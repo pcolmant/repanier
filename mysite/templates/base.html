@@ -1,0 +1,13 @@
+{% load cms_tags sekizai_tags menu_tags %}
+<html>
+  <head>
+      {% render_block "css" %}
+  </head>
+  <body>
+      {% cms_toolbar %}
+	  {% language_chooser "menu/language_chooser.html" %}
+      {% placeholder base_content %}
+      {% block base_content %}{% endblock %}
+      {% render_block "js" %}
+  </body>
+</html>

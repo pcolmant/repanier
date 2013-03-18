@@ -1,0 +1,24 @@
+server {
+	listen 80;
+	server_name producteur.intergas.be;
+
+	access_log /var/log/nginx/producteur_access.log;
+	error_log /var/log/nginx/producteur_error.log;
+	client_max_body_size 3M;
+	location / {
+		uwsgi_pass 	unix:///tmp/producteur.sock;
+		include		uwsgi_params;
+	}
+
+	location /media/ {
+		alias /home/pi/projects/mysite/mysite/media/;
+	}
+
+	location /static/ {
+		alias /home/pi/projects/mysite/mysite/static/;
+	}
+	
+	location /favicon.ico {
+		alias /home/pi/projects/mysite/mysite/static/favicon.ico;
+	}
+}
