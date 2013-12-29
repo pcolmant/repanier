@@ -1,0 +1,7 @@
+{% load menu_tags i18n %}
+{% for language in languages %}
+<li><a href="{% page_language_url language.0 %}" {% ifequal current_language language.0 %} class="active"{% endifequal %}>{{ language.1 }}</a></li>
+{% if not forloop.last %}
+<!-- <li role="presentation" class="divider"></li> -->
+{% endif %}
+{% endfor %}

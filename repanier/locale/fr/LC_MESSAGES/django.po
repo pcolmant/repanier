@@ -1,0 +1,562 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-12-28 22:22+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin.py:46 models.py:139
+msgid "producers"
+msgstr "producteurs"
+
+#: admin.py:77 models.py:81
+msgid "departments for producer"
+msgstr "rayons (pour le producteur)"
+
+#: admin.py:339 admin.py:426 admin.py:438
+msgid "duplicate product"
+msgstr "Créer un duplicata"
+
+#: admin.py:406
+msgid "select for offer"
+msgstr "Sélectionner le produit pour l'ouverture des commandes"
+
+#: admin.py:411
+msgid "unselect for offer"
+msgstr "Désélectionner le produit pour l'ouverture des commandes"
+
+#: admin.py:512
+msgid "planify permanence"
+msgstr "Planifier la permanence"
+
+#: admin.py:539
+msgid "open orders"
+msgstr "Ouvrir les commandes"
+
+#: admin.py:552
+msgid "close orders"
+msgstr "Fermer les commandes"
+
+#: admin.py:557
+msgid "send orders to producers"
+msgstr "Transmettre aux fournisseurs"
+
+#: admin.py:578 admin.py:683
+msgid "back to previous status"
+msgstr "Retour au niveau de traitement précédent"
+
+#: admin.py:629 const.py:18
+msgid "orders prepared"
+msgstr "Commandes préparées"
+
+#: admin.py:672 const.py:19
+msgid "done"
+msgstr "Commandes comptabilisées"
+
+#: const.py:13
+msgid "disabled"
+msgstr "Désactivé"
+
+#: const.py:14
+msgid "planified"
+msgstr "Planifié"
+
+#: const.py:15
+msgid "orders opened"
+msgstr "Commandes ouvertes"
+
+#: const.py:16
+msgid "orders closed"
+msgstr "Commandes fermées"
+
+#: const.py:17
+msgid "orders send to producers"
+msgstr "Commandes transmises"
+
+#: menu.py:24
+msgid "Permanence"
+msgstr "Permanence"
+
+#: menu.py:36
+msgid "My orders"
+msgstr "Mes commandes"
+
+#: menu.py:47
+msgid "My participation"
+msgstr "Ma participation"
+
+#: menu.py:58
+msgid "My finance"
+msgstr "Mon crédit"
+
+#: menu.py:69
+msgid "My deliveries pending for invoicing"
+msgstr "Mes livraisons pas encore comptabilisées"
+
+#: menu.py:80
+msgid "Send mail to coordinators"
+msgstr "Envoyer un mail aux coordinateurs"
+
+#: menu.py:91
+msgid "Send mail to all members"
+msgstr "Envoyer un mail à tous les membres"
+
+#: models.py:40 models.py:179 models.py:295 models.py:363 models.py:406
+#: models.py:509 models.py:612 models.py:687 models.py:746
+msgid "site"
+msgstr "groupement d'achat"
+
+#: models.py:41 models.py:511
+msgid "short_name"
+msgstr "nom abrégé"
+
+#: models.py:42
+msgid "description"
+msgstr "description"
+
+#: models.py:43 models.py:131 models.py:200 models.py:260 models.py:315
+#: models.py:371 models.py:470 models.py:660
+msgid "is_active"
+msgstr "activé"
+
+#: models.py:56 models.py:411
+msgid "production mode"
+msgstr "mode de production"
+
+#: models.py:57
+msgid "production modes"
+msgstr "modes de production"
+
+#: models.py:68
+msgid "department for customer"
+msgstr "rayon (pour le consomacteur)"
+
+#: models.py:69
+msgid "departments for customer"
+msgstr "rayons (pour le consomacteur)"
+
+#: models.py:80
+msgid "department for producer"
+msgstr "rayon (pour le producteur)"
+
+#: models.py:92
+msgid "permanence role"
+msgstr "rôle lors de la permanence"
+
+#: models.py:93
+msgid "permanences roles"
+msgstr "rôles lors des permanaces"
+
+#: models.py:123 models.py:254
+msgid "phone1"
+msgstr "téléphone 1"
+
+#: models.py:125 models.py:256
+msgid "phone2"
+msgstr "téléphone 2"
+
+#: models.py:127
+msgid "fax"
+msgstr "fax"
+
+#: models.py:129
+msgid "bank_account"
+msgstr "compte bancaire"
+
+#: models.py:130 models.py:258
+msgid "address"
+msgstr "adresse"
+
+#: models.py:138 models.py:181 models.py:408 models.py:691 models.py:748
+msgid "producer"
+msgstr "producteur"
+
+#: models.py:185
+msgid "short_profile_name"
+msgstr "nom abrégé"
+
+#: models.py:187
+msgid "long_profile_name"
+msgstr "nom étendu"
+
+#: models.py:189 models.py:370 models.py:520
+msgid "memo"
+msgstr "mémo"
+
+#: models.py:191 models.py:306
+msgid "date_previous_balance"
+msgstr "date du solde précédent"
+
+#: models.py:193 models.py:308
+msgid "previous_balance"
+msgstr "solde précédent"
+
+#: models.py:195 models.py:310
+msgid "amount_in"
+msgstr "montant crédité"
+
+#: models.py:197 models.py:312
+msgid "amount_out"
+msgstr "montant débité"
+
+#: models.py:199 models.py:314
+msgid "represent_this_buyinggroup"
+msgstr "représente ce groupement d'achats"
+
+#: models.py:208
+msgid "site producer"
+msgstr "producteur du groupe"
+
+#: models.py:209
+msgid "site producers"
+msgstr "producteurs du groupe"
+
+#: models.py:267 models.py:298 models.py:614 models.py:693 models.py:751
+msgid "customer"
+msgstr "cosomacteur"
+
+#: models.py:268
+msgid "customers"
+msgstr "cosomacteurs"
+
+#: models.py:302
+msgid "short_basket_name"
+msgstr "dénomination abrégée du panier"
+
+#: models.py:304
+msgid "long_basket_name"
+msgstr "dénomination étendue du panier"
+
+#: models.py:323
+msgid "site customer"
+msgstr "cosomacteur du groupe"
+
+#: models.py:324
+msgid "site customers"
+msgstr "cosomacteurs du groupe"
+
+#: models.py:361
+msgid "login"
+msgstr "login"
+
+#: models.py:365
+msgid "customer_responsible"
+msgstr "consomacteur responsable"
+
+#: models.py:368 models.py:409
+msgid "long_name"
+msgstr "nom étendu"
+
+#: models.py:379
+msgid "staff member"
+msgstr "responsable"
+
+#: models.py:380
+msgid "staff members"
+msgstr "responsables"
+
+#: models.py:414
+msgid "picture"
+msgstr "photo"
+
+#: models.py:416
+msgid "order_description"
+msgstr "description du mode de commande"
+
+#: models.py:417
+msgid "usage_description"
+msgstr "description du mode d'utilisation"
+
+#: models.py:420
+msgid "department_for_customer"
+msgstr "rayon pour le consomacteur"
+
+#: models.py:423
+msgid "position_into_department_for_customer"
+msgstr "classement dans ce rayon"
+
+#: models.py:427
+msgid "department_for_producer"
+msgstr "rayon pour le producteur"
+
+#: models.py:429
+msgid "position_into_department_for_producer"
+msgstr "classement dans ce rayon"
+
+#: models.py:433
+msgid "order_by_kg_pay_by_kg"
+msgstr "commandé par kg, facturé par kg"
+
+#: models.py:434
+msgid "order_by_kg_pay_by_kg (yes / no)"
+msgstr "commandé par kg, facturé par kg (oui / non)"
+
+#: models.py:436
+msgid "order_by_piece_pay_by_kg"
+msgstr "commandé à la pièce, facturé par kg"
+
+#: models.py:437
+msgid "order_by_piece_pay_by_kg (yes / no)"
+msgstr "commandé à la pièce, facturé par kg (oui / non)"
+
+#: models.py:439
+msgid "order_average_weight"
+msgstr "poids moyen"
+
+#: models.py:440
+msgid "if usefull, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)"
+msgstr ""
+"si utile, poids moyen de la pièce commandée (pe : 0,1 Kg [i.e. 100 gr], 3 Kg)"
+
+#: models.py:443
+msgid "order_by_piece_pay_by_piece"
+msgstr "commandé à la pièce, facturé à la pièce"
+
+#: models.py:444
+msgid "order_by_piece_pay_by_piece (yes / no)"
+msgstr "commandé à la pièce, facturé à la pièce (oui / non)"
+
+#: models.py:447
+msgid "individual package (yes/no)"
+msgstr "emballer individuellement"
+
+#: models.py:448
+msgid "producer_must_give_order_detail_per_customer"
+msgstr ""
+"le producteur doit donner emballer ce produit individuellement par client, "
+"et facturer de même"
+
+#: models.py:450 models.py:657
+msgid "producer_unit_price"
+msgstr "prix de vente à l'unité"
+
+#: models.py:451 models.py:658
+msgid "last known price (into the billing unit)"
+msgstr "dernier prix de vente à l'unité connu"
+
+#: models.py:455
+msgid "customer_minimum_order_quantity"
+msgstr "quantité minimale de commande"
+
+#: models.py:456
+msgid "minimum order qty (eg : 0,1 Kg [i.e. 100 gr], 1 piece, 3 Kg)"
+msgstr ""
+"quantité minimale de commande (pe : 0,1 Kg [i.e. 100 gr], 1 piece, 3 Kg)"
+
+#: models.py:459
+msgid "customer_increment_order_quantity"
+msgstr "ensuite quantité de"
+
+#: models.py:460
+msgid "increment order qty (eg : 0,05 Kg [i.e. 50 gr], 1 piece, 3 Kg)"
+msgstr "achat par multiple de (pe : 0,05 Kg [i.e. 50 gr], 1 piece, 3 Kg)"
+
+#: models.py:463
+msgid "customer_alert_order_quantity"
+msgstr "quantité d'alerte"
+
+#: models.py:464
+msgid ""
+"maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 "
+"pieces, 9 Kg)"
+msgstr ""
+"seuil avant de considérer la quantité commandée comme anormale (pe : 1,5 Kg, "
+"12 pieces, 9 Kg)"
+
+#: models.py:469
+msgid "is_into_offer"
+msgstr "produits sélectionnés pour l'ouverture des commandes"
+
+#: models.py:472 models.py:527 models.py:720 models.py:771
+msgid "is_cretaed_on"
+msgstr "enregistrement créé le"
+
+#: models.py:474 models.py:529 models.py:722 models.py:773
+msgid "is_updated_on"
+msgstr "enregistrement mis à jour le"
+
+#: models.py:482 models.py:655
+msgid "product"
+msgstr "produit"
+
+#: models.py:483
+msgid "products"
+msgstr "produits"
+
+#: models.py:495
+msgid "product selected"
+msgstr "produit sélectionné"
+
+#: models.py:496
+msgid "products selected"
+msgstr "produits sélectionnés pour l'ouverture des commandes"
+
+#: models.py:516
+msgid "permanence_status"
+msgstr "niveau de traitement de la permanence"
+
+#: models.py:517
+msgid ""
+"status of the permanence from planified, orders opened, orders closed, send, "
+"done"
+msgstr "statut / niveau de traitement de la permanence"
+
+#: models.py:519
+msgid "distribution_date"
+msgstr "date de distribution"
+
+#: models.py:542
+msgid "producers in this permanence"
+msgstr "offres de"
+
+#: models.py:556
+msgid "customers in this permanence"
+msgstr "achats par"
+
+#: models.py:591 models.py:623
+msgid "permanence board"
+msgstr "tableau des permanences"
+
+#: models.py:596
+msgid "Permanence on "
+msgstr "Permanence du "
+
+#: models.py:601 models.py:617 models.py:653 models.py:695
+msgid "permanence"
+msgstr "permanence"
+
+#: models.py:602
+msgid "permanences"
+msgstr "permanences"
+
+#: models.py:619
+msgid "permanence_role"
+msgstr "rôle lors de la permanence"
+
+#: models.py:624
+msgid "permanences board"
+msgstr "tableaux des permanences"
+
+#: models.py:634
+msgid "permanence in preparation"
+msgstr "permanence en phase de préparation"
+
+#: models.py:635
+msgid "permanences in preparation"
+msgstr "permanences en phase de préparation"
+
+#: models.py:640
+msgid "permanence done"
+msgstr "permanence en phase de comptabilisation"
+
+#: models.py:641
+msgid "permanences done"
+msgstr "permanences en phase de comptabilisation"
+
+#: models.py:667
+msgid "offer's item"
+msgstr "produit proposé"
+
+#: models.py:668
+msgid "offer's items"
+msgstr "produits proposés"
+
+#: models.py:689
+msgid "offer_item"
+msgstr "produit proposé"
+
+#: models.py:698
+msgid "order_quantity"
+msgstr "quantité commandée"
+
+#: models.py:700
+msgid "validated_quantity"
+msgstr "quantité commandée validée à la clôture"
+
+#: models.py:704
+msgid "preparator_recorded_quantity"
+msgstr "quantité validée lors de la préparation"
+
+#: models.py:707
+msgid "comment"
+msgstr "commentaire"
+
+#: models.py:709
+msgid "effective_balance"
+msgstr "montant validé"
+
+#: models.py:712 models.py:763
+msgid "is_recorded_on_sitecustomer"
+msgstr "est comptabilisé chez le consomacteur"
+
+#: models.py:714 models.py:765
+msgid "is_recorded_on_siteproducer"
+msgstr "est comptabilisé chez le producteur"
+
+#: models.py:716 models.py:767
+msgid "is_recorded_on_previous_sitecustomer"
+msgstr "est comptabilisé dans le solde précédent du consomacteur"
+
+#: models.py:718 models.py:769
+msgid "is_recorded_on_previous_siteproducer"
+msgstr "est comptabilisé dans le solde précédent du producteur"
+
+#: models.py:727
+msgid "purchase"
+msgstr "achat"
+
+#: models.py:728
+msgid "purchases"
+msgstr "achats"
+
+#: models.py:753
+msgid "operation_date"
+msgstr "date de l'opération"
+
+#: models.py:755
+msgid "operation_comment"
+msgstr "commentaire"
+
+#: models.py:757
+msgid "bank_amount_in"
+msgstr "montant crédité"
+
+#: models.py:757
+msgid "payment_on_the_account"
+msgstr "virement entrant"
+
+#: models.py:760
+msgid "bank_amount_out"
+msgstr "montant débité"
+
+#: models.py:760
+msgid "payment_from_the_account"
+msgstr "virement sortant"
+
+#: models.py:778
+msgid "bank account movement"
+msgstr "mouvement de compte"
+
+#: models.py:779
+msgid "bank account movements"
+msgstr "mouvements de compte"
+
+#~ msgid "You need to be logged in to perform this action."
+#~ msgstr "Vous devez vous identifier avant d'effectuer cette opération."
+
+#~ msgid "amount_in_waiting_for_validation"
+#~ msgstr "crédit à valider"
+
+#~ msgid "amount_out_waiting_for_validation"
+#~ msgstr "débit à valider"

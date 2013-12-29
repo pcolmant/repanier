@@ -1,13 +1,138 @@
-{% load cms_tags sekizai_tags menu_tags %}
-<html>
+{% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
+<!DOCTYPE html>
+{%get_current_language as LANGUAGE_CODE%}
+<html lang="{{LANGUAGE_CODE}}">
   <head>
-      {% render_block "css" %}
+    <title>Repanier | {% page_attribute "title" %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}foundation/css/normalize.css">{% endaddtoblock %}
+    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}foundation/css/foundation.min.css">{% endaddtoblock %}
+    {% addtoblock "jshead" %}<script src="{{ STATIC_URL }}foundation/js/vendor/custom.modernizr.js"></script>{% endaddtoblock %}
+    {% addtoblock "css" %}
+    <style type="text/css">
+      a.skip_link{ 
+       position:absolute; 
+       left:-1000px; 
+       top:-1000px; 
+      }
+      .white, .white a {
+        color: #fff;
+      }
+    </style>
+    {% endaddtoblock %}
+    {% render_block "css" postprocessor "compressor.contrib.sekizai.compress" %}
+    {% render_block "jshead" %}
   </head>
   <body>
-      {% cms_toolbar %}
-	  {% language_chooser "menu/language_chooser.html" %}
-      {% placeholder base_content %}
-      {% block base_content %}{% endblock %}
-      {% render_block "js" %}
+    <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
+    {% cms_toolbar %}
+    <!-- Header and Nav -->
+    <div class="fixed contain-to-grid">
+      <nav class="top-bar" data-topbar>
+        <ul class="title-area">
+          <!-- Title Area -->
+          <li class="name"></li>
+          <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+        </ul>
+        <section class="top-bar-section">
+          <!-- Right Nav Section -->
+          <ul class="right">
+            <li class="divider"></li>
+            <li class="has-dropdown">
+              <a href="#">{% trans "Language" %}</a>
+                <ul class="dropdown">
+                  {% language_chooser "native" %}
+                </ul>
+            </li>
+            <li class="divider"></li>
+            {% if user.is_authenticated %}
+            <li class="has-dropdown">
+                <a href="#">{% trans "Welkom" %} {{ user.first_name }}</a>
+                <ul class="dropdown">
+                  <li><a href="#">{% trans "My profile" %}</a></li>
+                  <li><a href="/?cms-toolbar-logout">{% trans "Logout" %}</a></li>
+                </ul>
+            </li>
+            {% else %}
+            <li class="has-dropdown">
+              <a href="#" data-reveal-id="loginModal">{% trans "Login" %}</a>
+            </li>
+            {% endif %} 
+          </ul>
+          <!-- Left Nav Section -->
+          <ul class="left">
+            {% show_menu 0 100 100 100 %}
+          </ul>
+        </section>
+      </nav>
+    </div>
+    <div class="row">
+      <a name=”content”></a>
+      {% block base_content%}{% endblock %}
+     </div>
+    <!-- Footer -->
+    <footer class="row">
+      <div class="large-12 columns">
+        <hr />
+        <div class="row">
+          <div class="large-12 columns">
+            {% block footer %}
+              {% placeholder 'footer' or %}
+              <p>Nous joindre : coordi at repanier.be | Participer : <a href="https://github.com/pcolmant/repanier">github</a> | Repanier utilise <a href="https://www.django-cms.org/en/">Django CMS 3</a> et <a href="http://foundation.zurb.com/">Foundation 5</a></p>
+              {% endplaceholder %}
+            {% endblock %}
+          </div>
+        </div>
+      </div>
+    </footer>
+    {% addtoblock "js" %}<script src="{{ STATIC_URL }}foundation/js/vendor/jquery.js"></script>{% endaddtoblock %}
+    {% addtoblock "js" %}<script src="{{ STATIC_URL }}foundation/js/foundation.min.js"></script>{% endaddtoblock %}
+    {% render_block "jsuncompressed" %}
+    {% render_block "js" postprocessor "compressor.contrib.sekizai.compress" %}
+    <!-- Login Modal starts -->
+    <div id="loginModal" class="reveal-modal" data-reveal>
+      <h2>{% trans "Login" %}</h2>
+      <div class="form">
+        <form action="?cms-toolbar-login=1" method="post" accept-charset="UTF-8" id="login-form">{% csrf_token %}  
+                <!-- Username -->
+                <div class="large-4 columns">
+                  <label for="id_username">{% trans "Username" %}</label>
+                  <input type="text" id="id_username" placeholder="{% trans "Username" %}" name="cms-username">
+                </div>
+                <!-- Password -->
+                <div class="large-4 columns">
+                  <label for="id_password">{% trans "Password" %}</label>
+                  <input type="password" id="id_password" placeholder="{% trans "Password" %}" name="cms-password">
+                </div>
+                <button class="btn btn-default" type="submit">{% trans "Login" %}</button>
+        </form>
+      </div><!-- /form -->
+      <a class="close-reveal-modal">&#215;</a>
+    </div><!-- /.modal -->
+    <!-- Login modal ends -->
+    <script>
+      function loginRequired()
+      {
+        if(document.location.hash) {
+          var hash = document.location.hash.substring(1); //Puts hash in variable, and removes the # character
+          if(hash == "loginRequired") {
+            var a = document.location.href.indexOf("?next=/",7);
+            if(a!=-1){
+              var b = document.location.href.lastIndexOf("#loginRequired");
+              // http://repanier.be:9000/fr/?next=/fr/repanier/contact/#loginRequired -> /fr/repanier/contact/?cms-toolbar-login=1
+              $("#login-form").attr("action", document.location.href.substring(a+6,b)+ "?cms-toolbar-login=1");
+              $('#loginModal').foundation('reveal', 'open');
+            }
+          }
+        }
+      }
+      $( document ).ready(function() {
+        loginRequired();
+      });
+    </script>
+    <script>
+      $(document).foundation();
+    </script>
   </body>
 </html>

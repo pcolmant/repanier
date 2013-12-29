@@ -1,0 +1,53 @@
+{% extends 'subpage_base.html' %}
+{% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
+{% block sub_content %}
+<div class="col-md-12">
+    {% crispy form %}
+</div>
+<div class="col-md-12">
+    <p>Test Post</p>
+    <p id="reponse-post"></p>
+</div>
+<div class="col-md-12">
+        <a href="../contact-ajax/?message=coucou" id="contact_form_ajax_get">Test Get</a></p>
+        <p id="reponse-get"></p>
+</div>
+{% addtoblock "js" %}<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.10.1.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}
+<script type="text/javascript">
+$(document).ready(function(){
+  // Link GET AJAX
+  $("#contact_form_ajax_get").click(function(e){
+    var lien = $(this).attr('href');
+    $('#reponse-get').fadeOut('fast', function(){
+      $('#reponse-get').load(lien, function() {
+        $('#reponse-get').fadeIn('fast');
+      });
+    });
+    e.preventDefault()
+  });
+  
+  // Form POST AJAX
+  $("#contact_form_ajax").submit( function() {
+    var urlSubmit = $(this).attr('action');
+    $.ajax({  
+      type: "POST",
+      url: urlSubmit,
+      data      : $(this).serializeArray(),
+      success: function(data) {
+        $('#reponse-post').fadeOut('fast', function(){
+          $('#reponse-post').html();
+          $('#reponse-post').html(data);
+          $('#reponse-post').fadeIn('fast');
+        });
+      },
+      error : function(xhr,errmsg,err) {
+        alert(xhr.status + ": " + xhr.responseText);
+      }
+    });
+    return false;
+  });
+});
+</script>        
+{% endaddtoblock %}
+{% endblock %}

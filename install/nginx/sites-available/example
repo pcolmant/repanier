@@ -1,0 +1,25 @@
+server {
+	listen 80;
+	server_name $REPANIER.BE$;
+
+	access_log /var/log/nginx/$REPANIER.BE$_access.log;
+	error_log /var/log/nginx/$REPANIER.BE$_error.log;
+	client_max_body_size 3M;
+	location / {
+		include		uwsgi_params;
+		uwsgi_param HTTP_X_FORWARDED_HOST $server_name:80;
+		uwsgi_pass 	unix:///tmp/$REPANIER.BE$.sock;
+	}
+
+	location /media/ {
+		alias /$PATH_TO$/production/mysite/mysite/media/repanier.be/;
+	}
+
+	location /static/ {
+		alias /$PATH_TO$/production/mysite/mysite/collect-static/;
+	}
+
+	location /favicon.ico {
+		alias /$PATH_TO$/production/mysite/mysite/media/$FAVICON_FILE_NAME$.ico;
+	}
+}

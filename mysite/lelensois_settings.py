@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from production_settings import *
 
-### Site 4 specific parameters
-SITE_ID = 4
-ALLOWED_HOSTS = ['apero.$REPANIER.BE$','apero.$REPANIER.LOCAL$']
+### Site 5 specific parameters
+SITE_ID = 5
+ALLOWED_HOSTS = ['lelensois.$REPANIER.BE$','lelensois.$REPANIER.LOCAL$']
 EMAIL_SUBJECT_PREFIX = '['+ ALLOWED_HOSTS[0] +']'
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", ALLOWED_HOSTS[0], "public")
 TEMPLATE_DIRS = (

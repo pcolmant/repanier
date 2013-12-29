@@ -1,20 +1,22 @@
 from django.conf.urls import patterns, include, url
+from django.conf.urls.i18n import i18n_patterns
 
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-admin.autodiscover()
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from cms.sitemaps import CMSSitemap
 
-urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'mysite.views.home', name='home'),
-    # url(r'^mysite/', include('mysite.foo.urls')),
+admin.autodiscover()
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+# urlpatterns = patterns('',
+#     url(r'^jsi18n/(?P<packages>\S+?)/$', 'django.views.i18n.javascript_catalog'),
+# )
 
-    # Uncomment the next line to enable the admin:
+urlpatterns = i18n_patterns('',
     url(r'^admin/', include(admin.site.urls)),
-	url(r'^sitemap\.xml$', 'django.contrib.sitemaps.views.sitemap', {'sitemaps': {'cmspages': CMSSitemap}}),
-	url(r'^', include('cms.urls')),
+    url(r'^repanier/', include('repanier.urls')),
+    url(r'^sitemap\.xml$', 'django.contrib.sitemaps.views.sitemap', {'sitemaps': {'cmspages': CMSSitemap}}),
+    url(r'^', include('cms.urls')),
+	url(r'^', include('filer.server.urls')),
 )
+
+urlpatterns += staticfiles_urlpatterns()

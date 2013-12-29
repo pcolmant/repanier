@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load cms_tags %}
+
+{% block base_content %}
+    <div class="large-12 columns">
+        {% placeholder "home-hero" or %}`
+        <h1>Repanier<br/>
+        <small>Repanier est un projet <a href="http://opensource.org/licenses/GPL-3.0">open source (GPL-3.0)</a> destiné aux groupements d'achats et aux producteurs locaux.</small></h1>
+        <h3>Qui sommes-nous<br/><small>
+          Repanier, contraction de repas et panier, est le fruit de l'expérience des membres de plusieurs groupements d'achats</li>
+          <ul class="square">
+          <li><a href="http://ptidej.gasath.be/">Gasath, groupe ptidej</a></li>
+          <li><a href="http://apero.gasath.be/">Gasath, groupe apéro</a></li>
+          <li><a href="http://www.lepanierlensois.be/">Le Panier Lensois</a></li>
+          </ul>
+        </small></h3>
+        {% endplaceholder %}
+    </div>
+
+    <div class="row">
+        <div class="large-4 columns">
+          {% placeholder 'home-col-1'  or %}
+          <h3>Pour le groupement<br/><small>
+          Repanier offre&nbsp;:
+          <ul class="square">
+           <li>Une gestion du calendrier des permanences.</li>
+           <li>Une gestion des offres et commandes.</li>
+           <li>Une gestion des paiements et provisons.</li>
+           <li>Une gestion du transfert des membres et du partage des producteurs entre groupements.</li>
+           <li>Une possibilité de remplacer/ou simplement étendre son site web existant.</li>
+          </ul></small></h3>
+          {% endplaceholder %}
+        </div>
+        <div class="large-4 columns">
+          {% placeholder 'home-col-2' or %}            
+          <h3>Pour le producteur<br/><small>
+          Repanier offre&nbsp;:
+          <ul class="square">
+           <li>Une vue centralisée des groupements participants.</li>
+           <li>Une gestion des offres et commandes.</li>
+           <li>Une gestion des paiements et provisons.</li>
+           <li>Une gestion du calendrier des livraisons.</li>
+           <li>Une possibilité de remplacer/ou simplement étendre son site web existant.</li>
+          </ul></small></h3>
+          {% endplaceholder %}
+       </div>
+       <div class="large-4 columns">
+          {% placeholder 'home-col-3' or %} 
+          <h3>Hébergement<br/><small>
+          L'hébergement de Repanier peut se faire&nbsp;:
+          <ul class="square">
+          <li>Soit à prix coûtant en mutualisation sur notre plateforme. Vous n'avez pas besoin de compétence IT.</li>
+          <li>Soit chez votre hébergeur. Vous avez besoin de compétences IT.</li>
+          </ul></small></h3>
+          {% endplaceholder %}
+        </div>
+      </div>
+
+{% endblock %}

@@ -1,8 +1,11 @@
-from django.conf.urls.defaults import *
-import permanence
+from django.conf.urls import patterns, url
+from repanier import views
+from django.contrib.auth.decorators import login_required
+from views import OrderView
 
-urlpatterns = patterns('mysite.repanier.views',
-	url(r'^permanence/(\d{4})/$', permanence.views.year),
-	url(r'^permanence/(\d{4})/(\d{2})/$', permanence.views.month),
-	url(r'^permanence/(\d{4})/(\d{2})/(\d+)/$', permanence.views.detail),
+urlpatterns = patterns('',
+    url(r'^contact/$', views.contact_form, name='contact_form'),
+    url(r'^contact-ajax/$', views.contact_form_ajax, name='contact_form_ajax'),
+    # url(r'^preparation/', login_required(PreparationView.as_view()), name='preparation_view'),
+    url(r'^order/(?P<permanence_id>\d+)/$', login_required(OrderView.as_view()), name='order_view'),
 )
