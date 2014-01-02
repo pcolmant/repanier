@@ -358,9 +358,7 @@ def add_all_products():
             long_name = row[2], production_mode_id = production_mode_id,
             picture = None, order_description = "", usage_description = "", 
             department_for_customer_id = department_for_customer_id,
-            position_into_department_for_customer = int(row[5]),
             department_for_producer_id = department_for_producer_id,
-            position_into_department_for_producer = int(row[7]),
             order_by_kg_pay_by_kg = ( row[8] == "True" ),
             order_by_piece_pay_by_kg = ( row[9] == "True" ),
             order_by_piece_pay_by_piece = ( row[10] == "True" ),
@@ -371,6 +369,12 @@ def add_all_products():
             customer_alert_order_quantity = row[15],
             is_into_offer=False,
             is_active = ( row[16] == "True" ))
+  order = 0
+  for obj in Product.objects_without_filter.all().order_by(
+      "site_producer__short_profile_name", "long_name"):
+    order += 1
+    obj.product_order = order
+    obj.save()
 
 #  producer.followed_by.add(1,3,4,5)
 

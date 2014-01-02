@@ -203,6 +203,27 @@ class SiteProducer(models.Model):
 	objects = SiteProducerManager()
 	objects_without_filter = models.Manager()
 
+	def get_products(self):
+		link = ''
+		if self.id:
+			# changeproducer_url = urlresolvers.reverse(
+			# 	'admin:repanier_producer_change', args=(self.id,)
+			# )
+			# link = u'<a href="' + changeproducer_url + '">  ' + unicode(self) + '</a>'
+			if self.producer:
+				# This producer may have product's list
+				changeproductslist_url = urlresolvers.reverse(
+					'admin:repanier_product_changelist', 
+				)
+				# &&& is used to hide the site_producer filter
+				link = u'<a href="' + changeproductslist_url + \
+					'?is_active__exact=1&department_for_this_producer=all&site_producer=' + \
+					str(self.id) + '">  ' + \
+					unicode(_("his_products")) + '</a>'
+		return link
+	get_products.short_description=(_("link to his products"))
+	get_products.allow_tags = True
+
 	def __unicode__(self):
 		return self.short_profile_name
 	
@@ -221,17 +242,19 @@ class SiteProducer(models.Model):
 def site_producer_post_save(sender, **kwargs):
 	# give access to the producer to private documents for the site
 	site_producer = kwargs['instance']
-	site = Site.objects.get(id=settings.SITE_ID) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.add(site_producer.producer.user)
+	if site_producer.producer:
+		site = Site.objects.get(id=settings.SITE_ID) 
+		group = Group.objects.get(name=site.domain) 
+		group.user_set.add(site_producer.producer.user)
 
 @receiver(post_delete, sender=SiteProducer)
 def site_producer_post_delete(sender, **kwargs):
 	# remove access to the producer to private documents for the site
 	site_producer = kwargs['instance']
-	site = Site.objects.get(id=settings.SITE_ID) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.remove(site_producer.producer.user)
+	if site_producer.producer:
+		site = Site.objects.get(id=settings.SITE_ID) 
+		group = Group.objects.get(name=site.domain) 
+		group.user_set.remove(site_producer.producer.user)
 
 class CustomerQuerySet(QuerySet):
 	def active(self):
@@ -263,6 +286,7 @@ class Customer(models.Model):
 	is_active = models.BooleanField(
 		_("is_active"), default=True)
 	objects = CustomerManager()
+	objects_without_filter = models.Manager()
 
 	def __unicode__(self):
 		return getattr(self.user, get_user_model().USERNAME_FIELD)
@@ -338,17 +362,19 @@ class SiteCustomer(models.Model):
 def site_customer_post_save(sender, **kwargs):
 	# give access to the customer to private documents for the site
 	site_customer = kwargs['instance']
-	site = Site.objects.get(id=settings.SITE_ID) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.add(site_customer.customer.user)
+	if site_customer.customer:
+		site = Site.objects.get(id=settings.SITE_ID) 
+		group = Group.objects.get(name=site.domain)
+		group.user_set.add(site_customer.customer.user)
 
 @receiver(post_delete, sender=SiteCustomer)
 def site_customer_post_delete(sender, **kwargs):
 	# remove access to the customer to private documents for the site
 	site_customer = kwargs['instance']
-	site = Site.objects.get(id=settings.SITE_ID) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.remove(site_customer.customer.user)
+	if site_customer.customer:
+		site = Site.objects.get(id=settings.SITE_ID) 
+		group = Group.objects.get(name=site.domain) 
+		group.user_set.remove(site_customer.customer.user)
 
 class StaffQuerySet(QuerySet):
 	def active(self):
@@ -425,15 +451,18 @@ class Product(models.Model):
 	department_for_customer = models.ForeignKey(
 		LUT_DepartmentForCustomer, verbose_name=_("department_for_customer"), 
 		on_delete=models.PROTECT)
-	position_into_department_for_customer = models.PositiveIntegerField(
-		_("position_into_department_for_customer"), 
-		default=0, blank=False, null=False)	
 	department_for_producer = models.ForeignKey(
 		LUT_DepartmentForProducer, 
 		verbose_name=_("department_for_producer"), on_delete=models.PROTECT)
-	position_into_department_for_producer = models.PositiveIntegerField(
-		_("position_into_department_for_producer"), 
+	product_order = models.PositiveIntegerField(
+		_("position_into_products_list_of_the_producer"), 
 		default=0, blank=False, null=False)	
+	placement = models.CharField(
+		max_length=3, 
+		choices=LUT_PRODUCT_PLACEMENT,
+		default=PRODUCT_PLACEMENT_BASKET_MIDDLE,
+		verbose_name=_("product_placement"), 
+		help_text=_('used for helping to determine the order of prepration of this product'))
 
 	order_by_kg_pay_by_kg = models.BooleanField(
 		_("order_by_kg_pay_by_kg"),
@@ -487,19 +516,13 @@ class Product(models.Model):
 	class Meta:
 		verbose_name = _("product")
 		verbose_name_plural = _("products")
-		ordering = ("site_producer__short_profile_name", "long_name",)
+		# First field of ordering must be position_for_producer for 'adminsortable' 
+		ordering = ("product_order",)
 		unique_together = ("site", "site_producer", "long_name",)
 		index_together = [
+			["site", "product_order"],
 			["site", "site_producer", "long_name"],
-			["site_producer", "long_name"],
 		]
-
-class ProductSelected(Product):
-	objects = ProductManager()
-	class Meta:
-		proxy = True
-		verbose_name = _("product selected")
-		verbose_name_plural = _("products selected")
 
 class PermanenceQuerySet(QuerySet):
 	def active(self):
@@ -521,7 +544,6 @@ class Permanence(models.Model):
 		default=PERMANENCE_PLANIFIED,
 		verbose_name=_("permanence_status"), 
 		help_text=_('status of the permanence from planified, orders opened, orders closed, send, done'))
-
 	distribution_date = models.DateField(_("distribution_date"))
 	memo = HTMLField(_("memo"),blank=True)
 	producers = models.ManyToManyField(
@@ -542,7 +564,8 @@ class Permanence(models.Model):
 			'admin:repanier_productselected_changelist', 
 			)
 			return u", ".join([u'<a href="' + changelist_url + \
-				'?site_producer=' + str(p.id) + '"" target="_blank">' + \
+				'?site_producer=' + str(p.id) + '">' + \
+#				'?site_producer=' + str(p.id) + '" target="_blank">' + \
 				 p.short_profile_name + '</a>' for p in self.producers.all()])
 		return u''
 	get_producers.short_description=(_("producers in this permanence"))
@@ -554,7 +577,8 @@ class Permanence(models.Model):
 			'admin:repanier_purchase_changelist', 
 			)
 			return u", ".join([u'<a href="' + changelist_url + \
-				'?site_customer=' + str(c.id) + '"" target="_blank">' + \
+				'?site_customer=' + str(c.id) + '">' + \
+#				'?site_customer=' + str(c.id) + '" target="_blank">' + \
 				c.short_basket_name + '</a>' 
 				for c in SiteCustomer.objects.filter(
 					purchase__permanence_id=self.id).distinct()])
@@ -726,7 +750,7 @@ class Purchase(models.Model):
 		_("is_cretaed_on"), auto_now_add=True)
 	is_updated_on = models.DateTimeField(
 		_("is_updated_on"), auto_now=True)
-	objects=PurchaseManager()
+	objects = PurchaseManager()
 	objects_without_filter = models.Manager()
 
 	class Meta:
@@ -777,7 +801,7 @@ class BankAccount(models.Model):
 		_("is_cretaed_on"), auto_now_add = True)
 	is_updated_on = models.DateTimeField(
 		_("is_updated_on"), auto_now=True)
-	objects=BankAccountManager()
+	objects =BankAccountManager()
 	objects_without_filter = models.Manager()
 
 	class Meta:

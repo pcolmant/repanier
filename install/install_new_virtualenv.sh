@@ -10,16 +10,13 @@ mkdir $1
 virtualenv $1
 cd $1
 source bin/activate
-sudo apt-get install gettext
+sudo apt-get install gettext unzip
 sudo apt-get install libpq-dev python-dev python-setuptools
 pip install psycopg2
 # IF installing the latest stable version
 # pip install django-cms
 # ELSE installing the latest development version
-# sudo apt-get install unzip
-# wget https://github.com/divio/django-cms/archive/develop.zip
-# unzip develop.zip
-# pip install -e django-cms-develop/
+# pip install https://github.com/divio/django-cms/archive/develop.zip
 # ELSE installing a specific version
 pip install https://github.com/divio/django-cms/archive/3.0.0.beta3.zip
 # ENDIF
@@ -30,6 +27,7 @@ pip install Pillow
 pip install cmsplugin-filer
 pip install django-reversion
 pip install django_compressor
+pip install django-admin-sortable2
 # pip install django_debug_toolbar
 # pip install django-dajaxice ! not working with Django 1.6
 # pip install django-custom-user

@@ -5,6 +5,10 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q, F
+from django import forms
+
+# from adminsortable.admin import SortableAdminMixin
+from repanier.adminsortable import SortableAdminMixin
 
 from repanier.models import LUT_ProductionMode
 from repanier.models import LUT_DepartmentForCustomer
@@ -17,7 +21,6 @@ from repanier.models import Customer
 from repanier.models import SiteCustomer
 from repanier.models import Staff
 from repanier.models import Product
-from repanier.models import ProductSelected
 from repanier.models import PermanenceBoard
 from repanier.models import OfferItem
 from repanier.models import PermanenceInPreparation
@@ -27,7 +30,7 @@ from repanier.models import BankAccount
 
 
 import django
-class LocalizedModelForm(django.forms.ModelForm):
+class LocalizedModelForm(forms.ModelForm):
     def __new__(cls, *args, **kwargs):
         new_class = super(LocalizedModelForm, cls).__new__(cls, *args, **kwargs)
         for field in new_class.base_fields.values():
@@ -57,7 +60,7 @@ class ProductFilterBySiteProducer(SimpleListFilter):
 		"""
 		# This list is a collection of site producer.id, .name
 		return [(c.id, c.short_profile_name) for c in 
-			SiteProducer.objects.all().active().with_login()
+			SiteProducer.on_site.all().active().with_login()
 		 	]
 
 	def queryset(self, request, queryset):
@@ -80,7 +83,7 @@ class ProductFilterByDepartmentForProducer(SimpleListFilter):
 	def lookups(self, request, model_admin):
 		# This list is a collection of site department.id, .name
 		return [(c.id, c.short_name) for c in 
-			LUT_DepartmentForProducer.objects.all().active()
+			LUT_DepartmentForProducer.on_site.all().active()
 		 	]
 
 	def queryset(self, request, queryset):
@@ -90,11 +93,44 @@ class ProductFilterByDepartmentForProducer(SimpleListFilter):
 		else:
 			return queryset
 
+class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
+	title = _("departments for producer")
+	parameter_name = 'department_for_this_producer'
+
+	def lookups(self, request, model_admin):
+		site_producer = request.GET.get('site_producer')
+		inner_qs = Product.objects.all().active().site_producer_is(
+			site_producer).order_by(
+			'department_for_producer__id').distinct(
+			'department_for_producer__id')
+		# return []
+		return [('all', _('All'))] + [(c.id, c.short_name) for c in 
+			LUT_DepartmentForProducer.objects.all().active().filter(product__in=inner_qs)
+		 	]
+
+	def choices(self, cl):
+		for lookup, title in self.lookup_choices:
+			yield {
+				'selected': self.value() == lookup,
+				'query_string': cl.get_query_string({
+					self.parameter_name: lookup,
+				}, []),
+				'display': title,
+			}
+
+	def queryset(self, request, queryset):
+		# This query set is a collection of products
+		if self.value()=='all':
+			site_producer = request.GET.get('site_producer')
+			return queryset.site_producer_is(site_producer)
+		else:
+			return queryset.department_for_producer_is(self.value())
+
 # LUT
 class LUT_ProductionModeAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	exclude = ('site',)	
+	exclude = ['site',]
 	list_max_show_all = True
 
 	# def queryset(self, request):
@@ -106,7 +142,7 @@ admin.site.register(LUT_ProductionMode, LUT_ProductionModeAdmin)
 class LUT_DepartmentForCustomerAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	exclude = ('site',)	
+	exclude = ['site',]
 	list_max_show_all = True
 
 admin.site.register(LUT_DepartmentForCustomer, LUT_DepartmentForCustomerAdmin)
@@ -114,7 +150,7 @@ admin.site.register(LUT_DepartmentForCustomer, LUT_DepartmentForCustomerAdmin)
 class LUT_DepartmentForProducerAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	exclude = ('site',)
+	exclude = ['site',]
 	list_max_show_all = True
 
 admin.site.register(LUT_DepartmentForProducer, LUT_DepartmentForProducerAdmin)
@@ -122,7 +158,7 @@ admin.site.register(LUT_DepartmentForProducer, LUT_DepartmentForProducerAdmin)
 class LUT_PermanenceRoleAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	exclude = ('site',)
+	exclude = ['site',]
 	list_max_show_all = True
 
 admin.site.register(LUT_PermanenceRole, LUT_PermanenceRoleAdmin)
@@ -158,14 +194,28 @@ class SiteProducerAdmin(admin.ModelAdmin):
 	fields = ['producer', 'short_profile_name', 'long_profile_name', 'memo',
 	 'date_previous_balance', 'previous_balance', 'amount_in', 'amount_out',
 	 'represent_this_buyinggroup', 'is_active']
-	exclude = ('site',)
+	exclude = ['site',]
 	readonly_fields = ('date_previous_balance', 
 		'previous_balance', 
 		'amount_in', 
 		'amount_out')
-	list_display = ('__unicode__', 'represent_this_buyinggroup',
+	list_display = ('short_profile_name', 'get_products', 'get_producer_phone1', 'get_producer_address', 'represent_this_buyinggroup',
 		'is_active')
 	list_max_show_all = True
+
+	def get_producer_phone1(self, obj):
+		if obj.producer:
+			return '%s'%(obj.producer.phone1)
+		else:
+			return ''
+	get_producer_phone1.short_description = _("phone1") 
+
+	def get_producer_address(self, obj):
+		if obj.producer:
+			return '%s'%(obj.producer.address)
+		else:
+			return ''
+	get_producer_address.short_description = _("address") 
 
 	def get_form(self,request, obj=None, **kwargs):
 		form = super(SiteProducerAdmin,self).get_form(request, obj, **kwargs)
@@ -191,38 +241,61 @@ class SiteProducerAdmin(admin.ModelAdmin):
 admin.site.register(SiteProducer, SiteProducerAdmin)
 
 # Customer
-class CustomerAdmin(admin.ModelAdmin):
-	fields = ['user', 'phone1', 'phone2', 'address', 'is_active']
+class CustomerWithUserDataForm(forms.ModelForm):
+	username = forms.Field()
+	password = forms.Field()
+	email = forms.Field()
+	first_name = forms.Field()
+	last_name = forms.Field()
+
+	class Meta:
+		model = Customer
+
+	def __init__(self, *args, **kwargs):
+		super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
+		# Here we will redefine our test field.
+		self.base_fields['username'] = forms.CharField(label=_('username'))
+		self.base_fields['password'] = forms.CharField(label=_('password'))
+		self.base_fields['email'] = forms.CharField(label=_('email'))
+		self.base_fields['first_name'] = forms.CharField(label=_('first_name'))
+		self.base_fields['last_name'] = forms.CharField(label=_('last_name'))
+
+
+class CustomerWithUserDataAdmin(admin.ModelAdmin):
+	form = CustomerWithUserDataForm
+	fields = ['username', 'password', 'email', 'first_name', 'last_name', 'phone1', 'phone2', 'address', 'is_active']
 	list_display = ('__unicode__', 'phone1', 'phone2', 'address', 'is_active')
 	list_max_show_all = True
 
 	def get_form(self,request, obj=None, **kwargs):
-		form = super(CustomerAdmin,self).get_form(request, obj, **kwargs)
-		user = form.base_fields["user"]
-		user.widget.can_add_related = False
+		form = super(CustomerWithUserDataAdmin,self).get_form(request, obj, **kwargs)
+		# https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#django.contrib.auth.models.AbstractBaseUser
+		username = form.base_fields['username']
+		password = form.base_fields['password']
+		email = form.base_fields['email']
+		first_name= form.base_fields['first_name']
+		last_name= form.base_fields['last_name']
+		user_model = get_user_model()
 
 		if obj:
-			# Don't allow to change the customer/login
-			user.empty_label = None
-			user.initial = obj.user
-			user.queryset = get_user_model().objects.filter(
-				id = obj.user.id)
-		else:
-			# Don't allow to add the same customer twice
-			user.queryset = get_user_model().objects.filter(
-				is_active=True, is_superuser = False, is_staff = False,
-				customer = None, staff = None, producer = None).order_by(
-				get_user_model().USERNAME_FIELD)
+			user = user_model.objects.get(id=obj.user.id)
+			username.initial = getattr(user, user_model.USERNAME_FIELD)
+			username.widget.attrs['readonly'] = True
+			password.initial = user.password
+			password.widget.attrs['readonly'] = True
+			email.initial = user.email
+			first_name.initial = user.first_name
+			last_name.initial = user.last_name
 		return form
 
-admin.site.register(Customer, CustomerAdmin)
+admin.site.register(Customer, CustomerWithUserDataAdmin)
 
 class SiteCustomerAdmin(admin.ModelAdmin):
 	fields = ('customer', 'short_basket_name', 'long_basket_name',
 	 'date_previous_balance', 'previous_balance', 
 	 'amount_in', 'amount_out',
 	 'represent_this_buyinggroup', 'is_active')
-	exclude = ('site',)
+	exclude = ['site',]
 	readonly_fields = ('date_previous_balance', 'previous_balance',
 	 'amount_in', 'amount_out')
 
@@ -256,7 +329,7 @@ admin.site.register(SiteCustomer, SiteCustomerAdmin)
 # Staff
 class StaffAdmin(admin.ModelAdmin):
 	fields = ('user', 'customer_responsible','long_name', 'memo', 'is_active')
-	exclude = ('login_site',)
+	exclude = ['login_site',]
 	list_display = ('user', 'customer_responsible','long_name', 'is_active')
 	list_max_show_all = True
 	ordering = ('user',)
@@ -292,47 +365,60 @@ class StaffAdmin(admin.ModelAdmin):
 
 admin.site.register(Staff, StaffAdmin)
 
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 	list_display = ('site_producer',
 		'department_for_producer',
-		'position_into_department_for_producer',
-		'department_for_customer',
-		'position_into_department_for_customer', 
 		'long_name',
-		'is_active',
+		'is_into_offer',
+		'producer_unit_price',
+		'order_average_weight',
 		'order_by_piece_pay_by_kg',
 		'producer_must_give_order_detail_per_customer',
 		'customer_minimum_order_quantity',
 		'customer_increment_order_quantity',
-		'customer_alert_order_quantity')
+		'customer_alert_order_quantity',
+		'is_active')
 	list_display_links = ('long_name',)
-	list_editable = ('is_active',
-		'position_into_department_for_producer',
-		'position_into_department_for_customer',)
+	# list_editable = ('is_active', 
+	# 	'producer_unit_price',
+	# 	'order_average_weight')
 	readonly_fields = ('is_created_on', 
 		'is_updated_on')
-	exclude = ('site',)
+	exclude = ['site',]
 	list_max_show_all = True
-	ordering = ('site_producer', 
-		'department_for_producer',
-		'position_into_department_for_producer', 
-		'long_name',)
+	# ordering = ('site_producer', 
+	# 	'department_for_producer',
+	# 	'long_name',)
 	search_fields = ('long_name',)
 	list_filter = ('is_active',
 		ProductFilterBySiteProducer, 
 		ProductFilterByDepartmentForProducer,)
-	actions = ['duplicate_product']
+	actions = [
+		'select_for_offer', 'unselect_for_offer',
+		'duplicate_product'
+	]
 
+	def select_for_offer(self, request, queryset):
+		queryset.active().is_not_selected_for_offer().update(is_into_offer=True)
+
+	select_for_offer.short_description = _('select for offer')
+
+	def unselect_for_offer(self, request, queryset):
+		# Don't filer "active()"
+		queryset.is_selected_for_offer().update(is_into_offer=False)
+
+	unselect_for_offer.short_description = _('unselect for offer')
 	def duplicate_product(self, request, queryset):
 		for product in queryset:
-			long_name_extension = "[" + str(product.id) + "] "
-			length_long_name_extension = len(long_name_extension)
-			max_length = Product._meta.get_field('long_name').max_length-2
-			if len(product.long_name) + length_long_name_extension > max_length:
-				product.long_name = long_name_extension + \
-					product.long_name[:max_length-length_long_name_extension-2 ] + '..' 
+			super(ProductAdmin,self).move_for_duplicate(product)
+			long_name_prefix = "COPY_OF_"
+			length_long_name_prefix = len(long_name_prefix)
+			max_length = Product._meta.get_field('long_name').max_length
+			if len(product.long_name) + length_long_name_prefix > max_length:
+				product.long_name = long_name_prefix + \
+					product.long_name[:max_length-length_long_name_prefix ]
 			else:
-				product.long_name = long_name_extension + product.long_name
+				product.long_name = long_name_prefix + product.long_name
 			product.id = None
 			product.save()
 
@@ -356,7 +442,7 @@ class ProductAdmin(admin.ModelAdmin):
 			production_mode.empty_label = None
 		site_producer.queryset = SiteProducer.objects.all(
 			).active().with_login()
-		department_for_producer.queryset = LUT_DepartmentForProducer.objects.all(
+		department_for_producer.queryset = LUT_DepartmentForProducer.objtects.all(
 			).active()
 		department_for_customer.queryset = LUT_DepartmentForCustomer.objects.all(
 			).active()
@@ -364,107 +450,18 @@ class ProductAdmin(admin.ModelAdmin):
 			).active()
 		return form
 
-	def queryset(self, request):
-		qs = super(ProductAdmin, self).queryset(request)
-		return qs.order_by(
-			'department_for_producer',
-			'position_into_department_for_producer')
+	def get_list_filter(self, request):
+		site_producer = request.GET.get('department_for_this_producer')
+		if site_producer:
+			return ('is_active', ProductFilterByDepartmentForThisProducer,)
+		else:
+			return self.list_filter
+
+	# def queryset(self, request):
+	# 	qs = super(ProductAdmin, self).queryset(request)
+	#  	return qs.order_by('order',)
+
 admin.site.register(Product, ProductAdmin)
-
-class ProductSelectedAdmin(admin.ModelAdmin):
-	list_display = ['site_producer',
-		'department_for_producer',
-		'position_into_department_for_producer', 
-		'long_name',
-		'is_into_offer',
-		'producer_unit_price',
-		'order_average_weight',
-		'producer_must_give_order_detail_per_customer']
-	list_display_links = ('long_name',)
-	list_editable = ('department_for_producer',
-		'position_into_department_for_producer',
-		'producer_unit_price',
-		'order_average_weight')
-	readonly_fields = ('is_created_on', 
-		'is_updated_on')
-	exclude = ('site', 'permanences')
-	list_max_show_all = True
-	ordering = ('site_producer', 
-		'department_for_producer',
-		'position_into_department_for_producer', 
-		'long_name',)
-	search_fields = ('long_name',)
-	list_filter = ('is_into_offer',
-		ProductFilterBySiteProducer, 
-		ProductFilterByDepartmentForProducer,)
-	actions = ['select_for_offer',
-		'unselect_for_offer','duplicate_product']
-
-	def select_for_offer(self, request, queryset):
-		queryset.is_not_selected_for_offer().update(is_into_offer=True)
-
-	select_for_offer.short_description = _('select for offer')
-
-	def unselect_for_offer(self, request, queryset):
-		queryset.is_selected_for_offer().update(is_into_offer=False)
-
-	unselect_for_offer.short_description = _('unselect for offer')
-
-	def duplicate_product(self, request, queryset):
-		for product in queryset:
-			long_name_extension = "[" + str(product.id) + "] "
-			length_long_name_extension = len(long_name_extension)
-			max_length = Product._meta.get_field('long_name').max_length-2
-			if len(product.long_name) + length_long_name_extension > max_length:
-				product.long_name = long_name_extension + \
-					product.long_name[:max_length-length_long_name_extension-2 ] + '..' 
-			else:
-				product.long_name = long_name_extension + product.long_name
-			product.id = None
-			product.save()
-
-	duplicate_product.short_description = _('duplicate product')
-
-	def back_to_previous_status(self, request, queryset):
-		for permanence in queryset:
-			if permanence.status==PERMANENCE_PREPARED:
-				permanence.status=PERMANENCE_SEND
-				permanence.save()
-			if permanence.status==PERMANENCE_DONE:
-				permanence.status=PERMANENCE_PREPARED
-				permanence.save()
-
-
-	duplicate_product.short_description = _('duplicate product')
-
-	def get_form(self,request, obj=None, **kwargs):
-		form = super(ProductSelectedAdmin,self).get_form(request, obj, **kwargs)
-		site_producer = form.base_fields["site_producer"]
-		department_for_producer = form.base_fields["department_for_producer"]
-		site_producer.widget.can_add_related = False
-		department_for_producer.widget.can_add_related = False
-
-		if obj:
-			site_producer.empty_label = None
-			department_for_producer.empty_label = None
-		site_producer.queryset = SiteProducer.objects.all(
-			).with_login().active()
-		department_for_producer.queryset = LUT_DepartmentForProducer.objects.all(
-			).active()
-		return form
-
-	def get_actions(self, request):
-		actions = super(ProductSelectedAdmin, self).get_actions(request)
-		if 'delete_selected' in actions:
-			del actions['delete_selected']
-		if not actions:
-			try:
-				self.list_display.remove('action_checkbox')
-			except ValueError:
-				pass
-		return actions
-
-admin.site.register(ProductSelected, ProductSelectedAdmin)
 
 # Permanence
 class PermanenceBoardInline(admin.TabularInline):
@@ -495,7 +492,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 		),
 	]
 	readonly_fields = ('status', 'is_created_on', 'is_updated_on')
-	exclude = ('site','products',)
+	exclude = ['site','products']
 	list_max_show_all = True
  	filter_horizontal = ('producers',)
 	inlines = [PermanenceBoardInline, OfferItemInline]
@@ -514,14 +511,11 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 	def open_orders(self, request, queryset):
 		for permanence in queryset.filter(status=PERMANENCE_PLANIFIED):
 			permanence.status=PERMANENCE_OPEN
-			site_producers_in_this_permanence = SiteProducer.objects.filter(
+			site_producers_in_this_permanence = SiteProducer.objects.active.filter(
 				permanence=permanence)
-			for product in Product.objects.filter(
-				site=settings.SITE_ID,
-				site_producer__in = site_producers_in_this_permanence,
-				is_into_offer=True,
-				is_active=True):
-				offeritem_set=OfferItem.objects.filter(
+			for product in Product.on_site.active.is_selected_for_offer.filter(
+				site_producer__in = site_producers_in_this_permanence):
+				offeritem_set=OfferItem.on_site.filter(
 					permanence=permanence,
 					product = product)[:1]
 				if offeritem_set:
@@ -604,7 +598,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		),
 	]
 	readonly_fields = ('status', 'is_created_on', 'is_updated_on')
-	exclude = ('site','products',)
+	exclude = ['site','products']
 	list_max_show_all = True
 	# inlines = [PermanenceBoardInline, DeliveryBoardInline]
 	inlines = [PermanenceBoardInline, OfferItemInline]
@@ -617,7 +611,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		permanence_set = queryset.filter(status=PERMANENCE_SEND)
 		if permanence_set:
 			for permanence in permanence_set:
-				purchase_set = Purchase.objects.filter(permanence=permanence)
+				purchase_set = Purchase.objcts.filter(permanence=permanence)
 				if purchase_set:
 					for purchase in purchase_set:
 						purchase.preparator_recorded_quantity = purchase.validated_quantity
@@ -651,7 +645,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 							purchase.site_customer.save()
 							purchase.is_recorded_on_site_customer = True
 						if not(purchase.is_recorded_on_site_producer):
-							bank_account_set = BankAccount.objects.filter(
+							bank_account_set = BankAccount.on_site.filter(
 								site_producer=purchase.site_producer, 
 								is_recorded_on_site_producer=False)
 							if bank_account_set:
@@ -703,9 +697,10 @@ admin.site.register(PermanenceDone, PermanenceDoneAdmin)
 
 class PurchaseAdmin(admin.ModelAdmin):
 	list_max_show_all = True
-	exclude = ('site', 'site_producer', 'permanence', 
+	exclude = ['site', 'site_producer', 'permanence', 
 		'is_recorded_on_previous_site_customer',
-		'is_recorded_on_previous_siteproducer')	
+		'is_recorded_on_previous_siteproducer'
+	]	
 	list_display = ['offer_item','site_customer', 
 		'order_quantity', 'validated_quantity', 'preparator_recorded_quantity',
 		'effective_balance']
@@ -774,23 +769,22 @@ class PurchaseAdmin(admin.ModelAdmin):
 
 		if obj:
 			site_customer.empty_label = None
-			site_customer.queryset = SiteCustomer.objects.filter(
+			site_customer.queryset = SiteCustomer.on_site.filter(
 				id = obj.site_customer.id)
 			offer_item.empty_label = None
-			offer_item.queryset = OfferItem.objects.filter(
+			offer_item.queryset = OfferItem.on_site.filter(
 				id = obj.offer_item.id)
 		else:
-			site_customer.queryset = SiteCustomer.objects.filter(
+			site_customer.queryset = SiteCustomer.on_site.filter(
 				site = settings.SITE_ID,
 				is_active = True).order_by(
 				"short_basket_name")
-			offer_item.queryset = OfferItem.objects.filter(
+			offer_item.queryset = OfferItem.on_site.filter(
 				permanence__status = PERMANENCE_OPEN).order_by(
 				"permanence__distribution_date",
 				"permanence__short_name",
 				# "product__site_producer__short_profile_name",
 				# "product__department_for_customer",
-				# "product__position_into_department_for_customer",
 				"product__long_name")
 		return form
 
@@ -858,23 +852,23 @@ class BankAccountAdmin(admin.ModelAdmin):
 				site_customer = form.base_fields["site_customer"]
 				site_customer.widget.can_add_related = False
 				site_customer.empty_label = None
-				site_customer.queryset = SiteCustomer.objects.id(
+				site_customer.queryset = SiteCustomer.on_site.id(
 					obj.site_customer.id)
 			if obj.site_producer:
 				site_producer = form.base_fields["site_producer"]
 				site_producer.widget.can_add_related = False
 				site_producer.empty_label = None
-				site_producer.queryset = SiteProducer.objects.id(
+				site_producer.queryset = SiteProducer.on_site.id(
 					obj.site_producer.id)
 		else:
 			site_producer = form.base_fields["site_producer"]
 			site_customer = form.base_fields["site_customer"]
 			site_producer.widget.can_add_related = False
 			site_customer.widget.can_add_related = False
-			site_producer.queryset = SiteProducer.objects.all(
+			site_producer.queryset = SiteProducer.on_site.all(
 				).not_the_buyinggroup().active().order_by(
 	 			"short_profile_name")
-			site_customer.queryset = SiteCustomer.objects.all(
+			site_customer.queryset = SiteCustomer.on_site.all(
 				).not_the_buyinggroup().active().order_by(
 	 			"short_basket_name")
  		return form
