@@ -114,8 +114,6 @@ class SortableAdminMixin(SortableAdminBase):
     def move_for_duplicate(self, obj):
         startorder = getattr(obj, self.default_order_field)
         finalorder = self.get_max_order()
-        print(startorder)
-        print(finalorder)
         move_filter = {
             '%s__gte' % self.default_order_field: startorder,
             '%s__lte' % self.default_order_field: finalorder,

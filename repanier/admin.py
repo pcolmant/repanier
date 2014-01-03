@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
+import re
+
 from const import *
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.core import validators
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.models import Q, F
 from django import forms
 
@@ -60,7 +66,7 @@ class ProductFilterBySiteProducer(SimpleListFilter):
 		"""
 		# This list is a collection of site producer.id, .name
 		return [(c.id, c.short_profile_name) for c in 
-			SiteProducer.on_site.all().active().with_login()
+			SiteProducer.objects.all().active().with_login()
 		 	]
 
 	def queryset(self, request, queryset):
@@ -83,7 +89,7 @@ class ProductFilterByDepartmentForProducer(SimpleListFilter):
 	def lookups(self, request, model_admin):
 		# This list is a collection of site department.id, .name
 		return [(c.id, c.short_name) for c in 
-			LUT_DepartmentForProducer.on_site.all().active()
+			LUT_DepartmentForProducer.objects.all().active()
 		 	]
 
 	def queryset(self, request, queryset):
@@ -163,32 +169,135 @@ class LUT_PermanenceRoleAdmin(admin.ModelAdmin):
 
 admin.site.register(LUT_PermanenceRole, LUT_PermanenceRoleAdmin)
 
+# Custom User
+class UserDataForm(forms.ModelForm):
+
+	username = forms.CharField(label=_('Username'), max_length=30, 
+			help_text=_(
+				'Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters'
+			),
+			validators=[
+				validators.RegexValidator(re.compile('^[\w.@+-]+$'), _('Enter a valid username.'), 'invalid')
+			])
+	password1 = forms.CharField(label=_('Password1'), max_length=128, required=False)
+	password2 = forms.CharField(label=_('Password2'), max_length=128, required=False)
+	email = forms.EmailField(label=_('Email'))
+	first_name = forms.CharField(label=_('First_name'), max_length=30)
+	last_name = forms.CharField(label=_('Last_name'), max_length=30)
+
+	def __init__(self, *args, **kwargs):
+		super(UserDataForm, self).__init__(*args, **kwargs)
+		# Here we will redefine our test field.
+		# self.base_fields['username'] = forms.CharField(label=_('Username'), max_length=30, 
+		# 	help_text=_('Required. 30 characters or fewer. Letters, numbers and '
+  #                    '@/./+/-/_ characters')
+		# 	,
+		# 	validators=[
+		# 		validators.RegexValidator(re.compile('^[\w.@+-]+$'), _('Enter a valid username.'), 'invalid')
+		# 	])
+		# self.base_fields['password1'] = forms.CharField(label=_('Password1'), max_length=128, required=False)
+		# self.base_fields['password2'] = forms.CharField(label=_('Password2'), max_length=128, required=False)
+		# self.base_fields['email'] = forms.EmailField(label=_('Email'))
+		# self.base_fields['first_name'] = forms.CharField(label=_('First_name'), max_length=30)
+		# self.base_fields['last_name'] = forms.CharField(label=_('Last_name'), max_length=30)
+
+	def clean(self):
+		# Check that the two password entries match
+		password1 = self.cleaned_data.get("password1")
+		password2 = self.cleaned_data.get("password2")
+		if password1 and password2 and password1 != password2:
+			raise forms.ValidationError(_("Passwords must match"))
+		username = self.cleaned_data.get("username")
+		if not username:
+			raise forms.ValidationError(_('The given username must be set'))
+		email = self.cleaned_data.get("email")
+		if not email:
+			raise forms.ValidationError(_('The given email must be set'))
+		user=None
+		email = User.objects.normalize_email(email)
+		try:
+			user = User.objects.get(email=email)
+		except User.DoesNotExist:
+			pass
+		if user != None and username!=user.username:
+			raise forms.ValidationError(_('The given email exist already and is used by another user'))
+		super(UserDataForm, self).clean()
+		return self.cleaned_data
+
+	def save(self, *args, **kwargs):
+		change = (self.instance.id != None)
+		username = self.data['username']
+		email = self.data['email']
+		password = self.data['password1']
+		if change==False and not password:
+			raise forms.ValidationError(_('The given password must be set'))
+		first_name = self.data['first_name']
+		last_name = self.data['last_name']
+		user = None
+		if change:
+			user=User.objects.get(id=self.instance.user.id)
+			user.username = username
+			user.email = email
+			user.first_name = first_name
+			user.last_name = last_name
+			if password:
+				user.set_password(password)
+			user.save()
+		else:
+			now = timezone.now()
+			user = User.model(username=username, email=email,
+								is_staff=False, is_active=True, is_superuser=False,
+								last_login=now, date_joined=now)
+			user.set_password(password)
+			user.save()
+		if  self.instance.id:
+			super(UserDataForm, self).save(*args, **kwargs)
+		return self.instance
+
 # Producer
-class ProducerAdmin(admin.ModelAdmin):
-	fields = ['user', 'phone1', 'phone2', 'fax', 'address',
-	'bank_account', 'is_active']
+class ProducerWithUserDataForm(UserDataForm):
+
+	class Meta:
+		model = Producer
+
+class ProducerWithUserDataAdmin(admin.ModelAdmin):
+	form = ProducerWithUserDataForm
+	fields = ['username', 'password1', 'password2', 'email', 'first_name', 
+		'last_name', 'phone1', 'phone2', 'fax', 'address',
+		'bank_account', 'is_active']
 	list_display = ('__unicode__', 'phone1', 'address', 'is_active')
 	list_max_show_all = True
 
 	def get_form(self,request, obj=None, **kwargs):
-		form = super(ProducerAdmin,self).get_form(request, obj, **kwargs)
-		user = form.base_fields["user"]
-		user.widget.can_add_related = False
-
+		form = super(ProducerWithUserDataAdmin,self).get_form(request, obj, **kwargs)
+		username = form.base_fields['username']
+		password1 = form.base_fields['password1']
+		password1.initial = ''
+		password2 = form.base_fields['password2']
+		password2.initial = ''
+		email = form.base_fields['email']
+		first_name= form.base_fields['first_name']
+		last_name= form.base_fields['last_name']
 		if obj:
-			# Don't allow to change the producer/login
-			user.empty_label = None
-			user.initial = obj.user
-			user.queryset = get_user_model().objects.filter(id = obj.user.id)
+			user_model = get_user_model()
+			user = user_model.objects.get(id=obj.user.id)
+			username.initial = getattr(user, user_model.USERNAME_FIELD)
+			# username.widget.attrs['readonly'] = True
+			email.initial = user.email
+			first_name.initial = user.first_name
+			last_name.initial = user.last_name
 		else:
-			# Don't allow to add the same user twice
-			user.queryset = get_user_model().objects.filter(
-				is_active=True, is_superuser = False, is_staff = False,
-				customer = None, staff = None, producer = None).order_by(
-				get_user_model().USERNAME_FIELD)
+			# Clean data displayed
+			username.initial = ''
+			# username.widget.attrs['readonly'] = False
+			password1.initial = ''
+			password2.initial = ''
+			email.initial = ''
+			first_name.initial = ''
+			last_name.initial = ''
 		return form
 
-admin.site.register(Producer, ProducerAdmin)
+admin.site.register(Producer, ProducerWithUserDataAdmin)
 
 class SiteProducerAdmin(admin.ModelAdmin):
 	fields = ['producer', 'short_profile_name', 'long_profile_name', 'memo',
@@ -241,29 +350,16 @@ class SiteProducerAdmin(admin.ModelAdmin):
 admin.site.register(SiteProducer, SiteProducerAdmin)
 
 # Customer
-class CustomerWithUserDataForm(forms.ModelForm):
-	username = forms.Field()
-	password = forms.Field()
-	email = forms.Field()
-	first_name = forms.Field()
-	last_name = forms.Field()
+class CustomerWithUserDataForm(UserDataForm):
 
 	class Meta:
 		model = Customer
 
-	def __init__(self, *args, **kwargs):
-		super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
-		# Here we will redefine our test field.
-		self.base_fields['username'] = forms.CharField(label=_('username'))
-		self.base_fields['password'] = forms.CharField(label=_('password'))
-		self.base_fields['email'] = forms.CharField(label=_('email'))
-		self.base_fields['first_name'] = forms.CharField(label=_('first_name'))
-		self.base_fields['last_name'] = forms.CharField(label=_('last_name'))
-
-
 class CustomerWithUserDataAdmin(admin.ModelAdmin):
 	form = CustomerWithUserDataForm
-	fields = ['username', 'password', 'email', 'first_name', 'last_name', 'phone1', 'phone2', 'address', 'is_active']
+	fields = ['username', 'password1', 'password2', 'email', 'first_name', 
+		'last_name', 'phone1', 'phone2', 'address',
+		'is_active']
 	list_display = ('__unicode__', 'phone1', 'phone2', 'address', 'is_active')
 	list_max_show_all = True
 
@@ -271,22 +367,37 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
 		form = super(CustomerWithUserDataAdmin,self).get_form(request, obj, **kwargs)
 		# https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#django.contrib.auth.models.AbstractBaseUser
 		username = form.base_fields['username']
-		password = form.base_fields['password']
+		password1 = form.base_fields['password1']
+		password1.initial = ''
+		password2 = form.base_fields['password2']
+		password2.initial = ''
 		email = form.base_fields['email']
 		first_name= form.base_fields['first_name']
 		last_name= form.base_fields['last_name']
-		user_model = get_user_model()
-
 		if obj:
+			print("obj")
+			user_model = get_user_model()
 			user = user_model.objects.get(id=obj.user.id)
 			username.initial = getattr(user, user_model.USERNAME_FIELD)
-			username.widget.attrs['readonly'] = True
-			password.initial = user.password
-			password.widget.attrs['readonly'] = True
+			# username.widget.attrs['readonly'] = False
 			email.initial = user.email
 			first_name.initial = user.first_name
 			last_name.initial = user.last_name
+		else:
+			# Clean data displayed
+			username.initial = ''
+			# username.widget.attrs['readonly'] = False
+			password1.initial = ''
+			password2.initial = ''
+			email.initial = ''
+			first_name.initial = ''
+			last_name.initial = ''
 		return form
+
+	# def save_model(self, request, obj, form, change):
+	# 	super(CustomerWithUserDataAdmin,self).save_model(
+	# 		request, obj, form, change)
+
 
 admin.site.register(Customer, CustomerWithUserDataAdmin)
 
@@ -513,9 +624,9 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 			permanence.status=PERMANENCE_OPEN
 			site_producers_in_this_permanence = SiteProducer.objects.active.filter(
 				permanence=permanence)
-			for product in Product.on_site.active.is_selected_for_offer.filter(
+			for product in Product.objects.active.is_selected_for_offer.filter(
 				site_producer__in = site_producers_in_this_permanence):
-				offeritem_set=OfferItem.on_site.filter(
+				offeritem_set=OfferItem.objects.filter(
 					permanence=permanence,
 					product = product)[:1]
 				if offeritem_set:
@@ -645,7 +756,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 							purchase.site_customer.save()
 							purchase.is_recorded_on_site_customer = True
 						if not(purchase.is_recorded_on_site_producer):
-							bank_account_set = BankAccount.on_site.filter(
+							bank_account_set = BankAccount.objects.filter(
 								site_producer=purchase.site_producer, 
 								is_recorded_on_site_producer=False)
 							if bank_account_set:
@@ -769,17 +880,17 @@ class PurchaseAdmin(admin.ModelAdmin):
 
 		if obj:
 			site_customer.empty_label = None
-			site_customer.queryset = SiteCustomer.on_site.filter(
+			site_customer.queryset = SiteCustomer.objects.filter(
 				id = obj.site_customer.id)
 			offer_item.empty_label = None
-			offer_item.queryset = OfferItem.on_site.filter(
+			offer_item.queryset = OfferItem.objects.filter(
 				id = obj.offer_item.id)
 		else:
-			site_customer.queryset = SiteCustomer.on_site.filter(
+			site_customer.queryset = SiteCustomer.objects.filter(
 				site = settings.SITE_ID,
 				is_active = True).order_by(
 				"short_basket_name")
-			offer_item.queryset = OfferItem.on_site.filter(
+			offer_item.queryset = OfferItem.objects.filter(
 				permanence__status = PERMANENCE_OPEN).order_by(
 				"permanence__distribution_date",
 				"permanence__short_name",
@@ -852,23 +963,23 @@ class BankAccountAdmin(admin.ModelAdmin):
 				site_customer = form.base_fields["site_customer"]
 				site_customer.widget.can_add_related = False
 				site_customer.empty_label = None
-				site_customer.queryset = SiteCustomer.on_site.id(
+				site_customer.queryset = SiteCustomer.objects.id(
 					obj.site_customer.id)
 			if obj.site_producer:
 				site_producer = form.base_fields["site_producer"]
 				site_producer.widget.can_add_related = False
 				site_producer.empty_label = None
-				site_producer.queryset = SiteProducer.on_site.id(
+				site_producer.queryset = SiteProducer.objects.id(
 					obj.site_producer.id)
 		else:
 			site_producer = form.base_fields["site_producer"]
 			site_customer = form.base_fields["site_customer"]
 			site_producer.widget.can_add_related = False
 			site_customer.widget.can_add_related = False
-			site_producer.queryset = SiteProducer.on_site.all(
+			site_producer.queryset = SiteProducer.objects.all(
 				).not_the_buyinggroup().active().order_by(
 	 			"short_profile_name")
-			site_customer.queryset = SiteCustomer.on_site.all(
+			site_customer.queryset = SiteCustomer.objects.all(
 				).not_the_buyinggroup().active().order_by(
 	 			"short_basket_name")
  		return form

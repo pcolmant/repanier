@@ -99,13 +99,13 @@ When needed, upgrade the DB with south for a new version of specific INSTALLED_A
 .. code:: bash
 
 	cd ~/production/mysite/
-	python manage.py schemamigration repanier --auto --settings=mysite.ptidej_settings
-	python manage.py migrate repanier --settings=mysite.ptidej_settings
+	python manage.py schemamigration repanier --auto --settings=mysite.repanier_settings
+	python manage.py migrate repanier --settings=mysite.repanier_settings
 
 If needed, check what South has done
 
 .. code:: bash
 
 	cd ~/production/mysite/
-	python manage.py migrate --list --settings=mysite.ptidej_settings
+	python manage.py migrate --list --settings=mysite.repanier_settings
 

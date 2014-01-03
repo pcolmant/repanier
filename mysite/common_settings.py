@@ -94,6 +94,7 @@ INSTALLED_APPS = (
     'cmsplugin_filer_teaser',
     'cmsplugin_filer_video',
     'reversion',
+    'adminsortable',
 ) 
 
 CMS_PERMISSION = False # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware' 
