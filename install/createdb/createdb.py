@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.sites.models import Site
 from repanier.models import Customer, SiteCustomer
 from repanier.models import Producer, SiteProducer
-from repanier.models import Staff
+from repanier.models import SiteStaff
 from repanier.models import Product
 from repanier.models import LUT_ProductionMode
 from repanier.models import LUT_DepartmentForCustomer
@@ -192,15 +192,15 @@ def add_all_staffs():
           group.user_set.add(user)
           customer_responsible = SiteCustomer.objects_without_filter.get(
             customer__user__username = row[7], site_id = int(row[0]))
-          staff_set = Staff.objects_without_filter.filter(user_id = user.id)[:1]
+          staff_set = SiteStaff.objects_without_filter.filter(user_id = user.id)[:1]
           if staff_set:
             for staff in staff_set:
-              staff.login_site_id = int(row[0])
+              staff.site_id = int(row[0])
               staff.customer_responsible_id = customer_responsible.id
               staff.save()
           else:
-            staff = Staff.objects.create(user_id = user.id,
-              login_site_id = int(row[0]),
+            staff = SiteStaff.objects.create(user_id = user.id,
+              site_id = int(row[0]),
               customer_responsible_id = customer_responsible.id,
               long_name = row[6], memo = row[6],
               is_active = True)
