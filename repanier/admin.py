@@ -7,6 +7,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -184,22 +185,11 @@ class UserDataForm(forms.ModelForm):
 	email = forms.EmailField(label=_('Email'))
 	first_name = forms.CharField(label=_('First_name'), max_length=30)
 	last_name = forms.CharField(label=_('Last_name'), max_length=30)
+	
 
 	def __init__(self, *args, **kwargs):
 		super(UserDataForm, self).__init__(*args, **kwargs)
-		# Here we will redefine our test field.
-		# self.base_fields['username'] = forms.CharField(label=_('Username'), max_length=30, 
-		# 	help_text=_('Required. 30 characters or fewer. Letters, numbers and '
-  #                    '@/./+/-/_ characters')
-		# 	,
-		# 	validators=[
-		# 		validators.RegexValidator(re.compile('^[\w.@+-]+$'), _('Enter a valid username.'), 'invalid')
-		# 	])
-		# self.base_fields['password1'] = forms.CharField(label=_('Password1'), max_length=128, required=False)
-		# self.base_fields['password2'] = forms.CharField(label=_('Password2'), max_length=128, required=False)
-		# self.base_fields['email'] = forms.EmailField(label=_('Email'))
-		# self.base_fields['first_name'] = forms.CharField(label=_('First_name'), max_length=30)
-		# self.base_fields['last_name'] = forms.CharField(label=_('Last_name'), max_length=30)
+		self.user = None
 
 	def clean(self):
 		# Check that the two password entries match
@@ -221,6 +211,16 @@ class UserDataForm(forms.ModelForm):
 			pass
 		if user != None and username!=user.username:
 			raise forms.ValidationError(_('The given email exist already and is used by another user'))
+		if self.fields['username'].initial=='':
+			if not password1:
+				raise forms.ValidationError(_('The given password must be set'))
+			user=None
+			try:
+				user = User.objects.get(username=username)
+			except User.DoesNotExist:
+				pass
+			if user != None:
+				raise forms.ValidationError(_('The given username exist already and is used by another user'))
 		super(UserDataForm, self).clean()
 		return self.cleaned_data
 
@@ -229,8 +229,6 @@ class UserDataForm(forms.ModelForm):
 		username = self.data['username']
 		email = self.data['email']
 		password = self.data['password1']
-		if change==False and not password:
-			raise forms.ValidationError(_('The given password must be set'))
 		first_name = self.data['first_name']
 		last_name = self.data['last_name']
 		user = None
@@ -244,14 +242,11 @@ class UserDataForm(forms.ModelForm):
 				user.set_password(password)
 			user.save()
 		else:
-			now = timezone.now()
-			user = User.model(username=username, email=email,
-								is_staff=False, is_active=True, is_superuser=False,
-								last_login=now, date_joined=now)
-			user.set_password(password)
-			user.save()
-		if  self.instance.id:
-			super(UserDataForm, self).save(*args, **kwargs)
+			user = User.objects.create_user(
+				username=username, email=email, password=password,
+				first_name=first_name, last_name=last_name)
+		self.user = user
+		super(UserDataForm, self).save(*args, **kwargs)
 		return self.instance
 
 # Producer
@@ -297,7 +292,13 @@ class ProducerWithUserDataAdmin(admin.ModelAdmin):
 			last_name.initial = ''
 		return form
 
+	def save_model(self, request, obj, form, change):
+		obj.user = form.user
+		super(ProducerWithUserDataAdmin,self).save_model(
+			request, obj, form, change)
+
 admin.site.register(Producer, ProducerWithUserDataAdmin)
+
 
 class SiteProducerAdmin(admin.ModelAdmin):
 	fields = ['producer', 'short_profile_name', 'long_profile_name', 'memo',
@@ -394,12 +395,13 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
 			last_name.initial = ''
 		return form
 
-	# def save_model(self, request, obj, form, change):
-	# 	super(CustomerWithUserDataAdmin,self).save_model(
-	# 		request, obj, form, change)
-
+	def save_model(self, request, obj, form, change):
+		obj.user = form.user
+		super(CustomerWithUserDataAdmin,self).save_model(
+			request, obj, form, change)
 
 admin.site.register(Customer, CustomerWithUserDataAdmin)
+
 
 class SiteCustomerAdmin(admin.ModelAdmin):
 	fields = ('customer', 'short_basket_name', 'long_basket_name',
@@ -553,7 +555,7 @@ class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 			production_mode.empty_label = None
 		site_producer.queryset = SiteProducer.objects.all(
 			).active().with_login()
-		department_for_producer.queryset = LUT_DepartmentForProducer.objtects.all(
+		department_for_producer.queryset = LUT_DepartmentForProducer.objects.all(
 			).active()
 		department_for_customer.queryset = LUT_DepartmentForCustomer.objects.all(
 			).active()
