@@ -26,7 +26,7 @@ from repanier.models import Producer
 from repanier.models import SiteProducer
 from repanier.models import Customer
 from repanier.models import SiteCustomer
-from repanier.models import Staff
+from repanier.models import SiteStaff
 from repanier.models import Product
 from repanier.models import PermanenceBoard
 from repanier.models import OfferItem
@@ -185,7 +185,6 @@ class UserDataForm(forms.ModelForm):
 	email = forms.EmailField(label=_('Email'))
 	first_name = forms.CharField(label=_('First_name'), max_length=30)
 	last_name = forms.CharField(label=_('Last_name'), max_length=30)
-	
 
 	def __init__(self, *args, **kwargs):
 		super(UserDataForm, self).__init__(*args, **kwargs)
@@ -221,10 +220,21 @@ class UserDataForm(forms.ModelForm):
 				pass
 			if user != None:
 				raise forms.ValidationError(_('The given username exist already and is used by another user'))
+		if not self['first_name'].html_name in self.data:
+			if 'first_name' in self._errors:
+				del self._errors['first_name']
+			self.data['first_name'] = self.fields['first_name'].initial
+			# self.cleaned_data['first_name'] = self.fields['first_name'].initial
+		if not self['last_name'].html_name in self.data:
+			if 'last_name' in self._errors:
+				del self._errors['last_name']
+			self.data['last_name'] = self.fields['last_name'].initial
+			# self.cleaned_data['last_name'] = self.fields['last_name'].initial
 		super(UserDataForm, self).clean()
 		return self.cleaned_data
 
 	def save(self, *args, **kwargs):
+		super(UserDataForm, self).save(*args, **kwargs)
 		change = (self.instance.id != None)
 		username = self.data['username']
 		email = self.data['email']
@@ -239,6 +249,8 @@ class UserDataForm(forms.ModelForm):
 			user.first_name = first_name
 			user.last_name = last_name
 			if password:
+				print(self.instance.user.id)
+				print(password)
 				user.set_password(password)
 			user.save()
 		else:
@@ -246,7 +258,6 @@ class UserDataForm(forms.ModelForm):
 				username=username, email=email, password=password,
 				first_name=first_name, last_name=last_name)
 		self.user = user
-		super(UserDataForm, self).save(*args, **kwargs)
 		return self.instance
 
 # Producer
@@ -330,7 +341,7 @@ class SiteProducerAdmin(admin.ModelAdmin):
 	def get_form(self,request, obj=None, **kwargs):
 		form = super(SiteProducerAdmin,self).get_form(request, obj, **kwargs)
 		producer = form.base_fields["producer"]
-		producer.widget.can_add_related = False
+		# producer.widget.can_add_related = False
 
 		if obj:
 			# Don't allow to change the producer/login
@@ -419,7 +430,7 @@ class SiteCustomerAdmin(admin.ModelAdmin):
 	def get_form(self,request, obj=None, **kwargs):
 		form = super(SiteCustomerAdmin,self).get_form(request, obj, **kwargs)
 		customer = form.base_fields["customer"]
-		customer.widget.can_add_related = False
+		# customer.widget.can_add_related = False
 
 		if obj:
 			# Don't allow to change the customer/login
@@ -439,44 +450,65 @@ class SiteCustomerAdmin(admin.ModelAdmin):
 	# 	return qs.filter(site=settings.SITE_ID)
 admin.site.register(SiteCustomer, SiteCustomerAdmin)
 
-# Staff
-class StaffAdmin(admin.ModelAdmin):
-	fields = ('user', 'customer_responsible','long_name', 'memo', 'is_active')
-	exclude = ['login_site',]
-	list_display = ('user', 'customer_responsible','long_name', 'is_active')
+# SiteStaff
+class SiteStaffWithUserDataForm(UserDataForm):
+
+	class Meta:
+		model = SiteStaff
+
+class SiteStaffWithUserDataAdmin(admin.ModelAdmin):
+	form = SiteStaffWithUserDataForm
+	fields = ['username', 'password1', 'password2', 'email', 
+		'customer_responsible','long_name', 'memo', 'is_active']
+	exclude = ['site',]
+	list_display = ('__unicode__', 'customer_responsible', 'get_sitecustomer_phone1', 'is_active')
 	list_max_show_all = True
-	ordering = ('user',)
 
 	def get_form(self,request, obj=None, **kwargs):
-		form = super(StaffAdmin,self).get_form(request, obj, **kwargs)
+		form = super(SiteStaffWithUserDataAdmin,self).get_form(request, obj, **kwargs)
+		username = form.base_fields['username']
+		password1 = form.base_fields['password1']
+		password1.initial = ''
+		password2 = form.base_fields['password2']
+		password2.initial = ''
+		email = form.base_fields['email']
+		first_name= form.base_fields['first_name']
+		last_name= form.base_fields['last_name']
 		customer_responsible = form.base_fields["customer_responsible"]
 		customer_responsible.widget.can_add_related = False
-		user = form.base_fields["user"]
 
 		if obj:
-			user.empty_label = None
-			user.initial = obj.user
-			user.queryset = get_user_model().objects.filter(
-				id = obj.user.id)
+			user_model = get_user_model()
+			user = user_model.objects.get(id=obj.user.id)
+			username.initial = getattr(user, user_model.USERNAME_FIELD)
+			# username.widget.attrs['readonly'] = True
+			email.initial = user.email
+			first_name.initial = user.first_name
+			last_name.initial = user.last_name
 			customer_responsible.empty_label = None
 			customer_responsible.initial = obj.customer_responsible
 		else:
-			# Give only django admin acces to eligible (is_staff) members
-			# Don't allow to add the same user twice
-			user.queryset = get_user_model().objects.filter(
-				is_active=True, is_superuser = False, is_staff = False,
-				customer = None, staff = None, producer = None).order_by(
-				get_user_model().USERNAME_FIELD)
+			# Clean data displayed
+			username.initial = ''
+			# username.widget.attrs['readonly'] = False
+			password1.initial = ''
+			password2.initial = ''
+			email.initial = ''
+			first_name.initial = 'N/A'
+			last_name.initial = 'N/A'
  		customer_responsible.queryset = SiteCustomer.objects.all(
  			).active().with_login().order_by(
  			"short_basket_name")
 		return form
 
-	# def queryset(self, request):
-	# 	qs = super(StaffAdmin, self).queryset(request)
-	# 	return qs.filter(login_site=settings.SITE_ID)
+	def save_model(self, request, obj, form, change):
+		obj.user = form.user
+		form.user.is_staff = True
+		form.user.save()
+		super(SiteStaffWithUserDataAdmin,self).save_model(
+			request, obj, form, change)
 
-admin.site.register(Staff, StaffAdmin)
+admin.site.register(SiteStaff, SiteStaffWithUserDataAdmin)
 
 class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 	list_display = ('site_producer',
@@ -506,21 +538,16 @@ class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 	list_filter = ('is_active',
 		ProductFilterBySiteProducer, 
 		ProductFilterByDepartmentForProducer,)
-	actions = [
-		'select_for_offer', 'unselect_for_offer',
-		'duplicate_product'
-	]
+	actions = ['flip_flop_select_for_offer_status', 'duplicate_product'	]
 
-	def select_for_offer(self, request, queryset):
-		queryset.active().is_not_selected_for_offer().update(is_into_offer=True)
-
-	select_for_offer.short_description = _('select for offer')
-
-	def unselect_for_offer(self, request, queryset):
-		# Don't filer "active()"
+	def flip_flop_select_for_offer_status(self, request, queryset):
+		queryset.active().is_not_selected_for_offer().update(is_into_offer=None)
 		queryset.is_selected_for_offer().update(is_into_offer=False)
+		queryset.is_waiting_to_be_selected_for_offer().update(is_into_offer=True)
 
-	unselect_for_offer.short_description = _('unselect for offer')
+	flip_flop_select_for_offer_status.short_description = _(
+		'flip_flop_select_for_offer_status for offer')
+
 	def duplicate_product(self, request, queryset):
 		for product in queryset:
 			super(ProductAdmin,self).move_for_duplicate(product)
@@ -610,7 +637,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
  	filter_horizontal = ('producers',)
 	inlines = [PermanenceBoardInline, OfferItemInline]
 	date_hierarchy = 'distribution_date'
-	list_display = ('__unicode__', 'get_producers', 'get_sitecustomers', 'get_board', 'status')
+	list_display = ('__unicode__', 'get_siteproducers', 'get_sitecustomers', 'get_board', 'status')
 	ordering = ('distribution_date',)
 	actions = ['planify', 'open_orders','close_orders', 
 		'send_orders_to_producers', 'back_to_previous_status'
@@ -624,10 +651,11 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 	def open_orders(self, request, queryset):
 		for permanence in queryset.filter(status=PERMANENCE_PLANIFIED):
 			permanence.status=PERMANENCE_OPEN
-			site_producers_in_this_permanence = SiteProducer.objects.active.filter(
-				permanence=permanence)
-			for product in Product.objects.active.is_selected_for_offer.filter(
-				site_producer__in = site_producers_in_this_permanence):
+			site_producers_in_this_permanence = SiteProducer.objects.filter(
+				permanence=permanence).active()
+			for product in Product.objects.filter(
+				site_producer__in = site_producers_in_this_permanence
+				).active().is_selected_for_offer():
 				offeritem_set=OfferItem.objects.filter(
 					permanence=permanence,
 					product = product)[:1]
@@ -716,7 +744,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 	# inlines = [PermanenceBoardInline, DeliveryBoardInline]
 	inlines = [PermanenceBoardInline, OfferItemInline]
 	date_hierarchy = 'distribution_date'
-	list_display = ('__unicode__', 'get_producers', 'get_sitecustomers', 'get_board', 'status')
+	list_display = ('__unicode__', 'get_siteproducers', 'get_sitecustomers', 'get_board', 'status')
 	ordering = ('distribution_date',)
 	actions = ['orders_prepared', 'done','back_to_previous_status']
 

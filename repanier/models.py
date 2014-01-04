@@ -255,6 +255,8 @@ def site_producer_post_delete(sender, **kwargs):
 		site = Site.objects.get(id=settings.SITE_ID) 
 		group = Group.objects.get(name=site.domain) 
 		group.user_set.remove(site_producer.producer.user)
+		user = User.objects.get(id=site_producer.producer.user.id)
+		user.delete()
 
 class CustomerQuerySet(QuerySet):
 	def active(self):
@@ -375,23 +377,25 @@ def site_customer_post_delete(sender, **kwargs):
 		site = Site.objects.get(id=settings.SITE_ID) 
 		group = Group.objects.get(name=site.domain) 
 		group.user_set.remove(site_customer.customer.user)
+		user = User.objects.get(id=site_customer.customer.user.id)
+		user.delete()
 
-class StaffQuerySet(QuerySet):
+class SiteStaffQuerySet(QuerySet):
 	def active(self):
 		return self.filter(is_active=True)
 
 	def id(self, id):
 		return self.filter(id = id)
 
-class StaffManager(models.Manager):
+class SiteStaffManager(models.Manager):
     def get_queryset(self):
         return SiteProducerQuerySet(self.model, using=self._db).filter(
-        	login_site=settings.SITE_ID)
+        	site=settings.SITE_ID)
 
-class Staff(models.Model):
+class SiteStaff(models.Model):
 	user = models.OneToOneField(
 		settings.AUTH_USER_MODEL, verbose_name=_("login"))
-	login_site = models.ForeignKey(
+	site = models.ForeignKey(
 		Site, verbose_name=_("site"), default=settings.SITE_ID)
 	customer_responsible =  models.ForeignKey(
 		SiteCustomer, verbose_name=_("customer_responsible"),
@@ -401,8 +405,13 @@ class Staff(models.Model):
 	memo = HTMLField(
 		_("memo"), blank=True)
 	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = StaffManager()
+	objects = SiteStaffManager()
 	objects_without_filter = models.Manager()
+
+	def get_sitecustomer_phone1(self):
+		return self.customer_responsible.customer.phone1
+	get_sitecustomer_phone1.short_description=(_("phone1"))
+	get_sitecustomer_phone1.allow_tags = False
 
 	def __unicode__(self):
 		return self.long_name
@@ -410,7 +419,28 @@ class Staff(models.Model):
 	class Meta:
 		verbose_name = _("staff member")
 		verbose_name_plural = _("staff members")
-		ordering = ("customer_responsible__short_basket_name",)
+		ordering = ("long_name",)
+		# ordering = ("customer_responsible__short_basket_name",)
+
+
+@receiver(post_save, sender=SiteStaff)
+def site_staff_post_save(sender, **kwargs):
+	# give access to the staff to private documents for the site
+	site_staff = kwargs['instance']
+	site = Site.objects.get(id=settings.SITE_ID) 
+	group = Group.objects.get(name=site.domain)
+	group.user_set.add(site_staff.user)
+
+@receiver(post_delete, sender=SiteStaff)
+def site_staff_post_delete(sender, **kwargs):
+	# remove access to the staff to private documents for the site
+	site_staff = kwargs['instance']
+	site = Site.objects.get(id=settings.SITE_ID) 
+	group = Group.objects.get(name=site.domain) 
+	group.user_set.remove(site_staff.user)
+	user = User.objects.get(id=site_staff.user.id)
+	user.delete()
+
 
 class ProductQuerySet(QuerySet):
 	def active(self):
@@ -427,6 +457,9 @@ class ProductQuerySet(QuerySet):
 
 	def is_selected_for_offer(self):
 		return self.filter(is_into_offer=True)
+
+	def is_waiting_to_be_selected_for_offer(self):
+		return self.filter(is_into_offer=None)
 
 class ProductManager(models.Manager):
     def get_queryset(self):
@@ -501,7 +534,7 @@ class Product(models.Model):
 
 	permanences = models.ManyToManyField(
 		'Permanence', through='OfferItem', null=True, blank=True)
-	is_into_offer = models.BooleanField(_("is_into_offer"))
+	is_into_offer = models.NullBooleanField(_("is_into_offer"))
 	is_active = models.BooleanField(_("is_active"), default=True)
 	is_created_on = models.DateTimeField(
 		_("is_cretaed_on"), auto_now_add = True, blank=True)
@@ -558,18 +591,26 @@ class Permanence(models.Model):
 	objects = PermanenceManager()
 	objects_without_filter = models.Manager()
 
-	def get_producers(self):
+	def get_siteproducers(self):
 		if self.id:
-			changelist_url = urlresolvers.reverse(
-			'admin:repanier_productselected_changelist', 
-			)
-			return u", ".join([u'<a href="' + changelist_url + \
-				'?site_producer=' + str(p.id) + '">' + \
-#				'?site_producer=' + str(p.id) + '" target="_blank">' + \
-				 p.short_profile_name + '</a>' for p in self.producers.all()])
+			if self.status==PERMANENCE_PLANIFIED:
+				changelist_url = urlresolvers.reverse(
+				'admin:repanier_product_changelist', 
+				)
+				return u", ".join([u'<a href="' + changelist_url + \
+					'?site_producer=' + str(p.id) + '">' + \
+	#				'?site_producer=' + str(p.id) + '" target="_blank">' + \
+					 p.short_profile_name + '</a>' for p in self.producers.all()])
+			else:
+				change_url = urlresolvers.reverse(
+					'admin:repanier_permanenceinpreparation_change', 
+					args=(self.id,)
+					)
+				label = unicode(_("the offers can't be modified any more"))
+				return '<a href="' + change_url + '">'  + "the offers can't be modified any more" + '</a>'
 		return u''
-	get_producers.short_description=(_("producers in this permanence"))
-	get_producers.allow_tags = True
+	get_siteproducers.short_description=(_("producers in this permanence"))
+	get_siteproducers.allow_tags = True
 
 	def get_sitecustomers(self):
 		if self.id:
