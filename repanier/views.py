@@ -15,7 +15,7 @@ from django.template import RequestContext
 from repanier.models import OfferItem
 from repanier.models import Permanence
 from repanier.models import SiteProducer
-from repanier.forms import ContactForm, ContactFormAjax, OrderForm
+from repanier.forms import ContactForm, ContactFormAjax, OrderForm, OrderTestForm
 
 def render_response(req, *args, **kwargs):
   # For csrf :  http://lincolnloop.com/blog/2008/may/10/getting-requestcontext-your-templates/
@@ -62,27 +62,30 @@ from django.http import Http404
 
 class OrderView(FormView):
   template_name = 'repanier/order_form.html'
-  form_class = OrderForm
+  form_class = OrderTestForm
   success_url = '/thanks/'
 
   def get_context_data(self, **kwargs):
     context = super(OrderView,self).get_context_data(**kwargs)
-    my_permanence = get_object_or_404(Permanence, pk = kwargs['permanence_id'])
-    if my_permanence.status <> PERMANENCE_OPEN:
-      raise Http404
-    if self.request.user.is_anonymous():
-      raise Http404
     if not self.request.user.customer:
       raise Http404
-    if my_permanence.site_id <> settings.SITE_ID:
+    permanence = get_object_or_404(Permanence, pk = kwargs['permanence_id'])
+    if permanence.site_id <> settings.SITE_ID:
       raise Http404
+    if permanence.status <> PERMANENCE_OPEN:
+      raise Http404
+
     # https://docs.djangoproject.com/en/dev/topics/http/shortcuts/
     # https://docs.djangoproject.com/en/dev/topics/class-based-views/generic-display/#dynamic-filtering
     context['email'] = 'ask.it@to.me'
-    context['permanence_memo'] = my_permanence.memo
-    context['siteproducer_list'] = SiteProducer.objects.all().filter(
-      permanence = my_permanence
-      )
+    context['permanence_memo'] = permanence.memo
+    siteproducer_set = SiteProducer.objects.all().filter(permanence = permanence)
+    context['siteproducer_set'] = siteproducer_set
+    offeritem_set = OfferItem.objects.all().filter(
+          permanence = permanence
+          ).order_by('product__site_producer__short_profile_name', 
+          'product__department_for_customer__short_name', 'product__long_name')
+    context['offeritem_set'] = offeritem_set
     return context
 
   def get(self, request, *args, **kwargs):
@@ -96,6 +99,46 @@ class OrderView(FormView):
     # This method is called when valid form data has been POSTed.
     # It should return an HttpResponse.
     return super(OrderView, self).form_valid(form)
+
+class OrderTestView(FormView):
+  template_name = 'repanier/order_test_form.html'
+  form_class = OrderTestForm
+  success_url = '/thanks/'
+
+  def get_context_data(self, **kwargs):
+    context = super(OrderTestView,self).get_context_data(**kwargs)
+    if not self.request.user.customer:
+      raise Http404
+    permanence = get_object_or_404(Permanence, pk = kwargs['permanence_id'])
+    if permanence.site_id <> settings.SITE_ID:
+      raise Http404
+    if permanence.status <> PERMANENCE_OPEN:
+      raise Http404
+
+    # https://docs.djangoproject.com/en/dev/topics/http/shortcuts/
+    # https://docs.djangoproject.com/en/dev/topics/class-based-views/generic-display/#dynamic-filtering
+    context['email'] = 'ask.it@to.me'
+    context['permanence_memo'] = permanence.memo
+    siteproducer_set = SiteProducer.objects.all().filter(permanence = permanence)
+    context['siteproducer_set'] = siteproducer_set
+    offeritem_set = OfferItem.objects.all().filter(
+          permanence = permanence
+          ).order_by('product__site_producer__short_profile_name', 
+          'product__department_for_customer__short_name', 'product__long_name')
+    context['offeritem_set'] = offeritem_set
+    return context
+
+  def get(self, request, *args, **kwargs):
+    self.object = None
+    form_class = self.get_form_class()
+    form = self.get_form(self.form_class)
+    context = self.get_context_data(form=form, **kwargs)
+    return self.render_to_response(context)
+
+  def form_valid(self, form):
+    # This method is called when valid form data has been POSTed.
+    # It should return an HttpResponse.
+    return super(OrderTestView, self).form_valid(form)
 
 # class PreparationView(View):
 

@@ -36,15 +36,15 @@ from repanier.models import Purchase
 from repanier.models import BankAccount
 
 
-import django
-class LocalizedModelForm(forms.ModelForm):
-    def __new__(cls, *args, **kwargs):
-        new_class = super(LocalizedModelForm, cls).__new__(cls, *args, **kwargs)
-        for field in new_class.base_fields.values():
-            if isinstance(field, django.forms.DecimalField):
-                field.localize = True
-                field.widget.is_localized = True
-        return new_class
+# import django
+# class LocalizedModelForm(forms.ModelForm):
+#     def __new__(cls, *args, **kwargs):
+#         new_class = super(LocalizedModelForm, cls).__new__(cls, *args, **kwargs)
+#         for field in new_class.base_fields.values():
+#             if isinstance(field, django.forms.DecimalField):
+#                 field.localize = True
+#                 field.widget.is_localized = True
+#         return new_class
 
 # Filters in the right sidebar of the change list page of the admin
 from django.contrib.admin import SimpleListFilter
@@ -190,46 +190,58 @@ class UserDataForm(forms.ModelForm):
 		super(UserDataForm, self).__init__(*args, **kwargs)
 		self.user = None
 
+	def error(self,field, msg):
+		if field not in self._errors:
+			self._errors[field]= self.error_class([msg])
+
 	def clean(self):
-		# Check that the two password entries match
+		# The SiteStaff has no first_name or last_name because it's a function with login/pwd.
+		# A SiteCustomer with a first_name and last_name is responsible of this funcition. 
+		if not self['first_name'].html_name in self.data:
+			if 'first_name' in self._errors:
+				del self._errors['first_name']
+			self.data['first_name'] = self.fields['first_name'].initial
+		if not self['last_name'].html_name in self.data:
+			if 'last_name' in self._errors:
+				del self._errors['last_name']
+			self.data['last_name'] = self.fields['last_name'].initial
+		# Check that the password is set when it's a new user. 
 		password1 = self.cleaned_data.get("password1")
 		password2 = self.cleaned_data.get("password2")
+		initial_username = self.fields['username'].initial
+		if initial_username=='':
+			if not password1:
+				self.error('password1',_('The given password must be set'))
+		# Check that the two password entries match
 		if password1 and password2 and password1 != password2:
-			raise forms.ValidationError(_("Passwords must match"))
+			self.error('password1',_("Passwords must match"))
+		# Check that the user name is set. The required attribute is not a waranty
+		# that the browser hasn't removed it.
 		username = self.cleaned_data.get("username")
 		if not username:
-			raise forms.ValidationError(_('The given username must be set'))
+			self.error('username',_('The given username must be set'))
+		# Check that the email is set
 		email = self.cleaned_data.get("email")
 		if not email:
-			raise forms.ValidationError(_('The given email must be set'))
+			self.error('email',_('The given email must be set'))
+		# Check that the email is not already used
 		user=None
 		email = User.objects.normalize_email(email)
 		try:
 			user = User.objects.get(email=email)
 		except User.DoesNotExist:
 			pass
-		if user != None and username!=user.username:
-			raise forms.ValidationError(_('The given email exist already and is used by another user'))
-		if self.fields['username'].initial=='':
-			if not password1:
-				raise forms.ValidationError(_('The given password must be set'))
+		if user != None and initial_username!=user.username:
+			self.error('email',_('The given email is used by another user'))
+		# Check that the username is not already used
+		if self.fields['username'].initial!=username:
 			user=None
 			try:
 				user = User.objects.get(username=username)
 			except User.DoesNotExist:
 				pass
 			if user != None:
-				raise forms.ValidationError(_('The given username exist already and is used by another user'))
-		if not self['first_name'].html_name in self.data:
-			if 'first_name' in self._errors:
-				del self._errors['first_name']
-			self.data['first_name'] = self.fields['first_name'].initial
-			# self.cleaned_data['first_name'] = self.fields['first_name'].initial
-		if not self['last_name'].html_name in self.data:
-			if 'last_name' in self._errors:
-				del self._errors['last_name']
-			self.data['last_name'] = self.fields['last_name'].initial
-			# self.cleaned_data['last_name'] = self.fields['last_name'].initial
+				self.error('username',_('The given username is used by another user'))
 		super(UserDataForm, self).clean()
 		return self.cleaned_data
 

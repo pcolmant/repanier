@@ -37,3 +37,7 @@ class ContactFormAjax(forms.Form):
 class OrderForm(forms.Form):
 	email = forms.EmailField(label='Your Email')
 	permanence_memo = HTMLField(blank=True)
+
+class OrderTestForm(forms.Form):
+	email = forms.EmailField(label='Your Email')
+	permanence_memo = HTMLField(blank=True)
