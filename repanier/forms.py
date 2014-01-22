@@ -5,6 +5,9 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from djangocms_text_ckeditor.fields import HTMLField
 from django.utils.translation import ugettext_lazy as _
+from django.forms.models import BaseModelFormSet
+
+from repanier.models import OfferItem, OfferItemManager
 
 class ContactForm(forms.Form):
     email = forms.EmailField(label='Your Email')
@@ -33,11 +36,3 @@ class ContactFormAjax(forms.Form):
 		self.helper.label_class = 'col-lg-2'
 		self.helper.field_class = 'col-lg-10'
 		self.helper.add_input(Submit('submit', 'Submit'))
-
-class OrderForm(forms.Form):
-	email = forms.EmailField(label='Your Email')
-	permanence_memo = HTMLField(blank=True)
-
-class OrderTestForm(forms.Form):
-	email = forms.EmailField(label='Your Email')
-	permanence_memo = HTMLField(blank=True)

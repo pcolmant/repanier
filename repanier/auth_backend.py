@@ -16,7 +16,6 @@ class RepanierCustomBackend(ModelBackend):
 					if not (user_or_none.is_active):
 						user_or_none = None
 				else:
-					# if user_or_none.userprofile.login_site != Site.objects.get_current().id:
 					is_customer = False
 					is_staff = False
 					is_producer = False
@@ -35,13 +34,13 @@ class RepanierCustomBackend(ModelBackend):
 								user_or_none = None
 					if is_customer:
 						site_customer = SiteCustomer.objects.filter(
-							site__exact = settings.SITE_ID,
-							customer__exact = user_or_none.customer)
+							site_id = settings.SITE_ID,
+							customer_id = user_or_none.customer)
 						if not(site_customer.exists()):
 							user_or_none = None
 					elif is_staff:
 						# A staff member may only access to one django admin site
-						if user_or_none.sitestaff.site.id != settings.SITE_ID:
+						if user_or_none.sitestaff.site_id != settings.SITE_ID:
 							user_or_none = None
 					elif is_producer:
 						# Only allowed to log into the site dedicated to producers
@@ -82,13 +81,13 @@ class RepanierCustomBackend(ModelBackend):
 								user_or_none = None
 					if is_customer:
 						site_customer = SiteCustomer.objects.filter(
-							site__exact = settings.SITE_ID,
-							customer__exact = user_or_none.customer)
+							site_id = settings.SITE_ID,
+							customer_id = user_or_none.customer)
 						if not(site_customer.exists()):
 							user_or_none = None
 					elif is_staff:
 						# A staff member may only access to one django admin site
-						if user_or_none.sitestaff.site.id != settings.SITE_ID:
+						if user_or_none.sitestaff.site_id != settings.SITE_ID:
 							user_or_none = None
 					elif is_producer:
 						# Only allowed to log into the site dedicated to producers

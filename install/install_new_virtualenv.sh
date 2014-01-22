@@ -28,6 +28,9 @@ pip install cmsplugin-filer
 pip install django-reversion
 pip install django_compressor
 pip install django-admin-sortable2
+pip install openpyxl
+sudo apt-get install libxml2-dev libxslt1-dev
+pip install docx
 # pip install django_debug_toolbar
 # pip install django-dajaxice ! not working with Django 1.6
 # pip install django-custom-user

@@ -8,16 +8,45 @@ PROJECT_PATH = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 os.sys.path.insert(0, os.path.dirname(PROJECT_DIR))
 
+###################### 
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_NAME',''),                      # Or path to database file if using sqlite3.
+        # The following settings are not used with sqlite3:
+        'USER': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_USER',''),
+        'PASSWORD': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PASSWORD',''),
+        # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'HOST': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_HOST',''),  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PORT',''),                      # Set to empty string for default.
+    }
+}
+SECRET_KEY = os.getenv('DJANGO_SETTINGS_MODULE_SECRET_KEY','')
+EMAIL_HOST = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST','')
+EMAIL_HOST_USER = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_USER','')
+EMAIL_HOST_PASSWORD = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_PASSWORD','')
+EMAIL_PORT = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_PORT','')
+EMAIL_USE_TLS = True if os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_USE_TLS','') == 'True' else False
+
+
 ###################### I18N
 
 TIME_ZONE = 'Europe/Brussels'
 LANGUAGE_CODE = 'fr-BE'
+# 'fr-be'
 
 ###################### DEBUG
 
 # Defined into /etc/uwsgi/apps-available/*.ini
 DEBUG = True if os.getenv('DJANGO_SETTINGS_MODULE_DEBUG','') == 'True' else False
 TEMPLATE_DEBUG = DEBUG
+ADMINS = (
+    (
+        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME',''), 
+        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
+    ),
+)
 
 ##################### Django & Django CMS
 LANGUAGES = [
@@ -84,8 +113,13 @@ INSTALLED_APPS = (
     'djangocms_admin_style', # note this needs to be above 
                             # the 'django.contrib.admin' entry
     'django.contrib.admin',
+    'adminsortable',
+    # 'cms.plugins.file',
     'cms.plugins.googlemap',
     'cms.plugins.link',
+    # 'cms.plugins.picture',
+    # 'cms.plugins.teaser',
+    # 'cms.plugins.video',
     'filer',
     'easy_thumbnails',
     'cmsplugin_filer_file',
@@ -94,11 +128,14 @@ INSTALLED_APPS = (
     'cmsplugin_filer_teaser',
     'cmsplugin_filer_video',
     'reversion',
-    'adminsortable',
+
+    # 'wkhtmltopdf', # --> PDF
 ) 
 
+# WKHTMLTOPDF_CMD = '/usr/bin/wkhtmltopdf.sh' # --> PDF
 CMS_PERMISSION = False # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware' 
 CMS_PUBLIC_FOR = 'all'
+# CMS_PUBLIC_FOR = 'staff'
 CMS_SHOW_START_DATE = False
 CMS_SHOW_END_DATE = False
 CMS_SEO_FIELDS = False
@@ -117,6 +154,7 @@ CKEDITOR_SETTINGS = {
 #        'stylesSet' : 'default:%sckeditor/styles.js' % STATIC_URL,
         'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
         'autoGrow_onStartup' :  True,
+#        'height' : '450px',
         'emailProtection' : '2',
         'toolbar_CMS2': [
                 ['Undo', 'Redo'],
@@ -148,6 +186,7 @@ THUMBNAIL_PROCESSORS = (
 )
 THUMBNAIL_DEBUG = DEBUG
 
+# https://docs.djangoproject.com/en/1.5/howto/static-files/
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
@@ -161,6 +200,8 @@ SOUTH_TESTS_MIGRATE = DEBUG
 
 ##################### Repanier
 AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
+# ADMIN_LOGIN = 'pise'
+# ADMIN_PASSWORD = 'raspberry'
 INSTALLED_APPS += (
 	'repanier',
 )
@@ -243,4 +284,117 @@ CMS_CACHE_DURATIONS = {
     'content' : 300, # default 60
     'menus' : 15, # default 3600
     'permissions' : 3600 # default: 3600
+}
+###################### EASYMAP
+#EASY_MAPS_CENTER = ( 50.630545,3.776955 )
+
+#INSTALLED_APPS += (
+#    'easy_maps',
+#)
+
+###################### Debug Toolbar
+# if( DEBUG):
+#     INTERNAL_IPS = ('127.0.0.1',)
+#     MIDDLEWARE_CLASSES += (
+#         'debug_toolbar.middleware.DebugToolbarMiddleware',
+#     )
+#     DEBUG_TOOLBAR_PANELS = (
+#         'debug_toolbar.panels.version.VersionDebugPanel',
+#         'debug_toolbar.panels.timer.TimerDebugPanel',
+#         'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
+#         'debug_toolbar.panels.headers.HeaderDebugPanel',
+#         'debug_toolbar.panels.profiling.ProfilingDebugPanel',
+#         'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
+#         'debug_toolbar.panels.sql.SQLDebugPanel',
+#         'debug_toolbar.panels.template.TemplateDebugPanel',
+#         'debug_toolbar.panels.cache.CacheDebugPanel',
+#         'debug_toolbar.panels.signals.SignalDebugPanel',
+#         'debug_toolbar.panels.logger.LoggingPanel',
+#     )
+#     CACHE_BACKEND = 'dummy://'
+#     LOGGING = {
+#         'version': 1,
+#         'disable_existing_loggers': True,
+#         'formatters': {
+#             'verbose': {
+#                 'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+#             },
+#         },
+#         'handlers': {
+#             'null': {
+#                 'level':'DEBUG',
+#                 'class':'django.utils.log.NullHandler',
+#             },
+#             'console':{
+#                 'level':'DEBUG',
+#                 'class':'logging.StreamHandler',
+#                 'formatter': 'verbose'
+#             },
+#         },
+#         'loggers': {
+#             'django': {
+#                 'handlers':['null'],
+#                 'propagate': True,
+#                 'level':'INFO',
+#             },
+#             'django.request': {
+#                 'handlers': ['console'],
+#                 'level': 'ERROR',
+#                 'propagate': False,
+#             },
+#             'django.db.backends': {
+#                 'handlers': ['console'],
+#                 'level': 'DEBUG',
+#                 'propagate': False,
+#             },
+#         }
+#     }
+#     INSTALLED_APPS += (
+#         'debug_toolbar',
+#     )
+
+#     def custom_show_toolbar(request):
+#         return DEBUG # Always show toolbar, for example purposes only.
+
+#     DEBUG_TOOLBAR_CONFIG = {
+#         'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
+#         'INTERCEPT_REDIRECTS': False,
+#         'ENABLE_STACKTRACES' : True,
+#         }
+
+if DEBUG:
+    import logging
+    l = logging.getLogger('django.db.backends')
+    l.setLevel(logging.DEBUG)
+    l.addHandler(logging.StreamHandler())
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+    }
 }

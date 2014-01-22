@@ -3,7 +3,7 @@ from const import *
 from django.conf import settings
 from django.db import models
 from django.db.models.query import QuerySet
-from django.db.models import Q, F
+from django.db.models import Q, F, Sum
 
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import Site
@@ -19,11 +19,11 @@ from django.core import urlresolvers
 import datetime
 
 try:
-    from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], 
-    	['^djangocms_text_ckeditor\.fields\.HTMLField'])
+	from south.modelsinspector import add_introspection_rules
+	add_introspection_rules([], 
+		['^djangocms_text_ckeditor\.fields\.HTMLField'])
 except ImportError:
-    pass
+	pass
 
 # Create your models here.
 class LUTQuerySet(QuerySet):
@@ -31,9 +31,13 @@ class LUTQuerySet(QuerySet):
 		return self.filter(is_active=True)
 
 class LUTManager(models.Manager):
-    def get_queryset(self):
-        return LUTQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return LUTQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
+
+	def get_by_natural_key(self, site, short_name):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(site = site, short_name=short_name)
 
 class LUT(models.Model):
 	site = models.ForeignKey(
@@ -44,59 +48,46 @@ class LUT(models.Model):
 	objects = LUTManager()
 	objects_without_filter = models.Manager()
 
+	def natural_key(self):
+		return (self.site_id, self.short_name)
+	natural_key.dependencies = ['sites.site']
+
 	def __unicode__(self):
 		return self.short_name
 
 	class Meta:
 		abstract = True
+		ordering = ("short_name",)
+		unique_together = ("site", "short_name",)
+		index_together = [
+			["site", "short_name"],
+			["short_name"],
+		]
 
 class LUT_ProductionMode(LUT):
 
-	class Meta:
+	class Meta(LUT.Meta):
 		verbose_name = _("production mode")
 		verbose_name_plural = _("production modes")
-		ordering = ("short_name",)
-		unique_together = ("site", "short_name",)
-		index_together = [
-			["site", "short_name"],
-			["short_name"],
-		]
+
 
 class LUT_DepartmentForCustomer(LUT):
 
-	class Meta:
+	class Meta(LUT.Meta):
 		verbose_name = _("department for customer")
 		verbose_name_plural = _("departments for customer")
-		ordering = ("short_name",)
-		unique_together = ("site", "short_name",)
-		index_together = [
-			["site", "short_name"],
-			["short_name"],
-		]
 
 class LUT_DepartmentForProducer(LUT):
 
-	class Meta:
+	class Meta(LUT.Meta):
 		verbose_name = _("department for producer")
 		verbose_name_plural = _("departments for producer")
-		ordering = ("short_name",)
-		unique_together = ("site", "short_name",)
-		index_together = [
-			["site", "short_name"],
-			["short_name"],
-		]
 
 class LUT_PermanenceRole(LUT):
 
-	class Meta:
+	class Meta(LUT.Meta):
 		verbose_name = _("permanence role")
 		verbose_name_plural = _("permanences roles")
-		ordering = ("short_name",)
-		unique_together = ("site", "short_name",)
-		index_together = [
-			["site", "short_name"],
-			["short_name"],
-		]
 
 class ProducerQuerySet(QuerySet):
 	def active(self):
@@ -106,16 +97,22 @@ class ProducerQuerySet(QuerySet):
 		return self.filter(id = id)
 
 class ProducerManager(models.Manager):
-    def get_queryset(self):
-        return ProducerQuerySet(self.model, using=self._db)
+	def get_queryset(self):
+		return ProducerQuerySet(self.model, using=self._db)
 
-    def id(self, id):
-        return self.get_queryset().id(id)
+	def get_by_natural_key(self, *user_key):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			user = User.objects.get_by_natural_key(*user_key)
+		)
 
-    def not_producer_of_the_buyinggroup(self):
-    	# Don't allow to add the same producer twice
-        return self.get_queryset(
-        	).active().filter(~Q(siteproducer__site=settings.SITE_ID))
+	def id(self, id):
+		return self.get_queryset().id(id)
+
+	def not_producer_of_the_buyinggroup(self):
+		# Don't allow to add the same producer twice
+		return self.get_queryset(
+			).active().filter(~Q(siteproducer__site=settings.SITE_ID))
 
 class Producer(models.Model):
 	user = models.OneToOneField(settings.AUTH_USER_MODEL)
@@ -128,8 +125,15 @@ class Producer(models.Model):
 	bank_account = models.CharField(
 		_("bank_account"), max_length=100,null=True, blank=True)
 	address = models.TextField(_("address"), null=True, blank=True)
+	# Unique id for password reset
+	uuid = models.CharField(
+		_("uuid"), max_length=36,null=True, blank=True)
 	is_active = models.BooleanField(_("is_active"), default=True)
 	objects = ProducerManager()
+
+	def natural_key(self):
+		return self.user.natural_key()
+	natural_key.dependencies = ['auth.user']
 
 	def __unicode__(self):
 		return getattr(self.user, get_user_model().USERNAME_FIELD)
@@ -169,12 +173,18 @@ class SiteProducerQuerySet(QuerySet):
 		return self.filter(represent_this_buyinggroup=False)
 
 class SiteProducerManager(models.Manager):
-    def get_queryset(self):
-        return SiteProducerQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return SiteProducerQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
 
-    def id(self, id):
-        return self.get_queryset().id(id)
+	def get_by_natural_key(self, site, short_profile_name):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			site = site, short_profile_name = short_profile_name
+		)
+
+	def id(self, id):
+		return self.get_queryset().id(id)
 
 class SiteProducer(models.Model):
 	site = models.ForeignKey(
@@ -202,6 +212,10 @@ class SiteProducer(models.Model):
 	is_active = models.BooleanField(_("is_active"), default=True)
 	objects = SiteProducerManager()
 	objects_without_filter = models.Manager()
+
+	def natural_key(self):
+		return (self.site_id, self.short_profile_name)
+	natural_key.dependencies = ['sites.site', 'repanier.producer']
 
 	def get_products(self):
 		link = ''
@@ -231,7 +245,10 @@ class SiteProducer(models.Model):
 		verbose_name = _("site producer")
 		verbose_name_plural = _("site producers")
 		ordering = ("short_profile_name",)
-		unique_together = ("site", "producer",)
+		unique_together = (
+			("site", "short_profile_name",),
+			("site", "producer",)
+		)
 		index_together = [
 			["site", "producer"],
 			["site", "short_profile_name"],
@@ -266,16 +283,22 @@ class CustomerQuerySet(QuerySet):
 		return self.filter(id=id)
 
 class CustomerManager(models.Manager):
-    def get_queryset(self):
-        return CustomerQuerySet(self.model, using=self._db)
+	def get_queryset(self):
+		return CustomerQuerySet(self.model, using=self._db)
 
-    def id(self, id):
-        return self.get_queryset().id(id)
+	def get_by_natural_key(self, *user_key):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			user = User.objects.get_by_natural_key(*user_key)
+		)
 
-    def not_customer_of_the_buyinggroup(self):
-    	# Don't allow to add the same customer twice
-        return self.get_queryset(
-        	).active().filter(~Q(sitecustomer__site=settings.SITE_ID))
+	def id(self, id):
+		return self.get_queryset().id(id)
+
+	def not_customer_of_the_buyinggroup(self):
+		# Don't allow to add the same customer twice
+		return self.get_queryset(
+			).active().filter(~Q(sitecustomer__site=settings.SITE_ID))
 
 class Customer(models.Model):
 	user = models.OneToOneField(settings.AUTH_USER_MODEL)
@@ -285,10 +308,18 @@ class Customer(models.Model):
 		_("phone2"), max_length=25,null=True, blank=True)
 	address = models.TextField(
 		_("address"), null=True, blank=True)
+	# Unique id for password reset
+	uuid = models.CharField(
+		_("uuid"), max_length=36,null=True, blank=True)
+
 	is_active = models.BooleanField(
 		_("is_active"), default=True)
 	objects = CustomerManager()
 	objects_without_filter = models.Manager()
+
+	def natural_key(self):
+		return self.user.natural_key()
+	natural_key.dependencies = ['auth.user']
 
 	def __unicode__(self):
 		return getattr(self.user, get_user_model().USERNAME_FIELD)
@@ -313,12 +344,18 @@ class SiteCustomerQuerySet(QuerySet):
 		return self.filter(customer__isnull=False)
 
 class SiteCustomerManager(models.Manager):
-    def get_queryset(self):
-        return SiteCustomerQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return SiteCustomerQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
 
-    def id(self, id):
-        return self.get_queryset().id(id)
+	def get_by_natural_key(self, site, short_basket_name):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			site = site, short_basket_name = short_basket_name
+		)
+
+	def id(self, id):
+		return self.get_queryset().id(id)
 
 class SiteCustomer(models.Model):
 	site = models.ForeignKey(
@@ -346,6 +383,10 @@ class SiteCustomer(models.Model):
 	objects = SiteCustomerManager()
 	objects_without_filter = models.Manager()
 
+	def natural_key(self):
+		return (self.site_id, self.short_basket_name)
+	natural_key.dependencies = ['sites.site', 'repanier.customer']
+
 	def __unicode__(self):
 		return self.short_basket_name
 	
@@ -353,7 +394,10 @@ class SiteCustomer(models.Model):
 		verbose_name = _("site customer")
 		verbose_name_plural = _("site customers")
 		ordering = ("short_basket_name",)
-		unique_together = ("site", "customer",)
+		unique_together = (
+			("site", "short_basket_name",),
+			("site", "customer",)
+		)
 		index_together = [
 			["site", "customer"],
 			["site", "short_basket_name"],
@@ -388,9 +432,15 @@ class SiteStaffQuerySet(QuerySet):
 		return self.filter(id = id)
 
 class SiteStaffManager(models.Manager):
-    def get_queryset(self):
-        return SiteProducerQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return SiteProducerQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
+
+	def get_by_natural_key(self, *user_key):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			user = User.objects.get_by_natural_key(*user_key)
+		)
 
 class SiteStaff(models.Model):
 	user = models.OneToOneField(
@@ -407,6 +457,10 @@ class SiteStaff(models.Model):
 	is_active = models.BooleanField(_("is_active"), default=True)
 	objects = SiteStaffManager()
 	objects_without_filter = models.Manager()
+
+	def natural_key(self):
+		return self.user.natural_key()
+	natural_key.dependencies = ['auth.user']
 
 	def get_sitecustomer_phone1(self):
 		return self.customer_responsible.customer.phone1
@@ -443,6 +497,10 @@ def site_staff_post_delete(sender, **kwargs):
 
 
 class ProductQuerySet(QuerySet):
+
+	def id(self, id):
+		return self.filter(id=id)
+
 	def active(self):
 		return self.filter(is_active=True)
 
@@ -462,9 +520,19 @@ class ProductQuerySet(QuerySet):
 		return self.filter(is_into_offer=None)
 
 class ProductManager(models.Manager):
-    def get_queryset(self):
-        return ProductQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return ProductQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
+
+	def get_by_natural_key(self, site_id, long_name, *siteproducer_key):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			site_id = site_id, long_name = long_name,
+			site_producer = SiteProducer.objects.get_by_natural_key(*siteproducer_key)
+		)
+
+	def id(self, id):
+		return self.get_queryset().id(id)
 
 class Product(models.Model):
 	site = models.ForeignKey(
@@ -543,6 +611,10 @@ class Product(models.Model):
 	objects = ProductManager()
 	objects_without_filter = models.Manager()
 
+	def natural_key(self):
+		return (self.site_id, self.long_name) + self.site_producer.natural_key()
+	natural_key.dependencies = ['sites.site', 'repanier.siteproducer']
+
 	def __unicode__(self):
 		return self.site_producer.short_profile_name + ', ' + self.long_name
 
@@ -553,18 +625,26 @@ class Product(models.Model):
 		ordering = ("product_order",)
 		unique_together = ("site", "site_producer", "long_name",)
 		index_together = [
+			["product_order", "id"],
 			["site", "product_order"],
 			["site", "site_producer", "long_name"],
 		]
 
 class PermanenceQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
+	def is_open(self):
+		return self.filter(status=PERMANENCE_OPEN)
 
 class PermanenceManager(models.Manager):
-    def get_queryset(self):
-        return PermanenceQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return PermanenceQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
+
+	def get_by_natural_key(self, site_id, distribution_date, short_name):
+		# don't use the filtered qet_queryset but use the default one.
+		return QuerySet(self.model, using=self._db).get(
+			site_id = site_id, distribution_date = distribution_date,
+			short_name = short_name
+		)
 
 class Permanence(models.Model):
 	site = models.ForeignKey(
@@ -580,16 +660,21 @@ class Permanence(models.Model):
 	distribution_date = models.DateField(_("distribution_date"))
 	memo = HTMLField(_("memo"),blank=True)
 	producers = models.ManyToManyField(
-		'SiteProducer',	null=True, blank=True, 
-		limit_choices_to={'site__exact': settings.SITE_ID})
-	products = models.ManyToManyField(
-		'Product', through='OfferItem',	null=True, blank=True)
+		'SiteProducer',	null=True, blank=True,
+		verbose_name = _("site producers"))
+		# limit_choices_to={'site__exact': settings.SITE_ID})
+	# products = models.ManyToManyField(
+	# 	'Product', through='OfferItem',	null=True, blank=True)
 	is_created_on = models.DateTimeField(
 		_("is_cretaed_on"), auto_now_add = True)
 	is_updated_on = models.DateTimeField(
 		_("is_updated_on"), auto_now=True)
 	objects = PermanenceManager()
 	objects_without_filter = models.Manager()
+
+	def natural_key(self):
+		return (self.site_id, self.distribution_date, self.short_name)
+	natural_key.dependencies = ['sites.site']
 
 	def get_siteproducers(self):
 		if self.id:
@@ -598,16 +683,16 @@ class Permanence(models.Model):
 				'admin:repanier_product_changelist', 
 				)
 				return u", ".join([u'<a href="' + changelist_url + \
-					'?site_producer=' + str(p.id) + '">' + \
-	#				'?site_producer=' + str(p.id) + '" target="_blank">' + \
+					'?department_for_this_producer=all&site_producer=' + str(p.id) + '" target="_blank">' + \
 					 p.short_profile_name + '</a>' for p in self.producers.all()])
 			else:
-				change_url = urlresolvers.reverse(
-					'admin:repanier_permanenceinpreparation_change', 
-					args=(self.id,)
-					)
-				label = unicode(_("the offers can't be modified any more"))
-				return '<a href="' + change_url + '">'  + "the offers can't be modified any more" + '</a>'
+				# change_url = urlresolvers.reverse(
+				# 	'admin:repanier_permanenceinpreparation_change', 
+				# 	args=(self.id,)
+				# 	)
+				return u", ".join([
+					p.short_profile_name + '</a>' for p in self.producers.all()
+				])
 		return u''
 	get_siteproducers.short_description=(_("producers in this permanence"))
 	get_siteproducers.allow_tags = True
@@ -618,15 +703,14 @@ class Permanence(models.Model):
 			'admin:repanier_purchase_changelist', 
 			)
 			return u", ".join([u'<a href="' + changelist_url + \
-				'?site_customer=' + str(c.id) + '">' + \
-#				'?site_customer=' + str(c.id) + '" target="_blank">' + \
+				'?permanence=' + str(self.id) + \
+				'&site_customer=' + str(c.id) + '" target="_blank">' + \
 				c.short_basket_name + '</a>' 
 				for c in SiteCustomer.objects.filter(
 					purchase__permanence_id=self.id).distinct()])
 		return u''
 	get_sitecustomers.short_description=(_("customers in this permanence"))
 	get_sitecustomers.allow_tags = True
-
 
 	def get_board(self):
 		board = ""
@@ -715,9 +799,15 @@ class OfferItemQuerySet(QuerySet):
 	def active(self):
 		return self.filter(is_active=True)
 
+	def product(self,product):
+		return self.filter(product=product)
+
+	def permanence(self,permanence):
+		return self.filter(permanence=permanence)
+
 class OfferItemManager(models.Manager):
-    def get_queryset(self):
-        return OfferItemQuerySet(self.model, using=self._db)
+	def get_queryset(self):
+		return OfferItemQuerySet(self.model, using=self._db)
 
 class OfferItem(models.Model):
 	permanence = models.ForeignKey(
@@ -729,6 +819,41 @@ class OfferItem(models.Model):
 		help_text=_('last known price (into the billing unit)'), 
 		max_digits=8, decimal_places=2, null = True, blank=True)
 	is_active = models.BooleanField(_("is_active"), default=True)
+	objects = OfferItemManager()
+	objects_without_filter = models.Manager()
+
+	def get_total_order_quantity(self):
+		total_order_quantity = 0
+		if self.id:
+			if self.permanence.status<=PERMANENCE_PLANIFIED:
+				pass
+			elif self.permanence.status<=PERMANENCE_CLOSED:
+				result_set = list(Purchase.objects.filter(
+					product_id=self.product.id, permanence_id=self.permanence_id).values(
+					'site_id', 'product_id', 'permanence_id').annotate(
+					total_order_quantity=Sum('order_quantity')).values(
+					'total_order_quantity').order_by()[:1])
+				if result_set:
+					total_order_quantity = result_set[0].get('total_order_quantity')
+			elif self.permanence.status<=PERMANENCE_PREPARED:
+				result_set = list(Purchase.objects.filter(
+					product_id=self.product.id, permanence_id=self.permanence_id).values(
+					'site_id', 'product_id', 'permanence_id').annotate(
+					total_order_quantity=Sum('validated_quantity')).values(
+					'total_order_quantity').order_by()[:1])
+				if result_set:
+					total_order_quantity = result_set[0].get('total_order_quantity')
+			else:
+				result_set = list(Purchase.objects.filter(
+					product_id=self.product.id, permanence_id=self.permanence_id).values(
+					'site_id', 'product_id', 'permanence_id').annotate(
+					total_order_quantity=Sum('preparator_recorded_quantity')).values(
+					'total_order_quantity').order_by()[:1])
+				if result_set:
+					total_order_quantity = result_set[0].get('total_order_quantity')
+		return total_order_quantity
+	get_total_order_quantity.short_description=(_("total order quantity"))
+	get_total_order_quantity.allow_tags = False
 
 	def __unicode__(self):
 		return self.permanence.__unicode__() + ", " + \
@@ -745,40 +870,49 @@ class OfferItem(models.Model):
 
 
 class PurchaseQuerySet(QuerySet):
-	def premanence(self,permanence):
+	def product(self,product):
+		return self.filter(product=product)
+
+	def permanence(self,permanence):
 		return self.filter(permanence=permanence)
 
+	def site_customer(self,site_customer):
+		return self.filter(site_customer=site_customer)
+
 class PurchaseManager(models.Manager):
-    def get_queryset(self):
-        return PurchaseQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return PurchaseQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
 
 class Purchase(models.Model):
 	site = models.ForeignKey(
 		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	offer_item = models.ForeignKey(
-		OfferItem, verbose_name=_("offer_item"), on_delete=models.PROTECT)
+	# mettre produit à la place de offer_item : sert au transport ou à retrouver les produits
+	# l'offer_item se retrouve avec le produit et la permanence.
+	permanence = models.ForeignKey(
+		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)	
+	distribution_date = models.DateField(_("distribution_date"))
+	product = models.ForeignKey(
+		Product, verbose_name=_("product"), on_delete=models.PROTECT)
 	site_producer = models.ForeignKey(
 		SiteProducer, verbose_name=_("producer"), on_delete=models.PROTECT)
 	site_customer = models.ForeignKey(
 		SiteCustomer, verbose_name=_("customer"), on_delete=models.PROTECT)
-	permanence = models.ForeignKey(
-		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)	
 
 	order_quantity = models.DecimalField(
 		_("order_quantity"), max_digits=9, decimal_places=3, default = 0)
 	validated_quantity = models.DecimalField(
 		_("validated_quantity"), max_digits=9, decimal_places=3, 
-		blank=True, null=True)
+		blank=True, null=True, default = 0)
 	# price, quantity or weight
 	preparator_recorded_quantity = models.DecimalField(
 		_("preparator_recorded_quantity"), 
-		max_digits=9, decimal_places=3, blank=True, null=True)
+		max_digits=9, decimal_places=3, blank=True, null=True, default = 0)
 	comment = models.CharField(
 		_("comment"), max_length=200, default = '', blank=True, null=True)
 	effective_balance = models.DecimalField(
 		_("effective_balance"), max_digits=8, decimal_places=2, 
-		blank=True, null=True)
+		blank=True, null=True, default = 0)
 	is_recorded_on_site_customer = models.BooleanField(
 		_("is_recorded_on_sitecustomer"), default=False)
 	is_recorded_on_site_producer = models.BooleanField(
@@ -797,20 +931,20 @@ class Purchase(models.Model):
 	class Meta:
 		verbose_name = _("purchase")
 		verbose_name_plural = _("purchases")
-		ordering = ("permanence", "offer_item", "site_customer")
-		unique_together = ("permanence", "offer_item", "site_customer",)
+		ordering = ("permanence", "product", "site_customer")
+		unique_together = ("permanence", "product", "site_customer",)
 		index_together = [
-			["permanence", "offer_item", "site_customer"],
+			["permanence", "product", "site_customer"],
 		]
 
 class BankAccountQuerySet(QuerySet):
-	def premanence(self,permanence):
+	def permanence(self,permanence):
 		return self.filter(permanence=permanence)
 
 class BankAccountManager(models.Manager):
-    def get_queryset(self):
-        return BankAccountQuerySet(self.model, using=self._db).filter(
-        	site=settings.SITE_ID)
+	def get_queryset(self):
+		return BankAccountQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
 
 class BankAccount(models.Model):
 	site = models.ForeignKey(
@@ -853,4 +987,42 @@ class BankAccount(models.Model):
 			["site_producer", "site_customer"],
 			["site_customer", "is_recorded_on_site_customer"],
 			["site_producer", "is_recorded_on_site_producer"],
+		]
+
+class ReportQuerySet(QuerySet):
+	def permanence(self,permanence):
+		return self.filter(permanence=permanence)
+
+class ReportManager(models.Manager):
+	def get_queryset(self):
+		return ReportQuerySet(self.model, using=self._db).filter(
+			site=settings.SITE_ID)
+
+class Report(models.Model):
+	site = models.ForeignKey(
+		Site, verbose_name=_("site"), default=settings.SITE_ID)
+	permanence = models.ForeignKey(
+		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)	
+	site_producer = models.ForeignKey(
+		SiteProducer, verbose_name=_("producer"), 
+		on_delete=models.PROTECT, blank=True, null=True)
+	# Unique id for report access
+	uuid = models.CharField(
+		_("uuid"), max_length=36,null=True, blank=True)
+	first_access_on = models.DateTimeField(
+		_("first_access_on"), blank=True, null=True)
+	is_created_on = models.DateTimeField(
+		_("is_cretaed_on"), auto_now_add = True)
+	is_updated_on = models.DateTimeField(
+		_("is_updated_on"), auto_now=True)
+	objects =ReportManager()
+	objects_without_filter = models.Manager()
+
+	class Meta:
+		verbose_name = _("report")
+		verbose_name_plural = _("reports")
+		ordering = ("permanence", "site_producer")
+		unique_together = ("uuid",)
+		index_together = [
+			["uuid",],
 		]

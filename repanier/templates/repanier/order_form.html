@@ -1,26 +1,55 @@
 {% extends 'subpage_base.html' %}
-{% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
+{% load cms_tags sekizai_tags i18n l10n crispy_forms_tags repanier_tags %}
 {% block sub_content %}
-<div class="col-md-12">
-	{% crispy form %}
-</div>
-<div class="col-md-12">
-	{{ email }}
-	{{ permanence_memo |safe }}
-	<ul>
-		{% for producer in siteproducer_set %}
-			<li>{{ producer.long_profile_name }}</li>
-		{% endfor %}
-	</ul>
-	<ul>
-		{% for offeritem in offeritem_set %}
-			{% ifchanged offeritem.product.site_producer %}
-				<b>{{ offeritem.product.site_producer.long_profile_name }}</b>
-			{% endifchanged %}
-			<li>{{ offeritem.product.long_name }}</li>
-		{% empty %}
-			<li>Sorry, no product in this list.</li>
-		{% endfor %}
-	</ul>
-</div>
+{# {% debug %} #}
+    {{ permanence_memo |safe }}
+    <ul>
+        {% for producer in siteproducer_set %}
+            <li>{{ producer.long_profile_name }}</li>
+        {% endfor %}
+    </ul>
+{% if offeritem_list %}
+    {% for offer in offeritem_list %}
+    <form>
+        <div class="row">
+            <div class="large-2 columns">
+                {{ offer.product.site_producer.short_profile_name }}
+            </div>
+            <div class="large-5 columns">
+                {{ offer.product.long_name }}
+            </div>
+            <div class="large-2 columns">
+                {{ offer.producer_unit_price }}
+                {% if offer.product.order_by_piece_pay_by_piece %}/ piece {% else %}/ kg {% endif %}
+            </div>
+            <div class="large-2 columns">
+                <input hidden name="page" value="{{ page_obj.number }}"/>
+                {% repanier_select_qty offer_item_id=offer.id %}
+            </div>
+            <div class="large-1 columns">
+                <input type="submit" class="round tiny button" value="ok" />
+            </div>
+        </div>
+    </form>
+    {% endfor %}
+    {# .... **Now the pagination section** .... #}
+    {% if is_paginated %}
+        <div class="pagination">
+            <span class="page-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+                <span class="page-current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+{% else %}
+    <h3>My Offers</h3>
+    <p>No offer found!!! :(</p>
+{% endif %}
 {% endblock %}

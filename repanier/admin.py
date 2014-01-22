@@ -3,9 +3,13 @@ import re
 
 from const import *
 from django.conf import settings
+from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.core import urlresolvers
+
+from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.core import validators
@@ -14,8 +18,8 @@ from django.db import models
 from django.db.models import Q, F
 from django import forms
 
-# from adminsortable.admin import SortableAdminMixin
-from repanier.adminsortable import SortableAdminMixin
+from adminsortable.admin import SortableAdminMixin
+# from repanier.adminsortable import SortableAdminMixin
 
 from repanier.models import LUT_ProductionMode
 from repanier.models import LUT_DepartmentForCustomer
@@ -23,6 +27,7 @@ from repanier.models import LUT_DepartmentForProducer
 from repanier.models import LUT_PermanenceRole
 
 from repanier.models import Producer
+from repanier.models import Permanence
 from repanier.models import SiteProducer
 from repanier.models import Customer
 from repanier.models import SiteCustomer
@@ -51,10 +56,10 @@ from django.contrib.admin import SimpleListFilter
 
 
 class ProductFilterBySiteProducer(SimpleListFilter):
-    # Human-readable title which will be displayed in the
-    # right admin sidebar.
+	# Human-readable title which will be displayed in the
+	# right admin sidebar.
 	title = _("producers")
-    # Parameter for the filter that will be used in the URL query.
+	# Parameter for the filter that will be used in the URL query.
 	parameter_name = 'site_producer'
 
 	def lookups(self, request, model_admin):
@@ -68,7 +73,7 @@ class ProductFilterBySiteProducer(SimpleListFilter):
 		# This list is a collection of site producer.id, .name
 		return [(c.id, c.short_profile_name) for c in 
 			SiteProducer.objects.all().active().with_login()
-		 	]
+			]
 
 	def queryset(self, request, queryset):
 		"""
@@ -91,7 +96,7 @@ class ProductFilterByDepartmentForProducer(SimpleListFilter):
 		# This list is a collection of site department.id, .name
 		return [(c.id, c.short_name) for c in 
 			LUT_DepartmentForProducer.objects.all().active()
-		 	]
+			]
 
 	def queryset(self, request, queryset):
 		# This query set is a collection of products
@@ -113,7 +118,7 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
 		# return []
 		return [('all', _('All'))] + [(c.id, c.short_name) for c in 
 			LUT_DepartmentForProducer.objects.all().active().filter(product__in=inner_qs)
-		 	]
+			]
 
 	def choices(self, cl):
 		for lookup, title in self.lookup_choices:
@@ -194,17 +199,18 @@ class UserDataForm(forms.ModelForm):
 		if field not in self._errors:
 			self._errors[field]= self.error_class([msg])
 
-	def clean(self):
+	def clean(self, *args, **kwargs):
 		# The SiteStaff has no first_name or last_name because it's a function with login/pwd.
 		# A SiteCustomer with a first_name and last_name is responsible of this funcition. 
-		if not self['first_name'].html_name in self.data:
-			if 'first_name' in self._errors:
-				del self._errors['first_name']
-			self.data['first_name'] = self.fields['first_name'].initial
-		if not self['last_name'].html_name in self.data:
-			if 'last_name' in self._errors:
-				del self._errors['last_name']
-			self.data['last_name'] = self.fields['last_name'].initial
+		if any(self.errors):
+			if not self['first_name'].html_name in self.data:
+				if 'first_name' in self._errors:
+					del self._errors['first_name']
+				self.data['first_name'] = self.fields['first_name'].initial
+			if not self['last_name'].html_name in self.data:
+				if 'last_name' in self._errors:
+					del self._errors['last_name']
+				self.data['last_name'] = self.fields['last_name'].initial
 		# Check that the password is set when it's a new user. 
 		password1 = self.cleaned_data.get("password1")
 		password2 = self.cleaned_data.get("password2")
@@ -242,7 +248,7 @@ class UserDataForm(forms.ModelForm):
 				pass
 			if user != None:
 				self.error('username',_('The given username is used by another user'))
-		super(UserDataForm, self).clean()
+		super(UserDataForm, self).clean(*args, **kwargs)
 		return self.cleaned_data
 
 	def save(self, *args, **kwargs):
@@ -255,14 +261,12 @@ class UserDataForm(forms.ModelForm):
 		last_name = self.data['last_name']
 		user = None
 		if change:
-			user=User.objects.get(id=self.instance.user.id)
+			user=User.objects.get(id=self.instance.user_id)
 			user.username = username
 			user.email = email
 			user.first_name = first_name
 			user.last_name = last_name
 			if password:
-				print(self.instance.user.id)
-				print(password)
 				user.set_password(password)
 			user.save()
 		else:
@@ -283,6 +287,7 @@ class ProducerWithUserDataAdmin(admin.ModelAdmin):
 	fields = ['username', 'password1', 'password2', 'email', 'first_name', 
 		'last_name', 'phone1', 'phone2', 'fax', 'address',
 		'bank_account', 'is_active']
+	search_fields = ('user__username',)
 	list_display = ('__unicode__', 'phone1', 'address', 'is_active')
 	list_max_show_all = True
 
@@ -298,7 +303,7 @@ class ProducerWithUserDataAdmin(admin.ModelAdmin):
 		last_name= form.base_fields['last_name']
 		if obj:
 			user_model = get_user_model()
-			user = user_model.objects.get(id=obj.user.id)
+			user = user_model.objects.get(id=obj.user_id)
 			username.initial = getattr(user, user_model.USERNAME_FIELD)
 			# username.widget.attrs['readonly'] = True
 			email.initial = user.email
@@ -332,6 +337,7 @@ class SiteProducerAdmin(admin.ModelAdmin):
 		'previous_balance', 
 		'amount_in', 
 		'amount_out')
+	search_fields = ('short_profile_name',)
 	list_display = ('short_profile_name', 'get_products', 'get_producer_phone1', 'get_producer_address', 'represent_this_buyinggroup',
 		'is_active')
 	list_max_show_all = True
@@ -360,7 +366,7 @@ class SiteProducerAdmin(admin.ModelAdmin):
 			producer.empty_label = None
 			producer.initial = obj.producer
 			if obj.producer:
-				producer.queryset = Producer.objects.id(obj.producer.id)
+				producer.queryset = Producer.objects.id(obj.producer_id)
 			else:
 				producer.queryset = Producer.objects.none()
 		else:
@@ -384,6 +390,7 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
 	fields = ['username', 'password1', 'password2', 'email', 'first_name', 
 		'last_name', 'phone1', 'phone2', 'address',
 		'is_active']
+	search_fields = ('user__username',)
 	list_display = ('__unicode__', 'phone1', 'phone2', 'address', 'is_active')
 	list_max_show_all = True
 
@@ -401,7 +408,7 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
 		if obj:
 			print("obj")
 			user_model = get_user_model()
-			user = user_model.objects.get(id=obj.user.id)
+			user = user_model.objects.get(id=obj.user_id)
 			username.initial = getattr(user, user_model.USERNAME_FIELD)
 			# username.widget.attrs['readonly'] = False
 			email.initial = user.email
@@ -434,7 +441,7 @@ class SiteCustomerAdmin(admin.ModelAdmin):
 	exclude = ['site',]
 	readonly_fields = ('date_previous_balance', 'previous_balance',
 	 'amount_in', 'amount_out')
-
+	search_fields = ('short_basket_name',)
 	list_display = ('__unicode__', 'represent_this_buyinggroup',
 		'is_active')
 	list_max_show_all = True
@@ -449,7 +456,7 @@ class SiteCustomerAdmin(admin.ModelAdmin):
 			customer.empty_label = None
 			customer.initial = obj.customer
 			if obj.customer:
-				customer.queryset = Customer.objects.id(obj.customer.id)
+				customer.queryset = Customer.objects.id(obj.customer_id)
 			else:
 				customer.queryset = Customer.objects.none()
 		else:
@@ -491,7 +498,7 @@ class SiteStaffWithUserDataAdmin(admin.ModelAdmin):
 
 		if obj:
 			user_model = get_user_model()
-			user = user_model.objects.get(id=obj.user.id)
+			user = user_model.objects.get(id=obj.user_id)
 			username.initial = getattr(user, user_model.USERNAME_FIELD)
 			# username.widget.attrs['readonly'] = True
 			email.initial = user.email
@@ -508,9 +515,9 @@ class SiteStaffWithUserDataAdmin(admin.ModelAdmin):
 			email.initial = ''
 			first_name.initial = 'N/A'
 			last_name.initial = 'N/A'
- 		customer_responsible.queryset = SiteCustomer.objects.all(
- 			).active().with_login().order_by(
- 			"short_basket_name")
+		customer_responsible.queryset = SiteCustomer.objects.all(
+			).active().with_login().order_by(
+			"short_basket_name")
 		return form
 
 	def save_model(self, request, obj, form, change):
@@ -632,9 +639,10 @@ class PermanenceBoardInline(admin.TabularInline):
 
 class OfferItemInline(admin.TabularInline):
 	model = OfferItem
-	fields = ['product', 'producer_unit_price']
-	readonly_fields = ('product',)
-	max_num=0
+	fields = ['product', 'producer_unit_price', 'get_total_order_quantity']
+	readonly_fields = ('product', 'get_total_order_quantity')
+	extra = 0
+	max_num = 0
 
 class PermanenceInPreparationAdmin(admin.ModelAdmin):
 	fieldsets = [
@@ -643,17 +651,190 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 			'memo', 'producers']}
 		),
 	]
-	readonly_fields = ('status', 'is_created_on', 'is_updated_on')
-	exclude = ['site','products']
+	# readonly_fields = ('status', 'is_created_on', 'is_updated_on')
+	exclude = ['site']
 	list_max_show_all = True
- 	filter_horizontal = ('producers',)
+	filter_horizontal = ('producers',)
 	inlines = [PermanenceBoardInline, OfferItemInline]
 	date_hierarchy = 'distribution_date'
 	list_display = ('__unicode__', 'get_siteproducers', 'get_sitecustomers', 'get_board', 'status')
 	ordering = ('distribution_date',)
 	actions = ['planify', 'open_orders','close_orders', 
-		'send_orders_to_producers', 'back_to_previous_status'
+		'send_orders_to_producers', 'back_to_previous_status', 
+		'export_xlsx', 'import_xlsx', 'send_email', 'export_docx'
 	]
+
+	def export_docx(self, request, queryset):
+		from docx import *
+		import cStringIO
+		response = HttpResponse(mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+		response['Content-Disposition'] = 'attachment; filename=mymodel.docx'
+		# Create our properties, contenttypes, and other support files
+		title    = 'Python docx demo'
+		subject  = 'A practical example of making docx from Python'
+		creator  = 'Mike MacCana'
+		keywords = ['python', 'Office Open XML', 'Word']
+
+		relationships = relationshiplist()
+		document = newdocument()
+		body = document.xpath('/w:document/w:body', namespaces=nsprefixes)[0]
+		body.append(heading(u"Titre àéè§ùµ", 1))
+		body.append(heading("Sous-titre 1", 2))
+		body.append(paragraph("Texte"))
+
+		points = [ 
+			'Remarque 1',
+			'Remarque 2',
+			'Remarque 3'
+		]
+		for point in points:
+			body.append(paragraph(point, style='ListNumber')) 
+
+		body.append(heading("Sous-titre 2", 2))
+		body.append(paragraph("Table"))
+		tbl_rows = [['Id', 'Date de distribution 2', 'Status']]
+		for obj in queryset:
+			row = [
+				str(obj.pk),
+				obj.distribution_date.strftime('%Y/%m/%d'),
+				obj.status,
+			]
+			tbl_rows.append(row)
+		body.append(table(tbl_rows))
+		coreprops = coreproperties(title=title, subject=subject, creator=creator,
+			keywords=keywords)
+		appprops = appproperties()
+		contenttypes = contenttypes()
+		websettings = websettings()
+		wordrelationships = wordrelationships(relationships)
+
+		# Save our document
+		fobj = cStringIO.StringIO()
+		savedocx(document, coreprops, appprops, contenttypes, websettings,
+			wordrelationships, fobj)
+		a = fobj.getvalue() 
+		fobj.close() 
+		response.write(a) 
+		return response
+
+	export_docx.short_description = _("Export DOCX")
+
+
+	def send_email(self, request, queryset):
+		from django.core.mail import send_mail, BadHeaderError
+		from django.http import HttpResponseRedirect
+
+		try:
+			send_mail('Test sujet', 'Test msg', 'ask.it@repanier.be', ['pcolmant@gmail.com'])
+		except BadHeaderError:
+			self.message_user(request, _("Invalid header found."))
+
+		# return HttpResponseRedirect(request.get_full_path())
+
+	send_email.short_description = _("Send e-mail")
+
+	class ImportXlsxForm(forms.Form):
+		_selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+		file_to_import = forms.FileField(
+			label=_('File to import'), allow_empty_file=False
+		)
+
+	def handle_uploaded_file(self, request, queryset, file_to_import):
+		from openpyxl import load_workbook
+
+		wb = load_workbook(file_to_import)
+		ws = wb.get_active_sheet()
+		i = 0
+		c = ws.cell(row=i, column=0)
+		while ( c.value!=None ) and (i < 10000):
+			d = ws.cell(row=i, column=1)
+			print("%s - %s") % (c.value.encode('utf-8'), d.value.encode('utf-8'))
+			i = i + 1
+			c = ws.cell(row=i, column=0)
+		c = ws.cell(row=0, column=1)
+		# for permanence in queryset:
+		# 	permanence.short_name = c.value.encode('utf-8')
+		# 	permanence.save()
+		return
+
+	def import_xlsx(self, request, queryset):
+		# http://www.jpichon.net/blog/2010/08/django-admin-actions-and-intermediate-pages/
+		from views import render_response
+		from django.http import HttpResponseRedirect
+
+		form = None
+		if 'apply' in request.POST:
+			form = self.ImportXlsxForm(request.POST, request.FILES)
+			if form.is_valid():
+				file_to_import = request.FILES['file_to_import']
+				if('.xlsx' in file_to_import.name) and (file_to_import.size <= 1000000):
+					self.handle_uploaded_file(request, queryset, file_to_import)
+					self.message_user(request, _("Successfully imported %s.") % (file_to_import.name))
+				else:
+					self.message_user(request, 
+						_("Error when importing %s : File size must be <= 1 Mb and extension must be .xlsx") % (file_to_import.name)
+					)
+			else:
+				self.message_user(request, _("Error when importing %s.") % (file_to_import.name))
+			return HttpResponseRedirect(request.get_full_path())
+		if not form:
+			form = self.ImportXlsxForm(
+				initial={'_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME)}
+			)
+		return render_response(request, 'import_xlsx.html', {
+				'permanences': queryset,
+				'import_xlsx_form': form,
+		})
+
+	import_xlsx.short_description = _("Import XLSX")
+
+	def export_xlsx(self, request, queryset):
+		import openpyxl
+		from openpyxl.cell import get_column_letter
+		response = HttpResponse(mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+		response['Content-Disposition'] = 'attachment; filename=mymodel.xlsx'
+		wb = openpyxl.Workbook()
+		ws = wb.get_active_sheet()
+		ws.title = "MyModel"
+
+		row_num = 0
+
+		columns = [
+			(u"ID", 15),
+			(u"distribution_date", 70),
+			(u"status", 70),
+		]
+
+		for col_num in xrange(len(columns)):
+			c = ws.cell(row=row_num, column=col_num)
+			c.value = columns[col_num][0]
+			c.style.font.bold = True
+			# set column width
+			ws.column_dimensions[get_column_letter(col_num+1)].width = columns[col_num][1]
+
+		for obj in queryset:
+			row_num += 1
+			row = [
+				obj.pk,
+				obj.distribution_date,
+				obj.status,
+			]
+			for col_num in xrange(len(row)):
+				c = ws.cell(row=row_num, column=col_num)
+				c.value = row[col_num]
+				c.style.alignment.wrap_text = True
+
+		wb.save(response)
+		return response
+
+	export_xlsx.short_description = _("Export XLSX")
+
+	def get_readonly_fields(self, request, obj=None):
+		if obj:
+			status = obj.status
+			if status>PERMANENCE_PLANIFIED:
+				return('status', 'is_created_on', 'is_updated_on','producers')
+		return ('status', 'is_created_on', 'is_updated_on')
 
 	def planify(self, request, queryset):
 		queryset.filter(status=PERMANENCE_DISABLED).update(status=PERMANENCE_PLANIFIED)
@@ -668,14 +849,13 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 			for product in Product.objects.filter(
 				site_producer__in = site_producers_in_this_permanence
 				).active().is_selected_for_offer():
-				offeritem_set=OfferItem.objects.filter(
-					permanence=permanence,
-					product = product)[:1]
-				if offeritem_set:
-					for offeritem in offeritem_set:
-						offeritem.is_active=True
-						offeritem.producer_unit_price = product.producer_unit_price
-						offeritem.save()
+				offer_item_set= list(OfferItem.objects.all().product(
+					product).permanence(permanence).order_by()[:1])
+				if offer_item_set:
+					offer_item = offer_item_set[0]
+					offeritem.is_active=True
+					offeritem.producer_unit_price = product.producer_unit_price
+					offeritem.save()
 				else:
 					OfferItem.objects.create(
 						permanence = permanence,
@@ -690,7 +870,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 		if permanence_set:
 			for permanence in permanence_set:
 				Purchase.objects.all(
-					).premanence(permanence).update(
+					).permanence(permanence).update(
 						validated_quantity=F('order_quantity')
 					)
 				permanence.status = PERMANENCE_CLOSED
@@ -751,7 +931,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		),
 	]
 	readonly_fields = ('status', 'is_created_on', 'is_updated_on')
-	exclude = ['site','products']
+	exclude = ['site']
 	list_max_show_all = True
 	# inlines = [PermanenceBoardInline, DeliveryBoardInline]
 	inlines = [PermanenceBoardInline, OfferItemInline]
@@ -760,16 +940,38 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 	ordering = ('distribution_date',)
 	actions = ['orders_prepared', 'done','back_to_previous_status']
 
+	# def get_urls(self):
+	#         urls = super(PermanenceDoneAdmin, self).get_urls()
+	#         my_urls = patterns('',
+	#             (r'\d+/purchase/$', self.admin_site.admin_view(self.purchase)),
+	#         )
+	#         return my_urls + urls
+
+	# def purchase(self, request, id):
+	# 	print(id)
+	# 	print(request.GET['site_customer'])
+
 	def orders_prepared(self, request, queryset):
 		permanence_set = queryset.filter(status=PERMANENCE_SEND)
 		if permanence_set:
 			for permanence in permanence_set:
-				purchase_set = Purchase.objcts.filter(permanence=permanence)
+				purchase_set = Purchase.objects.all().permanence(permanence)
 				if purchase_set:
 					for purchase in purchase_set:
-						purchase.preparator_recorded_quantity = purchase.validated_quantity
-						purchase.effective_balance = purchase.validated_quantity * purchase.offer_item.producer_unit_price
-						purchase.save()
+						offer_item_set = list(OfferItem.objects.all().product(
+							purchase.product).permanence(permanence)[:1])
+						if offer_item_set:
+							offer_item = offer_item_set[0]
+							purchase.preparator_recorded_quantity = purchase.validated_quantity
+							purchase.effective_balance = purchase.validated_quantity * offer_item.producer_unit_price
+							purchase.save()
+						else:
+							product_set = list(Product.objects.id(purchase.product_id)[:1])
+							if product_set:
+								product = product_set[0]
+								purchase.preparator_recorded_quantity = purchase.validated_quantity
+								purchase.effective_balance = purchase.validated_quantity * product.producer_unit_price
+								purchase.save()
 				permanence.status = PERMANENCE_PREPARED
 				permanence.save()
 
@@ -779,7 +981,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		permanence_set = queryset.filter(status=PERMANENCE_PREPARED)
 		if permanence_set:
 			for permanence in permanence_set:
-				purchase_set = Purchase.objects.filter(permanence=permanence)
+				purchase_set = Purchase.objects.all().permanence(permanence)
 				if purchase_set:
 					for purchase in purchase_set:
 						if not(purchase.is_recorded_on_site_customer):
@@ -850,16 +1052,19 @@ admin.site.register(PermanenceDone, PermanenceDoneAdmin)
 
 class PurchaseAdmin(admin.ModelAdmin):
 	list_max_show_all = True
-	exclude = ['site', 'site_producer', 'permanence', 
+	exclude = ['site', 
 		'is_recorded_on_previous_site_customer',
 		'is_recorded_on_previous_siteproducer'
 	]	
-	list_display = ['offer_item','site_customer', 
+	list_display = ['distribution_date', 'product','site_customer', 
 		'order_quantity', 'validated_quantity', 'preparator_recorded_quantity',
 		'effective_balance']
-	ordering = ('offer_item', 'site_customer')
-	fields = ('offer_item',
+	date_hierarchy = 'distribution_date'
+	list_filter = ('distribution_date',)
+	ordering = ('product', 'site_customer')
+	fields = ('permanence',
 		'site_customer',
+		'product',
 		'order_quantity',
 		'validated_quantity',
 		'preparator_recorded_quantity',
@@ -915,37 +1120,44 @@ class PurchaseAdmin(admin.ModelAdmin):
 
 	def get_form(self,request, obj=None, **kwargs):
 		form = super(PurchaseAdmin,self).get_form(request, obj, **kwargs)
+		permanence = form.base_fields["permanence"]
 		site_customer = form.base_fields["site_customer"]
-		offer_item = form.base_fields["offer_item"]
+		product = form.base_fields["product"]
+		permanence.widget.can_add_related = False
 		site_customer.widget.can_add_related = False
-		offer_item.widget.can_add_related = False
+		product.widget.can_add_related = False
 
 		if obj:
+			permanence.empty_label = None
+			permanence.queryset = Permanence.objects.filter(
+				id = obj.permanence_id)
 			site_customer.empty_label = None
 			site_customer.queryset = SiteCustomer.objects.filter(
-				id = obj.site_customer.id)
-			offer_item.empty_label = None
-			offer_item.queryset = OfferItem.objects.filter(
-				id = obj.offer_item.id)
+				id = obj.site_customer_id)
+			product.empty_label = None
+			product.queryset = Product.objects.filter(
+				id = obj.product_id)
 		else:
-			site_customer.queryset = SiteCustomer.objects.filter(
-				site = settings.SITE_ID,
-				is_active = True).order_by(
-				"short_basket_name")
-			offer_item.queryset = OfferItem.objects.filter(
-				permanence__status = PERMANENCE_OPEN).order_by(
-				"permanence__distribution_date",
-				"permanence__short_name",
-				# "product__site_producer__short_profile_name",
-				# "product__department_for_customer",
-				"product__long_name")
+			permanence.queryset = Permanence.objects.all().is_open()
+			site_customer.queryset = SiteCustomer.objects.all().active()
+			product.queryset = Product.objects.all().active()
 		return form
 
 	def save_model(self, request, purchase, form, change):
-	# 	obj.preformed_by = request.user
-	# 	obj.ip_address = utils.get_client_ip(request)
-		purchase.site_producer = purchase.offer_item.product.site_producer
-		purchase.permanence = purchase.offer_item.permanence
+		# obj.preformed_by = request.user
+		# obj.ip_address = utils.get_client_ip(request)
+		purchase.site_producer = purchase.product.site_producer
+		purchase.distribution_date = purchase.permanence.distribution_date
+		result_set = list(OfferItem.objects.all().permanence(
+			purchase.permanence).product(
+			purchase.product).order_by()[:1])
+		if not(result_set):
+			# Add the product to the OfferItem 
+			# to be managed with the other OfferItem's
+			OfferItem.objects.create(
+				permanence = purchase.permanence,
+				product = purchase.product,
+				producer_unit_price = purchase.product.producer_unit_price)
 		purchase.save()
 
 	def get_actions(self, request):
@@ -1006,13 +1218,13 @@ class BankAccountAdmin(admin.ModelAdmin):
 				site_customer.widget.can_add_related = False
 				site_customer.empty_label = None
 				site_customer.queryset = SiteCustomer.objects.id(
-					obj.site_customer.id)
+					obj.site_customer_id)
 			if obj.site_producer:
 				site_producer = form.base_fields["site_producer"]
 				site_producer.widget.can_add_related = False
 				site_producer.empty_label = None
 				site_producer.queryset = SiteProducer.objects.id(
-					obj.site_producer.id)
+					obj.site_producer_id)
 		else:
 			site_producer = form.base_fields["site_producer"]
 			site_customer = form.base_fields["site_customer"]
@@ -1020,11 +1232,11 @@ class BankAccountAdmin(admin.ModelAdmin):
 			site_customer.widget.can_add_related = False
 			site_producer.queryset = SiteProducer.objects.all(
 				).not_the_buyinggroup().active().order_by(
-	 			"short_profile_name")
+				"short_profile_name")
 			site_customer.queryset = SiteCustomer.objects.all(
 				).not_the_buyinggroup().active().order_by(
-	 			"short_basket_name")
- 		return form
+				"short_basket_name")
+		return form
 
 	def get_actions(self, request):
 		actions = super(BankAccountAdmin, self).get_actions(request)

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from production_settings import *
+from common_settings import *
 
 ### Site 1 specific parameters
-SITE_ID = 1
-ALLOWED_HOSTS = ['$REPANIER.BE$','$REPANIER.LOCAL$']
+SITE_ID = 1 if os.getenv('DJANGO_SETTINGS_MODULE_SITE_ID','') == '1' else 1 / 0
+ALLOWED_HOSTS = ['.$REPANIER.BE$',]
 EMAIL_SUBJECT_PREFIX = '['+ ALLOWED_HOSTS[0] +']'
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", ALLOWED_HOSTS[0], "public")
 TEMPLATE_DIRS = (
@@ -11,13 +11,6 @@ TEMPLATE_DIRS = (
 )
 CACHE_MIDDLEWARE_KEY_PREFIX = ALLOWED_HOSTS[0]
 CMS_CACHE_PREFIX = ALLOWED_HOSTS[0]
-# BEGIN OF : Use email instead of username as login name
-# from django.contrib.auth.models import User
-## ImportError: Could not import settings 'mysite.repanier_settings' (Is it on sys.path? Is there an import error in the settings file?): cannot import name auth
-# User.USERNAME_FIELD = 'email'
-# User.REQUIRED_FIELDS.remove('email')
-# User._meta.get_field('email')._unique = True
-# END OF : Use email instead of username as login name
 
 CMS_TEMPLATES = (
     ('home.html', gettext("Homepage")),

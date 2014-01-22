@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from production_settings import *
+from common_settings import *
 
 ### Site 5 specific parameters
-SITE_ID = 5
-ALLOWED_HOSTS = ['lelensois.$REPANIER.BE$','lelensois.$REPANIER.LOCAL$']
+SITE_ID = 5 if os.getenv('DJANGO_SETTINGS_MODULE_SITE_ID','') == '5' else 1 / 0
+ALLOWED_HOSTS = ['lelensois.$REPANIER.BE$',]
 EMAIL_SUBJECT_PREFIX = '['+ ALLOWED_HOSTS[0] +']'
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", ALLOWED_HOSTS[0], "public")
 TEMPLATE_DIRS = (

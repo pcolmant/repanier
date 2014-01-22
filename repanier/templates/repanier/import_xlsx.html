@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags sekizai_tags menu_tags compress i18n l10n crispy_forms_tags %}
+
+{% block content %}
+
+<p>Select tag to apply:</p>
+
+<form enctype="multipart/form-data" action="" method="post">
+    {% csrf_token %}
+    {{ import_xlsx_form }}
+    {{ context_instance }}
+
+    <p>The tag will be applied to:</p>
+
+    <ul>{{ permanences|unordered_list }}</ul>
+
+    <input type="hidden" name="action" value="import_xlsx" />
+    <input type="submit" name="apply" value="Apply tag" />
+</form>
+
+{% endblock %}

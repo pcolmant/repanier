@@ -75,15 +75,11 @@
     <footer class="row">
       <div class="large-12 columns">
         <hr />
-        <div class="row">
-          <div class="large-12 columns">
-            {% block footer %}
-              {% placeholder 'footer' or %}
-              <p>Nous joindre : coordi at repanier.be | Participer : <a href="https://github.com/pcolmant/repanier">github</a> | Repanier utilise <a href="https://www.django-cms.org/en/">Django CMS 3</a> et <a href="http://foundation.zurb.com/">Foundation 5</a></p>
-              {% endplaceholder %}
-            {% endblock %}
-          </div>
-        </div>
+        {% block footer %}
+          {% placeholder 'footer' or %}
+          <p>Nous joindre : coordi at repanier.be | Participer : <a href="https://github.com/pcolmant/repanier">github</a> | Repanier utilise <a href="https://www.django-cms.org/en/">Django CMS 3</a> et <a href="http://foundation.zurb.com/">Foundation 5</a></p>
+          {% endplaceholder %}
+        {% endblock %}
       </div>
     </footer>
     {% addtoblock "js" %}<script src="{{ STATIC_URL }}foundation/js/vendor/jquery.js"></script>{% endaddtoblock %}
