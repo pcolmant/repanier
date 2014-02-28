@@ -14,8 +14,8 @@ Login as : root
 
 .. code:: bash
 
-	sudo apt-get update
-	sudo apt-get install sudo
+	apt-get update
+	apt-get install sudo
 	nano /etc/sudoers
 		# User privilege specification
 		root	ALL=(ALL:ALL) ALL
