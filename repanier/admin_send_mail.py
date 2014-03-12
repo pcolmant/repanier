@@ -62,7 +62,7 @@ def email_offers(permanence_id, current_site):
 		bcc=bcc_email
 	)
 	email.attach_alternative(html_content, "text/html")
-	# email.send()
+	email.send()
 
 def email_orders(permanence_id, current_site):
 	permanence = Permanence.objects.get(id=permanence_id)
@@ -110,7 +110,7 @@ def email_orders(permanence_id, current_site):
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		# email.send()
+		email.send()
 	customer_set = Customer.objects.filter(
 		purchase__permanence=permanence_id).order_by().distinct()
 	for customer in customer_set:
@@ -127,7 +127,7 @@ def email_orders(permanence_id, current_site):
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		# email.send()
+		email.send()
 	wb = export_orders_xlsx(permanence=permanence, wb=None)
 	to_email_board = []
 	for permanenceboard in PermanenceBoard.objects.filter(
@@ -146,7 +146,7 @@ def email_orders(permanence_id, current_site):
 		save_virtual_workbook(wb), 
 		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 	email.attach_alternative(html_content, "text/html")
-	# email.send()
+	email.send()
 
 def email_invoices(permanence_id, current_site):
 	permanence = Permanence.objects.get(id=permanence_id)
@@ -174,7 +174,7 @@ def email_invoices(permanence_id, current_site):
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		# email.send()
+		email.send()
 	customer_set = Customer.objects.filter(
 		purchase__permanence=permanence_id).order_by().distinct()
 	for customer in customer_set:
@@ -191,7 +191,7 @@ def email_invoices(permanence_id, current_site):
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		# email.send()
+		email.send()
 	wb = export_invoices_xlsx(permanence=permanence, wb=None)
 	for permanenceboard in PermanenceBoard.objects.filter(
 		permanence=permanence_id).order_by():
@@ -208,4 +208,4 @@ def email_invoices(permanence_id, current_site):
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		# email.send()
+		email.send()
