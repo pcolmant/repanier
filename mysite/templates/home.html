@@ -2,58 +2,62 @@
 {% load cms_tags %}
 
 {% block base_content %}
-    <div class="large-12 columns">
-        {% placeholder "home-hero" or %}`
-        <h1>Repanier<br/>
-        <small>Repanier est un projet <a href="http://opensource.org/licenses/GPL-3.0">open source (GPL-3.0)</a> destiné aux groupements d'achats et aux producteurs locaux.</small></h1>
-        <h3>Qui sommes-nous<br/><small>
-          Repanier, contraction de repas et panier, est le fruit de l'expérience des membres de plusieurs groupements d'achats</li>
-          <ul class="square">
-          <li><a href="http://ptidej.gasath.be/">Gasath, groupe ptidej</a></li>
-          <li><a href="http://apero.gasath.be/">Gasath, groupe apéro</a></li>
-          <li><a href="http://www.lepanierlensois.be/">Le Panier Lensois</a></li>
+    <div class="container">
+      <div class="jumbotron">
+        {% placeholder "home-hero" or %}
+        <h3>Repanier</h3>
+        <p>Repanier est un outil de gestion du cycle des permamnences destiné aux groupements d'achats et aux producteurs locaux.</p>
+        <p>Contraction de repas et panier, repanier est le fruit de l'expérience des membres de plusieurs groupements d'achats</p>
+          <ul>
+          <li><a href="http://ptidej.gasath.be/">Gasath, groupe ptidej</a>, une trentaine d'acheteurs de produits locaux, de préférence bio, sur Ath</li>
+          <li><a href="http://apero.gasath.be/">Gasath, groupe apéro</a>, une trentaine d'acheteurs de produits locaux et bio sur Ath</li>
+          <li><a href="http://www.lepanierlensois.be/">Le Panier Lensois</a>, une trentaine d'acheteurs de produits locaux et bio sur Lens</li>
+          <li><a href="http://www.lebiodici.be/">Le Bio d'Ici</a>, une quinzaine de maraîchers bio regroupés pour les restaurants, collectivités locales, ...</li>
           </ul>
-        </small></h3>
         {% endplaceholder %}
+      </div>
     </div>
+    <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
 
-    <div class="row">
-        <div class="large-4 columns">
           {% placeholder 'home-col-1'  or %}
-          <h3>Pour le groupement<br/><small>
-          Repanier offre&nbsp;:
-          <ul class="square">
-           <li>Une gestion du calendrier des permanences.</li>
-           <li>Une gestion des offres et commandes.</li>
-           <li>Une gestion des paiements et provisons.</li>
-           <li>Une gestion du transfert des membres et du partage des producteurs entre groupements.</li>
-           <li>Une possibilité de remplacer/ou simplement étendre son site web existant.</li>
-          </ul></small></h3>
+ <div class="panel panel-warning">
+  <div class="panel-heading"><h4>Groupement et Producteur</h4></div> 
+
+          <ul class="list-group">
+           <li class="list-group-item">Gérer les permanences : Offres, commandes, listes de préparations, factures.</li>
+           <li class="list-group-item">Avoir un historique simple et précis des achats, provisions et paiements.</li>
+           <li class="list-group-item">Remplacer ou simplement étendre son site web existant.</li>
+          </ul>
+      </div>
           {% endplaceholder %}
         </div>
-        <div class="large-4 columns">
-          {% placeholder 'home-col-2' or %}            
-          <h3>Pour le producteur<br/><small>
-          Repanier offre&nbsp;:
-          <ul class="square">
-           <li>Une vue centralisée des groupements participants.</li>
-           <li>Une gestion des offres et commandes.</li>
-           <li>Une gestion des paiements et provisons.</li>
-           <li>Une gestion du calendrier des livraisons.</li>
-           <li>Une possibilité de remplacer/ou simplement étendre son site web existant.</li>
-          </ul></small></h3>
+        <div class="col-md-4">
+          {% placeholder 'home-col-2' or %}
+<div class="panel panel-warning">
+  <div class="panel-heading"><h4>Fonctionnalités</h4></div>  
+          <ul class="list-group">
+           <li class="list-group-item">Commander sans encoder de chiffres.</li>
+           <li class="list-group-item">Mettre à jour les offres, tarifs et factures hors ligne.</li>
+           <li class="list-group-item">Transmettre les commandes et factures par mail.</li>
+          </ul>
+      </div>
           {% endplaceholder %}
-       </div>
-       <div class="large-4 columns">
+        </div>
+        <div class="col-md-4">
           {% placeholder 'home-col-3' or %} 
-          <h3>Hébergement<br/><small>
-          L'hébergement de Repanier peut se faire&nbsp;:
-          <ul class="square">
-          <li>Soit à prix coûtant en mutualisation sur notre plateforme. Vous n'avez pas besoin de compétence IT.</li>
-          <li>Soit chez votre hébergeur. Vous avez besoin de compétences IT.</li>
-          </ul></small></h3>
+<div class="panel panel-warning">
+  <div class="panel-heading"><h4>Hébergement</h4></div> 
+          <ul class="list-group">
+          <li class="list-group-item">À prix coûtant en mutualisation sur notre plateforme. Vous n'avez pas besoin de compétence IT.</li>
+          <li class="list-group-item">Chez votre hébergeur. Vous avez besoin de compétences IT.</li>
+          <li class="list-group-item">Projet <a href="http://opensource.org/licenses/GPL-3.0">open source (GPL-3.0)</a></li>
+          </ul>
+      </div>
           {% endplaceholder %}
         </div>
       </div>
-
+    </div>
 {% endblock %}

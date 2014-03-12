@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load cms_tags i18n %}
+{% block title %}{% trans "Password recovery" %}{% endblock %}
+{% block base_content %}
+<div id="content-main">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{% trans "Password recovery" %}</h4>
+      </div>
+      <div class="modal-body">
+{% blocktrans %}Your password has successfully been reset. You can use it right now on the <a href="/go_repanier/">login page</a>.{% endblocktrans %}
+      </div><!-- /form -->
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+{% endblock %}

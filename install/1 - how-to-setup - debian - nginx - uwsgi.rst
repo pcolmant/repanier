@@ -84,6 +84,13 @@ For each of those files create a symbolic link between /etc/uwsgi/apps-enabled a
 
 	sudo ln -s /etc/wsgi/apps-available/´$FILE_NAME$´ /etc/wsgi/apps-enabled/´$FILE_NAME$´
 
+Install RabbitMQ
+----------------
+
+.. code:: bash
+
+	sudo apt-get install rabbitmq-server
+
 Optional : force static IP adress
 ---------------------------------
 

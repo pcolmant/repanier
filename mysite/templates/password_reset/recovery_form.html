@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load i18n %}{% load url from future %}
+{% block title %}{% trans "Password recovery" %}{% endblock %}
+{% block base_content %}
+<div id="content-main">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{% trans "Password recovery" %}</h4>
+      </div>
+      <div class="modal-body">
+<form method="post" action="{{ url }}" accept-charset="UTF-8">
+{% csrf_token %}
+<form method="post" action="/fr/recover/" accept-charset="UTF-8">{% csrf_token %}
+<div class="form-group">
+<p><label for="id_username_or_email">{% trans "Username or Email" %} :</label> <input id="id_username_or_email" name="username_or_email" type="text" /></p>
+</div>
+<button class="btn btn-primary" type="submit">{% trans "Recover my password" %}</button>
+</form>
+      </div><!-- /form -->
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+
+<script type="text/javascript">
+document.getElementById('id_username_or_email').focus()
+</script>
+</div>
+{% endblock %}

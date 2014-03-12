@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load i18n admin_static %}
+{% block base_content %}
+<div id="content-main">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="loginModalLabel">{% trans "Logout" %}</h4>
+      </div>
+      <div class="modal-body">
+{% blocktrans %}You are now disconnected. You can go right now on the <a href="/go_repanier/">login page</a> or on the <a href="/">home page</a>.{% endblocktrans %}
+      </div><!-- /form -->
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+{% endblock %}

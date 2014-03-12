@@ -1,0 +1,134 @@
+{% extends 'subpage_base.html' %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
+{% block sub_content %}
+<div class="container">
+{# {% debug %} #}
+{% if bank_account_set %}
+    <h4>{% trans "Bank movement(s) :" %}</h4>
+    <table class="table table-hover" >
+    <tr>
+        <th>
+            {% trans "Date" %}
+        </th>
+        <th align="right">
+            {% trans "Payment" %}
+        </th>
+        <th align="right">
+            {% trans "Refund" %}
+        </th>
+        <th>
+            {% trans "Comment" %}
+        </th>
+    <tr>
+    {% for bank_account in bank_account_set %}
+    <tr>
+        <td>
+            {{ bank_account.operation_date }}
+        </td>
+        <td align="right">
+            {{ bank_account.bank_amount_in }} &euro;
+        </td>
+        <td align="right">
+            {{ bank_account.bank_amount_out }} &euro;
+        </td>
+        <td>
+        {% if bank_account.operation_comment %}
+            {{ bank_account.operation_comment }}
+        {% endif %}
+        </td>
+    <tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <h4>{% trans "No bank movement found" %}</h4>
+{% endif %}
+{% if purchase_set %}
+    <h4>{% trans "Purchase(s) :" %}</h4>
+    <table class="table table-hover" >
+    <tr>
+        <th>
+            {% trans "Date" %}
+        </th>
+        <th>
+            {% trans "Producer" %}
+        </th>
+        <th>
+            {% trans "Product" %}
+        </th>
+        <th>
+            {% trans "Qty" %}
+        </th>
+        <th>
+            {% trans "Unit price" %}
+        </th>
+        <th>
+            {% trans "Total price" %}
+        </th>
+        <th>
+            {% trans "Comment" %}
+        </th>
+    <tr>
+    {% for purchase in purchase_set %}
+    <tr>
+        <td>
+            {{ purchase.distribution_date }}
+        </td>
+        <td>
+            {{ purchase.producer.short_profile_name | truncatechars:15 }}
+        </td>
+        <td>
+            {{ purchase.long_name }}
+        </td>
+        <td align="right">
+            {{ purchase.prepared_quantity }}
+        </td>
+        <td align="right">
+            {{ purchase.prepared_unit_price }} &euro;
+        </td>
+        <td align="right">
+            {{ purchase.prepared_amount }} &euro;
+        </td>
+        <td>
+        {% if purchase.comment %}
+            {{ purchase.comment }}
+        {% endif %}
+        </td>
+    <tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <h4>{% trans "No purchase found" %}</h4>
+{% endif %}
+</div>
+{% endblock %}
+{% block footer %}
+        <div class="btn-group">
+            {% if previous_customer_invoice_id %}
+                <a href="{% url 'invoice_view' previous_customer_invoice_id %}" class="btn btn-primary">&laquo;</a>
+            {% else %}
+                <a href="#" class="btn btn-disabled">&laquo;</a>
+            {% endif %}
+            {% if next_customer_invoice_id %}
+            <a href="{% url 'invoice_view' next_customer_invoice_id %}" class="btn btn-primary">&raquo;</a>
+            {% else %}
+                <a href="#" class="btn btn-disabled">&raquo;</a>
+            {% endif %}
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary disabled">{% trans "Previous balance" %}  {{ object.previous_balance }} &euro;</button>
+            {% if object.bank_amount_in != 0 %}
+            <button type="button" class="btn btn-primary disabled"> + </button>
+            <button type="button" class="btn btn-primary disabled">{% trans "Payment" %}  {{ object.bank_amount_in }} &euro;</button>
+            {% endif %}
+            {% if object.bank_amount_out != 0 %}
+            <button type="button" class="btn btn-primary disabled"> - </button>
+            <button type="button" class="btn btn-primary disabled">{% trans "Refund" %}  {{ object.bank_amount_out }} &euro;</button>
+            {% endif %}
+            {% if object.purchase_amount != 0 %}
+            <button type="button" class="btn btn-primary disabled"> - </button>
+            <button type="button" class="btn btn-primary disabled">{% trans "Purchase" %}  {{ object.purchase_amount }} &euro;</button>
+            {% endif %}
+            <button type="button" class="btn btn-primary disabled"> = </button>
+            <button type="button" class="btn {% if object.balance < 0 %}btn-danger{% else %}btn-success{% endif %} disabled">{% trans "New balance" %}  {{ object.balance }} &euro;</button>
+        </div>
+{% endblock %}

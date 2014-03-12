@@ -2,12 +2,10 @@
 from const import *
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
 from django.db.models.query import QuerySet
-from django.db.models import Q, F, Sum
 
-from django.contrib.auth.models import User, Group
-from django.contrib.sites.models import Site
-from django.db.models.signals import post_save, post_delete
+from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from djangocms_text_ckeditor.fields import HTMLField
@@ -19,1010 +17,911 @@ from django.core import urlresolvers
 import datetime
 
 try:
-	from south.modelsinspector import add_introspection_rules
-	add_introspection_rules([], 
-		['^djangocms_text_ckeditor\.fields\.HTMLField'])
+  from south.modelsinspector import add_introspection_rules
+  add_introspection_rules([], 
+    ['^djangocms_text_ckeditor\.fields\.HTMLField'])
 except ImportError:
-	pass
+  pass
 
 # Create your models here.
 class LUTQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
+  def active(self):
+    return self.filter(is_active=True)
 
 class LUTManager(models.Manager):
-	def get_queryset(self):
-		return LUTQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
+  def get_queryset(self):
+    return LUTQuerySet(self.model, using=self._db)
 
-	def get_by_natural_key(self, site, short_name):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(site = site, short_name=short_name)
+  def get_by_natural_key(self, short_name):
+    # don't use the filtered qet_queryset but use the default one.
+    return QuerySet(self.model, using=self._db).get(short_name=short_name)
 
 class LUT(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	short_name = models.CharField(_("short_name"), max_length=40)
-	description = HTMLField(_("description"), blank=True)
-	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = LUTManager()
-	objects_without_filter = models.Manager()
+  short_name = models.CharField(_("short_name"), max_length=40, db_index=True, unique=True)
+  description = HTMLField(_("description"), blank=True)
+  is_active = models.BooleanField(_("is_active"), default=True)
+  objects = LUTManager()
 
-	def natural_key(self):
-		return (self.site_id, self.short_name)
-	natural_key.dependencies = ['sites.site']
+  def natural_key(self):
+    return (self.short_name)
 
-	def __unicode__(self):
-		return self.short_name
+  def __unicode__(self):
+    return self.short_name
 
-	class Meta:
-		abstract = True
-		ordering = ("short_name",)
-		unique_together = ("site", "short_name",)
-		index_together = [
-			["site", "short_name"],
-			["short_name"],
-		]
+  class Meta:
+    abstract = True
+    ordering = ("short_name",)
 
 class LUT_ProductionMode(LUT):
 
-	class Meta(LUT.Meta):
-		verbose_name = _("production mode")
-		verbose_name_plural = _("production modes")
+  class Meta(LUT.Meta):
+    verbose_name = _("production mode")
+    verbose_name_plural = _("production modes")
 
 
 class LUT_DepartmentForCustomer(LUT):
 
-	class Meta(LUT.Meta):
-		verbose_name = _("department for customer")
-		verbose_name_plural = _("departments for customer")
+  class Meta(LUT.Meta):
+    verbose_name = _("department for customer")
+    verbose_name_plural = _("departments for customer")
 
 class LUT_DepartmentForProducer(LUT):
 
-	class Meta(LUT.Meta):
-		verbose_name = _("department for producer")
-		verbose_name_plural = _("departments for producer")
+  class Meta(LUT.Meta):
+    verbose_name = _("department for producer")
+    verbose_name_plural = _("departments for producer")
 
 class LUT_PermanenceRole(LUT):
 
-	class Meta(LUT.Meta):
-		verbose_name = _("permanence role")
-		verbose_name_plural = _("permanences roles")
+  class Meta(LUT.Meta):
+    verbose_name = _("permanence role")
+    verbose_name_plural = _("permanences roles")
 
 class ProducerQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
+  def active(self):
+    return self.filter(is_active=True)
 
-	def id(self, id):
-		return self.filter(id = id)
+  def id(self, id):
+    return self.filter(id = id)
+
+  def not_the_buyinggroup(self):
+    return self.filter(represent_this_buyinggroup=False)
+
 
 class ProducerManager(models.Manager):
-	def get_queryset(self):
-		return ProducerQuerySet(self.model, using=self._db)
+  def get_queryset(self):
+    return ProducerQuerySet(self.model, using=self._db)
 
-	def get_by_natural_key(self, *user_key):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			user = User.objects.get_by_natural_key(*user_key)
-		)
+  def get_by_natural_key(self, short_profile_name):
+    # don't use the filtered qet_queryset but use the default one.
+    return QuerySet(self.model, using=self._db).get(
+      short_profile_name = short_profile_name
+    )
 
-	def id(self, id):
-		return self.get_queryset().id(id)
+  def id(self, id):
+    return self.get_queryset().id(id)
 
-	def not_producer_of_the_buyinggroup(self):
-		# Don't allow to add the same producer twice
-		return self.get_queryset(
-			).active().filter(~Q(siteproducer__site=settings.SITE_ID))
+  def not_producer_of_the_buyinggroup(self):
+    # Don't allow to add the same producer twice
+    return self.get_queryset(
+      ).active()
 
 class Producer(models.Model):
-	user = models.OneToOneField(settings.AUTH_USER_MODEL)
-	phone1 = models.CharField(
-		_("phone1"), max_length=20,null=True)
-	phone2 = models.CharField(
-		_("phone2"), max_length=20,null=True, blank=True)
-	fax = models.CharField(
-		_("fax"), max_length=100,null=True, blank=True)
-	bank_account = models.CharField(
-		_("bank_account"), max_length=100,null=True, blank=True)
-	address = models.TextField(_("address"), null=True, blank=True)
-	# Unique id for password reset
-	uuid = models.CharField(
-		_("uuid"), max_length=36,null=True, blank=True)
-	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = ProducerManager()
+  short_profile_name = models.CharField(
+    _("short_profile_name"), max_length=25,null=False, db_index=True, unique=True)
+  long_profile_name = models.CharField(
+    _("long_profile_name"), max_length=100,null=True)
+  email = models.CharField(
+    _("email"), max_length=100,null=True)
+  phone1 = models.CharField(
+    _("phone1"), max_length=20,null=True)
+  phone2 = models.CharField(
+    _("phone2"), max_length=20,null=True, blank=True)
+  fax = models.CharField(
+    _("fax"), max_length=100,null=True, blank=True)
+  bank_account = models.CharField(
+    _("bank_account"), max_length=100,null=True, blank=True)
+  vat_id = models.CharField(
+    _("vat_id"), max_length=20,null=True, blank=True)
+  address = models.TextField(_("address"), null=True, blank=True)
+  password_reset_on = models.DateTimeField(
+    _("password_reset_on"), null=True, blank=True)
+  price_list_multiplier = models.DecimalField(
+    _("price_list_multiplier"),
+    help_text=_('This multiplier is applied to each price automaticaly imported/pushed.'), 
+    default=0, max_digits=4, decimal_places=2)
+  order_description = HTMLField(
+    _("order_description"),
+    help_text=_('This message is send by mail when we ordered something.'),
+    blank=True)
+  invoice_description = HTMLField(
+    _("invoice_description"),
+    help_text=_('This message is send by mail with the invoice report when we ordered something when closing the permanence.'),
+    blank=True)
+  date_balance = models.DateTimeField(
+    _("date_balance"),  default=datetime.date.today)
+  balance = models.DecimalField(
+    _("balance"), max_digits=8, decimal_places=2, default = 0)
+  represent_this_buyinggroup = models.BooleanField(
+    _("represent_this_buyinggroup"), default = False)
+  is_active = models.BooleanField(_("is_active"), default=True)
+  objects = ProducerManager()
 
-	def natural_key(self):
-		return self.user.natural_key()
-	natural_key.dependencies = ['auth.user']
+  def natural_key(self):
+    return self.short_profile_name
 
-	def __unicode__(self):
-		return getattr(self.user, get_user_model().USERNAME_FIELD)
-	
-	class Meta:
-		verbose_name = _("producer")
-		verbose_name_plural = _("producers")
-		ordering = ("user__" + get_user_model().USERNAME_FIELD,)
+  def get_products(self):
+    link = ''
+    if self.id:
+      # changeproducer_url = urlresolvers.reverse(
+      #   'admin:repanier_producer_change', args=(self.id,)
+      # )
+      # link = u'<a href="' + changeproducer_url + '">  ' + unicode(self) + '</a>'
+      # if self.producer:
+      # This producer may have product's list
+      changeproductslist_url = urlresolvers.reverse(
+        'admin:repanier_product_changelist', 
+      )
+      # &&& is used to hide the producer filter
+      link = u'<a href="' + changeproductslist_url + \
+        '?is_active__exact=1&department_for_this_producer=all&producer=' + \
+        str(self.id) + '">  ' + \
+        unicode(_("his_products")) + '</a>'
+    return link
+  get_products.short_description=(_("link to his products"))
+  get_products.allow_tags = True
 
-@receiver(post_save, sender=Producer)
-def producer_post_save(sender, **kwargs):
-	# give access to the producer to private documents for the site "SITE_ID_PRODUCER"
-	producer = kwargs['instance']
-	site = Site.objects.get(id=SITE_ID_PRODUCER) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.add(producer.user)
-
-@receiver(post_delete, sender=Producer)
-def producer_post_delete(sender, **kwargs):
-	# remove access to the producer to private documents for the site "SITE_ID_PRODUCER"
-	producer = kwargs['instance']
-	site = Site.objects.get(id=SITE_ID_PRODUCER) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.remove(producer.user)
-
-class SiteProducerQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
-
-	def id(self, id):
-		return self.filter(id=id)
-
-	def with_login(self):
-		return self.filter(producer__isnull=False)
-
-	def not_the_buyinggroup(self):
-		return self.filter(represent_this_buyinggroup=False)
-
-class SiteProducerManager(models.Manager):
-	def get_queryset(self):
-		return SiteProducerQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
-
-	def get_by_natural_key(self, site, short_profile_name):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			site = site, short_profile_name = short_profile_name
-		)
-
-	def id(self, id):
-		return self.get_queryset().id(id)
-
-class SiteProducer(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	producer = models.ForeignKey(
-		Producer, verbose_name=_("producer"),
-		blank=True, null=True,
-		on_delete=models.PROTECT)
-	short_profile_name = models.CharField(
-		_("short_profile_name"), max_length=25,null=False)
-	long_profile_name = models.CharField(
-		_("long_profile_name"), max_length=100,null=True)
-	memo = HTMLField(
-		_("memo"),blank=True)
-	date_previous_balance = models.DateField(
-		_("date_previous_balance"),	default=datetime.date.today)
-	previous_balance = models.DecimalField(
-		_("previous_balance"), max_digits=8, decimal_places=2, default = 0)
-	amount_in = models.DecimalField(
-		_("amount_in"), max_digits=8, decimal_places=2, default = 0)
-	amount_out = models.DecimalField(
-		_("amount_out"), max_digits=8, decimal_places=2, default = 0)
-	represent_this_buyinggroup = models.BooleanField(
-		_("represent_this_buyinggroup"), default = False)
-	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = SiteProducerManager()
-	objects_without_filter = models.Manager()
-
-	def natural_key(self):
-		return (self.site_id, self.short_profile_name)
-	natural_key.dependencies = ['sites.site', 'repanier.producer']
-
-	def get_products(self):
-		link = ''
-		if self.id:
-			# changeproducer_url = urlresolvers.reverse(
-			# 	'admin:repanier_producer_change', args=(self.id,)
-			# )
-			# link = u'<a href="' + changeproducer_url + '">  ' + unicode(self) + '</a>'
-			if self.producer:
-				# This producer may have product's list
-				changeproductslist_url = urlresolvers.reverse(
-					'admin:repanier_product_changelist', 
-				)
-				# &&& is used to hide the site_producer filter
-				link = u'<a href="' + changeproductslist_url + \
-					'?is_active__exact=1&department_for_this_producer=all&site_producer=' + \
-					str(self.id) + '">  ' + \
-					unicode(_("his_products")) + '</a>'
-		return link
-	get_products.short_description=(_("link to his products"))
-	get_products.allow_tags = True
-
-	def __unicode__(self):
-		return self.short_profile_name
-	
-	class Meta:
-		verbose_name = _("site producer")
-		verbose_name_plural = _("site producers")
-		ordering = ("short_profile_name",)
-		unique_together = (
-			("site", "short_profile_name",),
-			("site", "producer",)
-		)
-		index_together = [
-			["site", "producer"],
-			["site", "short_profile_name"],
-			["short_profile_name"],
-		]
-
-@receiver(post_save, sender=SiteProducer)
-def site_producer_post_save(sender, **kwargs):
-	# give access to the producer to private documents for the site
-	site_producer = kwargs['instance']
-	if site_producer.producer:
-		site = Site.objects.get(id=settings.SITE_ID) 
-		group = Group.objects.get(name=site.domain) 
-		group.user_set.add(site_producer.producer.user)
-
-@receiver(post_delete, sender=SiteProducer)
-def site_producer_post_delete(sender, **kwargs):
-	# remove access to the producer to private documents for the site
-	site_producer = kwargs['instance']
-	if site_producer.producer:
-		site = Site.objects.get(id=settings.SITE_ID) 
-		group = Group.objects.get(name=site.domain) 
-		group.user_set.remove(site_producer.producer.user)
-		user = User.objects.get(id=site_producer.producer.user.id)
-		user.delete()
+  def __unicode__(self):
+    return self.short_profile_name
+  
+  class Meta:
+    verbose_name = _("producer")
+    verbose_name_plural = _("producers")
+    ordering = ("short_profile_name",)
 
 class CustomerQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
+  def active(self):
+    return self.filter(is_active=True)
 
-	def id(self, id):
-		return self.filter(id=id)
+  def may_order(self):
+    return self.filter(may_order=True)
+
+  def id(self, id):
+    return self.filter(id=id)
+
+  def not_the_buyinggroup(self):
+    return self.filter(represent_this_buyinggroup=False)
+
+  def the_buyinggroup(self):
+    return self.filter(represent_this_buyinggroup=True)
 
 class CustomerManager(models.Manager):
-	def get_queryset(self):
-		return CustomerQuerySet(self.model, using=self._db)
+  def get_queryset(self):
+    return CustomerQuerySet(self.model, using=self._db)
 
-	def get_by_natural_key(self, *user_key):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			user = User.objects.get_by_natural_key(*user_key)
-		)
+  def get_by_natural_key(self, short_basket_name):
+    # don't use the filtered qet_queryset but use the default one.
+    return QuerySet(self.model, using=self._db).get(
+      short_basket_name = short_basket_name
+    )
 
-	def id(self, id):
-		return self.get_queryset().id(id)
+  def id(self, id):
+    return self.get_queryset().id(id)
 
-	def not_customer_of_the_buyinggroup(self):
-		# Don't allow to add the same customer twice
-		return self.get_queryset(
-			).active().filter(~Q(sitecustomer__site=settings.SITE_ID))
 
 class Customer(models.Model):
-	user = models.OneToOneField(settings.AUTH_USER_MODEL)
-	phone1 = models.CharField(
-		_("phone1"), max_length=25,null=True)
-	phone2 = models.CharField(
-		_("phone2"), max_length=25,null=True, blank=True)
-	address = models.TextField(
-		_("address"), null=True, blank=True)
-	# Unique id for password reset
-	uuid = models.CharField(
-		_("uuid"), max_length=36,null=True, blank=True)
+  user = models.OneToOneField(settings.AUTH_USER_MODEL)
+  short_basket_name = models.CharField(
+    _("short_basket_name"), max_length=25,null=False, db_index=True, unique=True)
+  long_basket_name = models.CharField(
+    _("long_basket_name"), max_length=100,null=True)
+  phone1 = models.CharField(
+    _("phone1"), max_length=25,null=True)
+  phone2 = models.CharField(
+    _("phone2"), max_length=25,null=True, blank=True)
+  vat_id = models.CharField(
+    _("vat_id"), max_length=20,null=True, blank=True)
+  address = models.TextField(
+    _("address"), null=True, blank=True)
+  password_reset_on = models.DateTimeField(
+    _("password_reset_on"), null=True, blank=True)
+  date_balance = models.DateTimeField(
+    _("date_balance"), default=datetime.date.today)
+  balance = models.DecimalField(
+    _("balance"), max_digits=8, decimal_places=2, default = 0)
+  represent_this_buyinggroup = models.BooleanField(
+    _("represent_this_buyinggroup"), default = False)
+  is_active = models.BooleanField(_("is_active"), default=True)
+  may_order = models.BooleanField(_("may_order"), default=True)
+  objects = CustomerManager()
 
-	is_active = models.BooleanField(
-		_("is_active"), default=True)
-	objects = CustomerManager()
-	objects_without_filter = models.Manager()
+  def natural_key(self):
+    return (self.short_basket_name)
+  natural_key.dependencies = ['repanier.customer']
 
-	def natural_key(self):
-		return self.user.natural_key()
-	natural_key.dependencies = ['auth.user']
+  def __unicode__(self):
+    return self.short_basket_name
 
-	def __unicode__(self):
-		return getattr(self.user, get_user_model().USERNAME_FIELD)
+  class Meta:
+    verbose_name = _("customer")
+    verbose_name_plural = _("customers")
+    ordering = ("short_basket_name",)
 
-	class Meta:
-		verbose_name = _("customer")
-		verbose_name_plural = _("customers")
-		ordering = ("user__" + get_user_model().USERNAME_FIELD,)
+class StaffQuerySet(QuerySet):
+  def active(self):
+    return self.filter(is_active=True)
 
+  def id(self, id):
+    return self.filter(id = id)
 
-class SiteCustomerQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
+class StaffManager(models.Manager):
+  def get_queryset(self):
+    return StaffQuerySet(self.model, using=self._db)
 
-	def id(self, id):
-		return self.filter(id=id)
+  def get_by_natural_key(self, *user_key):
+    # don't use the filtered qet_queryset but use the default one.
+    return QuerySet(self.model, using=self._db).get(
+      user = User.objects.get_by_natural_key(*user_key)
+    )
 
-	def not_the_buyinggroup(self):
-		return self.filter(represent_this_buyinggroup=False)
+class Staff(models.Model):
+  user = models.OneToOneField(
+    settings.AUTH_USER_MODEL, verbose_name=_("login"))
+  customer_responsible =  models.ForeignKey(
+    Customer, verbose_name=_("customer_responsible"),
+    on_delete=models.PROTECT, blank=True, null=True)
+  long_name = models.CharField(
+    _("long_name"), max_length=100,null=True)
+  function_description = HTMLField(
+    _("function_description"),
+    blank=True)
+  is_reply_to_order_email = models.BooleanField(_("is_reply_to_order_email"), 
+    default=False)
+  is_reply_to_invoice_email = models.BooleanField(_("is_reply_to_invoice_email"),
+    default=False)
+  password_reset_on = models.DateTimeField(
+    _("password_reset_on"), null=True, blank=True)
+  is_active = models.BooleanField(_("is_active"), default=True)
+  objects = StaffManager()
 
-	def with_login(self):
-		return self.filter(customer__isnull=False)
+  def natural_key(self):
+    return self.user.natural_key()
+  natural_key.dependencies = ['auth.user']
 
-class SiteCustomerManager(models.Manager):
-	def get_queryset(self):
-		return SiteCustomerQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
+  def get_customer_phone1(self):
+    try:
+      return self.customer_responsible.phone1
+    except:
+      return "N/A"
+  get_customer_phone1.short_description=(_("phone1"))
+  get_customer_phone1.allow_tags = False
 
-	def get_by_natural_key(self, site, short_basket_name):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			site = site, short_basket_name = short_basket_name
-		)
+  def __unicode__(self):
+    return self.long_name
 
-	def id(self, id):
-		return self.get_queryset().id(id)
-
-class SiteCustomer(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	customer = models.ForeignKey(
-		Customer, 
-		verbose_name=_("customer"),
-		blank=True, null=True,
-		on_delete=models.PROTECT)
-	short_basket_name = models.CharField(
-		_("short_basket_name"), max_length=25,null=False)
-	long_basket_name = models.CharField(
-		_("long_basket_name"), max_length=100,null=True)
-	date_previous_balance = models.DateField(
-		_("date_previous_balance"), default=datetime.date.today)
-	previous_balance = models.DecimalField(
-		_("previous_balance"), max_digits=8, decimal_places=2, default = 0)
-	amount_in = models.DecimalField(
-		_("amount_in"), max_digits=8, decimal_places=2, default = 0)
-	amount_out = models.DecimalField(
-		_("amount_out"), max_digits=8, decimal_places=2, default = 0)
-	represent_this_buyinggroup = models.BooleanField(
-		_("represent_this_buyinggroup"), default = False)
-	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = SiteCustomerManager()
-	objects_without_filter = models.Manager()
-
-	def natural_key(self):
-		return (self.site_id, self.short_basket_name)
-	natural_key.dependencies = ['sites.site', 'repanier.customer']
-
-	def __unicode__(self):
-		return self.short_basket_name
-	
-	class Meta:
-		verbose_name = _("site customer")
-		verbose_name_plural = _("site customers")
-		ordering = ("short_basket_name",)
-		unique_together = (
-			("site", "short_basket_name",),
-			("site", "customer",)
-		)
-		index_together = [
-			["site", "customer"],
-			["site", "short_basket_name"],
-			["short_basket_name"],
-		]
-
-@receiver(post_save, sender=SiteCustomer)
-def site_customer_post_save(sender, **kwargs):
-	# give access to the customer to private documents for the site
-	site_customer = kwargs['instance']
-	if site_customer.customer:
-		site = Site.objects.get(id=settings.SITE_ID) 
-		group = Group.objects.get(name=site.domain)
-		group.user_set.add(site_customer.customer.user)
-
-@receiver(post_delete, sender=SiteCustomer)
-def site_customer_post_delete(sender, **kwargs):
-	# remove access to the customer to private documents for the site
-	site_customer = kwargs['instance']
-	if site_customer.customer:
-		site = Site.objects.get(id=settings.SITE_ID) 
-		group = Group.objects.get(name=site.domain) 
-		group.user_set.remove(site_customer.customer.user)
-		user = User.objects.get(id=site_customer.customer.user.id)
-		user.delete()
-
-class SiteStaffQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
-
-	def id(self, id):
-		return self.filter(id = id)
-
-class SiteStaffManager(models.Manager):
-	def get_queryset(self):
-		return SiteProducerQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
-
-	def get_by_natural_key(self, *user_key):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			user = User.objects.get_by_natural_key(*user_key)
-		)
-
-class SiteStaff(models.Model):
-	user = models.OneToOneField(
-		settings.AUTH_USER_MODEL, verbose_name=_("login"))
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	customer_responsible =  models.ForeignKey(
-		SiteCustomer, verbose_name=_("customer_responsible"),
-		on_delete=models.PROTECT)
-	long_name = models.CharField(
-		_("long_name"), max_length=100,null=True)
-	memo = HTMLField(
-		_("memo"), blank=True)
-	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = SiteStaffManager()
-	objects_without_filter = models.Manager()
-
-	def natural_key(self):
-		return self.user.natural_key()
-	natural_key.dependencies = ['auth.user']
-
-	def get_sitecustomer_phone1(self):
-		return self.customer_responsible.customer.phone1
-	get_sitecustomer_phone1.short_description=(_("phone1"))
-	get_sitecustomer_phone1.allow_tags = False
-
-	def __unicode__(self):
-		return self.long_name
-
-	class Meta:
-		verbose_name = _("staff member")
-		verbose_name_plural = _("staff members")
-		ordering = ("long_name",)
-		# ordering = ("customer_responsible__short_basket_name",)
-
-
-@receiver(post_save, sender=SiteStaff)
-def site_staff_post_save(sender, **kwargs):
-	# give access to the staff to private documents for the site
-	site_staff = kwargs['instance']
-	site = Site.objects.get(id=settings.SITE_ID) 
-	group = Group.objects.get(name=site.domain)
-	group.user_set.add(site_staff.user)
-
-@receiver(post_delete, sender=SiteStaff)
-def site_staff_post_delete(sender, **kwargs):
-	# remove access to the staff to private documents for the site
-	site_staff = kwargs['instance']
-	site = Site.objects.get(id=settings.SITE_ID) 
-	group = Group.objects.get(name=site.domain) 
-	group.user_set.remove(site_staff.user)
-	user = User.objects.get(id=site_staff.user.id)
-	user.delete()
+  class Meta:
+    verbose_name = _("staff member")
+    verbose_name_plural = _("staff members")
+    ordering = ("long_name",)
+    # ordering = ("customer_responsible__short_basket_name",)
 
 
 class ProductQuerySet(QuerySet):
 
-	def id(self, id):
-		return self.filter(id=id)
+  def id(self, id):
+    return self.filter(id=id)
 
-	def active(self):
-		return self.filter(is_active=True)
+  def active(self):
+    return self.filter(is_active=True)
 
-	def site_producer_is(self, id):
-		return self.filter(site_producer__id__exact=id)
+  def producer_is(self, id):
+    return self.filter(producer__id__exact=id)
 
-	def department_for_producer_is(self, id):
-		return self.filter(department_for_producer__id__exact=id)
+  def department_for_producer_is(self, id):
+    return self.filter(department_for_producer__id__exact=id)
 
-	def is_not_selected_for_offer(self):
-		return self.filter(is_into_offer=False)
+  def is_not_selected_for_offer(self):
+    return self.filter(is_into_offer=False)
 
-	def is_selected_for_offer(self):
-		return self.filter(is_into_offer=True)
+  def is_selected_for_offer(self):
+    return self.filter(is_into_offer=True)
 
-	def is_waiting_to_be_selected_for_offer(self):
-		return self.filter(is_into_offer=None)
+  def add_product_manually(self):
+    return self.filter(automatically_added=ADD_PORDUCT_MANUALY)
+
+  def is_waiting_to_be_selected_for_offer(self):
+    return self.filter(is_into_offer=None)
 
 class ProductManager(models.Manager):
-	def get_queryset(self):
-		return ProductQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
+  def get_queryset(self):
+    return ProductQuerySet(self.model, using=self._db)
 
-	def get_by_natural_key(self, site_id, long_name, *siteproducer_key):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			site_id = site_id, long_name = long_name,
-			site_producer = SiteProducer.objects.get_by_natural_key(*siteproducer_key)
-		)
+  def get_by_natural_key(self, long_name, *producer_key):
+    # don't use the filtered qet_queryset but use the default one.
+    return QuerySet(self.model, using=self._db).get(
+      long_name = long_name,
+      producer = Producer.objects.get_by_natural_key(*producer_key)
+    )
 
-	def id(self, id):
-		return self.get_queryset().id(id)
+  def id(self, id):
+    return self.get_queryset().id(id)
 
 class Product(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	site_producer = models.ForeignKey(
-		SiteProducer, verbose_name=_("producer"), on_delete=models.PROTECT)
-	long_name = models.CharField(_("long_name"), max_length=100)
-	production_mode = models.ForeignKey(
-		LUT_ProductionMode, verbose_name=_("production mode"), 
-		related_name = 'production_mode+', on_delete=models.PROTECT)
-	picture = FilerImageField(
-		verbose_name=_("picture"), related_name="picture", 
-		null=True, blank=True)
-	order_description = HTMLField(_("order_description"), blank=True) 
-	usage_description = HTMLField(_("usage_description"), blank=True) 
+  producer = models.ForeignKey(
+    Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
+  long_name = models.CharField(_("long_name"), max_length=100)
+  production_mode = models.ForeignKey(
+    LUT_ProductionMode, verbose_name=_("production mode"), 
+    related_name = 'production_mode+', 
+    null=True, blank=True, on_delete=models.PROTECT)
+  picture = FilerImageField(
+    verbose_name=_("picture"), related_name="picture", 
+    null=True, blank=True)
+  offer_description = HTMLField(_("offer_description"), blank=True) 
+  usage_description = HTMLField(_("usage_description"), blank=True) 
 
-	department_for_customer = models.ForeignKey(
-		LUT_DepartmentForCustomer, verbose_name=_("department_for_customer"), 
-		on_delete=models.PROTECT)
-	department_for_producer = models.ForeignKey(
-		LUT_DepartmentForProducer, 
-		verbose_name=_("department_for_producer"), on_delete=models.PROTECT)
-	product_order = models.PositiveIntegerField(
-		_("position_into_products_list_of_the_producer"), 
-		default=0, blank=False, null=False)	
-	placement = models.CharField(
-		max_length=3, 
-		choices=LUT_PRODUCT_PLACEMENT,
-		default=PRODUCT_PLACEMENT_BASKET_MIDDLE,
-		verbose_name=_("product_placement"), 
-		help_text=_('used for helping to determine the order of prepration of this product'))
+  department_for_customer = models.ForeignKey(
+    LUT_DepartmentForCustomer, verbose_name=_("department_for_customer"), 
+    null=True, blank=True, on_delete=models.PROTECT)
+  department_for_producer = models.ForeignKey(
+    LUT_DepartmentForProducer, 
+    verbose_name=_("department_for_producer"), 
+    null=True, blank=True, on_delete=models.PROTECT)
+  product_order = models.PositiveIntegerField(
+    _("position_into_products_list_of_the_producer"), 
+    default=0, blank=False, null=False)
+  product_reorder = models.PositiveIntegerField(
+    _("position_into_products_list_of_the_producer"), 
+    default=0)  
+  placement = models.CharField(
+    max_length=3, 
+    choices=LUT_PRODUCT_PLACEMENT,
+    default=PRODUCT_PLACEMENT_BASKET_MIDDLE,
+    verbose_name=_("product_placement"), 
+    help_text=_('used for helping to determine the order of prepration of this product'))
 
-	order_by_kg_pay_by_kg = models.BooleanField(
-		_("order_by_kg_pay_by_kg"),
-		help_text=_('order_by_kg_pay_by_kg (yes / no)'))
-	order_by_piece_pay_by_kg = models.BooleanField(
-		_("order_by_piece_pay_by_kg"),
-		help_text=_('order_by_piece_pay_by_kg (yes / no)'))
-	order_average_weight = models.DecimalField(
-		_("order_average_weight"),
-		help_text=_('if usefull, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
-		default=0, max_digits=6, decimal_places=3)
-	order_by_piece_pay_by_piece = models.BooleanField(
-		_("order_by_piece_pay_by_piece"),
-		help_text=_('order_by_piece_pay_by_piece (yes / no)'))
+  order_by_kg_pay_by_kg = models.BooleanField(
+    _("order_by_kg_pay_by_kg"))
+  order_by_piece_pay_by_kg = models.BooleanField(
+    _("order_by_piece_pay_by_kg"))
+  order_average_weight = models.DecimalField(
+    _("order_average_weight"),
+    help_text=_('if usefull, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
+    default=0, max_digits=6, decimal_places=3)
+  order_by_piece_pay_by_piece = models.BooleanField(
+    _("order_by_piece_pay_by_piece"))
 
-	producer_must_give_order_detail_per_customer = models.BooleanField(
-		_("individual package (yes/no)"),
-		help_text=_("producer_must_give_order_detail_per_customer"))
-	producer_unit_price = models.DecimalField(
-		_("producer_unit_price"),
-		help_text=_('last known price (into the billing unit)'), 
-		max_digits=8, decimal_places=2)
+  producer_must_give_order_detail_per_customer = models.BooleanField(
+    _("individual package (yes/no)"),
+    help_text=_("producer_must_give_order_detail_per_customer"))
+  # 3 decimals required for rounding raisons
+  producer_original_unit_price = models.DecimalField(
+    _("producer_original_unit_price"),
+    help_text=_('last known price before reduction (or ...) (into the billing unit), vat or potential compensation included'), 
+    default=0, max_digits=9, decimal_places=3)
+  # 3 decimals required for rounding raisons
+  producer_unit_price = models.DecimalField(
+    _("producer_unit_price"),
+    help_text=_('last known price (into the billing unit), vat or potential compensation included'), 
+    default=0, max_digits=9, decimal_places=2)
+  vat_level = models.CharField(
+    max_length=3, 
+    choices=LUT_VAT,
+    default=VAT_400,
+    verbose_name=_("vat or compensation"), 
+    help_text=_('When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
 
-	customer_minimum_order_quantity = models.DecimalField(
-		_("customer_minimum_order_quantity"),
-		help_text=_('minimum order qty (eg : 0,1 Kg [i.e. 100 gr], 1 piece, 3 Kg)'),
-		default=0, max_digits=6, decimal_places=3)
-	customer_increment_order_quantity = models.DecimalField(
-		_("customer_increment_order_quantity"), 
-		help_text=_('increment order qty (eg : 0,05 Kg [i.e. 50 gr], 1 piece, 3 Kg)'),
-		default=0, max_digits=6, decimal_places=3)
-	customer_alert_order_quantity = models.DecimalField(
-		_("customer_alert_order_quantity"), 
-		help_text=_('maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 pieces, 9 Kg)'),
-		default=0, max_digits=6, decimal_places=3)
+  customer_minimum_order_quantity = models.DecimalField(
+    _("customer_minimum_order_quantity"),
+    help_text=_('minimum order qty (eg : 0,1 Kg [i.e. 100 gr], 1 piece, 3 Kg)'),
+    default=0, max_digits=6, decimal_places=3)
+  customer_increment_order_quantity = models.DecimalField(
+    _("customer_increment_order_quantity"), 
+    help_text=_('increment order qty (eg : 0,05 Kg [i.e. 50 gr], 1 piece, 3 Kg)'),
+    default=0, max_digits=6, decimal_places=3)
+  customer_alert_order_quantity = models.DecimalField(
+    _("customer_alert_order_quantity"), 
+    help_text=_('maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 pieces, 9 Kg)'),
+    default=0, max_digits=6, decimal_places=3)
 
-	permanences = models.ManyToManyField(
-		'Permanence', through='OfferItem', null=True, blank=True)
-	is_into_offer = models.NullBooleanField(_("is_into_offer"))
-	is_active = models.BooleanField(_("is_active"), default=True)
-	is_created_on = models.DateTimeField(
-		_("is_cretaed_on"), auto_now_add = True, blank=True)
-	is_updated_on = models.DateTimeField(
-		_("is_updated_on"), auto_now=True, blank=True)
-	objects = ProductManager()
-	objects_without_filter = models.Manager()
+  permanences = models.ManyToManyField(
+    'Permanence', through='OfferItem', null=True, blank=True)
+  is_into_offer = models.BooleanField(_("is_into_offer"))
 
-	def natural_key(self):
-		return (self.site_id, self.long_name) + self.site_producer.natural_key()
-	natural_key.dependencies = ['sites.site', 'repanier.siteproducer']
+  automatically_added = models.CharField(
+    max_length=3, 
+    choices=LUT_ADD_PRODUCT,
+    default=ADD_PORDUCT_MANUALY,
+    verbose_name=_("If is into offer, automatically"), 
+    help_text=_('this represent returnable, special offer, subscription and is automaticaly added to customer or group basket at order closure'))
 
-	def __unicode__(self):
-		return self.site_producer.short_profile_name + ', ' + self.long_name
+  is_active = models.BooleanField(_("is_active"), default=True)
+  is_created_on = models.DateTimeField(
+    _("is_cretaed_on"), auto_now_add = True, blank=True)
+  is_updated_on = models.DateTimeField(
+    _("is_updated_on"), auto_now=True, blank=True)
+  objects = ProductManager()
 
-	class Meta:
-		verbose_name = _("product")
-		verbose_name_plural = _("products")
-		# First field of ordering must be position_for_producer for 'adminsortable' 
-		ordering = ("product_order",)
-		unique_together = ("site", "site_producer", "long_name",)
-		index_together = [
-			["product_order", "id"],
-			["site", "product_order"],
-			["site", "site_producer", "long_name"],
-		]
+  def natural_key(self):
+    return (self.long_name) + self.producer.natural_key()
+  natural_key.dependencies = ['repanier.producer']
+
+  def __unicode__(self):
+    return self.producer.short_profile_name + ', ' + self.long_name
+
+  class Meta:
+    verbose_name = _("product")
+    verbose_name_plural = _("products")
+    # First field of ordering must be position_for_producer for 'adminsortable' 
+    ordering = ("product_order",)
+    unique_together = ("producer", "long_name",)
+    index_together = [
+      ["product_order", "id"],
+      ["producer", "long_name"],
+    ]
 
 class PermanenceQuerySet(QuerySet):
-	def is_open(self):
-		return self.filter(status=PERMANENCE_OPEN)
+  def is_opened(self):
+    return self.filter(status=PERMANENCE_OPENED)
+
+  def is_send(self):
+    return self.filter(status=PERMANENCE_SEND)
 
 class PermanenceManager(models.Manager):
-	def get_queryset(self):
-		return PermanenceQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
+  def get_queryset(self):
+    return PermanenceQuerySet(self.model, using=self._db)
 
-	def get_by_natural_key(self, site_id, distribution_date, short_name):
-		# don't use the filtered qet_queryset but use the default one.
-		return QuerySet(self.model, using=self._db).get(
-			site_id = site_id, distribution_date = distribution_date,
-			short_name = short_name
-		)
+  def get_by_natural_key(self, distribution_date, short_name):
+    # don't use the filtered qet_queryset but use the default one.
+    return QuerySet(self.model, using=self._db).get(
+      distribution_date = distribution_date,
+      short_name = short_name
+    )
 
 class Permanence(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
+  short_name = models.CharField(_("short_name"), max_length=40, blank=True)
+  status = models.CharField(
+    max_length=3, 
+    choices=LUT_PERMANENCE_STATUS,
+    default=PERMANENCE_PLANIFIED,
+    verbose_name=_("permanence_status"), 
+    help_text=_('status of the permanence from planified, orders opened, orders closed, send, done'))
+  distribution_date = models.DateField(_("distribution_date"))
+  offer_description = HTMLField(_("offer_description"),
+    help_text=_('This message is send by mail to all customers when opening the order or on top of the web order screen.'),
+    blank=True)
+  order_description = HTMLField(
+    _("order_description"),
+    help_text=_('This message is send by mail to all customers having bought something and to the preparation team when sending the orders to the producers.'),
+    blank=True)
+  invoice_description = HTMLField(
+    _("invoice_description"),
+    help_text=_('This message is send by mail to all customers having bought something when closing the permamence.'),
+    blank=True)
+  producers = models.ManyToManyField(
+    'Producer', null=True, blank=True,
+    verbose_name = _("producers"))
+  automaticaly_closed_on = models.DateTimeField(
+    _("is_automaticaly_closed_on"), blank=True, null=True)
+  is_done_on = models.DateTimeField(
+    _("is_done_on"), blank=True, null=True)
 
-	short_name = models.CharField(_("short_name"), max_length=25, blank=True)
-	status = models.CharField(
-		max_length=3, 
-		choices=LUT_PERMANENCE_STATUS,
-		default=PERMANENCE_PLANIFIED,
-		verbose_name=_("permanence_status"), 
-		help_text=_('status of the permanence from planified, orders opened, orders closed, send, done'))
-	distribution_date = models.DateField(_("distribution_date"))
-	memo = HTMLField(_("memo"),blank=True)
-	producers = models.ManyToManyField(
-		'SiteProducer',	null=True, blank=True,
-		verbose_name = _("site producers"))
-		# limit_choices_to={'site__exact': settings.SITE_ID})
-	# products = models.ManyToManyField(
-	# 	'Product', through='OfferItem',	null=True, blank=True)
-	is_created_on = models.DateTimeField(
-		_("is_cretaed_on"), auto_now_add = True)
-	is_updated_on = models.DateTimeField(
-		_("is_updated_on"), auto_now=True)
-	objects = PermanenceManager()
-	objects_without_filter = models.Manager()
+  is_created_on = models.DateTimeField(
+    _("is_cretaed_on"), auto_now_add = True)
+  is_updated_on = models.DateTimeField(
+    _("is_updated_on"), auto_now=True)
+  objects = PermanenceManager()
 
-	def natural_key(self):
-		return (self.site_id, self.distribution_date, self.short_name)
-	natural_key.dependencies = ['sites.site']
+  def natural_key(self):
+    return (self.distribution_date, self.short_name)
 
-	def get_siteproducers(self):
-		if self.id:
-			if self.status==PERMANENCE_PLANIFIED:
-				changelist_url = urlresolvers.reverse(
-				'admin:repanier_product_changelist', 
-				)
-				return u", ".join([u'<a href="' + changelist_url + \
-					'?department_for_this_producer=all&site_producer=' + str(p.id) + '" target="_blank">' + \
-					 p.short_profile_name + '</a>' for p in self.producers.all()])
-			else:
-				# change_url = urlresolvers.reverse(
-				# 	'admin:repanier_permanenceinpreparation_change', 
-				# 	args=(self.id,)
-				# 	)
-				return u", ".join([
-					p.short_profile_name + '</a>' for p in self.producers.all()
-				])
-		return u''
-	get_siteproducers.short_description=(_("producers in this permanence"))
-	get_siteproducers.allow_tags = True
+  def get_producers(self):
+    if self.id:
+      if self.status==PERMANENCE_PLANIFIED:
+        changelist_url = urlresolvers.reverse(
+        'admin:repanier_product_changelist', 
+        )
+        return u", ".join([u'<a href="' + changelist_url + \
+          '?department_for_this_producer=all&producer=' + str(p.id) + '" target="_blank">' + \
+           p.short_profile_name + '</a>' for p in self.producers.all()])
+      else:
+        # change_url = urlresolvers.reverse(
+        #   'admin:repanier_permanenceinpreparation_change', 
+        #   args=(self.id,)
+        #   )
+        return u", ".join([
+          p.short_profile_name + '</a>' for p in self.producers.all()
+        ])
+    return u''
+  get_producers.short_description=(_("producers in this permanence"))
+  get_producers.allow_tags = True
 
-	def get_sitecustomers(self):
-		if self.id:
-			changelist_url = urlresolvers.reverse(
-			'admin:repanier_purchase_changelist', 
-			)
-			return u", ".join([u'<a href="' + changelist_url + \
-				'?permanence=' + str(self.id) + \
-				'&site_customer=' + str(c.id) + '" target="_blank">' + \
-				c.short_basket_name + '</a>' 
-				for c in SiteCustomer.objects.filter(
-					purchase__permanence_id=self.id).distinct()])
-		return u''
-	get_sitecustomers.short_description=(_("customers in this permanence"))
-	get_sitecustomers.allow_tags = True
+  def get_customers(self):
+    if self.id:
+      changelist_url = urlresolvers.reverse(
+      'admin:repanier_purchase_changelist', 
+      )
+      return u", ".join([u'<a href="' + changelist_url + \
+        '?permanence=' + str(self.id) + \
+        '&customer=' + str(c.id) + '" target="_blank">' + \
+        c.short_basket_name + '</a>' 
+        for c in Customer.objects.filter(
+          purchase__permanence_id=self.id).distinct()])
+    return u''
+  get_customers.short_description=(_("customers in this permanence"))
+  get_customers.allow_tags = True
 
-	def get_board(self):
-		board = ""
-		if self.id:
-			permanenceboard_set = PermanenceBoard.objects.filter(
-				permanence=self)
-			first_board = True
-			if permanenceboard_set:
-				for permanenceboard in permanenceboard_set:
-					r_link = ''
-					r=permanenceboard.permanence_role
-					if r:
-						r_url = urlresolvers.reverse(
-							'admin:repanier_lut_permanencerole_change', 
-							args=(r.id,)
-						)
-						r_link = '<a href="' + r_url + \
-							'" target="_blank">' + r.short_name + '</a>'
-					c_link = ''
-					c=permanenceboard.site_customer
-					if c:
-						c_url = urlresolvers.reverse(
-							'admin:repanier_customer_change', 
-							args=(c.customer.id,)
-						)
-						c_link = ' -> <a href="' + c_url + \
-							'" target="_blank">' + c.short_basket_name + '</a>'
-					if not(first_board):
-						board += '<br/>'
-					board += r_link + c_link
-					first_board = False
-		return board
-	get_board.short_description=(_("permanence board"))
-	get_board.allow_tags = True
+  def get_board(self):
+    board = ""
+    if self.id:
+      permanenceboard_set = PermanenceBoard.objects.filter(
+        permanence=self)
+      first_board = True
+      if permanenceboard_set:
+        for permanenceboard in permanenceboard_set:
+          r_link = ''
+          r=permanenceboard.permanence_role
+          if r:
+            r_url = urlresolvers.reverse(
+              'admin:repanier_lut_permanencerole_change', 
+              args=(r.id,)
+            )
+            r_link = '<a href="' + r_url + \
+              '" target="_blank">' + r.short_name + '</a>'
+          c_link = ''
+          c=permanenceboard.customer
+          if c:
+            c_url = urlresolvers.reverse(
+              'admin:repanier_customer_change', 
+              args=(c.id,)
+            )
+            c_link = ' -> <a href="' + c_url + \
+              '" target="_blank">' + c.short_basket_name + '</a>'
+          if not(first_board):
+            board += '<br/>'
+          board += r_link + c_link
+          first_board = False
+    return board
+  get_board.short_description=(_("permanence board"))
+  get_board.allow_tags = True
 
-	def __unicode__(self):
-		if not self.short_name:
-			label = _("Permanence on ")
-			return label + self.distribution_date.strftime('%d-%m-%Y')
-		return self.short_name
+  def __unicode__(self):
+    if not self.short_name:
+      label = _("Permanence on ")
+      return label + self.distribution_date.strftime('%d-%m-%Y')
+    return self.short_name
 
-	class Meta:
-		verbose_name = _("permanence")
-		verbose_name_plural = _("permanences")
-		ordering = ("distribution_date","short_name",)
-		unique_together = ("site", "distribution_date", "short_name",)
-		index_together = [
-			["site", "distribution_date", "short_name"],
-			["distribution_date", "short_name"],
-		]
+  class Meta:
+    verbose_name = _("permanence")
+    verbose_name_plural = _("permanences")
+    # ordering = ("distribution_date","short_name",)
+    unique_together = ("distribution_date", "short_name",)
+    index_together = [
+      ["distribution_date", "short_name"],
+    ]
 
 class PermanenceBoard(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	site_customer = models.ForeignKey(
-		SiteCustomer, verbose_name=_("customer"),
-		null=True, blank=True, on_delete=models.PROTECT)
-	permanence = models.ForeignKey(
-		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
-	permanence_role = models.ForeignKey(
-		LUT_PermanenceRole, verbose_name=_("permanence_role"),
-		on_delete=models.PROTECT)
+  customer = models.ForeignKey(
+    Customer, verbose_name=_("customer"),
+    null=True, blank=True, on_delete=models.PROTECT)
+  permanence = models.ForeignKey(
+    Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
+  permanence_role = models.ForeignKey(
+    LUT_PermanenceRole, verbose_name=_("permanence_role"),
+    on_delete=models.PROTECT)
 
-	class Meta:
-		verbose_name = _("permanence board")
-		verbose_name_plural = _("permanences board")
-		ordering = ("permanence","permanence_role","site_customer",)
-		unique_together = ("permanence","permanence_role","site_customer",)
-		index_together = [
-			["permanence","permanence_role","site_customer"],
-		]
+  class Meta:
+    verbose_name = _("permanence board")
+    verbose_name_plural = _("permanences board")
+    ordering = ("permanence","permanence_role","customer",)
+    unique_together = ("permanence","permanence_role","customer",)
+    index_together = [
+      ["permanence","permanence_role","customer"],
+    ]
 
 class PermanenceInPreparation(Permanence):
-	class Meta:
-		proxy = True
-		verbose_name = _("permanence in preparation")
-		verbose_name_plural = _("permanences in preparation")
+  class Meta:
+    proxy = True
+    verbose_name = _("permanence in preparation")
+    verbose_name_plural = _("permanences in preparation")
 
 class PermanenceDone(Permanence):
-	class Meta:
-		proxy = True
-		verbose_name = _("permanence done")
-		verbose_name_plural = _("permanences done")
+  class Meta:
+    proxy = True
+    verbose_name = _("permanence done")
+    verbose_name_plural = _("permanences done")
 
 class OfferItemQuerySet(QuerySet):
-	def active(self):
-		return self.filter(is_active=True)
+  def active(self):
+    return self.filter(is_active=True)
 
-	def product(self,product):
-		return self.filter(product=product)
+  def product(self,product):
+    return self.filter(product=product)
 
-	def permanence(self,permanence):
-		return self.filter(permanence=permanence)
+  def add_product_manualy(self):
+    return self.filter(automatically_added=ADD_PORDUCT_MANUALY)
+
+  def permanence(self,permanence):
+    return self.filter(permanence=permanence)
 
 class OfferItemManager(models.Manager):
-	def get_queryset(self):
-		return OfferItemQuerySet(self.model, using=self._db)
+  def get_queryset(self):
+    return OfferItemQuerySet(self.model, using=self._db)
 
 class OfferItem(models.Model):
-	permanence = models.ForeignKey(
-		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
-	product = models.ForeignKey(
-		Product, verbose_name=_("product"), on_delete=models.PROTECT)
-	producer_unit_price = models.DecimalField(
-		_("producer_unit_price"),
-		help_text=_('last known price (into the billing unit)'), 
-		max_digits=8, decimal_places=2, null = True, blank=True)
-	is_active = models.BooleanField(_("is_active"), default=True)
-	objects = OfferItemManager()
-	objects_without_filter = models.Manager()
+  permanence = models.ForeignKey(
+    Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
+  product = models.ForeignKey(
+    Product, verbose_name=_("product"), on_delete=models.PROTECT)
+  automatically_added = models.CharField(
+    max_length=3, 
+    choices=LUT_ADD_PRODUCT_DISPLAY,
+    default=ADD_PORDUCT_MANUALY,
+    verbose_name=_("If is into offer, automatically"), 
+    help_text=_('this represent returnable, special offer, subscription and is automaticaly added to customer or group basket at order closure'))
+  is_active = models.BooleanField(_("is_active"), default=True)
+  objects = OfferItemManager()
 
-	def get_total_order_quantity(self):
-		total_order_quantity = 0
-		if self.id:
-			if self.permanence.status<=PERMANENCE_PLANIFIED:
-				pass
-			elif self.permanence.status<=PERMANENCE_CLOSED:
-				result_set = list(Purchase.objects.filter(
-					product_id=self.product.id, permanence_id=self.permanence_id).values(
-					'site_id', 'product_id', 'permanence_id').annotate(
-					total_order_quantity=Sum('order_quantity')).values(
-					'total_order_quantity').order_by()[:1])
-				if result_set:
-					total_order_quantity = result_set[0].get('total_order_quantity')
-			elif self.permanence.status<=PERMANENCE_PREPARED:
-				result_set = list(Purchase.objects.filter(
-					product_id=self.product.id, permanence_id=self.permanence_id).values(
-					'site_id', 'product_id', 'permanence_id').annotate(
-					total_order_quantity=Sum('validated_quantity')).values(
-					'total_order_quantity').order_by()[:1])
-				if result_set:
-					total_order_quantity = result_set[0].get('total_order_quantity')
-			else:
-				result_set = list(Purchase.objects.filter(
-					product_id=self.product.id, permanence_id=self.permanence_id).values(
-					'site_id', 'product_id', 'permanence_id').annotate(
-					total_order_quantity=Sum('preparator_recorded_quantity')).values(
-					'total_order_quantity').order_by()[:1])
-				if result_set:
-					total_order_quantity = result_set[0].get('total_order_quantity')
-		return total_order_quantity
-	get_total_order_quantity.short_description=(_("total order quantity"))
-	get_total_order_quantity.allow_tags = False
+  def get_total_order_quantity(self):
+    total_order_quantity = 0
+    if self.id:
+      if self.permanence.status<=PERMANENCE_PLANIFIED:
+        pass
+      elif self.permanence.status <= PERMANENCE_SEND:
+        result_set = Purchase.objects.filter(
+          product_id=self.product.id, permanence_id=self.permanence_id).values(
+          'product_id', 'permanence_id').annotate(
+          total_order_quantity=Sum('order_quantity')).values(
+          'total_order_quantity').order_by()[:1]
+        if result_set:
+          total_order_quantity = result_set[0].get('total_order_quantity')
+        if total_order_quantity == None:
+          total_order_quantity = 0
+      else:
+        result_set = Purchase.objects.filter(
+          product_id=self.product.id, permanence_id=self.permanence_id).values(
+          'product_id', 'permanence_id').annotate(
+          total_order_quantity=Sum('prepared_quantity')).values(
+          'total_order_quantity').order_by()[:1]
+        if result_set:
+          total_order_quantity = result_set[0].get('total_order_quantity')
+        if total_order_quantity == None:
+          total_order_quantity = 0
+    return total_order_quantity
 
-	def __unicode__(self):
-		return self.permanence.__unicode__() + ", " + \
-			self.product.__unicode__()
+  get_total_order_quantity.short_description=(_("total order quantity"))
+  get_total_order_quantity.allow_tags = False
 
-	class Meta:
-		verbose_name = _("offer's item")
-		verbose_name_plural = _("offer's items")
-		ordering = ("permanence","product",)
-		unique_together = ("permanence","product",)
-		index_together = [
-			["permanence","product"],
-		]
+  def __unicode__(self):
+    return self.permanence.__unicode__() + ", " + \
+      self.product.__unicode__()
 
+  class Meta:
+    verbose_name = _("offer's item")
+    verbose_name_plural = _("offer's items")
+    ordering = ("permanence","product",)
+    unique_together = ("permanence","product",)
+    index_together = [
+      ["permanence","product"],
+    ]
+
+class CustomerInvoice(models.Model):
+  customer = models.ForeignKey(
+    Customer, verbose_name=_("customer"), 
+    on_delete=models.PROTECT)
+  permanence = models.ForeignKey(
+    Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT, db_index=True) 
+  date_previous_balance = models.DateTimeField(
+    _("date_previous_balance"), default=datetime.date.today)
+  previous_balance = models.DecimalField(
+    _("previous_balance"), max_digits=8, decimal_places=2, default = 0)
+  purchase_amount = models.DecimalField(
+    _("purchase_amount"), help_text=_('purchased amount'),
+    max_digits=8, decimal_places=2,  default = 0)
+  bank_amount_in = models.DecimalField(
+    _("bank_amount_in"), help_text=_('payment_on_the_account'),
+    max_digits=8, decimal_places=2,  default = 0)
+  bank_amount_out = models.DecimalField(
+    _("bank_amount_out"), help_text=_('payment_from_the_account'),
+    max_digits=8, decimal_places=2,  default = 0)
+  date_balance = models.DateTimeField(
+    _("date_balance"),  default=datetime.date.today)
+  balance = models.DecimalField(
+    _("balance"), 
+    max_digits=8, decimal_places=2, default = 0)
+
+  def __unicode__(self):
+    return self.customer.__unicode__() + " " + self.permanence.__unicode__()
+
+  class Meta:
+    verbose_name = _("customer invoice")
+    verbose_name_plural = _("customers invoices")
+    unique_together = ("permanence","customer",)
+    index_together = [
+      ["permanence","customer",]
+    ]
+
+class ProducerInvoice(models.Model):
+  producer = models.ForeignKey(
+    Producer, verbose_name=_("producer"), 
+    on_delete=models.PROTECT)
+  permanence = models.ForeignKey(
+    Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT, db_index=True) 
+  date_previous_balance = models.DateTimeField(
+    _("date_previous_balance"), default=datetime.date.today)
+  previous_balance = models.DecimalField(
+    _("previous_balance"), max_digits=8, decimal_places=2, default = 0)
+  purchase_amount = models.DecimalField(
+    _("purchase_amount"), help_text=_('purchased amount'),
+    max_digits=8, decimal_places=2, default = 0)
+  bank_amount_in = models.DecimalField(
+    _("bank_amount_in"), help_text=_('payment_on_the_account'),
+    max_digits=8, decimal_places=2, default = 0)
+  bank_amount_out = models.DecimalField(
+    _("bank_amount_out"), help_text=_('payment_from_the_account'),
+    max_digits=8, decimal_places=2, default = 0)
+  date_balance = models.DateTimeField(
+    _("date_balance"),  default=datetime.date.today)
+  balance = models.DecimalField(
+    _("balance"),
+    max_digits=8, decimal_places=2, default = 0)
+
+  def __unicode__(self):
+    return self.producer.__unicode__() + " " + self.permanence.__unicode__()
+
+  class Meta:
+    verbose_name = _("producer invoice")
+    verbose_name_plural = _("producers invoices")
+    unique_together = ("permanence","producer",)
+    index_together = [
+      ["permanence","producer",]
+    ]
 
 class PurchaseQuerySet(QuerySet):
-	def product(self,product):
-		return self.filter(product=product)
+  def product(self,product):
+    return self.filter(product=product)
 
-	def permanence(self,permanence):
-		return self.filter(permanence=permanence)
+  def permanence(self,permanence):
+    return self.filter(permanence=permanence)
 
-	def site_customer(self,site_customer):
-		return self.filter(site_customer=site_customer)
+  def customer(self,customer):
+    return self.filter(customer=customer)
 
 class PurchaseManager(models.Manager):
-	def get_queryset(self):
-		return PurchaseQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
+  def get_queryset(self):
+    return PurchaseQuerySet(self.model, using=self._db)
 
 class Purchase(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	# mettre produit à la place de offer_item : sert au transport ou à retrouver les produits
-	# l'offer_item se retrouve avec le produit et la permanence.
-	permanence = models.ForeignKey(
-		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)	
-	distribution_date = models.DateField(_("distribution_date"))
-	product = models.ForeignKey(
-		Product, verbose_name=_("product"), on_delete=models.PROTECT)
-	site_producer = models.ForeignKey(
-		SiteProducer, verbose_name=_("producer"), on_delete=models.PROTECT)
-	site_customer = models.ForeignKey(
-		SiteCustomer, verbose_name=_("customer"), on_delete=models.PROTECT)
+  permanence = models.ForeignKey(
+    Permanence, verbose_name=_("permanence"), 
+    on_delete=models.PROTECT) 
+  distribution_date = models.DateField(_("distribution_date"))
+  product = models.ForeignKey(
+    Product, verbose_name=_("product"), blank=True, null=True, on_delete=models.PROTECT)
+  offer_item = models.ForeignKey(
+    OfferItem, verbose_name=_("offer_item"), blank=True, null=True, on_delete=models.PROTECT)
+  producer = models.ForeignKey(
+    Producer, verbose_name=_("producer"), blank=True, null=True, on_delete=models.PROTECT)
+  customer = models.ForeignKey(
+    Customer, verbose_name=_("customer"), 
+    blank=True, null=True, on_delete=models.PROTECT,
+    db_index=True)
 
-	order_quantity = models.DecimalField(
-		_("order_quantity"), max_digits=9, decimal_places=3, default = 0)
-	validated_quantity = models.DecimalField(
-		_("validated_quantity"), max_digits=9, decimal_places=3, 
-		blank=True, null=True, default = 0)
-	# price, quantity or weight
-	preparator_recorded_quantity = models.DecimalField(
-		_("preparator_recorded_quantity"), 
-		max_digits=9, decimal_places=3, blank=True, null=True, default = 0)
-	comment = models.CharField(
-		_("comment"), max_length=200, default = '', blank=True, null=True)
-	effective_balance = models.DecimalField(
-		_("effective_balance"), max_digits=8, decimal_places=2, 
-		blank=True, null=True, default = 0)
-	is_recorded_on_site_customer = models.BooleanField(
-		_("is_recorded_on_sitecustomer"), default=False)
-	is_recorded_on_site_producer = models.BooleanField(
-		_("is_recorded_on_siteproducer"), default=False)
-	is_recorded_on_previous_site_customer = models.BooleanField(
-		_("is_recorded_on_previous_sitecustomer"), default=False)
-	is_recorded_on_previous_site_producer = models.BooleanField(
-		_("is_recorded_on_previous_siteproducer"), default=False)
-	is_created_on = models.DateTimeField(
-		_("is_cretaed_on"), auto_now_add=True)
-	is_updated_on = models.DateTimeField(
-		_("is_updated_on"), auto_now=True)
-	objects = PurchaseManager()
-	objects_without_filter = models.Manager()
+  order_quantity = models.DecimalField(
+    _("order_quantity"), max_digits=9, decimal_places=3, default = 0)
+  order_amount = models.DecimalField(
+    _("order_amount"), 
+    max_digits=8, decimal_places=2, default = 0)
+  long_name = models.CharField(_("long_name"), max_length=100,
+    default='', blank=True, null=True)
+  order_by_piece_pay_by_kg = models.BooleanField(
+    _("order_by_piece_pay_by_kg"),
+    default=False,
+    help_text=_('order_by_piece_pay_by_kg (yes / no)'))
+  prepared_quantity = models.DecimalField(
+    _("preparared_quantity"), 
+    max_digits=9, decimal_places=3, blank=True, null=True, default=0)
+  prepared_unit_price = models.DecimalField(
+    _("prepared_unit_price"),
+    help_text=_('last known price (into the billing unit)'), 
+    max_digits=8, decimal_places=2, default=0)
+  prepared_amount = models.DecimalField(
+    _("effective_balance"), 
+    max_digits=8, decimal_places=2, default=0)
+  vat_level = models.CharField(
+    max_length=3, 
+    choices=LUT_VAT,
+    default=VAT_400,
+    verbose_name=_("vat or compensation"), 
+    help_text=_('When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
+  comment = models.CharField(
+    _("comment"), max_length=200, default = '', blank=True, null=True)
+  is_to_be_prepared = models.NullBooleanField(_("is_to_be_prepared"))
+  is_recorded_on_customer_invoice =  models.ForeignKey(
+    CustomerInvoice, verbose_name=_("customer invoice"),
+    on_delete=models.PROTECT, blank=True, null=True,
+    db_index=True)
+  is_recorded_on_producer_invoice = models.ForeignKey(
+    ProducerInvoice, verbose_name=_("producer invoice"),
+    on_delete=models.PROTECT, blank=True, null=True,
+    db_index=True)
+  is_created_on = models.DateTimeField(
+    _("is_cretaed_on"), auto_now_add=True)
+  is_updated_on = models.DateTimeField(
+    _("is_updated_on"), auto_now=True)
+  objects = PurchaseManager()
 
-	class Meta:
-		verbose_name = _("purchase")
-		verbose_name_plural = _("purchases")
-		ordering = ("permanence", "product", "site_customer")
-		unique_together = ("permanence", "product", "site_customer",)
-		index_together = [
-			["permanence", "product", "site_customer"],
-		]
+  class Meta:
+    verbose_name = _("purchase")
+    verbose_name_plural = _("purchases")
+    ordering = ("permanence", "customer", "product")
+    unique_together = ("permanence", "product", "customer",)
+    index_together = [
+      ["permanence", "product", "customer"],
+      ["offer_item", "permanence", "customer"],
+      ["permanence", "customer", "product"],
+    ]
+
+class CustomerOrder(models.Model):
+  permanence = models.ForeignKey(
+    Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT) 
+  customer = models.ForeignKey(
+    Customer, verbose_name=_("customer"), 
+    on_delete=models.PROTECT, blank=True, null=True)
+  order_amount = models.DecimalField(
+    _("order_amount"), help_text=_('order amount'),
+    max_digits=8, decimal_places=2,  default = 0)
+
+  class Meta:
+    verbose_name = _("customer order")
+    verbose_name_plural = _("customers orders")
+    index_together = [
+      ["permanence", "customer"],
+    ]
 
 class BankAccountQuerySet(QuerySet):
-	def permanence(self,permanence):
-		return self.filter(permanence=permanence)
+  def permanence(self,permanence):
+    return self.filter(permanence=permanence)
 
 class BankAccountManager(models.Manager):
-	def get_queryset(self):
-		return BankAccountQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
+  def get_queryset(self):
+    return BankAccountQuerySet(self.model, using=self._db)
 
 class BankAccount(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	site_producer = models.ForeignKey(
-		SiteProducer, verbose_name=_("producer"), 
-		on_delete=models.PROTECT, blank=True, null=True)
-	site_customer = models.ForeignKey(
-		SiteCustomer, verbose_name=_("customer"), 
-		on_delete=models.PROTECT, blank=True, null=True)
-	operation_date = models.DateField(_("operation_date"))
-	operation_comment = models.CharField(
-		_("operation_comment"), max_length=200, null = True, blank=True)
-	bank_amount_in = models.DecimalField(
-		_("bank_amount_in"), help_text=_('payment_on_the_account'),
-		max_digits=8, decimal_places=2, blank=True, null=True)
-	bank_amount_out = models.DecimalField(
-		_("bank_amount_out"), help_text=_('payment_from_the_account'),
-		max_digits=8, decimal_places=2, blank=True, null=True)
-	is_recorded_on_site_customer = models.BooleanField(
-		_("is_recorded_on_sitecustomer"), default=False)
-	is_recorded_on_site_producer = models.BooleanField(
-		_("is_recorded_on_siteproducer"), default=False)
-	is_recorded_on_previous_site_customer = models.BooleanField(
-		_("is_recorded_on_previous_sitecustomer"), default=False)
-	is_recorded_on_previous_site_producer = models.BooleanField(
-		_("is_recorded_on_previous_siteproducer"), default=False)
-	is_created_on = models.DateTimeField(
-		_("is_cretaed_on"), auto_now_add = True)
-	is_updated_on = models.DateTimeField(
-		_("is_updated_on"), auto_now=True)
-	objects =BankAccountManager()
-	objects_without_filter = models.Manager()
+  producer = models.ForeignKey(
+    Producer, verbose_name=_("producer"), 
+    on_delete=models.PROTECT, blank=True, null=True)
+  customer = models.ForeignKey(
+    Customer, verbose_name=_("customer"), 
+    on_delete=models.PROTECT, blank=True, null=True)
+  operation_date = models.DateField(_("operation_date"),
+    db_index=True)
+  operation_comment = models.CharField(
+    _("operation_comment"), max_length=200, null = True, blank=True)
+  bank_amount_in = models.DecimalField(
+    _("bank_amount_in"), help_text=_('payment_on_the_account'),
+    max_digits=8, decimal_places=2, default = 0)
+  bank_amount_out = models.DecimalField(
+    _("bank_amount_out"), help_text=_('payment_from_the_account'),
+    max_digits=8, decimal_places=2, default = 0)
+  is_recorded_on_customer_invoice =  models.ForeignKey(
+    CustomerInvoice, verbose_name=_("customer invoice"),
+    on_delete=models.PROTECT, blank=True, null=True,
+    db_index=True)
+  is_recorded_on_producer_invoice = models.ForeignKey(
+    ProducerInvoice, verbose_name=_("producer invoice"),
+    on_delete=models.PROTECT, blank=True, null=True,
+    db_index=True)
+  is_created_on = models.DateTimeField(
+    _("is_cretaed_on"), auto_now_add = True)
+  is_updated_on = models.DateTimeField(
+    _("is_updated_on"), auto_now=True)
+  objects =BankAccountManager()
 
-	class Meta:
-		verbose_name = _("bank account movement")
-		verbose_name_plural = _("bank account movements")
-		ordering = ("site_producer", "site_customer")
-		index_together = [
-			["site_producer", "site_customer"],
-			["site_customer", "is_recorded_on_site_customer"],
-			["site_producer", "is_recorded_on_site_producer"],
-		]
-
-class ReportQuerySet(QuerySet):
-	def permanence(self,permanence):
-		return self.filter(permanence=permanence)
-
-class ReportManager(models.Manager):
-	def get_queryset(self):
-		return ReportQuerySet(self.model, using=self._db).filter(
-			site=settings.SITE_ID)
-
-class Report(models.Model):
-	site = models.ForeignKey(
-		Site, verbose_name=_("site"), default=settings.SITE_ID)
-	permanence = models.ForeignKey(
-		Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)	
-	site_producer = models.ForeignKey(
-		SiteProducer, verbose_name=_("producer"), 
-		on_delete=models.PROTECT, blank=True, null=True)
-	# Unique id for report access
-	uuid = models.CharField(
-		_("uuid"), max_length=36,null=True, blank=True)
-	first_access_on = models.DateTimeField(
-		_("first_access_on"), blank=True, null=True)
-	is_created_on = models.DateTimeField(
-		_("is_cretaed_on"), auto_now_add = True)
-	is_updated_on = models.DateTimeField(
-		_("is_updated_on"), auto_now=True)
-	objects =ReportManager()
-	objects_without_filter = models.Manager()
-
-	class Meta:
-		verbose_name = _("report")
-		verbose_name_plural = _("reports")
-		ordering = ("permanence", "site_producer")
-		unique_together = ("uuid",)
-		index_together = [
-			["uuid",],
-		]
+  class Meta:
+    verbose_name = _("bank account movement")
+    verbose_name_plural = _("bank account movements")
+    ordering = ("producer", "customer")
+    index_together = [
+      ["producer", "customer"],
+    ]

@@ -3,19 +3,19 @@
 
 {% block content %}
 
-<p>Select tag to apply:</p>
+<p>{% trans "Select file to import" %}</p>
 
 <form enctype="multipart/form-data" action="" method="post">
     {% csrf_token %}
     {{ import_xlsx_form }}
     {{ context_instance }}
 
-    <p>The tag will be applied to:</p>
+    <p>{% trans "The importation concern :" %}</p>
 
-    <ul>{{ permanences|unordered_list }}</ul>
+    <ul>{{ objects | unordered_list }}</ul>
 
     <input type="hidden" name="action" value="import_xlsx" />
-    <input type="submit" name="apply" value="Apply tag" />
+    <input type="submit" name="apply" value="{% trans "Execute the import" %}" />
 </form>
 
 {% endblock %}

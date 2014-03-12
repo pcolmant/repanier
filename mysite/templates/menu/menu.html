@@ -1,23 +1,19 @@
 {% load menu_tags %}
 {% for child in children %}
-    <li class="divider"></li>
 	{% if child.children %}
-	<li class="has-dropdown {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
-	<a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="active"{% endif %}>{{ child.get_menu_title }}</a>
-     <ul class="dropdown">
+	<li class="dropdown {% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
+	<a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ child.get_menu_title |safe }} <b class="caret"></b></a>
+     <ul class="dropdown-menu">
         {% show_menu from_level to_level extra_inactive extra_active template "" "" child %}
     </ul>
      </li>
     {% else %}
     	{% if child.get_menu_title = '------' %}
- <li class="divider"></li>
+<li class="divider"></li>
        	{% else %}
 <li class="{% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
-	<a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="active"{% endif %}>{{ child.get_menu_title }}</a>
+	<a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="active"{% endif %}>{{ child.get_menu_title |safe }}</a>
 </li>
 		    {% endif %}
-    {% endif %}
-    {% if forloop.last %}
-        <li class="divider"></li>
     {% endif %}
 {% endfor %}

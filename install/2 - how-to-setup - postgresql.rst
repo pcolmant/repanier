@@ -23,6 +23,9 @@ The database name ($NAME$), user ($USER$), password ($PASSWORD$) must be identic
 	sudo nano /etc/postgresql/9.1/main/postgresql.conf
 		listen_addresses = '*'
 	sudo nano /etc/postgresql/9.1/main/pg_hba.conf
+		# Database administrative login by Unix domain socket                 
+		local   all             postgresql 					md5
+
 		# IPv4 local connections:
 		host    all 		all 		127.0.0.1/32		md5
 		# for the raspberry pi
@@ -30,5 +33,8 @@ The database name ($NAME$), user ($USER$), password ($PASSWORD$) must be identic
 		# for the virtualbox
 		host    all 		all 		10.0.2.0/24			md5
 	sudo /etc/init.d/postgresql restart
+
+	How-to backup : http://www.thegeekstuff.com/2009/01/how-to-backup-and-restore-postgres-database-using-pg_dump-and-psql/
+		pg_dump -U $USER$ $NAME$ -f dump.sql
 
 Now you got access to the PosgreSQL DB from any PC connected to the same network as the Raspberry Pi via "pgadmin" if you have installed it on your PC.

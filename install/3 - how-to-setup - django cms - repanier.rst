@@ -24,9 +24,9 @@ For each site replacing ´$REPANIER.BE$´ with the domain name of the correspond
 	chmod +x ~/install_new_site.sh
 	~/install_new_site.sh v1 $REPANIER.BE$
 
-Merge the folder /mysite of the git repo with the folder to ~/v1/mysite/mysite of your installation. Copy the folder /repanier of the git repo to ~/v1/mysite, giving ~/v1/mysite/repanier.... Copy your favicon.ico to ~/v1/mysite/mysite/media/
+Merge the folder /mysite of the git repo with the folder to ~/v1/mysite/mysite of your installation.
 
-Copy the ´secret_key´ of ~/v1/mysite/mysite/setup.py and check DB paramters into the file ~/v1/mysite/mysite/production_settings.py. The database name ($NAME$), user ($USER$), password ($PASSWORD$) must be identical to those in the setup of PostgreSQL. 
+Copy the ´secret_key´ of ~/v1/mysite/mysite/setup.py and check DB paramters into the *.INI file loacted at /etc/uwsgi/apps-available/. 
 
 Generate a copy of static files needed by Django
 
@@ -35,30 +35,31 @@ Generate a copy of static files needed by Django
 	cd ~/v1
 	source bin/activate
 	cd mysite
-	python manage.py collectstatic --settings=mysite.repanier_settings
+	python manage.py collectstatic --settings=ptidej.ptidej_settings
 	# If some errors execute 
-	# python manage.py collectstatic --traceback --settings=mysite.repanier_settings
+	# python manage.py collectstatic --traceback --settings=ptidej.ptidej_settings
 	# to detect the root cause
 
 Create the DB with south. During this step you will be asked to create the ´superuser´ of Django.
 
 .. code:: bash
 
-	python manage.py syncdb --all --settings=mysite.repanier_settings
-	python manage.py schemamigration repanier --initial --settings=mysite.repanier_settings
-	python manage.py migrate --fake --settings=mysite.repanier_settings
+	python manage.py syncdb --all --settings=ptidej.ptidej_settings
+	python manage.py schemamigration repanier --initial --settings=ptidej.ptidej_settings
+	python manage.py migrate --fake --settings=ptidej.ptidej_settings
 
 Check if CMS install is ok
 
 .. code:: bash
 
-	python manage.py cms check --settings=mysite.repanier_settings
+	python manage.py cms check --settings=ptidej.ptidej_settings
 
 Compile translation files
 
 .. code:: bash
 
 	cd ~/v1/mysite/repanier
+	export DJANGO_SETTINGS_MODULE=
 	django-admin.py compilemessages 
 
 
@@ -67,7 +68,7 @@ If you want, initialize the DB with test content : copy the content of /install/
 .. code:: bash
 
 	cd ~/v1/mysite/
-	export DJANGO_SETTINGS_MODULE='mysite.repanier_settings'
+	export DJANGO_SETTINGS_MODULE='ptidej.ptidej_settings'
 	python createdb.py
 
 Finalize th configuration
@@ -99,8 +100,8 @@ When needed, upgrade the DB with south for a new version of specific INSTALLED_A
 .. code:: bash
 
 	cd ~/production/mysite/
-	python manage.py schemamigration repanier --auto --settings=mysite.repanier_settings
-	python manage.py migrate repanier --settings=mysite.repanier_settings
+	python manage.py schemamigration repanier --auto --settings=ptidej.ptidej_settings
+	python manage.py migrate repanier --settings=ptidej.ptidej_settings
 
 If needed, check what South has done
 

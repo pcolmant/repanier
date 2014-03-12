@@ -1,55 +1,198 @@
 {% extends 'subpage_base.html' %}
-{% load cms_tags sekizai_tags i18n l10n crispy_forms_tags repanier_tags %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block sub_content %}
+<div class="container">
 {# {% debug %} #}
-    {{ permanence_memo |safe }}
-    <ul>
-        {% for producer in siteproducer_set %}
-            <li>{{ producer.long_profile_name }}</li>
-        {% endfor %}
-    </ul>
+    {{ permanence_offer_description |safe }}
 {% if offeritem_list %}
+    <br/>
+    {# .... **End of the pagination section** .... #}
+    <table class="table table-hover" >
     {% for offer in offeritem_list %}
+    <tr data-id="{{ offer.id }}" >
     <form>
-        <div class="row">
-            <div class="large-2 columns">
-                {{ offer.product.site_producer.short_profile_name }}
-            </div>
-            <div class="large-5 columns">
+        <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" class="hidden-xs">
+                {{ offer.product.producer.short_profile_name | truncatechars:15 }}
+        </td>
+        <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" class="hidden-xs">
                 {{ offer.product.long_name }}
-            </div>
-            <div class="large-2 columns">
-                {{ offer.producer_unit_price }}
-                {% if offer.product.order_by_piece_pay_by_piece %}/ piece {% else %}/ kg {% endif %}
-            </div>
-            <div class="large-2 columns">
+        </td>
+        <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" class="hidden-xs">
+                {{ offer.product.production_mode | truncatechars:10 }}
+        </td>
+        <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" style="width: 60%;" class="visible-xs">
+            <span class="visible-xs">{{ offer.product.producer.short_profile_name | truncatechars:8 }}, </span>
+                {{ offer.product.long_name }}
+            <span class="visible-xs">{{ offer.product.producer_unit_price }} &euro;
+                {% if offer.product.order_by_piece_pay_by_piece %}{% trans "/ piece" %}{% else %}{% trans "/ Kg" %}{% endif %}</span>
+        </td>
+        <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" class="hidden-xs">
+                {{ offer.product.producer_unit_price }} &euro;
+                {% if offer.product.order_by_piece_pay_by_piece %}{% trans "/ piece" %}{% else %}{% trans "/ Kg" %}{% endif %}
+        </td>
+        <td>
                 <input hidden name="page" value="{{ page_obj.number }}"/>
+                <input hidden name="producer" value="{{ producer_id }}"/>
+                <input hidden name="departementforcusomer" value="{{ departementforcusomer_id }}"/>
                 {% repanier_select_qty offer_item_id=offer.id %}
-            </div>
-            <div class="large-1 columns">
-                <input type="submit" class="round tiny button" value="ok" />
-            </div>
-        </div>
+                <noscript>
+                    <input type="submit" class="round tiny button" value="{% trans "ok" %}" />
+                </noscript>
+        </td>
     </form>
+    <tr>
     {% endfor %}
-    {# .... **Now the pagination section** .... #}
-    {% if is_paginated %}
-        <div class="pagination">
-            <span class="page-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-                {% endif %}
-                <span class="page-current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                </span>
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                {% endif %}
-            </span>
-        </div>
-    {% endif %}
+    </table>
+    {# .... **End of the pagination section** .... #}
+  <!-- Order Modal starts -->
+    <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+           <h4 class="modal-title" id="orderModalLabel"></h4>
+          </div>
+          <div class="modal-body">
+            <span id="orderDetails"></span>
+          </div>
+          <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+  <!-- Order modal ends -->
 {% else %}
-    <h3>My Offers</h3>
-    <p>No offer found!!! :(</p>
+    <h3>{% trans "No offer found" %}</h3>
 {% endif %}
+{% addtoblock "lastjs" %}
+<script type="text/javascript">
+function order_ajax(offer_item_id) {
+  var lien = '{% url 'order_form_ajax' %}?value=' + $("#offer_item"+offer_item_id).val() + "&offer_item=" + offer_item_id;
+  $.ajax({
+    url: lien,
+    cache: false,
+    async : true,
+    success:function(result){
+        if(result.indexOf("ok")!=0) {
+            $("#offer_item"+offer_item_id).val($("#offer_item"+offer_item_id).data('oldValue'));
+        } else {
+            $('#prepared_amount').text(result.substring(2));
+            $('#prepared_amount_visible_xs').text(result.substring(2));
+    }},
+    error:function(result){
+        $("#offer_item"+offer_item_id).val($("#offer_item"+offer_item_id).data('oldValue'));
+    }
+  });
+} 
+$(document).ready(function() {
+    $("select").focus(function() {
+      //store old value of "select" to restore it when Ajax calls fails 
+      $(this).data('oldValue',$(this).val());
+    });
+    $('#orderModal').modal({
+        keyboard: true,
+        backdrop: false,
+        show:false,
+    }).on('show.bs.modal', function(event){
+        var getIdFromRow = $(event.relatedTarget).data('id');
+        var getProductFromRow =  $(event.relatedTarget).data('product');
+        var lien = '{% url 'product_form_ajax' %}?offer_item=' + getIdFromRow;
+        var content = 
+        $.ajax({
+            url: lien,
+            cache: false,
+            async : false,
+            success:function(result){
+                $('#orderModalLabel').html(getProductFromRow);
+                $('#orderDetails').html(result)
+            },
+            error:function(result){
+                $('#orderModalLabel').html($('{% trans "Communication error" %}'));
+                $('#orderDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))
+            }
+        });
+    });
+});
+</script>        
+{% endaddtoblock %}
+</div>
+{% endblock %}
+{% block footer %}
+    <div class="hidden-xs">
+        {% if is_paginated %}
+        <div class="btn-group">
+            <div class="btn-group">
+                {% if page_obj.has_previous%}
+                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&laquo;</a>
+                {% else %}
+                    <a href="#" class="btn btn-disabled">&laquo;</a>
+                {% endif %}
+                <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&raquo;</a>
+                {% else %}
+                    <a href="#" class="btn btn-disabled">&raquo;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="btn-group">
+            <div class="btn-group">
+            {% if display_all_product_button  %}
+            <a href="?" class="btn btn-primary">{% trans "All product" %}</a>
+            {% endif %}
+            <a href="?offeritem=purchased" class="btn btn-primary">{% trans "Purchased product" %} <span id="prepared_amount" class="prepared_amount">{{ prepared_amount }}</span> &euro; {% trans "(at average weight)" %}</a>
+            </div>
+            <div class="btn-group dropup">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        {% trans "Producer" %}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                    {% for producer in producer_set %}
+                        <li><a href="?producer={{ producer.id }}">{{ producer.long_profile_name }}</a></li>
+                    {% endfor %}
+                    </ul>
+            </div>
+            <div class="btn-group dropup">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        {% trans "departement" %}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                    {% for departementforcusomer in departementforcusomer_set %}
+                        <li><a href="?departementforcusomer={{ departementforcusomer.id }}">{{ departementforcusomer.short_name }}</a></li>
+                    {% endfor %}
+                    </ul>
+            </div>
+        </div>
+    </div>
+    <div class="visible-xs">
+        {% if is_paginated %}
+        <div class="btn-group">
+            <div class="btn-group">
+                {% if page_obj.has_previous%}
+                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&laquo;</a>
+                {% else %}
+                    <a href="#" class="btn btn-disabled">&laquo;</a>
+                {% endif %}
+                <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&raquo;</a>
+                {% else %}
+                    <a href="#" class="btn btn-disabled">&raquo;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="btn-group">
+            <div class="btn-group">
+            {% if display_all_product_button  %}
+            <a href="?" class="btn btn-primary">{% trans "All product" %}</a>
+            {% endif %}
+            <a href="?offeritem=purchased" class="btn btn-primary"><span id="prepared_amount_visible_xs" class="prepared_amount">{{ prepared_amount }}</span> &euro;</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}
