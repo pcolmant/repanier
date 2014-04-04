@@ -2,6 +2,8 @@
 from const import *
 from tools import *
 from django.utils.translation import ugettext_lazy as _
+import datetime
+from django.utils.timezone import utc
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -11,15 +13,13 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-# from wkhtmltopdf.views import PDFTemplateResponse
 from django.views.generic import ListView
 from django.views.generic import DetailView
-from django.views.generic.base import View
-from django.views.generic.edit import FormView
 from django.utils.formats import number_format
 
 from django.shortcuts import render
 from django.shortcuts import render_to_response
+from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 
 from repanier.models import LUT_DepartmentForCustomer
@@ -30,8 +30,8 @@ from repanier.models import Purchase
 from repanier.models import Customer
 from repanier.models import CustomerInvoice
 from repanier.models import BankAccount
+from repanier.models import PermanenceBoard
 from repanier.forms import ContactForm
-from repanier.forms import ContactFormAjax
 from repanier.tools import update_or_create_purchase
 
 import logging
@@ -55,28 +55,6 @@ def contact_form(request):
 		form = ContactForm() # An unbound form
 
 	return render_response(request, "repanier/contact_form.html", {'form':form})
-
-@login_required()
-# @never_cache
-def contact_form_ajax(request):
-  if request.is_ajax():
-    if request.method == 'GET': # If the form has been submitted...
-      form = ContactFormAjax(request.GET) # A form bound to the GET data
-      if form.is_valid(): # All validation rules pass
-        return HttpResponse("Get is valid")
-      else:
-        return HttpResponse("Get is not vaild")
-    if request.method == 'POST': # If the form has been submitted...
-      form = ContactFormAjax(request.POST) # A form bound to the GET data
-      if form.is_valid(): # All validation rules pass
-        return HttpResponse("Post is valid")
-      else:
-        return HttpResponse("Post is not valid")
-    return HttpResponse("???")
-  else:
-    # Not an AJAX request
-    form = ContactFormAjax() # An unbound form
-    return render_response(request, "repanier/contact_form_ajax.html", {'form':form})
 
 
 @login_required()
@@ -117,13 +95,11 @@ def order_form_ajax(request):
   # Not an AJAX, GET request
   return HttpResponseRedirect('/')
 
-from django.shortcuts import get_object_or_404
-
 class OrderView(ListView):
 
   template_name = 'repanier/order_form.html'
   success_url = '/thanks/'
-  paginate_by = 30
+  paginate_by = 50
   paginate_orphans = 5
 
   # def get_urls(self):
@@ -203,6 +179,87 @@ class OrderView(ListView):
       # print("---------------")
     else:
       self.permanence = None
+    return qs
+
+@login_required()
+# @never_cache
+def permanence_form_ajax(request):
+  if request.is_ajax():
+    if request.method == 'GET':
+      result = "ko"
+      p_permanence_board_id = None
+      if 'permanence_board' in request.GET:
+        p_permanence_board_id = request.GET['permanence_board']
+      p_value_id = None
+      if 'value' in request.GET:
+        p_value_id = request.GET['value']
+      if p_permanence_board_id and p_value_id and request.user.customer.may_order:
+        row_counter = 0
+        if p_value_id == '0':
+          row_counter = PermanenceBoard.objects.filter(
+            id = p_permanence_board_id,
+            customer = request.user.customer.id,
+            permanence__status__lte=PERMANENCE_WAIT_FOR_SEND
+          ).update(
+            customer = None
+          )
+        else:
+          row_counter = PermanenceBoard.objects.filter(
+            id = p_permanence_board_id,
+            customer__isnull=True,
+            permanence__status__lte=PERMANENCE_WAIT_FOR_SEND
+          ).update(
+            customer = request.user.customer.id
+          )
+        if row_counter > 0:
+          result = "ok"
+      return HttpResponse(result)
+  # Not an AJAX, GET request
+  return HttpResponseRedirect('/')
+
+class PermanenceView(ListView):
+
+  template_name = 'repanier/permanence_form.html'
+  success_url = '/thanks/'
+  paginate_by = 50
+  paginate_orphans = 5
+
+  @method_decorator(never_cache)
+  def get(self, request, *args, **kwargs):
+    # Here via a form or via Ajax we modifiy the qty
+    p_permanence_board_id = None
+    if 'permanence_board' in request.GET:
+      p_permanence_board_id = request.GET['permanence_board']
+    p_value_id = None
+    if 'value' in request.GET:
+      p_value_id = request.GET['value']
+    if p_permanence_board_id and p_value_id and request.user.customer.may_order:
+      if p_value_id == '0':
+        PermanenceBoard.objects.filter(
+          id = p_permanence_board_id,
+          customer = request.user.customer.id,
+          permanence__status__lte=PERMANENCE_WAIT_FOR_SEND
+        ).update(
+          customer = None
+        )
+      else:
+        PermanenceBoard.objects.filter(
+          id = p_permanence_board_id,
+          customer__isnull=True,
+          permanence__status__lte=PERMANENCE_WAIT_FOR_SEND
+        ).update(
+          customer = request.user.customer.id
+        )
+    return super(PermanenceView, self).get(request, *args, **kwargs)
+
+  def get_queryset(self):
+    now = datetime.datetime.utcnow().replace(tzinfo=utc)
+    qs = PermanenceBoard.objects.filter(
+      distribution_date__gte=now, 
+      permanence__status__lte=PERMANENCE_WAIT_FOR_SEND
+    ).order_by(
+      "distribution_date", "permanence", "permanence_role"
+      )
     return qs
 
 class InvoiceView(DetailView):

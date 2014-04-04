@@ -31,14 +31,8 @@ Login as : pi
 
 .. code:: bash
 
-	sudo apt-get update && sudo apt-get -y upgrade
-
-Install Virtualenv, Nginx, Uwsgi
---------------------------------
-
-.. code:: bash
-
-	sudo apt-get install python-virtualenv
+	sudo apt-get update && sudo apt-get upgrade -uy
+	# sudo dist-upgrade -uy
 
 Install Nginx
 -------------
@@ -84,12 +78,22 @@ For each of those files create a symbolic link between /etc/uwsgi/apps-enabled a
 
 	sudo ln -s /etc/wsgi/apps-available/´$FILE_NAME$´ /etc/wsgi/apps-enabled/´$FILE_NAME$´
 
-Install RabbitMQ
-----------------
+Install Required libs for Django installation
+---------------------------------------------
 
 .. code:: bash
 
-	sudo apt-get install rabbitmq-server
+	sudo apt-get install gettext unzip
+	sudo apt-get python-setuptools
+	# vv For the PostgreSQL connector
+	sudo apt-get install libpq-dev python-dev
+	# vv for Pillow
+	sudo apt-get install libtiff4-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms1-dev libwebp-dev tcl8.5-dev tk8.5-dev
+	# vv for docx
+	sudo apt-get install libxml2-dev libxslt1-dev
+
+
+
 
 Optional : force static IP adress
 ---------------------------------

@@ -12,7 +12,6 @@ from repanier.models import Staff
 from repanier.models import Product
 from repanier.models import LUT_ProductionMode
 from repanier.models import LUT_DepartmentForCustomer
-from repanier.models import LUT_DepartmentForProducer
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from openpyxl import load_workbook
@@ -57,7 +56,7 @@ def add_all_customers(worksheet):
       user_set = User.objects.filter(username = row['short_basket_name'])[:1]
       if user_set:
         for user in user_set:
-          user.password = make_password(uuid.uuid1().hex)
+          user.password = make_password("=test=")
           user.is_superuser=False
           user.is_staff=False
           user.is_active=True
@@ -83,7 +82,7 @@ def add_all_customers(worksheet):
           customer.phone2 = row['phone2']
           customer.address = row['address']
           customer.vat_id = row['vat_id']
-          customer.represent_this_buyinggroup = ( row['represent_this_buyinggroup'] != None )
+          customer.balance = row['balance']
           customer.is_active = True
           customer.save()
       else:
@@ -97,7 +96,6 @@ def add_all_customers(worksheet):
           date_balance = row['date_balance'],
           balance = row['balance'],
           vat_id = row['vat_id'],
-          represent_this_buyinggroup = ( row['represent_this_buyinggroup'] != None ),
           is_active = True)
 
       row_num += 1
@@ -118,7 +116,7 @@ def add_all_staffs(worksheet):
       user_set = User.objects.filter(username = row['username'])[:1]
       if user_set:
         for user in user_set:
-          user.password = make_password(uuid.uuid1().hex)
+          user.password = make_password("=test=")
           user.is_superuser=False
           user.is_staff=False
           user.is_active=True
@@ -137,14 +135,14 @@ def add_all_staffs(worksheet):
       customer_responsible_id = None
       if row['customer_responsible']:
         customer_responsible = Customer.objects.get(
-          short_basket_name = row['customer_responsible']).id
+          short_basket_name = row['customer_responsible'])
 
       staff = None
       staff_set = Staff.objects.filter(user_id = user.id)[:1]
       if staff_set:
         for staff in staff_set:
           staff.long_name = row['long_name']
-          staff.customer_responsible_id = customer_responsible_id
+          staff.customer_responsible_id = customer_responsible.id
           staff.is_reply_to_order_email = ( row['is_reply_to_order_email'] != None )
           staff.is_reply_to_invoice_email = ( row['is_reply_to_invoice_email'] != None )
           staff.is_active = True
@@ -153,7 +151,7 @@ def add_all_staffs(worksheet):
         Staff.objects.create(
           user_id = user.id,
           long_name = row['long_name'],
-          customer_responsible_id = customer_responsible,
+          customer_responsible_id = customer_responsible.id,
           is_reply_to_order_email = ( row['is_reply_to_order_email'] != None ),
           is_reply_to_invoice_email = ( row['is_reply_to_invoice_email'] != None ),
           is_active = True)
@@ -186,7 +184,6 @@ def add_all_producers(worksheet):
           producer.price_list_multiplier = row['price_list_multiplier']
           producer.date_balance = row['date_balance']
           producer.balance = row['balance']
-          producer.represent_this_buyinggroup = ( row['represent_this_buyinggroup'] != None )
           producer.is_active = True
           producer.save()
       else:
@@ -197,13 +194,10 @@ def add_all_producers(worksheet):
           phone1 = row['phone1'],
           phone2 = row['phone2'],
           fax = row['fax'],
-          bank_account = row['bank_account'],
-          vat_id = row['vat_id'],
           address = row['address'],
           price_list_multiplier = row['price_list_multiplier'],
           date_balance = row['date_balance'],
           balance = row['balance'],
-          represent_this_buyinggroup = ( row['represent_this_buyinggroup'] != None ),
           is_active = True)
 
       row_num += 1
@@ -220,10 +214,10 @@ def add_all_products(worksheet):
 
       print row
 
-      producer_id = None
+      producer = None
       if row['producer']:
-        producer_id = Producer.objects.get(
-          short_profile_name = row['producer']).id
+        producer = Producer.objects.get(
+          short_profile_name = row['producer'])
 
       production_mode_id = None
       if row['production_mode']:
@@ -251,37 +245,23 @@ def add_all_products(worksheet):
           if department_for_customer!= None:
             department_for_customer_id = department_for_customer.id 
 
-      department_for_producer_id = None
-      if row['department_for_producer']:
-        department_for_producer_set = LUT_DepartmentForProducer.objects.filter(
-          short_name = row['department_for_producer'])[:1]
-        if department_for_producer_set:
-          department_for_producer_id = department_for_producer_set[0].id
-        else:
-          department_for_producer = LUT_DepartmentForProducer.objects.create(
-            short_name = row['department_for_producer'],
-            is_active = True)
-          if department_for_producer!= None:
-            department_for_producer_id = department_for_producer.id 
-
       product = None
       product_set = Product.objects.filter(
-        producer_id = producer_id,
+        producer_id = producer.id,
         long_name = row['long_name']
         )[:1]
       if product_set:
         for product in product_set:
-          product.producer_id = producer_id
+          product.producer_id = producer.id
           product.long_name = row['long_name']
           product.production_mode_id = production_mode_id
           product.department_for_customer_id = department_for_customer_id
-          product.department_for_producer_id = department_for_producer_id
           product.order_by_kg_pay_by_kg = ( row['order_by_kg_pay_by_kg'] != None )
           product.order_by_piece_pay_by_kg = ( row['order_by_piece_pay_by_kg'] != None )
           product.order_average_weight = row['order_average_weight']
           product.order_by_piece_pay_by_piece = ( row['order_by_piece_pay_by_piece'] != None )
           product.producer_must_give_order_detail_per_customer = ( row['producer_must_give_order_detail_per_customer'] != None )
-          product.producer_unit_price = row['producer_unit_price']
+          product.original_unit_price = row['producer_unit_price']
           product.customer_minimum_order_quantity = row['customer_minimum_order_quantity']
           product.customer_increment_order_quantity = row['customer_increment_order_quantity']
           product.customer_alert_order_quantity = row['customer_alert_order_quantity']
@@ -289,17 +269,16 @@ def add_all_products(worksheet):
           product.save()
       else:
         product = Product.objects.create(
-          producer_id = producer_id,
+          producer_id = producer.id,
           long_name = row['long_name'],
           production_mode_id = production_mode_id,
           department_for_customer_id = department_for_customer_id,
-          department_for_producer_id = department_for_producer_id,
           order_by_kg_pay_by_kg = ( row['order_by_kg_pay_by_kg'] != None ),
           order_by_piece_pay_by_kg = ( row['order_by_piece_pay_by_kg'] != None ),
           order_average_weight = row['order_average_weight'],
           order_by_piece_pay_by_piece = ( row['order_by_piece_pay_by_piece'] != None ),
           producer_must_give_order_detail_per_customer = ( row['producer_must_give_order_detail_per_customer'] != None ),
-          producer_unit_price = row['producer_unit_price'],
+          original_unit_price = row['producer_unit_price'],
           customer_minimum_order_quantity = row['customer_minimum_order_quantity'],
           customer_increment_order_quantity = row['customer_increment_order_quantity'],
           customer_alert_order_quantity = row['customer_alert_order_quantity'],

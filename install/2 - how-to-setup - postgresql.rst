@@ -2,9 +2,6 @@
 How to setup PostgreSQL
 -----------------------
 
-	- raspberrypi, using raspbian 'wheezy'
-	- virtualbox, using debian 'wheezy'
-
 Install PostgreSQL
 ------------------
 

@@ -10,6 +10,7 @@ from repanier.tools import *
 from repanier.models import OfferItem
 from repanier.models import Purchase
 from repanier.models import Customer
+from repanier.models import PermanenceBoard
 
 register = template.Library()
 
@@ -24,7 +25,7 @@ def repanier_select_qty(context, *args, **kwargs):
 	user = request.user
 	# try:
 	customer_set = list(Customer.objects.filter(
-		user_id = user.id).active()[:1])
+		user_id = user.id).active().order_by()[:1])
 	if customer_set:
 		customer = customer_set[0]
 		# The user is an active customer
@@ -36,14 +37,10 @@ def repanier_select_qty(context, *args, **kwargs):
 			q_average_weight = offer_item.product.order_average_weight
 			pruchase_set = list(Purchase.objects.all().product(
 				offer_item.product).permanence(offer_item.permanence).customer(
-				customer)[:1])
+				customer).order_by()[:1])
 			if pruchase_set:
 				pruchase = pruchase_set[0]
-				if offer_item.permanence.status < PERMANENCE_SEND:
-					q_order = pruchase.order_quantity
-				else:
-					q_order = pruchase.prepared_quantity
-					q_average_weight = 1
+				q_order = pruchase.quantity
 			# The q_order is either the purchased quantity or 0
 
 			q_min = offer_item.product.customer_minimum_order_quantity
@@ -114,3 +111,34 @@ def repanier_select_qty(context, *args, **kwargs):
 	# 	# user.customer doesn't exist -> the user is not a customer.
 	# 	result = "N/A2"
 	return result
+
+@register.simple_tag(takes_context=True)
+def repanier_select_permanence(context, *args, **kwargs):
+	request = context['request']
+	result = "N/A1"
+	user = request.user
+	p_permanence_board_id = kwargs['permanence_board_id']
+	if p_permanence_board_id:
+		permanence_board = PermanenceBoard.objects.get(id=p_permanence_board_id)
+		result=""
+		if permanence_board.customer:
+			if permanence_board.customer.user.id == user.id:
+				result += "<b><i>"
+				result += '<select name="value" id="permanence_board' + str(permanence_board.id) + '" onchange="permanence_board_ajax(' + str(permanence_board.id) + ')" class="form-control">'
+				result += '<option value="0">---</option>'
+				result += '<option value="1" selected>' + request.user.customer.long_basket_name + '</option>'
+				result += '</select>'
+				result += "</b></i>"
+			else:
+				result += '<select name="value" id="permanence_board' + str(permanence_board.id) + '" onchange="permanence_board_ajax(' + str(permanence_board.id) + ')" class="form-control">'
+				result += '<option value="0" selected>' + permanence_board.customer.long_basket_name + '</option>'
+				result += '</select>'
+		else:
+			result += "<b><i>"
+			result += '<select name="value" id="permanence_board' + str(permanence_board.id) + '" onchange="permanence_board_ajax(' + str(permanence_board.id) + ')" class="form-control">'
+			result += '<option value="0" selected>---</option>'
+			result += '<option value="1">' + request.user.customer.long_basket_name + '</option>'
+			result += '</select>'
+			result += "</b></i>"
+	return result
+

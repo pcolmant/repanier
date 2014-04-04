@@ -10,8 +10,6 @@ mkdir $1
 virtualenv $1
 cd $1
 source bin/activate
-sudo apt-get install gettext unzip
-sudo apt-get install libpq-dev python-dev python-setuptools
 pip install psycopg2
 # IF installing the latest stable version
 # pip install django-cms
@@ -32,7 +30,6 @@ pip install -U djangocms-text-ckeditor
 # pip install -U djangocms-table
 # pip install -U djangocms-googlemap
 # For easy_thumbnails which need Pillow (https://github.com/python-imaging/Pillow)
-sudo apt-get install libtiff4-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms1-dev libwebp-dev tcl8.5-dev tk8.5-dev
 pip install -U Pillow
 pip install -U cmsplugin-filer
 pip install -U django-reversion
@@ -40,7 +37,6 @@ pip install -U django_compressor
 pip install -U django-admin-sortable2
 pip install -U openpyxl
 # pip install -U django-hvad
-sudo apt-get install libxml2-dev libxslt1-dev
 pip install -U docx
 # pip install django_debug_toolbar
 # pip install django-dajaxice ! not working with Django 1.6

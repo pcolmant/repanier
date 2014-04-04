@@ -3,7 +3,7 @@ from common_settings import *
 
 ### Site 3 specific parameters
 SITE_ID = 1
-ALLOWED_HOSTS = ['ptidej.$REPANIER.BE$',]
+ALLOWED_HOSTS = ['ptidej.repanier.be','ptidej.repanier.local']
 EMAIL_SUBJECT_PREFIX = '['+ ALLOWED_HOSTS[0] +']'
 # DEFAULT_FROM_EMAIL Used by PASSWORD RESET
 DEFAULT_FROM_EMAIL=ALLOWED_HOSTS[0] + "@repanier.be"
@@ -33,6 +33,7 @@ CMS_PLACEHOLDER_CONF = {
     'home-hero': {
         'name': gettext('Hero'),
         'plugins': ['TextPlugin',],
+        # 'plugins': ['TextPlugin', 'LinkPlugin', 'StylePlugin', 'GoogleMapPlugin', 'MultiColumnPlugin', 'SnippetPlugin', 'VideoPlugin', 'CMSOembedVideoPlugin', 'TablePlugin'],
     },
     'home-col-1': {
         'name': gettext('Column 1'),
@@ -56,3 +57,16 @@ CMS_PLACEHOLDER_CONF = {
         'plugins': ['TextPlugin',],
     },
 }
+
+CMS_STYLE_NAMES = (
+    ('info', gettext("info")),
+    ('new', gettext("new")),
+    ('hint', gettext("hint")),
+)
+
+CMS_COLUMN_WIDTH_CHOICES = (
+    ('1', gettext("normal")),
+    ('2', gettext("2x")),
+    ('3', gettext("3x")),
+    ('4', gettext("4x"))
+)

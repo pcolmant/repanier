@@ -4,17 +4,20 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Sum
 from django.db.models.query import QuerySet
+from django.db.models.signals import pre_save
 
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from djangocms_text_ckeditor.fields import HTMLField
 from django.utils.translation import ugettext_lazy as _
+from django.utils.formats import number_format
 from filer.fields.image import FilerImageField
 from filer.fields.file import FilerFileField
 from django.core import urlresolvers
 
 import datetime
+from decimal import *
 
 try:
   from south.modelsinspector import add_introspection_rules
@@ -46,7 +49,7 @@ class LUT(models.Model):
     return (self.short_name)
 
   def __unicode__(self):
-    return self.short_name
+    return u'%s' % (self.short_name)
 
   class Meta:
     abstract = True
@@ -65,12 +68,6 @@ class LUT_DepartmentForCustomer(LUT):
     verbose_name = _("department for customer")
     verbose_name_plural = _("departments for customer")
 
-class LUT_DepartmentForProducer(LUT):
-
-  class Meta(LUT.Meta):
-    verbose_name = _("department for producer")
-    verbose_name_plural = _("departments for producer")
-
 class LUT_PermanenceRole(LUT):
 
   class Meta(LUT.Meta):
@@ -87,6 +84,8 @@ class ProducerQuerySet(QuerySet):
   def not_the_buyinggroup(self):
     return self.filter(represent_this_buyinggroup=False)
 
+  def the_buyinggroup(self):
+    return self.filter(represent_this_buyinggroup=True)
 
 class ProducerManager(models.Manager):
   def get_queryset(self):
@@ -119,10 +118,6 @@ class Producer(models.Model):
     _("phone2"), max_length=20,null=True, blank=True)
   fax = models.CharField(
     _("fax"), max_length=100,null=True, blank=True)
-  bank_account = models.CharField(
-    _("bank_account"), max_length=100,null=True, blank=True)
-  vat_id = models.CharField(
-    _("vat_id"), max_length=20,null=True, blank=True)
   address = models.TextField(_("address"), null=True, blank=True)
   password_reset_on = models.DateTimeField(
     _("password_reset_on"), null=True, blank=True)
@@ -130,6 +125,15 @@ class Producer(models.Model):
     _("price_list_multiplier"),
     help_text=_('This multiplier is applied to each price automaticaly imported/pushed.'), 
     default=0, max_digits=4, decimal_places=2)
+  # price_list_with_vat = models.BooleanField(
+  #   _("Set if the VAT is included in the price list of the producer"), default = True)
+  vat_level = models.CharField(
+    max_length=3, 
+    choices=LUT_VAT,
+    default=VAT_400,
+    verbose_name=_("Default vat or compensation"), 
+    help_text=_('When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
+
   order_description = HTMLField(
     _("order_description"),
     help_text=_('This message is send by mail when we ordered something.'),
@@ -153,31 +157,52 @@ class Producer(models.Model):
   def get_products(self):
     link = ''
     if self.id:
-      # changeproducer_url = urlresolvers.reverse(
-      #   'admin:repanier_producer_change', args=(self.id,)
-      # )
-      # link = u'<a href="' + changeproducer_url + '">  ' + unicode(self) + '</a>'
-      # if self.producer:
       # This producer may have product's list
       changeproductslist_url = urlresolvers.reverse(
         'admin:repanier_product_changelist', 
       )
-      # &&& is used to hide the producer filter
       link = u'<a href="' + changeproductslist_url + \
-        '?is_active__exact=1&department_for_this_producer=all&producer=' + \
-        str(self.id) + '">  ' + \
+        '?is_active__exact=1&producer=' + \
+        str(self.id) + '" target="_blank" class="addlink">&nbsp;' + \
         unicode(_("his_products")) + '</a>'
     return link
   get_products.short_description=(_("link to his products"))
   get_products.allow_tags = True
 
+  def get_balance(self):
+    if self.balance > 0:
+      return '<span style="color:#298A08">%s</span>'%(number_format(self.balance, 2))
+    elif self.balance == 0:
+      return '<span style="color:#74DF00">%s</span>'%(number_format(self.balance, 2))
+    elif self.balance > -30:
+      return '<span style="color:#FF4000">%s</span>'%(number_format(self.balance, 2))
+    else:
+      return '<span style="color:#DF013A">%s</span>'%(number_format(self.balance, 2))
+
+  get_balance.short_description = _("balance")
+  get_balance.allow_tags = True
+
   def __unicode__(self):
-    return self.short_profile_name
+    return u'%s' % (self.short_profile_name)
   
   class Meta:
     verbose_name = _("producer")
     verbose_name_plural = _("producers")
     ordering = ("short_profile_name",)
+
+@receiver(pre_save, sender=Producer)
+def producer_pre_save(sender, **kwargs):
+  producer = kwargs['instance']
+  if producer.price_list_multiplier <= DECIMAL_ZERO:
+    producer.price_list_multiplier = DECIMAL_ZERO
+  # The first producer created represents the buying group
+  # It's important to have one and only one producer representing the buying group
+  producer_set = Producer.objects.all().the_buyinggroup().order_by()[:1]
+  if not producer_set:
+    producer.represent_this_buyinggroup = True
+  else:
+    producer.represent_this_buyinggroup = False
+
 
 class CustomerQuerySet(QuerySet):
   def active(self):
@@ -215,6 +240,7 @@ class Customer(models.Model):
     _("short_basket_name"), max_length=25,null=False, db_index=True, unique=True)
   long_basket_name = models.CharField(
     _("long_basket_name"), max_length=100,null=True)
+  email2 = models.EmailField(_('secondary email address'),null=True, blank=True)
   phone1 = models.CharField(
     _("phone1"), max_length=25,null=True)
   phone2 = models.CharField(
@@ -235,17 +261,41 @@ class Customer(models.Model):
   may_order = models.BooleanField(_("may_order"), default=True)
   objects = CustomerManager()
 
+  def get_balance(self):
+    if self.balance >= 30:
+      return '<span style="color:#74DF00">%s</span>'%(number_format(self.balance, 2))
+    elif self.balance >= -10:
+      return '<span style="color:#DF013A">%s</span>'%(number_format(self.balance, 2))
+    else:
+      return '<span style="color:#FF4000">%s</span>'%(number_format(self.balance, 2))
+
+  get_balance.short_description = _("balance")
+  get_balance.allow_tags = True
+
   def natural_key(self):
     return (self.short_basket_name)
   natural_key.dependencies = ['repanier.customer']
 
   def __unicode__(self):
-    return self.short_basket_name
+    return u'%s' % (self.short_basket_name)
 
   class Meta:
     verbose_name = _("customer")
     verbose_name_plural = _("customers")
     ordering = ("short_basket_name",)
+
+@receiver(pre_save, sender=Customer)
+def customer_pre_save(sender, **kwargs):
+  customer = kwargs['instance']
+  if not customer.is_active:
+    customer.may_order = False
+  # The first customer created represents the buying group
+  # It's important to have one and only one customer representing the buying group
+  customer_set = Customer.objects.all().the_buyinggroup().order_by()[:1]
+  if not customer_set:
+    customer.represent_this_buyinggroup = True
+  else:
+    customer.represent_this_buyinggroup = False
 
 class StaffQuerySet(QuerySet):
   def active(self):
@@ -297,7 +347,7 @@ class Staff(models.Model):
   get_customer_phone1.allow_tags = False
 
   def __unicode__(self):
-    return self.long_name
+    return u'%s' % (self.long_name)
 
   class Meta:
     verbose_name = _("staff member")
@@ -314,11 +364,14 @@ class ProductQuerySet(QuerySet):
   def active(self):
     return self.filter(is_active=True)
 
+  def producer(self, producer):
+    return self.filter(producer=producer)
+
   def producer_is(self, id):
     return self.filter(producer__id__exact=id)
 
-  def department_for_producer_is(self, id):
-    return self.filter(department_for_producer__id__exact=id)
+  def department_for_customer_is(self, id):
+    return self.filter(department_for_customer__id__exact=id)
 
   def is_not_selected_for_offer(self):
     return self.filter(is_into_offer=False)
@@ -353,7 +406,7 @@ class Product(models.Model):
   production_mode = models.ForeignKey(
     LUT_ProductionMode, verbose_name=_("production mode"), 
     related_name = 'production_mode+', 
-    null=True, blank=True, on_delete=models.PROTECT)
+    on_delete=models.PROTECT)
   picture = FilerImageField(
     verbose_name=_("picture"), related_name="picture", 
     null=True, blank=True)
@@ -361,12 +414,10 @@ class Product(models.Model):
   usage_description = HTMLField(_("usage_description"), blank=True) 
 
   department_for_customer = models.ForeignKey(
-    LUT_DepartmentForCustomer, verbose_name=_("department_for_customer"), 
-    null=True, blank=True, on_delete=models.PROTECT)
-  department_for_producer = models.ForeignKey(
-    LUT_DepartmentForProducer, 
-    verbose_name=_("department_for_producer"), 
-    null=True, blank=True, on_delete=models.PROTECT)
+    LUT_DepartmentForCustomer, 
+    verbose_name=_("department_for_customer"), 
+    on_delete=models.PROTECT)
+
   product_order = models.PositiveIntegerField(
     _("position_into_products_list_of_the_producer"), 
     default=0, blank=False, null=False)
@@ -381,35 +432,53 @@ class Product(models.Model):
     help_text=_('used for helping to determine the order of prepration of this product'))
 
   order_by_kg_pay_by_kg = models.BooleanField(
-    _("order_by_kg_pay_by_kg"))
+    _("order_by_kg_pay_by_kg"),
+    default=False)
   order_by_piece_pay_by_kg = models.BooleanField(
-    _("order_by_piece_pay_by_kg"))
+    _("order_by_piece_pay_by_kg"),
+    default=False)
   order_average_weight = models.DecimalField(
     _("order_average_weight"),
     help_text=_('if usefull, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
     default=0, max_digits=6, decimal_places=3)
   order_by_piece_pay_by_piece = models.BooleanField(
-    _("order_by_piece_pay_by_piece"))
+    _("order_by_piece_pay_by_piece"),
+    default=False)
 
   producer_must_give_order_detail_per_customer = models.BooleanField(
     _("individual package (yes/no)"),
+    default=False,
     help_text=_("producer_must_give_order_detail_per_customer"))
-  # 3 decimals required for rounding raisons
-  producer_original_unit_price = models.DecimalField(
-    _("producer_original_unit_price"),
-    help_text=_('last known price before reduction (or ...) (into the billing unit), vat or potential compensation included'), 
+  original_unit_price = models.DecimalField(
+    _("original unit price"),
+    help_text=_('last known price (/piece or /kg) from the producer price list'), 
+    default=0, max_digits=8, decimal_places=2)
+  unit_deposit = models.DecimalField(
+    _("deposit"),
+    help_text=_('deposit to add to the original unit price'), 
+    default=0, max_digits=8, decimal_places=2)
+  unit_price_without_tax = models.DecimalField(
+    _("unit price without tax"),
+    help_text=_('last known price (/piece or /kg), tax excluded'), 
     default=0, max_digits=9, decimal_places=3)
-  # 3 decimals required for rounding raisons
-  producer_unit_price = models.DecimalField(
-    _("producer_unit_price"),
-    help_text=_('last known price (into the billing unit), vat or potential compensation included'), 
-    default=0, max_digits=9, decimal_places=2)
+  unit_price_with_vat = models.DecimalField(
+    _("unit price with tva"),
+    help_text=_('last known price (/piece or /kg), vat included'), 
+    default=0, max_digits=8, decimal_places=2)
+  unit_price_with_compensation = models.DecimalField(
+    _("unit price with compensation"),
+    help_text=_('last known price (/piece or /kg), compensation included'), 
+    default=0, max_digits=9, decimal_places=3)
   vat_level = models.CharField(
     max_length=3, 
     choices=LUT_VAT,
     default=VAT_400,
     verbose_name=_("vat or compensation"), 
     help_text=_('When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
+  price_list_multiplier = models.DecimalField(
+    _("price_list_multiplier"),
+    help_text=_('This multiplier is applied to each price automaticaly imported/pushed.'), 
+    default=0, max_digits=4, decimal_places=2)
 
   customer_minimum_order_quantity = models.DecimalField(
     _("customer_minimum_order_quantity"),
@@ -447,7 +516,7 @@ class Product(models.Model):
   natural_key.dependencies = ['repanier.producer']
 
   def __unicode__(self):
-    return self.producer.short_profile_name + ', ' + self.long_name
+    return u'%s, %s' % (self.producer.short_profile_name, self.long_name)
 
   class Meta:
     verbose_name = _("product")
@@ -459,6 +528,52 @@ class Product(models.Model):
       ["product_order", "id"],
       ["producer", "long_name"],
     ]
+
+@receiver(pre_save, sender=Product)
+def product_pre_save(sender, **kwargs):
+  product = kwargs['instance']
+  if not product.is_active:
+    product.is_into_offer = False
+  # Calculate compensation when "regime agricole"
+  product.price_list_multiplier = product.producer.price_list_multiplier
+  product.unit_price_with_vat = product.original_unit_price * product.price_list_multiplier
+  # if product.producer.price_list_with_vat:
+  if product.vat_level == VAT_400:
+    product.unit_price_without_tax = product.unit_price_with_vat / Decimal(1.06)
+  elif product.vat_level == VAT_500:
+    product.unit_price_without_tax = product.unit_price_with_vat / Decimal(1.12)
+  elif product.vat_level == VAT_600:
+    product.unit_price_without_tax = product.unit_price_with_vat / Decimal(1.21)
+  else:
+    product.unit_price_without_tax = product.unit_price_with_vat
+  if product.vat_level == VAT_200:
+    product.unit_price_with_compensation = product.unit_price_with_vat * Decimal(1.02)
+  elif product.vat_level == VAT_300:
+    product.unit_price_with_compensation = product.unit_price_with_vat * Decimal(1.06)
+  else:
+    product.unit_price_with_compensation = product.unit_price_with_vat
+
+  if product.customer_minimum_order_quantity <= 0:
+    product.customer_minimum_order_quantity = 1
+  if product.customer_increment_order_quantity <= 0:
+    product.customer_increment_order_quantity = 1
+  if product.customer_alert_order_quantity <= product.customer_minimum_order_quantity:
+    product.customer_alert_order_quantity = product.customer_minimum_order_quantity
+  if product.order_average_weight <= 0:
+    product.order_average_weight = 1
+  if product.order_by_piece_pay_by_kg:
+    product.order_by_kg_pay_by_kg = False
+    product.order_by_piece_pay_by_piece = False
+  elif product.order_by_kg_pay_by_kg:
+    product.order_by_piece_pay_by_kg = False
+    product.order_by_piece_pay_by_piece = False
+  elif product.order_by_piece_pay_by_piece:
+    product.order_by_kg_pay_by_kg = False
+    product.order_by_piece_pay_by_kg = False
+  else:
+    product.order_by_kg_pay_by_kg = True
+
+
 
 class PermanenceQuerySet(QuerySet):
   def is_opened(self):
@@ -486,7 +601,7 @@ class Permanence(models.Model):
     default=PERMANENCE_PLANIFIED,
     verbose_name=_("permanence_status"), 
     help_text=_('status of the permanence from planified, orders opened, orders closed, send, done'))
-  distribution_date = models.DateField(_("distribution_date"))
+  distribution_date = models.DateField(_("distribution_date"), db_index = True)
   offer_description = HTMLField(_("offer_description"),
     help_text=_('This message is send by mail to all customers when opening the order or on top of the web order screen.'),
     blank=True)
@@ -501,8 +616,11 @@ class Permanence(models.Model):
   producers = models.ManyToManyField(
     'Producer', null=True, blank=True,
     verbose_name = _("producers"))
-  automaticaly_closed_on = models.DateTimeField(
-    _("is_automaticaly_closed_on"), blank=True, null=True)
+  # automaticaly_closed_on = models.DateTimeField(
+  #   _("is_automaticaly_closed_on"), blank=True, null=True)
+  automaticaly_closed = models.BooleanField(
+    _("automaticaly_closed"), default = False)
+
   is_done_on = models.DateTimeField(
     _("is_done_on"), blank=True, null=True)
 
@@ -522,7 +640,7 @@ class Permanence(models.Model):
         'admin:repanier_product_changelist', 
         )
         return u", ".join([u'<a href="' + changelist_url + \
-          '?department_for_this_producer=all&producer=' + str(p.id) + '" target="_blank">' + \
+          '?producer=' + str(p.id) + '" target="_blank" class="addlink">&nbsp;' + \
            p.short_profile_name + '</a>' for p in self.producers.all()])
       else:
         # change_url = urlresolvers.reverse(
@@ -543,7 +661,7 @@ class Permanence(models.Model):
       )
       return u", ".join([u'<a href="' + changelist_url + \
         '?permanence=' + str(self.id) + \
-        '&customer=' + str(c.id) + '" target="_blank">' + \
+        '&customer=' + str(c.id) + '" target="_blank"  class="addlink">&nbsp;' + \
         c.short_basket_name + '</a>' 
         for c in Customer.objects.filter(
           purchase__permanence_id=self.id).distinct()])
@@ -586,10 +704,11 @@ class Permanence(models.Model):
   get_board.allow_tags = True
 
   def __unicode__(self):
-    if not self.short_name:
-      label = _("Permanence on ")
-      return label + self.distribution_date.strftime('%d-%m-%Y')
-    return self.short_name
+      label = unicode(_("Permanence on "))
+      if not self.short_name:
+        return label + u'%s' % (self.distribution_date.strftime('%d-%m-%Y'))
+      else:
+        return label + u'%s, %s' % (self.distribution_date.strftime('%d-%m-%Y'), self.short_name)
 
   class Meta:
     verbose_name = _("permanence")
@@ -603,9 +722,11 @@ class Permanence(models.Model):
 class PermanenceBoard(models.Model):
   customer = models.ForeignKey(
     Customer, verbose_name=_("customer"),
-    null=True, blank=True, on_delete=models.PROTECT)
+    null=True, blank=True, db_index=True, on_delete=models.PROTECT)
   permanence = models.ForeignKey(
     Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
+  # Distribution_date duplicated to quickly calculte # particpation of lasts 12 months
+  distribution_date = models.DateField(_("distribution_date"), db_index=True)
   permanence_role = models.ForeignKey(
     LUT_PermanenceRole, verbose_name=_("permanence_role"),
     on_delete=models.PROTECT)
@@ -617,7 +738,13 @@ class PermanenceBoard(models.Model):
     unique_together = ("permanence","permanence_role","customer",)
     index_together = [
       ["permanence","permanence_role","customer"],
+      ["distribution_date", "permanence", "permanence_role"],
     ]
+
+@receiver(pre_save, sender=PermanenceBoard)
+def permanence_board_pre_save(sender, **kwargs):
+  permanence_board = kwargs['instance']
+  permanence_board.distribution_date = permanence_board.permanence.distribution_date
 
 class PermanenceInPreparation(Permanence):
   class Meta:
@@ -655,12 +782,28 @@ class OfferItem(models.Model):
     Product, verbose_name=_("product"), on_delete=models.PROTECT)
   automatically_added = models.CharField(
     max_length=3, 
-    choices=LUT_ADD_PRODUCT_DISPLAY,
+    choices=LUT_ADD_PRODUCT,
     default=ADD_PORDUCT_MANUALY,
     verbose_name=_("If is into offer, automatically"), 
     help_text=_('this represent returnable, special offer, subscription and is automaticaly added to customer or group basket at order closure'))
   is_active = models.BooleanField(_("is_active"), default=True)
   objects = OfferItemManager()
+
+  def get_producer(self):
+    if self.id:
+      return self.product.producer.short_profile_name
+    return "N/A"
+
+  get_producer.short_description=(_("producers"))
+  get_producer.allow_tags = False
+
+  def get_product(self):
+    if self.id:
+      return self.product.long_name
+    return "N/A"
+
+  get_product.short_description=(_("products"))
+  get_product.allow_tags = False
 
   def get_total_order_quantity(self):
     total_order_quantity = 0
@@ -693,7 +836,7 @@ class OfferItem(models.Model):
   get_total_order_quantity.allow_tags = False
 
   def __unicode__(self):
-    return self.permanence.__unicode__() + ", " + \
+    return self.permanence.__unicode__() + u", " + \
       self.product.__unicode__()
 
   class Meta:
@@ -715,9 +858,22 @@ class CustomerInvoice(models.Model):
     _("date_previous_balance"), default=datetime.date.today)
   previous_balance = models.DecimalField(
     _("previous_balance"), max_digits=8, decimal_places=2, default = 0)
-  purchase_amount = models.DecimalField(
-    _("purchase_amount"), help_text=_('purchased amount'),
-    max_digits=8, decimal_places=2,  default = 0)
+  total_price_with_tax = models.DecimalField(
+    _("Total price"),
+    help_text=_('Total price vat or compensation if appliacable included'), 
+    default=0, max_digits=8, decimal_places=2)
+  total_vat = models.DecimalField(
+    _("Total vat"),
+    help_text=_('Vat part of the total price'), 
+    default=0, max_digits=9, decimal_places=3)
+  total_compensation = models.DecimalField(
+    _("Total compensation"),
+    help_text=_('Compensation part of the total price'), 
+    default=0, max_digits=9, decimal_places=3)
+  total_deposit = models.DecimalField(
+    _("deposit"),
+    help_text=_('deposit to add to the original unit price'), 
+    default=0, max_digits=8, decimal_places=2)
   bank_amount_in = models.DecimalField(
     _("bank_amount_in"), help_text=_('payment_on_the_account'),
     max_digits=8, decimal_places=2,  default = 0)
@@ -731,7 +887,7 @@ class CustomerInvoice(models.Model):
     max_digits=8, decimal_places=2, default = 0)
 
   def __unicode__(self):
-    return self.customer.__unicode__() + " " + self.permanence.__unicode__()
+    return self.customer.__unicode__() + u" " + self.permanence.__unicode__()
 
   class Meta:
     verbose_name = _("customer invoice")
@@ -751,9 +907,22 @@ class ProducerInvoice(models.Model):
     _("date_previous_balance"), default=datetime.date.today)
   previous_balance = models.DecimalField(
     _("previous_balance"), max_digits=8, decimal_places=2, default = 0)
-  purchase_amount = models.DecimalField(
-    _("purchase_amount"), help_text=_('purchased amount'),
-    max_digits=8, decimal_places=2, default = 0)
+  total_price_with_tax = models.DecimalField(
+    _("Total price"),
+    help_text=_('Total price vat or compensation if appliacable included'), 
+    default=0, max_digits=8, decimal_places=2)
+  total_vat = models.DecimalField(
+    _("Total vat"),
+    help_text=_('Vat part of the total price'), 
+    default=0, max_digits=9, decimal_places=3)
+  total_compensation = models.DecimalField(
+    _("Total compensation"),
+    help_text=_('Compensation part of the total price'), 
+    default=0, max_digits=9, decimal_places=3)
+  total_deposit = models.DecimalField(
+    _("deposit"),
+    help_text=_('deposit to add to the original unit price'), 
+    default=0, max_digits=8, decimal_places=2)
   bank_amount_in = models.DecimalField(
     _("bank_amount_in"), help_text=_('payment_on_the_account'),
     max_digits=8, decimal_places=2, default = 0)
@@ -767,7 +936,7 @@ class ProducerInvoice(models.Model):
     max_digits=8, decimal_places=2, default = 0)
 
   def __unicode__(self):
-    return self.producer.__unicode__() + " " + self.permanence.__unicode__()
+    return self.producer.__unicode__() + u" " + self.permanence.__unicode__()
 
   class Meta:
     verbose_name = _("producer invoice")
@@ -787,6 +956,9 @@ class PurchaseQuerySet(QuerySet):
   def customer(self,customer):
     return self.filter(customer=customer)
 
+  def producer(self,producer):
+    return self.filter(producer=producer)
+
 class PurchaseManager(models.Manager):
   def get_queryset(self):
     return PurchaseQuerySet(self.model, using=self._db)
@@ -804,38 +976,65 @@ class Purchase(models.Model):
     Producer, verbose_name=_("producer"), blank=True, null=True, on_delete=models.PROTECT)
   customer = models.ForeignKey(
     Customer, verbose_name=_("customer"), 
-    blank=True, null=True, on_delete=models.PROTECT,
+    on_delete=models.PROTECT,
     db_index=True)
 
-  order_quantity = models.DecimalField(
-    _("order_quantity"), max_digits=9, decimal_places=3, default = 0)
-  order_amount = models.DecimalField(
-    _("order_amount"), 
-    max_digits=8, decimal_places=2, default = 0)
+  quantity = models.DecimalField(
+    _("order quantitiy"), 
+    max_digits=9, decimal_places=3, default = 0)
+  quantity_send_to_producer = models.DecimalField(
+    _("quantity send to producer"), 
+    max_digits=9, decimal_places=3, default=0)
   long_name = models.CharField(_("long_name"), max_length=100,
     default='', blank=True, null=True)
+  order_by_kg_pay_by_kg = models.BooleanField(
+    _("order_by_kg_pay_by_kg"),
+    default=False)
   order_by_piece_pay_by_kg = models.BooleanField(
     _("order_by_piece_pay_by_kg"),
-    default=False,
-    help_text=_('order_by_piece_pay_by_kg (yes / no)'))
-  prepared_quantity = models.DecimalField(
-    _("preparared_quantity"), 
-    max_digits=9, decimal_places=3, blank=True, null=True, default=0)
-  prepared_unit_price = models.DecimalField(
-    _("prepared_unit_price"),
-    help_text=_('last known price (into the billing unit)'), 
-    max_digits=8, decimal_places=2, default=0)
-  prepared_amount = models.DecimalField(
-    _("effective_balance"), 
-    max_digits=8, decimal_places=2, default=0)
+    default=False)
+  original_unit_price = models.DecimalField(
+    _("original unit price"),
+    help_text=_('last known price (/piece or /kg) from the producer price list'), 
+    default=0, max_digits=8, decimal_places=2)
+  unit_deposit = models.DecimalField(
+    _("deposit"),
+    help_text=_('deposit to add to the original unit price'), 
+    default=0, max_digits=8, decimal_places=2)
+  original_price = models.DecimalField(
+    _("original total price"),
+    help_text=_('total from last known price (/piece or /kg) of the producer price list'), 
+    default=0, max_digits=8, decimal_places=2)
+  price_without_tax = models.DecimalField(
+    _("total price without tax"),
+    help_text=_('total without tax from last known price (/piece or /kg)'), 
+    default=0, max_digits=9, decimal_places=3)
+  price_with_tax = models.DecimalField(
+    _("total price with tva"),
+    help_text=_('total with tva from last known price (/piece or /kg)'), 
+    default=0, max_digits=8, decimal_places=2)
+  invoiced_price_with_compensation = models.BooleanField(
+    _("Set if the invoiced price is the price with compesation, otherwise it's the price with vat"), default = True)
   vat_level = models.CharField(
     max_length=3, 
     choices=LUT_VAT,
     default=VAT_400,
     verbose_name=_("vat or compensation"), 
     help_text=_('When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
+  price_list_multiplier = models.DecimalField(
+    _("price_list_multiplier"),
+    help_text=_('This multiplier is applied to each price automaticaly imported/pushed.'), 
+    default=0, max_digits=4, decimal_places=2)
+
+  producer_must_give_order_detail_per_customer = models.BooleanField(
+    _("individual package (yes/no)"),
+    default=False,
+    help_text=_("producer_must_give_order_detail_per_customer"))
+  product_order = models.PositiveIntegerField(
+    _("position_into_products_list_of_the_producer"), 
+    default=0, blank=False, null=False)
   comment = models.CharField(
-    _("comment"), max_length=200, default = '', blank=True, null=True)
+    _("comment"), max_length=100, default = '', blank=True, null=True)
   is_to_be_prepared = models.NullBooleanField(_("is_to_be_prepared"))
   is_recorded_on_customer_invoice =  models.ForeignKey(
     CustomerInvoice, verbose_name=_("customer invoice"),
@@ -868,9 +1067,10 @@ class CustomerOrder(models.Model):
   customer = models.ForeignKey(
     Customer, verbose_name=_("customer"), 
     on_delete=models.PROTECT, blank=True, null=True)
-  order_amount = models.DecimalField(
-    _("order_amount"), help_text=_('order amount'),
-    max_digits=8, decimal_places=2,  default = 0)
+  total_price_with_tax = models.DecimalField(
+    _("Total price"),
+    help_text=_('Total price vat or compensation if appliacable included'), 
+    default=0, max_digits=9, decimal_places=3)
 
   class Meta:
     verbose_name = _("customer order")
@@ -897,7 +1097,7 @@ class BankAccount(models.Model):
   operation_date = models.DateField(_("operation_date"),
     db_index=True)
   operation_comment = models.CharField(
-    _("operation_comment"), max_length=200, null = True, blank=True)
+    _("operation_comment"), max_length=100, null = True, blank=True)
   bank_amount_in = models.DecimalField(
     _("bank_amount_in"), help_text=_('payment_on_the_account'),
     max_digits=8, decimal_places=2, default = 0)
@@ -917,6 +1117,56 @@ class BankAccount(models.Model):
   is_updated_on = models.DateTimeField(
     _("is_updated_on"), auto_now=True)
   objects =BankAccountManager()
+
+  def get_bank_amount_in(self):
+    if self.id:
+      if self.bank_amount_in != 0:
+        return self.bank_amount_in
+      else:
+        return ""
+    return "N/A"
+
+  get_bank_amount_in.short_description=(_("bank_amount_in"))
+  get_bank_amount_in.allow_tags = False
+
+  def get_bank_amount_out(self):
+    if self.id:
+      if self.bank_amount_out != 0:
+        return self.bank_amount_out
+      else:
+        return ""
+    return "N/A"
+
+  get_bank_amount_out.short_description=(_("bank_amount_out"))
+  get_bank_amount_out.allow_tags = False
+
+  def get_producer(self):
+    if self.id:
+      if self.producer:
+        return self.producer
+      else:
+        if self.customer == None:
+          # This is a total, show it
+          return "--------------"
+        return ""
+    return "N/A"
+
+  get_producer.short_description=(_("producer"))
+  get_producer.allow_tags = False
+
+  def get_customer(self):
+    if self.id:
+      if self.customer:
+        return self.customer
+      else:
+        if self.producer == None:
+          # This is a total, show it
+          return "--------------"
+        return ""
+    return "N/A"
+
+  get_customer.short_description=(_("customers"))
+  get_customer.allow_tags = False
 
   class Meta:
     verbose_name = _("bank account movement")

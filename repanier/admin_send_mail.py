@@ -6,7 +6,6 @@ from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import EmailMultiAlternatives
-from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
@@ -25,12 +24,12 @@ from repanier.admin_export_xlsx import export_order_customer_xlsx
 from repanier.admin_export_xlsx import export_orders_xlsx
 from repanier.admin_export_xlsx import export_invoices_xlsx
 
-def send_test_email(request, queryset):
+def send_alert_email(permanence, current_site_name):
 	try:
-		send_mail('Test sujet', 'Test msg', settings.ALLOWED_HOSTS[0] + '@repanier.be', ['pcolmant@gmail.com'])
+		send_mail('Alert - ' + " - " + unicode(permanence) + " - " + current_site_name, permanence.get_status_display(), settings.ALLOWED_HOSTS[0] + '@repanier.be', ['pcolmant@gmail.com'])
 		# send_mail('Test sujet', 'Test msg', 'coordi@repanier.be', ['pcolmant@gmail.com'])
-	except BadHeaderError:
-		self.message_user(request, _("Invalid header found."))
+	except:
+		pass
 
 # subject, from_email, to = 'Order Confirmation', 'admin@yourdomain.com', 'someone@somewhere.com'
 
@@ -44,7 +43,7 @@ def send_test_email(request, queryset):
 # msg.attach_alternative(html_content, "text/html")
 # msg.send()
 
-def email_offers(permanence_id, current_site):
+def email_offers(permanence_id, current_site_name):
 	permanence = Permanence.objects.get(id=permanence_id)
 	sender_email = settings.DEFAULT_FROM_EMAIL
 	for staff in Staff.objects.all().active().order_by():
@@ -53,18 +52,19 @@ def email_offers(permanence_id, current_site):
 	bcc_email = []
 	for customer in Customer.objects.all().active().not_the_buyinggroup().may_order().order_by():
 		bcc_email.append(customer.user.email)
+	# bcc_email.append('pcolmant@gmail.com')
 	html_content = permanence.offer_description
 	email = EmailMultiAlternatives(
-		_("Orders opened") + " " + current_site.name + ", " + permanence.__unicode__(), 
+		unicode(_("Opening of orders")) + " - " + unicode(permanence) + " - " + current_site_name, 
 		strip_tags(html_content),
 		sender_email,
 		# [sender_email],
 		bcc=bcc_email
 	)
 	email.attach_alternative(html_content, "text/html")
-	email.send()
+	# email.send()
 
-def email_orders(permanence_id, current_site):
+def email_orders(permanence_id, current_site_name):
 	permanence = Permanence.objects.get(id=permanence_id)
 	sender_email = settings.DEFAULT_FROM_EMAIL
 	cc_email_staff = []
@@ -86,7 +86,7 @@ def email_orders(permanence_id, current_site):
 		c_part = ''
 		c=permanenceboard.customer
 		if c:
-			c_part = c.short_basket_name + ',' + c.phone1
+			c_part = c.long_basket_name + ',' + c.phone1
 		if first_board:
 			board_composition += '<br/>'
 		board_composition += r_part + c_part + '<br/>'
@@ -98,57 +98,60 @@ def email_orders(permanence_id, current_site):
 	for producer in producer_set:
 		wb = export_order_producer_xlsx(permanence=permanence, producer=producer, wb=None)
 		html_content = producer.order_description
+		long_profile_name = producer.long_profile_name if producer.long_profile_name != None else producer.short_profile_name
 		email = EmailMultiAlternatives(
-			current_site.name + ", " + permanence.__unicode__() + " - " + producer.short_profile_name, 
+			unicode(_("Order")) + " - " + unicode(permanence) + " - " + current_site_name + " - " + long_profile_name, 
 			strip_tags(html_content), 
 			sender_email, 
 			[producer.email], 
-			bcc=['pcolmant@gmail.com'],
+			# bcc=['pcolmant@gmail.com'],
 			cc=cc_email_staff
 		)
-		email.attach(permanence.__unicode__() + '.xlsx', 
+		email.attach(unicode(permanence) + '.xlsx', 
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		email.send()
+		# email.send()
 	customer_set = Customer.objects.filter(
 		purchase__permanence=permanence_id).order_by().distinct()
 	for customer in customer_set:
 		wb = export_order_customer_xlsx(permanence=permanence, customer=customer, wb=None)
 		html_content = permanence.order_description + board_composition
+		long_basket_name = customer.long_basket_name if customer.long_basket_name != None else customer.short_baskrt_name
 		email = EmailMultiAlternatives(
-			current_site.name + ", " + permanence.__unicode__() + " - " + customer.short_basket_name, 
+			unicode(_("Order")) + " - " + unicode(permanence) + " - " + current_site_name + " - " + long_basket_name, 
 			strip_tags(html_content),
 			sender_email, 
 			[customer.user.email], 
-			bcc=['pcolmant@gmail.com']
+			# bcc=['pcolmant@gmail.com']
 		)
-		email.attach(permanence.__unicode__() + '.xlsx', 
+		email.attach(unicode(permanence) + '.xlsx', 
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		email.send()
+		# email.send()
 	wb = export_orders_xlsx(permanence=permanence, wb=None)
 	to_email_board = []
 	for permanenceboard in PermanenceBoard.objects.filter(
 		permanence=permanence_id).order_by():
-		to_email_board.append(permanenceboard.customer.user.email)
+		if permanenceboard.customer:
+			to_email_board.append(permanenceboard.customer.user.email)
 	html_content = permanence.order_description + board_message
 	email = EmailMultiAlternatives(
-		current_site.name + ", " + permanence.__unicode__() + " - " + unicode(_('permanence preparation list')), 
+		unicode(_('Permanence preparation list')) + " - " + unicode(permanence) + " - " + current_site_name, 
 		strip_tags(html_content),
 		sender_email, 
 		to_email_board, 
-		bcc=['pcolmant@gmail.com'],
+		# bcc=['pcolmant@gmail.com'],
 		cc=cc_email_staff
 	)
-	email.attach(permanence.__unicode__() + '.xlsx', 
+	email.attach(unicode(permanence) + '.xlsx', 
 		save_virtual_workbook(wb), 
 		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 	email.attach_alternative(html_content, "text/html")
-	email.send()
+	# email.send()
 
-def email_invoices(permanence_id, current_site):
+def email_invoices(permanence_id, current_site_name):
 	permanence = Permanence.objects.get(id=permanence_id)
 	sender_email = settings.DEFAULT_FROM_EMAIL
 	cc_email = []
@@ -160,52 +163,54 @@ def email_invoices(permanence_id, current_site):
 	producer_set = Producer.objects.filter(
 		permanence=permanence_id).order_by()
 	for producer in producer_set:
-		wb = export_invoices_xlsx(permanence=permanence, producer=producer, wb=None)
+		wb = export_invoices_xlsx(permanence=permanence, producer=producer, wb=None, sheet_name=current_site_name)
 		html_content = producer.invoice_description
+		long_profile_name = producer.long_profile_name if producer.long_profile_name != None else producer.short_profile_name
 		email = EmailMultiAlternatives(
-			current_site.name + ", " + permanence.__unicode__() + " - " + producer.short_profile_name, 
+			unicode(_('Invoice')) + " - " + unicode(permanence) + " - " + current_site_name + " - " + long_profile_name,
 			strip_tags(html_content), 
 			sender_email, 
 			[producer.email], 
-			bcc=['pcolmant@gmail.com'],
+			# bcc=['pcolmant@gmail.com'],
 			cc=cc_email
 		)
-		email.attach(permanence.__unicode__() + '.xlsx', 
+		email.attach(unicode(permanence) + '.xlsx', 
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		email.send()
+		# email.send()
 	customer_set = Customer.objects.filter(
 		purchase__permanence=permanence_id).order_by().distinct()
 	for customer in customer_set:
 		wb = export_invoices_xlsx(permanence=permanence, customer=customer, wb=None)
 		html_content = permanence.invoice_description
+		long_basket_name = customer.long_basket_name if customer.long_basket_name != None else customer.short_baskrt_name
 		email = EmailMultiAlternatives(
-			current_site.name + ", " + permanence.__unicode__() + " - " + customer.short_basket_name, 
+			unicode(_('Invoice')) + " - " + unicode(permanence) + " - " + current_site_name + " - " + long_basket_name,
 			strip_tags(html_content),
 			sender_email, 
 			[customer.user.email], 
-			bcc=['pcolmant@gmail.com']
+			# bcc=['pcolmant@gmail.com']
 		)
-		email.attach(permanence.__unicode__() + '.xlsx', 
+		email.attach(unicode(permanence) + '.xlsx', 
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		email.send()
+		# email.send()
 	wb = export_invoices_xlsx(permanence=permanence, wb=None)
 	for permanenceboard in PermanenceBoard.objects.filter(
 		permanence=permanence_id).order_by():
 		html_content = permanence.invoice_description
 		email = EmailMultiAlternatives(
-			current_site.name + ", " + permanence.__unicode__() + " - " + unicode(_('permanence preparation list')), 
+			unicode(_('Invoice')) + " - " + unicode(permanence) + " - " + current_site_name,
 			strip_tags(html_content),
 			sender_email, 
 			[customer.user.email], 
-			bcc=['pcolmant@gmail.com'],
+			# bcc=['pcolmant@gmail.com'],
 			cc=cc_email
 		)
-		email.attach(permanence.__unicode__() + '.xlsx', 
+		email.attach(unicode(permanence) + '.xlsx', 
 			save_virtual_workbook(wb), 
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		email.attach_alternative(html_content, "text/html")
-		email.send()
+		# email.send()

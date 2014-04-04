@@ -7,7 +7,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.min.css">{% endaddtoblock %}
+    {% addtoblock "css" %}<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">{% endaddtoblock %}
     {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
     {% addtoblock "css" %}
     <style type="text/css">
@@ -80,8 +80,8 @@
           </center>
       </nav>
     </div>
-    {% addtoblock "js" %}<script src="{{ STATIC_URL }}js/jquery-1.10.1.min.js"></script>{% endaddtoblock %}
-    {% addtoblock "js" %}<script src="{{ STATIC_URL}}bootstrap/js/bootstrap.min.js"></script>{% endaddtoblock %}
+    {% addtoblock "js" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>{% endaddtoblock %}
+    {% addtoblock "js" %}<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>{% endaddtoblock %}
     {% render_block "jsuncompressed" %}
     {% render_block "js" %}
     {% render_block "lastjs"  %}

@@ -80,13 +80,13 @@
             {{ purchase.long_name }}
         </td>
         <td align="right">
-            {{ purchase.prepared_quantity }}
+            {{ purchase.quantity }}
         </td>
         <td align="right">
-            {{ purchase.prepared_unit_price }} &euro;
+            {{ purchase.original_unit_price }} &euro;{% if purchase.unit_deposit %} <span class="glyphicon glyphicon-plus"></span> {{ purchase.unit_deposit }} &euro; <span class="glyphicon glyphicon-leaf"></span>{% endif %}
         </td>
         <td align="right">
-            {{ purchase.prepared_amount }} &euro;
+            {{ purchase.price_with_tax }} &euro;
         </td>
         <td>
         {% if purchase.comment %}
@@ -104,14 +104,17 @@
 {% block footer %}
         <div class="btn-group">
             {% if previous_customer_invoice_id %}
-                <a href="{% url 'invoice_view' previous_customer_invoice_id %}" class="btn btn-primary">&laquo;</a>
+                <a href="{% url 'invoice_view' previous_customer_invoice_id %}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-left"></span></a>
             {% else %}
-                <a href="#" class="btn btn-disabled">&laquo;</a>
+                <a href="#" class="btn btn-disabled"></a>
+            {% endif %}
+            {% if previous_customer_invoice_id or next_customer_invoice_id %}
+                <a href="#" class="btn btn-disabled">{% trans "Page " %}</a>
             {% endif %}
             {% if next_customer_invoice_id %}
-            <a href="{% url 'invoice_view' next_customer_invoice_id %}" class="btn btn-primary">&raquo;</a>
+            <a href="{% url 'invoice_view' next_customer_invoice_id %}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
             {% else %}
-                <a href="#" class="btn btn-disabled">&raquo;</a>
+                <a href="#" class="btn btn-disabled"></a>
             {% endif %}
         </div>
         <div class="btn-group">
@@ -124,11 +127,11 @@
             <button type="button" class="btn btn-primary disabled"> - </button>
             <button type="button" class="btn btn-primary disabled">{% trans "Refund" %}  {{ object.bank_amount_out }} &euro;</button>
             {% endif %}
-            {% if object.purchase_amount != 0 %}
+            {% if object.total_price_with_tax != 0 %}
             <button type="button" class="btn btn-primary disabled"> - </button>
-            <button type="button" class="btn btn-primary disabled">{% trans "Purchase" %}  {{ object.purchase_amount }} &euro;</button>
+            <button type="button" class="btn btn-primary disabled">{% trans "Purchase" %}  {{ object.total_price_with_tax }} &euro;</button>
             {% endif %}
             <button type="button" class="btn btn-primary disabled"> = </button>
-            <button type="button" class="btn {% if object.balance < 0 %}btn-danger{% else %}btn-success{% endif %} disabled">{% trans "New balance" %}  {{ object.balance }} &euro;</button>
+            <button type="button" class="btn {% if object.balance < 0 %}btn-danger{% else %}btn-success{% endif %}">{% trans "New balance" %}  {{ object.balance }} &euro;</button>
         </div>
 {% endblock %}

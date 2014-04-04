@@ -2,9 +2,26 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block sub_content %}
 <div class="container">
+<div class="row">
+      <div class="col-sm-2 hidden-xs">
+            <ul id="sidebar" class="nav nav-stacked affix">
+                <li>{% trans "Producer" %}</li>
+            {% for producer in producer_set %}
+                <li><a href="?producer={{ producer.id }}">{{ producer.long_profile_name  | truncatechars:15 }}</a></li>
+            {% endfor %}
+            {% comment %}
+                <li>{% trans "departements" %}</li>
+            {% for departementforcusomer in departementforcusomer_set %}
+                <li><a href="?departementforcusomer={{ departementforcusomer.id }}">{{ departementforcusomer.short_name }}</a></li>
+            {% endfor %}
+            {% endcomment %}
+            </ul>
+      </div>
+      <div class="col-sm-10">
 {# {% debug %} #}
-    {{ permanence_offer_description |safe }}
+{% if user.customer.may_order %}
 {% if offeritem_list %}
+{{ permanence_offer_description |safe }}
     <br/>
     {# .... **End of the pagination section** .... #}
     <table class="table table-hover" >
@@ -23,12 +40,12 @@
         <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" style="width: 60%;" class="visible-xs">
             <span class="visible-xs">{{ offer.product.producer.short_profile_name | truncatechars:8 }}, </span>
                 {{ offer.product.long_name }}
-            <span class="visible-xs">{{ offer.product.producer_unit_price }} &euro;
-                {% if offer.product.order_by_piece_pay_by_piece %}{% trans "/ piece" %}{% else %}{% trans "/ Kg" %}{% endif %}</span>
+            <span class="visible-xs">{% if user.customer.vat_id %}{{ offer.product.unit_price_with_compensation }}{% else %}{{ offer.product.unit_price_with_vat }}{% endif %} &euro;
+                {% if offer.product.order_by_piece_pay_by_piece %}{% trans "/ piece" %}{% else %}{% trans "/ Kg" %}{% endif %}{% if offer.product.unit_deposit %} <span class="glyphicon glyphicon-plus"></span> {{ offer.product.unit_deposit }} &euro; <span class="glyphicon glyphicon-leaf"></span>{% endif %}
         </td>
         <td data-toggle="modal" data-id="{{ offer.id }}" data-product="{{ offer.product.long_name }}" data-target="#orderModal" class="hidden-xs">
-                {{ offer.product.producer_unit_price }} &euro;
-                {% if offer.product.order_by_piece_pay_by_piece %}{% trans "/ piece" %}{% else %}{% trans "/ Kg" %}{% endif %}
+                {% if user.customer.vat_id %}{{ offer.product.unit_price_with_compensation }}{% else %}{{ offer.product.unit_price_with_vat }}{% endif %} &euro;
+                {% if offer.product.order_by_piece_pay_by_piece %}{% trans "/ piece" %}{% else %}{% trans "/ Kg" %}{% endif %}{% if offer.product.unit_deposit %} <span class="glyphicon glyphicon-plus"></span> {{ offer.product.unit_deposit }} &euro; <span class="glyphicon glyphicon-leaf"></span>{% endif %}
         </td>
         <td>
                 <input hidden name="page" value="{{ page_obj.number }}"/>
@@ -36,7 +53,7 @@
                 <input hidden name="departementforcusomer" value="{{ departementforcusomer_id }}"/>
                 {% repanier_select_qty offer_item_id=offer.id %}
                 <noscript>
-                    <input type="submit" class="round tiny button" value="{% trans "ok" %}" />
+                    <input type="submit" value="{% trans "ok" %}" />
                 </noscript>
         </td>
     </form>
@@ -64,6 +81,9 @@
   <!-- Order modal ends -->
 {% else %}
     <h3>{% trans "No offer found" %}</h3>
+{% endif %}
+{% else %}
+    <h3>{% trans "You are not allowed to order products" %}</h3>
 {% endif %}
 {% addtoblock "lastjs" %}
 <script type="text/javascript">
@@ -117,22 +137,26 @@ $(document).ready(function() {
 </script>        
 {% endaddtoblock %}
 </div>
+</div>
+</div>
 {% endblock %}
 {% block footer %}
     <div class="hidden-xs">
         {% if is_paginated %}
         <div class="btn-group">
             <div class="btn-group">
-                {% if page_obj.has_previous%}
-                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&laquo;</a>
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-left"></span></a>
                 {% else %}
-                    <a href="#" class="btn btn-disabled">&laquo;</a>
+                    <a href="#" class="btn btn-disabled"></a>
                 {% endif %}
-                <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% if page_obj.has_previous or page_obj.has_next %}
+                    <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&raquo;</a>
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
                 {% else %}
-                    <a href="#" class="btn btn-disabled">&raquo;</a>
+                    <a href="#" class="btn btn-disabled"></a>
                 {% endif %}
             </div>
         </div>
@@ -173,15 +197,17 @@ $(document).ready(function() {
         <div class="btn-group">
             <div class="btn-group">
                 {% if page_obj.has_previous%}
-                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&laquo;</a>
+                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-left"></span></a>
                 {% else %}
-                    <a href="#" class="btn btn-disabled">&laquo;</a>
+                    <a href="#" class="btn btn-disabled"></a>
                 {% endif %}
-                <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% if page_obj.has_previous or page_obj.has_next %}
+                    <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-primary">&raquo;</a>
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
                 {% else %}
-                    <a href="#" class="btn btn-disabled">&raquo;</a>
+                    <a href="#" class="btn btn-disabled"></a>
                 {% endif %}
             </div>
         </div>

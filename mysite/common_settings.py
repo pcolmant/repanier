@@ -8,6 +8,18 @@ PROJECT_PATH = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 os.sys.path.insert(0, os.path.dirname(PROJECT_DIR))
 
+###################### DEBUG
+
+# Defined into /etc/uwsgi/apps-available/*.ini
+DEBUG = True if os.getenv('DJANGO_SETTINGS_MODULE_DEBUG','') == 'True' else False
+TEMPLATE_DEBUG = DEBUG
+ADMINS = (
+    (
+        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME',''), 
+        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
+    ),
+)
+
 ###################### 
 
 DATABASES = {
@@ -22,31 +34,25 @@ DATABASES = {
         'PORT': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PORT',''),                      # Set to empty string for default.
     }
 }
-SECRET_KEY = os.getenv('DJANGO_SETTINGS_MODULE_SECRET_KEY','')
 EMAIL_HOST = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST','')
 EMAIL_HOST_USER = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_USER','')
 EMAIL_HOST_PASSWORD = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_PASSWORD','')
 EMAIL_PORT = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_PORT','')
 EMAIL_USE_TLS = True if os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_USE_TLS','') == 'True' else False
-
-
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ###################### I18N
 
 TIME_ZONE = 'Europe/Brussels'
-LANGUAGE_CODE = 'fr-BE'
+USE_TZ = True
+# Before 22/02/2014 - DJANGO-CMS LANGUAGE_CODE = 'fr-BE'
+LANGUAGE_CODE = 'fr'
+USE_L10N = True
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = '.'
+NUMBER_GROUPING = 3
+DECIMAL_SEPARATOR = ','
 # 'fr-be'
-
-###################### DEBUG
-
-# Defined into /etc/uwsgi/apps-available/*.ini
-DEBUG = True if os.getenv('DJANGO_SETTINGS_MODULE_DEBUG','') == 'True' else False
-TEMPLATE_DEBUG = DEBUG
-ADMINS = (
-    (
-        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME',''), 
-        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
-    ),
-)
 
 ##################### Django & Django CMS
 LANGUAGES = [
@@ -69,17 +75,34 @@ LOCALE_PATHS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    # 'django.middleware.cache.UpdateCacheMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
+    # 'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware', 
+    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django.contrib.messages.middleware.MessageMiddleware',
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'django.middleware.locale.LocaleMiddleware',
+    # 'django.middleware.doc.XViewMiddleware',
+    # 'cms.middleware.page.CurrentPageMiddleware',
+    # 'cms.middleware.user.CurrentUserMiddleware',      
+    # 'cms.middleware.toolbar.ToolbarMiddleware',
+    # 'cms.middleware.language.LanguageCookieMiddleware',
+
+
     'django.middleware.cache.UpdateCacheMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware', 
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.doc.XViewMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'cms.middleware.page.CurrentPageMiddleware',
-    'cms.middleware.user.CurrentUserMiddleware',      
+    'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
     'cms.middleware.language.LanguageCookieMiddleware',
 )
@@ -91,7 +114,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.core.context_processors.media',
     'django.core.context_processors.static',
-    'cms.context_processors.media',
+    'cms.context_processors.cms_settings',
+    # 'cms.context_processors.media',
     'sekizai.context_processors.sekizai',  
 )
 
@@ -104,7 +128,24 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
     'django.contrib.formtools',
-    'djangocms_text_ckeditor', # note this needs to be above the 'cms' entry
+
+    # 'cms.plugins.file',
+    # 'cms.plugins.flash',
+    # 'cms.plugins.googlemap',
+    # 'cms.plugins.picture',
+    # 'cms.plugins.teaser',
+    # 'djangocms_link',
+    # 'djangocms_snippet',
+    # 'djangocms_style',
+    # 'djangocms_column',
+    # # 'djangocms_grid',
+    # 'djangocms_oembed',
+    # 'djangocms_table',
+    # 'djangocms_googlemap',
+    # 'djangocms_accordion',
+    'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
+    # 'cms.plugins.video',
+
     'cms',
     'mptt',
     'menus',
@@ -114,20 +155,15 @@ INSTALLED_APPS = (
                             # the 'django.contrib.admin' entry
     'django.contrib.admin',
     'adminsortable',
-    # 'cms.plugins.file',
-    'cms.plugins.googlemap',
-    'cms.plugins.link',
-    # 'cms.plugins.picture',
-    # 'cms.plugins.teaser',
-    # 'cms.plugins.video',
+    # 'hvad',
     'filer',
     'easy_thumbnails',
     'cmsplugin_filer_file',
     'cmsplugin_filer_folder',
     'cmsplugin_filer_image',
-    'cmsplugin_filer_teaser',
     'cmsplugin_filer_video',
     'reversion',
+    'password_reset',
 
     # 'wkhtmltopdf', # --> PDF
 ) 
@@ -142,37 +178,42 @@ CMS_SEO_FIELDS = False
 CMS_URL_OVERWRITE = True
 CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
-LOGIN_URL = "/#loginRequired"
+LOGIN_URL = "/go_repanier/"
 LOGIN_REDIRECT_URL = "/"
-LOGOUT_URL = "/?cms-toolbar-logout"
+LOGOUT_URL = "/leave_repanier/"
 
-CKEDITOR_SETTINGS = {
-        'language': '{{ language }}',
-        'toolbar': 'CMS2',
-        'skin': 'moono',
-        'toolbarCanCollapse' : False,
-#        'stylesSet' : 'default:%sckeditor/styles.js' % STATIC_URL,
-        'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
-        'autoGrow_onStartup' :  True,
-#        'height' : '450px',
-        'emailProtection' : '2',
-        'toolbar_CMS2': [
-                ['Undo', 'Redo'],
-                ['cmsplugins'],
-                # ['Format', '-','TextColor', 'BGColor', '-', 'Bold', 'Italic', 'Underline', '-', 
-                ['Styles', '-','TextColor', 'Bold', 'Italic', '-', 'RemoveFormat', 'PasteText'],
-                ['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
-                ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
-                ['Source'],['Maximize', '-', 'ShowBlocks'],
-        ],
-}
+
+# CKEDITOR_SETTINGS = {
+#         'language': '{{ language }}',
+#         'toolbar': 'HTMLField',
+#         'skin': 'moono',
+#         'toolbarCanCollapse' : False,
+# #        'stylesSet' : 'default:%sckeditor/styles.js' % STATIC_URL,
+#         # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
+#         'stylesSet' : [],
+#         'extraPlugins' : 'stylesheetparser',
+#         'contentsCss' : '%sjs/bootstrap.css',
+#         'autoGrow_onStartup' :  True,
+# #        'height' : '450px',
+#         'emailProtection' : '2',
+#         'toolbar_CMS2': [
+#                 ['Undo', 'Redo'],
+#                 ['cmsplugins'],
+#                 # ['Format', '-','TextColor', 'BGColor', '-', 'Bold', 'Italic', 'Underline', '-', 
+#                 # ['Styles', '-','TextColor', 'Bold', 'Italic', '-', 'RemoveFormat', 'PasteText'],
+#                 ['-','TextColor', 'Bold', 'Italic', '-', 'RemoveFormat', 'PasteText'],
+#                 ['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
+#                 ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
+#                 ['Source'],['Maximize', '-', 'ShowBlocks'],
+#         ],
+# }
 
 TEXT_SAVE_IMAGE_FUNCTION='cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True
-FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = False
-FILER_ENABLE_PERMISSIONS = True
+FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = True
+FILER_ENABLE_PERMISSIONS = False
 FILER_IS_PUBLIC_DEFAULT = True
 FILER_SUBJECT_LOCATION_IMAGE_DEBUG = True
 FILER_DEBUG = DEBUG
@@ -210,11 +251,11 @@ INSTALLED_APPS += (
 ################# Django_crispy_forms
 INSTALLED_APPS += (
     'crispy_forms',
-    'crispy_forms_foundation',
+    # 'crispy_forms_foundation',
 )
 
-# CRISPY_TEMPLATE_PACK = "bootstrap3"
-CRISPY_TEMPLATE_PACK = "foundation"
+CRISPY_TEMPLATE_PACK = "bootstrap3"
+# CRISPY_TEMPLATE_PACK = "foundation"
 JSON_MODULE = 'ujson'
 
 ################# Django_compressor
@@ -266,13 +307,13 @@ COMPRESS_OFFLINE = False
 ###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
 
 CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 3000
+CACHE_MIDDLEWARE_SECONDS = 3600
 
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': '/var/tmp/django_cache',
-        'TIMEOUT': 3000,
+        'TIMEOUT': 300,
         'OPTIONS': {
             'MAX_ENTRIES': 1000,
             'CULL_FREQUENCY': 3
@@ -282,7 +323,7 @@ CACHES = {
 
 CMS_CACHE_DURATIONS = {
     'content' : 300, # default 60
-    'menus' : 15, # default 3600
+    'menus' : 3600, # default 3600
     'permissions' : 3600 # default: 3600
 }
 ###################### EASYMAP
@@ -292,109 +333,40 @@ CMS_CACHE_DURATIONS = {
 #    'easy_maps',
 #)
 
-###################### Debug Toolbar
-# if( DEBUG):
-#     INTERNAL_IPS = ('127.0.0.1',)
-#     MIDDLEWARE_CLASSES += (
-#         'debug_toolbar.middleware.DebugToolbarMiddleware',
-#     )
-#     DEBUG_TOOLBAR_PANELS = (
-#         'debug_toolbar.panels.version.VersionDebugPanel',
-#         'debug_toolbar.panels.timer.TimerDebugPanel',
-#         'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
-#         'debug_toolbar.panels.headers.HeaderDebugPanel',
-#         'debug_toolbar.panels.profiling.ProfilingDebugPanel',
-#         'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
-#         'debug_toolbar.panels.sql.SQLDebugPanel',
-#         'debug_toolbar.panels.template.TemplateDebugPanel',
-#         'debug_toolbar.panels.cache.CacheDebugPanel',
-#         'debug_toolbar.panels.signals.SignalDebugPanel',
-#         'debug_toolbar.panels.logger.LoggingPanel',
-#     )
-#     CACHE_BACKEND = 'dummy://'
-#     LOGGING = {
-#         'version': 1,
-#         'disable_existing_loggers': True,
-#         'formatters': {
-#             'verbose': {
-#                 'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-#             },
-#         },
-#         'handlers': {
-#             'null': {
-#                 'level':'DEBUG',
-#                 'class':'django.utils.log.NullHandler',
-#             },
-#             'console':{
-#                 'level':'DEBUG',
-#                 'class':'logging.StreamHandler',
-#                 'formatter': 'verbose'
-#             },
-#         },
-#         'loggers': {
-#             'django': {
-#                 'handlers':['null'],
-#                 'propagate': True,
-#                 'level':'INFO',
-#             },
-#             'django.request': {
-#                 'handlers': ['console'],
-#                 'level': 'ERROR',
-#                 'propagate': False,
-#             },
-#             'django.db.backends': {
-#                 'handlers': ['console'],
-#                 'level': 'DEBUG',
-#                 'propagate': False,
-#             },
+
+# if DEBUG:
+#     import logging
+#     l = logging.getLogger('django.db.backends')
+#     l.setLevel(logging.DEBUG)
+#     l.addHandler(logging.StreamHandler())
+
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'require_debug_false': {
+#             '()': 'django.utils.log.RequireDebugFalse'
 #         }
+#     },
+#     'handlers': {
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'filters': ['require_debug_false'],
+#             'class': 'django.utils.log.AdminEmailHandler'
+#         },'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django.request': {
+#             'handlers': ['mail_admins'],
+#             'level': 'ERROR',
+#             'propagate': True,
+#         },'django.db.backends': {
+#             'level': 'DEBUG',
+#             'handlers': ['console'],
+#         },
 #     }
-#     INSTALLED_APPS += (
-#         'debug_toolbar',
-#     )
-
-#     def custom_show_toolbar(request):
-#         return DEBUG # Always show toolbar, for example purposes only.
-
-#     DEBUG_TOOLBAR_CONFIG = {
-#         'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
-#         'INTERCEPT_REDIRECTS': False,
-#         'ENABLE_STACKTRACES' : True,
-#         }
-
-if DEBUG:
-    import logging
-    l = logging.getLogger('django.db.backends')
-    l.setLevel(logging.DEBUG)
-    l.addHandler(logging.StreamHandler())
-
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        },'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        },
-    }
-}
+# }
