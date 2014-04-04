@@ -66,7 +66,6 @@ def export_orders_xlsx(permanence, wb = None):
 		ws = wb.create_sheet()
 
 # Customer info
-	ws = wb.get_active_sheet()
 	worksheet_setup_portait_a4(ws, unicode(permanence))
 
 	header = [
