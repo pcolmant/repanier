@@ -8,6 +8,7 @@ from django.utils.timezone import utc
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
 from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -26,13 +27,13 @@ from repanier.models import LUT_DepartmentForCustomer
 from repanier.models import OfferItem
 from repanier.models import Permanence
 from repanier.models import Producer
+from repanier.models import ProducerInvoice
 from repanier.models import Purchase
 from repanier.models import Customer
 from repanier.models import CustomerInvoice
 from repanier.models import BankAccount
 from repanier.models import PermanenceBoard
 from repanier.forms import ContactForm
-from repanier.tools import update_or_create_purchase
 
 import logging
 logger = logging.getLogger(__name__)
@@ -146,11 +147,19 @@ class OrderView(ListView):
       producer_set = Producer.objects.all().filter(permanence = self.permanence)
       context['producer_set'] = producer_set
       context['producer_id'] = self.producer_id
-      departementforcusomer_set = LUT_DepartmentForCustomer.objects.all().filter(
-        product__offeritem__permanence = self.permanence
-      ).distinct()
+      departementforcusomer_set = LUT_DepartmentForCustomer.objects.none()
+      if self.producer_id == 'all':
+        departementforcusomer_set = LUT_DepartmentForCustomer.objects.all().filter(
+          product__offeritem__permanence = self.permanence
+        ).distinct()
+      else:
+        departementforcusomer_set = LUT_DepartmentForCustomer.objects.all().filter(
+          product__producer = self.producer_id,
+          product__offeritem__permanence = self.permanence
+        ).distinct()
       context['departementforcusomer_set'] = departementforcusomer_set
       context['departementforcusomer_id'] = self.departementforcusomer_id
+      context['offeritem_id'] = self.offeritem_id
       context['prepared_amount'] = get_user_order_amount(self.permanence, user = self.user)
     return context
 
@@ -161,17 +170,19 @@ class OrderView(ListView):
       qs = OfferItem.objects.all().permanence(self.permanence.id).active()
       if self.permanence.status == PERMANENCE_OPENED:
         # Don't display technical products.
-        qs = qs.add_product_manualy()
+        qs = qs.filter(product__order_unit__lt = PRODUCT_ORDER_UNIT_DEPOSIT)
       if self.producer_id != 'all':
         qs = qs.filter(product__producer=self.producer_id)
-      if self.departementforcusomer_id != 'all':
-        qs = qs.filter(product__department_for_customer=self.departementforcusomer_id)
       if self.offeritem_id != 'all' or self.permanence.status == PERMANENCE_SEND:
         #if asked or if status is close or send, then display only purchased product
         qs = qs.filter(product__purchase__permanence=self.permanence.id,
-          product__purchase__customer__user=self.user)
+          product__purchase__customer__user=self.user).order_by(
+          'product__long_name'
+        )
+      if self.departementforcusomer_id != 'all':
+        qs = qs.filter(product__department_for_customer=self.departementforcusomer_id)
       qs = qs.order_by(
-        'product__producer__short_profile_name', 
+        # 'product__producer__short_profile_name', 
         'product__department_for_customer__short_name', 'product__long_name'
       )
       # print("---------------")
@@ -276,11 +287,11 @@ class InvoiceView(DetailView):
       purchase_set = Purchase.objects.all().filter(is_recorded_on_customer_invoice = customer_invoice)
       context['purchase_set'] = purchase_set
       previous_customer_invoice_id = None
-      previous_customer_invoice_set = CustomerInvoice.objects.filter(customer__user_id=self.request.user.id, id__lt=customer_invoice.id).order_by('-id')[:1]
+      previous_customer_invoice_set = CustomerInvoice.objects.filter(customer_id=customer_invoice.customer.id, id__lt=customer_invoice.id).order_by('-id')[:1]
       if previous_customer_invoice_set:
         context['previous_customer_invoice_id'] = previous_customer_invoice_set[0].id
       next_customer_invoice_id = None
-      next_customer_invoice_set = CustomerInvoice.objects.filter(customer__user_id=self.request.user.id, id__gt=customer_invoice.id).order_by('id')[:1]
+      next_customer_invoice_set = CustomerInvoice.objects.filter(customer_id=customer_invoice.customer.id, id__gt=customer_invoice.id).order_by('id')[:1]
       if next_customer_invoice_set:
         context['next_customer_invoice_id'] = next_customer_invoice_set[0].id
     return context
@@ -288,13 +299,72 @@ class InvoiceView(DetailView):
   def get_queryset(self):
     # qs = CustomerInvoice.objects.none()
     pk = self.kwargs.get('pk', None)
+    if self.request.user.is_staff:
+      customer_id = self.request.GET.get('customer', None)
+      if (pk == None) or (pk == '0'):
+        last_customer_invoice_set = CustomerInvoice.objects.filter(customer_id=customer_id).order_by('-id')[:1]
+        if last_customer_invoice_set:
+          self.kwargs['pk'] = last_customer_invoice_set[0].id
+      return CustomerInvoice.objects.all()
+    else:
+      if (pk == None) or (pk == '0'):
+        last_customer_invoice_set = CustomerInvoice.objects.filter(customer__user_id=self.request.user.id).order_by('-id')[:1]
+        if last_customer_invoice_set:
+          self.kwargs['pk'] = last_customer_invoice_set[0].id
+
+      return CustomerInvoice.objects.filter(customer__user_id=self.request.user.id)
+
+class InvoicePView(DetailView):
+
+  template_name = 'repanier/invoicep_form.html'
+  model = ProducerInvoice
+  uuid = None
+
+  @method_decorator(never_cache)
+  def get(self, request, *args, **kwargs):
+    return super(InvoicePView, self).get(request, *args, **kwargs)
+
+  def get_context_data(self, **kwargs):
+    context = super(InvoicePView,self).get_context_data(**kwargs)
+    producer_invoice = self.get_object()
+    if producer_invoice:
+      bank_account_set = BankAccount.objects.all().filter(is_recorded_on_producer_invoice = producer_invoice)
+      context['bank_account_set'] = bank_account_set
+      purchase_set = Purchase.objects.all().filter(is_recorded_on_producer_invoice = producer_invoice)
+      context['purchase_set'] = purchase_set
+      previous_producer_invoice_id = None
+      previous_producer_invoice_set = ProducerInvoice.objects.filter(producer_id=producer_invoice.producer.id, id__lt=producer_invoice.id).order_by('-id')[:1]
+      if previous_producer_invoice_set:
+        context['previous_producer_invoice_id'] = previous_producer_invoice_set[0].id
+      next_producer_invoice_id = None
+      next_producer_invoice_set = ProducerInvoice.objects.filter(producer_id=producer_invoice.producer.id, id__gt=producer_invoice.id).order_by('id')[:1]
+      if next_producer_invoice_set:
+        context['next_producer_invoice_id'] = next_producer_invoice_set[0].id
+      context['uuid'] = self.uuid
+    return context
+
+  def get_queryset(self):
+    # qs = producerInvoice.objects.none()
+    producer_id = None
+    self.uuid = None
+    if self.request.user.is_staff:
+      producer_id = self.request.GET.get('producer', None)
+    else:
+      self.uuid = self.kwargs.get('uuid', None)
+      if self.uuid:
+        try:
+          producer = Producer.objects.get(uuid=self.uuid)
+          producer_id = producer.id
+        except:
+          raise PermissionDenied
+      else:
+        return ProducerInvoice.objects.none()
+    pk = self.kwargs.get('pk', None)
     if (pk == None) or (pk == '0'):
-      last_customer_invoice_set = CustomerInvoice.objects.filter(customer__user_id=self.request.user.id).order_by('-id')[:1]
-      if last_customer_invoice_set:
-        self.kwargs['pk'] = last_customer_invoice_set[0].id
-
-    return CustomerInvoice.objects.filter(customer__user_id=self.request.user.id)
-
+      last_producer_invoice_set = ProducerInvoice.objects.filter(producer_id=producer_id).order_by('-id')[:1]
+      if last_producer_invoice_set:
+        self.kwargs['pk'] = last_producer_invoice_set[0].id
+    return ProducerInvoice.objects.filter(producer_id=producer_id)
 
 # class PreparationView(View):
 

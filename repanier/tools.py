@@ -31,7 +31,7 @@ def codepoint_length(first_byte):
     assert False, 'Invalid byte %r' % first_byte
 
 def cap_to_bytes_length(unicode_text, byte_limit):
-    utf8_bytes = unicode_text.encode('UTF-8')
+    utf8_bytes = unicode_text.encode('UTF-8', 'replace')
     cut_index = 0
     previous_cut_index = cut_index
     while cut_index < len(utf8_bytes):
@@ -59,6 +59,34 @@ def cap(s, l):
     return s
   else:
     return None
+
+def get_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
+  unit = None
+  if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
+    unit = unicode(_("/ Kg"))
+  elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
+    if qty < 2:
+      unit = unicode(_("/ piece -> Kg"))
+    else:
+      unit = unicode(_("/ pieces -> Kg"))
+  else:
+    if qty < 2:
+      unit = unicode(_("/ piece"))
+    else:
+      unit = unicode(_("/ pieces"))
+  return unit
+
+def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
+  # Used when producing the orders send to the producers.
+  unit = None
+  if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
+    unit = unicode(_("/ Kg"))
+  else:
+    if qty < 2:
+      unit = unicode(_("/ piece"))
+    else:
+      unit = unicode(_("/ pieces"))
+  return unit
 
 def get_user_order_amount(permanence, user=None):
   a_total_price_with_tax = 0
@@ -127,45 +155,44 @@ def recalculate_order_amount(permanence_id, send_to_producer=False):
     if customer_save_id != purchase.customer.id:
       if customer_save_id != None:
         save_order_amount(permanence_id, customer_save_id,a_total_price_with_tax)
-        a_total_price_with_tax = 0
+      a_total_price_with_tax = 0
       customer_save_id = purchase.customer.id
-    if purchase.product:
-      # Reset pucrchase value based on the actual state of the product
-      # Don't do that for purchase added without reffering to a product
-      # This can be the case of correction done when invoicing
-      purchase.is_to_be_prepared = (purchase.product.automatically_added == ADD_PORDUCT_MANUALY)
-      purchase.long_name = purchase.product.long_name
-      purchase.order_by_piece_pay_by_kg = purchase.product.order_by_piece_pay_by_kg
-      purchase.order_by_kg_pay_by_kg = purchase.product.order_by_kg_pay_by_kg
-      purchase.original_unit_price = purchase.product.original_unit_price
-      purchase.original_price = purchase.quantity * purchase.original_unit_price
-      purchase.price_without_tax = purchase.quantity * purchase.product.unit_price_without_tax
-      purchase.invoiced_price_with_compensation = False
-      if purchase.product.vat_level in [VAT_200, VAT_300] and purchase.customer.vat_id != None:
-        purchase.invoiced_price_with_compensation = True
-        purchase.price_with_tax = purchase.quantity * purchase.product.unit_price_with_compensation
-      else:
-        purchase.price_with_tax = purchase.quantity * purchase.product.unit_price_with_vat
-      if purchase.order_by_piece_pay_by_kg:
-        purchase.original_price *= purchase.product.order_average_weight
-        purchase.price_without_tax *= purchase.product.order_average_weight
-        purchase.price_with_tax *= purchase.product.order_average_weight
-      purchase.unit_deposit = purchase.product.unit_deposit
-      if purchase.unit_deposit != 0:
-        purchase.original_price += ( purchase.quantity * purchase.unit_deposit )
-        purchase.price_without_tax += ( purchase.quantity * purchase.unit_deposit )
-        purchase.price_with_tax += ( purchase.quantity * purchase.unit_deposit )
-      purchase.producer_must_give_order_detail_per_customer = purchase.product.producer_must_give_order_detail_per_customer
-      purchase.product_order = purchase.product.product_order
-      purchase.vat_level = purchase.product.vat_level
-      purchase.price_list_multiplier = purchase.producer.price_list_multiplier
-      if send_to_producer:
-        purchase.quantity_send_to_producer = purchase.quantity
-      purchase.save()
-    a_total_price_with_tax += purchase.price_with_tax
+    purchase.original_unit_price = purchase.product.original_unit_price
+    purchase.original_price = purchase.quantity * purchase.original_unit_price
+    purchase.producer = purchase.product.producer
+    purchase.long_name = purchase.product.long_name
+    purchase.department_for_customer = purchase.product.department_for_customer
+    purchase.order_unit = purchase.product.order_unit
+    purchase.price_with_vat = purchase.quantity * purchase.product.unit_price_with_vat
+    purchase.price_with_compensation = purchase.quantity * purchase.product.unit_price_with_compensation
+    purchase.invoiced_price_with_compensation = False
+    if purchase.product.vat_level in [VAT_200, VAT_300] and purchase.customer.vat_id != None and len(purchase.customer.vat_id) > 0:
+      purchase.invoiced_price_with_compensation = True
+    if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
+      purchase.original_price *= purchase.product.order_average_weight
+      purchase.price_with_vat *= purchase.product.order_average_weight
+      purchase.price_with_compensation *= purchase.product.order_average_weight
+    # RoundUp
+    purchase.original_price = purchase.original_price.quantize(Decimal('.01'), rounding=ROUND_UP)
+    purchase.price_with_vat = purchase.price_with_vat.quantize(Decimal('.01'), rounding=ROUND_UP)
+    purchase.price_with_compensation = purchase.price_with_compensation.quantize(Decimal('.01'), rounding=ROUND_UP)
+    purchase.unit_deposit = purchase.product.unit_deposit
+    if purchase.unit_deposit != 0:
+      purchase.original_price += ( purchase.quantity * purchase.unit_deposit )
+      purchase.price_with_vat += ( purchase.quantity * purchase.unit_deposit )
+      purchase.price_with_compensation += ( purchase.quantity * purchase.unit_deposit )
+    purchase.vat_level = purchase.product.vat_level
+    purchase.quantity_for_preparation_order = purchase.quantity if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG] else 0
+    if send_to_producer:
+      purchase.quantity_send_to_producer = purchase.quantity
+    purchase.save()
+    if purchase.invoiced_price_with_compensation:
+      a_total_price_with_tax += purchase.price_with_compensation
+    else:
+      a_total_price_with_tax += purchase.price_with_vat
 
   if customer_save_id != None:
-      save_order_amount(permanence_id, customer_save_id,a_total_price_with_tax)
+    save_order_amount(permanence_id, customer_save_id,a_total_price_with_tax)
 
 def find_customer(user=None, customer_id = None):
   customer = None
@@ -216,7 +243,17 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
         elif p_value_id == 1:
           q_order = q_min
         else:
-          q_order = q_min + q_step * ( p_value_id - 1 )
+          if q_min < q_step:
+            # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
+            # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
+            if  p_value_id == 2:
+              q_order = q_step
+            else:
+              q_order = q_step * ( p_value_id - 1 )
+          else:
+            # 1; 2; 3; 4 ... q_min = 1; q_step = 1
+            # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
+            q_order = q_min + q_step * ( p_value_id - 1 )
         if q_order > q_alert:
           # This occurs if the costomer has personaly asked it -> let it be
           if q_order != q_previous_order:
@@ -226,77 +263,82 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
           a_previous_total_price_with_tax = 0
           if pruchase_set:
             purchase = pruchase_set[0]
-            a_previous_total_price_with_tax = purchase.price_with_tax
+            if purchase.invoiced_price_with_compensation:
+              a_previous_total_price_with_tax = purchase.price_with_compensation
+            else:
+              a_previous_total_price_with_tax = purchase.price_with_vat
           a_original_unit_price = offer_item.product.original_unit_price
           a_unit_deposit = offer_item.product.unit_deposit
           a_original_price =q_order * a_original_unit_price
-          a_price_without_tax = q_order * offer_item.product.unit_price_without_tax
+          a_price_with_vat = q_order * offer_item.product.unit_price_with_vat
+          a_price_with_compensation = q_order * offer_item.product.unit_price_with_compensation
           is_compensation = False
-          a_price_with_tax = 0
-          if offer_item.product.vat_level in [VAT_200, VAT_300] and customer.vat_id != None:
+          if offer_item.product.vat_level in [VAT_200, VAT_300] and customer.vat_id != None and len(customer.vat_id) > 0:
             is_compensation = True
-            a_price_with_tax = q_order * offer_item.product.unit_price_with_compensation
-          else:
-            a_price_with_tax = q_order * offer_item.product.unit_price_with_vat
-          if offer_item.product.order_by_piece_pay_by_kg:
+          if offer_item.product.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
             a_original_price *= offer_item.product.order_average_weight
-            a_price_without_tax *= offer_item.product.order_average_weight
-            a_price_with_tax *= offer_item.product.order_average_weight
+            a_price_with_vat *= offer_item.product.order_average_weight
+            a_price_with_compensation *= offer_item.product.order_average_weight
           a_original_price += ( q_order * a_unit_deposit )
-          a_price_without_tax += ( q_order * a_unit_deposit )
-          a_price_with_tax += ( q_order * a_unit_deposit )
+          a_price_with_vat += ( q_order * a_unit_deposit )
+          a_price_with_compensation += ( q_order * a_unit_deposit )
           if purchase:
             purchase.quantity = q_order
             purchase.original_unit_price = a_original_unit_price
             purchase.unit_deposit = a_unit_deposit
             purchase.original_price = a_original_price
-            purchase.price_without_tax = a_price_without_tax
-            purchase.price_with_tax = a_price_with_tax
+            purchase.price_with_vat = a_price_with_vat
+            purchase.price_with_compensation = a_price_with_compensation
             purchase.invoiced_price_with_compensation = is_compensation
             purchase.vat_level = offer_item.product.vat_level
-            purchase.price_list_multiplier = offer_item.product.price_list_multiplier
+            purchase.order_unit = offer_item.product.order_unit
             purchase.save(update_fields=[
               'quantity',
+              'order_unit',
               'original_unit_price',
               'unit_deposit',
               'original_price',
-              'price_without_tax',
-              'price_with_tax',
+              'price_with_vat',
+              'price_with_compensation',
               'invoiced_price_with_compensation',
-              'vat_level',
-              'price_list_multiplier'
+              'vat_level'
             ])
           else:
             purchase = Purchase.objects.create( 
               permanence = offer_item.permanence,
               distribution_date = offer_item.permanence.distribution_date,
               product = offer_item.product,
+              department_for_customer = offer_item.product.department_for_customer,
               offer_item = offer_item,
               producer = offer_item.product.producer,
               customer = customer,
               quantity = q_order,
               long_name = offer_item.product.long_name,
-              order_by_kg_pay_by_kg = offer_item.product.order_by_kg_pay_by_kg,
-              order_by_piece_pay_by_kg = offer_item.product.order_by_piece_pay_by_kg,
+              order_unit = offer_item.product.order_unit,
               original_unit_price = a_original_unit_price,
+              unit_deposit = a_unit_deposit,
               original_price = a_original_price,
-              price_without_tax = a_price_without_tax,
-              price_with_tax = a_price_with_tax,
+              price_with_vat = a_price_with_vat,
+              price_with_compensation = a_price_with_compensation,
               invoiced_price_with_compensation = is_compensation,
-              vat_level = offer_item.product.vat_level,
-              price_list_multiplier = offer_item.product.price_list_multiplier,
-              producer_must_give_order_detail_per_customer = offer_item.product.producer_must_give_order_detail_per_customer,
-              product_order = offer_item.product.product_order,
-              is_to_be_prepared = (offer_item.product.automatically_added == ADD_PORDUCT_MANUALY)
+              vat_level = offer_item.product.vat_level
+              )
+          if result=="ko":
+            if purchase.invoiced_price_with_compensation:
+              order_amount = save_order_delta_amount(
+                offer_item.permanence.id,
+                customer.id,
+                a_previous_total_price_with_tax,
+                purchase.price_with_compensation
+              )
+            else:
+              order_amount = save_order_delta_amount(
+                offer_item.permanence.id,
+                customer.id,
+                a_previous_total_price_with_tax,
+                purchase.price_with_vat
               )
 
-          if result=="ko":
-            order_amount = save_order_delta_amount(
-              offer_item.permanence.id,
-              customer.id,
-              a_previous_total_price_with_tax,
-              purchase.price_with_tax
-            )
             if -0.00001 <= order_amount <= 0.00001:
               result = "ok0"
             else:
@@ -307,16 +349,16 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
     #   pass
   return result
 
-def get_qty_display(qty=0, order_average_weight=0, order_by_kg_pay_by_kg=False, order_by_piece_pay_by_kg=False):
+def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC):
   unit = unicode(_(' pieces'))
   magnitude = 1
-  if order_by_kg_pay_by_kg:
+  if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
     if qty < 1:
       unit = unicode(_(' gr'))
       magnitude = 1000
     else:
       unit = unicode(_(' kg'))
-  elif order_by_piece_pay_by_kg:
+  elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
     average_weight = order_average_weight * qty
     if average_weight < 1:
       average_weight_unit = unicode(_(' gr'))
@@ -331,9 +373,11 @@ def get_qty_display(qty=0, order_average_weight=0, order_by_kg_pay_by_kg=False, 
     elif average_weight * 100 == int(average_weight * 100):
       decimal = 2
     if qty < 2:
-      unit = unicode(_(' piece = ~ ')) + number_format(average_weight, decimal) + average_weight_unit
+      unit = unicode(_(' piece')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+      # unit = unicode(_(' piece = ~ ')) + number_format(average_weight, decimal) + average_weight_unit
     else:
-      unit = unicode(_(' pieces = ~ ')) + number_format(average_weight, decimal) + average_weight_unit
+      unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+      # unit = unicode(_(' pieces = ~ ')) + number_format(average_weight, decimal) + average_weight_unit
   else:
     if qty < 2:
       unit = unicode(_(' piece'))
@@ -368,7 +412,7 @@ def get_customer_2_vat_id_dict():
   id_2_customer_vat_id_dict={}
   customer_set = Customer.objects.all().active().order_by()
   for customer in customer_set:
-    id_2_customer_vat_id_dict[customer.id]=customer.vat_id
+    id_2_customer_vat_id_dict[customer.id]=None if customer.vat_id == None or len(customer.vat_id) <= 0 else customer.vat_id
   return id_2_customer_vat_id_dict
 
 def get_producer_2_id_dict():
@@ -394,6 +438,14 @@ def get_id_2_producer_vat_level_dict():
   for producer in producer_set:
     id_2_producer_vat_level_dict[producer.id]=producer.vat_level
   return id_2_producer_vat_level_dict
+
+
+def get_id_2_producer_price_list_multiplier_dict():
+  id_2_producer_price_list_multiplier_dict={}
+  producer_set = Producer.objects.all().active().order_by()
+  for producer in producer_set:
+    id_2_producer_price_list_multiplier_dict[producer.id]=producer.price_list_multiplier
+  return id_2_producer_price_list_multiplier_dict
 
 def get_department_for_customer_2_id_dict():
   department_for_customer_2_id_dict={}

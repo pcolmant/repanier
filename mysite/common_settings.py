@@ -19,7 +19,13 @@ ADMINS = (
         os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
     ),
 )
-
+SERVER_EMAIL = os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
+# MANAGERS = (
+#     (
+#         os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME',''), 
+#         os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
+#     ),
+# )
 ###################### 
 
 DATABASES = {
@@ -207,6 +213,11 @@ LOGOUT_URL = "/leave_repanier/"
 #                 ['Source'],['Maximize', '-', 'ShowBlocks'],
 #         ],
 # }
+
+CKEDITOR_SETTINGS = {
+        'language': '{{ language }}',
+        'toolbar': 'HTMLField',
+}
 
 TEXT_SAVE_IMAGE_FUNCTION='cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
 

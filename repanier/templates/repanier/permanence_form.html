@@ -1,7 +1,8 @@
-{% extends 'subpage_base.html' %}
+{% extends 'subpage_base_wo_cms_toolbar.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block sub_content %}
 <div class="container">
+{% if user.customer.may_order %}
 {% if permanenceboard_list %}
     <br/>
     {# .... **End of the pagination section** .... #}
@@ -57,6 +58,9 @@ $(document).ready(function() {
 });
 </script>        
 {% endaddtoblock %}
+{% else %}
+    <h3>{% trans "You are not allowed to order products" %}</h3>
+{% endif %}
 </div>
 {% endblock %}
 {% block footer %}
@@ -64,7 +68,7 @@ $(document).ready(function() {
     <div class="btn-group">
         <div class="btn-group">
             {% if page_obj.has_previous%}
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-left"></span></a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-success btn-disabled"><span class="glyphicon glyphicon-arrow-left"></span></a>
             {% else %}
                 <a href="#" class="btn btn-disabled"></a>
             {% endif %}
@@ -72,7 +76,7 @@ $(document).ready(function() {
                 <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
             {% endif %}
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
+                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-success btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
             {% else %}
                 <a href="#" class="btn btn-disabled"></a>
             {% endif %}

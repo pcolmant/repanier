@@ -20,11 +20,45 @@ from django.core.urlresolvers import reverse
 
 import logging
 
-class PermanenceMenu(Menu):
+
+class AccountMenu(Menu):
 
     def get_nodes(self, request):
         nodes = []
         master_id = 1
+        last_customer_invoice_set = CustomerInvoice.objects.filter(customer__user_id=request.user.id).order_by('-id')[:1]
+        if last_customer_invoice_set:
+            last_customer_invoice = last_customer_invoice_set[0]
+            if last_customer_invoice.balance < 0:
+                node = NavigationNode(
+                    _('My saldo : ') + '<font color="red">' + number_format(last_customer_invoice.balance, 2) + ' &euro;</font>',
+                    reverse('invoice_view', args=(0,)),
+                    id = master_id,
+                    attr={'visible_for_authenticated' : True,
+                    'visible_for_anonymous' : True, },
+                    visible=True
+                )
+            else:
+                node = NavigationNode(
+                    _('My saldo : ') + '<font color="green">' + number_format(last_customer_invoice.balance, 2) + ' &euro;</font>',
+                    reverse('invoice_view', args=(0,)),
+                    id = master_id,
+                    attr={'visible_for_authenticated' : True,
+                    'visible_for_anonymous' : True, },
+                    visible=True
+                )
+            nodes.append(node)
+            separator = True
+
+        return nodes
+
+menu_pool.register_menu(AccountMenu)
+
+class PermanenceMenu(Menu):
+
+    def get_nodes(self, request):
+        nodes = []
+        master_id = 2
         node = NavigationNode(
             _('Permanence'), 
             "/", 
@@ -60,44 +94,7 @@ class PermanenceMenu(Menu):
                 visible=True
             )
             nodes.append(node)
-            separator = True
-
-
-        last_customer_invoice_set = CustomerInvoice.objects.filter(customer__user_id=request.user.id).order_by('-id')[:1]
-        if last_customer_invoice_set:
-            last_customer_invoice = last_customer_invoice_set[0]
-            if(separator):
-                node = NavigationNode(
-                    ('------'),
-                    "/",
-                    id = submenu_id, parent_id = master_id,
-                    attr={'visible_for_authenticated' : True,
-                    'visible_for_anonymous' : True, },
-                    visible=True
-                )
-                nodes.append(node)
-                submenu_id += 1
-            if last_customer_invoice.balance < 0:
-                node = NavigationNode(
-                    _('My invoices (saldo : ') + '<font color="red">' + number_format(last_customer_invoice.balance, 2) + ' &euro;</font>)',
-                    reverse('invoice_view', args=(0,)),
-                    id = submenu_id, parent_id = master_id,
-                    attr={'visible_for_authenticated' : True,
-                    'visible_for_anonymous' : True, },
-                    visible=True
-                )
-                submenu_id += 1
-            else:
-                node = NavigationNode(
-                    _('My invoices (saldo : ') + '<font color="green">' + number_format(last_customer_invoice.balance, 2) + ' &euro;</font>)',
-                    reverse('invoice_view', args=(0,)),
-                    id = submenu_id, parent_id = master_id,
-                    attr={'visible_for_authenticated' : True,
-                    'visible_for_anonymous' : True, },
-                    visible=True
-                )
-                submenu_id += 1
-            nodes.append(node)
+            submenu_id += 1
             separator = True
 
         # node = NavigationNode(
@@ -123,9 +120,9 @@ class PermanenceMenu(Menu):
         # submenu_id += 1
 
         msg = unicode(_(' (opened)'))
-        permanence_in_menu = False
+        first_pass = True
         for permanence in Permanence.objects.all().is_opened().order_by('distribution_date'):
-            if(separator):
+            if first_pass and separator:
                 node = NavigationNode(
                     ('------'),
                     "/",
@@ -136,8 +133,7 @@ class PermanenceMenu(Menu):
                 )
                 nodes.append(node)
                 submenu_id += 1
-                separator = False
-                permanence_in_menu = True
+                first_pass = False
             node = NavigationNode(
                 permanence.__unicode__() + msg,
                 reverse('order_view', args=(permanence.id,)),                
@@ -148,12 +144,11 @@ class PermanenceMenu(Menu):
             )
             nodes.append(node)
             submenu_id += 1
-        separator = permanence_in_menu
 
         msg = unicode(_(' (closed)'))
-        permanence_in_menu = False
-        for permanence in Permanence.objects.all().is_send():
-            if(separator):
+        first_pass = True
+        for permanence in Permanence.objects.all().is_send().order_by('-distribution_date'):
+            if first_pass and separator:
                 node = NavigationNode(
                     ('------'),
                     "/",
@@ -164,8 +159,7 @@ class PermanenceMenu(Menu):
                 )
                 nodes.append(node)
                 submenu_id += 1
-                separator = False
-                permanence_in_menu = True
+                first_pass = False
             node = NavigationNode(
                 permanence.__unicode__() + msg,
                 reverse('order_view', args=(permanence.id,)),                
@@ -176,7 +170,7 @@ class PermanenceMenu(Menu):
             )
             nodes.append(node)
             submenu_id += 1
-        separator = permanence_in_menu
+
             # for node in nodes:
             #     logging.debug('Node before : %s' % node.get_menu_title())
             #     for attr in (x for x in dir(node) if not x.startswith('__')):

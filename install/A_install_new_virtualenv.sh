@@ -16,6 +16,7 @@ pip install psycopg2
 # ELSE installing the latest development version
 # pip install https://github.com/divio/django-cms/archive/develop.zip
 # OR UPGRADE
+pip install -U django
 pip install -U https://github.com/divio/django-cms/archive/develop.zip
 # ELSE installing a specific version
 # pip install https://github.com/divio/django-cms/archive/3.0.0.beta3.zip
@@ -37,10 +38,12 @@ pip install -U django_compressor
 pip install -U django-admin-sortable2
 pip install -U openpyxl
 # pip install -U django-hvad
-pip install -U docx
+# pip install -U docx
 # pip install django_debug_toolbar
 # pip install django-dajaxice ! not working with Django 1.6
 # pip install django-custom-user
 # pip install django-registration
 pip install -U django-crispy-forms
-pip install -U django-celery
+# pip install -U django-celery
+# pip install -U celery
+pip install -U django-password-reset

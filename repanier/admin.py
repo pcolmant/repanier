@@ -17,6 +17,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.core import urlresolvers
 import datetime
+from django.utils import timezone
 from django.utils.timezone import utc
 from django import forms
 
@@ -32,7 +33,7 @@ from django.contrib.sites.models import get_current_site
 from django.shortcuts import get_object_or_404
 
 # from adminsortable.admin import SortableAdminMixin
-from repanier.adminsortable import SortableAdminMixin
+# from repanier.adminsortable import SortableAdminMixin
 
 from repanier.models import LUT_ProductionMode
 from repanier.models import LUT_DepartmentForCustomer
@@ -57,6 +58,7 @@ from repanier.views import render_response
 from repanier.admin_export_xlsx import export_permanence_planified_xlsx
 from repanier.admin_export_xlsx import export_orders_xlsx
 from repanier.admin_export_xlsx import export_product_xlsx
+from repanier.admin_export_xlsx import export_invoices_xlsx
 from repanier.admin_export_xlsx import export_permanence_done_xlsx
 from repanier.admin_import_xlsx import import_product_xlsx
 from repanier.admin_import_xlsx import import_permanence_done_xlsx
@@ -66,10 +68,7 @@ from repanier.admin_send_mail import send_alert_email
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
 
-from repanier.tasks import open_offers_async
-from repanier.tasks import close_orders_async
-from repanier.tasks import done_async
-from repanier.tasks import email_invoices_async
+from repanier import tasks
 
 # Filters in the right sidebar of the change list page of the admin
 from django.contrib.admin import SimpleListFilter
@@ -197,21 +196,24 @@ class PurchaseFilterByPermanence(SimpleListFilter):
 class LUT_ProductionModeAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	list_max_show_all = True
+	list_per_page = 17
+	list_max_show_all = 17
 
 admin.site.register(LUT_ProductionMode, LUT_ProductionModeAdmin)
 
 class LUT_DepartmentForCustomerAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	list_max_show_all = True
+	list_per_page = 17
+	list_max_show_all = 17
 
 admin.site.register(LUT_DepartmentForCustomer, LUT_DepartmentForCustomerAdmin)
 
 class LUT_PermanenceRoleAdmin(admin.ModelAdmin):
 	list_display = ('short_name', 'is_active')
 	list_display_links = ('short_name',)
-	list_max_show_all = True
+	list_per_page = 17
+	list_max_show_all = 17
 
 admin.site.register(LUT_PermanenceRole, LUT_PermanenceRoleAdmin)
 
@@ -220,22 +222,23 @@ class ProducerAdmin(admin.ModelAdmin):
 		('short_profile_name', 'long_profile_name'),
 		('email', 'fax'),
 		('phone1', 'phone2',), 
-		'order_description',
-		'invoice_description',
-		('price_list_multiplier','vat_level'),
-		('date_balance', 'balance'),
-		'represent_this_buyinggroup', 
+		# 'order_description',
+		# 'invoice_description',
+		('price_list_multiplier', 'vat_level'),
+		('initial_balance', 'date_balance', 'balance'),
+		('invoice_by_basket', 'represent_this_buyinggroup'), 
 		'address',
 		'is_active']
 	readonly_fields = (
-		'represent_this_buyinggroup',
+		# 'represent_this_buyinggroup',
 		'date_balance', 
 		'balance',
 	)
 	search_fields = ('short_profile_name', 'email')
 	list_display = ('short_profile_name', 'get_products', 'get_balance', 'phone1', 'email', 'represent_this_buyinggroup',
 		'is_active')
-	list_max_show_all = True
+	list_per_page = 17
+	list_max_show_all = 17
 	actions = [
 		'export_xlsx',
 		'import_xlsx',
@@ -248,6 +251,7 @@ class ProducerAdmin(admin.ModelAdmin):
 	def import_xlsx(self, request, queryset):
 		return import_product_xlsx(self, admin, request, queryset)
 	import_xlsx.short_description = _("Import products of selected producer(s) from a XLSX file")
+
 
 	# def get_producer_phone1(self, obj):
 	# 	if obj.producer:
@@ -382,17 +386,18 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
 		('email','email2'), 
 		('phone1', 'phone2'),
 		'address', 'vat_id',
-		('date_balance', 'balance'),
+		('initial_balance', 'date_balance', 'balance'),
 		('represent_this_buyinggroup', 'may_order','is_active')
 	]
 	readonly_fields = (
-		'represent_this_buyinggroup',
+		# 'represent_this_buyinggroup',
 		'date_balance', 
 		'balance',
 	)
 	search_fields = ('short_basket_name', 'user__email', 'email2')
-	list_display = ('__unicode__', 'get_balance', 'may_order', 'phone1', 'phone2', 'get_email', 'email2')
-	list_max_show_all = True
+	list_display = ('__unicode__', 'get_balance', 'may_order', 'phone1', 'phone2', 'get_email', 'email2', 'represent_this_buyinggroup')
+	list_per_page = 17
+	list_max_show_all = 17
 
 	def get_email(self, obj):
 		if obj.user:
@@ -449,7 +454,9 @@ class StaffWithUserDataAdmin(admin.ModelAdmin):
 		'is_reply_to_order_email', 'is_reply_to_invoice_email',
 		'customer_responsible','long_name', 'function_description', 'is_active']
 	list_display = ('__unicode__', 'customer_responsible', 'get_customer_phone1', 'is_active')
-	list_max_show_all = True
+	list_select_related = ('customer_responsible',)
+	list_per_page = 17
+	list_max_show_all = 17
 
 	def get_form(self,request, obj=None, **kwargs):
 		form = super(StaffWithUserDataAdmin,self).get_form(request, obj, **kwargs)
@@ -494,42 +501,47 @@ class StaffWithUserDataAdmin(admin.ModelAdmin):
 
 admin.site.register(Staff, StaffWithUserDataAdmin)
 
-class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
-	list_display = ('producer',
+class ProductAdmin(admin.ModelAdmin):
+	list_display = (
 		'is_into_offer',
-		'long_name',
+		'producer',
 		'department_for_customer',
+		'long_name',
 		'original_unit_price',
 		'unit_deposit',
 		'customer_alert_order_quantity',
+		'get_order_unit',
 		'is_active')
 	list_display_links = ('long_name',)
 	list_editable = ('original_unit_price',)
 	readonly_fields = ('is_created_on', 
 		'is_updated_on')
 	fields = (
-		('producer', 'long_name'),
-		('original_unit_price', 'unit_deposit', 'order_average_weight'),
+		('producer', 'long_name', 'picture'),
+		('original_unit_price', 'unit_deposit', 'vat_level'),
+		# ('order_by_kg_pay_by_kg', 'order_by_piece_pay_by_piece', 'order_by_piece_pay_by_kg', 'producer_must_give_order_detail_per_customer', 'automatically_added'),
+	 	# 'usage_description', 
+		('order_unit', 'order_average_weight', 'customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity'),
+		('production_mode', 'department_for_customer', 'placement'),
 		'offer_description', 
-	 	'usage_description', 
-		('order_by_kg_pay_by_kg', 'order_by_piece_pay_by_piece', 'order_by_piece_pay_by_kg', 'producer_must_give_order_detail_per_customer'),
-		('customer_minimum_order_quantity', 'customer_increment_order_quantity'),
-		'customer_alert_order_quantity',
-		('production_mode', 'picture'),
-	 	('department_for_customer', 'placement'),
-		('vat_level', 'automatically_added'),
 		('is_into_offer', 'is_active', 'is_created_on', 'is_updated_on')
 	)
-	list_max_show_all = True
-	# ordering = ('producer', 
-	# 	'department_for_customer',
-	# 	'long_name',)
+	list_select_related = ('producer', 'department_for_customer')
+	list_per_page = 100
+	list_max_show_all = 100
+	ordering = ('producer', 
+		'department_for_customer',
+		'long_name',)
 	search_fields = ('long_name',)
 	list_filter = ('is_active',
 		'is_into_offer',
 		ProductFilterByDepartmentForThisProducer,
 		ProductFilterByProducer,)
 	actions = ['flip_flop_select_for_offer_status', 'duplicate_product'	]
+
+	def get_order_unit(self, obj):
+		return obj.get_order_unit_display()
+	get_order_unit.short_description = _("order unit")
 
 	def flip_flop_select_for_offer_status(self, request, queryset):
 		for product in queryset.order_by():
@@ -540,13 +552,37 @@ class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 		'flip_flop_select_for_offer_status for offer')
 
 	def duplicate_product(self, request, queryset):
+		user_message = _("The product is duplicated.")
+		user_message_level = messages.INFO
+		product_count = 0
+		duplicate_count = 0
 		for product in queryset:
-			super(ProductAdmin,self).move_for_duplicate(product)
-			long_name_prefix = _("COPY_OF_")
-			max_length = Product._meta.get_field('long_name').max_length
-			product.long_name = cap(long_name_prefix + product.long_name, max_length)
-			product.id = None
-			product.save()
+			product_count += 1
+			long_name_postfix = unicode(_(" (COPY)"))
+			max_length = Product._meta.get_field('long_name').max_length - len(long_name_postfix)
+			product.long_name = cap(product.long_name, max_length).decode("utf8") + long_name_postfix
+			product_set = Product.objects.filter(
+				producer_id = product.producer_id,
+				long_name = product.long_name).order_by()[:1]
+			if product_set:
+				# avoid to break the unique index : producer_id, long_name
+				pass
+			else:
+				product.id = None
+				product.save()
+				duplicate_count += 1
+		if product_count == duplicate_count:
+			if product_count > 1:
+				user_message = _("The products are duplicated.")
+		else:
+			if product_count == 1:
+				user_message = _("The product has not been duplicated because a product with the same long name already exists.")
+				user_message_level = messages.ERROR
+			else:
+				user_message = _("At least one product has not been duplicated because a product with the same long name already exists.")
+				user_message_level = messages.WARNING
+
+		self.message_user(request, user_message, user_message_level)
 
 	duplicate_product.short_description = _('duplicate product')
 
@@ -554,6 +590,7 @@ class ProductAdmin(SortableAdminMixin, admin.ModelAdmin):
 		form = super(ProductAdmin,self).get_form(request, obj, **kwargs)
 		# If we are coming from a list screen, use the filter to pre-fill the form
 
+		# print form.base_fields
 		producer = form.base_fields["producer"]
 		department_for_customer = form.base_fields["department_for_customer"]
 		production_mode = form.base_fields["production_mode"]
@@ -630,7 +667,7 @@ class PermanenceBoardInline(admin.TabularInline):
 	def formfield_for_foreignkey(self, db_field, request, **kwargs):
 		if db_field.name == "customer":
 			kwargs["queryset"] = Customer.objects.all(
-				).active().not_the_buyinggroup()
+				).active()  # .not_the_buyinggroup()
 		if db_field.name == "permanence_role":
 			kwargs["queryset"] = LUT_PermanenceRole.objects.all(
 				).active()
@@ -679,12 +716,13 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 		# ('status', 'automaticaly_closed'), 
 		'automaticaly_closed',
 		'offer_description',
-		'order_description', 
+		# 'order_description', 
 		'producers'
 	)
 	# readonly_fields = ('status', 'is_created_on', 'is_updated_on')
 	exclude = ['invoice_description']
-	list_max_show_all = True
+	list_per_page = 10
+	list_max_show_all = 10
 	filter_horizontal = ('producers',)
 	# inlines = [PermanenceBoardInline, OfferItemInline]
 	inlines = [PermanenceBoardInline]
@@ -698,6 +736,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 		'close_and_send_orders',
 		'delete_purchases', 
 		'back_to_planified',
+		'generate_calendar'
 	]
 
 	def get_readonly_fields(self, request, obj=None):
@@ -718,9 +757,10 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 
 	def download_orders(self, request, queryset):
 		for permanence in queryset[:1]:
-			if permanence.status==PERMANENCE_OPENED:
+			if permanence.status >=PERMANENCE_OPENED:
 				response = HttpResponse(mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-				response['Content-Disposition'] = 'attachment; filename=' + unicode(_('Check')) + '.xlsx'
+				filename = (unicode(_("Check")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('latin-1', errors='ignore')
+				response['Content-Disposition'] = 'attachment; filename=' + filename
 				wb = export_orders_xlsx(permanence)
 				wb.save(response)
 				return response
@@ -733,25 +773,27 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 			current_site = get_current_site(request)
 			user_message = _("The status of this permanence prohibit you to open and send offers.")
 			user_message_level = messages.ERROR
+			now = timezone.now()
 			for permanence in queryset[:1]:
 				if permanence.status==PERMANENCE_PLANIFIED:
 					permanence.status = PERMANENCE_WAIT_FOR_OPEN
-					permanence.save(update_fields=['status'])
-					thread.start_new_thread( open_offers_async, (permanence.id, current_site.name) )
+					permanence.is_updated_on = now
+					permanence.save(update_fields=['status','is_updated_on'])
+					thread.start_new_thread( tasks.open_offers, (permanence.id, current_site.name) )
 					user_message = _("The offers are being generated.")
 					user_message_level = messages.INFO
 				elif permanence.status==PERMANENCE_WAIT_FOR_OPEN:
 					# On demand 15 minutes after the previous attempt, go back to previous status and send alert email
-					now = datetime.datetime.utcnow().replace(tzinfo=utc)
+					# use only timediff, -> timezone conversion not needed
 					timediff = now - permanence.is_updated_on
-					if timediff.total_seconds() > (15 * 60):
-						send_alert_email(permanence, current_site.name)
+					if timediff.total_seconds() > (30 * 60):
+						thread.start_new_thread( send_alert_email, (permanence, current_site.name) )
 						permanence.status = PERMANENCE_PLANIFIED
 						permanence.save(update_fields=['status'])
 						user_message = _("The action has been canceled by the system and an email send to the site administrator.")
-						user_message_level = messages.INFO
+						user_message_level = messages.WARNING
 					else:
-						user_message = _("Action canceled by the system.")
+						user_message = _("Action refused by the system. Please, retry in %d minutes.") % (31 - (int(timediff.total_seconds()) / 60))
 						user_message_level = messages.WARNING
 		elif 'cancel' not in request.POST:
 			opts = self.model._meta
@@ -775,25 +817,28 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 			user_message = _("The status of this permanence prohibit you to close it.")
 			user_message_level = messages.ERROR
 			current_site = get_current_site(request)
+			now = timezone.now()
 			for permanence in queryset[:1]:
 				if permanence.status==PERMANENCE_OPENED:
 					permanence.status = PERMANENCE_WAIT_FOR_SEND
-					permanence.save(update_fields=['status'])
-					thread.start_new_thread( close_orders_async, (permanence.id, current_site.name) )
+					permanence.is_updated_on = now
+					permanence.save(update_fields=['status','is_updated_on'])
+					thread.start_new_thread( tasks.close_orders, (permanence.id, current_site.name) )
+					# tasks.close_orders(permanence.id, current_site.name)
 					user_message = _("The orders are being closed.")
 					user_message_level = messages.INFO
 				elif permanence.status==PERMANENCE_WAIT_FOR_SEND:
 					# On demand 30 minutes after the previous attempt, go back to previous status and send alert email
-					now = datetime.datetime.utcnow().replace(tzinfo=utc)
+					# use only timediff, -> timezone conversion not needed
 					timediff = now - permanence.is_updated_on
 					if timediff.total_seconds() > (30 * 60):
-						send_alert_email(permanence, current_site.name)
+						thread.start_new_thread( send_alert_email, (permanence, current_site.name) )
 						permanence.status = PERMANENCE_OPENED
 						permanence.save(update_fields=['status'])
 						user_message = _("The action has been canceled by the system and an email send to the site administrator.")
-						user_message_level = messages.INFO
+						user_message_level = messages.WARNING
 					else:
-						user_message = _("Action canceled by the system.")
+						user_message = _("Action refused by the system. Please, retry in %d minutes.") % (31 - (int(timediff.total_seconds()) / 60))
 						user_message_level = messages.WARNING
 		elif 'cancel' not in request.POST:
 			opts = self.model._meta
@@ -868,16 +913,27 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 
 	delete_purchases.short_description = _('delete purchases')
 
-	def get_actions(self, request):
-		actions = super(PermanenceInPreparationAdmin, self).get_actions(request)
-		if 'delete_selected' in actions:
-			del actions['delete_selected']
-		if not actions:
-			try:
-				self.list_display.remove('action_checkbox')
-			except ValueError:
-				pass
-		return actions
+	def generate_calendar(self, request, queryset):
+		for permanence in queryset[:1]:
+			starting_date = permanence.distribution_date
+			for i in xrange(1,13):
+				# PermanenceInPreparation used to generate PermanenceBoard when post_save
+				try:
+					PermanenceInPreparation.objects.create(distribution_date=starting_date+datetime.timedelta(days=7*i))
+				except:
+					pass
+	generate_calendar.short_description = _("Generate 12 weekly permanences starting from this")
+
+	# def get_actions(self, request):
+	# 	actions = super(PermanenceInPreparationAdmin, self).get_actions(request)
+	# 	if 'delete_selected' in actions:
+	# 		del actions['delete_selected']
+	# 	if not actions:
+	# 		try:
+	# 			self.list_display.remove('action_checkbox')
+	# 		except ValueError:
+	# 			pass
+	# 	return actions
 
 	def formfield_for_manytomany(self, db_field, request, **kwargs):
 		if db_field.name == "producers":
@@ -908,8 +964,9 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		# 'status'
 	)
 	readonly_fields = ('status', 'is_created_on', 'is_updated_on', 'automaticaly_closed')
-	exclude = ['offer_description', 'order_description']
-	list_max_show_all = True
+	exclude = ['offer_description',]
+	list_per_page = 10
+	list_max_show_all = 10
 	# inlines = [PermanenceBoardInline, OfferItemInline]
 	inlines = [PermanenceBoardInline]
 	date_hierarchy = 'distribution_date'
@@ -919,6 +976,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		'export_xlsx',
 		'import_xlsx',
 		'generate_invoices',
+		'preview_invoices',
 		'send_invoices',
 		'cancel_invoices',
 	]
@@ -931,55 +989,48 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		return import_permanence_done_xlsx(self, admin, request, queryset)
 	import_xlsx.short_description = _("Import orders prepared from a XLSX file")
 
-	# def get_urls(self):
-	#         urls = super(PermanenceDoneAdmin, self).get_urls()
-	#         my_urls = patterns('',
-	#             (r'\d+/purchase/$', self.admin_site.admin_view(self.purchase)),
-	#         )
-	#         return my_urls + urls
+	def preview_invoices(self, request, queryset):
+		current_site = get_current_site(request)
+		for permanence in queryset[:1]:
+			if permanence.status==PERMANENCE_DONE:
+				response = HttpResponse(mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+				filename = (unicode(_("Invoice")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('latin-1', errors='ignore')
+				response['Content-Disposition'] = 'attachment; filename=' + filename
+				wb = export_invoices_xlsx(permanence=permanence, wb=None, sheet_name=current_site.name)
+				wb.save(response)
+				return response
+			else:
+				user_message = _("You can only preview invoices when the permanence status is 'done'.")
+				user_message_level = messages.WARNING
+	preview_invoices.short_description = _("Preview invoices before sending them by email")
 
 	def generate_invoices(self, request, queryset):
 		user_message = _("Action canceled by the user.")
 		user_message_level = messages.WARNING
 		if 'apply' in request.POST:
 			current_site = get_current_site(request)
-			permanence_done_pending_set = Permanence.objects.filter(status__in= [PERMANENCE_WAIT_FOR_DONE, PERMANENCE_INVOICES_VALIDATION_FAILED]).order_by()[:1]
-			user_message = _("The status of this permanence prohibit you to close invoices.")
-			user_message_level = messages.ERROR
-			if not permanence_done_pending_set:
-				# Accept to close only one at the same time because the order of execution is important.
-				for permanence in queryset[:1]:
-					if permanence.status==PERMANENCE_SEND:
-						permanence.status = PERMANENCE_WAIT_FOR_DONE
-						permanence.save(update_fields=['status'])
-						thread.start_new_thread( done_async, (permanence.id, permanence.distribution_date, current_site.name) )
-						user_message = _("The invoices are being generated.")
-						user_message_level = messages.INFO
-			else:
-				permanence_done_pending = permanence_done_pending_set[0]
-				for permanence in queryset[:1]:
-					if permanence_done_pending.id == permanence.id:
-						if permanence_done_pending.status == PERMANENCE_INVOICES_VALIDATION_FAILED:
-							self.cancel(permanence_done_pending.id)
-							permanence_done_pending.status = PERMANENCE_WAIT_FOR_DONE
-							permanence_done_pending.save(update_fields=['status'])
-							thread.start_new_thread( permanence_done_pending_async, (permanence_done_pending.id, permanence_done_pending.distribution_date, current_site.name) )
-							user_message = _("The invoices are being generated.")
-							user_message_level = messages.INFO
-						else:
-							# On demand 30 minutes after the previous attempt, go back to previuos status and send alert email
-							now = datetime.datetime.utcnow().replace(tzinfo=utc)
-							timediff = now - permanence.is_updated_on
-							if timediff.total_seconds() > (30 * 60):
-								send_alert_email(permanence, current_site.name)
-								permanence.status = PERMANENCE_DONE
-								permanence.save(update_fields=['status'])
-								self.cancel(permanence_done_pending.id)
-								user_message = _("The action has been canceled by the system and an email send to the site administrator.")
-								user_message_level = messages.INFO
-							else:
-								user_message = _("Action canceled by the system.")
-								user_message_level = messages.WARNING
+			# user_message = _("The status of another permanence prohibit you to close invoices of this permanence.")
+			# user_message_level = messages.ERROR
+			# permanence_done_pending_set = Permanence.objects.filter(status__in= [PERMANENCE_WAIT_FOR_DONE, PERMANENCE_INVOICES_VALIDATION_FAILED]).order_by()[:1]
+			# if permanence_done_pending_set:
+			# 	pass
+			# else:
+			# Accept to close only one at the same time because the order of execution is important.
+			for permanence in queryset[:1]:
+				if permanence.status==PERMANENCE_SEND:
+					# permanence.status = PERMANENCE_WAIT_FOR_DONE
+					# permanence.save(update_fields=['status'])
+					# thread.start_new_thread( tasks.done, (permanence.id, permanence.distribution_date, current_site.name) )
+					tasks.done(permanence.id, permanence.distribution_date, current_site.name)
+					user_message = _("Action performed.")
+					user_message_level = messages.INFO
+				else:
+					if permanence.status == PERMANENCE_INVOICES_VALIDATION_FAILED:
+						user_message = _("The permanence status says there is an error. You must cancel the invoice then correct, before retrying.")
+						user_message_level = messages.WARNING
+					else:
+						user_message = _("You can only generate invoices when the permanence status is 'send'.")
+						user_message_level = messages.WARNING
 		elif 'cancel' not in request.POST:
 			opts = self.model._meta
 			app_label = opts.app_label
@@ -1002,9 +1053,10 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 			current_site = get_current_site(request)
 			for permanence in queryset[:1]:
 				if permanence.status==PERMANENCE_DONE:
-					thread.start_new_thread( email_invoices_async, (permanence.id, current_site.name) )
+					thread.start_new_thread( tasks.email_invoices, (permanence.id, current_site.name) )
+					# tasks.email_invoices(permanence.id, current_site.name)
 					user_message = _("Emails containing the invoices will be send to the customers and the producers.")
-					user_message_level = messages.ERROR
+					user_message_level = messages.INFO
 				else:
 					user_message = _("The status of this permanence prohibit you to send invoices.")
 					user_message_level = messages.ERROR
@@ -1027,17 +1079,21 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 		user_message = _("Action canceled by the user.")
 		user_message_level = messages.WARNING
 		if 'apply' in request.POST:
+			# TODO : Use the bank account total record
 			latest_customer_invoice_set=CustomerInvoice.objects.order_by('-id')[:1]
 			if latest_customer_invoice_set:
 				user_message = _("The status of this permanence prohibit you to close invoices.")
 				user_message_level = messages.ERROR
 				for permanence in queryset[:1]:
-					if permanence.status == PERMANENCE_DONE:
+					if permanence.status in [PERMANENCE_WAIT_FOR_DONE, PERMANENCE_INVOICES_VALIDATION_FAILED, PERMANENCE_DONE] :
 						if latest_customer_invoice_set[0].permanence.id == permanence.id:
 							# This is well the latest closed permanence. The invoices can be cancelled without damages.
 							self.cancel(permanence.id)
 							user_message = _("The selected invoice has been canceled.")
 							user_message_level = messages.INFO
+							# else:
+							# 	user_message = _("Please retry later, an operation on the bank account is ongoing.")
+							# 	user_message_level = messages.WARNING
 						else:
 							user_message = _("The selected invoice is not the latest invoice.")
 							user_message_level = messages.ERROR
@@ -1061,6 +1117,13 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 	cancel_invoices.short_description = _('cancel latest invoices')
 
 	def cancel(self, permanence_id):
+
+		# Lock BankAccount for update
+		# lock = BankAccount.objects.filter(
+		# 	operation_status=BANK_LATEST_TOTAL).order_by().update(
+		# 	operation_status=BANK_CALCULTAING_LATEST_TOTAL)
+		# if lock != 1 :
+		# 	return False
 
 		for customer_invoice in CustomerInvoice.objects.filter(
 			permanence_id=permanence_id).order_by().distinct():
@@ -1095,17 +1158,22 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 				is_recorded_on_producer_invoice=None
 				)
 		CustomerInvoice.objects.filter(
-			permanence_id=permanence_id).delete()
+			permanence_id=permanence_id).order_by().delete()
 		ProducerInvoice.objects.filter(
-			permanence_id=permanence_id).delete()
+			permanence_id=permanence_id).order_by().delete()
+		BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by().delete()
 		bank_account_set= BankAccount.objects.all().filter(
-		customer = None,
-		producer = None).order_by('-id')[:1]
+			customer = None,
+			producer = None).order_by('-id')[:1]
 		if bank_account_set:
-			a_bank_amount_id = bank_account_set[0].id
-			BankAccount.objects.all().filter(id=a_bank_amount_id).order_by().delete()
+			bank_account = bank_account_set[0]
+			bank_account.operation_status=BANK_LATEST_TOTAL
+			bank_account.save(update_fields=[
+		      'operation_status' 
+    		])
 		Permanence.objects.filter(id=permanence_id).update(status = PERMANENCE_SEND,is_done_on = None)
 		menu_pool.clear()
+		# return True
 
 	def has_add_permission(self, request):
 		return False
@@ -1134,7 +1202,18 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 admin.site.register(PermanenceDone, PermanenceDoneAdmin)
 
 class PurchaseAdmin(admin.ModelAdmin):
-	list_max_show_all = True
+	fields = (
+		'permanence',
+		'customer',
+		'product',
+		'long_name',
+		'quantity',
+		'original_unit_price',
+		'unit_deposit',
+		# 'original_price',
+		'comment'
+	)
+	readonly_fields  = ('long_name',)
 	exclude = ['offer_item']	
 	list_display = [
 		'permanence',
@@ -1145,29 +1224,35 @@ class PurchaseAdmin(admin.ModelAdmin):
 		'original_unit_price',
 		'unit_deposit',
 		'original_price',
-		'comment'
+		'comment',
 	]
+	list_select_related = ('producer', 'permanence', 'customer')
+	list_per_page = 17
+	list_max_show_all = 17
+	ordering = ('-distribution_date','customer', 'product')
 	date_hierarchy = 'distribution_date'
 	list_filter = (PurchaseFilterByPermanence,PurchaseFilterByCustomerForThisPermanence, PurchaseFilterByProducerForThisPermanence)
 	list_display_links = ('long_name',)
 	search_fields = ('customer__short_basket_name', 'long_name')
-	fields = (
-		'permanence',
-		'customer',
-		'product',
-		'long_name',
-		'quantity',
-		'comment'
-	)
-	readonly_fields  = ('long_name',)
 	actions = []
 
-	# def get_readonly_fields(self, request, obj=None):
-	# 	if obj:
-	# 		status = obj.permanence.status
-	# 		if status<PERMANENCE_SEND:
-	# 			return('original_price',)
-
+	def get_readonly_fields(self, request, obj=None):
+		if obj:
+			status = obj.permanence.status
+			if status == PERMANENCE_SEND:
+				return('long_name',)
+		else:
+			preserved_filters = request.GET.get('_changelist_filters', None)
+			if preserved_filters:
+				param = dict(parse_qsl(preserved_filters))
+				if 'permanence' in param:
+					permanence_id = param['permanence']
+					permanence_set = Permanence.objects.filter(
+						id = permanence_id).order_by()[:1]
+					if permanence_set:
+						if permanence_set[0].status == PERMANENCE_SEND:
+							return('long_name',)
+		return('long_name', 'original_unit_price',	'unit_deposit')
 
 	def queryset(self, request):
 		queryset = super(PurchaseAdmin, self).queryset(request)
@@ -1195,10 +1280,10 @@ class PurchaseAdmin(admin.ModelAdmin):
 		permanence.widget.can_add_related = False
 		customer.widget.can_add_related = False
 		product.widget.can_add_related = False
-		self.a_previous_total_price_with_tax = 0
+		# self.a_previous_price_with_tax = 0
 
 		if obj:
-			a_total_price_with_tax = obj.price_with_tax
+			# self.a_previous_price_with_tax = obj.price_with_tax
 			permanence.empty_label = None
 			permanence.queryset = Permanence.objects.filter(
 				id = obj.permanence_id)
@@ -1225,9 +1310,9 @@ class PurchaseAdmin(admin.ModelAdmin):
 					status__in=[PERMANENCE_OPENED, PERMANENCE_SEND]
 				)
 				if producer_id:
-					product.queryset = Product.objects.all().producer(producer_id).active()
+					product.queryset = Product.objects.all().producer(producer_id).active().is_selected_for_offer()
 				else:
-					product.queryset = Product.objects.all().active()
+					product.queryset = Product.objects.all().active().is_selected_for_offer()
 			if customer_id:
 				customer.empty_label = None
 				customer.queryset = Customer.objects.filter(id=customer_id).active().may_order()
@@ -1238,70 +1323,75 @@ class PurchaseAdmin(admin.ModelAdmin):
 	def save_model(self, request, purchase, form, change):
 		# obj.preformed_by = request.user
 		# obj.ip_address = utils.get_client_ip(request)
-		if purchase.id == None:
-			offer_item = None
+		purchase.distribution_date = purchase.permanence.distribution_date
+		if purchase.offer_item == None:
 			offer_item_set = OfferItem.objects.all().permanence(
 				purchase.permanence).product(
 				purchase.product).order_by()[:1]
-			# if offer_item_set:
-			# 	offer_item = offer_item_set[0]
-			# else:
-			# 	# Add the product to the OfferItem
-			# 	if purchase.product.is_active:
-			# 		offer_item = OfferItem.objects.create(
-			# 			permanence = purchase.permanence,
-			# 			product = purchase.product,
-			# 			automatically_added = ADD_PRODUCT_ADDED_WHEN_CREATING_A_PURCHASE_IN_ADMIN )
-			# 	else:
-			# 		offer_item = OfferItem.objects.create(
-			# 			permanence = purchase.permanence,
-			# 			product = purchase.product,
-			# 			automatically_added = ADD_PRODUCT_DEACTIVATED_ADDED_WHEN_CREATING_A_PURCHASE_IN_ADMIN )
-			purchase.offert_item = offer_item
+			if offer_item_set:
+				purchase.offer_item = offer_item_set[0]
+		previous_price_with_tax = purchase.price_with_vat
+		if purchase.invoiced_price_with_compensation:
+			previous_price_with_tax = purchase.price_with_compensation
 
-		if purchase.product:
-			# TODO Make it worfs when puchase.product == None 
-			# This happen when adding purchase of non existing products with the import feature
-			purchase.producer = purchase.product.producer
-			purchase.distribution_date = purchase.permanence.distribution_date
-			purchase.is_to_be_prepared = (purchase.product.automatically_added == ADD_PORDUCT_MANUALY)
-			purchase.long_name = purchase.product.long_name
-			purchase.order_by_piece_pay_by_kg = purchase.product.order_by_piece_pay_by_kg
-			purchase.order_by_kg_pay_by_kg = purchase.product.order_by_kg_pay_by_kg
-			purchase.producer_must_give_order_detail_per_customer = purchase.product.producer_must_give_order_detail_per_customer
-			purchase.product_order = purchase.product.product_order
-			is_compensation = False
-			if purchase.product.vat_level in [VAT_200, VAT_300] and purchase.customer.vat_id != None:
-				is_compensation = True
-			a_original_price = purchase.quantity * purchase.product.original_unit_price
-			a_price_without_tax = purchase.quantity * purchase.product.unit_price_without_tax
-			a_price_with_vat = purchase.quantity * purchase.product.unit_price_with_vat
-			a_price_with_compensation = purchase.quantity * purchase.product.unit_price_with_compensation
-			if purchase.product.order_by_piece_pay_by_kg:
-				a_original_price *= purchase.product.order_average_weight
-				a_price_without_tax *= purchase.product.order_average_weight
-				a_price_with_vat *= purchase.product.order_average_weight
-				a_price_with_compensation *= purchase.product.order_average_weight
-			purchase.invoiced_price_with_compensation = is_compensation
+		purchase.producer = purchase.product.producer
+		purchase.long_name = purchase.product.long_name
+		purchase.department_for_customer = purchase.product.department_for_customer
+		purchase.order_unit = purchase.product.order_unit
+		purchase.vat_level = purchase.product.vat_level
+		unit_price_with_vat = 0
+		unit_price_with_compensation = 0
+		if purchase.permanence.status < PERMANENCE_SEND or (purchase.original_unit_price == 0 and purchase.unit_deposit == 0):
 			purchase.original_unit_price = purchase.product.original_unit_price
-			purchase.original_price = a_original_price
-			purchase.price_without_tax = a_price_without_tax
-			purchase.price_with_vat = a_price_with_vat
-			purchase.price_with_compensation = a_price_with_compensation
-			a_total_price_with_tax = 0
-			if is_compensation:
-				a_total_price_with_tax = purchase.price_with_compensation
-			else:
-				a_total_price_with_tax = purchase.price_with_vat
-			if purchase.permanence.status==PERMANENCE_OPENED:
-				save_order_delta_amount(
-					purchase.permanence.id,
-					purchase.customer.id,
-					self.a_previous_total_price_with_tax,
-					a_total_price_with_tax
-				)
-			purchase.permanence.producers.add(purchase.producer)
-			purchase.save()
+			purchase.unit_deposit = purchase.product.unit_deposit
+			unit_price_with_vat = purchase.product.unit_price_with_vat
+			unit_price_with_compensation = purchase.product.unit_price_with_compensation
+		else:
+			unit_price_with_vat = (purchase.original_unit_price * purchase.producer.price_list_multiplier).quantize(DECIMAL_0_01, rounding=ROUND_UP)
+			unit_price_with_compensation = unit_price_with_vat
+			if purchase.product.vat_level == VAT_200:
+				unit_price_with_compensation = (unit_price_with_vat * Decimal(1.02)).quantize(DECIMAL_0_01, rounding=ROUND_UP)
+			elif purchase.product.vat_level == VAT_300:
+				unit_price_with_compensation = (unit_price_with_vat * Decimal(1.06)).quantize(DECIMAL_0_01, rounding=ROUND_UP)
+
+		purchase.original_price = purchase.quantity * purchase.original_unit_price
+		purchase.price_with_vat = purchase.quantity * unit_price_with_vat
+		purchase.price_with_compensation = purchase.quantity * unit_price_with_compensation
+		purchase.invoiced_price_with_compensation = False
+		if purchase.product.vat_level in [VAT_200, VAT_300] and purchase.customer.vat_id != None and len(purchase.customer.vat_id) > 0:
+			purchase.invoiced_price_with_compensation = True
+		if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
+			purchase.original_price *= purchase.product.order_average_weight
+			purchase.price_with_vat *= purchase.product.order_average_weight
+			purchase.price_with_compensation *= purchase.product.order_average_weight
+		# RoundUp
+		purchase.original_price = purchase.original_price.quantize(Decimal('.01'), rounding=ROUND_UP)
+		purchase.price_with_vat = purchase.price_with_vat.quantize(Decimal('.01'), rounding=ROUND_UP)
+		purchase.price_with_compensation = purchase.price_with_compensation.quantize(Decimal('.01'), rounding=ROUND_UP)
+		purchase.unit_deposit = purchase.product.unit_deposit
+		if purchase.unit_deposit != 0:
+			purchase.original_price += ( purchase.quantity * purchase.unit_deposit )
+			purchase.price_with_vat += ( purchase.quantity * purchase.unit_deposit )
+			purchase.price_with_compensation += ( purchase.quantity * purchase.unit_deposit )
+		purchase.vat_level = purchase.product.vat_level
+		purchase.quantity_for_preparation_order = purchase.quantity if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG] else 0
+		# if send_to_producer:
+		# 	purchase.quantity_send_to_producer = purchase.quantity
+		# purchase.save()
+
+		if purchase.permanence.status==PERMANENCE_OPENED:
+			price_with_tax = purchase.price_with_vat
+			if purchase.invoiced_price_with_compensation:
+				price_with_tax = purchase.price_with_compensation
+			save_order_delta_amount(
+				purchase.permanence.id,
+				purchase.customer.id,
+				previous_price_with_tax,
+				price_with_tax
+			)
+		purchase.permanence.producers.add(purchase.producer)
+		purchase.save()
+
 
 	def get_actions(self, request):
 		actions = super(PurchaseAdmin, self).get_actions(request)
@@ -1317,36 +1407,76 @@ class PurchaseAdmin(admin.ModelAdmin):
 admin.site.register(Purchase, PurchaseAdmin)
 
 # Accounting
+class BankAccountDataForm(forms.ModelForm):
+	def __init__(self, *args, **kwargs):
+		super(BankAccountDataForm, self).__init__(*args, **kwargs)
+
+	def error(self,field, msg):
+		if field not in self._errors:
+			self._errors[field]= self.error_class([msg])
+
+	def clean(self, *args, **kwargs):
+		cleaned_data = super(BankAccountDataForm, self).clean(*args, **kwargs)
+		customer = self.cleaned_data.get("customer")
+		producer = self.cleaned_data.get("producer")
+		initial_id = self.instance.id
+		initial_customer = self.instance.customer
+		initial_producer = self.instance.producer
+		if not customer and not producer:
+			if initial_id != None:
+				if initial_customer == None and initial_producer == None:
+					pass
+				else:
+					self.error('customer',_('Either a customer or a producer must be given.'))
+					self.error('producer',_('Either a customer or a producer must be given.'))
+			else:
+				bank_account_set = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by()[:1]
+				if bank_account_set:
+					# You may only insert the first latest bank total at initialisation of the website
+					self.error('customer',_('Either a customer or a producer must be given.'))
+					self.error('producer',_('Either a customer or a producer must be given.'))
+		if customer and producer:
+			self.error('customer',_('Only one customer or one producer must be given.'))
+			self.error('producer',_('Only one customer or one producer must be given.'))
+		return cleaned_data
+
+	class Meta:
+		model = BankAccount
+
 class BankAccountAdmin(admin.ModelAdmin):
-	list_max_show_all = True
-	list_display = ['operation_date', 'get_producer' , 'get_customer',
-	 'get_bank_amount_in', 'get_bank_amount_out', 'operation_comment'] 
-	date_hierarchy = 'operation_date'
-	ordering = ('-operation_date',)
+	form = BankAccountDataForm
 	fields=('operation_date', 
 		('producer', 'customer'), 'operation_comment', 'bank_amount_in',
 		 'bank_amount_out', 
 		 ('is_recorded_on_customer_invoice', 'is_recorded_on_producer_invoice'), 
 		 ('is_created_on', 'is_updated_on') )
+	list_per_page = 17
+	list_max_show_all = 17
+	list_display = ['operation_date', 'get_producer' , 'get_customer',
+	 'get_bank_amount_in', 'get_bank_amount_out', 'operation_comment'] 
+	date_hierarchy = 'operation_date'
+	ordering = ('-operation_date', '-id')
 	search_fields = ('producer__short_profile_name', 'customer__short_basket_name', 'operation_comment')
 	actions = []
 
 	def get_readonly_fields(self, request, obj=None):
+		readonly = [
+			'is_created_on', 'is_updated_on',
+			'is_recorded_on_customer_invoice', 'is_recorded_on_producer_invoice'
+		]
 		if obj:
-			readonly = ['operation_date',
-				'bank_amount_in',
-				'bank_amount_out',
-				'is_created_on', 'is_updated_on',
-				'is_recorded_on_customer_invoice', 'is_recorded_on_producer_invoice']
-			if obj.customer==None:
-				readonly.append('customer')
-			if obj.producer==None:
-				readonly.append('producer')
-			if obj.customer==None and obj.producer==None:
-				readonly.append('operation_comment')
-			return readonly
-		return ('is_created_on', 'is_updated_on',
-			'is_recorded_on_customer_invoice', 'is_recorded_on_producer_invoice')
+			if (obj.is_recorded_on_customer_invoice != None or obj.is_recorded_on_producer_invoice != None) or (obj.customer==None and obj.producer==None):
+				readonly.append('operation_date')
+				readonly.append('bank_amount_in')
+				readonly.append('bank_amount_out')
+				if obj.customer==None:
+					readonly.append('customer')
+				if obj.producer==None:
+					readonly.append('producer')
+				if obj.customer==None and obj.producer==None:
+					readonly.append('operation_comment')
+				return readonly
+		return readonly
 
 	def get_form(self,request, obj=None, **kwargs):
 		form = super(BankAccountAdmin,self).get_form(request, obj, **kwargs)
@@ -1389,5 +1519,13 @@ class BankAccountAdmin(admin.ModelAdmin):
 
 	def has_delete_permission(self, request, obj=None):
 		return False
+
+	def save_model(self, request, bank_account, form, change):
+		if not change:
+			# create
+			if bank_account.producer==None and bank_account.customer==None:
+				# You may only insert the first latest bank total at initialisation of the website
+				bank_account.operation_status = BANK_LATEST_TOTAL
+		super(BankAccountAdmin,self).save_model(request, bank_account, form, change)
 
 admin.site.register(BankAccount, BankAccountAdmin)

@@ -86,11 +86,17 @@ def repanier_select_qty(context, *args, **kwargs):
 						qty_display = get_qty_display(
 							q_valid,
 						 	q_average_weight,
-							offer_item.product.order_by_kg_pay_by_kg,
-						 	offer_item.product.order_by_piece_pay_by_kg
+							offer_item.product.order_unit
 						)
 						result += '<option value="'+ str(q_select_id) + '" '+ selected + '>'+ qty_display +'</option>'
-					q_valid = q_valid + q_step
+					if q_valid < q_step:
+						# 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
+						# 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
+						q_valid = q_step
+					else:
+						# 1; 2; 3; 4 ... q_min = 1; q_step = 1
+						# 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
+						q_valid = q_valid + q_step
 				if q_order_is_displayed == False:
 					# An custom order_qty > q_alert
 					q_select_id = q_select_id + 1
@@ -98,8 +104,7 @@ def repanier_select_qty(context, *args, **kwargs):
 					qty_display = get_qty_display(
 						q_order,
 					 	q_average_weight,
-						offer_item.product.order_by_kg_pay_by_kg,
-					 	offer_item.product.order_by_piece_pay_by_kg
+						offer_item.product.order_unit
 					)
 					result += '<option value="'+ str(q_select_id) + '" '+ selected + '>'+ qty_display +'</option>'
 			result += '</select>'

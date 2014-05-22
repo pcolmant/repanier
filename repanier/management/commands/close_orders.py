@@ -7,6 +7,8 @@ class Command(BaseCommand):
     help = 'Closes now orders on due date'
 
     def handle(self, *args, **options):
-		something_to_close = tasks.close_orders_async_now()
+		something_to_close = tasks.close_orders_now()
 		if something_to_close:
 			self.stdout.write('At least on order being closed')
+		else:
+			self.stdout.write('Nothing to close')

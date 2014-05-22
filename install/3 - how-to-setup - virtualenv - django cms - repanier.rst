@@ -57,13 +57,13 @@ Check if CMS install is ok
 
 	python manage.py cms check --settings=ptidej.ptidej_settings
 
-Compile translation files
+.. Compile translation files
 
-.. code:: bash
+.. .. code:: bash
 
-	cd ~/v1/mysite/repanier
-	export DJANGO_SETTINGS_MODULE=
-	django-admin.py compilemessages 
+.. 	cd ~/v1/mysite/repanier
+.. 	export DJANGO_SETTINGS_MODULE=
+.. 	django-admin.py compilemessages 
 
 
 If you want, initialize the DB with test content : copy the content of /install/createdb into ~/v1/mysite/
@@ -94,6 +94,10 @@ Restart Nginx and Uwsgi
 	rm -rf /var/tmp/django_cache/*
 	# Start Uwsgi
 	sudo /etc/init.d/uwsgi start
+
+	# The same Stop, Clean, Start Uwsgi in one line
+	sudo /etc/init.d/uwsgi stop && rm -rf /var/tmp/django_cache/* && sudo /etc/init.d/uwsgi start
+
 
 The surf on your sites
 
