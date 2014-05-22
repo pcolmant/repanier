@@ -60,10 +60,10 @@ import uuid
 # ALTER TABLE repanier_customer ADD COLUMN initial_balance numeric(8,2) DEFAULT 0;
 # ALTER TABLE repanier_customer ALTER COLUMN initial_balance SET NOT NULL;
 
-ALTER TABLE repanier_purchase RENAME price_without_tax  TO price_with_vat;
-ALTER TABLE repanier_purchase RENAME price_with_tax  TO price_with_compensation;
-UPDATE repanier_purchase set price_with_vat = price_with_compensation;
-ALTER TABLE repanier_product DROP COLUMN unit_price_without_tax;
+# ALTER TABLE repanier_purchase RENAME price_without_tax  TO price_with_vat;
+# ALTER TABLE repanier_purchase RENAME price_with_tax  TO price_with_compensation;
+# UPDATE repanier_purchase set price_with_vat = price_with_compensation;
+# ALTER TABLE repanier_product DROP COLUMN unit_price_without_tax;
 
 
 from const import *
