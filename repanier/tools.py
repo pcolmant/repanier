@@ -182,8 +182,8 @@ def recalculate_order_amount(permanence_id, send_to_producer=False):
       purchase.price_with_vat += ( purchase.quantity * purchase.unit_deposit )
       purchase.price_with_compensation += ( purchase.quantity * purchase.unit_deposit )
     purchase.vat_level = purchase.product.vat_level
-    purchase.quantity_for_preparation_order = purchase.quantity if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG] else 0
     if send_to_producer:
+      purchase.quantity_for_preparation_order = purchase.quantity if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG] else 0
       purchase.quantity_send_to_producer = purchase.quantity
     purchase.save()
     if purchase.invoiced_price_with_compensation:

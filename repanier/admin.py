@@ -1021,7 +1021,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 					# permanence.status = PERMANENCE_WAIT_FOR_DONE
 					# permanence.save(update_fields=['status'])
 					# thread.start_new_thread( tasks.done, (permanence.id, permanence.distribution_date, current_site.name) )
-					tasks.done(permanence.id, permanence.distribution_date, current_site.name)
+					tasks.done(permanence.id, permanence.distribution_date, permanence.__unicode__(), current_site.name)
 					user_message = _("Action performed.")
 					user_message_level = messages.INFO
 				else:

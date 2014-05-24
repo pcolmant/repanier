@@ -1580,6 +1580,9 @@ def export_permanence_done_xlsx(request, queryset):
 								c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
 								ws.conditional_formatting.addCellIs(get_column_letter(10)+str(row_num),'notEqual', [get_column_letter(1)+str(row_num+1)], True, wb, None, None, yellowFill)
 								c.style.font.bold = True
+							else:
+								c = ws.cell(row=row_num-1, column=8)
+								c.style.font.bold = True
 							c = ws.cell(row=row_num, column=0)
 							c.value = sum_original_price
 							c = ws.cell(row=row_num-1, column=1)
@@ -1600,12 +1603,18 @@ def export_permanence_done_xlsx(request, queryset):
 						if sum_on != None:
 							if sum_counter > 1:
 								c = ws.cell(row=row_num-1, column=9)
-								c.value = sum_quantity
-								c.style.number_format.format_code = '#,##0.????'
+								# c.value = sum_quantity
+								c.value = sum_original_price
+								# c.style.number_format.format_code = '#,##0.????'
+								c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
 								ws.conditional_formatting.addCellIs(get_column_letter(10)+str(row_num),'notEqual', [get_column_letter(1)+str(row_num+1)], True, wb, None, None, yellowFill)
 								c.style.font.bold = True
+							else:
+								c = ws.cell(row=row_num-1, column=8)
+								c.style.font.bold = True
 							c = ws.cell(row=row_num, column=0)
-							c.value = sum_quantity
+							# c.value = sum_quantity
+							c.value = sum_original_price
 							c = ws.cell(row=row_num-1, column=1)
 							c.style.font.bold = True
 							c = ws.cell(row=row_num-1, column=3)
@@ -1623,6 +1632,8 @@ def export_permanence_done_xlsx(request, queryset):
 						if PRODUCT_ORDER_UNIT_NAMED_PC <= purchase.product.order_unit <= PRODUCT_ORDER_UNIT_NAMED_PC_KG:
 							# Don't display the sum_quantity of NAMED products
 							sum_counter = 0
+							c = ws.cell(row=row_num-1, column=8)
+							c.style.font.bold = True
 
 				sum_original_price += purchase.original_price
 				sum_quantity += purchase.quantity
@@ -1670,6 +1681,9 @@ def export_permanence_done_xlsx(request, queryset):
 						c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
 						c.style.font.bold = True
 						ws.conditional_formatting.addCellIs(get_column_letter(10)+str(row_num),'notEqual', [get_column_letter(1)+str(row_num+1)], True, wb, None, None, yellowFill)
+					else:
+						c = ws.cell(row=row_num-1, column=8)
+						c.style.font.bold = True
 					c = ws.cell(row=row_num, column=0)
 					c.value = sum_original_price
 					c = ws.cell(row=row_num-1, column=1)
@@ -1678,12 +1692,18 @@ def export_permanence_done_xlsx(request, queryset):
 					c.style.font.bold = True
 				else:
 					if sum_counter > 1:
-						c.value = sum_quantity
-						c.style.number_format.format_code = '#,##0.????'
+						# c.value = sum_quantity
+						c.value = sum_original_price
+						# c.style.number_format.format_code = '#,##0.????'
+						c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
 						c.style.font.bold = True
 						ws.conditional_formatting.addCellIs(get_column_letter(10)+str(row_num),'notEqual', [get_column_letter(1)+str(row_num+1)], True, wb, None, None, yellowFill)
+					else:
+						c = ws.cell(row=row_num-1, column=8)
+						c.style.font.bold = True
 					c = ws.cell(row=row_num, column=0)
-					c.value = sum_quantity
+					# c.value = sum_quantity
+					c.value = sum_original_price
 					c = ws.cell(row=row_num-1, column=1)
 					c.style.font.bold = True
 					c = ws.cell(row=row_num-1, column=3)

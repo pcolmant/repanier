@@ -114,7 +114,7 @@ def close_orders(permanence_id, current_site_name):
 	Permanence.objects.filter(id=permanence_id).update(status = PERMANENCE_SEND)
 
 @transaction.atomic
-def done(permanence_id, permanence_distribution_date, current_site_name):
+def done(permanence_id, permanence_distribution_date, permanence_unicode, current_site_name):
 
 	validation_passed = True
 	something_to_put_into_the_invoice = False
@@ -289,6 +289,31 @@ def done(permanence_id, permanence_distribution_date, current_site_name):
 							)
 						purchase.is_recorded_on_producer_invoice_id = producerinvoice.id
 					purchase.save()
+
+				# Create or update bank movements for producers
+
+				for producer_invoice in ProducerInvoice.objects.filter(permanence=permanence_id).order_by():
+					# Take lastest bank account movement attached to this permamence
+					bank_account_set= BankAccount.objects.filter(permanence=permanence_id, producer=producer_invoice.producer_id).order_by('-id')[:1]
+					if bank_account_set:
+						bank_account = bank_account_set[0]
+						bank_account.bank_amount_in = 0
+						bank_account.bank_amount_out = producer_invoice.total_price_with_tax if producer_invoice.total_price_with_tax >= 0 else 0
+						bank_account.operation_comment = unicode(_('Delivery')) + " " + current_site_name + " - " + permanence_unicode + ". " + unicode(_('Thanks!'))
+						bank_account.save()
+					else:
+						BankAccount.objects.create(
+							permanence_id = permanence_id,
+							producer = producer_invoice.producer,
+							customer = None,
+							operation_date = permanence_distribution_date,
+							operation_status = BANK_NOT_LATEST_TOTAL,
+							operation_comment = unicode(_('Delivery')) + " " + current_site_name + " - " + permanence_unicode + ". " + unicode(_('Thanks!')),
+							bank_amount_in = 0,
+							bank_amount_out = producer_invoice.total_price_with_tax if producer_invoice.total_price_with_tax >= 0 else 0,
+							is_recorded_on_customer_invoice = None,
+							is_recorded_on_producer_invoice = None
+						)
 
 				# Calculate new current balance : Bank
 				

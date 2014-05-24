@@ -311,68 +311,74 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 					if db_write:
 						max_purchase_counter = len(array_purchase)
 						if max_purchase_counter > 1:
-							old_invoiced = None if row[_('Id')] == None else Decimal(row[_('Id')])
-							if old_invoiced == None:
-								error = True
-								error_msg = _("Row %(row_num)d : No purchase invoice given.") % {'row_num': row_num + 1}
-								break
+							# old_invoiced = None if row[_('Id')] == None else Decimal(row[_('Id')])
+							# if old_invoiced == None:
+							# 	error = True
+							# 	error_msg = _("Row %(row_num)d : No purchase invoice given.") % {'row_num': row_num + 1}
+							# 	break
 							producer_id = None
 							actual_invoice = DECIMAL_ZERO
-							invoice_by_basket = None
+							# invoice_by_basket = None
 							for i, purchase in enumerate(array_purchase):
 								if i == 0:
 									producer_id = purchase.producer_id
-									invoice_by_basket = purchase.producer.invoice_by_basket
-								else:
-									if producer_id != purchase.producer_id:
-										error = True
-										error_msg = _("Row %(row_num)d : The system cannot combine purchases of different producers.") % {'row_num': row_num + 1}
-										break
-								if invoice_by_basket:
-									actual_invoice += purchase.original_price
-								else:
-									actual_invoice += purchase.quantity
-							if error:
-								break
-							if invoice_by_basket == None:
-								error = True
-								error_msg = _("Row %(row_num)d : The system cannot determine if purchases are invoiced by basket or not.") % {'row_num': row_num + 1}
-								break
+								# 	invoice_by_basket = purchase.producer.invoice_by_basket
+								# else:
+								# 	if producer_id != purchase.producer_id:
+								# 		error = True
+								# 		error_msg = _("Row %(row_num)d : The system cannot combine purchases of different producers.") % {'row_num': row_num + 1}
+								# 		break
+								# if invoice_by_basket:
+								actual_invoice += purchase.original_price
+								# else:
+								# 	actual_invoice += purchase.quantity
+							# if error:
+							# 	break
+							# if invoice_by_basket == None:
+							# 	error = True
+							# 	error_msg = _("Row %(row_num)d : The system cannot determine if purchases are invoiced by basket or not.") % {'row_num': row_num + 1}
+							# 	break
 
 							if new_invoiced != None:
 								ratio = DECIMAL_ONE
+								# print "Ratio", ratio
 								if actual_invoice != DECIMAL_ZERO:
 									ratio = new_invoiced / actual_invoice
 								else:
 									if new_invoiced == DECIMAL_ZERO:
 										ratio = DECIMAL_ZERO
 									else:
-										error = True
-										error_msg = _("Row %(row_num)d : The actual invoiced amount is zero and you want to distribute more than zero.") % {'row_num': row_num + 1}
-										break
+										# Do not generate an error because there is no roll back at this stage
+										# TODO : Transaction
+										ratio = DECIMAL_ONE
+										# error = True
+										# error_msg = _("Row %(row_num)d : The actual invoiced amount is zero and you want to distribute more than zero.") % {'row_num': row_num + 1}
+										# break
+								# print "Ratio", ratio, "new_invoiced", new_invoiced, "actual_invoice", actual_invoice
 								# Rule of 3
-								adjusted_invoice = 0
-								for i, purchase in enumerate(array_purchase, start=1):
-									if i == max_purchase_counter:
-										if invoice_by_basket:
+								if ratio != DECIMAL_ONE:
+									adjusted_invoice = 0
+									for i, purchase in enumerate(array_purchase, start=1):
+										if i == max_purchase_counter:
+											# if invoice_by_basket:
 											purchase.original_price = new_invoiced - adjusted_invoice
 											if ( purchase.original_unit_price + purchase.unit_deposit ) != DECIMAL_ZERO:
 												purchase.quantity = purchase.original_price / ( purchase.original_unit_price + purchase.unit_deposit )
+											# else:
+											# 	purchase.quantity = new_invoiced - adjusted_invoice
+											# 	purchase.original_price = purchase.quantity * ( purchase.original_unit_price + purchase.unit_deposit )
 										else:
-											purchase.quantity = new_invoiced - adjusted_invoice
-											purchase.original_price = purchase.quantity * ( purchase.original_unit_price + purchase.unit_deposit )
-									else:
-										if invoice_by_basket:
+											# if invoice_by_basket:
 											purchase.original_price *= ratio
 											purchase.original_price = purchase.original_price.quantize(DECIMAL_0_01, rounding=ROUND_UP)
 											adjusted_invoice += purchase.original_price
 											if ( purchase.original_unit_price + purchase.unit_deposit ) != DECIMAL_ZERO:
 												purchase.quantity = purchase.original_price / ( purchase.original_unit_price + purchase.unit_deposit )
-										else:
-											purchase.quantity *= ratio
-											purchase.quantity = purchase.quantity.quantize(DECIMAL_0_0001, rounding=ROUND_HALF_UP)
-											adjusted_invoice += purchase.quantity
-											purchase.original_price = purchase.quantity * ( purchase.original_unit_price + purchase.unit_deposit )
+											# else:
+											# 	purchase.quantity *= ratio
+											# 	purchase.quantity = purchase.quantity.quantize(DECIMAL_0_0001, rounding=ROUND_HALF_UP)
+											# 	adjusted_invoice += purchase.quantity
+											# 	purchase.original_price = purchase.quantity * ( purchase.original_unit_price + purchase.unit_deposit )
 						# Adjust tax and save updated purchase
 						price_list_multiplier = 1
 						if producer_id in id_2_producer_price_list_multiplier_dict:
@@ -452,7 +458,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 					unit_deposit = DECIMAL_ZERO if row[_('deposit')] == None else Decimal(row[_('deposit')]).quantize(Decimal('.01'), rounding=ROUND_HALF_DOWN)
 					# PL 
 					original_price = DECIMAL_ZERO if row[_('original price')] == None  else Decimal(row[_('original price')]).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
-					new_invoiced = None if row[_('invoiced')] in [None, " "] else Decimal(row[_('invoiced')])
+					new_invoiced = None if row[_('invoiced')] in [None, " "] else Decimal(row[_('invoiced')]).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
 
 					comment = cap(row[_('comment')], 100)
 
@@ -463,6 +469,8 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 						unit_deposit_modified = unit_deposit != purchase.unit_deposit
 						original_price_modified = original_price != purchase.original_price
 
+						# print("---------------------------------------")
+						# print quantity, original_unit_price, unit_deposit, original_price
 						# A1	if (PU + C) != 0 then: Q = PL / (PU + C) else: Q = 1, PU = PL - C
 						# A2	if Q != 0 then: PU = ( PL / Q ) - C else: PL = 0
 						# A3	if Q != 0 then: C = ( PL / Q ) - PU else: PL = 0
@@ -474,6 +482,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 							if unit_deposit_modified:
 								if quantity_modified and not original_unit_price_modified:
 									# A2
+									# print("A2-1")
 									if quantity != DECIMAL_ZERO:
 										original_unit_price = ( original_price / quantity ) - unit_deposit
 										original_unit_price = original_unit_price.quantize(DECIMAL_0_01, rounding=ROUND_HALF_DOWN)
@@ -481,6 +490,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 										original_price = DECIMAL_ZERO
 								else:
 									# A1
+									# print("A1-2")
 									if ( original_unit_price + unit_deposit ) != DECIMAL_ZERO:
 										quantity = original_price / ( original_unit_price + unit_deposit )
 										quantity = quantity.quantize(DECIMAL_0_0001, rounding=ROUND_HALF_DOWN)
@@ -490,6 +500,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 							else:
 								if quantity_modified:
 									if original_unit_price_modified:
+										# print("A3-3")
 										# A3
 										if quantity != DECIMAL_ZERO:
 											unit_deposit = ( original_price / quantity ) - original_unit_price
@@ -497,6 +508,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 										else:
 											original_price = DECIMAL_ZERO
 									else:
+										# print("A2-4")
 										# A2
 										if quantity != DECIMAL_ZERO:
 											original_unit_price = ( original_price / quantity ) - unit_deposit
@@ -505,6 +517,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 											original_price = DECIMAL_ZERO
 								else:
 									if original_unit_price_modified:
+										# print("A4-5")
 										# A4
 										if ( original_unit_price + unit_deposit ) != DECIMAL_ZERO:
 											quantity = original_price / ( original_unit_price + unit_deposit )
@@ -514,6 +527,7 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 											original_unit_price = original_price - original_unit_price
 									else:
 										# A1
+										# print("A1-6")
 										if ( original_unit_price + unit_deposit ) != DECIMAL_ZERO:
 											quantity = original_price / ( original_unit_price + unit_deposit )
 											quantity = quantity.quantize(DECIMAL_0_0001, rounding=ROUND_HALF_DOWN)
@@ -523,11 +537,15 @@ def import_permanence_purchases(worksheet, permanence = None, db_write = False,
 						else:
 							if quantity_modified or original_unit_price_modified or unit_deposit_modified:
 								# A5
+								# print("A5-7")
 								original_price = quantity * ( original_unit_price + unit_deposit )
 								original_price = original_price.quantize(DECIMAL_0_01, rounding=ROUND_HALF_UP)
 							else:
 								# A6
+								# print("A6-8")
 								pass
+
+						# print quantity, original_unit_price, unit_deposit, original_price
 
 	# print (Decimal('1.0')/Decimal('2.0')).quantize(Decimal('.0001'), rounding=ROUND_HALF_UP )
 	# print (Decimal('2.0')/Decimal('3.0')).quantize(Decimal('.0001'), rounding=ROUND_HALF_UP  )
