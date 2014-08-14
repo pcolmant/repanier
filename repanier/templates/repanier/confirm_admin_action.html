@@ -4,17 +4,18 @@
 {% block content %}
 
     <form action="" method="post">{% csrf_token %}
-    <div>
-    {% for obj in queryset %}
-    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}" />
-    {% endfor %}
-    <ul>{{ queryset | unordered_list }}</ul>
-    <p></p>
-    <p></p>
-    <input type="hidden" name="action" value="{{ action }}" />
-    <button type="submit" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-    <button type="submit" name="apply" value="apply">{% trans "Yes, I'm sure" %}</button>
-    </div>
+        <div>
+            {% for obj in queryset %}
+                <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}"/>
+            {% endfor %}
+            <ul>{{ queryset | unordered_list }}</ul>
+            <p></p>
+
+            <p></p>
+            <input type="hidden" name="action" value="{{ action }}"/>
+            <button type="submit" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" name="apply" value="apply">{% trans "Yes, I'm sure" %}</button>
+        </div>
     </form>
 
 {% endblock %}

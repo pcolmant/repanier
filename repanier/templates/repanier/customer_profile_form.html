@@ -1,9 +1,11 @@
 {% extends 'subpage_base.html' %}
 {% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
 {% block sub_content %}
-{% addtoblock "js" %}<script type="text/javascript" src="{{ STATIC_URL }}admin/js/admin/RelatedObjectLookups.js"></script>{% endaddtoblock %}
-<div class="col-md-12">
-    {% crispy form %}
-    {% if popup %}<input type="hidden" name="_popup" value="1">{% endif %}
-</div>
+    {% addtoblock "js" %}
+        <script type="text/javascript" src="{{ STATIC_URL }}admin/js/admin/RelatedObjectLookups.js"></script>
+    {% endaddtoblock %}
+    <div class="col-md-12">
+        {% crispy form %}
+        {% if popup %}<input type="hidden" name="_popup" value="1">{% endif %}
+    </div>
 {% endblock %}

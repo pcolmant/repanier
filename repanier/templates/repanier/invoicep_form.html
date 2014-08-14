@@ -3,10 +3,10 @@
 {% block sub_content %}
     <div class="container">
         {# {% debug %} #}
-        <div class="panel {% if object.balance < 0 %}panel-danger{% else %}panel-success{% endif %}">
+        <div class="panel {% if object.balance > 0 %}panel-danger{% else %}panel-success{% endif %}">
             <div class="panel-heading">
                 <small>{{ object.date_balance | date:"DATE_FORMAT" }}</small>
-                <h4>{% trans "New balance" %} {{ object.customer.long_basket_name }}
+                <h4>{% trans "New balance" %} {{ object.producer.long_profile_name }}
                     : {{ object.balance }}&nbsp;&euro;</h4>
             </div>
         </div>
@@ -19,10 +19,10 @@
                         {% trans "Date" %}
                     </th>
                     <th align="right">
-                        {% trans "Payment" %}
+                        {% trans "Refund" %}
                     </th>
                     <th align="right">
-                        {% trans "Refund" %}
+                        {% trans "Payment" %}
                     </th>
                     <th>
                         {% trans "Comment" %}
@@ -80,7 +80,7 @@
                         {% trans "Date" %}
                     </th>
                     <th>
-                        {% trans "Producer" %}
+                        {% trans "Customer" %}
                     </th>
                     <th>
                         {% trans "Product" %}
@@ -106,7 +106,7 @@
                             {{ purchase.distribution_date }}
                         </td>
                         <td>
-                            {{ purchase.producer.short_profile_name | truncatechars:15 }}
+                            {{ purchase.customer.short_basket_name | truncatechars:15 }}
                         </td>
                         <td>
                             {{ purchase.long_name }}
@@ -142,17 +142,21 @@
 {% endblock %}
 {% block footer %}
     <div class="btn-group">
-        {% if previous_customer_invoice_id %}
-            <a href="{% url 'invoice_view' previous_customer_invoice_id %}" class="btn btn-success btn-disabled btn-xs"><span
-                    class="glyphicon glyphicon-arrow-left"></span></a>
+        {% if previous_producer_invoice_id %}
+            <a href="
+                    {% if uuid %}{% url 'invoicep_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'invoicep_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-left"></span></a>
         {% else %}
             <a href="#" class="btn btn-disabled btn-xs"></a>
         {% endif %}
-        {% if previous_customer_invoice_id or next_customer_invoice_id %}
-            <a href="#" class="btn btn-disabled btn-xs"> {% trans "Invoice" %} </a>
+        {% if previous_producer_invoice_id or next_producer_invoice_id %}
+            <a href="
+                    {% if uuid %}{% url 'invoicep_uuid_view' 0 uuid %}{% else %}{% url 'invoicep_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-disabled btn-xs"> {% trans "Invoice" %} </a>
         {% endif %}
-        {% if next_customer_invoice_id %}
-            <a href="{% url 'invoice_view' next_customer_invoice_id %}"
+        {% if next_producer_invoice_id %}
+            <a href="
+                    {% if uuid %}{% url 'invoicep_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'invoicep_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
                class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-right"></span></a>
         {% else %}
             <a href="#" class="btn btn-disabled btn-xs"></a>

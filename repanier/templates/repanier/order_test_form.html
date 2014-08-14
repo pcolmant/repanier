@@ -1,26 +1,26 @@
 {% extends 'subpage_base.html' %}
 {% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
 {% block sub_content %}
-<div class="col-md-12">
-	{% crispy form %}
-</div>
-<div class="col-md-12">
-	{{ email }}
-	{{ permanence_memo |safe }}
-	<ul>
-		{% for producer in siteproducer_set %}
-			<li>{{ producer.long_profile_name }}</li>
-		{% endfor %}
-	</ul>
-	<ul>
-		{% for offeritem in offeritem_set %}
-			{% ifchanged offeritem.product.site_producer %}
-				<b>{{ offeritem.product.site_producer.long_profile_name }}</b>
-			{% endifchanged %}
-			<li>{{ offeritem.product.long_name }}</li>
-		{% empty %}
-			<li>Sorry, no product in this list.</li>
-		{% endfor %}
-	</ul>
-</div>
+    <div class="col-md-12">
+        {% crispy form %}
+    </div>
+    <div class="col-md-12">
+        {{ email }}
+        {{ permanence_memo |safe }}
+        <ul>
+            {% for producer in siteproducer_set %}
+                <li>{{ producer.long_profile_name }}</li>
+            {% endfor %}
+        </ul>
+        <ul>
+            {% for offeritem in offeritem_set %}
+                {% ifchanged offeritem.product.site_producer %}
+                    <b>{{ offeritem.product.site_producer.long_profile_name }}</b>
+                {% endifchanged %}
+                <li>{{ offeritem.product.long_name }}</li>
+            {% empty %}
+                <li>Sorry, no product in this list.</li>
+            {% endfor %}
+        </ul>
+    </div>
 {% endblock %}

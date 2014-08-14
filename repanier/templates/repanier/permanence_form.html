@@ -1,86 +1,96 @@
 {% extends 'subpage_base_wo_cms_toolbar.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block sub_content %}
-<div class="container">
-{% if user.customer.may_order %}
-{% if permanenceboard_list %}
-    <br/>
-    {# .... **End of the pagination section** .... #}
-    <table class="table table-hover" >
-    {% for permanenceboard in permanenceboard_list %}
-    <tr>
-    <form>
-        <td>
-                {% ifchanged %}{{ permanenceboard.permanence }}{% endifchanged %}
-        </td>
-        <td>
-                {{ permanenceboard.permanence_role }}
-        </td>
-        <td>
-                <input hidden name="page" value="{{ page_obj.number }}"/>
-                <input hidden name="permanence_board" value="{{ permanenceboard.id }}"/>
-                {% repanier_select_permanence permanence_board_id=permanenceboard.id %}
-                <noscript>
-                    <input type="submit" value="{% trans "ok" %}" />
-                </noscript>
-        </td>
-    </form>
-    <tr>
-    {% endfor %}
-    </table>
-    {# .... **End of the pagination section** .... #}
-{% else %}
-    <h3>{% trans "No permanence found" %}</h3>
-{% endif %}
-{% addtoblock "lastjs" %}
-<script type="text/javascript">
-function permanence_board_ajax(permanence_board_id) {
-  var lien = '{% url 'permanence_form_ajax' %}?value=' + $("#permanence_board"+permanence_board_id).val() + "&permanence_board=" + permanence_board_id;
-  $.ajax({
-    url: lien,
-    cache: false,
-    async : true,
-    success:function(result){
-        if(result.indexOf("ok")!=0) {
-            $("#permanence_board"+permanence_board_id).val($("#permanence_board"+permanence_board_id).data('oldValue'));
-        }
-    },
-    error:function(result){
-        $("#permanence_board"+permanence_board_id).val($("#permanence_board"+permanence_board_id).data('oldValue'));
-    }
-  });
-} 
-$(document).ready(function() {
-    $("select").focus(function() {
-      //store old value of "select" to restore it when Ajax calls fails 
-      $(this).data('oldValue',$(this).val());
-    });
-});
-</script>        
-{% endaddtoblock %}
-{% else %}
-    <h3>{% trans "You are not allowed to order products" %}</h3>
-{% endif %}
-</div>
+    <div class="container">
+        {% if user.customer.may_order %}
+            {% if permanenceboard_list %}
+                <br/>
+                {% for permanenceboard in permanenceboard_list %}
+                    <form>
+                        {% ifchanged permanenceboard.permanence %}
+                            {% if not forloop.first %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <hr/>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endifchanged %}
+                        <div class="row">
+                            <div class="col-md-4">
+                                {% ifchanged permanenceboard.permanence %}<b>{{ permanenceboard.permanence }}
+                                    </b>{% endifchanged %}
+                            </div>
+                            <div class="col-md-4">
+                                {{ permanenceboard.permanence_role }}
+                            </div>
+                            <div class="col-md-4">
+                                <input hidden name="page" value="{{ page_obj.number }}"/>
+                                <input hidden name="permanence_board" value="{{ permanenceboard.id }}"/>
+                                {% repanier_select_permanence permanence_board_id=permanenceboard.id %}
+                                <noscript>
+                                    <input type="submit" value="{% trans "ok" %}"/>
+                                </noscript>
+                                <br/>
+                            </div>
+                        </div>
+                    </form>
+                {% endfor %}
+            {% else %}
+                <h3>{% trans "No permanence found" %}</h3>
+            {% endif %}
+            {% addtoblock "lastjs" %}
+                <script type="text/javascript">
+                    function permanence_board_ajax(permanence_board_id) {
+                        var lien = '{% url 'permanence_form_ajax' %}?value=' + $("#permanence_board" + permanence_board_id).val() + "&permanence_board=" + permanence_board_id;
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            async: true,
+                            success: function (result) {
+                                if (result.indexOf("ok") != 0) {
+                                    $("#permanence_board" + permanence_board_id).val($("#permanence_board" + permanence_board_id).data('oldValue'));
+                                }
+                            },
+                            error: function (result) {
+                                $("#permanence_board" + permanence_board_id).val($("#permanence_board" + permanence_board_id).data('oldValue'));
+                            }
+                        });
+                    }
+                    $(document).ready(function () {
+                        $("select").focus(function () {
+                            //store old value of "select" to restore it when Ajax calls fails
+                            $(this).data('oldValue', $(this).val());
+                        });
+                    });
+                </script>
+            {% endaddtoblock %}
+        {% else %}
+            <h3>{% trans "You are not allowed to order products" %}</h3>
+        {% endif %}
+    </div>
 {% endblock %}
 {% block footer %}
     {% if is_paginated %}
-    <div class="btn-group">
         <div class="btn-group">
-            {% if page_obj.has_previous%}
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-success btn-disabled"><span class="glyphicon glyphicon-arrow-left"></span></a>
-            {% else %}
-                <a href="#" class="btn btn-disabled"></a>
-            {% endif %}
-            {% if page_obj.has_previous or page_obj.has_next %}
-                <a href="#" class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
-            {% endif %}
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-success btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
-            {% else %}
-                <a href="#" class="btn btn-disabled"></a>
-            {% endif %}
+            <div class="btn-group">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}"
+                       class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-left"></span></a>
+                {% else %}
+                    <a href="#" class="btn btn-disabled btn-xs"></a>
+                {% endif %}
+                {% if page_obj.has_previous or page_obj.has_next %}
+                    <a href="#"
+                       class="btn btn-disabled btn-xs">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-success btn-disabled btn-xs"><span
+                            class="glyphicon glyphicon-arrow-right"></span></a>
+                {% else %}
+                    <a href="#" class="btn btn-disabled btn-xs"></a>
+                {% endif %}
+            </div>
         </div>
-    </div>
     {% endif %}
 {% endblock %}

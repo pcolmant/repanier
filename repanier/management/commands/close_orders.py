@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
-from repanier import tasks
+from repanier.task import task_order
+
 
 class Command(BaseCommand):
     args = '<none>'
     help = 'Closes now orders on due date'
 
     def handle(self, *args, **options):
-		something_to_close = tasks.close_orders_now()
-		if something_to_close:
-			self.stdout.write('At least on order being closed')
-		else:
-			self.stdout.write('Nothing to close')
+        something_to_close = task_order.automaticaly_closed()
+        if something_to_close:
+            self.stdout.write('At least on order being closed')
+        else:
+            self.stdout.write('Nothing to close')

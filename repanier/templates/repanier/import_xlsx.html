@@ -1,23 +1,26 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n  %}
+{% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
 
 {% block content %}
 
-<form enctype="multipart/form-data" action="" method="post">
-    <div>
-    {% csrf_token %}
-    {{ import_xlsx_form }}
-    {{ context_instance }}
-    <p></p>
-    <p></p>
-    <p>{% trans "The importation concern :" %}</p>
-    <ul>{{ objects | unordered_list }}</ul>
-    <p></p>
-    <p></p>
-    <input type="hidden" name="action" value="import_xlsx" />
-    <button type="submit" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-    <button type="submit" name="apply" value="apply">{% trans "Execute the import" %}</button>
-    </div>
-</form>
+    <form enctype="multipart/form-data" action="" method="post">
+        <div>
+            {% csrf_token %}
+            {{ import_xlsx_form }}
+            {{ context_instance }}
+            <p></p>
+
+            <p></p>
+
+            <p>{% trans "The importation concern :" %}</p>
+            <ul>{{ objects | unordered_list }}</ul>
+            <p></p>
+
+            <p></p>
+            <input type="hidden" name="action" value="import_xlsx"/>
+            <button type="submit" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" name="apply" value="apply">{% trans "Execute the import" %}</button>
+        </div>
+    </form>
 
 {% endblock %}
