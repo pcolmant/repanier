@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-12 18:14+0100\n"
-"PO-Revision-Date: 2014-03-18 21:19+0100\n"
+"POT-Creation-Date: 2014-08-14 10:15+0200\n"
+"PO-Revision-Date: 2014-06-03 18:24+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -34,80 +34,97 @@ msgstr "Fançais"
 msgid "Hero"
 msgstr "Héro"
 
-#: ptidej_settings.py:39
+#: ptidej_settings.py:53
 msgid "Column 1"
 msgstr "Colonne 1"
 
-#: ptidej_settings.py:43
+#: ptidej_settings.py:75
 msgid "Column 2"
 msgstr "Colonne 2"
 
-#: ptidej_settings.py:47
+#: ptidej_settings.py:97
 msgid "Column 3"
 msgstr "Colonne 3"
 
-#: ptidej_settings.py:56
+#: ptidej_settings.py:122
 msgid "Content"
 msgstr "Contenu"
 
-#: ptidej_settings.py:62
+#: ptidej_settings.py:137
+msgid "Footer"
+msgstr "Pide de page"
+
+#: ptidej_settings.py:153
 msgid "info"
 msgstr "info"
 
-#: ptidej_settings.py:63
+#: ptidej_settings.py:154
 msgid "new"
 msgstr "nouveau"
 
-#: ptidej_settings.py:64
+#: ptidej_settings.py:155
 msgid "hint"
 msgstr "atteindre"
 
-#: ptidej_settings.py:68
+#: ptidej_settings.py:159
 msgid "normal"
 msgstr "normal"
 
-#: ptidej_settings.py:69
+#: ptidej_settings.py:160
 msgid "2x"
 msgstr "2x"
 
-#: ptidej_settings.py:70
+#: ptidej_settings.py:161
 msgid "3x"
 msgstr "3x"
 
-#: ptidej_settings.py:71
+#: ptidej_settings.py:162
 msgid "4x"
 msgstr "4x"
 
-#: templates/base.html:28
+#: templates/base.html:35 templates/base_wo_cms_toolbar.html:35
 msgid "Skip to main content"
 msgstr "Aller au contenu principal"
 
-#: templates/base.html:35
+#: templates/base.html:42 templates/base_wo_cms_toolbar.html:41
 msgid "Toggle navigation"
 msgstr "Basculer la navigation"
 
-#: templates/base.html:50
+#: templates/base.html:62 templates/base_wo_cms_toolbar.html:61
 msgid "Welkom"
 msgstr "Bienvenue"
 
-#: templates/base.html:52 templates/registration/logged_out.html:7
+#: templates/base.html:64 templates/base_wo_cms_toolbar.html:63
+#: templates/registration/logged_out.html:7
 msgid "Logout"
 msgstr "Deconnexion"
 
-#: templates/base.html:57 templates/registration/login.html:7
-#: templates/registration/login.html:32
+#: templates/base.html:69 templates/base_wo_cms_toolbar.html:71
+#: templates/registration/login.html:7 templates/registration/login.html:32
 msgid "Login"
 msgstr "Connexion"
 
-#: templates/base.html:61
+#: templates/base.html:74 templates/base_wo_cms_toolbar.html:76
 msgid "Language"
 msgstr "Langue"
 
-#: templates/base.html:78
+#: templates/base.html:87 templates/base_wo_cms_toolbar.html:90
+msgid ""
+"It will be easier for you to crawl this website with a newer browser. For "
+"example"
+msgstr ""
+"Votre navigateur est trop ancien pour visiter ce site confortablement. Nous "
+"vous recommandons de le mettre à jour ou d'utiliser par exemple "
+
+#: templates/base.html:87 templates/base_wo_cms_toolbar.html:90
+msgid "or"
+msgstr "ou"
+
+#: templates/base.html:95 templates/base_wo_cms_toolbar.html:99
 msgid "Contact"
 msgstr "Contact"
 
-#: templates/base.html:78
+#: templates/base.html:95 templates/base_wo_cms_toolbar.html:99
 msgid "Participer"
 msgstr "Participer"
 

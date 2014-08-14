@@ -1,19 +1,15 @@
 {% extends "base.html" %}
-{% load cms_tags %}
+{% load cms_tags i18n l10n %}
 
 {% block base_content %}
     <div class="container">
       <div class="jumbotron">
         {% placeholder "home-hero" or %}
-        <h3>Repanier</h3>
-        <p>Repanier est un outil de gestion du cycle des permamnences destiné aux groupements d'achats et aux producteurs locaux.</p>
-        <p>Contraction de repas et panier, repanier est le fruit de l'expérience des membres de plusieurs groupements d'achats</p>
-          <ul>
-          <li><a href="http://ptidej.repanier.be/">Gasath, groupe ptidej</a>, une trentaine d'acheteurs de produits locaux, de préférence bio, sur Ath</li>
-          <li><a href="http://apero.repanier.be/">Gasath, groupe apéro</a>, une trentaine d'acheteurs de produits locaux et bio sur Ath</li>
-          <li><a href="http://www.lepanierlensois.be/">Le Panier Lensois</a>, une trentaine d'acheteurs de produits locaux et bio sur Lens</li>
-          <li><a href="http://www.lebiodici.be/">Le Bio d'Ici</a>, une quinzaine de maraîchers bio regroupés pour les restaurants, collectivités locales, ...</li>
-          </ul>
+<h3>Gasath Ptidej</h3>
+<p>Bienvenue sur le site de commande du groupe Gasath Ptidej.</p>
+<p class="text-muted"><span class="glyphicon glyphicon-pushpin"></span>&nbsp;Veuillez utiliser ce site pour passer vos commandes.</p>
+<h3>Premi&egrave;re connexion</h3>
+<p class="text-muted">Cliquez sur &quot;Connexion&quot; en haut &agrave; droite de l&#39;&eacute;cran. Ensuite sur &quot;Mot de passe perdu ?&quot;. Respectez bien les majuscules/minuscules/espaces.</p>
         {% endplaceholder %}
       </div>
     </div>
@@ -24,12 +20,12 @@
 
           {% placeholder 'home-col-1'  or %}
  <div class="panel panel-warning">
-  <div class="panel-heading"><h4>Groupement et Producteur</h4></div> 
-
+  <div class="panel-heading"><h4>Tableau des permanences</h4></div> 
           <ul class="list-group">
-           <li class="list-group-item">Gérer les permanences : Offres, commandes, listes de préparations, factures.</li>
-           <li class="list-group-item">Avoir un historique simple et précis des achats, provisions et paiements.</li>
-           <li class="list-group-item">Remplacer ou simplement étendre son site web existant.</li>
+           <li class="list-group-item">Le tableau des permanences est à présent disponible à partir du menu "Permanence" en haut de l'écran, entrée "Tableau des permanences".</li>
+           <li class="list-group-item">Pour vous inscrire à une permanence, sélectionnez votre nom.</li>
+           <li class="list-group-item">Pour vous désinscrire, désélectionnez votre nom.</li>
+           <li class="list-group-item">Seules sont reprises les permanences planifiées par le/la responsable commandes.</li>
           </ul>
       </div>
           {% endplaceholder %}
@@ -37,11 +33,12 @@
         <div class="col-md-4">
           {% placeholder 'home-col-2' or %}
 <div class="panel panel-warning">
-  <div class="panel-heading"><h4>Fonctionnalités</h4></div>  
+  <div class="panel-heading"><h4>Commandes</h4></div>  
           <ul class="list-group">
-           <li class="list-group-item">Commander sans encoder de chiffres.</li>
-           <li class="list-group-item">Mettre à jour les offres, tarifs et factures hors ligne.</li>
-           <li class="list-group-item">Transmettre les commandes et factures par mail.</li>
+           <li class="list-group-item">A partir du menu "Permanence" en haut de l'écran, vous sélectionnez une permanence.</li>
+           <li class="list-group-item">Si elle est ouverte, vous pouvez modifiez votre commande jusqu'à la clôture des commandes.</li>
+           <li class="list-group-item">Un récapitulatif vous perviendra par mail au moment de la clôture.</li>
+           <li class="list-group-item">Dès qu'elle est fermée, vous ne pouvez plus modifier votre commande.</li>
           </ul>
       </div>
           {% endplaceholder %}
@@ -49,11 +46,10 @@
         <div class="col-md-4">
           {% placeholder 'home-col-3' or %} 
 <div class="panel panel-warning">
-  <div class="panel-heading"><h4>Hébergement</h4></div> 
+  <div class="panel-heading"><h4>Comptabilité</h4></div> 
           <ul class="list-group">
-          <li class="list-group-item">À prix coûtant en mutualisation sur notre plateforme. Vous n'avez pas besoin de compétence IT.</li>
-          <li class="list-group-item">Chez votre hébergeur. Vous avez besoin de compétences IT.</li>
-          <li class="list-group-item">Projet <a href="http://opensource.org/licenses/GPL-3.0">open source (GPL-3.0)</a></li>
+          <li class="list-group-item">Connecté, le solde de votre compte est affiché dans le menu "Mon solde" en haut de l'écran.</li>
+          <li class="list-group-item">En cliquant sur votre solde vous accédez à l'historique de vos achats et versements depuis le 1/1/2014.</li>
           </ul>
       </div>
           {% endplaceholder %}

@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
+import os
+
 from settings import *
 
-import os
-import sys
 gettext = lambda s: s
 PROJECT_PATH = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 os.sys.path.insert(0, os.path.dirname(PROJECT_DIR))
 
-###################### DEBUG
+# ##################### DEBUG
 
 # Defined into /etc/uwsgi/apps-available/*.ini
-DEBUG = True if os.getenv('DJANGO_SETTINGS_MODULE_DEBUG','') == 'True' else False
+DEBUG = True if os.getenv('DJANGO_SETTINGS_MODULE_DEBUG', '') == 'True' else False
 TEMPLATE_DEBUG = DEBUG
 ADMINS = (
     (
-        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME',''), 
-        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
+        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME', ''),
+        os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL', '')
     ),
 )
-SERVER_EMAIL = os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
+SERVER_EMAIL = os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL', '')
 # MANAGERS = (
 #     (
 #         os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME',''), 
@@ -30,21 +30,23 @@ SERVER_EMAIL = os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL','')
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_NAME',''),                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_NAME', ''),  # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
-        'USER': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_USER',''),
-        'PASSWORD': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PASSWORD',''),
+        'USER': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_USER', ''),
+        'PASSWORD': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PASSWORD', ''),
         # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'HOST': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_HOST',''),  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PORT',''),                      # Set to empty string for default.
+        'HOST': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_HOST', ''),
+        # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': os.getenv('DJANGO_SETTINGS_MODULE_DATABASE_PORT', ''),  # Set to empty string for default.
     }
 }
-EMAIL_HOST = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST','')
-EMAIL_HOST_USER = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_USER','')
-EMAIL_HOST_PASSWORD = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_PASSWORD','')
-EMAIL_PORT = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_PORT','')
-EMAIL_USE_TLS = True if os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_USE_TLS','') == 'True' else False
+EMAIL_HOST = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST', '')
+EMAIL_HOST_USER = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_PORT', '')
+EMAIL_USE_TLS = True if os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_USE_TLS', '') == 'True' else False
 # if DEBUG:
 #     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ###################### I18N
@@ -70,7 +72,7 @@ LANGUAGES = [
 CMS_LANGUAGES = {
     'default': {
         'fallbacks': ['fr', 'en', 'nl'],
-        'redirect_on_fallback':True,
+        'redirect_on_fallback': True,
         'public': False,
         'hide_untranslated': False,
     }
@@ -110,7 +112,7 @@ MIDDLEWARE_CLASSES = (
     'cms.middleware.page.CurrentPageMiddleware',
     'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
-    'cms.middleware.language.LanguageCookieMiddleware',
+    # 'cms.middleware.language.LanguageCookieMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -122,7 +124,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'cms.context_processors.cms_settings',
     # 'cms.context_processors.media',
-    'sekizai.context_processors.sekizai',  
+    'sekizai.context_processors.sekizai',
 )
 
 INSTALLED_APPS = (
@@ -135,47 +137,33 @@ INSTALLED_APPS = (
     'django.contrib.sitemaps',
     'django.contrib.formtools',
 
-    # 'cms.plugins.file',
-    # 'cms.plugins.flash',
-    # 'cms.plugins.googlemap',
-    # 'cms.plugins.picture',
-    # 'cms.plugins.teaser',
-    # 'djangocms_link',
-    # 'djangocms_snippet',
-    # 'djangocms_style',
-    # 'djangocms_column',
-    # # 'djangocms_grid',
-    # 'djangocms_oembed',
-    # 'djangocms_table',
-    # 'djangocms_googlemap',
-    # 'djangocms_accordion',
+
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
-    # 'cms.plugins.video',
 
     'cms',
     'mptt',
     'menus',
     'south',
     'sekizai',
-    'djangocms_admin_style', # note this needs to be above 
-                            # the 'django.contrib.admin' entry
+    'djangocms_admin_style',  # note this needs to be above
+    # the 'django.contrib.admin' entry
     'django.contrib.admin',
     'adminsortable',
     # 'hvad',
     'filer',
     'easy_thumbnails',
+
     'cmsplugin_filer_file',
     'cmsplugin_filer_folder',
     'cmsplugin_filer_image',
     'cmsplugin_filer_video',
+    'cmsplugin_filer_link',
     'reversion',
     'password_reset',
 
-    # 'wkhtmltopdf', # --> PDF
-) 
+)
 
-# WKHTMLTOPDF_CMD = '/usr/bin/wkhtmltopdf.sh' # --> PDF
-CMS_PERMISSION = False # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware' 
+CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
 # CMS_PUBLIC_FOR = 'staff'
 CMS_SHOW_START_DATE = False
@@ -188,38 +176,31 @@ LOGIN_URL = "/go_repanier/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/leave_repanier/"
 
-
-# CKEDITOR_SETTINGS = {
-#         'language': '{{ language }}',
-#         'toolbar': 'HTMLField',
-#         'skin': 'moono',
-#         'toolbarCanCollapse' : False,
-# #        'stylesSet' : 'default:%sckeditor/styles.js' % STATIC_URL,
-#         # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
-#         'stylesSet' : [],
-#         'extraPlugins' : 'stylesheetparser',
-#         'contentsCss' : '%sjs/bootstrap.css',
-#         'autoGrow_onStartup' :  True,
-# #        'height' : '450px',
-#         'emailProtection' : '2',
-#         'toolbar_CMS2': [
-#                 ['Undo', 'Redo'],
-#                 ['cmsplugins'],
-#                 # ['Format', '-','TextColor', 'BGColor', '-', 'Bold', 'Italic', 'Underline', '-', 
-#                 # ['Styles', '-','TextColor', 'Bold', 'Italic', '-', 'RemoveFormat', 'PasteText'],
-#                 ['-','TextColor', 'Bold', 'Italic', '-', 'RemoveFormat', 'PasteText'],
-#                 ['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
-#                 ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
-#                 ['Source'],['Maximize', '-', 'ShowBlocks'],
-#         ],
-# }
-
 CKEDITOR_SETTINGS = {
-        'language': '{{ language }}',
-        'toolbar': 'HTMLField',
+    'language': '{{ language }}',
+    'toolbar': 'HTMLField',
+    # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
+    # 'stylesSet' : [],
+    'extraPlugins': 'cmsplugins,templates',
+    'format_tags': 'p;h1;h2;h3;h4;h5;blockquote;mutted;success;info;danger;heart;infosign;warningsign;pushpin;div',
+    'format_blockquote': {'element': 'blockquote', 'name': 'Blockquote'},
+    'format_heart': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
+    'format_infosign': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-info-sign'}},
+    'format_warningsign': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-warning-sign'}},
+    'format_pushpin': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-pushpin'}},
+    'format_mutted': {'element': 'p', 'attributes': {'class': 'text-muted'}, 'name': 'Mutted'},
+    'format_success': {'element': 'p', 'attributes': {'class': 'bg-success'}, 'name': 'Success'},
+    'format_info': {'element': 'p', 'attributes': {'class': 'bg-info'}, 'name': 'Info'},
+    'format_danger': {'element': 'p', 'attributes': {'class': 'bg-danger'}, 'name': 'Danger'},
+    # format_p = { element: 'p', attributes: { 'class': 'normalPara' } };
+    # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'} };
+    # 'contentsCss' : '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
+    'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
+    # 'extraAllowedContent' : '*(*)',
+    # 'removeFormatTags' : 'b,big,code,del,dfn,em,font,i,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var'
 }
 
-TEXT_SAVE_IMAGE_FUNCTION='cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
+TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True
@@ -251,11 +232,12 @@ SESSION_FILE_PATH = '/var/tmp/django_session'
 SOUTH_TESTS_MIGRATE = DEBUG
 
 ##################### Repanier
+AUTH_USER_MODEL = 'auth.User'
 AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
 # ADMIN_LOGIN = 'pise'
 # ADMIN_PASSWORD = 'raspberry'
 INSTALLED_APPS += (
-	'repanier',
+'repanier',
 )
 
 
@@ -277,11 +259,11 @@ INSTALLED_APPS += (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 STATICFILES_FINDERS += (
-     'compressor.finders.CompressorFinder',
+    'compressor.finders.CompressorFinder',
 )
 
 COMPRESS_ENABLED = True
@@ -290,30 +272,30 @@ COMPRESS_STORAGE = 'compressor.storage.GzipCompressorFileStorage'
 COMPRESS_PARSER = "compressor.parser.HtmlParser"
 COMPRESS_OFFLINE = False
 
-    # COMPRESS_YUI_BINARY = "yui-compressor"
-    # COMPRESS_CLOSURE_COMPILER_BINARY = "/usr/local/bin/node /usr/local/bin/uglifyjs"
-    # COMPRESS_CLOSURE_COMPILER_ARGUMENTS = '--compress'
+# COMPRESS_YUI_BINARY = "yui-compressor"
+# COMPRESS_CLOSURE_COMPILER_BINARY = "/usr/local/bin/node /usr/local/bin/uglifyjs"
+# COMPRESS_CLOSURE_COMPILER_ARGUMENTS = '--compress'
 
-    # COMPRESS_CSS_FILTERS = [
-    #    'compressor.filters.yui.YUICSSFilter',
-    #    'compressor.filters.css_default.CssAbsoluteFilter',
-    #    'compressor.filters.template.TemplateFilter'
-    #    ]
+# COMPRESS_CSS_FILTERS = [
+#    'compressor.filters.yui.YUICSSFilter',
+#    'compressor.filters.css_default.CssAbsoluteFilter',
+#    'compressor.filters.template.TemplateFilter'
+#    ]
 
-    # COMPRESS_JS_FILTERS = [
-    #    'compressor.filters.yui.YUIJSFilter',
-    #     'compressor.filters.closure.ClosureCompilerFilter',
-    #    'compressor.filters.jsmin.JSMinFilter',
-    #    'compressor.filters.template.TemplateFilter'
-    #    ]
+# COMPRESS_JS_FILTERS = [
+#    'compressor.filters.yui.YUIJSFilter',
+#     'compressor.filters.closure.ClosureCompilerFilter',
+#    'compressor.filters.jsmin.JSMinFilter',
+#    'compressor.filters.template.TemplateFilter'
+#    ]
 
-    # COMPRESS_PRECOMPILERS = (
-    #    ('text/coffeescript', 'coffee --compile --stdio'),
-    #    ('text/less', 'lessc {infile} {outfile}'),
-    #    ('text/x-sass', 'sass {infile} {outfile}'),
-    #    ('text/x-scss', 'sass --scss {infile} {outfile}'),
-    #    ('text/stylus', 'stylus < {infile} > {outfile}'),
-    # )
+# COMPRESS_PRECOMPILERS = (
+#    ('text/coffeescript', 'coffee --compile --stdio'),
+#    ('text/less', 'lessc {infile} {outfile}'),
+#    ('text/x-sass', 'sass {infile} {outfile}'),
+#    ('text/x-scss', 'sass --scss {infile} {outfile}'),
+#    ('text/stylus', 'stylus < {infile} > {outfile}'),
+# )
 
 ###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
 
@@ -333,9 +315,13 @@ CACHES = {
 }
 
 CMS_CACHE_DURATIONS = {
-    'content' : 300, # default 60
-    'menus' : 3600, # default 3600
-    'permissions' : 3600 # default: 3600
+    'content': 300,  # default 60
+    'menus': 3600,  # default 3600
+    'permissions': 3600  # default: 3600
+}
+
+SOUTH_MIGRATION_MODULES = {
+    'easy_thumbnails': 'easy_thumbnails.south_migrations',
 }
 ###################### EASYMAP
 #EASY_MAPS_CENTER = ( 50.630545,3.776955 )

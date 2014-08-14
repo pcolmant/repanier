@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-11 22:59+0100\n"
+"POT-Creation-Date: 2014-08-14 10:15+0200\n"
 "PO-Revision-Date: 2014-03-18 21:20+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -189,6 +189,5 @@ msgid "Tomorrow"
 msgstr "Demain"
 
 #: collect-static/cms/js/modules/cms.changeform.js:60
-#: collect-static/cms/js/plugins/cms.changeform.js:60
 msgid "Are you sure you want to change tabs without saving the page first?"
 msgstr "Etes-vous sur de changer d'onglet sans avoir d'abord sauvegardé?"

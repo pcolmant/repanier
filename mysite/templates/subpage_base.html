@@ -1,8 +1,63 @@
 {% extends 'base.html' %}
-{% load cms_tags %}
-
+{% load menu_tags cms_tags sekizai_tags %}
 {% block base_content %}
+{% addtoblock "css" %}
+<style type="text/css">
+    /* sidebar */
+    .bs-docs-sidebar {
+        padding-left: 20px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    /* all links */
+    .bs-docs-sidebar .nav>li>a {
+		font-weight: bold;
+        border-left: 2px solid transparent;
+    }
+    /* nested links */
+    .bs-docs-sidebar .nav .nav>li>a {
+    	font-weight: normal;
+    }
+    .bs-docs-sidebar .nav .nav .nav>li>a {
+    	font-weight: lighter;
+        padding-left: 25px;
+		font-size: 14px;
+    }
+    /* active & hover links */
+    .bs-docs-sidebar .nav>.active>a, 
+    .bs-docs-sidebar .nav>li>a:hover, 
+    .bs-docs-sidebar .nav>li>a:focus,
+    /* selected links */
+    .bs-docs-sidebar .nav>li>a.bs-docs-sidebar-active
+    {
+        color: #51a351;                 
+        text-decoration: none;          
+        background-color: transparent;  
+        border-left: 2px solid #51a351;
+    }
+</style>
+{% endaddtoblock %}
+<div class="container">
+<div class="row">
+<div class="col-sm-3 bs-docs-sidebar">
+<ul class="nav nav-stacked fixed" id="sidebar">
+	{% show_menu 1 4 0 4 "menu/menu_subpage.html" %}
+</ul>
+</div>
+<div class="col-sm-9">
+<h3>{% page_attribute "page_title" %}</h3>
+{# {% show_breadcrumb 1 %} #}
 {% block sub_content %}{% endblock %}
+</div>
+</div>
+<div class="row visible-xs-block">
+<div class="col-sm-3 bs-docs-sidebar">
+<ul class="nav nav-stacked fixed" id="sidebar">
+    {% show_menu 1 4 0 4 "menu/menu_subpage.html" %}
+</ul>
+</div>
+<div class="col-sm-9">
+</div>
+</div>
+</div>
 {% endblock %}
-
-

@@ -7,8 +7,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% addtoblock "css" %}<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">{% endaddtoblock %}
-    {% addtoblock "css" %}<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">{% endaddtoblock %}
+    {# <!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"> --> #}
+    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
+    {# <!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css"> --> #}
+    {# <!-- <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap-theme.min.css"> --> #}
     {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
     {% addtoblock "css" %}
     <!--[if lt IE 9]>
@@ -32,7 +34,7 @@
   <body>
     <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
     {% cms_toolbar %}
-    <!-- Header and Nav -->
+    {# <!-- Header and Nav --> #}
     <div class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
@@ -44,11 +46,16 @@
           </button>
         </div>
         <div class="collapse navbar-collapse">
-          <!-- Left Nav Section -->
-          <ul class="nav navbar-nav">
-            {% show_menu 0 100 100 100 %}
+          {# <!-- Left Nav Section --> #}
+          <ul class="nav navbar-nav navbar-left">
+            <li>
+              <a href="/"><span class="glyphicon glyphicon glyphicon-home"></span></a>
+            </li>
           </ul>
-          <!-- Right Nav Section -->
+          <ul class="nav navbar-nav">
+            {% show_menu 0 1 1 1 %}
+          </ul>
+          {# <!-- Right Nav Section --> #}
           <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
             <li class="dropdown">
@@ -56,9 +63,6 @@
                 <ul class="dropdown-menu">
                   <li><a href="{% url "logout_form" %}">{% trans "Logout" %}</a></li>
                 </ul>
-            </li>
-            <li class="dropdown">
-              <a href="?offeritem=purchased"><span id="my_basket">{{ prepared_amount }}</span> &euro; <span class="glyphicon glyphicon-shopping-cart"></span></a>
             </li>
             {% else %}
             <li class="dropdown">
@@ -74,24 +78,24 @@
             </li>
             {% endif %} 
           </ul> 
-        </div><!--/.nav-collapse -->
+        </div>
       </div>
     </div>
-    <!-- Begin page content -->
     <a name="content"></a>
+    <div class="container">
     <!--[if lt IE 9]>
       <h1>{% trans "It will be easier for you to crawl this website with a newer browser. For example" %} <a href="http://www.mozilla.org/fr/">Firefox</a> {% trans "or" %} <a href="http://www.google.be/intl/fr/chrome/browser/">Chrome</a>.</h1>
     <![endif]-->
     {% block base_content%}{% endblock %}
-    <!-- Footer -->
-    <div id="footer" class="container">
-      <nav class="navbar navbar-default navbar-fixed-bottom navbar-content-center text-muted">
-        <center>
+    </div>
+    <div class="footer">
+      <div class="container">
+        <p class="text-muted">
           {% block footer %}
-            {% placeholder 'footer' or %}{% trans "Contact" %} : coordi@repanier.be<span  class="hidden-xs"> | {% trans "Participer" %} : <a href="https://github.com/pcolmant/repanier">github</a></span>{% endplaceholder %}
+            {% static_placeholder 'footer' or %}{% trans "Contact" %} : coordi@repanier.be<span  class="hidden-xs"> | {% trans "Participer" %} : <a href="https://github.com/pcolmant/repanier">github</a></span>{% endstatic_placeholder %}
           {% endblock %}
-          </center>
-      </nav>
+        </p>
+      </div>
     </div>
     {% addtoblock "js" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>{% endaddtoblock %}
     {% addtoblock "js" %}<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>{% endaddtoblock %}
