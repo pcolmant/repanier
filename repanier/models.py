@@ -82,6 +82,10 @@ import uuid
 # ALTER TABLE repanier_offeritem ADD COLUMN customer_alert_order_quantity numeric(6,3);
 
 
+# ALTER TABLE repanier_permanence RENAME automaticaly_closed  TO automatically_closed;
+
+
+
 from const import *
 from decimal import *
 from django.conf import settings
@@ -195,7 +199,7 @@ class Producer(models.Model):
 
     price_list_multiplier = models.DecimalField(
         _("price_list_multiplier"),
-        help_text=_('This multiplier is applied to each price automaticaly imported/pushed.'),
+        help_text=_('This multiplier is applied to each price automatically imported/pushed.'),
         default=0, max_digits=4, decimal_places=2)
     vat_level = models.CharField(
         max_length=3,
@@ -633,9 +637,9 @@ class Permanence(models.Model):
     status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANIFIED,
+        default=PERMANENCE_PLANNED,
         verbose_name=_("permanence_status"),
-        help_text=_('status of the permanence from planified, orders opened, orders closed, send, done'))
+        help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
     distribution_date = models.DateField(_("distribution_date"), db_index=True)
     offer_description = HTMLField(_("offer_description"),
                                   help_text=_(
@@ -650,8 +654,8 @@ class Permanence(models.Model):
         'Producer', null=True, blank=True,
         verbose_name=_("producers"))
 
-    automaticaly_closed = models.BooleanField(
-        _("automaticaly_closed"), default=False)
+    automatically_closed = models.BooleanField(
+        _("automatically_closed"), default=False)
 
     is_done_on = models.DateTimeField(
         _("is_done_on"), blank=True, null=True)
@@ -666,7 +670,7 @@ class Permanence(models.Model):
 
     def get_producers(self):
         if self.id:
-            if self.status == PERMANENCE_PLANIFIED:
+            if self.status == PERMANENCE_PLANNED:
                 changelist_url = urlresolvers.reverse(
                     'admin:repanier_product_changelist',
                 )
@@ -840,7 +844,7 @@ class OfferItem(models.Model):
     # def get_total_order_quantity(self):
     #   total_order_quantity = 0
     #   if self.id:
-    #     if self.permanence.status<=PERMANENCE_PLANIFIED:
+    #     if self.permanence.status<=PERMANENCE_PLANNED:
     #       pass
     #     elif self.permanence.status <= PERMANENCE_SEND:
     #       result_set = Purchase.objects.filter(

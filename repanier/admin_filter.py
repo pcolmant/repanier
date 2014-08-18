@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from const import *
-
 from django.utils.translation import ugettext_lazy as _
-from repanier.models import Customer
-from repanier.models import LUT_DepartmentForCustomer
-from repanier.models import Permanence
-from repanier.models import Producer
-from repanier.models import Product
+
+from const import *
+from models import Customer
+from models import LUT_DepartmentForCustomer
+from models import Permanence
+from models import Producer
+from models import Product
 
 # Filters in the right sidebar of the change list page of the admin
 from django.contrib.admin import SimpleListFilter

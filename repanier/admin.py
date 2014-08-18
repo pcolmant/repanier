@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
 import uuid
 
 try:
@@ -7,7 +6,7 @@ try:
 except ImportError:
     from urlparse import parse_qsl
 
-from const import *
+from re import compile
 from tools import *
 from admin_filter import *
 from django.contrib import admin
@@ -22,35 +21,36 @@ from django import forms
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
-from repanier.models import LUT_ProductionMode
-from repanier.models import LUT_DepartmentForCustomer
-from repanier.models import LUT_PermanenceRole
+from models import LUT_ProductionMode
+from models import LUT_DepartmentForCustomer
+from models import LUT_PermanenceRole
 
-from repanier.models import Producer
-from repanier.models import Permanence
-from repanier.models import Customer
-from repanier.models import Staff
-from repanier.models import Product
-from repanier.models import PermanenceBoard
-from repanier.models import OfferItem
-from repanier.models import PermanenceInPreparation
-from repanier.models import PermanenceDone
-from repanier.models import Purchase
-from repanier.models import BankAccount
-from repanier.views import render_response
+from models import Producer
+from models import Permanence
+from models import Customer
+from models import Staff
+from models import Product
+from models import PermanenceBoard
+from models import OfferItem
+from models import PermanenceInPreparation
+from models import PermanenceDone
+from models import Purchase
+from models import BankAccount
+from views import render_response
 
-from repanier.xslx import xslx_offer
-from repanier.xslx import xslx_order
-from repanier.xslx import xslx_product
-from repanier.xslx import xslx_invoice
-from repanier.xslx import xslx_purchase
+from xslx import xslx_offer
+from xslx import xslx_order
+from xslx import xslx_product
+from xslx import xslx_invoice
+from xslx import xslx_purchase
 
 from menus.menu_pool import menu_pool
 
-from repanier.task import task_invoice
-from repanier.task import task_order
-from repanier.task import task_product
-from repanier.task import task_purchase
+from task import task_invoice
+from task import task_order
+from task import task_product
+from task import task_purchase
+
 
 # Filters in the right sidebar of the change list page of the admin
 class ReadOnlyAdmin(admin.ModelAdmin):
@@ -71,7 +71,6 @@ class ReadOnlyAdmin(admin.ModelAdmin):
             return False
         return super(ReadOnlyAdmin, self).has_delete_permission(request, obj=obj)
 
-
     def get_actions(self, request):
         actions = super(ReadOnlyAdmin, self).get_actions(request)
         if request.user.groups.filter(name=READ_ONLY_GROUP).count() != 0:
@@ -83,34 +82,34 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 
 
 # LUT
-class LUT_ProductionModeAdmin(ReadOnlyAdmin):
+class LUTProductionModeAdmin(ReadOnlyAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
     list_max_show_all = 17
 
 
-admin.site.register(LUT_ProductionMode, LUT_ProductionModeAdmin)
+admin.site.register(LUT_ProductionMode, LUTProductionModeAdmin)
 
 
-class LUT_DepartmentForCustomerAdmin(ReadOnlyAdmin):
+class LUTDepartmentForCustomerAdmin(ReadOnlyAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
     list_max_show_all = 17
 
 
-admin.site.register(LUT_DepartmentForCustomer, LUT_DepartmentForCustomerAdmin)
+admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
 
 
-class LUT_PermanenceRoleAdmin(ReadOnlyAdmin):
+class LUTPermanenceRoleAdmin(ReadOnlyAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
     list_max_show_all = 17
 
 
-admin.site.register(LUT_PermanenceRole, LUT_PermanenceRoleAdmin)
+admin.site.register(LUT_PermanenceRole, LUTPermanenceRoleAdmin)
 
 
 class ProducerAdmin(ReadOnlyAdmin):
@@ -151,6 +150,7 @@ class ProducerAdmin(ReadOnlyAdmin):
 
 admin.site.register(Producer, ProducerAdmin)
 
+
 # Custom User
 class UserDataForm(forms.ModelForm):
     username = forms.CharField(label=_('Username'), max_length=30,
@@ -158,7 +158,7 @@ class UserDataForm(forms.ModelForm):
                                    'Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters'
                                ),
                                validators=[
-                                   validators.RegexValidator(re.compile('^[\w.@+-]+$'), _('Enter a valid username.'),
+                                   validators.RegexValidator(compile('^[\w.@+-]+$'), _('Enter a valid username.'),
                                                              'invalid')
                                ])
     email = forms.EmailField(label=_('Email'))
@@ -180,7 +180,7 @@ class UserDataForm(forms.ModelForm):
     def clean(self, *args, **kwargs):
         cleaned_data = super(UserDataForm, self).clean(*args, **kwargs)
         # The Staff has no first_name or last_name because it's a function with login/pwd.
-        # A Customer with a first_name and last_name is responsible of this funcition.
+        # A Customer with a first_name and last_name is responsible of this function.
         customer_form = 'short_basket_name' in self.fields
         if any(self.errors):
             if 'first_name' in self._errors:
@@ -224,7 +224,7 @@ class UserDataForm(forms.ModelForm):
             except User.DoesNotExist:
                 pass
         # Check that the username is not already used
-        if user != None:
+        if user is not None:
             if initial_username != user.username:
                 self.error('email', _('The given email is used by another user'))
         user = None
@@ -232,21 +232,21 @@ class UserDataForm(forms.ModelForm):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             pass
-        if user != None:
+        if user is not None:
             if initial_username != user.username:
                 self.error(username_field_name, user_error2)
         return cleaned_data
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
-        change = (self.instance.id != None)
+        change = (self.instance.id is not None)
         username = self.data['username']
         email = self.data['email']
         # password = self.data['password1']
         first_name = self.data['first_name']
         last_name = self.data['last_name']
         user = None
-        if self.read_only == False:
+        if not self.read_only:
             # Update allowed, this is not a read only user
             if change:
                 user = User.objects.get(id=self.instance.user_id)
@@ -328,7 +328,7 @@ class CustomerWithUserDataAdmin(ReadOnlyAdmin):
         return form
 
     def save_model(self, request, customer, form, change):
-        if form.read_only == False:
+        if not form.read_only:
             # Update allowed, this is not a read only user
             customer.user = form.user
             form.user.is_staff = False
@@ -339,6 +339,7 @@ class CustomerWithUserDataAdmin(ReadOnlyAdmin):
 
 
 admin.site.register(Customer, CustomerWithUserDataAdmin)
+
 
 # Staff
 class StaffWithUserDataForm(UserDataForm):
@@ -395,7 +396,7 @@ class StaffWithUserDataAdmin(ReadOnlyAdmin):
     def save_model(self, request, staff, form, change):
         # TODO Check there is not more that one is_reply_to_order_email set to True
         # TODO Check there is not more that one is_reply_to_invoice_email set to True
-        if form.read_only == False:
+        if not form.read_only:
             # Update allowed, this is not a read only user
             staff.user = form.user
             form.user.is_staff = True
@@ -531,6 +532,7 @@ class ProductAdmin(ReadOnlyAdmin):
 
 admin.site.register(Product, ProductAdmin)
 
+
 # Permanence
 class PermanenceBoardInline(admin.TabularInline):
     model = PermanenceBoard
@@ -563,7 +565,7 @@ class PermanenceDataForm(forms.ModelForm):
         distribution_date = self.cleaned_data.get("distribution_date")
         initial_short_name = self.instance.short_name
         short_name = self.cleaned_data.get("short_name")
-        if (initial_distribution_date != distribution_date or initial_short_name != short_name):
+        if initial_distribution_date != distribution_date or initial_short_name != short_name:
             permanence_already_exist = False
             try:
                 Permanence.objects.get(distribution_date=distribution_date, short_name=short_name)
@@ -586,8 +588,8 @@ class PermanenceInPreparationAdmin(ReadOnlyAdmin):
     form = PermanenceDataForm
     fields = (
         'distribution_date',
-        'short_name',  # ('status', 'automaticaly_closed'),
-        'automaticaly_closed',
+        'short_name',  # ('status', 'automatically_closed'),
+        'automatically_closed',
         'offer_description',  # 'order_description',
         'producers'
     )
@@ -607,21 +609,21 @@ class PermanenceInPreparationAdmin(ReadOnlyAdmin):
         'export_xlsx_order',
         'close_and_send_order',
         'delete_purchases',
-        'back_to_planified',
+        'back_to_planned',
         'generate_calendar'
     ]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
             status = obj.status
-            if status > PERMANENCE_PLANIFIED:
+            if status > PERMANENCE_PLANNED:
                 return ['status', 'is_created_on', 'is_updated_on', 'producers']
         return ['status', 'is_created_on', 'is_updated_on']
 
     def export_xlsx_offer(self, request, queryset):
         return xslx_offer.admin_export(request, queryset)
 
-    export_xlsx_offer.short_description = _("Export planified XLSX")
+    export_xlsx_offer.short_description = _("Export planned XLSX")
 
 
     def export_xlsx_order(self, request, queryset):
@@ -669,17 +671,17 @@ class PermanenceInPreparationAdmin(ReadOnlyAdmin):
 
     close_and_send_order.short_description = _('close and send orders')
 
-    def back_to_planified(self, request, queryset):
+    def back_to_planned(self, request, queryset):
         user_message = _("Action canceled by the user.")
         user_message_level = messages.WARNING
         if 'apply' in request.POST:
-            user_message, user_message_level = task_order.admin_back_to_planified(request, queryset)
+            user_message, user_message_level = task_order.admin_back_to_planned(request, queryset)
         elif 'cancel' not in request.POST:
             opts = self.model._meta
             app_label = opts.app_label
             return render_response(request, 'repanier/confirm_admin_action.html', {
-                'title': _("Please, confirm the action : back to planified"),
-                'action': 'back_to_planified',
+                'title': _("Please, confirm the action : back to planned"),
+                'action': 'back_to_planned',
                 'queryset': queryset[:1],
                 "app_label": app_label,
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
@@ -687,7 +689,7 @@ class PermanenceInPreparationAdmin(ReadOnlyAdmin):
         self.message_user(request, user_message, user_message_level)
         return None
 
-    back_to_planified.short_description = _('back to planified')
+    back_to_planned.short_description = _('back to planned')
 
     def delete_purchases(self, request, queryset):
         user_message = _("Action canceled by the user.")
@@ -764,7 +766,7 @@ class PermanenceDoneAdmin(ReadOnlyAdmin):
         'short_name',
         'invoice_description',  # 'status'
     )
-    readonly_fields = ('status', 'is_created_on', 'is_updated_on', 'automaticaly_closed')
+    readonly_fields = ('status', 'is_created_on', 'is_updated_on', 'automatically_closed')
     exclude = ['offer_description', ]
     list_per_page = 10
     list_max_show_all = 10
@@ -802,7 +804,7 @@ class PermanenceDoneAdmin(ReadOnlyAdmin):
         user_message_level = messages.WARNING
         if 'apply' in request.POST:
             permanence_id = request.POST.get('permanence', None)
-            if permanence_id != None:
+            if permanence_id is not None:
                 producers_to_be_paid = []
                 if admin.ACTION_CHECKBOX_NAME in request.POST:
                     # List of PK's of the selected models
@@ -820,7 +822,7 @@ class PermanenceDoneAdmin(ReadOnlyAdmin):
                                                                        customer__isnull=True).order_by('-id').first()
                     previous_latest_total_id = previous_latest_total.id if previous_latest_total else 0
                     return render_response(request, 'repanier/confirm_admin_bank_movement.html', {
-                        'title': _("Please make the following paiments, whose bank movements have been generated"),
+                        'title': _("Please make the following payments, whose bank movements have been generated"),
                         'action': 'generate_invoices',
                         'permanence': permanence,
                         'queryset': BankAccount.objects.filter(id__gt=previous_latest_total_id, producer__isnull=False,
@@ -926,7 +928,7 @@ class PermanenceDoneAdmin(ReadOnlyAdmin):
 
     def save_related(self, request, form, formsets, change):
         if request.user.groups.filter(name=READ_ONLY_GROUP).count() == 0:
-            super(PermanenceInPreparationAdmin, self).save_related(request, form, formsets, change)
+            super(PermanenceDoneAdmin, self).save_related(request, form, formsets, change)
         else:
             for formset in formsets:
                 # option.py -> construct_change_message doesn't test the presence of those array not created at form initialisation...
@@ -974,6 +976,10 @@ class PurchaseAdmin(ReadOnlyAdmin):
     search_fields = ('customer__short_basket_name', 'long_name')
     actions = []
 
+    def __init__(self, model, admin_site):
+        super(PurchaseAdmin, self).__init__(model, admin_site)
+        self.q_previous_order = 0
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
             status = obj.permanence.status
@@ -1019,7 +1025,6 @@ class PurchaseAdmin(ReadOnlyAdmin):
             permanence.widget.can_add_related = False
             customer.widget.can_add_related = False
             product.widget.can_add_related = False
-            self.q_previous_order = 0
 
             if obj:
                 self.q_previous_order = obj.quantity
@@ -1033,7 +1038,7 @@ class PurchaseAdmin(ReadOnlyAdmin):
                 product.queryset = Product.objects.filter(
                     id=obj.product_id)
             else:
-
+                self.q_previous_order = 0
                 if permanence_id:
                     permanence.empty_label = None
                     permanence.queryset = Permanence.objects.filter(
@@ -1067,13 +1072,14 @@ class PurchaseAdmin(ReadOnlyAdmin):
         # obj.preformed_by = request.user
         # obj.ip_address = utils.get_client_ip(request)
         if request.user.groups.filter(name=READ_ONLY_GROUP).count() == 0:
-            if purchase.offer_item == None:
+            offer_item = purchase.offer_item
+            if purchase.offer_item is None:
                 offer_item = OfferItem.objects.filter(permanence_id=purchase.permanence_id,
                                                       product_id=purchase.product_id).order_by().first()
                 purchase.offer_item = offer_item
                 purchase.producer = purchase.product.producer
                 purchase.distribution_date = purchase.permanence.distribution_date
-            if purchase.offer_item != None:
+            if purchase.offer_item is not None:
                 if offer_item.limit_to_alert_order_quantity:
                     offer_item = OfferItem.objects.select_for_update(nowait=True).get(id=purchase.offer_item_id)
                     offer_item.customer_alert_order_quantity += self.q_previous_order
@@ -1102,6 +1108,7 @@ class PurchaseAdmin(ReadOnlyAdmin):
 
 admin.site.register(Purchase, PurchaseAdmin)
 
+
 # Accounting
 class BankAccountDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -1119,8 +1126,8 @@ class BankAccountDataForm(forms.ModelForm):
         initial_customer = self.instance.customer
         initial_producer = self.instance.producer
         if not customer and not producer:
-            if initial_id != None:
-                if initial_customer == None and initial_producer == None:
+            if initial_id is not None:
+                if initial_customer is None and initial_producer is None:
                     pass
                 else:
                     self.error('customer', _('Either a customer or a producer must be given.'))
@@ -1162,16 +1169,16 @@ class BankAccountAdmin(ReadOnlyAdmin):
             'is_recorded_on_customer_invoice', 'is_recorded_on_producer_invoice'
         ]
         if obj:
-            if (obj.is_recorded_on_customer_invoice != None or obj.is_recorded_on_producer_invoice != None) or (
-                            obj.customer == None and obj.producer == None):
+            if (obj.is_recorded_on_customer_invoice is not None or obj.is_recorded_on_producer_invoice is not None) or (
+                            obj.customer is None and obj.producer is None):
                 readonly_fields.append('operation_date')
                 readonly_fields.append('bank_amount_in')
                 readonly_fields.append('bank_amount_out')
-                if obj.customer == None:
+                if obj.customer is None:
                     readonly_fields.append('customer')
-                if obj.producer == None:
+                if obj.producer is None:
                     readonly_fields.append('producer')
-                if obj.customer == None and obj.producer == None:
+                if obj.customer is None and obj.producer is None:
                     readonly_fields.append('operation_comment')
                 return readonly_fields
         return readonly_fields
@@ -1220,7 +1227,7 @@ class BankAccountAdmin(ReadOnlyAdmin):
         if request.user.groups.filter(name=READ_ONLY_GROUP).count() == 0:
             if not change:
                 # create
-                if bank_account.producer == None and bank_account.customer == None:
+                if bank_account.producer is None and bank_account.customer is None:
                     # You may only insert the first latest bank total at initialisation of the website
                     bank_account.operation_status = BANK_LATEST_TOTAL
             super(BankAccountAdmin, self).save_model(request, bank_account, form, change)

@@ -22,10 +22,10 @@ def export(permanence, wb=None):
         ws = wb.get_active_sheet()
     else:
         ws = wb.create_sheet()
-    worksheet_setup_landscape_a4(ws, unicode(_("Planified")), unicode(permanence))
+    worksheet_setup_landscape_a4(ws, unicode(_("Planned")), unicode(permanence))
     row_num = 0
 
-    if permanence.status == PERMANENCE_PLANIFIED:
+    if permanence.status == PERMANENCE_PLANNED:
 
         producers_in_this_permanence = Producer.objects.filter(
             permanence=permanence, is_active=True)

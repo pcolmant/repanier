@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-from const import *
-from django.conf import settings
+import datetime
+
 from django.utils.formats import number_format
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
-
-import datetime
 from django.utils.timezone import utc
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
+from const import *
 from repanier.models import Permanence
 from repanier.models import CustomerInvoice
 from repanier.models import PermanenceBoard
-
-from django.core.urlresolvers import reverse
-
-import logging
 
 
 class PermanenceMenu(Menu):
@@ -47,7 +43,7 @@ class PermanenceMenu(Menu):
             separator = True
 
         # node = NavigationNode(
-        #     _('Send mail to coordinators'),
+        # _('Send mail to coordinators'),
         #     "/",
         #     id = submenu_id, parent_id = master_id,
         #     attr={'visible_for_authenticated' : True,
@@ -127,18 +123,18 @@ class PermanenceMenu(Menu):
                     submenu_id += 1
                 if last_customer_invoice.balance < 0:
                     node = NavigationNode(
-                        unicode(_('My saldo : <font color="red">%(balance)s &euro;</font> at %(date)s') % {
-                        'balance': number_format(last_customer_invoice.balance, 2),
-                        'date': last_customer_invoice.date_balance.strftime('%d-%m-%Y')}),
+                        unicode(_('My balance : <font color="red">%(balance)s &euro;</font> at %(date)s') % {
+                            'balance': number_format(last_customer_invoice.balance, 2),
+                            'date': last_customer_invoice.date_balance.strftime('%d-%m-%Y')}),
                         reverse('invoice_view', args=(0,)),
                         id=submenu_id, parent_id=master_id,
                         visible=True
                     )
                 else:
                     node = NavigationNode(
-                        unicode(_('My saldo : <font color="green">%(balance)s &euro;</font> at %(date)s') % {
-                        'balance': number_format(last_customer_invoice.balance, 2),
-                        'date': last_customer_invoice.date_balance.strftime('%d-%m-%Y')}),
+                        unicode(_('My balance : <font color="green">%(balance)s &euro;</font> at %(date)s') % {
+                            'balance': number_format(last_customer_invoice.balance, 2),
+                            'date': last_customer_invoice.date_balance.strftime('%d-%m-%Y')}),
                         reverse('invoice_view', args=(0,)),
                         id=submenu_id, parent_id=master_id,
                         visible=True

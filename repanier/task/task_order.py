@@ -77,8 +77,8 @@ def open(permanence_id, current_site_name):
     permanence.save(update_fields=['status'])
 
 
-def admin_back_to_planified(request, queryset):
-    user_message = _("The status of this permanence prohibit you to go back to planified.")
+def admin_back_to_planned(request, queryset):
+    user_message = _("The status of this permanence prohibit you to go back to planned.")
     user_message_level = messages.ERROR
     for permanence in queryset[:1]:
         if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
@@ -89,10 +89,10 @@ def admin_back_to_planified(request, queryset):
                         purchase.quantity = purchase.quantity_send_to_producer
                         purchase.save(update_fields=['quantity'])
             OfferItem.objects.filter(permanence_id=permanence.id).update(is_active=False)
-            permanence.status = PERMANENCE_PLANIFIED
+            permanence.status = PERMANENCE_PLANNED
             permanence.save(update_fields=['status'])
             menu_pool.clear()
-            user_message = _("The permanence is back to planified.")
+            user_message = _("The permanence is back to planned.")
             user_message_level = messages.INFO
     return user_message, user_message_level
 
@@ -103,7 +103,7 @@ def admin_open_and_send(request, queryset):
     user_message_level = messages.ERROR
     now = timezone.now()
     for permanence in queryset[:1]:
-        if permanence.status == PERMANENCE_PLANIFIED:
+        if permanence.status == PERMANENCE_PLANNED:
             permanence.status = PERMANENCE_WAIT_FOR_OPEN
             permanence.is_updated_on = now
             permanence.save(update_fields=['status', 'is_updated_on'])
@@ -116,7 +116,7 @@ def admin_open_and_send(request, queryset):
             timediff = now - permanence.is_updated_on
             if timediff.total_seconds() > (30 * 60):
                 thread.start_new_thread(email_alert.send, (permanence, current_site.name))
-                permanence.status = PERMANENCE_PLANIFIED
+                permanence.status = PERMANENCE_PLANNED
                 permanence.save(update_fields=['status'])
                 user_message = _(
                     "The action has been canceled by the system and an email send to the site administrator.")
