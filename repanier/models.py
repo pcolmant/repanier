@@ -12,13 +12,13 @@ import uuid
 # ALTER TABLE repanier_purchase ADD COLUMN department_for_customer_id integer;
 # CREATE INDEX repanier_purchase_department_for_customer_id
 # ON repanier_purchase
-#   USING btree
-#   (department_for_customer_id);
+# USING btree
+# (department_for_customer_id);
 # ALTER TABLE repanier_bankaccount ADD COLUMN permanence_id integer;
 # CREATE INDEX repanier_bankaccount_permanence_id
-#   ON repanier_bankaccount
-#   USING btree
-#   (permanence_id);
+# ON repanier_bankaccount
+# USING btree
+# (permanence_id);
 # ALTER TABLE repanier_producer ADD COLUMN invoice_by_basket boolean;
 # update repanier_producer set invoice_by_basket = FALSE;
 # ALTER TABLE repanier_producer ALTER COLUMN invoice_by_basket SET NOT NULL;
@@ -43,15 +43,12 @@ import uuid
 # ALTER TABLE repanier_product DROP COLUMN price_list_multiplier;
 # ALTER TABLE repanier_producer DROP COLUMN invoice_description;
 
-
-
-
 # ALTER TABLE repanier_product
-#    ALTER COLUMN unit_price_without_tax TYPE numeric(8,2);
+# ALTER COLUMN unit_price_without_tax TYPE numeric(8,2);
 # ALTER TABLE repanier_product
-#    ALTER COLUMN unit_price_with_compensation TYPE numeric(8,2);
+# ALTER COLUMN unit_price_with_compensation TYPE numeric(8,2);
 # ALTER TABLE repanier_purchase
-#    ALTER COLUMN price_without_tax TYPE numeric(8,2);
+# ALTER COLUMN price_without_tax TYPE numeric(8,2);
 
 # ALTER TABLE repanier_purchase ADD COLUMN quantity_for_preparation_order numeric(9,3) DEFAULT 0;
 # ALTER TABLE repanier_purchase ALTER COLUMN quantity_for_preparation_order SET NOT NULL;
@@ -81,34 +78,25 @@ import uuid
 # ALTER TABLE repanier_offeritem ALTER COLUMN limit_to_alert_order_quantity SET NOT NULL;
 # ALTER TABLE repanier_offeritem ADD COLUMN customer_alert_order_quantity numeric(6,3);
 
-
 # ALTER TABLE repanier_permanence RENAME automaticaly_closed  TO automatically_closed;
 
-
-
 from const import *
-from decimal import *
 from django.conf import settings
 from django.db import models
-# from django.db.models import Sum
 from django.db.models.query import QuerySet
 from django.db.models.signals import pre_save
 from django.db.models.signals import post_save
 from django.db.models.signals import post_delete
 
-from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.dispatch import receiver
-from django.contrib.auth import get_user_model
 from djangocms_text_ckeditor.fields import HTMLField
 from django.utils.translation import ugettext_lazy as _
 from django.utils.formats import number_format
 from filer.fields.image import FilerImageField
-from filer.fields.file import FilerFileField
 from django.core import urlresolvers
 
 import datetime
-from decimal import *
 
 try:
     from south.modelsinspector import add_introspection_rules
@@ -117,6 +105,7 @@ try:
                               ['^djangocms_text_ckeditor\.fields\.HTMLField'])
 except ImportError:
     pass
+
 
 # Create your models here.
 class LUTQuerySet(QuerySet):
@@ -207,7 +196,8 @@ class Producer(models.Model):
         default=VAT_400,
         verbose_name=_("Default vat or compensation"),
         help_text=_(
-            'When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
+            'When the vendor is in agricultural'
+            ' regime select the correct compensation %. In the other cases select the correct vat %'))
 
     date_balance = models.DateField(
         _("date_balance"), default=datetime.date.today)
@@ -245,19 +235,19 @@ class Producer(models.Model):
             if self.balance < 0:
                 return '<a href="' + urlresolvers.reverse('invoicep_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#298A08">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#298A08">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             elif self.balance == 0:
                 return '<a href="' + urlresolvers.reverse('invoicep_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             elif self.balance > 30:
                 return '<a href="' + urlresolvers.reverse('invoicep_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('invoicep_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))) + '</a>'
         else:
             if self.balance < 0:
                 return '<span style="color:#298A08">%s</span>' % (number_format(self.balance, 2))
@@ -276,16 +266,16 @@ class Producer(models.Model):
         if producer_last_invoice:
             if producer_last_invoice.total_price_with_tax < 0:
                 return '<span style="color:#298A08">%s</span>' % (
-                number_format(producer_last_invoice.total_price_with_tax, 2))
+                    number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax == 0:
                 return '<span style="color:#74DF00">%s</span>' % (
-                number_format(producer_last_invoice.total_price_with_tax, 2))
+                    number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax > 30:
                 return '<span style="color:#FF4000">%s</span>' % (
-                number_format(producer_last_invoice.total_price_with_tax, 2))
+                    number_format(producer_last_invoice.total_price_with_tax, 2))
             else:
                 return '<span style="color:#DF013A">%s</span>' % (
-                number_format(producer_last_invoice.total_price_with_tax, 2))
+                    number_format(producer_last_invoice.total_price_with_tax, 2))
         else:
             return '<span style="color:#74DF00">%s</span>' % (number_format(0, 2))
 
@@ -310,12 +300,12 @@ def producer_pre_save(sender, **kwargs):
     # It's important to have one and only one producer representing the buying group
     # producer_set = Producer.objects.all().the_buyinggroup().order_by()[:1]
     # if not producer_set:
-    #   producer.represent_this_buyinggroup = True
+    # producer.represent_this_buyinggroup = True
     # else:
-    #   producer.represent_this_buyinggroup = False
-    if producer.uuid == None:
+    # producer.represent_this_buyinggroup = False
+    if producer.uuid is None:
         producer.uuid = uuid.uuid4()
-    if producer.id == None:
+    if producer.id is None:
         producer.balance = producer.initial_balance
         bank_account_set = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by()[:1]
         if bank_account_set:
@@ -367,15 +357,15 @@ class Customer(models.Model):
             if self.balance >= 30:
                 return '<a href="' + urlresolvers.reverse('invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             elif self.balance >= -10:
                 return '<a href="' + urlresolvers.reverse('invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                       '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
         else:
             if self.balance >= 30:
                 return '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))
@@ -388,12 +378,12 @@ class Customer(models.Model):
     get_balance.allow_tags = True
 
     def natural_key(self):
-        return (self.short_basket_name)
+        return self.short_basket_name
 
     natural_key.dependencies = ['repanier.customer']
 
     def __unicode__(self):
-        return u'%s' % (self.short_basket_name)
+        return u'%s' % self.short_basket_name
 
     class Meta:
         verbose_name = _("customer")
@@ -406,7 +396,7 @@ def customer_pre_save(sender, **kwargs):
     customer = kwargs['instance']
     if not customer.is_active:
         customer.may_order = False
-    if customer.id == None:
+    if customer.id is None:
         customer.balance = customer.initial_balance
         bank_account_set = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by()[:1]
         if bank_account_set:
@@ -425,9 +415,9 @@ def customer_pre_save(sender, **kwargs):
                 # It's important to have one and only one customer representing the buying group
                 # customer_set = Customer.objects.all().the_buyinggroup().order_by()[:1]
                 # if not customer_set:
-                #   customer.represent_this_buyinggroup = True
+                # customer.represent_this_buyinggroup = True
                 # else:
-                #   customer.represent_this_buyinggroup = False
+                # customer.represent_this_buyinggroup = False
 
 
 @receiver(post_delete, sender=Customer)
@@ -473,7 +463,7 @@ class Staff(models.Model):
     get_customer_phone1.allow_tags = False
 
     def __unicode__(self):
-        return u'%s' % (self.long_name)
+        return u'%s' % self.long_name
 
     class Meta:
         verbose_name = _("staff member")
@@ -486,7 +476,7 @@ class Staff(models.Model):
 def staff_post_save(sender, **kwargs):
     staff = kwargs['instance']
     created = kwargs['created']
-    if staff.id != None:
+    if staff.id is not None:
         user = staff.user
         user.groups.clear()
         if staff.is_external_group:
@@ -531,11 +521,11 @@ class Product(models.Model):
         choices=LUT_PRODUCT_PLACEMENT,
         default=PRODUCT_PLACEMENT_BASKET,
         verbose_name=_("product_placement"),
-        help_text=_('used for helping to determine the order of prepration of this product'))
+        help_text=_('used for helping to determine the order of preparation of this product'))
 
     order_average_weight = models.DecimalField(
         _("order_average_weight"),
-        help_text=_('if usefull, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
+        help_text=_('if useful, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
         default=0, max_digits=6, decimal_places=3)
 
     original_unit_price = models.DecimalField(
@@ -585,12 +575,12 @@ class Product(models.Model):
 
     is_active = models.BooleanField(_("is_active"), default=True)
     is_created_on = models.DateTimeField(
-        _("is_cretaed_on"), auto_now_add=True, blank=True)
+        _("is_created_on"), auto_now_add=True, blank=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True, blank=True)
 
     def natural_key(self):
-        return (self.long_name) + self.producer.natural_key()
+        return self.long_name + self.producer.natural_key()
 
     natural_key.dependencies = ['repanier.producer']
 
@@ -643,12 +633,13 @@ class Permanence(models.Model):
     distribution_date = models.DateField(_("distribution_date"), db_index=True)
     offer_description = HTMLField(_("offer_description"),
                                   help_text=_(
-                                      'This message is send by mail to all customers when opening the order or on top of the web order screen.'),
+                                      "This message is send by mail to all customers when opening the order or on top "
+                                      "of the web order screen."),
                                   blank=True)
     invoice_description = HTMLField(
         _("invoice_description"),
         help_text=_(
-            'This message is send by mail to all customers having bought something when closing the permamence.'),
+            'This message is send by mail to all customers having bought something when closing the permanence.'),
         blank=True)
     producers = models.ManyToManyField(
         'Producer', null=True, blank=True,
@@ -661,12 +652,12 @@ class Permanence(models.Model):
         _("is_done_on"), blank=True, null=True)
 
     is_created_on = models.DateTimeField(
-        _("is_cretaed_on"), auto_now_add=True)
+        _("is_created_on"), auto_now_add=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True)
 
     def natural_key(self):
-        return (self.distribution_date, self.short_name)
+        return self.distribution_date, self.short_name
 
     def get_producers(self):
         if self.id:
@@ -679,9 +670,9 @@ class Permanence(models.Model):
                                    p.short_profile_name + '</a>' for p in self.producers.all()])
             else:
                 # change_url = urlresolvers.reverse(
-                #   'admin:repanier_permanenceinpreparation_change',
-                #   args=(self.id,)
-                #   )
+                # 'admin:repanier_permanenceinpreparation_change',
+                # args=(self.id,)
+                # )
                 return u", ".join([
                     p.short_profile_name + '</a>' for p in self.producers.all()
                 ])
@@ -699,8 +690,7 @@ class Permanence(models.Model):
                                '?permanence=' + str(self.id) + \
                                '&customer=' + str(c.id) + '" target="_blank"  class="addlink">&nbsp;' + \
                                c.short_basket_name + '</a>'
-                               for c in Customer.objects.filter(
-                    purchase__permanence_id=self.id).distinct()])
+                               for c in Customer.objects.filter(purchase__permanence_id=self.id).distinct()])
         return u''
 
     get_customers.short_description = (_("customers in this permanence"))
@@ -746,7 +736,7 @@ class Permanence(models.Model):
             return unicode(_("Permanence on ")) + u'%s' % (self.distribution_date.strftime('%d-%m-%Y'))
         else:
             return unicode(_("Permanence on ")) + u'%s (%s)' % (
-            self.distribution_date.strftime('%d-%m-%Y'), self.short_name)
+                self.distribution_date.strftime('%d-%m-%Y'), self.short_name)
 
     class Meta:
         verbose_name = _("permanence")
@@ -797,7 +787,7 @@ class PermanenceInPreparation(Permanence):
 def permanence_post_save(sender, **kwargs):
     permanence = kwargs['instance']
     created = kwargs['created']
-    if permanence.id != None and created:
+    if permanence.id is not None and created:
         lut_permanence_role_set = LUT_PermanenceRole.objects.filter(is_active=True, automatically_added=True)
         for lut_permanence_role in lut_permanence_role_set:
             PermanenceBoard.objects.create(
@@ -842,13 +832,13 @@ class OfferItem(models.Model):
     get_product.allow_tags = False
 
     # def get_total_order_quantity(self):
-    #   total_order_quantity = 0
-    #   if self.id:
-    #     if self.permanence.status<=PERMANENCE_PLANNED:
-    #       pass
-    #     elif self.permanence.status <= PERMANENCE_SEND:
-    #       result_set = Purchase.objects.filter(
-    #         product_id=self.product.id, permanence_id=self.permanence_id).values(
+    # total_order_quantity = 0
+    # if self.id:
+    # if self.permanence.status<=PERMANENCE_PLANNED:
+    # pass
+    # elif self.permanence.status <= PERMANENCE_SEND:
+    # result_set = Purchase.objects.filter(
+    # product_id=self.product.id, permanence_id=self.permanence_id).values(
     #         'product_id', 'permanence_id').annotate(
     #         total_order_quantity=Sum('order_quantity')).values(
     #         'total_order_quantity').order_by()[:1]
@@ -896,7 +886,7 @@ class CustomerInvoice(models.Model):
         _("previous_balance"), max_digits=8, decimal_places=2, default=0)
     total_price_with_tax = models.DecimalField(
         _("Total price"),
-        help_text=_('Total price vat or compensation if appliacable included'),
+        help_text=_('Total price vat or compensation if applicable included'),
         default=0, max_digits=8, decimal_places=2)
     total_vat = models.DecimalField(
         _("Total vat"),
@@ -946,7 +936,7 @@ class ProducerInvoice(models.Model):
         _("previous_balance"), max_digits=8, decimal_places=2, default=0)
     total_price_with_tax = models.DecimalField(
         _("Total price"),
-        help_text=_('Total price vat or compensation if appliacable included'),
+        help_text=_('Total price vat or compensation if applicable included'),
         default=0, max_digits=8, decimal_places=2)
     total_vat = models.DecimalField(
         _("Total vat"),
@@ -1004,11 +994,11 @@ class Purchase(models.Model):
         db_index=True)
 
     quantity = models.DecimalField(
-        _("order quantitiy"),
+        _("order quantity"),
         max_digits=9, decimal_places=4, default=0)
     order_average_weight = models.DecimalField(
         _("order_average_weight"),
-        help_text=_('if usefull, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
+        help_text=_('if useful, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
         default=0, max_digits=6, decimal_places=3)
     quantity_send_to_producer = models.DecimalField(
         _("quantity send to producer"),
@@ -1016,7 +1006,7 @@ class Purchase(models.Model):
     # 0 if this is not a KG product -> the preparation list for this product will be produced by familly
     # qty if not -> the preparation list for this product will be produced by qty then by familly
     quantity_for_preparation_order = models.DecimalField(
-        _("preparation order quantitiy"),
+        _("preparation order quantity"),
         max_digits=9, decimal_places=4, default=0)
     long_name = models.CharField(_("long_name"), max_length=100,
                                  default='', blank=True, null=True)
@@ -1047,14 +1037,15 @@ class Purchase(models.Model):
         default=0, max_digits=8, decimal_places=2)
 
     invoiced_price_with_compensation = models.BooleanField(
-        _("Set if the invoiced price is the price with compesation, otherwise it's the price with vat"), default=True)
+        _("Set if the invoiced price is the price with compensation, otherwise it's the price with vat"), default=True)
     vat_level = models.CharField(
         max_length=3,
         choices=LUT_VAT,
         default=VAT_400,
         verbose_name=_("vat or compensation"),
         help_text=_(
-            'When the vendor is in agricultural regime select the correct compensation %. In the other cases select the correct vat %'))
+            'When the vendor is in agricultural regime select the correct compensation %. '
+            'In the other cases select the correct vat %'))
 
     comment = models.CharField(
         _("comment"), max_length=100, default='', blank=True, null=True)
@@ -1067,7 +1058,7 @@ class Purchase(models.Model):
         on_delete=models.PROTECT, blank=True, null=True,
         db_index=True)
     is_created_on = models.DateTimeField(
-        _("is_cretaed_on"), auto_now_add=True)
+        _("is_created_on"), auto_now_add=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True)
 
@@ -1114,7 +1105,7 @@ class CustomerOrder(models.Model):
         on_delete=models.PROTECT, blank=True, null=True)
     total_price_with_tax = models.DecimalField(
         _("Total price"),
-        help_text=_('Total price vat or compensation if appliacable included'),
+        help_text=_('Total price vat or compensation if applicable included'),
         default=0, max_digits=8, decimal_places=2)
 
     class Meta:
@@ -1160,7 +1151,7 @@ class BankAccount(models.Model):
         on_delete=models.PROTECT, blank=True, null=True,
         db_index=True)
     is_created_on = models.DateTimeField(
-        _("is_cretaed_on"), auto_now_add=True)
+        _("is_created_on"), auto_now_add=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True)
 
@@ -1234,7 +1225,7 @@ class BankAccount(models.Model):
 @receiver(pre_save, sender=BankAccount)
 def bank_account_pre_save(sender, **kwargs):
     bank_account = kwargs['instance']
-    if bank_account.producer == None and bank_account.customer == None:
+    if bank_account.producer is None and bank_account.customer is None:
         bank_account_set = BankAccount.objects.exclude(
             operation_status=BANK_NOT_LATEST_TOTAL).order_by()[:1]
         if not bank_account_set:

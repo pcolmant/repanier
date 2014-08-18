@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-from const import *
-from tools import *
 import json
+import datetime
 
 from django.utils.translation import ugettext_lazy as _
-import datetime
 from django.utils.timezone import utc
-
-from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
+
+from tools import *
+
 # from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -241,9 +240,16 @@ class OrderView(ListView):
 
     # def get_urls(self):
     # my_urls = patterns('',
-    #         url(r'^purchase_update/$', self.update, name='sortable_update'),
+    # url(r'^purchase_update/$', self.update, name='sortable_update'),
     #     )
     #     return my_urls + super(SortableAdminMixin, self).get_urls()
+
+    def __init__(self, **kwargs):
+        super(OrderView, self).__init__(**kwargs)
+        self.user = None
+        self.offeritem_id = 'all'
+        self.producer_id = 'all'
+        self.departementforcusomer_id = 'all'
 
     def dispatch(self, request, *args, **kwargs):
         self.user = request.user
@@ -283,7 +289,7 @@ class OrderView(ListView):
             producer_set = Producer.objects.filter(permanence=self.permanence.id)
             context['producer_set'] = producer_set
             context['producer_id'] = self.producer_id
-            departementforcusomer_set = LUT_DepartmentForCustomer.objects.none()
+            departementforcusomer_set = None
             if self.producer_id == 'all':
                 departementforcusomer_set = LUT_DepartmentForCustomer.objects.filter(
                     product__offeritem__permanence_id=self.permanence.id
@@ -515,7 +521,7 @@ class InvoicePView(DetailView):
         # class PreparationView(View):
 
         # template='index.html'
-        #    context= {'title': 'Hello World!'}
+        # context= {'title': 'Hello World!'}
 
         #    def get(self, request):
         #        response = PDFTemplateResponse(request=request,
