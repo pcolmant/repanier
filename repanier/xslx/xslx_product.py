@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-from const import *
-from repanier.tools import recalculate_order_amount
-from decimal import *
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
-from export_tools import *
-from import_tools import *
 from openpyxl import load_workbook
 from openpyxl.datavalidation import DataValidation, ValidationType, ValidationOperator
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
 from openpyxl.workbook import Workbook
+
+from repanier.tools import recalculate_order_amount
+from export_tools import *
+from import_tools import *
 from repanier.const import *
 from repanier.models import LUT_DepartmentForCustomer
 from repanier.models import LUT_ProductionMode
@@ -19,13 +17,10 @@ from repanier.models import Permanence
 from repanier.models import Product
 from repanier.tools import cap
 from views import import_xslx_view
-import datetime
 
 
 def export(producer, wb=None):
-    ws = None
-
-    if wb == None:
+    if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
     else:
@@ -36,7 +31,7 @@ def export(producer, wb=None):
         producer_id=producer.id, is_active=True
     )
     product_save = None
-    if ws == None:
+    if ws is None:
         ws = wb.create_sheet()
     now = timezone.localtime(timezone.now())
     worksheet_setup_landscape_a4(ws, unicode(producer.short_profile_name), unicode(now.strftime('%d-%m-%Y %H:%M')))
@@ -46,7 +41,7 @@ def export(producer, wb=None):
             (unicode(_("department_for_customer")), 15, product.department_for_customer.short_name,
              NumberFormat.FORMAT_TEXT, False),
             (unicode(_("production mode")), 15,
-             product.production_mode.short_name if product.production_mode != None else u"", NumberFormat.FORMAT_TEXT,
+             product.production_mode.short_name if product.production_mode is not None else u"", NumberFormat.FORMAT_TEXT,
              False),
             (unicode(_("is_into_offer")), 7, unicode(_("Yes")) if product.is_into_offer else None,
              NumberFormat.FORMAT_TEXT, False),
@@ -61,10 +56,12 @@ def export(producer, wb=None):
             (unicode(_("customer_minimum_order_quantity")), 10, product.customer_minimum_order_quantity, '#,##0.???',
              False),
             (
-            unicode(_("customer_increment_order_quantity")), 10, product.customer_increment_order_quantity, '#,##0.???',
-            False),
+                unicode(_("customer_increment_order_quantity")), 10, product.customer_increment_order_quantity,
+                '#,##0.???',
+                False),
             (
-            unicode(_("customer_alert_order_quantity")), 10, product.customer_alert_order_quantity, '#,##0.???', False),
+                unicode(_("customer_alert_order_quantity")), 10, product.customer_alert_order_quantity, '#,##0.???',
+                False),
         ]
 
         if row_num == 0:
@@ -105,7 +102,7 @@ def export(producer, wb=None):
     ]
 
     if row_num == 0:
-        #  add a header if there is no previous movement.
+        # add a header if there is no previous movement.
         worksheet_set_header(ws, row_num, row)
         row_num += 1
 
@@ -175,7 +172,7 @@ def export(producer, wb=None):
     dv.ranges.append('J2:J5000')
     # End of data validation
 
-    #  Add formating for empty cells.
+    # Add formating for empty cells.
     for row_num in xrange(row_num, row_num + 30):
         for col_num in xrange(len(row)):
             c = ws.cell(row=row_num, column=col_num)
@@ -214,11 +211,9 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
         while row and not error:
             try:
                 row_id = None
-                if row[_('Id')] != None:
+                if row[_('Id')] is not None:
                     row_id = Decimal(row[_('Id')])
-                # product_reorder += 1
 
-                department_for_customer_id = None
                 if row[_('department_for_customer')] in department_for_customer_2_id_dict:
                     department_for_customer_id = department_for_customer_2_id_dict[row[_('department_for_customer')]]
                 else:
@@ -226,7 +221,6 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                     error_msg = _("Row %(row_num)d : No valid departement for customer") % {'row_num': row_num + 1}
                     break
 
-                production_mode_id = None
                 if row[_('production mode')] in production_mode_2_id_dict:
                     production_mode_id = production_mode_2_id_dict[row[_('production mode')]]
                 else:
@@ -234,23 +228,23 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                     error_msg = _("Row %(row_num)d : No valid production mode") % {'row_num': row_num + 1}
                     break
 
-                original_unit_price = None if row[_('original_unit_price')] == None else Decimal(
+                original_unit_price = None if row[_('original_unit_price')] is None else Decimal(
                     row[_('original_unit_price')])
-                unit_deposit = None if row[_('deposit')] == None else Decimal(row[_('deposit')])
-                order_average_weight = None if row[_('order_average_weight')] == None else Decimal(
+                unit_deposit = None if row[_('deposit')] is None else Decimal(row[_('deposit')])
+                order_average_weight = None if row[_('order_average_weight')] is None else Decimal(
                     row[_('order_average_weight')])
                 customer_minimum_order_quantity = None if row[_(
-                    'customer_minimum_order_quantity')] == None else Decimal(row[_('customer_minimum_order_quantity')])
+                    'customer_minimum_order_quantity')] is None else Decimal(row[_('customer_minimum_order_quantity')])
                 customer_increment_order_quantity = None if row[_(
-                    'customer_increment_order_quantity')] == None else Decimal(
+                    'customer_increment_order_quantity')] is None else Decimal(
                     row[_('customer_increment_order_quantity')])
-                customer_alert_order_quantity = None if row[_('customer_alert_order_quantity')] == None else Decimal(
+                customer_alert_order_quantity = None if row[_('customer_alert_order_quantity')] is None else Decimal(
                     row[_('customer_alert_order_quantity')])
 
                 order_unit = None
                 if row[_("order unit")] in order_unit_dict:
                     order_unit = order_unit_dict[row[_("order unit")]]
-                if order_unit == None:
+                if order_unit is None:
                     order_unit = PRODUCT_ORDER_UNIT_LOOSE_PC
 
                 long_name = cap(row[_('long_name')], 100)
@@ -263,10 +257,9 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                     product = product_set[0]
                     if row_id == product.id:
                         # Detect VAT LEVEL. Fall back on product.
-                        vat_level = None
                         if row[_("vat or compensation")] in vat_level_dict:
                             vat_level = vat_level_dict[row[_("vat or compensation")]]
-                        elif product != None:
+                        elif product is not None:
                             vat_level = product.vat_level
                         else:
                             vat_level = producer.vat_level
@@ -276,19 +269,19 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                         product.production_mode_id = production_mode_id
                         product.department_for_customer_id = department_for_customer_id
                         product.order_unit = order_unit
-                        if order_average_weight != None:
+                        if order_average_weight is not None:
                             product.order_average_weight = order_average_weight
-                        if original_unit_price != None:
+                        if original_unit_price is not None:
                             product.original_unit_price = original_unit_price
-                        if unit_deposit != None:
+                        if unit_deposit is not None:
                             product.unit_deposit = unit_deposit
-                        if customer_minimum_order_quantity != None:
+                        if customer_minimum_order_quantity is not None:
                             product.customer_minimum_order_quantity = customer_minimum_order_quantity
-                        if customer_increment_order_quantity != None:
+                        if customer_increment_order_quantity is not None:
                             product.customer_increment_order_quantity = customer_increment_order_quantity
-                        if customer_alert_order_quantity != None:
+                        if customer_alert_order_quantity is not None:
                             product.customer_alert_order_quantity = customer_alert_order_quantity
-                        product.is_into_offer = ( row[_('is_into_offer')] != None )
+                        product.is_into_offer = (row[_('is_into_offer')] is not None)
                         product.vat_level = vat_level
                         product.is_active = True
                         # product.product_reorder = product_reorder
@@ -296,39 +289,32 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                             product.save()
                     else:
                         error = True
-                        if row[_('Id')] == None:
+                        if row[_('Id')] is None:
                             error_msg = _(
                                 "Row %(row_num)d : No id given, or the product %(producer)s - %(product)s already exist.") % {
-                                        'row_num': row_num + 1, 'producer': producer.short_profile_name,
-                                        'product': row[_('long_name')]}
+                                            'row_num': row_num + 1, 'producer': producer.short_profile_name,
+                                            'product': row[_('long_name')]}
                         else:
                             error_msg = _(
                                 "Row %(row_num)d : The given id %(record_id)s is not the id of %(producer)s - %(product)s.") % {
-                                        'row_num': row_num + 1, 'record_id': row[_('Id')],
-                                        'producer': producer.short_profile_name, 'product': row[_('long_name')]}
+                                            'row_num': row_num + 1, 'record_id': row[_('Id')],
+                                            'producer': producer.short_profile_name, 'product': row[_('long_name')]}
                         break
                 else:
-                    if row_id == None:
+                    if row_id is None:
                         # Let only create product if non id in the row
                         if db_write:
-                            # Detect VAT LEVEL. Can't fall back on product.
-                            vat_level = None
-                            if row[_("vat or compensation")] in vat_level_dict:
-                                vat_level = vat_level_dict[row[_("vat or compensation")]]
-                            else:
-                                vat_level = producer.vat_level
-
-                            if order_average_weight == None:
+                            if order_average_weight is None:
                                 order_average_weight = 0
-                            if original_unit_price == None:
+                            if original_unit_price is None:
                                 original_unit_price = 0
-                            if unit_deposit == None:
+                            if unit_deposit is None:
                                 unit_deposit = 0
-                            if customer_minimum_order_quantity == None:
+                            if customer_minimum_order_quantity is None:
                                 customer_minimum_order_quantity = 0
-                            if customer_increment_order_quantity == None:
+                            if customer_increment_order_quantity is None:
                                 customer_increment_order_quantity = 0
-                            if customer_alert_order_quantity == None:
+                            if customer_alert_order_quantity is None:
                                 customer_alert_order_quantity = 0
                             Product.objects.create(
                                 producer=producer,
@@ -342,15 +328,15 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                                 customer_minimum_order_quantity=customer_minimum_order_quantity,
                                 customer_increment_order_quantity=customer_increment_order_quantity,
                                 customer_alert_order_quantity=customer_alert_order_quantity,
-                                is_into_offer=( row[_('is_into_offer')] != None ),
+                                is_into_offer=( row[_('is_into_offer')] is not None ),
                                 is_active=True,  # product_reorder = product_reorder
                             )
                     else:
                         error = True
                         error_msg = _(
                             "Row %(row_num)d : The given id %(record_id)s is not the id of %(producer)s - %(product)s.") % {
-                                    'row_num': row_num + 1, 'record_id': row[_('Id')],
-                                    'producer': producer.short_profile_name, 'product': row[_('long_name')]}
+                                        'row_num': row_num + 1, 'record_id': row[_('Id')],
+                                        'producer': producer.short_profile_name, 'product': row[_('long_name')]}
                         break
 
                 row_num += 1

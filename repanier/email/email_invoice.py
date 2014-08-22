@@ -20,8 +20,6 @@ def send(permanence_id, current_site_name):
     sender_function = ""
     signature = ""
     cc_email_staff = []
-    staff_composition = ""
-    first_staff = True
     for staff in Staff.objects.filter(is_active=True, is_external_group=False):
         cc_email_staff.append(staff.user.email)
         if staff.is_reply_to_invoice_email:
@@ -45,9 +43,9 @@ def send(permanence_id, current_site_name):
         permanence=permanence_id).order_by()
     for producer in producer_set:
         if producer.email.upper().find("NO-SPAM.WS") < 0:
-            long_profile_name = producer.long_profile_name if producer.long_profile_name != None else producer.short_profile_name
+            long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name
             wb = xslx_invoice.export(permanence=permanence, producer=producer, wb=None, sheet_name=long_profile_name)
-            if wb != None:
+            if wb is not None:
                 invoices_url = 'http://' + settings.ALLOWED_HOSTS[0] + urlresolvers.reverse(
                     'invoicep_uuid_view',
                     args=(0, producer.uuid )
@@ -88,9 +86,9 @@ def send(permanence_id, current_site_name):
     customer_set = Customer.objects.filter(
         purchase__permanence=permanence_id, represent_this_buyinggroup=False).order_by().distinct()
     for customer in customer_set:
-        long_basket_name = customer.long_basket_name if customer.long_basket_name != None else customer.short_basket_name
+        long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
         wb = xslx_invoice.export(permanence=permanence, customer=customer, wb=None, sheet_name=long_basket_name)
-        if wb != None:
+        if wb is not None:
             html_content = unicode(_('Dear')) + " " + long_basket_name + ",<br/><br/>" + unicode(_('Your invoice of')) + \
                            " " + unicode(permanence) + " " + unicode(
                 _("is now available in attachment")) + ".<br/>" + permanence.invoice_description + \
@@ -118,7 +116,7 @@ def send(permanence_id, current_site_name):
 
     # Report to the staff
     wb = xslx_invoice.export(permanence=permanence, wb=None, sheet_name=current_site_name)
-    if wb != None:
+    if wb is not None:
         html_content = unicode(_('Dear staff member')) + ",<br/><br/>" + unicode(_('The invoices of')) + \
                        " " + unicode(permanence) + " " + unicode(
             _("are now available in attachment")) + ".<br/>" + permanence.invoice_description + \

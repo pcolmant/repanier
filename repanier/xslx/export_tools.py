@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from const import *
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.cell import get_column_letter
 from openpyxl.style import NumberFormat
+
+from const import *
 from repanier.models import Customer
 from repanier.models import LUT_DepartmentForCustomer
 from repanier.models import LUT_ProductionMode

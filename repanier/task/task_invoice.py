@@ -26,7 +26,6 @@ import thread
 def generate(request, permanence_id, permanence_distribution_date, permanence_unicode, current_site_name,
              producers_to_be_paid_set):
     validation_passed = True
-    something_to_put_into_the_invoice = False
     bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by().first()
     if bank_account:
         # try:
@@ -113,15 +112,12 @@ def generate(request, permanence_id, permanence_distribution_date, permanence_un
             # Calculate new current balance : Purchases
 
             # Changed in Django 1.6.3:
-            # 	It is now an error to execute a query with select_for_update() in autocommit mode. With earlier releases in the 1.6 series it was a no-op.
+            # It is now an error to execute a query with select_for_update() in autocommit mode. With earlier releases in the 1.6 series it was a no-op.
 
             for purchase in Purchase.objects.select_for_update().filter(
                     permanence=permanence_id,
             ).order_by():
 
-                a_total_price = 0
-                a_total_vat = 0
-                a_total_compensation = 0
                 a_total_deposit = purchase.unit_deposit * purchase.quantity_deposit
                 if purchase.invoiced_price_with_compensation:
                     a_total_price = purchase.price_with_compensation + a_total_deposit
@@ -138,7 +134,7 @@ def generate(request, permanence_id, permanence_distribution_date, permanence_un
                         a_total_vat = (purchase.price_with_vat * DECIMAL_0_21).quantize(THREE_DECIMALS)
                     a_total_compensation = 0
 
-                if purchase.is_recorded_on_customer_invoice == None:
+                if purchase.is_recorded_on_customer_invoice is None:
                     if purchase.producer.id == producer_buyinggroup_id:
                         # When the producer represent the buying group, generate a compensation movement
                         customerinvoice = CustomerInvoice.objects.get(
@@ -174,7 +170,7 @@ def generate(request, permanence_id, permanence_distribution_date, permanence_un
                         balance=F('balance') - a_total_price
                     )
                     purchase.is_recorded_on_customer_invoice_id = customerinvoice.id
-                if purchase.is_recorded_on_producer_invoice == None:
+                if purchase.is_recorded_on_producer_invoice is None:
                     producerinvoice = ProducerInvoice.objects.get(
                         producer=purchase.producer,
                         permanence=permanence_id,
@@ -217,7 +213,7 @@ def generate(request, permanence_id, permanence_distribution_date, permanence_un
                     customer=bank_account.customer,
                     permanence=permanence_id,
                 ).order_by().first()
-                if customerinvoice == None:
+                if customerinvoice is None:
                     customerinvoice = CustomerInvoice.objects.create(
                         customer=bank_account.customer,
                         permanence_id=permanence_id,
@@ -259,7 +255,7 @@ def generate(request, permanence_id, permanence_distribution_date, permanence_un
                     producer=bank_account.producer,
                     permanence=permanence_id,
                 ).order_by().first()
-                if producerinvoice == None:
+                if producerinvoice is None:
                     producerinvoice = ProducerInvoice.objects.create(
                         producer=bank_account.producer,
                         permanence_id=permanence_id,
@@ -309,7 +305,7 @@ def generate(request, permanence_id, permanence_distribution_date, permanence_un
                 is_recorded_on_customer_invoice=None,
                 is_recorded_on_producer_invoice=None
             )
-        # except Exception, e:
+            # except Exception, e:
     # validation_passed = False
 
     if validation_passed:
@@ -382,7 +378,7 @@ def admin_generate(request, producers_to_be_paid_set=Producer.objects.none(), pe
     user_message = _("You can only generate invoices when the permanence status is 'send'.")
     user_message_level = messages.WARNING
     permanence = Permanence.objects.filter(id=permanence_id).order_by().first()
-    if permanence != None:
+    if permanence is not None:
         current_site = get_current_site(request)
         if permanence.status == PERMANENCE_SEND:
             generate(request, permanence.id, permanence.distribution_date, permanence.__unicode__(), current_site.name,

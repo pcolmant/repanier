@@ -129,10 +129,10 @@ class LUT(models.Model):
     objects = LUTManager()
 
     def natural_key(self):
-        return (self.short_name)
+        return self.short_name
 
     def __unicode__(self):
-        return u'%s' % (self.short_name)
+        return u'%s' % self.short_name
 
     class Meta:
         abstract = True
@@ -188,7 +188,7 @@ class Producer(models.Model):
 
     price_list_multiplier = models.DecimalField(
         _("price_list_multiplier"),
-        help_text=_('This multiplier is applied to each price automatically imported/pushed.'),
+        help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=0, max_digits=4, decimal_places=2)
     vat_level = models.CharField(
         max_length=3,
@@ -196,8 +196,8 @@ class Producer(models.Model):
         default=VAT_400,
         verbose_name=_("Default vat or compensation"),
         help_text=_(
-            'When the vendor is in agricultural'
-            ' regime select the correct compensation %. In the other cases select the correct vat %'))
+            "When the vendor is in agricultural"
+            " regime select the correct compensation %. In the other cases select the correct vat %"))
 
     date_balance = models.DateField(
         _("date_balance"), default=datetime.date.today)
@@ -283,7 +283,7 @@ class Producer(models.Model):
     get_last_invoice.allow_tags = True
 
     def __unicode__(self):
-        return u'%s' % (self.short_profile_name)
+        return u'%s' % self.short_profile_name
 
     class Meta:
         verbose_name = _("producer")
@@ -475,7 +475,6 @@ class Staff(models.Model):
 @receiver(post_save, sender=Staff)
 def staff_post_save(sender, **kwargs):
     staff = kwargs['instance']
-    created = kwargs['created']
     if staff.id is not None:
         user = staff.user
         user.groups.clear()

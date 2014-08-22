@@ -262,7 +262,6 @@ class UserDataForm(forms.ModelForm):
                     username=username, email=email, password=uuid.uuid1().hex,
                     first_name=first_name, last_name=last_name)
         self.user = user
-        read_only = self.read_only
         return self.instance
 
 
@@ -487,7 +486,7 @@ class ProductAdmin(ReadOnlyAdmin):
             else:
                 producer_id = None
                 department_for_customer_id = None
-                is_actif_value = None
+                is_active_value = None
                 is_into_offer_value = None
                 preserved_filters = request.GET.get('_changelist_filters', None)
                 if preserved_filters:
@@ -497,7 +496,7 @@ class ProductAdmin(ReadOnlyAdmin):
                     if 'department_for_customer' in param:
                         department_for_customer_id = param['department_for_customer']
                     if 'is_active__exact' in param:
-                        is_actif_value = param['is_active__exact']
+                        is_active_value = param['is_active__exact']
                     if 'is_into_offer__exact' in param:
                         is_into_offer_value = param['is_into_offer__exact']
                 is_active = form.base_fields["is_active"]
@@ -516,8 +515,8 @@ class ProductAdmin(ReadOnlyAdmin):
                     )
                 else:
                     department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(is_active=True)
-                if is_actif_value:
-                    if is_actif_value == '0':
+                if is_active_value:
+                    if is_active_value == '0':
                         is_active.initial = False
                     else:
                         is_active.initial = True

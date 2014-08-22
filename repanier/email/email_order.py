@@ -67,8 +67,8 @@ def send(permanence_id, current_site_name):
     for producer in producer_set:
         if producer.email.upper().find("NO-SPAM.WS") < 0:
             wb = xslx_order.export_producer(permanence=permanence, producer=producer, wb=None)
-            if wb != None:
-                long_profile_name = producer.long_profile_name if producer.long_profile_name != None else producer.short_profile_name
+            if wb is not None:
+                long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name
                 html_content = unicode(_('Dear')) + " " + long_profile_name + ",<br/><br/>" + unicode(
                     _('In attachment, you will find the detail of our order for the')) + \
                                " " + unicode(permanence) + ".<br/><br/>" + unicode(
@@ -101,8 +101,8 @@ def send(permanence_id, current_site_name):
         purchase__permanence=permanence_id, represent_this_buyinggroup=False).order_by().distinct()
     for customer in customer_set:
         wb = xslx_order.export_customer(permanence=permanence, customer=customer, wb=None)
-        if wb != None:
-            long_basket_name = customer.long_basket_name if customer.long_basket_name != None else customer.short_baskrt_name
+        if wb is not None:
+            long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_baskrt_name
             html_content = unicode(_('Dear')) + " " + long_basket_name + ",<br/><br/>" + unicode(
                 _('In attachment, you will find the detail of your order for the')) + \
                            " " + unicode(permanence) + ".<br/><br/>" + unicode(
@@ -131,7 +131,7 @@ def send(permanence_id, current_site_name):
                 email.send()
 
     wb = xslx_order.export(permanence=permanence, wb=None)
-    if wb != None:
+    if wb is not None:
         to_email_board = []
         for permanenceboard in PermanenceBoard.objects.filter(
                 permanence=permanence_id).order_by():

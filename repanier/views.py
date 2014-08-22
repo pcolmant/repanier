@@ -22,18 +22,18 @@ from django.shortcuts import render_to_response
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 
-from repanier.models import LUT_DepartmentForCustomer
-from repanier.models import OfferItem
-from repanier.models import Permanence
-from repanier.models import Producer
-from repanier.models import ProducerInvoice
-from repanier.models import Purchase
-from repanier.models import Customer
-from repanier.models import CustomerInvoice
-from repanier.models import Staff
-from repanier.models import BankAccount
-from repanier.models import PermanenceBoard
-from repanier.forms import ContactForm
+from models import LUT_DepartmentForCustomer
+from models import OfferItem
+from models import Permanence
+from models import Producer
+from models import ProducerInvoice
+from models import Purchase
+from models import Customer
+from models import CustomerInvoice
+from models import Staff
+from models import BankAccount
+from models import PermanenceBoard
+from forms import ContactForm
 
 import logging
 
@@ -109,7 +109,6 @@ def ajax_order_select(request):
     if request.method == 'GET':
         # construct a list which will contain all of the data for the response
         to_json = []
-        p_offer_item_id = None
         if 'offer_item' in request.GET:
             p_offer_item_id = request.GET['offer_item']
             user = request.user
@@ -133,7 +132,7 @@ def ajax_order_select(request):
                     q_alert = offer_item.customer_alert_order_quantity + q_order if offer_item.limit_to_alert_order_quantity else offer_item.customer_alert_order_quantity
                     q_step = offer_item.product.customer_increment_order_quantity
                     # The q_min cannot be 0. In this case try to replace q_min by q_step.
-                    # In last ressort by q_alert.
+                    # In last resort by q_alert.
 
                     q_order_is_displayed = False
                     if q_step <= 0:
@@ -144,13 +143,7 @@ def ajax_order_select(request):
                         q_min = q_alert
                         q_step = q_alert
                     if q_min <= 0 and offer_item.permanence.status == PERMANENCE_OPENED:
-                        q_order_is_displayed = True
-                        # for each object, construct a dictionary containing the data you wish to return
-                        option_dict = {}
-                        option_dict['value'] = '0'
-                        option_dict['selected'] = 'selected'
-                        option_dict['label'] = '---'
-                        # append the dictionary of each dog to the list
+                        option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
                         to_json.append(option_dict)
                     else:
 
@@ -161,12 +154,7 @@ def ajax_order_select(request):
                             selected = "selected"
                         if ( offer_item.permanence.status == PERMANENCE_OPENED or
                                  (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
-                            # result += '<option value="0" '+ selected + '>---</option>'
-                            option_dict = {}
-                            option_dict['value'] = '0'
-                            option_dict['selected'] = selected
-                            option_dict['label'] = '---'
-                            # append the dictionary of each dog to the list
+                            option_dict = {'value': '0', 'selected': selected, 'label': '---'}
                             to_json.append(option_dict)
 
                         q_valid = q_min
@@ -175,23 +163,18 @@ def ajax_order_select(request):
                             q_select_id += 1
                             q_counter += 1
                             selected = ""
-                            if q_order_is_displayed == False:
+                            if not q_order_is_displayed:
                                 if q_order <= q_valid:
                                     q_order_is_displayed = True
                                     selected = "selected"
-                            if ( offer_item.permanence.status == PERMANENCE_OPENED or
-                                     (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
+                            if (offer_item.permanence.status == PERMANENCE_OPENED or
+                                    (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
                                 qty_display = get_qty_display(
                                     q_valid,
                                     q_average_weight,
                                     offer_item.product.order_unit
                                 )
-                                # result += '<option value="'+ str(q_select_id) + '" '+ selected + '>'+ qty_display +'</option>'
-                                option_dict = {}
-                                option_dict['value'] = str(q_select_id)
-                                option_dict['selected'] = selected
-                                option_dict['label'] = qty_display
-                                # append the dictionary of each dog to the list
+                                option_dict = {'value': str(q_select_id), 'selected': selected, 'label': qty_display}
                                 to_json.append(option_dict)
                             if q_valid < q_step:
                                 # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
@@ -202,29 +185,19 @@ def ajax_order_select(request):
                                 # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
                                 q_valid = q_valid + q_step
 
-                        if q_order_is_displayed == False:
+                        if not q_order_is_displayed:
                             # An custom order_qty > q_alert
-                            q_select_id = q_select_id + 1
+                            q_select_id += 1
                             selected = "selected"
                             qty_display = get_qty_display(
                                 q_order,
                                 q_average_weight,
                                 offer_item.product.order_unit
                             )
-                            # result += '<option value="'+ str(q_select_id) + '" '+ selected + '>'+ qty_display +'</option>'
-                            option_dict = {}
-                            option_dict['value'] = str(q_select_id)
-                            option_dict['selected'] = selected
-                            option_dict['label'] = qty_display
-                            # append the dictionary of each dog to the list
+                            option_dict = {'value': str(q_select_id), 'selected': selected, 'label': qty_display}
                             to_json.append(option_dict)
                         if offer_item.permanence.status == PERMANENCE_OPENED:
-                            # result += '<option value="other_qty">'+ unicode(_("Other qty")) +'</option>'
-                            option_dict = {}
-                            option_dict['value'] = 'other_qty'
-                            option_dict['selected'] = ''
-                            option_dict['label'] = unicode(_("Other qty"))
-                            # append the dictionary of each dog to the list
+                            option_dict = {'value': 'other_qty', 'selected': '', 'label': unicode(_("Other qty"))}
                             to_json.append(option_dict)
 
         return HttpResponse(json.dumps(to_json), content_type="application/json")
@@ -241,8 +214,8 @@ class OrderView(ListView):
     # def get_urls(self):
     # my_urls = patterns('',
     # url(r'^purchase_update/$', self.update, name='sortable_update'),
-    #     )
-    #     return my_urls + super(SortableAdminMixin, self).get_urls()
+    # )
+    # return my_urls + super(SortableAdminMixin, self).get_urls()
 
     def __init__(self, **kwargs):
         super(OrderView, self).__init__(**kwargs)
@@ -289,7 +262,6 @@ class OrderView(ListView):
             producer_set = Producer.objects.filter(permanence=self.permanence.id)
             context['producer_set'] = producer_set
             context['producer_id'] = self.producer_id
-            departementforcusomer_set = None
             if self.producer_id == 'all':
                 departementforcusomer_set = LUT_DepartmentForCustomer.objects.filter(
                     product__offeritem__permanence_id=self.permanence.id
@@ -350,7 +322,6 @@ def permanence_form_ajax(request):
             if 'value' in request.GET:
                 p_value_id = request.GET['value']
             if p_permanence_board_id and p_value_id and request.user.customer.may_order:
-                row_counter = 0
                 if p_value_id == '0':
                     row_counter = PermanenceBoard.objects.filter(
                         id=p_permanence_board_id,
@@ -431,13 +402,11 @@ class InvoiceView(DetailView):
             context['bank_account_set'] = bank_account_set
             purchase_set = Purchase.objects.filter(is_recorded_on_customer_invoice=customer_invoice)
             context['purchase_set'] = purchase_set
-            previous_customer_invoice_id = None
             previous_customer_invoice_set = CustomerInvoice.objects.filter(customer_id=customer_invoice.customer_id,
                                                                            id__lt=customer_invoice.id).order_by('-id')[
                                             :1]
             if previous_customer_invoice_set:
                 context['previous_customer_invoice_id'] = previous_customer_invoice_set[0].id
-            next_customer_invoice_id = None
             next_customer_invoice_set = CustomerInvoice.objects.filter(customer_id=customer_invoice.customer_id,
                                                                        id__gt=customer_invoice.id).order_by('id')[:1]
             if next_customer_invoice_set:
@@ -449,13 +418,13 @@ class InvoiceView(DetailView):
         pk = self.kwargs.get('pk', None)
         if self.request.user.is_staff:
             customer_id = self.request.GET.get('customer', None)
-            if (pk == None) or (pk == '0'):
+            if (pk is None) or (pk == '0'):
                 last_customer_invoice_set = CustomerInvoice.objects.filter(customer_id=customer_id).order_by('-id')[:1]
                 if last_customer_invoice_set:
                     self.kwargs['pk'] = last_customer_invoice_set[0].id
             return CustomerInvoice.objects.all()
         else:
-            if (pk == None) or (pk == '0'):
+            if (pk is None) or (pk == '0'):
                 last_customer_invoice_set = CustomerInvoice.objects.filter(
                     customer__user_id=self.request.user.id).order_by('-id')[:1]
                 if last_customer_invoice_set:
@@ -481,13 +450,11 @@ class InvoicePView(DetailView):
             context['bank_account_set'] = bank_account_set
             purchase_set = Purchase.objects.filter(is_recorded_on_producer_invoice=producer_invoice)
             context['purchase_set'] = purchase_set
-            previous_producer_invoice_id = None
             previous_producer_invoice_set = ProducerInvoice.objects.filter(producer_id=producer_invoice.producer.id,
                                                                            id__lt=producer_invoice.id).order_by('-id')[
                                             :1]
             if previous_producer_invoice_set:
                 context['previous_producer_invoice_id'] = previous_producer_invoice_set[0].id
-            next_producer_invoice_id = None
             next_producer_invoice_set = ProducerInvoice.objects.filter(producer_id=producer_invoice.producer.id,
                                                                        id__gt=producer_invoice.id).order_by('id')[:1]
             if next_producer_invoice_set:
@@ -497,7 +464,6 @@ class InvoicePView(DetailView):
 
     def get_queryset(self):
         # qs = producerInvoice.objects.none()
-        producer_id = None
         self.uuid = None
         if self.request.user.is_staff:
             producer_id = self.request.GET.get('producer', None)
@@ -512,23 +478,8 @@ class InvoicePView(DetailView):
             else:
                 return ProducerInvoice.objects.none()
         pk = self.kwargs.get('pk', None)
-        if (pk == None) or (pk == '0'):
+        if (pk is None) or (pk == '0'):
             last_producer_invoice_set = ProducerInvoice.objects.filter(producer_id=producer_id).order_by('-id')[:1]
             if last_producer_invoice_set:
                 self.kwargs['pk'] = last_producer_invoice_set[0].id
         return ProducerInvoice.objects.filter(producer_id=producer_id)
-
-        # class PreparationView(View):
-
-        # template='index.html'
-        # context= {'title': 'Hello World!'}
-
-        #    def get(self, request):
-        #        response = PDFTemplateResponse(request=request,
-        #                                       template=self.template,
-        #                                       filename='toto.pdf',
-        #                                       context= self.context,
-        #                                       show_content_in_browser=True,
-        #                                       cmd_options={'margin-top': 10,},
-        #                                       )
-        #        return response

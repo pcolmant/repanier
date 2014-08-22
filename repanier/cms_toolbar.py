@@ -13,16 +13,12 @@ from const import *
 class RepanierToolbar(CMSToolbar):
     def populate(self):
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER, _('Manage'))
-        # _('Administration')
         position = admin_menu.get_alphabetical_insert_position(
             _('Parameters'),
             SubMenu
         )
         if not position:
-            position = admin_menu.find_first(
-                Break,
-                identifier=ADMINISTRATION_BREAK
-            ) + 1
+            # TODO : Check this part of the code
             position = 0
             admin_menu.add_break('custom-break', position=position)
         office_menu = admin_menu.get_or_create_menu(

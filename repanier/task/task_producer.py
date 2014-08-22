@@ -20,7 +20,7 @@ def admin_generate_bank_account_movement(request, queryset, permanence_distribut
         if bank_account.operation_date > operation_date:
             operation_date = bank_account.operation_date
         bank_latest_total_id = bank_account.id
-    if bank_latest_total_id != None:
+    if bank_latest_total_id is not None:
         counter = 0
         counter_max = 0
         for producer in queryset:
@@ -56,7 +56,7 @@ def admin_generate_bank_account_movement(request, queryset, permanence_distribut
                     bank_account = BankAccount.objects.filter(producer_id=producer.id, operation_date=operation_date,
                                                               operation_comment=msg).order_by("-id").first()
                     if bank_account:
-                        if bank_account.is_recorded_on_producer_invoice == None:
+                        if bank_account.is_recorded_on_producer_invoice is None:
                             bank_account.bank_amount_in = 0
                             bank_account.bank_amount_out += delta
                             bank_account.operation_comment = msg

@@ -6,10 +6,10 @@ from django.conf import settings
 from django.utils.formats import number_format
 from django.db import transaction
 
-from repanier.models import Purchase
-from repanier.models import Customer
-from repanier.models import OfferItem
-from repanier.models import CustomerOrder
+from models import Purchase
+from models import Customer
+from models import OfferItem
+from models import CustomerOrder
 
 LENGTH_BY_PREFIX = [
     (0xC0, 2),  # first byte mask, total codepoint length
@@ -34,24 +34,18 @@ def codepoint_length(first_byte):
 def cap_to_bytes_length(unicode_text, byte_limit):
     utf8_bytes = unicode_text.encode('UTF-8', 'replace')
     cut_index = 0
-    previous_cut_index = cut_index
     while cut_index < len(utf8_bytes):
         step = codepoint_length(ord(utf8_bytes[cut_index]))
         if cut_index + step > byte_limit:
             # can't go a whole codepoint further, time to cut
             return utf8_bytes[:cut_index] + '...'
         else:
-            previous_cut_index = cut_index
-            previuos_step = step
-            cprevious = utf8_bytes[cut_index]
             cut_index += step
-            # ccurrent = utf8_bytes[cut_index]
-    # length limit is longer than our bytes strung, so no cutting
     return utf8_bytes
 
 
 def cap(s, l):
-    if s != None:
+    if s is not None:
         if not isinstance(s, basestring):
             s = str(s)
         if isinstance(s, unicode):
@@ -64,7 +58,6 @@ def cap(s, l):
 
 
 def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
-    unit = None
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
                       PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
         unit = unicode(_("/ Kg"))
@@ -79,16 +72,10 @@ def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
 
 
 def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
-    unit = None
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
         unit = unicode(_("/ Kg"))
     elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_LT:
         unit = unicode(_("/ L"))
-    # elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_BT_LT:
-    # if qty < 2:
-    #     unit = unicode(_("/ piece"))
-    #   else:
-    #     unit = unicode(_("/ pieces"))
     else:
         if qty < 2:
             unit = unicode(_("/ piece"))
@@ -99,7 +86,6 @@ def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
 
 def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     # Used when producing the orders send to the producers.
-    unit = None
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
         unit = unicode(_("/ Kg"))
     elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_LT:
@@ -114,7 +100,6 @@ def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
 
 def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     # Used when producing the preparation list.
-    unit = None
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_DEPOSIT]:
         unit = unicode(_("Piece(s) :"))
     elif order_unit in [PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
@@ -193,7 +178,7 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
 
 def get_user_order_amount(permanence, user=None):
     a_total_price_with_tax = 0
-    if user != None:
+    if user is not None:
         customer_order_set = CustomerOrder.objects.filter(
             permanence_id=permanence.id,
             customer__user=user)[:1]
@@ -204,7 +189,7 @@ def get_user_order_amount(permanence, user=None):
 
 def get_order_amount(permanence, customer=None):
     a_total_price_with_tax = 0
-    if customer != None:
+    if customer is not None:
         customer_order_set = CustomerOrder.objects.filter(
             permanence_id=permanence.id,
             customer_id=customer.id)[:1]
@@ -234,7 +219,6 @@ def save_order_amount(permanence_id, customer_id, a_total_price_with_tax):
 def save_order_delta_amount(permanence_id, customer_id,
                             a_previous_total_price_with_tax,
                             a_total_price_with_tax):
-    a_new_total_price_with_tax = 0
     customer_order_set = CustomerOrder.objects.filter(
         permanence_id=permanence_id,
         customer_id=customer_id)[:1]
@@ -258,15 +242,14 @@ def save_order_delta_amount(permanence_id, customer_id,
 def recalculate_order_amount(permanence_id, customer_id=None, send_to_producer=False):
     customer_save_id = None
     a_total_price_with_tax = 0
-    purchase_set = Purchase.objects.none()
-    if customer_id == None:
+    if customer_id is None:
         purchase_set = Purchase.objects.filter(permanence_id=permanence_id).order_by('customer')
     else:
         purchase_set = Purchase.objects.filter(permanence_id=permanence_id, customer_id=customer_id).order_by()
     for purchase in purchase_set:
         distribution_date = purchase.permanence.distribution_date
         if customer_save_id != purchase.customer.id:
-            if customer_save_id != None:
+            if customer_save_id is not None:
                 save_order_amount(permanence_id, customer_save_id, a_total_price_with_tax)
             a_total_price_with_tax = 0
             customer_save_id = purchase.customer.id
@@ -317,7 +300,7 @@ def recalculate_order_amount(permanence_id, customer_id=None, send_to_producer=F
         else:
             a_total_price_with_tax += purchase.price_with_vat
 
-    if customer_save_id != None:
+    if customer_save_id is not None:
         save_order_amount(permanence_id, customer_save_id, a_total_price_with_tax)
 
 
@@ -355,21 +338,19 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
             # when the status is PERMANENCE_WAIT_FOR_SEND
             if (offer_item.permanence.status == PERMANENCE_OPENED) or close_orders:
                 # The offer_item belong to a open permanence
-                q_order = 0
                 purchase = Purchase.objects.filter(
                     offer_item_id=offer_item.id,
                     permanence_id=offer_item.permanence_id,
                     customer_id=customer.id).order_by().first()
                 a_previous_total_price_with_tax = 0
                 q_previous_order = 0
-                if purchase != None:
+                if purchase is not None:
                     q_previous_order = purchase.quantity
                     if purchase.invoiced_price_with_compensation:
                         a_previous_total_price_with_tax = purchase.price_with_compensation
                     else:
                         a_previous_total_price_with_tax = purchase.price_with_vat
                 q_min = offer_item.product.customer_minimum_order_quantity
-                q_alert = 0
                 if offer_item.limit_to_alert_order_quantity:
                     offer_item.customer_alert_order_quantity += q_previous_order
                     q_alert = offer_item.customer_alert_order_quantity

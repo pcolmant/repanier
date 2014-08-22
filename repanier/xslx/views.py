@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from const import *
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+
 from repanier.views import render_response
 
 
@@ -16,8 +16,6 @@ class ImportXlsxForm(forms.Form):
 
 
 def import_xslx_view(obj, admin, request, queryset, handle_uploaded_file):
-    form = None
-    error_msg = None
     if 'apply' in request.POST:
         form = ImportXlsxForm(request.POST, request.FILES)
         if form.is_valid():

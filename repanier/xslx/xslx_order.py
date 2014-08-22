@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from const import *
 from django.http import HttpResponse
-from django.utils.translation import ugettext_lazy as _
-from export_tools import *
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
 from openpyxl.workbook import Workbook
+from django.contrib.sites.models import Site
+
+from export_tools import *
 from repanier.const import *
 from repanier.models import Customer
 from repanier.models import Permanence
@@ -16,12 +16,10 @@ from repanier.models import Staff
 from repanier.tools import get_producer_unit
 from repanier.tools import get_customer_unit
 from repanier.tools import get_preparator_unit
-from django.contrib.sites.models import Site
 
 
 def export(permanence, wb=None):
-    ws = None
-    if wb == None:
+    if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
     else:
@@ -65,7 +63,7 @@ def export(permanence, wb=None):
         for permanenceboard in PermanenceBoard.objects.filter(
                 permanence_id=next_permanence.id):
             c = permanenceboard.customer
-            if c != None:
+            if c is not None:
                 row = [
                     next_permanence.distribution_date,
                     c.long_basket_name,
@@ -88,7 +86,7 @@ def export(permanence, wb=None):
     row_num += 1
     for staff in Staff.objects.filter(is_active=True).order_by():
         c = staff.customer_responsible
-        if c != None:
+        if c is not None:
             row = [
                 staff.long_name,
                 c.long_basket_name,
@@ -163,13 +161,13 @@ def export(permanence, wb=None):
         for purchase in purchase_set:
 
             qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
-            if (qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT):
+            if qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT:
 
                 unit = get_customer_unit(order_unit=purchase.order_unit, qty=qty)
 
                 row = [
                     (unicode(_("Placement")), 15,
-                     purchase.product.get_placement_display() if purchase.product != None else "",
+                     purchase.product.get_placement_display() if purchase.product is not None else "",
                      NumberFormat.FORMAT_TEXT),
                     (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT),
                     (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT),
@@ -184,14 +182,14 @@ def export(permanence, wb=None):
 
                 if customer_save != purchase.customer.id or department_for_customer_save != purchase.department_for_customer:
                     if customer_save != purchase.customer.id:
-                        # Chloé asked to add an empty line for the scissors.
+                        # Add an empty line for the scissors.
                         row_num += 1
                     c = ws.cell(row=row_num, column=2)
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c.style.alignment.horizontal = 'right'
                     c.style.font.italic = True
                     department_for_customer_save = purchase.department_for_customer
-                    if department_for_customer_save != None:
+                    if department_for_customer_save is not None:
                         c.value = department_for_customer_save.short_name
                     else:
                         c.value = ""
@@ -226,18 +224,14 @@ def export(permanence, wb=None):
         department_for_customer_save = None
         long_name_save = None
         producer_save = None
-        producer_bold = False
-        product_bold = False
         product_counter = 0
         previous_product_qty_sum = 0
         customer_save = None
-        customer_bold = False
 
         producer_set = Producer.objects.filter(
             purchase__permanence_id=permanence.id).distinct()
 
         for producer in producer_set:
-            purchase_set = Purchase.objects.none()
             if producer.invoice_by_basket:
                 purchase_set = Purchase.objects.filter(
                     permanence_id=permanence.id,
@@ -271,10 +265,10 @@ def export(permanence, wb=None):
             for purchase in purchase_set:
 
                 qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
-                if (qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT):
+                if qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT:
 
-                    if ws == None:
-                        if wb == None:
+                    if ws is None:
+                        if wb is None:
                             wb = Workbook()
                             ws = wb.get_active_sheet()
                         else:
@@ -311,14 +305,15 @@ def export(permanence, wb=None):
 
                     row = [
                         (unicode(_("Placement")), 7,
-                         purchase.product.get_placement_display() if purchase.product != None else "",
+                         purchase.product.get_placement_display() if purchase.product is not None else "",
                          NumberFormat.FORMAT_TEXT, False),
                         (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT,
                          False),
                         (unicode(_("Product")), 40, purchase.long_name, NumberFormat.FORMAT_TEXT, False),
                         (unicode(_("Quantity")), 10, qty, '#,##0.???', False),
                         (
-                        unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
+                            unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT,
+                            False),
                         (unicode(_("Unit")), 10, get_customer_unit(order_unit=purchase.order_unit, qty=qty),
                          NumberFormat.FORMAT_TEXT, False),
                         (unicode(_("To distribute")), 9, "", '#,##0.???', False),
@@ -333,7 +328,7 @@ def export(permanence, wb=None):
                         row_num += 1
 
                     if department_for_customer_save != purchase.department_for_customer or producer_bold or (
-                        purchase.producer.invoice_by_basket and customer_save != purchase.customer):
+                                purchase.producer.invoice_by_basket and customer_save != purchase.customer):
                         if purchase.producer.invoice_by_basket and customer_save != purchase.customer:
                             customer_bold = True
                         else:
@@ -344,8 +339,8 @@ def export(permanence, wb=None):
                         c.style.alignment.horizontal = 'right'
                         c.style.font.italic = True
                         department_for_customer_save = purchase.department_for_customer
-                        if department_for_customer_save != None:
-                            if purchase.producer.invoice_by_basket == False:
+                        if department_for_customer_save is not None:
+                            if not purchase.producer.invoice_by_basket:
                                 c.value = department_for_customer_save.short_name
                             else:
                                 # TODO : Add a row with the departement and hidde it instead of repalcing with ""
@@ -407,15 +402,11 @@ def export(permanence, wb=None):
 def export_producer(permanence, producer, wb=None):
     ws = None
     row_num = 0
-    row_inc = 0
     current_site_name = Site.objects.get_current().name
 
-    date_save = None
     department_for_customer_save = None
     department_for_customer_short_name_save = None
-    product_bold = False
     qty_sum = 0
-    unit_sum = None
     long_name_save = None
     unit_price_save = 0
     unit_deposit_save = 0
@@ -444,8 +435,8 @@ def export_producer(permanence, producer, wb=None):
     )
     for purchase in purchase_set:
 
-        if ws == None:
-            if wb == None:
+        if ws is None:
+            if wb is None:
                 wb = Workbook()
                 ws = wb.get_active_sheet()
             else:
@@ -459,7 +450,7 @@ def export_producer(permanence, producer, wb=None):
             product_bold = True
             row_start_sum = row_num
             if department_for_customer_save != purchase.department_for_customer_id:
-                if department_for_customer_short_name_save != None:
+                if department_for_customer_short_name_save is not None:
                     row_num += 1
                     for col_num in xrange(7):
                         c = ws.cell(row=row_num, column=col_num)
@@ -476,12 +467,11 @@ def export_producer(permanence, producer, wb=None):
                     total_price_sum_sum = 0
                 row_start_sum_sum = row_num
                 department_for_customer_save = purchase.department_for_customer_id
-                if purchase.department_for_customer != None:
+                if purchase.department_for_customer is not None:
                     department_for_customer_short_name_save = purchase.department_for_customer.short_name
                 else:
                     department_for_customer_short_name_save = ""
-                c = None
-                if long_name_save != None:
+                if long_name_save is not None:
                     row_num += 1
                     c = ws.cell(row=row_num, column=1)
                 else:
@@ -527,7 +517,7 @@ def export_producer(permanence, producer, wb=None):
         qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
         qty_sum += qty
         unit_sum = get_producer_unit(order_unit=purchase.order_unit, qty=qty_sum)
-        if unit_save == None:
+        if unit_save is None:
             unit_save = purchase.order_unit
         else:
             if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
@@ -564,7 +554,7 @@ def export_producer(permanence, producer, wb=None):
                 c.style.font.bold = True
             c.style.borders.bottom.border_style = Border.BORDER_THIN
 
-    if ws != None:
+    if ws is not None:
         if hidde_column_unit_deposit:
             ws.column_dimensions[get_column_letter(6)].visible = False
         if hidde_column_unit:
@@ -576,7 +566,7 @@ def export_producer(permanence, producer, wb=None):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 2:
-                if department_for_customer_short_name_save != None:
+                if department_for_customer_short_name_save is not None:
                     c.value = unicode(_("Total Price")) + " " + department_for_customer_short_name_save
                 else:
                     c.value = unicode(_("Total Price"))
@@ -601,12 +591,9 @@ def export_producer(permanence, producer, wb=None):
 
     ws = None
     row_num = 0
-    row_inc = 0
 
     department_for_customer_save = None
     basket_save = None
-    basket_bold = False
-    total_price = 0
     total_price_sum = 0
     row_start_sum = 0
     total_price_sum_sum = 0
@@ -630,8 +617,8 @@ def export_producer(permanence, producer, wb=None):
     )
     for purchase in purchase_set:
 
-        if ws == None:
-            if wb == None:
+        if ws is None:
+            if wb is None:
                 wb = Workbook()
                 ws = wb.get_active_sheet()
             else:
@@ -641,7 +628,7 @@ def export_producer(permanence, producer, wb=None):
 
         if basket_save != purchase.customer.short_basket_name:
             basket_bold = True
-            if basket_save != None:
+            if basket_save is not None:
                 c = ws.cell(row=row_num, column=2)
                 c.value = unicode(_("Total Price")) + " " + basket_save
                 c = ws.cell(row=row_num, column=6)
@@ -670,11 +657,11 @@ def export_producer(permanence, producer, wb=None):
         qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
         unit = get_producer_unit(order_unit=purchase.order_unit, qty=qty)
 
-        if unit_save == None:
+        if unit_save is None:
             unit_save = purchase.order_unit
         else:
             if (purchase.order_unit != unit_save and purchase.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT) or (
-                purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]):
+                        purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]):
                 hidde_column_unit = False
 
         row = [
@@ -701,7 +688,7 @@ def export_producer(permanence, producer, wb=None):
 
         if basket_bold or (department_for_customer_save != purchase.department_for_customer):
             department_for_customer_save = purchase.department_for_customer
-            if department_for_customer_save != None:
+            if department_for_customer_save is not None:
                 c = ws.cell(row=row_num, column=1)
                 c.value = department_for_customer_save.short_name
                 row_num += 1
@@ -717,7 +704,7 @@ def export_producer(permanence, producer, wb=None):
 
         row_num += 1
 
-    if ws != None:
+    if ws is not None:
         if hidde_column_unit_deposit:
             ws.column_dimensions[get_column_letter(6)].visible = False
         if hidde_column_unit:
@@ -748,8 +735,7 @@ def export_producer(permanence, producer, wb=None):
 
 
 def export_customer(permanence, customer, wb=None):
-    ws = None
-    if wb == None:
+    if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
     else:
@@ -769,16 +755,16 @@ def export_customer(permanence, customer, wb=None):
     for purchase in purchase_set:
 
         qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
-        if (qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT):
+        if qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT:
             unit = get_customer_unit(order_unit=purchase.order_unit, qty=qty)
 
             row = [
                 (unicode(_("Placement")), 15,
-                 purchase.product.get_placement_display() if purchase.product != None else "", NumberFormat.FORMAT_TEXT,
+                 purchase.product.get_placement_display() if purchase.product is not None else "", NumberFormat.FORMAT_TEXT,
                  False),
                 (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Department")), 15,
-                 purchase.department_for_customer.short_name if purchase.department_for_customer != None else "N/A",
+                 purchase.department_for_customer.short_name if purchase.department_for_customer is not None else "N/A",
                  NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
@@ -820,6 +806,6 @@ def admin_export(request, queryset):
     filename = (unicode(_("Check")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('latin-1', errors='ignore')
     response['Content-Disposition'] = 'attachment; filename=' + filename
     wb = export(permanence=permanence, wb=None)
-    if wb != None:
+    if wb is not None:
         wb.save(response)
     return response

@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-from const import *
-from decimal import *
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
-from export_tools import *
-from import_tools import *
 from openpyxl import load_workbook
 from openpyxl.datavalidation import DataValidation, ValidationType
 from openpyxl.style import Border
 from openpyxl.style import Fill
 from openpyxl.style import NumberFormat
 from openpyxl.workbook import Workbook
+from django.contrib.sites.models import Site
+
+from export_tools import *
+from import_tools import *
 from repanier.const import *
 from repanier.models import LUT_DepartmentForCustomer
 from repanier.models import Producer
@@ -19,29 +18,19 @@ from repanier.models import Purchase
 from repanier.models import Customer
 from repanier.tools import cap
 from views import import_xslx_view
-from django.contrib.sites.models import Site
 
 
 def export(permanence, wb=None):
-    ws = None
-
-    if wb == None:
+    if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
     else:
         ws = wb.create_sheet()
 
-    last_permanence_name = None
-    producer_valid_values = []
-    customer_valid_values = []
-
     yellowFill = Fill()
     yellowFill.start_color.index = 'FFEEEE11'
     yellowFill.end_color.index = 'FFEEEE11'
     yellowFill.fill_type = Fill.FILL_SOLID
-
-    if ws == None:
-        ws = wb.create_sheet()
 
     last_permanence_name = worksheet_setup_landscape_a4(ws, unicode(permanence), unicode(_('invoices')))
     producer_valid_values = []
@@ -52,7 +41,6 @@ def export(permanence, wb=None):
     producer_set = Producer.objects.filter(is_active=True)
     for producer in producer_set:
 
-        purchase_set = Purchase.objects.none()
         if producer.invoice_by_basket:
             purchase_set = Purchase.objects.filter(
                 permanence_id=permanence.id,
@@ -79,8 +67,6 @@ def export(permanence, wb=None):
         sum_counter = 0
         sum_original_price = 0
         sum_quantity = 0
-        customer_short_basket_name = None
-        product_long_name = None
 
         for purchase in purchase_set:
             customer_short_basket_name = purchase.customer.short_basket_name
@@ -93,7 +79,7 @@ def export(permanence, wb=None):
 
             if producer.invoice_by_basket:
                 if sum_on != customer_short_basket_name:
-                    if sum_on != None:
+                    if sum_on is not None:
                         if sum_counter > 1:
                             c = ws.cell(row=row_num - 1, column=8)
                             c.value = sum_original_price
@@ -122,7 +108,7 @@ def export(permanence, wb=None):
                     sum_counter = 0
             else:
                 if sum_on != product_long_name:
-                    if sum_on != None:
+                    if sum_on is not None:
                         if sum_counter > 1:
                             c = ws.cell(row=row_num - 1, column=8)
                             # c.value = sum_quantity
@@ -167,7 +153,7 @@ def export(permanence, wb=None):
                 (unicode(_("Id")), 10, purchase.id, '#,##0', False),
                 (unicode(_("producer")), 15, producer_short_profile_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Department")), 15,
-                 "" if purchase.department_for_customer == None else purchase.department_for_customer.short_name,
+                 "" if purchase.department_for_customer is None else purchase.department_for_customer.short_name,
                  NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("product")), 60, product_long_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("customer")), 15, customer_short_basket_name, NumberFormat.FORMAT_TEXT, False),
@@ -207,7 +193,7 @@ def export(permanence, wb=None):
                                                         [str(row[col_num][ROW_VALUE])], True, wb, None, None,
                                                         yellowFill)
             row_num += 1
-        if sum_on != None:
+        if sum_on is not None:
             c = ws.cell(row=row_num - 1, column=8)
             if producer.invoice_by_basket:
                 if sum_counter > 1:
@@ -312,7 +298,6 @@ def export(permanence, wb=None):
     worksheet_set_header(ws, row_num, row)
     row_num += 1
 
-    today = timezone.localtime(timezone.now()).date()
     current_site_name = Site.objects.get_current().name
     producer_valid_values.sort()
     for v in producer_valid_values:
@@ -356,7 +341,7 @@ def admin_export(request, queryset):
                                                                                               errors='ignore')
     response['Content-Disposition'] = 'attachment; filename=' + filename
     wb = export(permanence=permanence, wb=None)
-    if wb != None:
+    if wb is not None:
         wb.save(response)
     return response
 
@@ -365,11 +350,9 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
                           customer_2_id_dict=None,
                           id_2_customer_vat_id_dict=None,
                           producer_2_id_dict=None,
-                          id_2_producer_vat_level_dict=None,
                           id_2_producer_price_list_multiplier_dict=None
 ):
     vat_level_dict = dict(LUT_VAT_REVERSE)
-    order_unit_dict = dict(LUT_PRODUCT_ORDER_UNIT_REVERSE)
     error = False
     error_msg = None
     header = get_header(worksheet)
@@ -381,7 +364,7 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
         while row and not error:
             # print(str(row[_('Id')]))
             try:
-                if row[_('producer')] == None and row[_('product')] == None and row[_('customer')] == None:
+                if row[_('producer')] is None and row[_('product')] is None and row[_('customer')] is None:
                     if db_write:
                         max_purchase_counter = len(array_purchase)
                         if max_purchase_counter > 1:
@@ -392,7 +375,7 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
                                     producer_id = purchase.producer_id
                                 actual_invoice += purchase.original_price
 
-                            if new_invoiced != None:
+                            if new_invoiced is not None:
                                 ratio = DECIMAL_ONE
                                 # print "Ratio", ratio
                                 if actual_invoice != DECIMAL_ZERO:
@@ -435,35 +418,31 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
                             purchase.price_with_compensation = purchase.price_with_compensation.quantize(TWO_DECIMALS)
                             purchase.invoiced_price_with_compensation = False
                             if (purchase.vat_level in [VAT_200, VAT_300]) and (
-                                id_2_customer_vat_id_dict[purchase.customer_id] != None):
+                                        id_2_customer_vat_id_dict[purchase.customer_id] is not None):
                                 purchase.invoiced_price_with_compensation = True
                             purchase.save()
 
-                    sum_original_price = 0
-                    sum_quantity = 0
                     array_purchase = []
                     new_invoiced = None
                 else:
-                    row_id = None
-                    if row[_('Id')] == None:
+                    if row[_('Id')] is None:
                         error = True
                         error_msg = _("Row %(row_num)d : No purchase id given.") % {'row_num': row_num + 1}
                         break
                     row_id = Decimal(row[_('Id')])
 
-                    purchase = None
                     purchase_set = Purchase.objects.filter(id=row_id).order_by()[:1]
                     if purchase_set:
                         purchase = purchase_set[0]
                     else:
                         error = True
                         error_msg = _("Row %(row_num)d : No purchase corresponding to the given purchase id.") % {
-                        'row_num': row_num + 1}
+                            'row_num': row_num + 1}
                         break
                     if purchase.permanence_id != permanence.id:
                         error = True
                         error_msg = _("Row %(row_num)d : The given permanence doesn't own the given purchase id.") % {
-                        'row_num': row_num + 1}
+                            'row_num': row_num + 1}
                         break
                     producer_id = None
                     if row[_('producer')] in producer_2_id_dict:
@@ -479,7 +458,6 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
                         error = True
                         error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                         break
-                    vat_level = None
                     if row[_("vat or compensation")] in vat_level_dict:
                         vat_level = vat_level_dict[row[_("vat or compensation")]]
                     else:
@@ -488,15 +466,13 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
                         break
 
                     # Q
-                    quantity = DECIMAL_ZERO if row[_('quantity')] == None else Decimal(row[_('quantity')]).quantize(
+                    quantity = DECIMAL_ZERO if row[_('quantity')] is None else Decimal(row[_('quantity')]).quantize(
                         FOUR_DECIMALS)
                     # PU
-                    original_unit_price = DECIMAL_ZERO if row[_('original unit price')] == None else Decimal(
+                    original_unit_price = DECIMAL_ZERO if row[_('original unit price')] is None else Decimal(
                         row[_('original unit price')]).quantize(TWO_DECIMALS)
-                    # C
-                    # unit_deposit = DECIMAL_ZERO if row[_('invoiced deposit')] == None else Decimal(row[_('invoiced deposit')]).quantize(TWO_DECIMALS)
                     # PL
-                    original_price = DECIMAL_ZERO if row[_('original row price')] == None  else Decimal(
+                    original_price = DECIMAL_ZERO if row[_('original row price')] is None else Decimal(
                         row[_('original row price')]).quantize(TWO_DECIMALS)
                     new_invoiced = None if row[_('invoiced without deposit')] in [None, " "] else Decimal(
                         row[_('invoiced without deposit')]).quantize(TWO_DECIMALS)
@@ -581,7 +557,7 @@ def import_purchase_sheet(worksheet, permanence=None, db_write=False,
                 # Missing field
                 error = True
                 error_msg = _("Row %(row_num)d : A required column is missing %(error_msg)s.") % {
-                'row_num': row_num + 1, 'error_msg': str(e)}
+                    'row_num': row_num + 1, 'error_msg': str(e)}
             except Exception, e:
                 error = True
                 error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
@@ -598,11 +574,11 @@ def handle_uploaded_file(request, queryset, file_to_import):
     producer_buyinggroup_id, producer_2_id_dict = get_producer_2_id_dict()
     id_2_producer_vat_level_dict = get_id_2_producer_vat_level_dict()
     id_2_producer_price_list_multiplier_dict = get_id_2_producer_price_list_multiplier_dict()
-    if customer_buyinggroup_id == None:
+    if customer_buyinggroup_id is None:
         error = True
         error_msg = _("At least one customer must represent the buying group.")
     else:
-        if producer_buyinggroup_id == None:
+        if producer_buyinggroup_id is None:
             error = True
             error_msg = _("At least one producer must represent the buying group.")
 
@@ -615,7 +591,6 @@ def handle_uploaded_file(request, queryset, file_to_import):
                                                              customer_2_id_dict=customer_2_id_dict,
                                                              id_2_customer_vat_id_dict=id_2_customer_vat_id_dict,
                                                              producer_2_id_dict=producer_2_id_dict,
-                                                             id_2_producer_vat_level_dict=id_2_producer_vat_level_dict,
                                                              id_2_producer_price_list_multiplier_dict=id_2_producer_price_list_multiplier_dict
                     )
                     if error:
@@ -634,7 +609,6 @@ def handle_uploaded_file(request, queryset, file_to_import):
                                                          customer_2_id_dict=customer_2_id_dict,
                                                          id_2_customer_vat_id_dict=id_2_customer_vat_id_dict,
                                                          producer_2_id_dict=producer_2_id_dict,
-                                                         id_2_producer_vat_level_dict=id_2_producer_vat_level_dict,
                                                          id_2_producer_price_list_multiplier_dict=id_2_producer_price_list_multiplier_dict
                 )
                 if error:

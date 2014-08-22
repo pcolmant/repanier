@@ -9,9 +9,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
 from const import *
-from repanier.models import Permanence
-from repanier.models import CustomerInvoice
-from repanier.models import PermanenceBoard
+from models import Permanence
+from models import CustomerInvoice
+from models import PermanenceBoard
 
 
 class PermanenceMenu(Menu):
@@ -69,7 +69,7 @@ class PermanenceMenu(Menu):
         for permanence in Permanence.objects.filter(status=PERMANENCE_OPENED).order_by('distribution_date'):
             if first_pass and separator:
                 node = NavigationNode(
-                    ('------'),
+                    '------',
                     "/",
                     id=submenu_id, parent_id=master_id,
                     visible=True
@@ -91,7 +91,7 @@ class PermanenceMenu(Menu):
         for permanence in Permanence.objects.filter(status=PERMANENCE_SEND).order_by('-distribution_date'):
             if first_pass and separator:
                 node = NavigationNode(
-                    ('------'),
+                    '------',
                     "/",
                     id=submenu_id, parent_id=master_id,
                     visible=True
@@ -114,7 +114,7 @@ class PermanenceMenu(Menu):
             if last_customer_invoice:
                 if separator:
                     node = NavigationNode(
-                        ('------'),
+                        '------',
                         "/",
                         id=submenu_id, parent_id=master_id,
                         visible=True
@@ -140,7 +140,6 @@ class PermanenceMenu(Menu):
                         visible=True
                     )
                 nodes.append(node)
-
 
                 # for node in nodes:
                 #     logging.debug('Node before : %s' % node.get_menu_title())

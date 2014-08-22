@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
-from const import *
 from django.http import HttpResponse
-from django.utils.translation import ugettext_lazy as _
-from export_tools import *
-from openpyxl.datavalidation import DataValidation, ValidationType, ValidationOperator
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
 from openpyxl.workbook import Workbook
-from repanier.const import *
-from repanier.models import OfferItem
+
+from export_tools import *
 from repanier.models import Producer
 from repanier.models import Product
 from repanier.tools import *
 
 
 def export(permanence, wb=None):
-    ws = None
-
-    if wb == None:
+    if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
     else:
@@ -185,6 +179,6 @@ def admin_export(request, queryset):
     filename = (unicode(_("Preview")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('latin-1', errors='ignore')
     response['Content-Disposition'] = 'attachment; filename=' + filename
     wb = export(permanence=permanence, wb=None)
-    if wb != None:
+    if wb is not None:
         wb.save(response)
     return response

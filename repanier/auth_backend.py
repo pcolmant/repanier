@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 
 class RepanierCustomBackend(ModelBackend):
     def authenticate(self, **credentials):
-        user_or_none = None
         try:
             user_or_none = super(RepanierCustomBackend, self).authenticate(**credentials)
             if user_or_none and not user_or_none.is_superuser:
@@ -29,7 +28,6 @@ class RepanierCustomBackend(ModelBackend):
         return user_or_none
 
     def get_user(self, user_id):
-        user_or_none = None
         try:
             user_or_none = User.objects.get(pk=user_id)
             if user_or_none and not user_or_none.is_superuser:

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from const import *
-from django.utils.translation import ugettext_lazy as _
 from repanier.models import Customer
 from repanier.models import LUT_DepartmentForCustomer
 from repanier.models import LUT_ProductionMode
@@ -13,7 +11,7 @@ def get_header(worksheet):
         row_num = 0
         col_num = 0
         c = worksheet.cell(row=row_num, column=col_num)
-        while (c.value != None ) and (col_num < 50):
+        while (c.value is not None ) and (col_num < 50):
             header.append(c.value)
             col_num += 1
             c = worksheet.cell(row=row_num, column=col_num)

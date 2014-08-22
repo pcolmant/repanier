@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
-from django.conf import settings
 from django import template
-from django.contrib.auth.models import User
-from django.utils.translation import ugettext as _
-from django.utils.formats import number_format
 
-from repanier.const import *
 from repanier.tools import *
 from repanier.models import OfferItem
 from repanier.models import Purchase
@@ -49,7 +44,6 @@ def repanier_select_qty(context, *args, **kwargs):
             q_step = offer_item.product.customer_increment_order_quantity
             # The q_min cannot be 0. In this case try to replace q_min by q_step.
             # In last ressort by q_alert.
-            # result = '<select name="value" id="offer_item' + str(offer_item.id) + '" onchange="order_ajax(' + str(offer_item.id) + ')" data-refresh="'+ str(offer_item.limit_to_alert_order_quantity) + '" class="form-control">'
             result = '<select name="value" id="offer_item' + str(offer_item.id) + '" onchange="order_ajax(' + str(
                 offer_item.id) + ')" class="form-control">'
             q_order_is_displayed = False
@@ -61,13 +55,12 @@ def repanier_select_qty(context, *args, **kwargs):
                 q_min = q_alert
                 q_step = q_alert
             if (q_min <= 0 and offer_item.permanence.status == PERMANENCE_OPENED) or (q_order <= 0):
-                q_order_is_displayed = True
                 result += '<option value="0" selected>---</option>'
             else:
                 q_select_id = 0
                 q_valid = q_min
                 q_counter = 0  # Limit to avoid too long selection list
-                while q_valid <= q_alert and q_counter <= 20 and q_order_is_displayed == False:
+                while q_valid <= q_alert and q_counter <= 20 and not q_order_is_displayed:
                     q_select_id += 1
                     q_counter += 1
                     if q_order <= q_valid:
@@ -86,9 +79,9 @@ def repanier_select_qty(context, *args, **kwargs):
                         # 1; 2; 3; 4 ... q_min = 1; q_step = 1
                         # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
                         q_valid = q_valid + q_step
-                if q_order_is_displayed == False:
+                if not q_order_is_displayed:
                     # An custom order_qty > q_alert
-                    q_select_id = q_select_id + 1
+                    q_select_id += 1
                     qty_display = get_qty_display(
                         q_order,
                         q_average_weight,
@@ -104,8 +97,8 @@ def repanier_select_qty(context, *args, **kwargs):
     else:
         result = "N/A3"
     # except:
-    # 	# user.customer doesn't exist -> the user is not a customer.
-    # 	result = "N/A2"
+    # # user.customer doesn't exist -> the user is not a customer.
+    # result = "N/A2"
     return result
 
 

@@ -10,7 +10,6 @@ from repanier.models import Purchase
 def admin_delete(request, queryset):
     user_message = _("The status of this permanence prohibit you to delete the purchases.")
     user_message_level = messages.ERROR
-    is_something_deleted = False
     for permanence in queryset.filter(status=PERMANENCE_SEND)[:1]:
         Purchase.objects.filter(permanence_id=permanence.id).delete()
         OfferItem.objects.filter(permanence_id=permanence.id).delete()

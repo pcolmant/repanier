@@ -123,7 +123,7 @@ def admin_open_and_send(request, queryset):
                 user_message_level = messages.WARNING
             else:
                 user_message = _("Action refused by the system. Please, retry in %d minutes.") % (
-                31 - (int(timediff.total_seconds()) / 60))
+                    31 - (int(timediff.total_seconds()) / 60))
                 user_message_level = messages.WARNING
     return user_message, user_message_level
 
@@ -211,7 +211,7 @@ def admin_close_and_send(request, queryset):
                 user_message_level = messages.WARNING
             else:
                 user_message = _("Action refused by the system. Please, retry in %d minutes.") % (
-                31 - (int(timediff.total_seconds()) / 60))
+                    31 - (int(timediff.total_seconds()) / 60))
                 user_message_level = messages.WARNING
     return user_message, user_message_level
 

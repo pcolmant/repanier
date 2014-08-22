@@ -25,9 +25,9 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
     ws = None
     # Detail of what has been prepared
     purchase_set = Purchase.objects.none()
-    if customer == None and producer == None:
-        if ws == None:
-            if wb == None:
+    if customer is None and producer is None:
+        if ws is None:
+            if wb is None:
                 wb = Workbook()
                 ws = wb.get_active_sheet()
             else:
@@ -44,10 +44,8 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
 
         customer_set = Customer.objects.all()
         for customer in customer_set:
-            balance_before = 0
             payment = 0
             prepared = 0
-            balance_after = 0
             customer_invoice_set = CustomerInvoice.objects.filter(customer=customer,
                                                                   permanence=permanence
             ).order_by()[:1]
@@ -190,7 +188,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
             "long_name",
             "customer__short_basket_name"
         )
-    elif customer != None:
+    elif customer is not None:
         purchase_set = Purchase.objects.filter(
             permanence_id=permanence.id, producer__isnull=False, customer=customer).order_by(
             "producer__short_profile_name",
@@ -214,13 +212,13 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
 
     for purchase in purchase_set:
 
-        if ws == None:
-            if wb == None:
+        if ws is None:
+            if wb is None:
                 wb = Workbook()
                 ws = wb.get_active_sheet()
             else:
                 ws = wb.create_sheet()
-            if producer != None:
+            if producer is not None:
                 # To the producer we speak of "payment".
                 # This is the detail of the paiment to the producer, i.e. received products
                 worksheet_setup_landscape_a4(ws, unicode(_('Payment')) + " - " + unicode(sheet_name),
@@ -263,14 +261,14 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
             (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
             (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
             (unicode(_("Department")), 15,
-             purchase.product.department_for_customer.short_name if purchase.product != None else "",
+             purchase.product.department_for_customer.short_name if purchase.product is not None else "",
              NumberFormat.FORMAT_TEXT, False),
             (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT, False),
             (unicode(_("Quantity")), 10, qty, '#,##0.????',
              True if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
                                              PRODUCT_ORDER_UNIT_NAMED_PC_KG] else False),
             (unicode(_("Unit")), 10, unit, NumberFormat.FORMAT_TEXT, False),
-            (unicode(_("Unit invoided price, deposit included")), 10, a_unit_price,
+            (unicode(_("Unit invoiced price, deposit included")), 10, a_unit_price,
              u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             (unicode(_("Total invoiced price, deposit included")), 10, a_total_price,
              u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
@@ -300,7 +298,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
 
         row_num += 1
 
-    if wb != None:
+    if wb is not None:
         if hidde_column_vat:
             ws.column_dimensions[get_column_letter(9)].visible = False
         if hidde_column_compensation:
@@ -341,6 +339,6 @@ def admin_export(request, queryset):
                                                                                                        errors='ignore')
     response['Content-Disposition'] = 'attachment; filename=' + filename
     wb = export(permanence=permanence, wb=None, sheet_name=current_site.name)
-    if wb != None:
+    if wb is not None:
         wb.save(response)
     return response
