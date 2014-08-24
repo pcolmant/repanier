@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponse
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
