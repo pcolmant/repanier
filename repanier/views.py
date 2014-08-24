@@ -129,7 +129,7 @@ def ajax_order_select(request):
                     # The q_order is either the purchased quantity or 0
                     q_min = offer_item.product.customer_minimum_order_quantity
                     # Limit to available qty
-                    q_alert = offer_item.customer_alert_order_quantity + q_order if offer_item.limit_to_alert_order_quantity else offer_item.customer_alert_order_quantity
+                    q_alert = offer_item.customer_alert_order_quantity + q_order if offer_item.limit_to_alert_order_quantity else offer_item.product.customer_alert_order_quantity
                     q_step = offer_item.product.customer_increment_order_quantity
                     # The q_min cannot be 0. In this case try to replace q_min by q_step.
                     # In last resort by q_alert.
@@ -146,13 +146,12 @@ def ajax_order_select(request):
                         option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
                         to_json.append(option_dict)
                     else:
-
                         q_select_id = 0
                         selected = ""
                         if q_order <= 0:
                             q_order_is_displayed = True
                             selected = "selected"
-                        if ( offer_item.permanence.status == PERMANENCE_OPENED or
+                        if (offer_item.permanence.status == PERMANENCE_OPENED or
                                  (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
                             option_dict = {'value': '0', 'selected': selected, 'label': '---'}
                             to_json.append(option_dict)
