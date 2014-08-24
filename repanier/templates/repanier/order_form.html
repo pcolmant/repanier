@@ -58,13 +58,11 @@
                             <a href="?"
                                {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
                             <ul class="nav nav-stacked">
-                        {% endif %}
                         {% for producer in producer_set %}
                             <li><a href="?producer={{ producer.id }}"
                                    {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
                             </li>
                         {% endfor %}
-                        {% if producer_set.count > 1 %}
                             </ul>
                         {% endif %}
                     </li>
@@ -86,41 +84,6 @@
         </nav>
 
         <div class="col-md-10 col-sm-9 col-xs-12">
-        <div class="visible-xs">
-            <div class="btn-group">
-                {% if producer_set.count > 1 %}
-                    <div class="btn-group dropdown">
-                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                            {% trans " P " %}
-                            <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="?">{% trans "All producers" %}</a></li>
-                            {% for producer in producer_set %}
-                                <li><a href="?producer={{ producer.id }}">{{ producer.short_profile_name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-                {% if departementforcusomer_set.count > 1 %}
-                    <div class="btn-group dropdown">
-                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                            {% trans " D " %}
-                            <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="?">{% trans "All departments" %}</a></li>
-                            {% for departementforcusomer in departementforcusomer_set %}
-                                <li>
-                                    <a href="?departementforcusomer={{ departementforcusomer.id }}">{{ departementforcusomer.short_name }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
         {% if offeritem_list %}
             <div class="hidden-xs offer-description">
                 {{ permanence_offer_description | safe }}
@@ -130,11 +93,13 @@
                 {% for offer in offeritem_list %}
                     <tr data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
                         <form>
+                        {% if producer_set.count > 1 %}
                             <td data-toggle="modal" data-target="#orderModal" class="hidden-xs hidden-sm">
                                 <h4>
                                     <small>{{ offer.product.producer.short_profile_name | truncatechars:15 }}</small>
                                 </h4>
                             </td>
+                        {% endif %}
                             <td data-toggle="modal" data-target="#orderModal" style="width: 40%;"
                                 class="hidden-xs hidden-sm">
                                 <h4>{{ offer.product.long_name }}{% if offer.product.offer_description|length > 0 %}
@@ -150,11 +115,10 @@
                             </td>
                             <td data-toggle="modal" data-target="#orderModal" style="width: 50%;"
                                 class="visible-xs visible-sm">
-                                {{ offer.product.producer.short_profile_name | truncatechars:8 }},
+                                {% if producer_set.count > 1 %}{{ offer.product.producer.short_profile_name | truncatechars:8 }},{% endif %}
                                 <b>{{ offer.product.long_name }}{% if offer.product.offer_description|length > 0 %}
                                     <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
-                                {% if departementforcusomer_set.count > 1 %}(
-                                    {{ offer.product.department_for_customer.short_name }}){% endif %}
+                                {% if departementforcusomer_set.count > 1 %}({{ offer.product.department_for_customer.short_name }}){% endif %}
                                 {% if user.customer.vat_id %}{{ offer.product.unit_price_with_compensation }}{% else %}
                                     {{ offer.product.unit_price_with_vat }}{% endif %} &euro;
                                 {% if offer.product.order_unit == "120" or offer.product.order_unit == "220" or offer.product.order_unit == "140" or offer.product.order_unit == "240" %}
@@ -164,7 +128,7 @@
                                         {% if offer.product.unit_deposit %}
                                             <span class="glyphicon glyphicon-plus"></span>
                                             {{ offer.product.unit_deposit }} &euro;
-                                            <span class="glyphicon glyphicon-leaf">{% endif %}
+                                            <span class="glyphicon glyphicon-leaf"></span>{% endif %}
                             </td>
                             <td data-toggle="modal" data-target="#orderModal" class="hidden-xs hidden-sm">
                                 <h4>{% if user.customer.vat_id %}
@@ -349,13 +313,46 @@
 {% block footer %}
     <div class="visible-xs">
         <div class="btn-group">
-            <div class="btn-group">
-                {% if display_all_product_button %}
-                    <a href="?" class="btn btn-primary btn-xs">{% trans "All product" %}</a>
+                {% if producer_set.count > 1 %}
+                    <div class="btn-group btn-xs dropup">
+                        <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
+                            {% trans " P " %}
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="?">{% trans "All producers" %}</a></li>
+                            {% for producer in producer_set %}
+                                <li><a href="?producer={{ producer.id }}">{{ producer.short_profile_name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 {% endif %}
+                {% if departementforcusomer_set.count > 1 %}
+                    <div class="btn-group btn-xs dropup">
+                        <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
+                            {% trans " D " %}
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="?">{% trans "All departments" %}</a></li>
+                            {% for departementforcusomer in departementforcusomer_set %}
+                                <li>
+                                    <a href="?departementforcusomer={{ departementforcusomer.id }}">{{ departementforcusomer.short_name }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                {% if display_all_product_button %}
+                    <div class="btn-group btn-xs">
+                    <a href="?" class="btn btn-primary btn-xs">{% trans "All" %}</a>
+                    </div>
+                {% endif %}
+                <div class="btn-group btn-xs">
                 <a href="?offeritem=purchased" class="btn btn-primary btn-xs"><span id="prepared_amount_visible_xs"
-                                                                                    class="prepared_amount">{{ prepared_amount }}</span> &euro;
+                    class="prepared_amount">{{ prepared_amount }}</span> &euro;
                     <span class="glyphicon glyphicon-shopping-cart"></span></a>
+                </div>
             </div>
         </div>
     </div>
