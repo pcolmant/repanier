@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-08-19 05:56+0200\n"
-"PO-Revision-Date: 2014-08-20 06:47+0100\n"
+"PO-Revision-Date: 2014-08-24 16:29+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -370,7 +370,7 @@ msgstr ""
 
 #: const.py:76 const.py:94
 msgid "/L (loose)"
-msgstr "Acheté et facturé au ℓ.  → (•_•) contenance moyenne et consigne."
+msgstr "Acheté et facturé au ℓ.  → (•_•) consigne."
 
 #: const.py:77 const.py:91
 msgid "/piece -> L (loose)"
@@ -2122,8 +2122,8 @@ msgstr ""
 #~ "Row %(row_num)d : Price validation error. Calculated quantity * original "
 #~ "unit price = %(check)f and given total price is %(total)f."
 #~ msgstr ""
-#~ "Ligne %(row_num)d : La quantité multipliée par le prix unitaire = %(check)"
-#~ "f tandis que le prix total renseigné = %(total)f."
+#~ "Ligne %(row_num)d : La quantité multipliée par le prix unitaire = "
+#~ "%(check)f tandis que le prix total renseigné = %(total)f."
 
 #~ msgid " piece = ~ "
 #~ msgstr " pièce = ~ "
