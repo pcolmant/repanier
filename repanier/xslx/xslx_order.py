@@ -235,11 +235,7 @@ def export(permanence, wb=None):
                 purchase_set = Purchase.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer.id,
-                    order_unit__in=[
-                        PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-                        PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
-                        PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-                        PRODUCT_ORDER_UNIT_DEPOSIT]
+                    order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT
                 ).order_by(
                     "customer__short_basket_name",  # "product__placement",
                     "department_for_customer",
@@ -251,11 +247,7 @@ def export(permanence, wb=None):
                 purchase_set = Purchase.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer.id,
-                    order_unit__in=[
-                        PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-                        PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
-                        PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-                        PRODUCT_ORDER_UNIT_DEPOSIT]
+                    order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT
                 ).order_by(  # "product__placement",
                              "department_for_customer",
                              "long_name",
@@ -423,12 +415,7 @@ def export_producer(permanence, producer, wb=None):
 
     purchase_set = Purchase.objects.filter(
         permanence_id=permanence.id, producer_id=producer.id,
-        order_unit__in=[
-            PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-            PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
-            PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-            PRODUCT_ORDER_UNIT_TRANSPORTATION
-        ]
+        order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT
     ).exclude(quantity=0
     ).order_by(
         "department_for_customer",
@@ -606,12 +593,7 @@ def export_producer(permanence, producer, wb=None):
 
     purchase_set = Purchase.objects.filter(
         permanence_id=permanence.id, producer_id=producer.id,
-        order_unit__in=[
-            PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-            PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
-            PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-            PRODUCT_ORDER_UNIT_TRANSPORTATION
-        ]
+        order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT
     ).exclude(quantity=0
     ).order_by(
         "customer__short_basket_name",
