@@ -61,7 +61,7 @@ def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
                       PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
         unit = unicode(_("/ Kg"))
-    elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT]:
+    elif order_unit in [PRODUCT_ORDER_UNIT_NAMED_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT]:
         unit = unicode(_("/ L"))
     else:
         if qty < 2:
@@ -74,7 +74,7 @@ def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
 def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
         unit = unicode(_("/ Kg"))
-    elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_LT:
+    elif order_unit == PRODUCT_ORDER_UNIT_NAMED_LT:
         unit = unicode(_("/ L"))
     else:
         if qty < 2:
@@ -88,7 +88,7 @@ def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     # Used when producing the orders send to the producers.
     if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
         unit = unicode(_("/ Kg"))
-    elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_LT:
+    elif order_unit == PRODUCT_ORDER_UNIT_NAMED_LT:
         unit = unicode(_("/ L"))
     else:
         if qty < 2:
@@ -104,7 +104,7 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
         unit = unicode(_("Piece(s) :"))
     elif order_unit in [PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
         unit = unicode(_(u"€ :"))
-    elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_BT_LT, PRODUCT_ORDER_UNIT_LOOSE_LT]:
+    elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_BT_LT, PRODUCT_ORDER_UNIT_NAMED_LT]:
         unit = unicode(_("L :"))
     else:
         unit = unicode(_("Kg :"))
@@ -120,7 +120,7 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
             magnitude = 1000
         else:
             unit = unicode(_(' kg'))
-    elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_LT:
+    elif order_unit == PRODUCT_ORDER_UNIT_NAMED_LT:
         if qty < 1:
             unit = unicode(_(' cl'))
             magnitude = 100

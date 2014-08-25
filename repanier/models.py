@@ -1066,7 +1066,7 @@ class Purchase(models.Model):
         self._quantity_deposit = DECIMAL_ZERO
         if self.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_NAMED_PC]:
             self._quantity_deposit = self.quantity
-        elif self.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_BT_LT, PRODUCT_ORDER_UNIT_LOOSE_LT]:
+        elif self.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_BT_LT, PRODUCT_ORDER_UNIT_NAMED_LT]:
             if self.permanence.status < PERMANENCE_SEND:
                 self._quantity_deposit = self.quantity
             else:

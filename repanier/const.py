@@ -57,7 +57,7 @@ LUT_PRODUCT_PLACEMENT = (
 PRODUCT_ORDER_UNIT_LOOSE_PC = '100'
 PRODUCT_ORDER_UNIT_LOOSE_KG = '120'
 PRODUCT_ORDER_UNIT_LOOSE_PC_KG = '140'
-PRODUCT_ORDER_UNIT_LOOSE_LT = '150'
+PRODUCT_ORDER_UNIT_NAMED_LT = '150'
 PRODUCT_ORDER_UNIT_LOOSE_BT_LT = '160'
 PRODUCT_ORDER_UNIT_NAMED_PC = '200'
 PRODUCT_ORDER_UNIT_NAMED_KG = '220'
@@ -73,7 +73,7 @@ LUT_PRODUCT_ORDER_UNIT = (
     (PRODUCT_ORDER_UNIT_NAMED_KG, unicode(_("/Kg (named)"))),
     (PRODUCT_ORDER_UNIT_LOOSE_PC_KG, unicode(_("/piece -> Kg (loose)"))),
     (PRODUCT_ORDER_UNIT_NAMED_PC_KG, unicode(_("/piece -> Kg (named)"))),
-    (PRODUCT_ORDER_UNIT_LOOSE_LT, unicode(_("/L (loose)"))),
+    (PRODUCT_ORDER_UNIT_NAMED_LT, unicode(_("/L (named)"))),
     (PRODUCT_ORDER_UNIT_LOOSE_BT_LT, unicode(_("/piece -> L (loose)"))),
     (PRODUCT_ORDER_UNIT_DEPOSIT, unicode(
         _(
@@ -91,7 +91,7 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
     (unicode(_("/piece -> L (loose)")), PRODUCT_ORDER_UNIT_LOOSE_BT_LT),
     (unicode(_("/piece (named)")), PRODUCT_ORDER_UNIT_NAMED_PC),
     (unicode(_("/Kg (named)")), PRODUCT_ORDER_UNIT_NAMED_KG),
-    (unicode(_("/L (loose)")), PRODUCT_ORDER_UNIT_LOOSE_LT),
+    (unicode(_("/L (named)")), PRODUCT_ORDER_UNIT_NAMED_LT),
     (unicode(_("/piece -> Kg (named)")), PRODUCT_ORDER_UNIT_NAMED_PC_KG),
     (unicode(
         _(

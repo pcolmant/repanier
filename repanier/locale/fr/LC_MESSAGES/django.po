@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-19 05:56+0200\n"
-"PO-Revision-Date: 2014-08-24 16:29+0100\n"
+"POT-Creation-Date: 2014-08-25 21:10+0200\n"
+"PO-Revision-Date: 2014-08-25 20:55+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -369,8 +369,8 @@ msgstr ""
 "panier.  → (•_•) poids moyen."
 
 #: const.py:76 const.py:94
-msgid "/L (loose)"
-msgstr "Acheté et facturé au ℓ.  → (•_•) consigne."
+msgid "/L (named)"
+msgstr "/ ℓ (le producteur étiquette le produit par panier)"
 
 #: const.py:77 const.py:91
 msgid "/piece -> L (loose)"
@@ -1028,7 +1028,8 @@ msgstr "Mouvement de compte"
 msgid "bank account movements"
 msgstr "Mouvements de compte"
 
-#: tools.py:63 tools.py:76 tools.py:90 templates/repanier/order_form.html:125
+#: tools.py:63 tools.py:76 tools.py:90 templates/repanier/order_form -
+#: Copy.html:28 Copy.html:32 templates/repanier/order_form.html:125
 #: templates/repanier/order_form.html:138
 #: templates/repanier/order_form_std.html:165
 #: templates/repanier/order_form_std.html:178
@@ -1039,7 +1040,8 @@ msgstr "/ kg"
 msgid "/ L"
 msgstr "/ ℓ"
 
-#: tools.py:68 tools.py:81 tools.py:95 templates/repanier/order_form.html:127
+#: tools.py:68 tools.py:81 tools.py:95 templates/repanier/order_form -
+#: Copy.html:28 Copy.html:32 templates/repanier/order_form.html:127
 #: templates/repanier/order_form.html:140
 #: templates/repanier/order_form_std.html:167
 #: templates/repanier/order_form_std.html:180
@@ -1492,21 +1494,23 @@ msgid "Compensation"
 msgstr "(Compensation)"
 
 #: templates/repanier/invoice_form.html:72
-#: templates/repanier/invoicep_form.html:72
+#: templates/repanier/invoicep_form.html:72 xslx/xslx_order.py:527
+#: xslx/xslx_order.py:660
 msgid "Deposit"
 msgstr "Consigne"
 
-#: templates/repanier/invoice_form.html:83 xslx/xslx_invoice.py:261
-#: xslx/xslx_offer.py:34 xslx/xslx_offer.py:107 xslx/xslx_order.py:173
-#: xslx/xslx_order.py:311 xslx/xslx_order.py:766
+#: templates/repanier/invoice_form.html:83 templates/repanier/order_form -
+#: Copy.html:155 xslx/xslx_invoice.py:261 xslx/xslx_offer.py:34
+#: xslx/xslx_offer.py:107 xslx/xslx_order.py:173 xslx/xslx_order.py:303
+#: xslx/xslx_order.py:751
 msgid "Producer"
 msgstr "Producteur"
 
 #: templates/repanier/invoice_form.html:86
 #: templates/repanier/invoicep_form.html:86 xslx/xslx_invoice.py:266
 #: xslx/xslx_offer.py:37 xslx/xslx_offer.py:111 xslx/xslx_order.py:174
-#: xslx/xslx_order.py:313 xslx/xslx_order.py:535 xslx/xslx_order.py:672
-#: xslx/xslx_order.py:770
+#: xslx/xslx_order.py:305 xslx/xslx_order.py:524 xslx/xslx_order.py:657
+#: xslx/xslx_order.py:755
 msgid "Product"
 msgstr "Produit"
 
@@ -1534,10 +1538,74 @@ msgstr "Solde précédent"
 msgid "Customer"
 msgstr "Consommateur"
 
+#: templates/repanier/order_form - Copy.html:40
+#: templates/repanier/order_form.html:152
+#: templates/repanier/order_form_std.html:192
+#: templates/repanier/permanence_form.html:32
+msgid "ok"
+msgstr "Confirmer"
+
+#: templates/repanier/order_form - Copy.html:67
+#: templates/repanier/order_form.html:204
+#: templates/repanier/order_form_std.html:249
+msgid "No offer found"
+msgstr "Pas de produit trouvé"
+
+#: templates/repanier/order_form - Copy.html:70
+#: templates/repanier/order_form.html:309
+#: templates/repanier/order_form_std.html:318
+#: templates/repanier/permanence_form.html:69
+msgid "You are not allowed to order products"
+msgstr ""
+"La fonctionnalité de commande n'est pas activée sur votre compte. Si vous "
+"souhaitez commander, veuillez vous adresser aux responsables de votre groupe."
+
+#: templates/repanier/order_form - Copy.html:115
+#: templates/repanier/order_form.html:298
+#: templates/repanier/order_form_std.html:307
+msgid "Communication error"
+msgstr "Erreur de connexion"
+
+#: templates/repanier/order_form - Copy.html:116
+#: templates/repanier/order_form.html:299
+#: templates/repanier/order_form_std.html:308
+msgid "Please close this window and retry."
+msgstr "Veuillez fermer cette fenêtre et ressayer l\\'opération."
+
+#: templates/repanier/order_form - Copy.html:136 Copy.html:187
+#: templates/repanier/order_form.html:370
+#: templates/repanier/order_form_std.html:335
+#: templates/repanier/order_form_std.html:370
+#: templates/repanier/permanence_form.html:85
+msgid "Page "
+msgstr "Écran "
+
+#: templates/repanier/order_form - Copy.html:136 Copy.html:187
+#: templates/repanier/order_form.html:370
+#: templates/repanier/order_form_std.html:335
+#: templates/repanier/order_form_std.html:370
+#: templates/repanier/permanence_form.html:85
+msgid "of"
+msgstr "/"
+
+#: templates/repanier/order_form - Copy.html:149 Copy.html:200
+#: templates/repanier/order_form_std.html:352
+msgid "All product"
+msgstr "Tous les produits"
+
+#: templates/repanier/order_form - Copy.html:151
 #: templates/repanier/order_form.html:52
 #: templates/repanier/order_form_std.html:65
 msgid "Purchased product"
 msgstr "Mon panier"
+
+#: templates/repanier/order_form - Copy.html:151
+msgid "(at average weight)"
+msgstr "(au poids moyen)"
+
+#: templates/repanier/order_form - Copy.html:166
+msgid "departement"
+msgstr "Rayon"
 
 #: templates/repanier/order_form.html:59
 #: templates/repanier/order_form.html:323
@@ -1546,7 +1614,7 @@ msgstr "Mon panier"
 msgid "All producers"
 msgstr "Tous les producteurs"
 
-#: templates/repanier/order_form.html:74
+#: templates/repanier/order_form.html:72
 #: templates/repanier/order_form.html:337
 #: templates/repanier/order_form_std.html:82
 #: templates/repanier/order_form_std.html:116
@@ -1560,12 +1628,6 @@ msgstr "Tous les rayons"
 msgid "/ ℓ"
 msgstr "/ ℓ"
 
-#: templates/repanier/order_form.html:152
-#: templates/repanier/order_form_std.html:192
-#: templates/repanier/permanence_form.html:32
-msgid "ok"
-msgstr "Confirmer"
-
 #: templates/repanier/order_form.html:172
 #: templates/repanier/order_form.html:197
 #: templates/repanier/order_form_std.html:213
@@ -1577,29 +1639,6 @@ msgstr "Fermer"
 #: templates/repanier/order_form_std.html:232
 msgid "To order a bigger quantity, please contact your "
 msgstr "Pour commander une quantité plus grande, veuillez contacter votre "
-
-#: templates/repanier/order_form.html:204
-#: templates/repanier/order_form_std.html:249
-msgid "No offer found"
-msgstr "Pas de produit trouvé"
-
-#: templates/repanier/order_form.html:298
-#: templates/repanier/order_form_std.html:307
-msgid "Communication error"
-msgstr "Erreur de connexion"
-
-#: templates/repanier/order_form.html:299
-#: templates/repanier/order_form_std.html:308
-msgid "Please close this window and retry."
-msgstr "Veuillez fermer cette fenêtre et ressayer l\\'opération."
-
-#: templates/repanier/order_form.html:309
-#: templates/repanier/order_form_std.html:318
-#: templates/repanier/permanence_form.html:69
-msgid "You are not allowed to order products"
-msgstr ""
-"La fonctionnalité de commande n'est pas activée sur votre compte. Si vous "
-"souhaitez commander, veuillez vous adresser aux responsables de votre groupe."
 
 #: templates/repanier/order_form.html:319
 #: templates/repanier/order_form_std.html:100
@@ -1614,24 +1653,6 @@ msgstr " R "
 #: templates/repanier/order_form.html:348
 msgid "All"
 msgstr "Tous"
-
-#: templates/repanier/order_form.html:371
-#: templates/repanier/order_form_std.html:335
-#: templates/repanier/order_form_std.html:370
-#: templates/repanier/permanence_form.html:85
-msgid "Page "
-msgstr "Écran "
-
-#: templates/repanier/order_form.html:371
-#: templates/repanier/order_form_std.html:335
-#: templates/repanier/order_form_std.html:370
-#: templates/repanier/permanence_form.html:85
-msgid "of"
-msgstr "/"
-
-#: templates/repanier/order_form_std.html:352
-msgid "All product"
-msgstr "Tous les produits"
 
 #: templates/repanier/permanence_form.html:40
 msgid "No permanence found"
@@ -1714,23 +1735,23 @@ msgid "Balance after"
 msgstr "Solde final"
 
 #: xslx/xslx_invoice.py:262 xslx/xslx_order.py:33 xslx/xslx_order.py:177
-#: xslx/xslx_order.py:316 xslx/xslx_order.py:532 xslx/xslx_order.py:669
-#: xslx/xslx_order.py:771
+#: xslx/xslx_order.py:308 xslx/xslx_order.py:521 xslx/xslx_order.py:654
+#: xslx/xslx_order.py:756
 msgid "Basket"
 msgstr "Panier"
 
 #: xslx/xslx_invoice.py:263 xslx/xslx_offer.py:35 xslx/xslx_offer.py:109
-#: xslx/xslx_order.py:767 xslx/xslx_purchase.py:156
+#: xslx/xslx_order.py:752 xslx/xslx_purchase.py:156
 msgid "Department"
 msgstr "Rayon"
 
-#: xslx/xslx_invoice.py:267 xslx/xslx_order.py:175 xslx/xslx_order.py:314
-#: xslx/xslx_order.py:533 xslx/xslx_order.py:670 xslx/xslx_order.py:772
+#: xslx/xslx_invoice.py:267 xslx/xslx_order.py:175 xslx/xslx_order.py:306
+#: xslx/xslx_order.py:522 xslx/xslx_order.py:655 xslx/xslx_order.py:757
 msgid "Quantity"
 msgstr "Quantité"
 
-#: xslx/xslx_invoice.py:270 xslx/xslx_order.py:176 xslx/xslx_order.py:318
-#: xslx/xslx_order.py:534 xslx/xslx_order.py:671 xslx/xslx_order.py:773
+#: xslx/xslx_invoice.py:270 xslx/xslx_order.py:176 xslx/xslx_order.py:310
+#: xslx/xslx_order.py:523 xslx/xslx_order.py:656 xslx/xslx_order.py:758
 msgid "Unit"
 msgstr "Unité"
 
@@ -1742,10 +1763,10 @@ msgstr "Prix unitaire (consigne comprise)"
 msgid "Total invoiced price, deposit included"
 msgstr "Total / ligne"
 
-#: xslx/xslx_invoice.py:313 xslx/xslx_order.py:460 xslx/xslx_order.py:540
-#: xslx/xslx_order.py:571 xslx/xslx_order.py:573 xslx/xslx_order.py:586
-#: xslx/xslx_order.py:634 xslx/xslx_order.py:677 xslx/xslx_order.py:714
-#: xslx/xslx_order.py:727
+#: xslx/xslx_invoice.py:313 xslx/xslx_order.py:448 xslx/xslx_order.py:529
+#: xslx/xslx_order.py:560 xslx/xslx_order.py:562 xslx/xslx_order.py:575
+#: xslx/xslx_order.py:619 xslx/xslx_order.py:662 xslx/xslx_order.py:699
+#: xslx/xslx_order.py:712
 msgid "Total Price"
 msgstr "Prix total"
 
@@ -1757,8 +1778,8 @@ msgstr "Rapport comptable"
 msgid "Planned"
 msgstr "Planifié"
 
-#: xslx/xslx_offer.py:38 xslx/xslx_offer.py:112 xslx/xslx_order.py:536
-#: xslx/xslx_order.py:673
+#: xslx/xslx_offer.py:38 xslx/xslx_offer.py:112 xslx/xslx_order.py:525
+#: xslx/xslx_order.py:658
 msgid "Unit Price"
 msgstr "Prix tarif"
 
@@ -1786,39 +1807,35 @@ msgstr "Permanenciers/cières"
 msgid "Label"
 msgstr "Etiquette"
 
-#: xslx/xslx_order.py:147 xslx/xslx_order.py:744
+#: xslx/xslx_order.py:147 xslx/xslx_order.py:729
 msgid "Customer check"
 msgstr "Contrôle des Paniers"
 
-#: xslx/xslx_order.py:170 xslx/xslx_order.py:308 xslx/xslx_order.py:763
+#: xslx/xslx_order.py:170 xslx/xslx_order.py:300 xslx/xslx_order.py:748
 msgid "Placement"
 msgstr "Emplacement"
 
-#: xslx/xslx_order.py:277
+#: xslx/xslx_order.py:269
 msgid "Preparation"
 msgstr "Préparation"
 
-#: xslx/xslx_order.py:320
+#: xslx/xslx_order.py:312
 msgid "To distribute"
 msgstr "À répartir"
 
-#: xslx/xslx_order.py:321
+#: xslx/xslx_order.py:313
 msgid "Prepared Quantity"
 msgstr "Qté préparée"
 
-#: xslx/xslx_order.py:445
+#: xslx/xslx_order.py:433
 msgid " by product"
 msgstr " par produit"
 
-#: xslx/xslx_order.py:538 xslx/xslx_order.py:675
-msgid "Desposit"
-msgstr "Consigne"
-
-#: xslx/xslx_order.py:627
+#: xslx/xslx_order.py:612
 msgid " by basket"
 msgstr " duplicata, par panier"
 
-#: xslx/xslx_order.py:807
+#: xslx/xslx_order.py:793
 msgid "Check"
 msgstr "Contrôle"
 
@@ -1951,6 +1968,12 @@ msgstr ""
 "Au moins une des permamnences a déjà été facturée. L'importation ne peut "
 "avoir lieu."
 
+#~ msgid "Desposit"
+#~ msgstr "Consigne"
+
+#~ msgid "/L (loose)"
+#~ msgstr "Acheté et facturé au ℓ.  → (•_•) consigne."
+
 #~ msgid "Planified"
 #~ msgstr "Planifié"
 
@@ -2028,9 +2051,6 @@ msgstr ""
 
 #~ msgid "invoiced"
 #~ msgstr "Facturé"
-
-#~ msgid "/L (named)"
-#~ msgstr "/ ℓ (le producteur étiquette le produit par panier)"
 
 #~ msgid "/ bottle"
 #~ msgstr "/ bouteille"
@@ -2122,8 +2142,8 @@ msgstr ""
 #~ "Row %(row_num)d : Price validation error. Calculated quantity * original "
 #~ "unit price = %(check)f and given total price is %(total)f."
 #~ msgstr ""
-#~ "Ligne %(row_num)d : La quantité multipliée par le prix unitaire = "
-#~ "%(check)f tandis que le prix total renseigné = %(total)f."
+#~ "Ligne %(row_num)d : La quantité multipliée par le prix unitaire = %(check)"
+#~ "f tandis que le prix total renseigné = %(total)f."
 
 #~ msgid " piece = ~ "
 #~ msgstr " pièce = ~ "
@@ -2180,9 +2200,6 @@ msgstr ""
 #~ "Le statut d'une autre permanence vous empêche de clôturer les factures de "
 #~ "cette permanence-ci."
 
-#~ msgid "departement"
-#~ msgstr "Rayon"
-
 #~ msgid "The order responsible"
 #~ msgstr "Le/la responsable des commandes,"
 
@@ -2232,9 +2249,6 @@ msgstr ""
 
 #~ msgid "Loose preparation"
 #~ msgstr "Vrac à distribuer"
-
-#~ msgid "(at average weight)"
-#~ msgstr "(au poids moyen)"
 
 #~ msgid "order_by_kg_pay_by_kg"
 #~ msgstr "Commandé par kg, facturé par kg"
