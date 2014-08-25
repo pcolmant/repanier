@@ -217,9 +217,7 @@ def export(permanence, wb=None):
                 row_num += 1
 
     if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
-
         # Preparation list
-
         ws = None
         row_num = 0
         department_for_customer_save = None
@@ -239,6 +237,7 @@ def export(permanence, wb=None):
                     producer_id=producer.id,
                     order_unit__in=[
                         PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
+                        PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
                         PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
                         PRODUCT_ORDER_UNIT_DEPOSIT]
                 ).order_by(
@@ -254,6 +253,7 @@ def export(permanence, wb=None):
                     producer_id=producer.id,
                     order_unit__in=[
                         PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
+                        PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
                         PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
                         PRODUCT_ORDER_UNIT_DEPOSIT]
                 ).order_by(  # "product__placement",
@@ -425,6 +425,7 @@ def export_producer(permanence, producer, wb=None):
         permanence_id=permanence.id, producer_id=producer.id,
         order_unit__in=[
             PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
+            PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
             PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
             PRODUCT_ORDER_UNIT_TRANSPORTATION
         ]
@@ -607,6 +608,7 @@ def export_producer(permanence, producer, wb=None):
         permanence_id=permanence.id, producer_id=producer.id,
         order_unit__in=[
             PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
+            PRODUCT_ORDER_UNIT_LOOSE_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT,
             PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
             PRODUCT_ORDER_UNIT_TRANSPORTATION
         ]
