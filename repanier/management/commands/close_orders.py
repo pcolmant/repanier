@@ -8,8 +8,8 @@ class Command(BaseCommand):
     help = 'Closes now orders on due date'
 
     def handle(self, *args, **options):
-        something_to_close = task_order.automaticaly_closed()
+        something_to_close = task_order.automatically_closed()
         if something_to_close:
-            self.stdout.write('At least on order being closed')
+            self.stdout.write('At least one order being closed')
         else:
             self.stdout.write('Nothing to close')

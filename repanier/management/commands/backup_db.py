@@ -25,7 +25,7 @@ class Command(BaseCommand):
                 "Backup " + db_name,
                 "Backup of the DB : " + db_name,
                 settings.DEFAULT_FROM_EMAIL,
-                ["pcolmant@gmail.com"]
+                [os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL', 'pcolmant@gmail.com')]
             )
             email.attach_file(os.path.abspath(backup_file.name),
                               'application/zip')

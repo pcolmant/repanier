@@ -129,14 +129,14 @@ def admin_open_and_send(request, queryset):
 
 
 @transaction.atomic
-def automaticaly_closed():
+def automatically_closed():
     # now = timezone.localtime(timezone.now())
     current_site_name = Site.objects.get_current().name
     translation.activate("fr")
     something_to_close = False
     for permanence in Permanence.objects.filter(
             status=PERMANENCE_OPENED,
-            automaticaly_closed=True):
+            automatically_closed=True):
         permanence.status = PERMANENCE_WAIT_FOR_SEND
         permanence.save(update_fields=['status'])
         # close.delay(permanence.id, current_site_name)
