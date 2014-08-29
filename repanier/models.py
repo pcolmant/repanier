@@ -80,6 +80,16 @@ import uuid
 
 # ALTER TABLE repanier_permanence RENAME automaticaly_closed  TO automatically_closed;
 
+# ALTER TABLE repanier_lut_productionmode ADD COLUMN picture_id integer;
+# ALTER TABLE repanier_lut_productionmode
+#   ADD CONSTRAINT repanier_lut_productionmode_picture_id_fkey FOREIGN KEY (picture_id)
+#       REFERENCES filer_image (file_ptr_id) MATCH SIMPLE
+#       ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED;
+# CREATE INDEX repanier_lut_productionmode_picture_id
+#   ON repanier_lut_productionmode
+#   USING btree
+#   (picture_id);
+
 from const import *
 from django.conf import settings
 from django.db import models
@@ -140,6 +150,10 @@ class LUT(models.Model):
 
 
 class LUT_ProductionMode(LUT):
+    picture = FilerImageField(
+        verbose_name=_("picture"), related_name="picture",
+        null=True, blank=True)
+
     class Meta(LUT.Meta):
         verbose_name = _("production mode")
         verbose_name_plural = _("production modes")

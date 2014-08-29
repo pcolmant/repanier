@@ -13,7 +13,7 @@
 
             /* all links */
             .bs-docs-sidebar .nav > li > a {
-                color: #999;
+                color: #3c3c3c;
                 padding: 4px 20px;
                 font-size: 13px;
                 font-weight: 400;
@@ -44,6 +44,10 @@
     <div class="container">
     {% if user.customer.may_order %}
         <div class="row">
+            <div class="offer-description">
+                {{ permanence_offer_description | safe }}
+            </div>
+            <br/>
         <nav class="col-md-2 col-sm-3 hidden-xs bs-docs-sidebar">
             <div class="fixed">
                 <ul class="nav nav-stacked" id="sidebar">
@@ -85,50 +89,35 @@
 
         <div class="col-md-10 col-sm-9 col-xs-12">
         {% if offeritem_list %}
-            <div class="hidden-xs offer-description">
-                {{ permanence_offer_description | safe }}
-                <br/>
-            </div>
             <table class="table table-hover">
                 {% for offer in offeritem_list %}
                     <tr data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
                         <form>
                         {% if producer_set.count > 1 %}
                             <td data-toggle="modal" data-target="#orderModal" class="hidden-xs hidden-sm">
-                                <h4>
-                                    <small>{{ offer.product.producer.short_profile_name | truncatechars:15 }}</small>
-                                </h4>
+                                <small>{{ offer.product.producer.short_profile_name | truncatechars:15 }}</small>
                             </td>
                         {% endif %}
                             <td data-toggle="modal" data-target="#orderModal" style="width: 40%;"
                                 class="hidden-xs hidden-sm">
                                 <h4>{{ offer.product.long_name }}{% if offer.product.offer_description|length > 0 %}
-                                    <small><span class="glyphicon glyphicon-info-sign"></span></small>{% endif %}
-                                {% if departementforcusomer_set.count > 1 %}<br/>
-                                    <small>({{ offer.product.department_for_customer.short_name }})</small>{% endif %}
-                                </h4>
-                            </td>
-                            <td data-toggle="modal" data-target="#orderModal" class="hidden-xs hidden-sm">
-                                <h4>
-                                    <small>{{ offer.product.production_mode | truncatechars:10 }}</small>
-                                </h4>
+                                    <small><span class="glyphicon glyphicon-info-sign"></span></small>{% endif %}</h4>
+                                {% if departementforcusomer_set.count > 1 %}
+                                    <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
+                                {% if not offer.product.production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ offer.product.production_mode }}</small>
+                                    {% else %}<img class="img-responsive img-rounded" style = "float: right; margin: 5px;" alt="{{ offer.product.production_mode }}" src="{{ offer.product.production_mode.picture.url }}"/>
+                                {% endif %}
                             </td>
                             <td data-toggle="modal" data-target="#orderModal" style="width: 50%;"
-                                class="visible-xs visible-sm">
+                                class="visible-sm">
                                 {% if producer_set.count > 1 %}{{ offer.product.producer.short_profile_name | truncatechars:8 }},{% endif %}
                                 <b>{{ offer.product.long_name }}{% if offer.product.offer_description|length > 0 %}
                                     <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
-                                {% if departementforcusomer_set.count > 1 %}({{ offer.product.department_for_customer.short_name }}){% endif %}
-                                {% if user.customer.vat_id %}{{ offer.product.unit_price_with_compensation }}{% else %}
-                                    {{ offer.product.unit_price_with_vat }}{% endif %} &euro;
-                                {% if offer.product.order_unit == "120" or offer.product.order_unit == "220" or offer.product.order_unit == "140" or offer.product.order_unit == "240" %}
-                                    {% trans "/ Kg" %}{% else %}
-                                    {% if offer.product.order_unit == "150" or offer.product.order_unit == "160" %}
-                                        {% trans "/ ℓ" %}{% else %}{% trans "/ piece" %}{% endif %}{% endif %}
-                                        {% if offer.product.unit_deposit %}
-                                            <span class="glyphicon glyphicon-plus"></span>
-                                            {{ offer.product.unit_deposit }} &euro;
-                                            <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+                                {% if departementforcusomer_set.count > 1 %}
+                                    <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
+                                {% if not offer.product.production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ offer.product.production_mode }}</small>
+                                    {% else %}<img class="img-responsive img-rounded" style = "float: right; margin: 5px;" alt="{{ offer.product.production_mode }}" src="{{ offer.product.production_mode.picture.url }}"/>
+                                {% endif %}
                             </td>
                             <td data-toggle="modal" data-target="#orderModal" class="hidden-xs hidden-sm">
                                 <h4>{% if user.customer.vat_id %}
@@ -144,6 +133,11 @@
                                                 <span class="glyphicon glyphicon-leaf"></span>{% endif %}</h4>
                             </td>
                             <td>
+                                <span class="visible-xs" data-toggle="modal" data-target="#orderModal">
+                                    {% if producer_set.count > 1 %}{{ offer.product.producer.short_profile_name | truncatechars:8 }},{% endif %}
+                                    <b>{{ offer.product.long_name }}{% if offer.product.offer_description|length > 0 %}
+                                        <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b>
+                                </span>
                                 <input hidden name="page" value="{{ page_obj.number }}"/>
                                 <input hidden name="producer" value="{{ producer_id }}"/>
                                 <input hidden name="departementforcusomer" value="{{ departementforcusomer_id }}"/>
@@ -151,6 +145,26 @@
                                 <noscript>
                                     <input type="submit" value="{% trans "ok" %}"/>
                                 </noscript>
+                                <span class="visible-xs visible-sm" data-toggle="modal" data-target="#orderModal">
+                                {% if user.customer.vat_id %}
+                                    {{ offer.product.unit_price_with_compensation }}{% else %}
+                                    {{ offer.product.unit_price_with_vat }}{% endif %} &euro;
+                                    {% if offer.product.order_unit == "120" or offer.product.order_unit == "220" or offer.product.order_unit == "140" or offer.product.order_unit == "240" %}
+                                        {% trans "/ Kg" %}{% else %}
+                                        {% if offer.product.order_unit == "150" or offer.product.order_unit == "160" %}
+                                            {% trans "/ ℓ" %}{% else %}{% trans "/ piece" %}{% endif %}{% endif %}
+                                            {% if offer.product.unit_deposit %}
+                                                <span class="glyphicon glyphicon-plus"></span>
+                                                {{ offer.product.unit_deposit }} &euro;
+                                                <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+                                </span>
+                                <span class="visible-xs" data-toggle="modal" data-target="#orderModal">
+                                    {% if departementforcusomer_set.count > 1 %}
+                                        <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
+                                    {% if not offer.product.production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ offer.product.production_mode }}</small>
+                                        {% else %}<img class="img-responsive img-rounded" style = "float: right; margin: 5px;" alt="{{ offer.product.production_mode }}" src="{{ offer.product.production_mode.picture.url }}"/>
+                                    {% endif %}
+                                </span>
                             </td>
                         </form>
                     <tr>
