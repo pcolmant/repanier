@@ -83,6 +83,10 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 
 # LUT
 class LUTProductionModeAdmin(ReadOnlyAdmin):
+    fields = [
+        ('short_name', 'picture'),
+        'description',
+        'is_active']
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
