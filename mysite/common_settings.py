@@ -83,25 +83,7 @@ LOCALE_PATHS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    # 'django.middleware.cache.UpdateCacheMiddleware',
-    # 'django.middleware.cache.FetchFromCacheMiddleware',
-    # 'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware', 
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # 'django.contrib.messages.middleware.MessageMiddleware',
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'django.middleware.locale.LocaleMiddleware',
-    # 'django.middleware.doc.XViewMiddleware',
-    # 'cms.middleware.page.CurrentPageMiddleware',
-    # 'cms.middleware.user.CurrentUserMiddleware',      
-    # 'cms.middleware.toolbar.ToolbarMiddleware',
-    # 'cms.middleware.language.LanguageCookieMiddleware',
-
-
     'django.middleware.cache.UpdateCacheMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
-
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -109,10 +91,11 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.doc.XViewMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'cms.middleware.page.CurrentPageMiddleware',
+    # 'cms.middleware.language.LanguageCookieMiddleware', Disable to avoid cookies advertising requirement
     'cms.middleware.user.CurrentUserMiddleware',
+    'cms.middleware.page.CurrentPageMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
-    # 'cms.middleware.language.LanguageCookieMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -136,10 +119,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
     'django.contrib.formtools',
-
-
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
-
     'cms',
     'mptt',
     'menus',
@@ -165,7 +145,6 @@ INSTALLED_APPS = (
 
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
-# CMS_PUBLIC_FOR = 'staff'
 CMS_SHOW_START_DATE = False
 CMS_SHOW_END_DATE = False
 CMS_SEO_FIELDS = False
@@ -178,7 +157,34 @@ LOGOUT_URL = "/leave_repanier/"
 
 CKEDITOR_SETTINGS = {
     'language': '{{ language }}',
-    'toolbar': 'HTMLField',
+	'toolbar_CMS': [
+		['Undo', 'Redo'],
+		['cmsplugins', '-', 'ShowBlocks'],
+		 # ['Format', 'Styles'],
+		['Format', 'Templates'],
+		['TextColor', 'BGColor', '-', 'PasteText'], #, 'PasteFromWord'],
+		['Maximize', ''],
+		'/',
+		['Bold', 'Italic', 'Underline', '-', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
+		['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
+		['HorizontalRule'],
+		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
+		['Source']
+	],
+	'toolbar_HTMLField': [
+		['Undo', 'Redo'],
+		['ShowBlocks', 'Format'],
+		['TextColor', 'BGColor', '-', 'PasteText'], #, 'PasteFromWord'],
+		['Maximize', ''],
+		'/',
+		['Bold', 'Italic', 'Underline', '-', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
+		['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
+		['HorizontalRule'],
+		['Link', 'Unlink'],
+		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
+		['Source']
+	],
+    'skin': 'moono',
     # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
     # 'stylesSet' : [],
     'extraPlugins': 'cmsplugins,templates',
@@ -200,7 +206,12 @@ CKEDITOR_SETTINGS = {
     # 'removeFormatTags' : 'b,big,code,del,dfn,em,font,i,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var'
 }
 
-TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
+TEXT_ADDITIONAL_TAGS = ('span',)
+TEXT_ADDITIONAL_ATTRIBUTES  = ('class',)
+# TEXT_HTML_SANITIZE = False
+# TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
+# TEXT_SAVE_IMAGE_FUNCTION = 'djangocms_text_ckeditor.picture_save.create_picture_plugin'
+TEXT_SAVE_IMAGE_FUNCTION = None
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True
@@ -242,14 +253,12 @@ INSTALLED_APPS += (
 
 
 ################# Django_crispy_forms
-INSTALLED_APPS += (
-    'crispy_forms',
-    # 'crispy_forms_foundation',
-)
+# INSTALLED_APPS += (
+#     'crispy_forms',
+# )
 
-CRISPY_TEMPLATE_PACK = "bootstrap3"
-# CRISPY_TEMPLATE_PACK = "foundation"
-JSON_MODULE = 'ujson'
+# CRISPY_TEMPLATE_PACK = "bootstrap3"
+# JSON_MODULE = 'ujson'
 
 ################# Django_compressor
 INSTALLED_APPS += (
@@ -319,6 +328,9 @@ CMS_CACHE_DURATIONS = {
     'menus': 3600,  # default 3600
     'permissions': 3600  # default: 3600
 }
+CMS_PAGE_CACHE = True
+CMS_PLACEHOLDER_CACHE = True
+CMS_PLUGIN_CACHE = True
 
 SOUTH_MIGRATION_MODULES = {
     'easy_thumbnails': 'easy_thumbnails.south_migrations',

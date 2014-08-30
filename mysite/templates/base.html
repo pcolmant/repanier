@@ -35,7 +35,7 @@
     <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
     {% cms_toolbar %}
     {# <!-- Header and Nav --> #}
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="navbar navbar-default" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -69,7 +69,7 @@
               <a href="{% url "login_form" %}">{% trans "Login" %}</a>
             </li>
             {% endif %} 
-            {% if languages.len > 1 %}
+            {% if languages.count > 1 %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
               <ul class="dropdown-menu">
