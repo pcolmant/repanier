@@ -151,7 +151,7 @@ class LUT(models.Model):
 
 class LUT_ProductionMode(LUT):
     picture = FilerImageField(
-        verbose_name=_("picture"), related_name="picture",
+        verbose_name=_("picture"), related_name="production_mode_picture",
         null=True, blank=True)
 
     class Meta(LUT.Meta):
@@ -520,7 +520,7 @@ class Product(models.Model):
         related_name='production_mode+',
         on_delete=models.PROTECT)
     picture = FilerImageField(
-        verbose_name=_("picture"), related_name="picture",
+        verbose_name=_("picture"), related_name="product_picture",
         null=True, blank=True)
     offer_description = HTMLField(_("offer_description"), blank=True)
 
