@@ -108,7 +108,7 @@
                         {% if not offer.product.production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ offer.product.production_mode }}</small>
                         {% else %}
                             {% thumbnail offer.product.production_mode.picture "0x40"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
-                            <img class="img-responsive img-rounded" style = "float: right; margin: 5px;" alt="{{ offer.product.production_mode }}" title="{{ offer.product.production_mode }}" src="{{ logo_thumbnail.url }}"/>
+                            <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ offer.product.production_mode }}" title="{{ offer.product.production_mode }}" src="{{ logo_thumbnail.url }}"/>
                         {% endif %}
                     </div>
                     <div class="col-sm-6 col-md-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
@@ -133,7 +133,10 @@
                                         <span class="glyphicon glyphicon-leaf"></span>{% endif %}
                         {% if offer.product.picture %}
 {#                            {% thumbnail offer.product.picture "0x150"|extra_padding_y:5 crop="smart" as thumbnail %}#}
-                            <img class="img-responsive img-thumbnail" style = "float: right; margin: 5px;" alt="{{ offer.product }}" title="{{ offer.product }}" src="{{ product_thumbnail.url }}"/>
+                            <br/>
+                            <span data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="{{ product_thumbnail.url }}">
+                            <img class="img-thumbnail" style = "margin-top: 5px;" alt="{{ offer.product }}" title="{{ offer.product }}" src="{{ product_thumbnail.url }}"/>
+                            </span>
                         {% endif %}
 
 {#                        </form>#}
