@@ -90,13 +90,56 @@ import uuid
 #   USING btree
 #   (picture_id);
 
+# CREATE TABLE repanier_product_production_mode
+# (
+#   id serial NOT NULL,
+#   product_id integer NOT NULL,
+#   lut_productionmode_id integer NOT NULL,
+#   CONSTRAINT repanier_product_production_mode_pkey PRIMARY KEY (id),
+#   CONSTRAINT product_id_refs_id_a31f1be4 FOREIGN KEY (product_id)
+#       REFERENCES repanier_product (id) MATCH SIMPLE
+#       ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+#   CONSTRAINT repanier_product_production_mode_lut_productionmode_id_fkey FOREIGN KEY (lut_productionmode_id)
+#       REFERENCES repanier_lut_productionmode (id) MATCH SIMPLE
+#       ON UPDATE NO ACTION ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+#   CONSTRAINT repanier_product_production_m_product_id_lut_productionmode_key UNIQUE (product_id, lut_productionmode_id)
+# )
+# WITH (
+#   OIDS=FALSE
+# );
+# ALTER TABLE repanier_product_production_mode
+#   OWNER TO pi;
+#
+# -- Index: repanier_product_production_mode_lut_productionmode_id
+#
+# -- DROP INDEX repanier_product_production_mode_lut_productionmode_id;
+#
+# CREATE INDEX repanier_product_production_mode_lut_productionmode_id
+#   ON repanier_product_production_mode
+#   USING btree
+#   (lut_productionmode_id);
+#
+# -- Index: repanier_product_production_mode_product_id
+#
+# -- DROP INDEX repanier_product_production_mode_product_id;
+#
+# CREATE INDEX repanier_product_production_mode_product_id
+#   ON repanier_product_production_mode
+#   USING btree
+#   (product_id);
+#
+
+# ALTER TABLE repanier_product DROP CONSTRAINT repanier_product_production_mode_id_fkey;
+# ALTER TABLE repanier_product DROP CONSTRAINT repanier_product_producer_id_department_for_customer_id_lon_key;
+# DROP INDEX repanier_product_85f5abb2;
+
 from const import *
 from django.conf import settings
 from django.db import models
-from django.db.models.query import QuerySet
 from django.db.models.signals import pre_save
 from django.db.models.signals import post_save
 from django.db.models.signals import post_delete
+from parler.models import TranslatableModel, TranslatedFields
 
 from django.contrib.auth.models import Group
 from django.dispatch import receiver
@@ -105,6 +148,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.formats import number_format
 from filer.fields.image import FilerImageField
 from django.core import urlresolvers
+from mptt.models import MPTTModel, TreeForeignKey
 
 import datetime
 
@@ -117,26 +161,14 @@ except ImportError:
     pass
 
 
-# Create your models here.
-class LUTQuerySet(QuerySet):
-    def active(self):
-        return self.filter(is_active=True)
+class LUT(MPTTModel):
+    class MPTTMeta:
+        order_insertion_by = ['short_name']
 
-
-class LUTManager(models.Manager):
-    def get_queryset(self):
-        return LUTQuerySet(self.model, using=self._db)
-
-    def get_by_natural_key(self, short_name):
-        # don't use the filtered qet_queryset but use the default one.
-        return QuerySet(self.model, using=self._db).get(short_name=short_name)
-
-
-class LUT(models.Model):
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     short_name = models.CharField(_("short_name"), max_length=40, db_index=True, unique=True)
     description = HTMLField(_("description"), blank=True)
     is_active = models.BooleanField(_("is_active"), default=True)
-    objects = LUTManager()
 
     def natural_key(self):
         return self.short_name
@@ -146,7 +178,6 @@ class LUT(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ("short_name",)
 
 
 class LUT_ProductionMode(LUT):
@@ -210,8 +241,7 @@ class Producer(models.Model):
         default=VAT_400,
         verbose_name=_("Default vat or compensation"),
         help_text=_(
-            "When the vendor is in agricultural"
-            " regime select the correct compensation %. In the other cases select the correct vat %"))
+            "When the vendor is in agricultural regime select the correct compensation %. "))
 
     date_balance = models.DateField(
         _("date_balance"), default=datetime.date.today)
@@ -310,14 +340,7 @@ def producer_pre_save(sender, **kwargs):
     producer = kwargs['instance']
     if producer.price_list_multiplier <= DECIMAL_ZERO:
         producer.price_list_multiplier = DECIMAL_ONE
-    # The first producer created represents the buying group
-    # It's important to have one and only one producer representing the buying group
-    # producer_set = Producer.objects.all().the_buyinggroup().order_by()[:1]
-    # if not producer_set:
-    # producer.represent_this_buyinggroup = True
-    # else:
-    # producer.represent_this_buyinggroup = False
-    if producer.uuid is None:
+    if producer.uuid is None or producer.uuid == "":
         producer.uuid = uuid.uuid4()
     if producer.id is None:
         producer.balance = producer.initial_balance
@@ -425,13 +448,6 @@ def customer_pre_save(sender, **kwargs):
             bank_account_set = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by()[:1]
             if bank_account_set:
                 customer.date_balance = bank_account_set[0].operation_date
-                # The first customer created represents the buying group
-                # It's important to have one and only one customer representing the buying group
-                # customer_set = Customer.objects.all().the_buyinggroup().order_by()[:1]
-                # if not customer_set:
-                # customer.represent_this_buyinggroup = True
-                # else:
-                # customer.represent_this_buyinggroup = False
 
 
 @receiver(post_delete, sender=Customer)
@@ -511,18 +527,26 @@ def staff_post_delete(sender, **kwargs):
     user.delete()
 
 
-class Product(models.Model):
+class Product(TranslatableModel):
     producer = models.ForeignKey(
         Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
-    long_name = models.CharField(_("long_name"), max_length=100)
-    production_mode = models.ForeignKey(
-        LUT_ProductionMode, verbose_name=_("production mode"),
-        related_name='production_mode+',
-        on_delete=models.PROTECT)
+    long_name_admin = models.CharField(_("long_name"), max_length=100)
+    translations = TranslatedFields(
+        long_name=models.CharField(_("long_name"), max_length=100),
+        offer_description=HTMLField(_("offer_description"), blank=True)
+    )
+    # production_mode = models.ForeignKey(
+    #     LUT_ProductionMode, verbose_name=_("production mode"),
+    #     related_name='production_mode+',
+    #     on_delete=models.PROTECT)
+    production_mode = models.ManyToManyField(
+        LUT_ProductionMode, null=True, blank=True,
+        verbose_name=_("production mode"))
     picture = FilerImageField(
         verbose_name=_("picture"), related_name="product_picture",
         null=True, blank=True)
-    offer_description = HTMLField(_("offer_description"), blank=True)
+    reference = models.CharField(
+        _("reference"), max_length=36, blank=True, null=True)
 
     department_for_customer = models.ForeignKey(
         LUT_DepartmentForCustomer,
@@ -562,6 +586,10 @@ class Product(models.Model):
         choices=LUT_VAT,
         default=VAT_400,
         verbose_name=_("vat or compensation"))
+    stock = models.DecimalField(
+        _("quantity in stock"),
+        help_text=_('quantity in stock'),
+        default=0, max_digits=8, decimal_places=2)
 
     customer_minimum_order_quantity = models.DecimalField(
         _("customer_minimum_order_quantity"),
@@ -603,11 +631,10 @@ class Product(models.Model):
     class Meta:
         verbose_name = _("product")
         verbose_name_plural = _("products")
-        ordering = ("producer", "long_name",)
-        unique_together = ("producer", "department_for_customer", "long_name",)
+        # ordering = ("producer", "long_name",)
+        unique_together = ("producer", "reference",)
         index_together = [
-            ["id"],
-            ["producer", "department_for_customer", "long_name"],
+            ["producer", "reference"],
         ]
 
 
@@ -633,6 +660,9 @@ def product_pre_save(sender, **kwargs):
         product.customer_alert_order_quantity = product.customer_minimum_order_quantity
     if product.order_average_weight <= 0:
         product.order_average_weight = 1
+    if product.reference is None or product.reference == "":
+        product.reference = uuid.uuid4()
+    product.long_name_admin = product.long_name
 
 
 class Permanence(models.Model):
@@ -646,8 +676,7 @@ class Permanence(models.Model):
     distribution_date = models.DateField(_("distribution_date"), db_index=True)
     offer_description = HTMLField(_("offer_description"),
                                   help_text=_(
-                                      "This message is send by mail to all customers when opening the order or on top "
-                                      "of the web order screen."),
+                                      "This message is send by mail to all customers when opening the order or on top "),
                                   blank=True)
     invoice_description = HTMLField(
         _("invoice_description"),
@@ -655,7 +684,7 @@ class Permanence(models.Model):
             'This message is send by mail to all customers having bought something when closing the permanence.'),
         blank=True)
     producers = models.ManyToManyField(
-        'Producer', null=True, blank=True,
+        Producer, null=True, blank=True,
         verbose_name=_("producers"))
 
     automatically_closed = models.BooleanField(
@@ -821,6 +850,7 @@ class OfferItem(models.Model):
         Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
     product = models.ForeignKey(
         Product, verbose_name=_("product"), on_delete=models.PROTECT)
+    production_mode_cache = models.TextField(default="")
     is_active = models.BooleanField(_("is_active"), default=True)
     limit_to_alert_order_quantity = models.BooleanField(_("limit maximum order qty to alert qty"), default=False)
     customer_alert_order_quantity = models.DecimalField(
@@ -1057,8 +1087,7 @@ class Purchase(models.Model):
         default=VAT_400,
         verbose_name=_("vat or compensation"),
         help_text=_(
-            'When the vendor is in agricultural regime select the correct compensation %. '
-            'In the other cases select the correct vat %'))
+            'When the vendor is in agricultural regime select the correct compensation %. '))
 
     comment = models.CharField(
         _("comment"), max_length=100, default='', blank=True, null=True)

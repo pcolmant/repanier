@@ -8,8 +8,9 @@ from repanier.tools import cap
 
 def flip_flop_is_into_offer(queryset):
     for product in queryset.order_by():
-        product.is_into_offer = not product.is_into_offer
-        product.save(update_fields=['is_into_offer'])
+        if product.is_active:
+            product.is_into_offer = not product.is_into_offer
+            product.save(update_fields=['is_into_offer'])
 
 
 def admin_duplicate(queryset):

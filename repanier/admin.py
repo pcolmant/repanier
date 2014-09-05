@@ -15,11 +15,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 import datetime
 from django.utils.translation import ugettext_lazy as _
+from django.utils import translation
 from django.core import validators
-from django.db.models import Q
+from django.db.models import Q, F
 from django import forms
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django_mptt_admin.admin import DjangoMpttAdmin
+
+from parler.admin import TranslatableAdmin, TranslatableModelForm
 
 from models import LUT_ProductionMode
 from models import LUT_DepartmentForCustomer
@@ -80,13 +84,12 @@ class ReadOnlyAdmin(admin.ModelAdmin):
                     del actions[key]
         return actions
 
-
 # LUT
-class LUTProductionModeAdmin(ReadOnlyAdmin):
-    fields = [
-        ('short_name', 'picture'),
-        'description',
-        'is_active']
+class LUTProductionModeAdmin(DjangoMpttAdmin):
+    # fields = [
+    #     ('short_name', 'picture'),
+    #     'description',
+    #     'is_active']
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
@@ -96,7 +99,7 @@ class LUTProductionModeAdmin(ReadOnlyAdmin):
 admin.site.register(LUT_ProductionMode, LUTProductionModeAdmin)
 
 
-class LUTDepartmentForCustomerAdmin(ReadOnlyAdmin):
+class LUTDepartmentForCustomerAdmin(DjangoMpttAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
@@ -106,7 +109,7 @@ class LUTDepartmentForCustomerAdmin(ReadOnlyAdmin):
 admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
 
 
-class LUTPermanenceRoleAdmin(ReadOnlyAdmin):
+class LUTPermanenceRoleAdmin(DjangoMpttAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
@@ -411,8 +414,8 @@ class StaffWithUserDataAdmin(ReadOnlyAdmin):
 
 admin.site.register(Staff, StaffWithUserDataAdmin)
 
-
-class ProductAdmin(ReadOnlyAdmin):
+class ProductAdmin(TranslatableAdmin):
+    # base_form = TranslatableModelForm
     list_display = (
         'is_into_offer',
         'producer',
@@ -428,26 +431,33 @@ class ProductAdmin(ReadOnlyAdmin):
     readonly_fields = ('is_created_on',
                        'is_updated_on')
     fields = (
-        ('producer', 'long_name', 'picture'),
-        ('original_unit_price', 'unit_deposit', 'vat_level'),
-        ('order_unit', 'order_average_weight'),
+        ('producer', 'long_name', 'picture',),
+        'order_unit',
+        ('original_unit_price', 'unit_deposit','order_average_weight'),
         ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity'),
-        ('production_mode', 'department_for_customer', 'placement'),
+        ('department_for_customer', 'placement'),
+        'production_mode',
         'offer_description',
+        ('reference', 'vat_level', 'stock'),
         ('is_into_offer', 'is_active', 'is_created_on', 'is_updated_on')
     )
     list_select_related = ('producer', 'department_for_customer')
     list_per_page = 100
     list_max_show_all = 100
+    filter_horizontal = ('production_mode',)
     ordering = ('producer',
                 'department_for_customer',
-                'long_name',)
-    search_fields = ('long_name',)
+                'translations__long_name',)
+    search_fields = ('translations__long_name',)
     list_filter = ('is_active',
                    'is_into_offer',
                    ProductFilterByDepartmentForThisProducer,
                    ProductFilterByProducer,)
     actions = ['flip_flop_select_for_offer_status', 'duplicate_product']
+
+    def queryset(self, request):
+        queryset = super(ProductAdmin, self).queryset(request)
+        return queryset.filter(translations__language_code=translation.get_language())
 
     def get_order_unit(self, obj):
         return obj.get_order_unit_display()
@@ -485,7 +495,8 @@ class ProductAdmin(ReadOnlyAdmin):
                 producer.empty_label = None
                 producer.queryset = Producer.objects.filter(is_active=True)
                 department_for_customer.empty_label = None
-                department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(is_active=True)
+                department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(
+                    rght=F('lft')+1, is_active=True).order_by('short_name')
                 production_mode.empty_label = None
             else:
                 producer_id = None
@@ -518,7 +529,8 @@ class ProductAdmin(ReadOnlyAdmin):
                         id=department_for_customer_id
                     )
                 else:
-                    department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(is_active=True)
+                    department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(
+                        rght=F('lft')+1, is_active=True).order_by('short_name')
                 if is_active_value:
                     if is_active_value == '0':
                         is_active.initial = False
@@ -529,7 +541,8 @@ class ProductAdmin(ReadOnlyAdmin):
                         is_into_offer.initial = False
                     else:
                         is_into_offer.initial = True
-            production_mode.queryset = LUT_ProductionMode.objects.filter(is_active=True)
+            production_mode.queryset = LUT_ProductionMode.objects.filter(
+                rght=F('lft')+1, is_active=True).order_by('short_name')
         return form
 
 
