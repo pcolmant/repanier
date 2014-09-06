@@ -7,8 +7,8 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import ugettext_lazy as _
-from django.utils import translation
 from parler.models import TranslationDoesNotExist
+from django.utils import translation
 
 from tools import *
 
@@ -266,7 +266,11 @@ class OrderView(ListView):
     def get_context_data(self, **kwargs):
         context = super(OrderView, self).get_context_data(**kwargs)
         if self.permanence:
-            context['permanence_offer_description'] = self.permanence.offer_description
+            try:
+                offer_description = self.permanence.offer_description
+            except TranslationDoesNotExist:
+                offer_description = ""
+            context['permanence_offer_description'] = offer_description
             if self.permanence.status == PERMANENCE_OPENED:
                 context['display_all_product_button'] = "Ok"
             producer_set = Producer.objects.filter(permanence=self.permanence.id)
