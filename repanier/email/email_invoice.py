@@ -5,6 +5,7 @@ from django.core import urlresolvers
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
+from parler.models import TranslationDoesNotExist
 from openpyxl.writer.excel import save_virtual_workbook
 from repanier.models import Customer
 from repanier.models import Permanence
@@ -83,6 +84,10 @@ def send(permanence_id, current_site_name):
     filename = (unicode(_("Invoice")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('ascii',
                                                                                              errors='replace').replace(
         '?', '_')
+    try:
+        invoice_description = permanence.invoice_description
+    except TranslationDoesNotExist:
+         invoice_description = ""
     customer_set = Customer.objects.filter(
         purchase__permanence=permanence_id, represent_this_buyinggroup=False).order_by().distinct()
     for customer in customer_set:
@@ -91,7 +96,7 @@ def send(permanence_id, current_site_name):
         if wb is not None:
             html_content = unicode(_('Dear')) + " " + long_basket_name + ",<br/><br/>" + unicode(_('Your invoice of')) + \
                            " " + unicode(permanence) + " " + unicode(
-                _("is now available in attachment")) + ".<br/>" + permanence.invoice_description + \
+                _("is now available in attachment")) + ".<br/>" + invoice_description + \
                            "<br/><br/>" + signature + \
                            "<br/>" + sender_function + \
                            "<br/>" + current_site_name
@@ -119,7 +124,7 @@ def send(permanence_id, current_site_name):
     if wb is not None:
         html_content = unicode(_('Dear staff member')) + ",<br/><br/>" + unicode(_('The invoices of')) + \
                        " " + unicode(permanence) + " " + unicode(
-            _("are now available in attachment")) + ".<br/>" + permanence.invoice_description + \
+            _("are now available in attachment")) + ".<br/>" + invoice_description + \
                        "<br/><br/>" + signature + \
                        "<br/>" + sender_function + \
                        "<br/>" + current_site_name

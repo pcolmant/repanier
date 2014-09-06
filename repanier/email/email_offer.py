@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
+from parler.models import TranslationDoesNotExist
 from repanier.models import Permanence
 from repanier.models import Staff
 from repanier.tools import *
@@ -32,9 +33,13 @@ def send(permanence_id, current_site_name):
     for customer in Customer.objects.filter(is_active=True, represent_this_buyinggroup=False,
                                             may_order=True).order_by():
         cc_email_staff.append(customer.user.email)
+    try:
+        offer_description = permanence.offer_description
+    except TranslationDoesNotExist:
+         offer_description = ""
     html_content = unicode(_('Hello')) + ",<br/><br/>" + unicode(_('The order of')) + \
                    " " + unicode(permanence) + " " + unicode(
-        _("are now opened.")) + "<br/>" + permanence.offer_description + \
+        _("are now opened.")) + "<br/>" + offer_description  + \
                    "<br/><br/>" + signature + \
                    "<br/>" + sender_function + \
                    "<br/>" + current_site_name
