@@ -2,6 +2,7 @@
 from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils import translation
 from openpyxl import load_workbook
 from openpyxl.datavalidation import DataValidation, ValidationType, ValidationOperator
 from openpyxl.style import Border
@@ -41,9 +42,6 @@ def export(producer, wb=None):
             (unicode(_("Id")), 10, product.id, '#,##0', False),
             (unicode(_("department_for_customer")), 15, product.department_for_customer.short_name,
              NumberFormat.FORMAT_TEXT, False),
-            (unicode(_("production mode")), 15,
-             product.production_mode.short_name if product.production_mode is not None else u"", NumberFormat.FORMAT_TEXT,
-             False),
             (unicode(_("is_into_offer")), 7, unicode(_("Yes")) if product.is_into_offer else None,
              NumberFormat.FORMAT_TEXT, False),
             (unicode(_("long_name")), 60, product.long_name, NumberFormat.FORMAT_TEXT, False),
@@ -89,7 +87,6 @@ def export(producer, wb=None):
     row = [
         (unicode(_("Id")), 10, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("department_for_customer")), 15, u"", NumberFormat.FORMAT_TEXT),
-        (unicode(_("production mode")), 15, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("is_into_offer")), 7, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("long_name")), 60, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("order unit")), 15, u"", NumberFormat.FORMAT_TEXT),
@@ -124,17 +121,6 @@ def export(producer, wb=None):
                         allow_blank=True)
     ws.add_data_validation(dv)
     dv.ranges.append('B2:B5000')
-    # Data validation Production mode
-    # List of Production mode
-    valid_values = []
-    production_mode_set = LUT_ProductionMode.objects.filter(is_active=True).order_by()
-    for production_mode in production_mode_set:
-        valid_values.append(production_mode.short_name)
-    valid_values.sort()
-    dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
-                        allow_blank=True)
-    ws.add_data_validation(dv)
-    dv.ranges.append('C2:C5000')
     # Data validation Unit
     # List of Unit
     valid_values = []
@@ -143,25 +129,25 @@ def export(producer, wb=None):
     dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
                         allow_blank=False)
     ws.add_data_validation(dv)
-    dv.ranges.append('F2:F5000')
+    dv.ranges.append('E2:E5000')
     # Data validation Yes/
     # List of Yes/
     valid_values = [unicode(_('Yes')), ]
     dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
                         allow_blank=True)
     ws.add_data_validation(dv)
-    dv.ranges.append('D2:D5000')
+    dv.ranges.append('C2:C5000')
     # Data validation qty / weight
     dv = DataValidation(ValidationType.DECIMAL,
                         ValidationOperator.GREATER_THAN_OR_EQUAL,
                         0)
     ws.add_data_validation(dv)
-    dv.ranges.append('G2:I5000')
+    dv.ranges.append('F2:H5000')
     dv = DataValidation(ValidationType.DECIMAL,
                         ValidationOperator.GREATER_THAN_OR_EQUAL,
                         0)
     ws.add_data_validation(dv)
-    dv.ranges.append('K2:M5000')
+    dv.ranges.append('J2:L5000')
     # Data validation Vat or Compensation
     # List of Vat or Compensation
     valid_values = []
@@ -170,7 +156,7 @@ def export(producer, wb=None):
     dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
                         allow_blank=True)
     ws.add_data_validation(dv)
-    dv.ranges.append('J2:J5000')
+    dv.ranges.append('I2:I5000')
     # End of data validation
 
     # Add formating for empty cells.
@@ -222,13 +208,6 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                     error_msg = _("Row %(row_num)d : No valid departement for customer") % {'row_num': row_num + 1}
                     break
 
-                if row[_('production mode')] in production_mode_2_id_dict:
-                    production_mode_id = production_mode_2_id_dict[row[_('production mode')]]
-                else:
-                    error = True
-                    error_msg = _("Row %(row_num)d : No valid production mode") % {'row_num': row_num + 1}
-                    break
-
                 original_unit_price = None if row[_('original_unit_price')] is None else Decimal(
                     row[_('original_unit_price')])
                 unit_deposit = None if row[_('deposit')] is None else Decimal(row[_('deposit')])
@@ -251,7 +230,8 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                 long_name = cap(row[_('long_name')], 100)
                 product_set = Product.objects.filter(
                     producer_id=producer.id,
-                    long_name=long_name
+                    translations__long_name=long_name,
+                    translations__language_code=translation.get_language()
                 ).order_by()[:1]
                 # print(long_name.encode('utf8'))
                 if product_set:
@@ -267,7 +247,6 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                         # Let only update if the given id is the same as the product found id
                         product.producer_id = producer.id
                         product.long_name = long_name
-                        product.production_mode_id = production_mode_id
                         product.department_for_customer_id = department_for_customer_id
                         product.order_unit = order_unit
                         if order_average_weight is not None:
@@ -320,7 +299,6 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                             Product.objects.create(
                                 producer=producer,
                                 long_name=long_name,
-                                production_mode_id=production_mode_id,
                                 department_for_customer_id=department_for_customer_id,
                                 order_unit=order_unit,
                                 order_average_weight=order_average_weight,

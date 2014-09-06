@@ -85,7 +85,7 @@ class ReadOnlyAdmin(admin.ModelAdmin):
         return actions
 
 # LUT
-class LUTProductionModeAdmin(DjangoMpttAdmin):
+class LUTProductionModeAdmin(TranslatableAdmin, DjangoMpttAdmin):
     # fields = [
     #     ('short_name', 'picture'),
     #     'description',
@@ -99,7 +99,7 @@ class LUTProductionModeAdmin(DjangoMpttAdmin):
 admin.site.register(LUT_ProductionMode, LUTProductionModeAdmin)
 
 
-class LUTDepartmentForCustomerAdmin(DjangoMpttAdmin):
+class LUTDepartmentForCustomerAdmin(TranslatableAdmin, DjangoMpttAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
@@ -109,7 +109,7 @@ class LUTDepartmentForCustomerAdmin(DjangoMpttAdmin):
 admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
 
 
-class LUTPermanenceRoleAdmin(DjangoMpttAdmin):
+class LUTPermanenceRoleAdmin(TranslatableAdmin, DjangoMpttAdmin):
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     list_per_page = 17
@@ -121,7 +121,7 @@ admin.site.register(LUT_PermanenceRole, LUTPermanenceRoleAdmin)
 
 class ProducerAdmin(ReadOnlyAdmin):
     fields = [
-        ('short_profile_name', 'long_profile_name'),
+        ('short_profile_name', 'long_profile_name', 'language'),
         ('email', 'fax'),
         ('phone1', 'phone2',),
         ('price_list_multiplier', 'vat_level'),
@@ -281,7 +281,7 @@ class CustomerWithUserDataForm(UserDataForm):
 class CustomerWithUserDataAdmin(ReadOnlyAdmin):
     form = CustomerWithUserDataForm
     fields = [
-        ('short_basket_name', 'long_basket_name'),
+        ('short_basket_name', 'long_basket_name', 'language'),
         ('email', 'email2'),
         ('phone1', 'phone2'),
         'address', 'vat_id',
@@ -446,7 +446,7 @@ class ProductAdmin(TranslatableAdmin):
     list_max_show_all = 100
     filter_horizontal = ('production_mode',)
     ordering = ('producer',
-                'department_for_customer',
+                # 'department_for_customer',
                 'translations__long_name',)
     search_fields = ('translations__long_name',)
     list_filter = ('is_active',
@@ -496,7 +496,7 @@ class ProductAdmin(TranslatableAdmin):
                 producer.queryset = Producer.objects.filter(is_active=True)
                 department_for_customer.empty_label = None
                 department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(
-                    rght=F('lft')+1, is_active=True).order_by('short_name')
+                    rght=F('lft')+1, is_active=True, translations__language_code=translation.get_language()).order_by('translations__short_name')
                 production_mode.empty_label = None
             else:
                 producer_id = None
@@ -530,7 +530,7 @@ class ProductAdmin(TranslatableAdmin):
                     )
                 else:
                     department_for_customer.queryset = LUT_DepartmentForCustomer.objects.filter(
-                        rght=F('lft')+1, is_active=True).order_by('short_name')
+                        rght=F('lft')+1, is_active=True, translations__language_code=translation.get_language()).order_by('translations__short_name')
                 if is_active_value:
                     if is_active_value == '0':
                         is_active.initial = False
@@ -542,7 +542,7 @@ class ProductAdmin(TranslatableAdmin):
                     else:
                         is_into_offer.initial = True
             production_mode.queryset = LUT_ProductionMode.objects.filter(
-                rght=F('lft')+1, is_active=True).order_by('short_name')
+                rght=F('lft')+1, is_active=True, translations__language_code=translation.get_language()).order_by('translations__short_name')
         return form
 
 
@@ -566,7 +566,7 @@ class PermanenceBoardInline(admin.TabularInline):
         # -> replaced by pre_save signal in model
 
 
-class PermanenceDataForm(forms.ModelForm):
+class PermanenceDataForm(TranslatableModelForm):
     def __init__(self, *args, **kwargs):
         super(PermanenceDataForm, self).__init__(*args, **kwargs)
         self.user = None
@@ -579,15 +579,16 @@ class PermanenceDataForm(forms.ModelForm):
         cleaned_data = super(PermanenceDataForm, self).clean(*args, **kwargs)
         initial_distribution_date = self.instance.distribution_date
         distribution_date = self.cleaned_data.get("distribution_date")
-        initial_short_name = self.instance.short_name
         short_name = self.cleaned_data.get("short_name")
+        if self.instance.id is not None:
+            initial_short_name = self.instance.short_name
+        else:
+            initial_short_name = short_name
         if initial_distribution_date != distribution_date or initial_short_name != short_name:
-            permanence_already_exist = False
-            try:
-                Permanence.objects.get(distribution_date=distribution_date, short_name=short_name)
-                permanence_already_exist = True
-            except Permanence.DoesNotExist:
-                pass
+            permanence_already_exist = Permanence.objects.filter(
+                distribution_date=distribution_date,
+                translations__short_name=short_name,
+                translations__language_code=translation.get_language()).order_by().first() is not None
             if permanence_already_exist:
                 self.error('short_name', _(
                     'A permanence with the same distribution date and the same short_name already exist. You must either change te distribution_date or the name.'))
@@ -600,21 +601,19 @@ class PermanenceDataForm(forms.ModelForm):
         model = Permanence
 
 
-class PermanenceInPreparationAdmin(ReadOnlyAdmin):
+class PermanenceInPreparationAdmin(TranslatableAdmin):
     form = PermanenceDataForm
     fields = (
         'distribution_date',
-        'short_name',  # ('status', 'automatically_closed'),
+        'short_name',
         'automatically_closed',
-        'offer_description',  # 'order_description',
+        'offer_description',
         'producers'
     )
-    # readonly_fields = ('status', 'is_created_on', 'is_updated_on')
     exclude = ['invoice_description']
     list_per_page = 10
     list_max_show_all = 10
     filter_horizontal = ('producers',)
-    # inlines = [PermanenceBoardInline, OfferItemInline]
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'distribution_date'
     list_display = ('__unicode__', 'get_producers', 'get_customers', 'get_board', 'status')
@@ -776,7 +775,7 @@ class PermanenceInPreparationAdmin(ReadOnlyAdmin):
 admin.site.register(PermanenceInPreparation, PermanenceInPreparationAdmin)
 
 
-class PermanenceDoneAdmin(ReadOnlyAdmin):
+class PermanenceDoneAdmin(TranslatableAdmin):
     fields = (
         'distribution_date',
         'short_name',
@@ -786,7 +785,6 @@ class PermanenceDoneAdmin(ReadOnlyAdmin):
     exclude = ['offer_description', ]
     list_per_page = 10
     list_max_show_all = 10
-    # inlines = [PermanenceBoardInline, OfferItemInline]
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'distribution_date'
     list_display = ('__unicode__', 'get_producers', 'get_customers', 'get_board', 'status')

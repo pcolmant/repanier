@@ -105,11 +105,13 @@
                             <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
                         {% if departementforcusomer_set.count > 1 %}
                             <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
-                        {% if not offer.product.production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ offer.product.production_mode }}</small>
-                        {% else %}
-                            {% thumbnail offer.product.production_mode.picture "0x40"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
-                            <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ offer.product.production_mode }}" title="{{ offer.product.production_mode }}" src="{{ logo_thumbnail.url }}"/>
-                        {% endif %}
+                        {% for production_mode in offer.product.production_mode.all %}
+                            {% if not production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ production_mode }}</small>
+                            {% else %}
+                                {% thumbnail production_mode.picture "0x40"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
+                                <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ production_mode }}" title="{{ production_mode }}" src="{{ logo_thumbnail.url }}"/>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     <div class="col-sm-6 col-md-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
 {#                        <form>#}

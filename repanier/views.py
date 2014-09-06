@@ -2,11 +2,13 @@
 import json
 import datetime
 
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import utc
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
+from django.utils.translation import ugettext_lazy as _
+from django.utils import translation
+from parler.models import TranslationDoesNotExist
 
 from tools import *
 
@@ -15,7 +17,6 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
-
 from django.views.generic import DetailView
 
 from django.shortcuts import render_to_response
@@ -60,6 +61,8 @@ def contact_form(request):
 
     return render_response(request, "repanier/contact_form.html", {'form': form})
 
+# import sys
+# import traceback
 
 @login_required()
 # @never_cache
@@ -73,8 +76,16 @@ def product_form_ajax(request):
             if p_offer_item_id:
                 offer_item = OfferItem.objects.get(id=p_offer_item_id)
                 if PERMANENCE_OPENED <= offer_item.permanence.status <= PERMANENCE_SEND:
-                    result = offer_item.product.offer_description if offer_item.product.offer_description else unicode(
-                        _("There is no more product's information"))
+                    try:
+                        result = offer_item.product.offer_description
+                        if result is None or result == "":
+                            result = _("There is no more product's information")
+                    except TranslationDoesNotExist:
+                        result = ""
+                    # except:
+                    #     exc_type, exc_value, exc_traceback = sys.exc_info()
+                    #     lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                    #     print ''.join('!! ' + line for line in lines)
             return HttpResponse(result)
     # Not an AJAX, GET request
     return HttpResponseRedirect('/')
@@ -152,7 +163,7 @@ def ajax_order_select(request):
                             q_order_is_displayed = True
                             selected = "selected"
                         if (offer_item.permanence.status == PERMANENCE_OPENED or
-                                 (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
+                                (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
                             option_dict = {'value': '0', 'selected': selected, 'label': '---'}
                             to_json.append(option_dict)
 
@@ -289,16 +300,15 @@ class OrderView(ListView):
             if self.producer_id != 'all':
                 qs = qs.filter(product__producer=self.producer_id)
             if self.offeritem_id != 'all' or self.permanence.status == PERMANENCE_SEND:
-                #if asked or if status is close or send, then display only purchased product
+                # if asked or if status is close or send, then display only purchased product
                 qs = qs.filter(product__purchase__permanence=self.permanence.id,
-                               product__purchase__customer__user=self.user).order_by(
-                    'product__long_name'
-                )
+                               product__purchase__customer__user=self.user)
             if self.departementforcusomer_id != 'all':
                 qs = qs.filter(product__department_for_customer=self.departementforcusomer_id)
-            qs = qs.order_by(
-                # 'product__producer__short_profile_name',
-                'product__department_for_customer__short_name', 'product__long_name'
+            qs = qs.filter(product__translations__language_code=translation.get_language(),
+                           product__department_for_customer__translations__language_code=translation.get_language()
+            ).order_by(
+                'product__department_for_customer__translations__short_name', 'product__translations__long_name'
             )
             # print("---------------")
             # print qs.query

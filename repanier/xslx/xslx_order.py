@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import ugettext_lazy as _
+from django.utils import translation
 from django.http import HttpResponse
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
@@ -20,6 +21,7 @@ from repanier.tools import get_preparator_unit
 
 
 def export(permanence, wb=None):
+    translation.activate("fr")
     if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
@@ -151,12 +153,15 @@ def export(permanence, wb=None):
         customer_save = None
 
         purchase_set = Purchase.objects.filter(
-            permanence_id=permanence.id, producer__isnull=False).order_by(
+            permanence_id=permanence.id, producer__isnull=False,
+            product__translations__language_code=translation.get_language(),
+            product__department_for_customer__translations__language_code=translation.get_language()
+        ).order_by(
             "customer__short_basket_name",
             "product__placement",
             "producer__short_profile_name",
-            "department_for_customer",
-            "product__long_name"
+            "product__department_for_customer__translations__short_name",
+            "product__translations__long_name"
         )
 
         for purchase in purchase_set:

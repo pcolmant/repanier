@@ -140,6 +140,12 @@ from django.db.models.signals import pre_save
 from django.db.models.signals import post_save
 from django.db.models.signals import post_delete
 from parler.models import TranslatableModel, TranslatedFields
+from parler.managers import TranslatableManager, TranslatableQuerySet
+from parler.models import TranslatedFieldsModel
+from parler.models import TranslationDoesNotExist
+from parler.fields import TranslatedField
+
+from mptt.managers import TreeManager
 
 from django.contrib.auth.models import Group
 from django.dispatch import receiver
@@ -160,46 +166,80 @@ try:
 except ImportError:
     pass
 
+class LUT_ProductionModeQuerySet(TranslatableQuerySet):
+    pass
 
-class LUT(MPTTModel):
-    class MPTTMeta:
-        order_insertion_by = ['short_name']
+class LUT_ProductionModeManager(TreeManager, TranslatableManager):
+    queryset_class = LUT_ProductionModeQuerySet
+
+class LUT_ProductionMode(MPTTModel, TranslatableModel):
 
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
-    short_name = models.CharField(_("short_name"), max_length=40, db_index=True, unique=True)
-    description = HTMLField(_("description"), blank=True)
+    translations = TranslatedFields(
+        short_name = models.CharField(_("short_name"), max_length=40, db_index=True, unique=True),
+        description = HTMLField(_("description"), blank=True),
+    )
+    picture = FilerImageField(
+        verbose_name=_("picture"), related_name="production_mode_picture",
+        null=True, blank=True)
     is_active = models.BooleanField(_("is_active"), default=True)
-
-    def natural_key(self):
-        return self.short_name
+    objects = LUT_ProductionModeManager()
 
     def __unicode__(self):
         return u'%s' % self.short_name
 
     class Meta:
-        abstract = True
-
-
-class LUT_ProductionMode(LUT):
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="production_mode_picture",
-        null=True, blank=True)
-
-    class Meta(LUT.Meta):
         verbose_name = _("production mode")
         verbose_name_plural = _("production modes")
 
+class LUT_DepartmentForCustomerQuerySet(TranslatableQuerySet):
+    pass
 
-class LUT_DepartmentForCustomer(LUT):
-    class Meta(LUT.Meta):
+class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
+    queryset_class = LUT_DepartmentForCustomerQuerySet
+
+class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    translations = TranslatedFields(
+        short_name = models.CharField(_("short_name"), max_length=40, db_index=True, unique=True),
+        description = HTMLField(_("description"), blank=True),
+    )
+    picture = FilerImageField(
+        verbose_name=_("picture"), related_name="department_picture",
+        null=True, blank=True)
+    is_active = models.BooleanField(_("is_active"), default=True)
+    objects = LUT_ProductionModeManager()
+
+    def __unicode__(self):
+        return u'%s' % self.short_name
+
+    class Meta:
         verbose_name = _("department for customer")
         verbose_name_plural = _("departments for customer")
 
+class LUT_PermanenceRoleQuerySet(TranslatableQuerySet):
+    pass
 
-class LUT_PermanenceRole(LUT):
+class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
+    queryset_class = LUT_PermanenceRoleQuerySet
+
+class LUT_PermanenceRole(MPTTModel, TranslatableModel):
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    translations = TranslatedFields(
+        short_name = models.CharField(_("short_name"), max_length=40, db_index=True, unique=True),
+        description = HTMLField(_("description"), blank=True),
+    )
+    picture = FilerImageField(
+        verbose_name=_("picture"), related_name="permanence_role_picture",
+        null=True, blank=True)
+    is_active = models.BooleanField(_("is_active"), default=True)
     automatically_added = models.BooleanField(_("automatically added to the new permanences"), default=False)
+    objects = LUT_ProductionModeManager()
 
-    class Meta(LUT.Meta):
+    def __unicode__(self):
+        return u'%s' % self.short_name
+
+    class Meta:
         verbose_name = _("permanence role")
         verbose_name_plural = _("permanences roles")
 
@@ -218,6 +258,11 @@ class Producer(models.Model):
         _("long_profile_name"), max_length=100, null=True)
     email = models.CharField(
         _("email"), max_length=100, null=True)
+    language = models.CharField(
+        max_length=5,
+        choices=settings.LANGUAGES,
+        default=settings.LANGUAGES[0][0],
+        verbose_name=_("language"))
     phone1 = models.CharField(
         _("phone1"), max_length=20, null=True)
     phone2 = models.CharField(
@@ -366,6 +411,11 @@ class Customer(models.Model):
     long_basket_name = models.CharField(
         _("long_basket_name"), max_length=100, null=True)
     email2 = models.EmailField(_('secondary email address'), null=True, blank=True)
+    language = models.CharField(
+        max_length=5,
+        choices=settings.LANGUAGES,
+        default=settings.LANGUAGES[0][0],
+        verbose_name=_("language"))
     phone1 = models.CharField(
         _("phone1"), max_length=25, null=True)
     phone2 = models.CharField(
@@ -530,15 +580,8 @@ def staff_post_delete(sender, **kwargs):
 class Product(TranslatableModel):
     producer = models.ForeignKey(
         Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
-    long_name_admin = models.CharField(_("long_name"), max_length=100)
-    translations = TranslatedFields(
-        long_name=models.CharField(_("long_name"), max_length=100),
-        offer_description=HTMLField(_("offer_description"), blank=True)
-    )
-    # production_mode = models.ForeignKey(
-    #     LUT_ProductionMode, verbose_name=_("production mode"),
-    #     related_name='production_mode+',
-    #     on_delete=models.PROTECT)
+    long_name = TranslatedField()
+    offer_description = TranslatedField()
     production_mode = models.ManyToManyField(
         LUT_ProductionMode, null=True, blank=True,
         verbose_name=_("production mode"))
@@ -662,11 +705,33 @@ def product_pre_save(sender, **kwargs):
         product.order_average_weight = 1
     if product.reference is None or product.reference == "":
         product.reference = uuid.uuid4()
-    product.long_name_admin = product.long_name
 
+class Product_Translation(TranslatedFieldsModel):
+    master = models.ForeignKey(Product, related_name='translations', null=True)
+    long_name = models.CharField(_("long_name"), max_length=100)
+    offer_description=HTMLField(_("offer_description"), blank=True)
 
-class Permanence(models.Model):
-    short_name = models.CharField(_("short_name"), max_length=40, blank=True)
+    class Meta:
+        unique_together = ('language_code', 'master')
+        verbose_name = _("Product translation")
+
+# import sys
+# import traceback
+
+class Permanence(TranslatableModel):
+    translations = TranslatedFields(
+        short_name=models.CharField(_("short_name"), max_length=40, blank=True),
+        offer_description=HTMLField(_("offer_description"),
+              help_text=_(
+                  "This message is send by mail to all customers when opening the order or on top "),
+              blank=True),
+        invoice_description=HTMLField(
+            _("invoice_description"),
+            help_text=_(
+                'This message is send by mail to all customers having bought something when closing the permanence.'),
+            blank=True)
+    )
+
     status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
@@ -674,15 +739,6 @@ class Permanence(models.Model):
         verbose_name=_("permanence_status"),
         help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
     distribution_date = models.DateField(_("distribution_date"), db_index=True)
-    offer_description = HTMLField(_("offer_description"),
-                                  help_text=_(
-                                      "This message is send by mail to all customers when opening the order or on top "),
-                                  blank=True)
-    invoice_description = HTMLField(
-        _("invoice_description"),
-        help_text=_(
-            'This message is send by mail to all customers having bought something when closing the permanence.'),
-        blank=True)
     producers = models.ManyToManyField(
         Producer, null=True, blank=True,
         verbose_name=_("producers"))
@@ -774,18 +830,22 @@ class Permanence(models.Model):
     get_board.allow_tags = True
 
     def __unicode__(self):
-        if not self.short_name:
-            return unicode(_("Permanence on ")) + u'%s' % (self.distribution_date.strftime('%d-%m-%Y'))
-        else:
+
+        try:
             return unicode(_("Permanence on ")) + u'%s (%s)' % (
                 self.distribution_date.strftime('%d-%m-%Y'), self.short_name)
+        except TranslationDoesNotExist:
+            return unicode(_("Permanence on ")) + u'%s' % (self.distribution_date.strftime('%d-%m-%Y'))
+        # except:
+        #     exc_type, exc_value, exc_traceback = sys.exc_info()
+        #     lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        #     print ''.join('!! ' + line for line in lines)
 
     class Meta:
         verbose_name = _("permanence")
         verbose_name_plural = _("permanences")
-        unique_together = ("distribution_date", "short_name",)
         index_together = [
-            ["distribution_date", "short_name"],
+            ["distribution_date"],
         ]
 
 

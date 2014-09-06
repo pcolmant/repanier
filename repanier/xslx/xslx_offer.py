@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponse
+from django.utils import translation
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
 from openpyxl.workbook import Workbook
@@ -26,10 +27,11 @@ def export(permanence, wb=None):
             permanence=permanence, is_active=True)
 
         for product in Product.objects.filter(
-                producer__in=producers_in_this_permanence, is_active=True, is_into_offer=True).order_by(
+                producer__in=producers_in_this_permanence, is_active=True, is_into_offer=True,
+                translations__language_code=translation.get_language()).order_by(
                 "producer__short_profile_name",
                 "department_for_customer",
-                "long_name"):
+                "translations__long_name"):
             row = [
                 (unicode(_("Producer")), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Department")), 15, product.department_for_customer.short_name, NumberFormat.FORMAT_TEXT,
@@ -99,10 +101,11 @@ def export(permanence, wb=None):
 
     if permanence.status == PERMANENCE_OPENED:
 
-        for offer_item in OfferItem.objects.filter(permanence_id=permanence.id, is_active=True).order_by(
+        for offer_item in OfferItem.objects.filter(permanence_id=permanence.id, is_active=True,
+                product__translations__language_code=translation.get_language()).order_by(
                 'product__producer__short_profile_name',
                 'product__department_for_customer',
-                'product__long_name'):
+                'product__translations__long_name'):
             row = [
                 (unicode(_("Producer")), 15, offer_item.product.producer.short_profile_name, NumberFormat.FORMAT_TEXT,
                  False),
