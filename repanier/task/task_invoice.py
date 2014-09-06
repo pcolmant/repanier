@@ -408,10 +408,10 @@ def admin_send(request, queryset):
 
 def admin_cancel(request, queryset):
     # TODO : Use the bank account total record
+    user_message = _("The status of this permanence prohibit you to close invoices.")
+    user_message_level = messages.ERROR
     latest_customer_invoice = CustomerInvoice.objects.order_by('-id').first()
     if latest_customer_invoice:
-        user_message = _("The status of this permanence prohibit you to close invoices.")
-        user_message_level = messages.ERROR
         for permanence in queryset[:1]:
             if permanence.status in [PERMANENCE_WAIT_FOR_DONE, PERMANENCE_INVOICES_VALIDATION_FAILED, PERMANENCE_DONE]:
                 if latest_customer_invoice.permanence.id == permanence.id:
