@@ -105,6 +105,7 @@
                             <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
                         {% if departementforcusomer_set.count > 1 %}
                             <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
+                        <br/>
                         {% for production_mode in offer.product.production_mode.all %}
                             {% if not production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ production_mode }}</small>
                             {% else %}
@@ -142,7 +143,7 @@
                                 {% if offer.product.order_unit == "150" %}
                                     {% trans "/ l" %}{% else %}{% trans "/ piece" %}{% endif %}{% endif %}
                                     {% if offer.product.unit_deposit %}
-                                        <span class="glyphicon glyphicon-plus"></span>
+                                        <br/><span class="glyphicon glyphicon-plus"></span>
                                         {{ offer.product.unit_deposit }} &euro;
                                         <span class="glyphicon glyphicon-leaf"></span>{% endif %}
                         {% if offer.product.picture %}
