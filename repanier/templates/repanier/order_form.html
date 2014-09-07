@@ -108,7 +108,7 @@
                         {% for production_mode in offer.product.production_mode.all %}
                             {% if not production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ production_mode }}</small>
                             {% else %}
-                                {% thumbnail production_mode.picture "32x32"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
+                                {% thumbnail production_mode.picture "0x32"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
                                 <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ production_mode }}" title="{{ production_mode }}" src="{{ logo_thumbnail.url }}"/>
                             {% endif %}
                         {% endfor %}
