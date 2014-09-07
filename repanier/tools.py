@@ -57,12 +57,11 @@ def cap(s, l):
         return None
 
 
-def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
-    if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-                      PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
-        unit = unicode(_("/ Kg"))
-    elif order_unit in [PRODUCT_ORDER_UNIT_NAMED_LT, PRODUCT_ORDER_UNIT_LOOSE_BT_LT]:
-        unit = unicode(_("/ L"))
+def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
+    if order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
+        unit = unicode(_("/ kg"))
+    elif order_unit == PRODUCT_ORDER_UNIT_LT:
+        unit = unicode(_("/ l"))
     else:
         if qty < 2:
             unit = unicode(_("/ piece"))
@@ -71,11 +70,11 @@ def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     return unit
 
 
-def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
-    if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
-        unit = unicode(_("/ Kg"))
-    elif order_unit == PRODUCT_ORDER_UNIT_NAMED_LT:
-        unit = unicode(_("/ L"))
+def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
+    if order_unit == PRODUCT_ORDER_UNIT_KG:
+        unit = unicode(_("/ kg"))
+    elif order_unit == PRODUCT_ORDER_UNIT_LT:
+        unit = unicode(_("/ l"))
     else:
         if qty < 2:
             unit = unicode(_("/ piece"))
@@ -84,12 +83,12 @@ def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     return unit
 
 
-def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
+def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     # Used when producing the orders send to the producers.
-    if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
-        unit = unicode(_("/ Kg"))
-    elif order_unit == PRODUCT_ORDER_UNIT_NAMED_LT:
-        unit = unicode(_("/ L"))
+    if order_unit == PRODUCT_ORDER_UNIT_KG:
+        unit = unicode(_("/ kg"))
+    elif order_unit == PRODUCT_ORDER_UNIT_LT:
+        unit = unicode(_("/ l"))
     else:
         if qty < 2:
             unit = unicode(_("/ piece"))
@@ -98,35 +97,35 @@ def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
     return unit
 
 
-def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC, qty=0):
+def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     # Used when producing the preparation list.
-    if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_DEPOSIT]:
+    if order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
         unit = unicode(_("Piece(s) :"))
-    elif order_unit in [PRODUCT_ORDER_UNIT_NAMED_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
-        unit = unicode(_(u"€ :"))
-    elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_BT_LT, PRODUCT_ORDER_UNIT_NAMED_LT]:
+    elif order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
+        unit = unicode(_(u"€ or kg :"))
+    elif order_unit == PRODUCT_ORDER_UNIT_LT:
         unit = unicode(_("L :"))
     else:
         unit = unicode(_("Kg :"))
     return unit
 
 
-def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_LOOSE_PC):
+def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC):
     unit = unicode(_(' pieces'))
     magnitude = 1
-    if order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]:
+    if order_unit == PRODUCT_ORDER_UNIT_KG:
         if qty < 1:
             unit = unicode(_(' gr'))
             magnitude = 1000
         else:
             unit = unicode(_(' kg'))
-    elif order_unit == PRODUCT_ORDER_UNIT_NAMED_LT:
+    elif order_unit == PRODUCT_ORDER_UNIT_LT:
         if qty < 1:
             unit = unicode(_(' cl'))
             magnitude = 100
         else:
             unit = unicode(_(' l'))
-    elif order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
+    elif order_unit in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG]:
         average_weight = order_average_weight * qty
         if average_weight < 1:
             average_weight_unit = unicode(_(' gr'))
@@ -144,7 +143,7 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
             unit = unicode(_(' piece')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
         else:
             unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
-    elif order_unit == PRODUCT_ORDER_UNIT_LOOSE_BT_LT:
+    elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
         average_weight = order_average_weight * qty
         if average_weight < 1:
             average_weight_unit = unicode(_(' cl'))
@@ -269,11 +268,10 @@ def recalculate_order_amount(permanence_id, customer_id=None, send_to_producer=F
         purchase.long_name = purchase.product.long_name
         purchase.department_for_customer = purchase.product.department_for_customer
         purchase.order_unit = purchase.product.order_unit
+        purchase.wrapped = purchase.product.wrapped
 
         purchase.order_average_weight = purchase.product.order_average_weight
-        if purchase.permanence.status < PERMANENCE_SEND and purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-                                                                                    PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-                                                                                    PRODUCT_ORDER_UNIT_LOOSE_BT_LT]:
+        if purchase.permanence.status < PERMANENCE_SEND and purchase.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
             purchase.original_price *= purchase.order_average_weight
             purchase.price_with_vat *= purchase.order_average_weight
             purchase.price_with_compensation *= purchase.order_average_weight
@@ -286,13 +284,12 @@ def recalculate_order_amount(permanence_id, customer_id=None, send_to_producer=F
         # by Kg then by familly when PRODUCT_ORDER_UNIT_LOOSE_KG,
         # or directly by familly otherwise.
         purchase.quantity_for_preparation_order = purchase.quantity if purchase.order_unit in [
-            PRODUCT_ORDER_UNIT_LOOSE_KG] else 0
+            PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT] else 0
 
         if send_to_producer:
             # Save initial quantity and convert piece(s) to kg or l.
             purchase.quantity_send_to_producer = purchase.quantity
-            if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-                                       PRODUCT_ORDER_UNIT_LOOSE_BT_LT]:
+            if purchase.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                 purchase.quantity = (purchase.quantity * purchase.order_average_weight).quantize(FOUR_DECIMALS)
         purchase.save()
         if purchase.invoiced_price_with_compensation:
@@ -385,8 +382,7 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
                     if offer_item.product.vat_level in [VAT_200, VAT_300] and customer.vat_id != None and len(
                             customer.vat_id) > 0:
                         is_compensation = True
-                    if offer_item.product.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-                                                         PRODUCT_ORDER_UNIT_LOOSE_BT_LT]:
+                    if offer_item.product.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                         a_original_price *= offer_item.product.order_average_weight
                         a_price_with_vat *= offer_item.product.order_average_weight
                         a_price_with_compensation *= offer_item.product.order_average_weight
@@ -403,9 +399,11 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
                         purchase.invoiced_price_with_compensation = is_compensation
                         purchase.vat_level = offer_item.product.vat_level
                         purchase.order_unit = offer_item.product.order_unit
+                        purchase.wrapped = offer_item.product.wrapped
                         purchase.save(update_fields=[
                             'quantity',
                             'order_unit',
+                            'wrapped',
                             'original_unit_price',
                             'unit_deposit',
                             'original_price',
@@ -426,6 +424,7 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
                             quantity=q_order,
                             long_name=offer_item.product.long_name,
                             order_unit=offer_item.product.order_unit,
+                            wrapped=offer_item.product.wrapped,
                             original_unit_price=a_original_unit_price,
                             unit_deposit=a_unit_deposit,
                             original_price=a_original_price,

@@ -140,8 +140,8 @@ def export(permanence, wb=None):
                     sum_quantity = 0
                     sum_counter = 0
                 else:
-                    if PRODUCT_ORDER_UNIT_NAMED_PC <= purchase.order_unit <= PRODUCT_ORDER_UNIT_NAMED_PC_KG:
-                        # Don't display the sum_quantity of NAMED products
+                    if purchase.wrapped:
+                        # Don't display the sum_quantity of wrapped products
                         sum_counter = 0
                         c = ws.cell(row=row_num - 1, column=7)
                         c.style.font.bold = True
@@ -159,8 +159,7 @@ def export(permanence, wb=None):
                 (unicode(_("product")), 60, product_long_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("customer")), 15, customer_short_basket_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("quantity")), 10, purchase.quantity, '#,##0.????',
-                 True if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG,
-                                                 PRODUCT_ORDER_UNIT_NAMED_PC_KG] else False),
+                 True if purchase.order_unit == PRODUCT_ORDER_UNIT_PC_KG else False),
                 (unicode(_("original unit price")), 10, purchase.original_unit_price,
                  u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
                 (unicode(_("original row price")), 10, purchase.original_price,

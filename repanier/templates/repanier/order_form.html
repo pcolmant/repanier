@@ -122,13 +122,25 @@
 {#                            <noscript>#}
 {#                                <input type="submit" value="{% trans "ok" %}"/>#}
 {#                            </noscript>#}
+                        {% if offer.product.order_unit == "105" or offer.product.order_unit == "110" %}
+                            <h5><small><i><b>
+                            {% if user.customer.vat_id %}
+                            {{ offer.product.reference_price_with_compensation }}{% else %}
+                            {{ offer.product.reference_price_with_vat }}
+                            {% endif %} &euro;
+                            {% if offer.product.order_unit == "105" %}
+                                {% trans "/ kg" %}{% else %}
+                                {% trans "/ l" %}
+                            {% endif %}
+                            </b></i></small></h5>
+                        {% endif %}
                         {% if user.customer.vat_id %}
                             {{ offer.product.unit_price_with_compensation }}{% else %}
                             {{ offer.product.unit_price_with_vat }}{% endif %} &euro;
-                            {% if offer.product.order_unit == "120" or offer.product.order_unit == "220" or offer.product.order_unit == "140" or offer.product.order_unit == "240" %}
-                                {% trans "/ Kg" %}{% else %}
-                                {% if offer.product.order_unit == "150" or offer.product.order_unit == "160" %}
-                                    {% trans "/ ℓ" %}{% else %}{% trans "/ piece" %}{% endif %}{% endif %}
+                            {% if offer.product.order_unit == "120" or offer.product.order_unit == "140" %}
+                                {% trans "/ kg" %}{% else %}
+                                {% if offer.product.order_unit == "150" %}
+                                    {% trans "/ l" %}{% else %}{% trans "/ piece" %}{% endif %}{% endif %}
                                     {% if offer.product.unit_deposit %}
                                         <span class="glyphicon glyphicon-plus"></span>
                                         {{ offer.product.unit_deposit }} &euro;

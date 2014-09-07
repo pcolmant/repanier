@@ -414,8 +414,28 @@ class StaffWithUserDataAdmin(ReadOnlyAdmin):
 
 admin.site.register(Staff, StaffWithUserDataAdmin)
 
+# Custom Product
+class ProductDataForm(TranslatableModelForm):
+    # wrapped = forms.BooleanField(label=_('Individually wrapped by the producer'),
+    #     required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(ProductDataForm, self).__init__(*args, **kwargs)
+
+    def error(self, field, msg):
+        if field not in self._errors:
+            self._errors[field] = self.error_class([msg])
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super(ProductDataForm, self).clean(*args, **kwargs)
+        return cleaned_data
+
+    class Meta:
+        model = Product
+
+
 class ProductAdmin(TranslatableAdmin):
-    # base_form = TranslatableModelForm
+    form = ProductDataForm
     list_display = (
         'is_into_offer',
         'producer',
@@ -432,7 +452,7 @@ class ProductAdmin(TranslatableAdmin):
                        'is_updated_on')
     fields = (
         ('producer', 'long_name', 'picture',),
-        'order_unit',
+        ('order_unit','wrapped'),
         ('original_unit_price', 'unit_deposit','order_average_weight'),
         ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity'),
         ('department_for_customer', 'placement'),
@@ -476,8 +496,8 @@ class ProductAdmin(TranslatableAdmin):
 
     duplicate_product.short_description = _('duplicate product')
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super(ProductAdmin, self).get_form(request, obj, **kwargs)
+    def get_form(self, request, product=None, **kwargs):
+        form = super(ProductAdmin, self).get_form(request, product, **kwargs)
         # If we are coming from a list screen, use the filter to pre-fill the form
 
         # print form.base_fields
@@ -491,7 +511,7 @@ class ProductAdmin(TranslatableAdmin):
             department_for_customer.widget.can_add_related = False
             production_mode.widget.can_add_related = False
 
-            if obj:
+            if product:
                 producer.empty_label = None
                 producer.queryset = Producer.objects.filter(is_active=True)
                 department_for_customer.empty_label = None

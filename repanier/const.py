@@ -54,27 +54,74 @@ LUT_PRODUCT_PLACEMENT = (
     (PRODUCT_PLACEMENT_BASKET, unicode(_('into the basket'))),
 )
 
-PRODUCT_ORDER_UNIT_LOOSE_PC = '100'
-PRODUCT_ORDER_UNIT_LOOSE_KG = '120'
-PRODUCT_ORDER_UNIT_LOOSE_PC_KG = '140'
-PRODUCT_ORDER_UNIT_NAMED_LT = '150'
-PRODUCT_ORDER_UNIT_LOOSE_BT_LT = '160'
-PRODUCT_ORDER_UNIT_NAMED_PC = '200'
-PRODUCT_ORDER_UNIT_NAMED_KG = '220'
-PRODUCT_ORDER_UNIT_NAMED_PC_KG = '240'
+# PRODUCT_ORDER_UNIT_LOOSE_PC = '100'
+# PRODUCT_ORDER_UNIT_LOOSE_KG = '120'
+# PRODUCT_ORDER_UNIT_LOOSE_PC_KG = '140'
+# PRODUCT_ORDER_UNIT_NAMED_LT = '150'
+# PRODUCT_ORDER_UNIT_LOOSE_BT_LT = '160'
+# PRODUCT_ORDER_UNIT_NAMED_PC = '200'
+# PRODUCT_ORDER_UNIT_NAMED_KG = '220'
+# PRODUCT_ORDER_UNIT_NAMED_PC_KG = '240'
+# PRODUCT_ORDER_UNIT_DEPOSIT = '300'
+# PRODUCT_ORDER_UNIT_SUBSCRIPTION = '400'
+# PRODUCT_ORDER_UNIT_TRANSPORTATION = '500'
+#
+# LUT_PRODUCT_ORDER_UNIT = (
+#     (PRODUCT_ORDER_UNIT_LOOSE_PC, unicode(_("/piece (loose)"))),
+#     (PRODUCT_ORDER_UNIT_NAMED_PC, unicode(_("/piece (named)"))),
+#     (PRODUCT_ORDER_UNIT_LOOSE_KG, unicode(_("/Kg (loose)"))),
+#     (PRODUCT_ORDER_UNIT_NAMED_KG, unicode(_("/Kg (named)"))),
+#     (PRODUCT_ORDER_UNIT_LOOSE_PC_KG, unicode(_("/piece -> Kg (loose)"))),
+#     (PRODUCT_ORDER_UNIT_NAMED_PC_KG, unicode(_("/piece -> Kg (named)"))),
+#     (PRODUCT_ORDER_UNIT_NAMED_LT, unicode(_("/L (named)"))),
+#     (PRODUCT_ORDER_UNIT_LOOSE_BT_LT, unicode(_("/piece -> L (loose)"))),
+#     (PRODUCT_ORDER_UNIT_DEPOSIT, unicode(
+#         _(
+#             'As a deposit, a bag : always add this product to preparation list when the customer has purchased something.'))),
+#     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, unicode(_(
+#         'As a subscription, common expense : add the minimal order quantity of this product to each customer of the group'))),
+#     (PRODUCT_ORDER_UNIT_TRANSPORTATION, unicode(_(
+#         'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.'))),
+# )
+#
+# LUT_PRODUCT_ORDER_UNIT_REVERSE = (
+#     (unicode(_("/piece (loose)")), PRODUCT_ORDER_UNIT_LOOSE_PC),
+#     (unicode(_("/Kg (loose)")), PRODUCT_ORDER_UNIT_LOOSE_KG),
+#     (unicode(_("/piece -> Kg (loose)")), PRODUCT_ORDER_UNIT_LOOSE_PC_KG),
+#     (unicode(_("/piece -> L (loose)")), PRODUCT_ORDER_UNIT_LOOSE_BT_LT),
+#     (unicode(_("/piece (named)")), PRODUCT_ORDER_UNIT_NAMED_PC),
+#     (unicode(_("/Kg (named)")), PRODUCT_ORDER_UNIT_NAMED_KG),
+#     (unicode(_("/L (named)")), PRODUCT_ORDER_UNIT_NAMED_LT),
+#     (unicode(_("/piece -> Kg (named)")), PRODUCT_ORDER_UNIT_NAMED_PC_KG),
+#     (unicode(
+#         _(
+#             'As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
+#      PRODUCT_ORDER_UNIT_DEPOSIT),
+#     (unicode(_(
+#         'As a subscription, common expense : add the minimal order quantity of this product to each customer of the group')),
+#      PRODUCT_ORDER_UNIT_SUBSCRIPTION),
+#     (unicode(_(
+#         'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.')),
+#      PRODUCT_ORDER_UNIT_TRANSPORTATION),
+# )
+
+PRODUCT_ORDER_UNIT_PC = '100'
+PRODUCT_ORDER_UNIT_PC_PRICE_KG = '105' # NEW
+PRODUCT_ORDER_UNIT_PC_PRICE_LT = '110' # NEW
+PRODUCT_ORDER_UNIT_KG = '120'
+PRODUCT_ORDER_UNIT_PC_KG = '140'
+PRODUCT_ORDER_UNIT_LT = '150'
 PRODUCT_ORDER_UNIT_DEPOSIT = '300'
 PRODUCT_ORDER_UNIT_SUBSCRIPTION = '400'
 PRODUCT_ORDER_UNIT_TRANSPORTATION = '500'
 
 LUT_PRODUCT_ORDER_UNIT = (
-    (PRODUCT_ORDER_UNIT_LOOSE_PC, unicode(_("/piece (loose)"))),
-    (PRODUCT_ORDER_UNIT_NAMED_PC, unicode(_("/piece (named)"))),
-    (PRODUCT_ORDER_UNIT_LOOSE_KG, unicode(_("/Kg (loose)"))),
-    (PRODUCT_ORDER_UNIT_NAMED_KG, unicode(_("/Kg (named)"))),
-    (PRODUCT_ORDER_UNIT_LOOSE_PC_KG, unicode(_("/piece -> Kg (loose)"))),
-    (PRODUCT_ORDER_UNIT_NAMED_PC_KG, unicode(_("/piece -> Kg (named)"))),
-    (PRODUCT_ORDER_UNIT_NAMED_LT, unicode(_("/L (named)"))),
-    (PRODUCT_ORDER_UNIT_LOOSE_BT_LT, unicode(_("/piece -> L (loose)"))),
+    (PRODUCT_ORDER_UNIT_PC, unicode(_("bought per piece"))),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, unicode(_("bought per piece (price /kg)"))),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, unicode(_("bought per piece (price /l)"))),
+    (PRODUCT_ORDER_UNIT_KG, unicode(_("bought per kg"))),
+    (PRODUCT_ORDER_UNIT_PC_KG, unicode(_("bought per piece, invoiced following the weight"))),
+    (PRODUCT_ORDER_UNIT_LT, unicode(_("bought per l"))),
     (PRODUCT_ORDER_UNIT_DEPOSIT, unicode(
         _(
             'As a deposit, a bag : always add this product to preparation list when the customer has purchased something.'))),
@@ -85,14 +132,12 @@ LUT_PRODUCT_ORDER_UNIT = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_REVERSE = (
-    (unicode(_("/piece (loose)")), PRODUCT_ORDER_UNIT_LOOSE_PC),
-    (unicode(_("/Kg (loose)")), PRODUCT_ORDER_UNIT_LOOSE_KG),
-    (unicode(_("/piece -> Kg (loose)")), PRODUCT_ORDER_UNIT_LOOSE_PC_KG),
-    (unicode(_("/piece -> L (loose)")), PRODUCT_ORDER_UNIT_LOOSE_BT_LT),
-    (unicode(_("/piece (named)")), PRODUCT_ORDER_UNIT_NAMED_PC),
-    (unicode(_("/Kg (named)")), PRODUCT_ORDER_UNIT_NAMED_KG),
-    (unicode(_("/L (named)")), PRODUCT_ORDER_UNIT_NAMED_LT),
-    (unicode(_("/piece -> Kg (named)")), PRODUCT_ORDER_UNIT_NAMED_PC_KG),
+    (unicode(_("bought per piece")), PRODUCT_ORDER_UNIT_PC),
+    (unicode(_("bought per piece (price /kg)")), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
+    (unicode(_("bought per piece (price /l)")), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
+    (unicode(_("bought per kg")), PRODUCT_ORDER_UNIT_KG),
+    (unicode(_("bought per piece, invoiced following the weight")), PRODUCT_ORDER_UNIT_PC_KG),
+    (unicode(_("bought per l")), PRODUCT_ORDER_UNIT_LT),
     (unicode(
         _(
             'As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),

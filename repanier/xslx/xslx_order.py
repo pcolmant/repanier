@@ -317,8 +317,7 @@ def export(permanence, wb=None):
                         (unicode(_("To distribute")), 9, "", '#,##0.???', False),
                         (unicode(_("Prepared Quantity")), 22, get_preparator_unit(purchase.order_unit),
                          NumberFormat.FORMAT_TEXT,
-                         True if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_KG,
-                                                         PRODUCT_ORDER_UNIT_NAMED_PC_KG, PRODUCT_ORDER_UNIT_NAMED_LT] else False),
+                         True if purchase.order_unit == PRODUCT_ORDER_UNIT_PC_KG or purchase.wrapped else False),
                     ]
 
                     if row_num == 0:
@@ -480,8 +479,7 @@ def export_producer(permanence, producer, wb=None):
             if unit_deposit_save != 0:
                 hide_column_unit_deposit = False
 
-            if purchase.order_unit in [PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG,
-                                       PRODUCT_ORDER_UNIT_NAMED_PC_KG, PRODUCT_ORDER_UNIT_NAMED_LT]:
+            if purchase.wrapped:
                 short_basket_name = purchase.customer.short_basket_name
                 hide_column_short_basket_name = False
             else:
@@ -497,8 +495,7 @@ def export_producer(permanence, producer, wb=None):
             if unit_deposit_save != 0:
                 hide_column_unit_deposit = False
 
-            if purchase.order_unit in [PRODUCT_ORDER_UNIT_NAMED_PC, PRODUCT_ORDER_UNIT_NAMED_KG,
-                                       PRODUCT_ORDER_UNIT_NAMED_PC_KG, PRODUCT_ORDER_UNIT_NAMED_LT]:
+            if purchase.wrapped:
                 short_basket_name = purchase.customer.short_basket_name
                 hide_column_short_basket_name = False
                 qty_sum = 0
@@ -514,8 +511,7 @@ def export_producer(permanence, producer, wb=None):
         if unit_save is None:
             unit_save = purchase.order_unit
         else:
-            if purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG,
-                                       PRODUCT_ORDER_UNIT_NAMED_LT]:
+            if purchase.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_LT]:
                 hide_column_unit = False
         # if purchase.order_unit not in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
         total_price_sum += purchase.original_price
@@ -652,7 +648,7 @@ def export_producer(permanence, producer, wb=None):
             unit_save = purchase.order_unit
         else:
             if (purchase.order_unit != unit_save and purchase.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT) or (
-                        purchase.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_KG, PRODUCT_ORDER_UNIT_NAMED_KG]):
+                        purchase.order_unit == PRODUCT_ORDER_UNIT_KG):
                 hide_column_unit = False
 
         row = [
@@ -761,9 +757,7 @@ def export_customer(permanence, customer, wb=None):
                 (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Quantity")), 10, qty, '#,##0.???', False),
                 (unicode(_("Unit")), 10, unit, NumberFormat.FORMAT_TEXT,
-                 True if purchase.order_unit in [PRODUCT_ORDER_UNIT_NAMED_KG,
-                                                 PRODUCT_ORDER_UNIT_NAMED_PC_KG,
-                                                 PRODUCT_ORDER_UNIT_NAMED_LT] else False),
+                 True if purchase.wrapped else False),
             ]
 
             if row_num == 0:

@@ -46,6 +46,8 @@ def export(producer, wb=None):
              NumberFormat.FORMAT_TEXT, False),
             (unicode(_("long_name")), 60, product.long_name, NumberFormat.FORMAT_TEXT, False),
             (unicode(_("order unit")), 15, product.get_order_unit_display(), NumberFormat.FORMAT_TEXT, False),
+            (unicode(_("wrapped")), 7, unicode(_("Yes")) if product.is_into_offer else None,
+             NumberFormat.FORMAT_TEXT, False),
             (unicode(_("order_average_weight")), 10, product.order_average_weight, '#,##0.???', False),
             (unicode(_("original_unit_price")), 10, product.original_unit_price,
              u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
@@ -90,6 +92,7 @@ def export(producer, wb=None):
         (unicode(_("is_into_offer")), 7, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("long_name")), 60, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("order unit")), 15, u"", NumberFormat.FORMAT_TEXT),
+        (unicode(_("wrapped")), 7, u"", NumberFormat.FORMAT_TEXT),
         (unicode(_("order_average_weight")), 10, u"", '#,##0.???'),
         (unicode(_("original_unit_price")), 10, u"", u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
         (unicode(_("deposit")), 10, u"", u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
@@ -137,17 +140,23 @@ def export(producer, wb=None):
                         allow_blank=True)
     ws.add_data_validation(dv)
     dv.ranges.append('C2:C5000')
+    # List of Yes/
+    valid_values = [unicode(_('Yes')), ]
+    dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
+                        allow_blank=True)
+    ws.add_data_validation(dv)
+    dv.ranges.append('F2:F5000')
     # Data validation qty / weight
     dv = DataValidation(ValidationType.DECIMAL,
                         ValidationOperator.GREATER_THAN_OR_EQUAL,
                         0)
     ws.add_data_validation(dv)
-    dv.ranges.append('F2:H5000')
+    dv.ranges.append('G2:I5000')
     dv = DataValidation(ValidationType.DECIMAL,
                         ValidationOperator.GREATER_THAN_OR_EQUAL,
                         0)
     ws.add_data_validation(dv)
-    dv.ranges.append('J2:L5000')
+    dv.ranges.append('K2:M5000')
     # Data validation Vat or Compensation
     # List of Vat or Compensation
     valid_values = []
@@ -156,7 +165,7 @@ def export(producer, wb=None):
     dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
                         allow_blank=True)
     ws.add_data_validation(dv)
-    dv.ranges.append('I2:I5000')
+    dv.ranges.append('J2:J5000')
     # End of data validation
 
     # Add formating for empty cells.
@@ -225,7 +234,7 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                 if row[_("order unit")] in order_unit_dict:
                     order_unit = order_unit_dict[row[_("order unit")]]
                 if order_unit is None:
-                    order_unit = PRODUCT_ORDER_UNIT_LOOSE_PC
+                    order_unit = PRODUCT_ORDER_UNIT_PC
 
                 long_name = cap(row[_('long_name')], 100)
                 product_set = Product.objects.filter(
@@ -262,6 +271,7 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                         if customer_alert_order_quantity is not None:
                             product.customer_alert_order_quantity = customer_alert_order_quantity
                         product.is_into_offer = (row[_('is_into_offer')] is not None)
+                        product.wrapped = (row[_('wrapped')] is not None)
                         product.vat_level = vat_level
                         product.is_active = True
                         # product.product_reorder = product_reorder
@@ -307,7 +317,8 @@ def import_product_sheet(worksheet, producer=None, db_write=False,
                                 customer_minimum_order_quantity=customer_minimum_order_quantity,
                                 customer_increment_order_quantity=customer_increment_order_quantity,
                                 customer_alert_order_quantity=customer_alert_order_quantity,
-                                is_into_offer=( row[_('is_into_offer')] is not None ),
+                                is_into_offer=(row[_('is_into_offer')] is not None),
+                                wrapped=(row[_('wrapped')] is not None),
                                 is_active=True,  # product_reorder = product_reorder
                             )
                     else:

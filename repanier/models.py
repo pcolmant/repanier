@@ -654,14 +654,37 @@ class Product(TranslatableModel):
     order_unit = models.CharField(
         max_length=3,
         choices=LUT_PRODUCT_ORDER_UNIT,
-        default=PRODUCT_ORDER_UNIT_LOOSE_PC,
+        default=PRODUCT_ORDER_UNIT_PC,
         verbose_name=_("order unit"))
-
+    wrapped = models.BooleanField(_('Individually wrapped by the producer'),
+        default=False)
     is_active = models.BooleanField(_("is_active"), default=True)
     is_created_on = models.DateTimeField(
         _("is_created_on"), auto_now_add=True, blank=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True, blank=True)
+
+    @property
+    def reference_price_with_compensation(self):
+        if self.order_average_weight > DECIMAL_ZERO:
+            reference_price = ((DECIMAL_ONE / self.order_average_weight) * self.unit_price_with_compensation).quantize(TWO_DECIMALS)
+            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
+                return number_format(reference_price, 2)
+            else:
+                return ""
+        else:
+            return ""
+
+    @property
+    def reference_price_with_vat(self):
+        if self.order_average_weight > DECIMAL_ZERO:
+            reference_price = ((DECIMAL_ONE / self.order_average_weight) * self.unit_price_with_vat).quantize(TWO_DECIMALS)
+            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
+                return number_format(reference_price, 2)
+            else:
+                return ""
+        else:
+            return ""
 
     def natural_key(self):
         return self.long_name + self.producer.natural_key()
@@ -717,6 +740,7 @@ class Product_Translation(TranslatedFieldsModel):
 
 # import sys
 # import traceback
+
 
 class Permanence(TranslatableModel):
     translations = TranslatedFields(
@@ -1116,8 +1140,10 @@ class Purchase(models.Model):
     order_unit = models.CharField(
         max_length=3,
         choices=LUT_PRODUCT_ORDER_UNIT,
-        default=PRODUCT_ORDER_UNIT_LOOSE_PC,
+        default=PRODUCT_ORDER_UNIT_PC,
         verbose_name=_("order unit"))
+    wrapped = models.BooleanField(_('Individually wrapped by the producer'),
+        default=False)
     original_unit_price = models.DecimalField(
         _("original unit price"),
         help_text=_('last known price (/piece or /kg) from the producer price list'),
@@ -1167,13 +1193,8 @@ class Purchase(models.Model):
     @property
     def quantity_deposit(self):
         self._quantity_deposit = DECIMAL_ZERO
-        if self.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_PC, PRODUCT_ORDER_UNIT_NAMED_PC]:
+        if self.order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
             self._quantity_deposit = self.quantity
-        elif self.order_unit in [PRODUCT_ORDER_UNIT_LOOSE_BT_LT, PRODUCT_ORDER_UNIT_NAMED_LT]:
-            if self.permanence.status < PERMANENCE_SEND:
-                self._quantity_deposit = self.quantity
-            else:
-                self._quantity_deposit = (self.quantity / self.order_average_weight).quantize(ZERO_DECIMAL)
         return self._quantity_deposit
 
     @property
