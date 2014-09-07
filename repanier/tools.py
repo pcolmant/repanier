@@ -139,10 +139,13 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
             decimal = 1
         elif average_weight * 100 == int(average_weight * 100):
             decimal = 2
+        tilde = ''
+        if order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            tilde = '~'
         if qty < 2:
-            unit = unicode(_(' piece')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+            unit = unicode(_(' piece')) + ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
         else:
-            unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+            unit = unicode(_(' pieces')) + ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
     elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
         average_weight = order_average_weight * qty
         if average_weight < 1:
