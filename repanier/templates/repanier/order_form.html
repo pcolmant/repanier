@@ -14,7 +14,7 @@
             .bs-docs-sidebar .nav > li > a {
                 color: #3c3c3c;
                 padding: 4px 20px;
-                font-size: 13px;
+                font-size: 16px;
                 font-weight: 400;
                 border-left: 2px solid transparent;
             }
@@ -23,7 +23,7 @@
                 padding-top: 1px;
                 padding-bottom: 1px;
                 padding-left: 30px;
-                font-size: 12px;
+                font-size: 14px;
             }
 {#            /* active & hover links */#}
             .bs-docs-sidebar .nav > .active > a,
@@ -283,13 +283,13 @@
             </div>
         </div>
     {% endif %}
-
+</div>
     {% addtoblock "lastjs" %}
         <script type="text/javascript">
             function order_ajax(offer_item_id) {
-                var offer_item = $("#offer_item" + offer_item_id)
+                var offer_item = $("#offer_item" + offer_item_id);
                 {# *** Need to save offer_item.val() for Firefox ***  #}
-                var offer_item_val = $("option:selected", offer_item).val()
+                var offer_item_val = $("option:selected", offer_item).val();
 
                 if (offer_item_val == 'other_qty') {
                     var getProductFromRow = offer_item.closest('div').data('product');
@@ -297,11 +297,9 @@
                     $('#otherQtyModal').modal('show');
                     offer_item.val(offer_item.data('oldValue'));
                 } else {
-
-
                     var lien = '{% url 'order_form_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id;
                     {# *** Bellow needed to avoid Firefox flashing the old/new selected value *** #}
-                    offer_item.val(offer_item_val);
+                    // offer_item.val(offer_item_val);
                     $.ajax({
                         url: lien,
                         cache: false,
@@ -314,7 +312,7 @@
                                 $('#prepared_amount_visible_xs').text(result.substring(2));
                                 $('#my_basket').text(result.substring(2));
                                 {# *** Need to restore offer_item.val() for Firefox *** #}
-                                offer_item.val(offer_item_val);
+{#                                offer_item.val(offer_item_val);#}
                                 offer_item.data('oldValue', offer_item_val);
                             }
                         },
@@ -322,14 +320,16 @@
                             offer_item.val(offer_item.data('oldValue'));
                         }
                     });
-
-
                 }
             }
             $(document).ready(function () {
                 $("#li_my_basket").show();
                 $("select").mouseenter(function (event) {
-                    var offer_item = $(this)
+{#                    event.preventDefault();#}
+{#                    event.stopPropagation();#}
+                    var offer_item = $(this);
+                    var offer_item_val = $("option:selected", offer_item).val();
+                    offer_item.data('oldValue', offer_item_val);
                     var offer_item_id = offer_item.closest('div').data('id');
                     var lien = '{% url 'ajax_order_select' %}?offer_item=' + offer_item_id;
 
@@ -340,28 +340,33 @@
                         async: false,
                         success: function (result) {
                             var selectOption = '';
+                            var selectVal = 0;
                             $.each(result, function (key, val) {
                                 if (val.selected == "selected") {
                                     selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                    selectVal = val.value
                                 } else {
                                     selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
                                 }
-                                ;
-
-                            })
-                            offer_item.data('oldValue', $("option:selected", this).val());
-                            offer_item.val($("option:selected", this).val());
+                            });
                             offer_item.html(selectOption);
+                            offer_item.data('oldValue', selectVal);
+                            // offer_item.val(selectVal);
                         },
                         error: function (result) {
                             offer_item.val(offer_item.data('oldValue'));
                         }
                     });
                 });
+{#                $("select").mouseout(function (event) {#}
+{#                    var offer_item = $(this);#}
+{#                    var selectVal = offer_item.data('oldValue');#}
+{#                    offer_item.val(offer_item.data('oldValue'));#}
+{#                });#}
                 $('#orderModal').modal({
                     keyboard: true,
                     backdrop: false,
-                    show: false,
+                    show: false
                 }).on('show.bs.modal', function (event) {
                     var getIdFromRow = $(event.relatedTarget).data('id');
                     var getProductFromRow = $(event.relatedTarget).data('product');
