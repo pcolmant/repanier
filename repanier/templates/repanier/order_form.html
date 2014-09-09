@@ -71,14 +71,14 @@
                             </ul>
                         {% endif %}
                     </li>
-                    {% if departementforcusomer_set.count > 1 %}
+                    {% if departementforcustomer_set.count > 1 %}
                         <li>
                             <a href="?"
-                               {% if departementforcusomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
+                               {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
                             <ul class="nav nav-stacked">
-                                {% for departementforcusomer in departementforcusomer_set %}
-                                    <li><a href="?departementforcusomer={{ departementforcusomer.id }}"
-                                           {% if departementforcusomer.id == departementforcusomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcusomer.short_name }}</a>
+                                {% for departementforcustomer in departementforcustomer_set %}
+                                    <li><a href="?departementforcustomer={{ departementforcustomer.id }}"
+                                           {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -103,11 +103,11 @@
                         {% if producer_set.count > 1 %}{{ offer.product.producer.short_profile_name | truncatechars:15 }},{% endif %}
                         <b>{{ offer.product.long_name }}{% repanier_product_content_unit offer_item_id=offer.id %}{% if offer.product.offer_description|length > 0 %}
                             <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
-                        {% if departementforcusomer_set.count > 1 %}
+                        {% if departementforcustomer_set.count > 1 %}
                             <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
                         <br/>
                         {% for production_mode in offer.product.production_mode.all %}
-                            {% if not production_mode.picture %}<small>{% if departementforcusomer_set.count > 1 %} - {% endif %}{{ production_mode }}</small>
+                            {% if not production_mode.picture %}<small>{% if departementforcustomer_set.count > 1 %} - {% endif %}{{ production_mode }}</small>
                             {% else %}
                                 {% thumbnail production_mode.picture "0x32"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
                                 <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ production_mode }}" title="{{ production_mode }}" src="{{ logo_thumbnail.url }}"/>
@@ -118,7 +118,7 @@
 {#                        <form>#}
 {#                            <input hidden name="page" value="{{ page_obj.number }}"/>#}
 {#                            <input hidden name="producer" value="{{ producer_id }}"/>#}
-{#                            <input hidden name="departementforcusomer" value="{{ departementforcusomer_id }}"/>#}
+{#                            <input hidden name="departementforcustomer" value="{{ departementforcustomer_id }}"/>#}
                         {% repanier_select_qty offer_item_id=offer.id %}
 {#                            <noscript>#}
 {#                                <input type="submit" value="{% trans "ok" %}"/>#}
@@ -233,7 +233,7 @@
                     </ul>
                 </div>
             {% endif %}
-            {% if departementforcusomer_set.count > 1 %}
+            {% if departementforcustomer_set.count > 1 %}
                 <div class="btn-group btn-xs dropup">
                     <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
                         {% trans " D " %}
@@ -241,9 +241,9 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a href="?">{% trans "All departments" %}</a></li>
-                        {% for departementforcusomer in departementforcusomer_set %}
+                        {% for departementforcustomer in departementforcustomer_set %}
                             <li>
-                                <a href="?departementforcusomer={{ departementforcusomer.id }}">{{ departementforcusomer.short_name }}</a>
+                                <a href="?departementforcustomer={{ departementforcustomer.id }}">{{ departementforcustomer.short_name }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -266,7 +266,7 @@
         <div class="btn-group">
             <div class="btn-group">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}"
+                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
                        class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-left"></span></a>
                 {% else %}
                     <a href="#" class="btn btn-disabled btn-xs"></a>
@@ -276,7 +276,7 @@
                        class="btn btn-disabled btn-xs">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcusomer={{ departementforcusomer_id }}"
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
                        class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-right"></span></a>
                 {% else %}
                     <a href="#" class="btn btn-disabled btn-xs"></a>

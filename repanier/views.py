@@ -232,7 +232,7 @@ class OrderView(ListView):
         self.user = None
         self.offeritem_id = 'all'
         self.producer_id = 'all'
-        self.departementforcusomer_id = 'all'
+        self.departementforcustomer_id = 'all'
 
     def dispatch(self, request, *args, **kwargs):
         self.user = request.user
@@ -242,9 +242,9 @@ class OrderView(ListView):
         self.producer_id = 'all'
         if self.request.GET.get('producer'):
             self.producer_id = self.request.GET['producer']
-        self.departementforcusomer_id = 'all'
-        if self.request.GET.get('departementforcusomer'):
-            self.departementforcusomer_id = self.request.GET['departementforcusomer']
+        self.departementforcustomer_id = 'all'
+        if self.request.GET.get('departementforcustomer'):
+            self.departementforcustomer_id = self.request.GET['departementforcustomer']
         return super(OrderView, self).dispatch(request, *args, **kwargs)
 
     @method_decorator(never_cache)
@@ -277,16 +277,16 @@ class OrderView(ListView):
             context['producer_set'] = producer_set
             context['producer_id'] = self.producer_id
             if self.producer_id == 'all':
-                departementforcusomer_set = LUT_DepartmentForCustomer.objects.filter(
+                departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
                     product__offeritem__permanence_id=self.permanence.id
                 ).distinct()
             else:
-                departementforcusomer_set = LUT_DepartmentForCustomer.objects.filter(
+                departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
                     product__producer_id=self.producer_id,
                     product__offeritem__permanence_id=self.permanence.id
                 ).distinct()
-            context['departementforcusomer_set'] = departementforcusomer_set
-            context['departementforcusomer_id'] = self.departementforcusomer_id
+            context['departementforcustomer_set'] = departementforcustomer_set
+            context['departementforcustomer_id'] = self.departementforcustomer_id
             context['offeritem_id'] = self.offeritem_id
             context['prepared_amount'] = get_user_order_amount(self.permanence,
                                                                user=self.user)  # + ' &euro; <span class="glyphicon glyphicon-shopping-cart"></span>'
@@ -307,8 +307,8 @@ class OrderView(ListView):
                 # if asked or if status is close or send, then display only purchased product
                 qs = qs.filter(product__purchase__permanence=self.permanence.id,
                                product__purchase__customer__user=self.user)
-            if self.departementforcusomer_id != 'all':
-                qs = qs.filter(product__department_for_customer=self.departementforcusomer_id)
+            if self.departementforcustomer_id != 'all':
+                qs = qs.filter(product__department_for_customer=self.departementforcustomer_id)
             qs = qs.filter(product__translations__language_code=translation.get_language(),
                            product__department_for_customer__translations__language_code=translation.get_language()
             ).order_by(
