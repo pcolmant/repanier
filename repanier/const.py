@@ -108,6 +108,7 @@ LUT_PRODUCT_PLACEMENT = (
 PRODUCT_ORDER_UNIT_PC = '100'
 PRODUCT_ORDER_UNIT_PC_PRICE_KG = '105' # NEW
 PRODUCT_ORDER_UNIT_PC_PRICE_LT = '110' # NEW
+PRODUCT_ORDER_UNIT_PC_PRICE_PC = '115' # NEW
 PRODUCT_ORDER_UNIT_KG = '120'
 PRODUCT_ORDER_UNIT_PC_KG = '140'
 PRODUCT_ORDER_UNIT_LT = '150'
@@ -119,6 +120,7 @@ LUT_PRODUCT_ORDER_UNIT = (
     (PRODUCT_ORDER_UNIT_PC, unicode(_("bought per piece"))),
     (PRODUCT_ORDER_UNIT_PC_PRICE_KG, unicode(_("bought per piece (price /kg)"))),
     (PRODUCT_ORDER_UNIT_PC_PRICE_LT, unicode(_("bought per piece (price /l)"))),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, unicode(_("bought per piece (price /pc)"))),
     (PRODUCT_ORDER_UNIT_KG, unicode(_("bought per kg"))),
     (PRODUCT_ORDER_UNIT_PC_KG, unicode(_("bought per piece, invoiced following the weight"))),
     (PRODUCT_ORDER_UNIT_LT, unicode(_("bought per l"))),
@@ -135,6 +137,7 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
     (unicode(_("bought per piece")), PRODUCT_ORDER_UNIT_PC),
     (unicode(_("bought per piece (price /kg)")), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
     (unicode(_("bought per piece (price /l)")), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
+    (unicode(_("bought per piece (price /pc)")), PRODUCT_ORDER_UNIT_PC_PRICE_PC),
     (unicode(_("bought per kg")), PRODUCT_ORDER_UNIT_KG),
     (unicode(_("bought per piece, invoiced following the weight")), PRODUCT_ORDER_UNIT_PC_KG),
     (unicode(_("bought per l")), PRODUCT_ORDER_UNIT_LT),

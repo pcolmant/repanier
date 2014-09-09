@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django import template
+from django.utils.translation import ugettext_lazy as _
 
 from repanier.tools import *
 from repanier.models import OfferItem
@@ -138,3 +139,47 @@ def repanier_select_permanence(context, *args, **kwargs):
             result += "</b></i>"
     return result
 
+@register.simple_tag(takes_context=False)
+def repanier_product_content_unit(*args, **kwargs):
+    result = ""
+    p_offer_item_id = kwargs['offer_item_id']
+    offer_item = OfferItem.objects.get(id=p_offer_item_id)
+    order_unit = offer_item.product.order_unit
+    if order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_KG]:
+        average_weight = offer_item.product.order_average_weight
+        if average_weight < 1:
+            average_weight_unit = unicode(_(' gr'))
+            average_weight *= 1000
+        else:
+            average_weight_unit = unicode(_(' kg'))
+        decimal = 3
+        if average_weight == int(average_weight):
+            decimal = 0
+        elif average_weight * 10 == int(average_weight * 10):
+            decimal = 1
+        elif average_weight * 100 == int(average_weight * 100):
+            decimal = 2
+        tilde = ''
+        if order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            tilde = '~'
+        result = ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
+    elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
+        average_weight = offer_item.product.order_average_weight
+        if average_weight < 1:
+            average_weight_unit = unicode(_(' cl'))
+            average_weight *= 100
+        else:
+            average_weight_unit = unicode(_(' l'))
+        decimal = 3
+        if average_weight == int(average_weight):
+            decimal = 0
+        elif average_weight * 10 == int(average_weight * 10):
+            decimal = 1
+        elif average_weight * 100 == int(average_weight * 100):
+            decimal = 2
+        result = ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+    elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
+        average_weight = offer_item.product.order_average_weight
+        if average_weight > 2:
+            result = ' (' + number_format(average_weight, 0) + unicode(_(' pcs')) + ')'
+    return result

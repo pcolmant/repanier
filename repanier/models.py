@@ -668,7 +668,7 @@ class Product(TranslatableModel):
     def reference_price_with_compensation(self):
         if self.order_average_weight > DECIMAL_ZERO:
             reference_price = ((DECIMAL_ONE / self.order_average_weight) * self.unit_price_with_compensation).quantize(TWO_DECIMALS)
-            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
+            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
                 return number_format(reference_price, 2)
             else:
                 return ""
@@ -679,7 +679,7 @@ class Product(TranslatableModel):
     def reference_price_with_vat(self):
         if self.order_average_weight > DECIMAL_ZERO:
             reference_price = ((DECIMAL_ONE / self.order_average_weight) * self.unit_price_with_vat).quantize(TWO_DECIMALS)
-            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
+            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
                 return number_format(reference_price, 2)
             else:
                 return ""
@@ -1193,7 +1193,7 @@ class Purchase(models.Model):
     @property
     def quantity_deposit(self):
         self._quantity_deposit = DECIMAL_ZERO
-        if self.order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
+        if self.order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
             self._quantity_deposit = self.quantity
         return self._quantity_deposit
 

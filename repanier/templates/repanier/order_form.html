@@ -101,7 +101,7 @@
                     <div class="col-sm-6 col-md-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="">
                     {% endif %}
                         {% if producer_set.count > 1 %}{{ offer.product.producer.short_profile_name | truncatechars:15 }},{% endif %}
-                        <b>{{ offer.product.long_name }}{% if offer.product.offer_description|length > 0 %}
+                        <b>{{ offer.product.long_name }}{% repanier_product_content_unit offer_item_id=offer.id %}{% if offer.product.offer_description|length > 0 %}
                             <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
                         {% if departementforcusomer_set.count > 1 %}
                             <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
@@ -123,15 +123,16 @@
 {#                            <noscript>#}
 {#                                <input type="submit" value="{% trans "ok" %}"/>#}
 {#                            </noscript>#}
-                        {% if offer.product.order_unit == "105" or offer.product.order_unit == "110" %}
+                        {% if offer.product.order_unit == "105" or offer.product.order_unit == "110" or offer.product.order_unit == "115" %}
                             <h5><small><i><b>
                             {% if user.customer.vat_id %}
                             {{ offer.product.reference_price_with_compensation }}{% else %}
                             {{ offer.product.reference_price_with_vat }}
                             {% endif %} &euro;
                             {% if offer.product.order_unit == "105" %}
-                                {% trans "/ kg" %}{% else %}
-                                {% trans "/ l" %}
+                                {% trans "/ kg" %}{% else %}{% if offer.product.order_unit == "110" %}
+                                {% trans "/ l" %}{% else %}
+                                {% trans "/ pc" %}{% endif %}
                             {% endif %}
                             </b></i></small></h5>
                         {% endif %}
@@ -141,7 +142,7 @@
                             {% if offer.product.order_unit == "120" or offer.product.order_unit == "140" %}
                                 {% trans "/ kg" %}{% else %}
                                 {% if offer.product.order_unit == "150" %}
-                                    {% trans "/ l" %}{% else %}{% trans "/ piece" %}{% endif %}{% endif %}
+                                    {% trans "/ l" %}{% else %}{% if offer.product.order_unit != "115" %}{% trans "/ piece" %}{% endif %}{% endif %}{% endif %}
                                     {% if offer.product.unit_deposit %}
                                         <br/><span class="glyphicon glyphicon-plus"></span>
                                         {{ offer.product.unit_deposit }} &euro;

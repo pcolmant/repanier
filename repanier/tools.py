@@ -82,7 +82,6 @@ def get_customer_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
             unit = unicode(_("/ pieces"))
     return unit
 
-
 def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     # Used when producing the orders send to the producers.
     if order_unit == PRODUCT_ORDER_UNIT_KG:
@@ -99,7 +98,7 @@ def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
 
 def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     # Used when producing the preparation list.
-    if order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT]:
+    if order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
         unit = unicode(_("Piece(s) :"))
     elif order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
         unit = unicode(_(u"€ or kg :"))
@@ -164,6 +163,12 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
             unit = unicode(_(' piece')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
         else:
             unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+    elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
+        average_weight = order_average_weight * qty
+        if qty < 2:
+            unit = unicode(_(' piece')) + ' (' + number_format(average_weight, 0) + unicode(_(' pc')) + ')'
+        else:
+            unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, 0) + unicode(_(' pcs')) + ')'
     else:
         if qty < 2:
             unit = unicode(_(' piece'))
@@ -284,10 +289,10 @@ def recalculate_order_amount(permanence_id, customer_id=None, send_to_producer=F
         purchase.price_with_compensation = purchase.price_with_compensation.quantize(TWO_DECIMALS)
 
         # quantity_for_preparation_order is used to sort preparation listing
-        # by Kg then by familly when PRODUCT_ORDER_UNIT_LOOSE_KG,
-        # or directly by familly otherwise.
+        # by Kg then by family when PRODUCT_ORDER_UNIT_LOOSE_KG,
+        # or directly by family otherwise.
         purchase.quantity_for_preparation_order = purchase.quantity if purchase.order_unit in [
-            PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT] else 0
+            PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC] else 0
 
         if send_to_producer:
             # Save initial quantity and convert piece(s) to kg or l.
