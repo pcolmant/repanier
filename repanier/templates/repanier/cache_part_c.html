@@ -1,0 +1,27 @@
+{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
+{% if offer.product.order_unit == "105" or offer.product.order_unit == "110" or offer.product.order_unit == "115" %}
+    <h5><small><i><b>
+    {{ offer.product.reference_price_with_compensation }} &euro;
+    {% if offer.product.order_unit == "105" %}
+        {% trans "/ kg" %}{% else %}{% if offer.product.order_unit == "110" %}
+        {% trans "/ l" %}{% else %}
+        {% trans "/ pc" %}{% endif %}
+    {% endif %}
+    </b></i></small></h5>
+{% endif %}
+    {{ offer.product.unit_price_with_compensation }} &euro;
+    {% if offer.product.order_unit == "120" or offer.product.order_unit == "140" %}
+        {% trans "/ kg" %}{% else %}
+        {% if offer.product.order_unit == "150" %}
+            {% trans "/ l" %}{% else %}{% if offer.product.order_unit != "115" %}{% trans "/ piece" %}{% endif %}{% endif %}{% endif %}
+            {% if offer.product.unit_deposit %}
+                <br/><span class="glyphicon glyphicon-plus"></span>
+                {{ offer.product.unit_deposit }} &euro;
+                <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+{% if offer.product.picture %}
+    {% thumbnail offer.product.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+    <br/>
+    <span data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="{{ product_thumbnail.url }}">
+    <img class="img-thumbnail" style = "margin-top: 5px;" alt="{{ offer.product }}" title="{{ offer.product }}" src="{{ product_thumbnail.url }}"/>
+    </span>
+{% endif %}

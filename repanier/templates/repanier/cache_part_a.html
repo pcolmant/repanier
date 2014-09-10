@@ -1,0 +1,13 @@
+{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
+<b>{{ offer.product.long_name }}{% repanier_product_content_unit offer_item_id=offer.id %}{% if offer.product.offer_description|length > 0 %}
+    <span class="glyphicon glyphicon-info-sign"></span>{% endif %}</b><br/>
+{% if departementforcustomer_set.count > 1 %}
+    <small>{{ offer.product.department_for_customer.short_name }}</small>{% endif %}
+<br/>
+{% for production_mode in offer.product.production_mode.all %}
+    {% if not production_mode.picture %}<small>{% if departementforcustomer_set.count > 1 %} - {% endif %}{{ production_mode }}</small>
+    {% else %}
+        {% thumbnail production_mode.picture "0x32"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
+        <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ production_mode }}" title="{{ production_mode }}" src="{{ logo_thumbnail.url }}"/>
+    {% endif %}
+{% endfor %}

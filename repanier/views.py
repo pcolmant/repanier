@@ -23,6 +23,7 @@ from django.shortcuts import render_to_response
 from django.shortcuts import get_object_or_404
 from django.template import RequestContext
 
+from settings import *
 from models import LUT_DepartmentForCustomer
 from models import OfferItem
 from models import Permanence
@@ -273,7 +274,10 @@ class OrderView(ListView):
             context['permanence_offer_description'] = offer_description
             if self.permanence.status == PERMANENCE_OPENED:
                 context['display_all_product_button'] = "Ok"
-            producer_set = Producer.objects.filter(permanence=self.permanence.id)
+            if REPANIER_DO_NOT_DISPLAY_PRODUCERS:
+                producer_set = Producer.objects.none()
+            else:
+                producer_set = Producer.objects.filter(permanence=self.permanence.id)
             context['producer_set'] = producer_set
             context['producer_id'] = self.producer_id
             if self.producer_id == 'all':

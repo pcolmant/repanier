@@ -157,7 +157,7 @@ from django.core import urlresolvers
 from mptt.models import MPTTModel, TreeForeignKey
 
 import datetime
-
+from settings import *
 try:
     from south.modelsinspector import add_introspection_rules
 
@@ -854,20 +854,25 @@ class Permanence(TranslatableModel):
     get_board.allow_tags = True
 
     def __unicode__(self):
-
+        result = ""
         try:
-            return unicode(_("Permanence on ")) + u'%s (%s)' % (
-                self.distribution_date.strftime('%d-%m-%Y'), self.short_name)
+            if self.short_name is not None and len(self.short_name) > 0:
+                result = unicode(REPANIER_PERMANENCE_ON_NAME) + u'%s (%s)' % (
+                    self.distribution_date.strftime('%d-%m-%Y'), self.short_name)
         except TranslationDoesNotExist:
-            return unicode(_("Permanence on ")) + u'%s' % (self.distribution_date.strftime('%d-%m-%Y'))
+            pass
+        if result == "":
+            return unicode(REPANIER_PERMANENCE_ON_NAME) + u'%s' % (self.distribution_date.strftime('%d-%m-%Y'))
+        else:
+            return result
         # except:
         #     exc_type, exc_value, exc_traceback = sys.exc_info()
         #     lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         #     print ''.join('!! ' + line for line in lines)
 
     class Meta:
-        verbose_name = _("permanence")
-        verbose_name_plural = _("permanences")
+        verbose_name = REPANIER_PERMANENCE_NAME
+        verbose_name_plural = REPANIER_PERMANENCES_NAME
         index_together = [
             ["distribution_date"],
         ]
@@ -878,8 +883,8 @@ class PermanenceBoard(models.Model):
         Customer, verbose_name=_("customer"),
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
-    # Distribution_date duplicated to quickly calculte # particpation of lasts 12 months
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME, on_delete=models.PROTECT)
+    # Distribution_date duplicated to quickly calculate # participation of lasts 12 months
     distribution_date = models.DateField(_("distribution_date"), db_index=True)
     permanence_role = models.ForeignKey(
         LUT_PermanenceRole, verbose_name=_("permanence_role"),
@@ -929,12 +934,16 @@ class PermanenceDone(Permanence):
         verbose_name_plural = _("permanences done")
 
 
-class OfferItem(models.Model):
+class OfferItem(TranslatableModel):
+    translations = TranslatedFields(
+        cache_part_a = HTMLField(default="", blank=True),
+        cache_part_b = HTMLField(default="", blank=True),
+        cache_part_c = HTMLField(default="", blank=True)
+    )
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME, on_delete=models.PROTECT)
     product = models.ForeignKey(
         Product, verbose_name=_("product"), on_delete=models.PROTECT)
-    production_mode_cache = models.TextField(default="")
     is_active = models.BooleanField(_("is_active"), default=True)
     limit_to_alert_order_quantity = models.BooleanField(_("limit maximum order qty to alert qty"), default=False)
     customer_alert_order_quantity = models.DecimalField(
@@ -1006,7 +1015,7 @@ class CustomerInvoice(models.Model):
         Customer, verbose_name=_("customer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME, on_delete=models.PROTECT, db_index=True)
     date_previous_balance = models.DateField(
         _("date_previous_balance"), default=datetime.date.today)
     previous_balance = models.DecimalField(
@@ -1056,7 +1065,7 @@ class ProducerInvoice(models.Model):
         Producer, verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME, on_delete=models.PROTECT, db_index=True)
     date_previous_balance = models.DateField(
         _("date_previous_balance"), default=datetime.date.today)
     previous_balance = models.DecimalField(
@@ -1103,7 +1112,7 @@ class ProducerInvoice(models.Model):
 
 class Purchase(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"),
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME,
         on_delete=models.PROTECT)
     distribution_date = models.DateField(_("distribution_date"))
     product = models.ForeignKey(
@@ -1222,7 +1231,7 @@ class Purchase(models.Model):
 
 class CustomerOrder(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"), on_delete=models.PROTECT)
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME, on_delete=models.PROTECT)
     customer = models.ForeignKey(
         Customer, verbose_name=_("customer"),
         on_delete=models.PROTECT, blank=True, null=True)
@@ -1241,7 +1250,7 @@ class CustomerOrder(models.Model):
 
 class BankAccount(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=_("permanence"),
+        Permanence, verbose_name=REPANIER_PERMANENCE_NAME,
         on_delete=models.PROTECT, blank=True, null=True)
     producer = models.ForeignKey(
         Producer, verbose_name=_("producer"),

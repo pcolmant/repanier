@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from repanier.models import BankAccount
 from repanier.models import ProducerInvoice
+from repanier.settings import *
 
 
 def admin_generate_bank_account_movement(request, queryset, permanence_distribution_date=None):
@@ -42,12 +43,12 @@ def admin_generate_bank_account_movement(request, queryset, permanence_distribut
                     producer_last_invoice = ProducerInvoice.objects.filter(producer_id=producer.id).order_by(
                         "-id").first()
                     msg = unicode(_('Delivery')) + " " + current_site.name + " - " + unicode(
-                        _('Permanence on ')) + permanence_distribution_date.strftime('%d-%m-%Y') + ". " + unicode(
+                        REPANIER_PERMANENCE_ON_NAME) + permanence_distribution_date.strftime('%d-%m-%Y') + ". " + unicode(
                         _('Thanks!'))
                     if producer_last_invoice:
                         if producer_last_invoice.total_price_with_tax == delta:
                             msg = unicode(_('Delivery')) + " " + current_site.name + " - " + unicode(
-                                _('Permanence on ')) + producer_last_invoice.date_balance.strftime(
+                                REPANIER_PERMANENCE_ON_NAME) + producer_last_invoice.date_balance.strftime(
                                 '%d-%m-%Y') + ". " + unicode(_('Thanks!'))
                         else:
                             msg = unicode(_('Delivery')) + " " + current_site.name + " - " + unicode(

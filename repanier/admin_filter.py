@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import ugettext_lazy as _
-
+from settings import *
 from const import *
 from models import Customer
 from models import LUT_DepartmentForCustomer
@@ -117,7 +117,7 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
 
 
 class PurchaseFilterByPermanence(SimpleListFilter):
-    title = _("permanences")
+    title = REPANIER_PERMANENCES_NAME
     parameter_name = 'permanence'
 
     def lookups(self, request, model_admin):

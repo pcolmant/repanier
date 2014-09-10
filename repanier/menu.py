@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
 from const import *
+from settings import *
 from models import Permanence
 from models import CustomerInvoice
 from models import PermanenceBoard
@@ -20,7 +21,7 @@ class PermanenceMenu(Menu):
         # if request.user.is_authenticated():
         master_id = 2
         node = NavigationNode(
-            _('Permanence'),
+            REPANIER_PERMANENCE_NAME,
             "/",
             id=master_id,
             visible=True

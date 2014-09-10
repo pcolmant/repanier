@@ -2,6 +2,7 @@
 from django.contrib import messages
 from django.contrib.sites.models import get_current_site
 from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 from django.db import transaction
 from django.utils import timezone
 from django.utils import translation
@@ -34,7 +35,7 @@ def open(permanence_id, current_site_name):
 
     for product in Product.objects.filter(
             producer__in=producers_in_this_permanence, is_active=True, is_into_offer=True,
-            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT):
+            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT).order_by():
         offer_item = OfferItem.objects.filter(product_id=product.id, permanence_id=permanence_id).order_by().first()
         if offer_item:
             offer_item.is_active = True
@@ -52,7 +53,7 @@ def open(permanence_id, current_site_name):
 
     # 3 - Activate purchased products even if not in selected in the admin
     for purchase in Purchase.objects.filter(permanence_id=permanence_id,
-                                            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT).exclude(quantity=0):
+                                            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT).exclude(quantity=0).order_by():
         offer_item = OfferItem.objects.filter(product_id=purchase.product_id,
                                               permanence_id=permanence_id).order_by().first()
         if offer_item:
@@ -69,7 +70,20 @@ def open(permanence_id, current_site_name):
                 customer_alert_order_quantity=product.customer_alert_order_quantity
             )
 
-    # 4 - Calculate the Purchase 'sum' for each customer
+    # 4 - Generate cache
+    cur_language = translation.get_language()
+    try:
+        for language in settings.LANGUAGES:
+            translation.activate(language[0])
+            for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+                offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
+                offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
+                offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
+                offer_item.save()
+    finally:
+        translation.activate(cur_language)
+
+    # 5 - Calculate the Purchase 'sum' for each customer
     recalculate_order_amount(permanence_id, send_to_producer=False)
     email_offer.send(permanence_id, current_site_name)
     menu_pool.clear()
@@ -107,6 +121,8 @@ def admin_open_and_send(request, queryset):
             permanence.status = PERMANENCE_WAIT_FOR_OPEN
             permanence.is_updated_on = now
             permanence.save(update_fields=['status', 'is_updated_on'])
+            # open(permanence.id, current_site.name)
+            # i = 1 / 0
             thread.start_new_thread(open, (permanence.id, current_site.name))
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
