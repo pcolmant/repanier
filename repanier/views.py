@@ -219,7 +219,7 @@ def ajax_order_select(request):
 class OrderView(ListView):
     template_name = 'repanier/order_form.html'
     success_url = '/thanks/'
-    paginate_by = 50
+    paginate_by = 14
     paginate_orphans = 5
 
     # def get_urls(self):
