@@ -9,10 +9,12 @@ from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
 from repanier.const import *
+from repanier.settings import *
 from repanier.email import email_alert
 from repanier.email import email_offer
 from repanier.email import email_order
 from repanier.models import Customer
+from repanier.models import LUT_DepartmentForCustomer
 from repanier.models import OfferItem
 from repanier.models import Permanence
 from repanier.models import Producer
@@ -71,15 +73,26 @@ def open(permanence_id, current_site_name):
             )
 
     # 4 - Generate cache
+    departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
+                    product__offeritem__permanence_id=permanence.id).distinct()
+    if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM:
+        producer_set = Producer.objects.filter(permanence=permanence_id)
+    else:
+        producer_set = Producer.objects.none()
     cur_language = translation.get_language()
     try:
         for language in settings.LANGUAGES:
             translation.activate(language[0])
-            for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
-                offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
-                offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
-                offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
-                offer_item.save()
+            if permanence.has_translation(language[0]):
+                permanence.cache_part_d = render_to_string('repanier/cache_part_d.html',
+                   {'producer_set': producer_set, 'departementforcustomer_set': departementforcustomer_set})
+            permanence.save()
+            if offer_item.has_translation(language[0]):
+                for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+                    offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
+                    offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
+                    offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
+                    offer_item.save()
     finally:
         translation.activate(cur_language)
 
@@ -163,6 +176,7 @@ def automatically_closed():
 
 @transaction.atomic
 def close(permanence_id, current_site_name):
+    permanence = Permanence.objects.get(id=permanence_id)
     # Deposit
     for offer_item in OfferItem.objects.filter(permanence_id=permanence_id, is_active=True,
                                                product__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT).order_by():
@@ -194,10 +208,27 @@ def close(permanence_id, current_site_name):
                 p_value_id="1",
                 close_orders=True
             )
+    # Clear cache
+    cur_language = translation.get_language()
+    try:
+        for language in settings.LANGUAGES:
+            translation.activate(language[0])
+            if permanence.has_translation(language[0]):
+                permanence.cache_part_d = ""
+                permanence.save()
+            if offer_item.has_translation(language[0]):
+                for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+                    offer_item.cache_part_a = ""
+                    offer_item.cache_part_b = ""
+                    offer_item.cache_part_c = ""
+                    offer_item.save()
+    finally:
+        translation.activate(cur_language)
+    #
     recalculate_order_amount(permanence_id, send_to_producer=True)
     email_order.send(permanence_id, current_site_name)
     menu_pool.clear()
-    Permanence.objects.filter(id=permanence_id).update(status=PERMANENCE_SEND)
+    permanence.update(status=PERMANENCE_SEND)
 
 
 def admin_close_and_send(request, queryset):

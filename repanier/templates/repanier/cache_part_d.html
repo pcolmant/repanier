@@ -1,0 +1,33 @@
+{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
+{% if producer_set.count > 1 %}
+    <div class="btn-group btn-xs dropup">
+        <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
+            {% trans " P " %}
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a href="?">{% trans "All producers" %}</a></li>
+            {% for producer in producer_set %}
+                <li><a href="?producer={{ producer.id }}">{{ producer.short_profile_name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+{% if departementforcustomer_set.count > 1 %}
+    <div class="btn-group btn-xs dropup">
+        <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
+            {% trans " D " %}
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a href="?">{% trans "All departments" %}</a></li>
+            {% for departementforcustomer in departementforcustomer_set %}
+                {% ifchanged departementforcustomer.parent %}
+                <li>
+                    <a href="?departementforcustomer={{ departementforcustomer.parent.id }}">{{ departementforcustomer.parent.short_name }}</a>
+                </li>
+                {% endifchanged %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}

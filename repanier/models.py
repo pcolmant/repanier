@@ -753,7 +753,8 @@ class Permanence(TranslatableModel):
             _("invoice_description"),
             help_text=_(
                 'This message is send by mail to all customers having bought something when closing the permanence.'),
-            blank=True)
+            blank=True),
+        cache_part_d = HTMLField(default="", blank=True)
     )
 
     status = models.CharField(

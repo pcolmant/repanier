@@ -113,6 +113,57 @@ def order_form_ajax(request):
     # Not an AJAX, GET request
     return HttpResponseRedirect('/')
 
+@login_required()
+@never_cache
+def ajax_order_init(request):
+    if request.method == 'GET':
+        if 'offer_item' in request.GET:
+            p_offer_item_id = request.GET['offer_item']
+            result = "N/A1"
+            user = request.user
+            # try:
+            customer = Customer.objects.filter(
+                user_id=user.id, is_active=True, may_order=True).order_by().first()
+            if customer:
+                # The user is an active customer
+                offer_item = OfferItem.objects.get(id=p_offer_item_id)
+                if PERMANENCE_OPENED <= offer_item.permanence.status <= PERMANENCE_SEND:
+                    # The offer_item belong to a open permanence
+                    q_order = 0
+                    if offer_item.product.vat_level in [VAT_200, VAT_300] and customer.vat_id is not None and len(
+                        customer.vat_id) > 0:
+                        a_price = offer_item.product.unit_price_with_compensation
+                    else:
+                        a_price = offer_item.product.unit_price_with_vat
+                    q_average_weight = offer_item.product.order_average_weight
+                    # result = '<select name="value" id="offer_item' + str(offer_item.id) + '" onchange="order_ajax(' + str(
+                    #     offer_item.id) + ')" class="form-control">'
+                    purchase = Purchase.objects.filter(product_id=offer_item.product_id,
+                                                                permanence_id=offer_item.permanence_id,
+                                                                customer_id=customer.id).order_by().first()
+                    if purchase:
+                        q_order = purchase.quantity if purchase.permanence.status < PERMANENCE_SEND else purchase.quantity_send_to_producer
+                    if q_order<=0:
+                        result = '<option value="0" selected>---</option>'
+                    else:
+                        qty_display = get_qty_display(
+                            q_order,
+                            q_average_weight,
+                            offer_item.product.order_unit,
+                            a_price
+                        )
+                        result = '<option value="' + str(q_order) + '" selected>' + qty_display + '</option>'
+                    # result += '</select>'
+                else:
+                    result = "N/A4"
+            else:
+                result = "N/A3"
+            # except:
+            # # user.customer doesn't exist -> the user is not a customer.
+            # result = "N/A2"
+            return HttpResponse(result)
+    # Not an AJAX, GET request
+    return HttpResponseRedirect('/')
 
 @login_required()
 @never_cache
@@ -132,6 +183,11 @@ def ajax_order_select(request):
                 if PERMANENCE_OPENED <= offer_item.permanence.status <= PERMANENCE_SEND:
                     # The offer_item belong to a open permanence
                     q_order = 0
+                    if offer_item.product.vat_level in [VAT_200, VAT_300] and customer.vat_id is not None and len(
+                        customer.vat_id) > 0:
+                        a_price = offer_item.product.unit_price_with_compensation
+                    else:
+                        a_price = offer_item.product.unit_price_with_vat
                     q_average_weight = offer_item.product.order_average_weight
                     purchase = Purchase.objects.filter(product_id=offer_item.product_id,
                                                        permanence_id=offer_item.permanence_id,
@@ -183,7 +239,8 @@ def ajax_order_select(request):
                                 qty_display = get_qty_display(
                                     q_valid,
                                     q_average_weight,
-                                    offer_item.product.order_unit
+                                    offer_item.product.order_unit,
+                                    a_price
                                 )
                                 option_dict = {'value': str(q_select_id), 'selected': selected, 'label': qty_display}
                                 to_json.append(option_dict)
@@ -203,7 +260,8 @@ def ajax_order_select(request):
                             qty_display = get_qty_display(
                                 q_order,
                                 q_average_weight,
-                                offer_item.product.order_unit
+                                offer_item.product.order_unit,
+                                a_price
                             )
                             option_dict = {'value': str(q_select_id), 'selected': selected, 'label': qty_display}
                             to_json.append(option_dict)
@@ -236,48 +294,30 @@ class OrderView(ListView):
         self.departementforcustomer_id = 'all'
 
     def dispatch(self, request, *args, **kwargs):
-        self.user = request.user
-        self.offeritem_id = 'all'
-        if self.request.GET.get('offeritem'):
-            self.offeritem_id = self.request.GET['offeritem']
-        self.producer_id = 'all'
-        if self.request.GET.get('producer'):
-            self.producer_id = self.request.GET['producer']
-        self.departementforcustomer_id = 'all'
-        if self.request.GET.get('departementforcustomer'):
-            self.departementforcustomer_id = self.request.GET['departementforcustomer']
-        return super(OrderView, self).dispatch(request, *args, **kwargs)
-
-    @method_decorator(never_cache)
-    def get(self, request, *args, **kwargs):
-        # Here via a form or via Ajax we modifiy the qty
-        p_offer_item_id = None
-        if 'offer_item' in request.GET:
-            p_offer_item_id = request.GET['offer_item']
-        p_value_id = None
-        if 'value' in request.GET:
-            p_value_id = request.GET['value']
-        if p_offer_item_id and p_value_id:
-            update_or_create_purchase(
-                user=request.user, p_offer_item_id=p_offer_item_id,
-                p_value_id=p_value_id
-            )
-        return super(OrderView, self).get(request, *args, **kwargs)
+        if request.user.is_authenticated():
+            self.user = request.user
+            self.offeritem_id = 'all'
+            if self.request.GET.get('offeritem'):
+                self.offeritem_id = self.request.GET['offeritem']
+            self.producer_id = 'all'
+            if self.request.GET.get('producer'):
+                self.producer_id = self.request.GET['producer']
+            self.departementforcustomer_id = 'all'
+            if self.request.GET.get('departementforcustomer'):
+                self.departementforcustomer_id = self.request.GET['departementforcustomer']
+            return super(OrderView, self).dispatch(request, *args, **kwargs)
+        return
 
     def get_context_data(self, **kwargs):
         context = super(OrderView, self).get_context_data(**kwargs)
         if self.permanence:
-            try:
-                offer_description = self.permanence.offer_description
-            except TranslationDoesNotExist:
-                offer_description = ""
-            context['permanence_offer_description'] = offer_description
+            context['permanence'] = self.permanence
             if self.permanence.status == PERMANENCE_OPENED:
                 context['display_all_product_button'] = "Ok"
-            if REPANIER_DO_NOT_DISPLAY_PRODUCERS:
-                producer_set = Producer.objects.none()
-            else:
+            if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM:
                 producer_set = Producer.objects.filter(permanence=self.permanence.id)
+            else:
+                producer_set = Producer.objects.none()
             context['producer_set'] = producer_set
             context['producer_id'] = self.producer_id
             if self.producer_id == 'all':
@@ -312,7 +352,12 @@ class OrderView(ListView):
                 qs = qs.filter(product__purchase__permanence=self.permanence.id,
                                product__purchase__customer__user=self.user)
             if self.departementforcustomer_id != 'all':
-                qs = qs.filter(product__department_for_customer=self.departementforcustomer_id)
+                department = LUT_DepartmentForCustomer.objects.filter(id=self.departementforcustomer_id
+                    ).order_by().first()
+                if department is not None:
+                    qs = qs.filter(product__department_for_customer__lft__gte=department.lft,
+                                   product__department_for_customer__rght__lte=department.rght,
+                                   product__department_for_customer__tree_id=department.tree_id)
             qs = qs.filter(product__translations__language_code=translation.get_language(),
                            product__department_for_customer__translations__language_code=translation.get_language()
             ).order_by(
@@ -325,6 +370,11 @@ class OrderView(ListView):
             self.permanence = None
         return qs
 
+
+class OrderViewWithoutCache(OrderView):
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super(OrderView, self).get(request, *args, **kwargs)
 
 @login_required()
 # @never_cache

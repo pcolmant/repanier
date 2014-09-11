@@ -109,7 +109,7 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     return unit
 
 
-def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC):
+def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC, price=None):
     unit = unicode(_(' pieces'))
     magnitude = 1
     if order_unit == PRODUCT_ORDER_UNIT_KG:
@@ -126,6 +126,8 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
             unit = unicode(_(' l'))
     elif order_unit in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG]:
         average_weight = order_average_weight * qty
+        if order_unit == PRODUCT_ORDER_UNIT_PC_KG and price is not None:
+            price *= order_average_weight
         if average_weight < 1:
             average_weight_unit = unicode(_(' gr'))
             average_weight *= 1000
@@ -165,7 +167,7 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
             unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
     elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
         average_weight = order_average_weight * qty
-        if qty < 2:
+        if average_weight < 2:
             unit = unicode(_(' piece')) + ' (' + number_format(average_weight, 0) + unicode(_(' pc')) + ')'
         else:
             unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, 0) + unicode(_(' pcs')) + ')'
@@ -180,7 +182,11 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
         decimal = 1
     elif qty * 100 == int(qty * 100):
         decimal = 2
-    return number_format(qty, decimal) + unit
+    if price is not None:
+        display_price = " = " + number_format((price * qty).quantize(TWO_DECIMALS), 2) + "&nbsp;&euro;"
+    else:
+        display_price = ""
+    return number_format(qty, decimal) + unit + display_price
 
 
 def get_user_order_amount(permanence, user=None):
