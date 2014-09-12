@@ -462,8 +462,8 @@ class ProductAdmin(TranslatableAdmin):
         ('is_into_offer', 'is_active', 'is_created_on', 'is_updated_on')
     )
     list_select_related = ('producer', 'department_for_customer')
-    list_per_page = 100
-    list_max_show_all = 100
+    list_per_page = 17
+    list_max_show_all = 17
     filter_horizontal = ('production_mode',)
     ordering = ('producer',
                 # 'department_for_customer',

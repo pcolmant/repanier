@@ -120,9 +120,7 @@
                     </div>
                     <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
                         <select name="offer_item{{ offer.id|stringformat:"d" }}" id="offer_item{{ offer.id|stringformat:"d" }}" onchange="order_ajax({{ offer.id|stringformat:"d" }})" class="form-control">
-{#                            <option value="0" selected>---</option>#}
                         </select>
-{#                        {% repanier_select_qty offer_item_id=offer.id %}#}
                         {% if user.customer.vat_id %}
                             {{ offer.cache_part_c | safe }}
                         {% else %}
@@ -229,38 +227,33 @@
 </div>
     {% addtoblock "lastjs" %}
         <script type="text/javascript">
+            var previously_edited_offer_item = null;
+            var previously_edited_offer_item_id = null;
             function order_ajax(offer_item_id) {
                 var offer_item = $("#offer_item" + offer_item_id);
-                {# *** Need to save offer_item.val() for Firefox ***  #}
                 var offer_item_val = $("option:selected", offer_item).val();
 
                 if (offer_item_val == 'other_qty') {
                     var getProductFromRow = offer_item.closest('div').data('product');
                     $('#otherQtyModalLabel').html(getProductFromRow);
                     $('#otherQtyModal').modal('show');
-                    offer_item.val(offer_item.data('oldValue'));
                 } else {
                     var lien = '{% url 'order_form_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id;
-                    {# *** Bellow needed to avoid Firefox flashing the old/new selected value *** #}
-                    // offer_item.val(offer_item_val);
                     $.ajax({
                         url: lien,
                         cache: false,
-                        async: true,
+                        async: false,
                         success: function (result) {
                             if (result.indexOf("ok") != 0) {
-                                offer_item.val(offer_item.data('oldValue'));
+                                offer_item.html('<option value="0" selected>{% trans "Retry1" %}</option>');
                             } else {
                                 $('#prepared_amount').text(result.substring(2));
                                 $('#prepared_amount_visible_xs').text(result.substring(2));
                                 $('#my_basket').text(result.substring(2));
-                                {# *** Need to restore offer_item.val() for Firefox *** #}
-{#                                offer_item.val(offer_item_val);#}
-                                offer_item.data('oldValue', offer_item_val);
                             }
                         },
                         error: function (result) {
-                            offer_item.val(offer_item.data('oldValue'));
+                            offer_item.html('<option value="0" selected>{% trans "Retry2" %}</option>');
                         }
                     });
                 }
@@ -274,22 +267,20 @@
             cache: false,
             async: false,
             success: function (result) {
-                $("#offer_item{{ offer.id|stringformat:"d" }}").append(result);
+                $("#offer_item{{ offer.id|stringformat:"d" }}").html(result);
             },
             error: function (result) {
-                $("#offer_item{{ offer.id|stringformat:"d" }}").append('<option value="0" selected>{% trans "Communication error" %}</option>');
+                $("#offer_item{{ offer.id|stringformat:"d" }}").html('<option value="0" selected>{% trans "Retry3" %}</option>');
             }
         });
     {% endfor %}
 {% endif %}
                 $("#li_my_basket").show();
                 $("select").mouseenter(function (event) {
+                    var lien = "";
                     var offer_item = $(this);
-                    var offer_item_val = $("option:selected", offer_item).val();
-                    offer_item.data('oldValue', offer_item_val);
                     var offer_item_id = offer_item.closest('div').data('id');
-                    var lien = '{% url 'ajax_order_select' %}?offer_item=' + offer_item_id;
-
+                    lien = '{% url 'ajax_order_select' %}?offer_item=' + offer_item_id;
                     $.ajax({
                         url: lien,
                         cache: false,
@@ -307,11 +298,9 @@
                                 }
                             });
                             offer_item.html(selectOption);
-                            offer_item.data('oldValue', selectVal);
-                            // offer_item.val(selectVal);
                         },
                         error: function (result) {
-                            offer_item.val(offer_item.data('oldValue'));
+                            offer_item.html('<option value="0" selected>{% trans "Retry4" %}</option>');
                         }
                     });
                 });

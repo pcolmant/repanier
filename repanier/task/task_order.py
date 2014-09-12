@@ -216,8 +216,8 @@ def close(permanence_id, current_site_name):
             if permanence.has_translation(language[0]):
                 permanence.cache_part_d = ""
                 permanence.save()
-            if offer_item.has_translation(language[0]):
-                for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+            for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+                if offer_item.has_translation(language[0]):
                     offer_item.cache_part_a = ""
                     offer_item.cache_part_b = ""
                     offer_item.cache_part_c = ""
@@ -228,7 +228,8 @@ def close(permanence_id, current_site_name):
     recalculate_order_amount(permanence_id, send_to_producer=True)
     email_order.send(permanence_id, current_site_name)
     menu_pool.clear()
-    permanence.update(status=PERMANENCE_SEND)
+    permanence.status=PERMANENCE_SEND
+    permanence.save(update_fields=['status'])
 
 
 def admin_close_and_send(request, queryset):

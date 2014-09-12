@@ -146,13 +146,14 @@ def ajax_order_init(request):
                     if q_order<=0:
                         result = '<option value="0" selected>---</option>'
                     else:
-                        qty_display = get_qty_display(
+                        qty_display, price_display, price = get_display(
                             q_order,
                             q_average_weight,
                             offer_item.product.order_unit,
                             a_price
                         )
-                        result = '<option value="' + str(q_order) + '" selected>' + qty_display + '</option>'
+                        result = '<option value="' + str(q_order) + '" selected>' + \
+                                 qty_display + price_display + '&nbsp;&euro;</option>'
                     # result += '</select>'
                 else:
                     result = "N/A4"
@@ -236,13 +237,14 @@ def ajax_order_select(request):
                                     selected = "selected"
                             if (offer_item.permanence.status == PERMANENCE_OPENED or
                                     (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
-                                qty_display = get_qty_display(
+                                qty_display, price_display, price = get_display(
                                     q_valid,
                                     q_average_weight,
                                     offer_item.product.order_unit,
                                     a_price
                                 )
-                                option_dict = {'value': str(q_select_id), 'selected': selected, 'label': qty_display}
+                                option_dict = {'value': str(q_select_id), 'selected': selected,
+                                               'label': qty_display + price_display + '&nbsp;&euro;'}
                                 to_json.append(option_dict)
                             if q_valid < q_step:
                                 # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
@@ -257,13 +259,14 @@ def ajax_order_select(request):
                             # An custom order_qty > q_alert
                             q_select_id += 1
                             selected = "selected"
-                            qty_display = get_qty_display(
+                            qty_display, price_display, price = get_display(
                                 q_order,
                                 q_average_weight,
                                 offer_item.product.order_unit,
                                 a_price
                             )
-                            option_dict = {'value': str(q_select_id), 'selected': selected, 'label': qty_display}
+                            option_dict = {'value': str(q_select_id), 'selected': selected,
+                                           'label': qty_display + price_display + '&nbsp;&euro;'}
                             to_json.append(option_dict)
                         if offer_item.permanence.status == PERMANENCE_OPENED:
                             option_dict = {'value': 'other_qty', 'selected': '', 'label': unicode(_("Other qty"))}

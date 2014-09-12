@@ -109,7 +109,7 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     return unit
 
 
-def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC, price=None):
+def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC, price=None):
     unit = unicode(_(' pieces'))
     magnitude = 1
     if order_unit == PRODUCT_ORDER_UNIT_KG:
@@ -182,11 +182,14 @@ def get_qty_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT
         decimal = 1
     elif qty * 100 == int(qty * 100):
         decimal = 2
+    qty_display = number_format(qty, decimal) + unit
     if price is not None:
-        display_price = " = " + number_format((price * qty).quantize(TWO_DECIMALS), 2) + "&nbsp;&euro;"
+        price = (price * qty).quantize(TWO_DECIMALS)
+        price_display = " = " + number_format(price, 2)
     else:
-        display_price = ""
-    return number_format(qty, decimal) + unit + display_price
+        price = 0
+        price_display = ""
+    return qty_display, price_display, price
 
 
 def get_user_order_amount(permanence, user=None):

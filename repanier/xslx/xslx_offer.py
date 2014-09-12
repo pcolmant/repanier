@@ -39,6 +39,8 @@ def export(permanence, wb=None):
                 (unicode(_("Product")), 60, product.long_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Unit Price")), 10, product.original_unit_price,
                  u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
+                (unicode(_("deposit")), 10, product.unit_deposit,
+                 u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             ]
 
             if row_num == 0:
@@ -80,12 +82,14 @@ def export(permanence, wb=None):
             while q_valid <= q_alert and q_counter <= 20:
                 q_counter += 1
                 c = ws.cell(row=row_num, column=col_num)
-                c.value = get_qty_display(
+                qty_display, price_display, price = get_display(
                     q_valid,
                     product.order_average_weight,
-                    product.order_unit
+                    product.order_unit,
+                    product.unit_price_with_vat
                 )
-                ws.column_dimensions[get_column_letter(col_num + 1)].width = 15
+                c.value = qty_display + price_display + u" €"
+                ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 col_num += 1
                 if q_valid < q_step:
@@ -113,6 +117,8 @@ def export(permanence, wb=None):
                  NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Product")), 60, offer_item.product.long_name, NumberFormat.FORMAT_TEXT, False),
                 (unicode(_("Unit Price")), 10, offer_item.product.original_unit_price,
+                 u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
+                (unicode(_("deposit")), 10, offer_item.product.unit_deposit,
                  u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             ]
 
@@ -155,12 +161,14 @@ def export(permanence, wb=None):
             while q_valid <= q_alert and q_counter <= 20:
                 q_counter += 1
                 c = ws.cell(row=row_num, column=col_num)
-                c.value = get_qty_display(
+                qty_display, price_display, price = get_display(
                     q_valid,
                     offer_item.product.order_average_weight,
-                    offer_item.product.order_unit
+                    offer_item.product.order_unit,
+                    offer_item.product.unit_price_with_vat
                 )
-                ws.column_dimensions[get_column_letter(col_num + 1)].width = 15
+                c.value = qty_display + price_display + u" €"
+                ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 col_num += 1
                 if q_valid < q_step:
