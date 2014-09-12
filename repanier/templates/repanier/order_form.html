@@ -265,7 +265,7 @@
         $.ajax({
             url: lien,
             cache: false,
-            async: false,
+            async: true,
             success: function (result) {
                 $("#offer_item{{ offer.id|stringformat:"d" }}").html(result);
             },
