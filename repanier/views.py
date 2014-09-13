@@ -309,6 +309,9 @@ class OrderView(ListView):
             if self.request.GET.get('departementforcustomer'):
                 self.departementforcustomer_id = self.request.GET['departementforcustomer']
             return super(OrderView, self).dispatch(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect("/")
+            # return super(OrderView, self).dispatch(request, *args, **kwargs)
         return
 
     def get_context_data(self, **kwargs):
