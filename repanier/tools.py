@@ -192,11 +192,11 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
     return qty_display, price_display, price
 
 
-def get_user_order_amount(permanence, user=None):
+def get_user_order_amount(permanence_id, user=None):
     a_total_price_with_tax = 0
     if user is not None:
         customer_order_set = CustomerOrder.objects.filter(
-            permanence_id=permanence.id,
+            permanence_id=permanence_id,
             customer__user=user)[:1]
         if customer_order_set:
             a_total_price_with_tax = customer_order_set[0].total_price_with_tax

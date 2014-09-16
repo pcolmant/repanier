@@ -937,9 +937,9 @@ class PermanenceDone(Permanence):
 
 class OfferItem(TranslatableModel):
     translations = TranslatedFields(
-        cache_part_a = HTMLField(default="", blank=True),
-        cache_part_b = HTMLField(default="", blank=True),
-        cache_part_c = HTMLField(default="", blank=True)
+        cache_part_a=HTMLField(default="", blank=True),
+        cache_part_b=HTMLField(default="", blank=True),
+        cache_part_c=HTMLField(default="", blank=True)
     )
     permanence = models.ForeignKey(
         Permanence, verbose_name=REPANIER_PERMANENCE_NAME, on_delete=models.PROTECT)

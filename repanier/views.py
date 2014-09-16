@@ -93,6 +93,36 @@ def product_form_ajax(request):
 
 
 @login_required()
+@never_cache
+def order_name_ajax(request):
+    if request.is_ajax():
+        if request.method == 'GET':
+            user = request.user
+            customer = Customer.objects.filter(
+                    user_id=user.id, is_active=True, may_order=True).order_by().first()
+            if customer:
+                return HttpResponse(customer)
+    # Not an AJAX, GET request
+    return HttpResponseRedirect('/')
+
+
+@login_required()
+@never_cache
+def basket_amount_ajax(request):
+    if request.is_ajax():
+        if request.method == 'GET':
+            if 'permanence' in request.GET:
+                p_permanence_id = request.GET['permanence']
+                user = request.user
+                customer = Customer.objects.filter(
+                        user_id=user.id, is_active=True, may_order=True).order_by().first()
+                if customer:
+                    return HttpResponse(get_user_order_amount(p_permanence_id,user=user))
+    # Not an AJAX, GET request
+    return HttpResponseRedirect('/')
+
+
+@login_required()
 # @never_cache
 def order_form_ajax(request):
     if request.is_ajax():
@@ -296,6 +326,7 @@ class OrderView(ListView):
         self.producer_id = 'all'
         self.departementforcustomer_id = 'all'
 
+    # @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated():
             self.user = request.user
@@ -338,8 +369,8 @@ class OrderView(ListView):
             context['departementforcustomer_set'] = departementforcustomer_set
             context['departementforcustomer_id'] = self.departementforcustomer_id
             context['offeritem_id'] = self.offeritem_id
-            context['prepared_amount'] = get_user_order_amount(self.permanence,
-                                                               user=self.user)  # + ' &euro; <span class="glyphicon glyphicon-shopping-cart"></span>'
+            context['prepared_amount'] = get_user_order_amount(self.permanence.id,
+                                                               user=self.user)
             context['staff_order'] = Staff.objects.filter(is_reply_to_order_email=True).order_by().first()
         return context
 

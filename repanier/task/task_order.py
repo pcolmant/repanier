@@ -80,19 +80,32 @@ def open(permanence_id, current_site_name):
     else:
         producer_set = Producer.objects.none()
     cur_language = translation.get_language()
+    # try:
+    #     for language in settings.LANGUAGES:
+    #         translation.activate(language[0])
+    #         if permanence.has_translation(language[0]):
+    #             permanence.cache_part_d = render_to_string('repanier/cache_part_d.html',
+    #                {'producer_set': producer_set, 'departementforcustomer_set': departementforcustomer_set})
+    #         permanence.save()
+    #         for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+    #             if offer_item.has_translation(language[0]):
+    #                 offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
+    #                 offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
+    #                 offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
+    #                 offer_item.save()
+    # finally:
+    #     translation.activate(cur_language)
     try:
         for language in settings.LANGUAGES:
             translation.activate(language[0])
-            if permanence.has_translation(language[0]):
-                permanence.cache_part_d = render_to_string('repanier/cache_part_d.html',
-                   {'producer_set': producer_set, 'departementforcustomer_set': departementforcustomer_set})
+            permanence.cache_part_d = render_to_string('repanier/cache_part_d.html',
+               {'producer_set': producer_set, 'departementforcustomer_set': departementforcustomer_set})
             permanence.save()
-            if offer_item.has_translation(language[0]):
-                for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
-                    offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
-                    offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
-                    offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
-                    offer_item.save()
+            for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
+                offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
+                offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
+                offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
+                offer_item.save()
     finally:
         translation.activate(cur_language)
 
@@ -213,15 +226,13 @@ def close(permanence_id, current_site_name):
     try:
         for language in settings.LANGUAGES:
             translation.activate(language[0])
-            if permanence.has_translation(language[0]):
-                permanence.cache_part_d = ""
-                permanence.save()
+            permanence.cache_part_d = ""
+            permanence.save()
             for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
-                if offer_item.has_translation(language[0]):
-                    offer_item.cache_part_a = ""
-                    offer_item.cache_part_b = ""
-                    offer_item.cache_part_c = ""
-                    offer_item.save()
+                offer_item.cache_part_a = ""
+                offer_item.cache_part_b = ""
+                offer_item.cache_part_c = ""
+                offer_item.save()
     finally:
         translation.activate(cur_language)
     #

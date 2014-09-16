@@ -275,6 +275,34 @@
         });
     {% endfor %}
 {% endif %}
+                lien = '{% url 'order_name' %}';
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    async: false,
+                    success: function (result) {
+                        $("#my_name").html(result);
+                    },
+                    error: function (result) {
+                        $("#my_name").html("{% trans "Retry5" %}");
+                    }
+                });
+                lien = '{% url 'basket_amount' %}?permanence=' + {{ permanence.id|stringformat:"d" }};
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    async: false,
+                    success: function (result) {
+                        $("#my_basket").html(result);
+                        $("#prepared_amount").html(result);
+                        $("#prepared_amount_visible_xs").html(result);
+                    },
+                    error: function (result) {
+                        $("#my_basket").html("{% trans "Retry 6" %}");
+                        $("#prepared_amount").html("{% trans "Retry 6" %}");
+                        $("#prepared_amount_visible_xs").html("{% trans "Retry 6" %}");
+                    }
+                });
                 $("#li_my_basket").show();
                 $("select").mouseenter(function (event) {
                     var lien = "";
