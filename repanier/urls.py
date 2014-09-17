@@ -9,9 +9,8 @@ from views import PermanenceView
 
 urlpatterns = patterns('',
                        url(r'^contact/$', views.contact_form, name='contact_form'),
-                       url(r'^order/(\w+)/$', cache_page(60*60)(OrderView.as_view()), name='order_view'),
-                       url(r'^order/(\w+)/$', login_required(cache_page(60*60)(OrderView.as_view())), name='order_view'),
-                       # url(r'^order/(\w+)/$', login_required((OrderView.as_view())), name='order_view'),
+                       url(r'^order/(\w+)/$', cache_page(60*60)(login_required(OrderView.as_view())), name='order_view'),
+                       url(r'^basket/(\w+)/$', login_required(OrderViewWithoutCache.as_view()), name='basket_view'),
                        url(r'^order-name/$', views.order_name_ajax, name='order_name'),
                        url(r'^basket-amount/$', views.basket_amount_ajax, name='basket_amount'),
                        url(r'^basket/(\w+)/$', login_required(OrderViewWithoutCache.as_view()), name='basket_view'),
