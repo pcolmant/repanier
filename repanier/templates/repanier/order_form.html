@@ -70,8 +70,8 @@
                             <span id="prepared_amount">{{ prepared_amount }}</span> &euro; <span
                                     class="glyphicon glyphicon-shopping-cart"></span></a></b>
                     </li>
-                    <li>
                         {% if producer_set.count > 1 %}
+                        <li>
                             <a href="?"
                                {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
                             <ul class="nav nav-stacked">
@@ -81,24 +81,26 @@
                             </li>
                         {% endfor %}
                             </ul>
+                        </li>
                         {% endif %}
-                    </li>
                     {% if departementforcustomer_set.count > 1 %}
                         <li>
-                            <b><a href="?"
+                            <b><a href="{% url "order_view" permanence.id %}"
                                {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
                             <ul class="nav nav-stacked">
                                 {% for departementforcustomer in departementforcustomer_set %}
                                     {% ifchanged departementforcustomer.parent %}
+{#                                    {% if not forloop.first and departementforcustomer.parent.level == 0 %}</ul>{% endif %}#}
                                     {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                                    <li><b><a href="?departementforcustomer={{ departementforcustomer.parent.id|stringformat:"d" }}"
+                                    <li><b><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.parent.id|stringformat:"d" }}"
                                            {% if departementforcustomer.parent.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
                                     </b></li>
                                     {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                                     {% endifchanged %}
-                                    <li><a href="?departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                                    <li><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
                                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                                     </li>
+{#                                    {% if forloop.last %}</ul>{% endif %}#}
                                 {% endfor %}
                             </ul>
                         </li>
@@ -133,12 +135,11 @@
         {% else %}
             <h3>{% trans "No offer found" %}</h3>
         {% endif %}
+        </div>
+        </div>
     {% else %}
         <h3>{% trans "You are not allowed to order products" %}</h3>
     {% endif %}
-        </div>
-        </div>
-        </div>
 {#        Order Modal starts#}
         <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
              aria-hidden="true">
@@ -184,6 +185,7 @@
         </div>
 {#        Other qty modal ends#}
     </div>
+</div>
 {% endblock %}
 {% block footer %}
     <div class="visible-xs">
@@ -206,7 +208,7 @@
         <div class="btn-group">
             <div class="btn-group">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
+                     <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}&amp;offeritem={{ offeritem_id }}"
                        class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-left"></span></a>
                 {% else %}
                     <a href="#" class="btn btn-disabled btn-xs"></a>
@@ -216,7 +218,7 @@
                        class="btn btn-disabled btn-xs">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}&amp;offeritem={{ offeritem_id }}"
                        class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-right"></span></a>
                 {% else %}
                     <a href="#" class="btn btn-disabled btn-xs"></a>
@@ -224,7 +226,6 @@
             </div>
         </div>
     {% endif %}
-</div>
     {% addtoblock "lastjs" %}
         <script type="text/javascript">
             var previously_edited_offer_item = null;
@@ -259,22 +260,22 @@
                 }
             }
             $(document).ready(function () {
-{% if offeritem_list %}
-    {% for offer in offeritem_list %}
-        var lien = '{% url 'ajax_order_init' %}?offer_item=' + {{ offer.id|stringformat:"d" }};
-        $.ajax({
-            url: lien,
-            cache: false,
-            async: true,
-            success: function (result) {
-                $("#offer_item{{ offer.id|stringformat:"d" }}").html(result);
-            },
-            error: function (result) {
-                $("#offer_item{{ offer.id|stringformat:"d" }}").html('<option value="0" selected>{% trans "Retry3" %}</option>');
-            }
-        });
-    {% endfor %}
-{% endif %}
+                {% if offeritem_list %}
+                    {% for offer in offeritem_list %}
+                        var lien = '{% url 'ajax_order_init' %}?offer_item=' + {{ offer.id|stringformat:"d" }};
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            async: true,
+                            success: function (result) {
+                                $("#offer_item{{ offer.id|stringformat:"d" }}").html(result);
+                            },
+                            error: function (result) {
+                                $("#offer_item{{ offer.id|stringformat:"d" }}").html('<option value="0" selected>{% trans "Retry3" %}</option>');
+                            }
+                        });
+                    {% endfor %}
+                {% endif %}
                 lien = '{% url 'order_name' %}';
                 $.ajax({
                     url: lien,

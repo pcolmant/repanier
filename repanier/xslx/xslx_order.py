@@ -18,6 +18,7 @@ from repanier.models import Staff
 from repanier.tools import get_producer_unit
 from repanier.tools import get_customer_unit
 from repanier.tools import get_preparator_unit
+from repanier.tools import get_display
 
 
 def export(permanence, wb=None):
@@ -143,85 +144,13 @@ def export(permanence, wb=None):
         if row_num > 0:
             ws.column_dimensions[get_column_letter(1)].width = 120
 
-    if PERMANENCE_WAIT_FOR_SEND <= permanence.status <= PERMANENCE_SEND:
-        # Basket check list, by customer
-        ws = wb.create_sheet()
-        worksheet_setup_portait_a4(ws, unicode(_('Customer check')), unicode(permanence))
-
-        row_num = 0
-        department_for_customer_save = None
-        customer_save = None
-
-        purchase_set = Purchase.objects.filter(
-            permanence_id=permanence.id, producer__isnull=False,
-            product__translations__language_code=translation.get_language(),
-            product__department_for_customer__translations__language_code=translation.get_language()
-        ).order_by(
-            "customer__short_basket_name",
-            "product__placement",
-            "producer__short_profile_name",
-            "product__department_for_customer__translations__short_name",
-            "product__translations__long_name"
-        )
-
-        for purchase in purchase_set:
-
-            qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
-            if qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT:
-
-                unit = get_customer_unit(order_unit=purchase.order_unit, qty=qty)
-
-                row = [
-                    (unicode(_("Placement")), 15,
-                     purchase.product.get_placement_display() if purchase.product is not None else "",
-                     NumberFormat.FORMAT_TEXT),
-                    (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT),
-                    (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT),
-                    (unicode(_("Quantity")), 10, qty, '#,##0.???'),
-                    (unicode(_("Unit")), 12, unit, NumberFormat.FORMAT_TEXT),
-                    (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT),
-                ]
-
-                if row_num == 0:
-                    worksheet_set_header(ws, row_num, row)
-                    row_num += 1
-
-                if customer_save != purchase.customer.id or department_for_customer_save != purchase.department_for_customer:
-                    if customer_save != purchase.customer.id:
-                        # Add an empty line for the scissors.
-                        row_num += 1
-                    c = ws.cell(row=row_num, column=2)
-                    c.style.borders.bottom.border_style = Border.BORDER_THIN
-                    c.style.alignment.horizontal = 'right'
-                    c.style.font.italic = True
-                    department_for_customer_save = purchase.department_for_customer
-                    if department_for_customer_save is not None:
-                        c.value = department_for_customer_save.short_name
-                    else:
-                        c.value = ""
-                    if customer_save != purchase.customer.id:
-                        for col_num in xrange(len(row)):
-                            c = ws.cell(row=row_num, column=col_num)
-                            c.style.borders.top.border_style = Border.BORDER_THIN
-                            if col_num == 5:
-                                c.value = purchase.customer.short_basket_name
-                                c.style.font.bold = True
-                        # Force the display of the department for next customer
-                        customer_save = purchase.customer.id
-                    else:
-                        c = ws.cell(row=row_num, column=5)
-                        c.value = purchase.customer.short_basket_name
-                    row_num += 1
-
-                for col_num in xrange(len(row)):
-                    c = ws.cell(row=row_num, column=col_num)
-                    c.value = row[col_num][ROW_VALUE]
-                    c.style.number_format.format_code = row[col_num][ROW_FORMAT]
-                    c.style.borders.bottom.border_style = Border.BORDER_HAIR
-
-                row_num += 1
-
+    # if PERMANENCE_WAIT_FOR_SEND <= permanence.status <= PERMANENCE_SEND:
     if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
+        # Basket check list, by customer
+        ws = export_customer(permanence, wb=wb)
+
+    if PERMANENCE_WAIT_FOR_SEND <= permanence.status <= PERMANENCE_SEND:
+    # if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
         # Preparation list
         ws = None
         row_num = 0
@@ -386,12 +315,11 @@ def export(permanence, wb=None):
                 c.value = previous_product_qty_sum
                 c.style.number_format.format_code = '#,##0.???'
 
-    # if PERMANENCE_WAIT_FOR_SEND <= permanence.status <= PERMANENCE_SEND:
-    if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
-        # Order adressed to our producers,
-        producer_set = Producer.objects.filter(permanence=permanence).order_by("short_profile_name")
-        for producer in producer_set:
-            export_producer(permanence=permanence, producer=producer, wb=wb)
+    # if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
+    #     # Order adressed to our producers,
+    #     producer_set = Producer.objects.filter(permanence=permanence).order_by("short_profile_name")
+    #     for producer in producer_set:
+    #         export_producer(permanence=permanence, producer=producer, wb=wb)
 
     return wb
 
@@ -721,7 +649,7 @@ def export_producer(permanence, producer, wb=None):
     return wb
 
 
-def export_customer(permanence, customer, wb=None):
+def export_customer(permanence, customer=None, wb=None):
     if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
@@ -730,60 +658,144 @@ def export_customer(permanence, customer, wb=None):
     worksheet_setup_landscape_a4(ws, unicode(_('Customer check')), unicode(permanence))
 
     row_num = 0
-
-    purchase_set = Purchase.objects.filter(
-        permanence_id=permanence.id, customer_id=customer.id, producer__isnull=False).order_by(
-        "product__placement",
-        "producer__short_profile_name",
-        "department_for_customer",
-        "long_name"
-    )
+    department_for_customer_save = None
     customer_save = None
+
+    if customer is not None:
+        purchase_set = Purchase.objects.filter(
+            permanence_id=permanence.id, customer_id=customer.id, producer__isnull=False,
+            product__translations__language_code=translation.get_language()
+        ).order_by(
+            "product__placement",
+            "product__department_for_customer__tree_id",
+            "product__department_for_customer__lft",
+            "producer__short_profile_name",
+            "product__translations__long_name"
+        )
+    else:
+        purchase_set = Purchase.objects.filter(
+            permanence_id=permanence.id, producer__isnull=False,
+            product__translations__language_code=translation.get_language()
+        ).order_by(
+            "customer__short_basket_name",
+            "product__placement",
+            "product__department_for_customer__tree_id",
+            "product__department_for_customer__lft",
+            "producer__short_profile_name",
+            "product__translations__long_name"
+        )
+
+    hide_column_placement = True
+    placement_save = None
+    row_start_sum = None
+
     for purchase in purchase_set:
 
         qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
         if qty != 0 or purchase.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT:
-            unit = get_customer_unit(order_unit=purchase.order_unit, qty=qty)
+
+            if placement_save is not None:
+                if placement_save != purchase.product.placement:
+                    hide_column_placement = False
+            placement_save = purchase.product.placement
+            # unit = get_customer_unit(order_unit=purchase.order_unit, qty=qty)
+            if purchase.invoiced_price_with_compensation:
+                a_price = purchase.product.unit_price_with_compensation
+            else:
+                a_price = purchase.product.unit_price_with_vat
+            qty_display, price_display, price = get_display(
+                qty,
+                purchase.product.order_average_weight,
+                purchase.product.order_unit,
+                a_price
+            )
 
             row = [
                 (unicode(_("Placement")), 15,
-                 purchase.product.get_placement_display() if purchase.product is not None else "", NumberFormat.FORMAT_TEXT,
-                 False),
-                (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Department")), 15,
-                 purchase.department_for_customer.short_name if purchase.department_for_customer is not None else "N/A",
-                 NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Quantity")), 10, qty, '#,##0.???', False),
-                (unicode(_("Unit")), 10, unit, NumberFormat.FORMAT_TEXT,
-                 True if purchase.wrapped else False),
+                 purchase.product.get_placement_display() if purchase.product is not None else "",
+                 NumberFormat.FORMAT_TEXT),
+                (unicode(_("Producer")), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT),
+                (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT),
+                (unicode(_("Quantity")), 20, qty_display, NumberFormat.FORMAT_TEXT),
+                (unicode(_("Unit Price")), 10, a_price,
+                    u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
+                (unicode(_("deposit")), 10, purchase.unit_deposit,
+                    u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
+                (unicode(_("Total invoiced price, deposit included")), 10, qty * purchase.unit_deposit + price,
+                    u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
+                # (unicode(_("Quantity")), 10, qty, '#,##0.???'),
+                # (unicode(_("Unit")), 12, unit, NumberFormat.FORMAT_TEXT),
+                (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT),
             ]
 
             if row_num == 0:
                 worksheet_set_header(ws, row_num, row)
                 row_num += 1
 
+            if customer_save != purchase.customer.id or department_for_customer_save != purchase.department_for_customer:
+                if customer_save != purchase.customer.id:
+                    if row_start_sum is not None:
+                        c = ws.cell(row=row_num, column=5)
+                        c.value = unicode(_("Total Price"))
+                        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                        c.style.font.bold = True
+                        c = ws.cell(row=row_num, column=6)
+                        formula = 'SUM(G%s:G%s)' % (row_start_sum + 3, row_num)
+                        c.value = '=' + formula
+                        c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
+                        c.style.font.bold = True
+                    row_start_sum = row_num
+                    # Add an empty line for the scissors.
+                    if customer_save is not None:
+                        row_num += 2
+                c = ws.cell(row=row_num, column=2)
+                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                c.style.alignment.horizontal = 'right'
+                c.style.font.italic = True
+                department_for_customer_save = purchase.department_for_customer
+                if department_for_customer_save is not None:
+                    c.value = department_for_customer_save.short_name
+                else:
+                    c.value = ""
+                if customer_save != purchase.customer.id:
+                    for col_num in xrange(len(row)):
+                        c = ws.cell(row=row_num, column=col_num)
+                        c.style.borders.top.border_style = Border.BORDER_THIN
+                        if col_num == 7:
+                            c.value = purchase.customer.short_basket_name
+                            c.style.font.bold = True
+                    # Force the display of the department for next customer
+                    customer_save = purchase.customer.id
+                else:
+                    c = ws.cell(row=row_num, column=7)
+                    c.value = purchase.customer.short_basket_name
+                row_num += 1
+
             for col_num in xrange(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
                 c.value = row[col_num][ROW_VALUE]
                 c.style.number_format.format_code = row[col_num][ROW_FORMAT]
-                if row[col_num][ROW_BOX]:
-                    c.style.borders.top.border_style = Border.BORDER_THIN
-                    c.style.borders.bottom.border_style = Border.BORDER_THIN
-                    c.style.borders.left.border_style = Border.BORDER_THIN
-                    c.style.borders.right.border_style = Border.BORDER_THIN
-                else:
-                    c.style.borders.bottom.border_style = Border.BORDER_HAIR
-                if customer_save != purchase.customer.id:
-                    # Display the customer in bold when changing
-                    if col_num == 4:
-                        c.style.font.bold = True
-                    c.style.borders.top.border_style = Border.BORDER_THIN
-            if customer_save != purchase.customer.id:
-                customer_save = purchase.customer.id
+                c.style.borders.bottom.border_style = Border.BORDER_HAIR
+
             row_num += 1
-    return wb
+
+    if row_start_sum is not None:
+        c = ws.cell(row=row_num, column=5)
+        c.value = unicode(_("Total Price"))
+        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+        c.style.font.bold = True
+        c = ws.cell(row=row_num, column=6)
+        formula = 'SUM(G%s:G%s)' % (row_start_sum + 3, row_num)
+        c.value = '=' + formula
+        c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
+        c.style.font.bold = True
+
+    if hide_column_placement:
+        ws.column_dimensions[get_column_letter(1)].visible = False
+
+    if customer is None:
+        return wb
+    return ws
 
 
 def admin_export(request, queryset):
