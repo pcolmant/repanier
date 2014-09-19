@@ -123,7 +123,7 @@ def basket_amount_ajax(request):
 
 
 @login_required()
-# @never_cache
+@never_cache
 def order_form_ajax(request):
     if request.is_ajax():
         if request.method == 'GET':
