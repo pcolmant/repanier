@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.utils import translation
 from django.http import HttpResponse
@@ -16,13 +17,11 @@ from repanier.models import Producer
 from repanier.models import Purchase
 from repanier.models import Staff
 from repanier.tools import get_producer_unit
-from repanier.tools import get_customer_unit
-from repanier.tools import get_preparator_unit
 from repanier.tools import get_display
 
 
 def export(permanence, wb=None):
-    translation.activate("fr")
+    translation.activate(settings.LANGUAGES[0][0])
     if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
@@ -144,16 +143,16 @@ def export(permanence, wb=None):
         if row_num > 0:
             ws.column_dimensions[get_column_letter(1)].width = 120
 
-    # if PERMANENCE_WAIT_FOR_SEND <= permanence.status <= PERMANENCE_SEND:
     if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
         # Basket check list, by customer
-        ws = export_customer(permanence, wb=wb)
+        wb = export_customer(permanence, wb=wb)
 
-    # if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
+    if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
     #     # Order adressed to our producers,
-    #     producer_set = Producer.objects.filter(permanence=permanence).order_by("short_profile_name")
-    #     for producer in producer_set:
-    #         export_producer(permanence=permanence, producer=producer, wb=wb)
+        producer_set = Producer.objects.filter(permanence=permanence).order_by("short_profile_name")
+        for producer in producer_set:
+            wb = export_producer(permanence=permanence, producer=producer, wb=wb)
+
 
     return wb
 
@@ -169,23 +168,22 @@ def export_producer(permanence, producer, wb=None):
     long_name_save = None
     unit_price_save = 0
     unit_deposit_save = 0
-    total_price_sum = 0
-    total_price_sum_sum = 0
     row_start_sum_sum = 0
-    total_price_sum_sum_sum = 0
     formula_sum_sum_sum = []
     hide_column_short_basket_name = True
     hide_column_unit_deposit = True
     unit_save = None
-    hide_column_unit = True
 
+    translation.activate(producer.language)
     purchase_set = Purchase.objects.filter(
         permanence_id=permanence.id, producer_id=producer.id,
-        order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT
+        order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
+        product__translations__language_code=translation.get_language()
     ).exclude(quantity=0
     ).order_by(
-        "department_for_customer",
-        "long_name",
+        "department_for_customer__tree_id",
+        "department_for_customer__lft",
+        "product__translations__long_name",
         "customer__short_basket_name"
     )
     for purchase in purchase_set:
@@ -198,28 +196,24 @@ def export_producer(permanence, producer, wb=None):
                 ws = wb.create_sheet()
             worksheet_setup_landscape_a4(ws, unicode(producer.short_profile_name) + unicode(_(" by product")),
                                          unicode(permanence))
-
-        short_basket_name = ""
-
         if long_name_save != purchase.long_name:
             product_bold = True
             row_start_sum = row_num
             if department_for_customer_save != purchase.department_for_customer_id:
                 if department_for_customer_short_name_save is not None:
                     row_num += 1
-                    for col_num in xrange(7):
+                    for col_num in xrange(6):
                         c = ws.cell(row=row_num, column=col_num)
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if col_num == 2:
                             c.value = unicode(_("Total Price")) + " " + department_for_customer_short_name_save
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                        if col_num == 6:
-                            formula = 'SUM(G%s:G%s)' % (row_start_sum_sum + 3, row_num)
+                        if col_num == 5:
+                            formula = 'SUM(F%s:F%s)' % (row_start_sum_sum + 3, row_num)
                             c.value = '=' + formula
                             formula_sum_sum_sum.append(formula)
                             c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
                             c.style.font.bold = True
-                    total_price_sum_sum = 0
                 row_start_sum_sum = row_num
                 department_for_customer_save = purchase.department_for_customer_id
                 if purchase.department_for_customer is not None:
@@ -248,7 +242,6 @@ def export_producer(permanence, producer, wb=None):
                 short_basket_name = current_site_name
 
             qty_sum = 0
-            total_price_sum = 0
             row_inc = 1
         else:
 
@@ -261,7 +254,6 @@ def export_producer(permanence, producer, wb=None):
                 short_basket_name = purchase.customer.short_basket_name
                 hide_column_short_basket_name = False
                 qty_sum = 0
-                total_price_sum = 0
                 row_inc = 1
             else:
                 short_basket_name = current_site_name
@@ -269,27 +261,26 @@ def export_producer(permanence, producer, wb=None):
 
         qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
         qty_sum += qty
-        unit_sum = get_producer_unit(order_unit=purchase.order_unit, qty=qty_sum)
+        a_price = (purchase.original_unit_price + purchase.unit_deposit) * qty_sum
+        qty_display, price_display, price = get_display(
+            qty_sum,
+            purchase.order_average_weight,
+            purchase.order_unit,
+            a_price,
+            False
+        )
         if unit_save is None:
             unit_save = purchase.order_unit
-        else:
-            if purchase.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_LT]:
-                hide_column_unit = False
-        # if purchase.order_unit not in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
-        total_price_sum += purchase.original_price
-        total_price_sum_sum += purchase.original_price
-        total_price_sum_sum_sum += purchase.original_price
 
         row = [
             (unicode(_("Basket")), 20, short_basket_name, NumberFormat.FORMAT_TEXT, False),
             (unicode(_("Quantity")), 10, qty_sum, '#,##0.???', True),
-            (unicode(_("Unit")), 12, unit_sum, NumberFormat.FORMAT_TEXT, False),
-            (unicode(_("Product")), 60, long_name_save, NumberFormat.FORMAT_TEXT, product_bold),
+            (unicode(_("Product")), 60, long_name_save + qty_display, NumberFormat.FORMAT_TEXT, product_bold),
             (unicode(_("Unit Price")), 10, unit_price_save, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
              False),
             (unicode(_("Deposit")), 10, unit_deposit_save, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
              False),
-            (unicode(_("Total Price")), 12, total_price_sum, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
+            (unicode(_("Total Price")), 12, a_price, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
              False)
         ]
 
@@ -309,13 +300,11 @@ def export_producer(permanence, producer, wb=None):
 
     if ws is not None:
         if hide_column_unit_deposit:
-            ws.column_dimensions[get_column_letter(6)].visible = False
-        if hide_column_unit:
-            ws.column_dimensions[get_column_letter(3)].visible = False
+            ws.column_dimensions[get_column_letter(5)].visible = False
         if hide_column_short_basket_name:
             ws.column_dimensions[get_column_letter(1)].visible = False
         row_num += 1
-        for col_num in xrange(7):
+        for col_num in xrange(6):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 2:
@@ -324,20 +313,20 @@ def export_producer(permanence, producer, wb=None):
                 else:
                     c.value = unicode(_("Total Price"))
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            if col_num == 6:
-                formula = 'SUM(G%s:G%s)' % (row_start_sum_sum + 3, row_num)
+            if col_num == 5:
+                formula = 'SUM(F%s:F%s)' % (row_start_sum_sum + 3, row_num)
                 c.value = '=' + formula
                 formula_sum_sum_sum.append(formula)
                 c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
                 c.style.font.bold = True
         row_num += 1
-        for col_num in xrange(7):
+        for col_num in xrange(6):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 1:
                 c.value = unicode(_("Total Price")) + " " + current_site_name
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            if col_num == 6:
+            if col_num == 5:
                 c.value = "=" + "+".join(formula_sum_sum_sum)
                 c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
                 c.style.font.bold = True
@@ -347,22 +336,21 @@ def export_producer(permanence, producer, wb=None):
 
     department_for_customer_save = None
     basket_save = None
-    total_price_sum = 0
     row_start_sum = 0
-    total_price_sum_sum = 0
     formula_sum_sum = []
     hide_column_unit_deposit = True
     unit_save = None
-    hide_column_unit = True
 
     purchase_set = Purchase.objects.filter(
         permanence_id=permanence.id, producer_id=producer.id,
-        order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT
+        order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
+        product__translations__language_code=translation.get_language()
     ).exclude(quantity=0
     ).order_by(
         "customer__short_basket_name",
-        "department_for_customer",
-        "long_name"
+        "department_for_customer__tree_id",
+        "department_for_customer__lft",
+        "product__translations__long_name"
     )
     for purchase in purchase_set:
 
@@ -380,49 +368,44 @@ def export_producer(permanence, producer, wb=None):
             if basket_save is not None:
                 c = ws.cell(row=row_num, column=2)
                 c.value = unicode(_("Total Price")) + " " + basket_save
-                c = ws.cell(row=row_num, column=6)
-                formula = 'SUM(G%s:G%s)' % (row_start_sum + 2, row_num)
+                c = ws.cell(row=row_num, column=5)
+                formula = 'SUM(F%s:F%s)' % (row_start_sum + 2, row_num)
                 c.value = '=' + formula
                 formula_sum_sum.append(formula)
                 c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
                 c.style.font.bold = True
                 row_start_sum = row_num
-                total_price_sum = 0
                 row_num += 1
             basket_save = purchase.customer.short_basket_name
         else:
             basket_bold = False
 
-        if unit_deposit_save != 0:
+        if purchase.unit_deposit != 0:
             hide_column_unit_deposit = False
 
-        # if purchase.order_unit not in [PRODUCT_ORDER_UNIT_LOOSE_PC_KG, PRODUCT_ORDER_UNIT_NAMED_PC_KG]:
-        total_price = purchase.original_price
-        total_price_sum += purchase.original_price
-        total_price_sum_sum += purchase.original_price
-        # else:
-        # total_price = 0
-
         qty = purchase.quantity if permanence.status < PERMANENCE_WAIT_FOR_SEND else purchase.quantity_send_to_producer
-        unit = get_producer_unit(order_unit=purchase.order_unit, qty=qty)
+
+        a_price = ( purchase.original_unit_price + purchase.unit_deposit ) * qty
+        qty_display, price_display, price = get_display(
+            qty,
+            purchase.order_average_weight,
+            purchase.order_unit,
+            0,
+            False
+        )
 
         if unit_save is None:
             unit_save = purchase.order_unit
-        else:
-            if (purchase.order_unit != unit_save and purchase.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT) or (
-                        purchase.order_unit == PRODUCT_ORDER_UNIT_KG):
-                hide_column_unit = False
 
         row = [
             (unicode(_("Basket")), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, basket_bold),
             (unicode(_("Quantity")), 10, qty, '#,##0.???', True),
-            (unicode(_("Unit")), 12, unit, NumberFormat.FORMAT_TEXT, False),
-            (unicode(_("Product")), 60, purchase.long_name, NumberFormat.FORMAT_TEXT, True),
+            (unicode(_("Product")), 60, purchase.long_name + qty_display, NumberFormat.FORMAT_TEXT, True),
             (unicode(_("Unit Price")), 10, purchase.original_unit_price,
              u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
-            (unicode(_("Deposit")), 10, unit_deposit_save, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
+            (unicode(_("Deposit")), 10, purchase.unit_deposit, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
              False),
-            (unicode(_("Total Price")), 12, total_price, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
+            (unicode(_("Total Price")), 12, a_price, u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
              False)
         ]
 
@@ -455,27 +438,23 @@ def export_producer(permanence, producer, wb=None):
 
     if ws is not None:
         if hide_column_unit_deposit:
-            ws.column_dimensions[get_column_letter(6)].visible = False
-        if hide_column_unit:
-            ws.column_dimensions[get_column_letter(3)].visible = False
+            ws.column_dimensions[get_column_letter(5)].visible = False
         c = ws.cell(row=row_num, column=2)
         c.value = unicode(_("Total Price")) + " " + basket_save
-        c = ws.cell(row=row_num, column=6)
-        formula = 'SUM(G%s:G%s)' % (row_start_sum + 2, row_num)
+        c = ws.cell(row=row_num, column=5)
+        formula = 'SUM(F%s:F%s)' % (row_start_sum + 2, row_num)
         c.value = '=' + formula
         formula_sum_sum.append(formula)
         c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
         c.style.font.bold = True
         row_num += 1
-        for col_num in xrange(7):
+        for col_num in xrange(6):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.top.border_style = Border.BORDER_THIN
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 1:
                 c.value = unicode(_("Total Price")) + " " + current_site_name
-            # c.style.font.bold = True
-            if col_num == 6:
-                # c.value = total_price_sum_sum
+            if col_num == 5:
                 c.value = "=" + "+".join(formula_sum_sum)
                 c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
                 c.style.font.bold = True
@@ -484,18 +463,9 @@ def export_producer(permanence, producer, wb=None):
 
 
 def export_customer(permanence, customer=None, wb=None):
-    if wb is None:
-        wb = Workbook()
-        ws = wb.get_active_sheet()
-    else:
-        ws = wb.create_sheet()
-    worksheet_setup_landscape_a4(ws, unicode(_('Customer check')), unicode(permanence))
-
-    row_num = 0
-    department_for_customer_save = None
-    customer_save = None
 
     if customer is not None:
+        translation.activate(customer.language)
         purchase_set = Purchase.objects.filter(
             permanence_id=permanence.id, customer_id=customer.id, producer__isnull=False,
             product__translations__language_code=translation.get_language()
@@ -519,9 +489,22 @@ def export_customer(permanence, customer=None, wb=None):
             "product__translations__long_name"
         )
 
+    if wb is None:
+        wb = Workbook()
+        ws = wb.get_active_sheet()
+    else:
+        ws = wb.create_sheet()
+
+    # Customer check list
+    worksheet_setup_landscape_a4(ws, unicode(_('Customer check')), unicode(permanence))
+
+    row_num = 0
+    department_for_customer_save = None
+    customer_save = None
     hide_column_placement = True
     placement_save = None
     row_start_sum = None
+    order_amount = 0
 
     for purchase in purchase_set:
 
@@ -543,6 +526,8 @@ def export_customer(permanence, customer=None, wb=None):
                 purchase.product.order_unit,
                 a_price
             )
+            row_price = qty * purchase.unit_deposit + price
+            order_amount += row_price
 
             row = [
                 (unicode(_("Placement")), 15,
@@ -555,7 +540,7 @@ def export_customer(permanence, customer=None, wb=None):
                     u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
                 (unicode(_("deposit")), 10, purchase.unit_deposit,
                     u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
-                (unicode(_("Total invoiced price, deposit included")), 10, qty * purchase.unit_deposit + price,
+                (unicode(_("Total invoiced price, deposit included")), 10, row_price,
                     u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '),
                 # (unicode(_("Quantity")), 10, qty, '#,##0.???'),
                 # (unicode(_("Unit")), 12, unit, NumberFormat.FORMAT_TEXT),
@@ -622,17 +607,20 @@ def export_customer(permanence, customer=None, wb=None):
         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
         c.style.font.bold = True
         c = ws.cell(row=row_num, column=6)
-        formula = 'SUM(G%s:G%s)' % (row_start_sum + 3, row_num)
+        if row_start_sum == 1:
+            formula = 'SUM(G%s:G%s)' % (row_start_sum + 1, row_num)
+        else:
+            formula = 'SUM(G%s:G%s)' % (row_start_sum + 3, row_num)
         c.value = '=' + formula
         c.style.number_format.format_code = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
         c.style.font.bold = True
 
-    if hide_column_placement:
-        ws.column_dimensions[get_column_letter(1)].visible = False
-
-    if customer is None:
+        if hide_column_placement:
+            ws.column_dimensions[get_column_letter(1)].visible = False
+    if customer is not None:
+        return order_amount, wb
+    else:
         return wb
-    return ws
 
 
 def admin_export(request, queryset):

@@ -489,7 +489,9 @@ class PermanenceView(ListView):
             distribution_date__gte=now,
             permanence__status__lte=PERMANENCE_WAIT_FOR_SEND
         ).order_by(
-            "distribution_date", "permanence", "permanence_role"
+            "distribution_date", "permanence",
+            "permanence_role__tree_id",
+            "permanence_role__lft"
         )
         return qs
 

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from repanier.const import *
 from django.conf import settings
+from repanier.const import *
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
+from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslationDoesNotExist
 from repanier.models import Permanence
@@ -11,6 +12,7 @@ from repanier.tools import *
 
 
 def send(permanence_id, current_site_name):
+    translation.activate(settings.LANGUAGES[0][0])
     permanence = Permanence.objects.get(id=permanence_id)
     sender_email = settings.DEFAULT_FROM_EMAIL
     sender_function = ""

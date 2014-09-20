@@ -98,7 +98,8 @@ def get_producer_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
 
 def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     # Used when producing the preparation list.
-    if order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
+    if order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT,
+                      PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
         unit = unicode(_("Piece(s) :"))
     elif order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
         unit = unicode(_(u"€ or kg :"))
@@ -109,8 +110,15 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     return unit
 
 
-def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC, price=None):
-    unit = unicode(_(' pieces'))
+def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC, price=None,
+                for_customer=True):
+    if for_customer:
+        if qty < 2:
+            unit = unicode(_(' piece'))
+        else:
+            unit = unicode(_(' pieces'))
+    else:
+        unit = " (" + unicode(_(' piece')) + " )"
     magnitude = 1
     if order_unit == PRODUCT_ORDER_UNIT_KG:
         if qty < 1:
@@ -125,7 +133,9 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         else:
             unit = unicode(_(' l'))
     elif order_unit in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG]:
-        average_weight = order_average_weight * qty
+        average_weight = order_average_weight
+        if for_customer:
+            average_weight *= qty
         if order_unit == PRODUCT_ORDER_UNIT_PC_KG and price is not None:
             price *= order_average_weight
         if average_weight < 1:
@@ -143,12 +153,20 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         tilde = ''
         if order_unit == PRODUCT_ORDER_UNIT_PC_KG:
             tilde = '~'
-        if qty < 2:
-            unit = unicode(_(' piece')) + ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
+        if for_customer:
+            if qty < 2:
+                unit = unicode(_(' piece')) + ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
+            else:
+                unit = unicode(_(' pieces')) + ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
         else:
-            unit = unicode(_(' pieces')) + ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
+            if qty < 2:
+                unit = ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
+            else:
+                unit = ' (' + tilde + number_format(average_weight, decimal) + average_weight_unit + ')'
     elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
-        average_weight = order_average_weight * qty
+        average_weight = order_average_weight
+        if for_customer:
+            average_weight *= qty
         if average_weight < 1:
             average_weight_unit = unicode(_(' cl'))
             average_weight *= 100
@@ -161,19 +179,29 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
             decimal = 1
         elif average_weight * 100 == int(average_weight * 100):
             decimal = 2
-        if qty < 2:
-            unit = unicode(_(' piece')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+        if for_customer:
+            if qty < 2:
+                unit = unicode(_(' piece')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+            else:
+                unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
         else:
-            unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+            if qty < 2:
+                unit = ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
+            else:
+                unit = ' (' + number_format(average_weight, decimal) + average_weight_unit + ')'
     elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
-        average_weight = order_average_weight * qty
-        if average_weight < 2:
-            unit = unicode(_(' piece')) + ' (' + number_format(average_weight, 0) + unicode(_(' pc')) + ')'
+        average_weight = order_average_weight
+        if for_customer:
+            average_weight *= qty
+            if average_weight < 2:
+                unit = unicode(_(' piece')) + ' (' + number_format(average_weight, 0) + unicode(_(' pc')) + ')'
+            else:
+                unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, 0) + unicode(_(' pcs')) + ')'
         else:
-            unit = unicode(_(' pieces')) + ' (' + number_format(average_weight, 0) + unicode(_(' pcs')) + ')'
-    else:
-        if qty < 2:
-            unit = unicode(_(' piece'))
+            if average_weight < 2:
+                unit = ' (' + number_format(average_weight, 0) + unicode(_(' pc')) + ')'
+            else:
+                unit = ' (' + number_format(average_weight, 0) + unicode(_(' pcs')) + ')'
     qty *= magnitude
     decimal = 3
     if qty == int(qty):
@@ -182,7 +210,10 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         decimal = 1
     elif qty * 100 == int(qty * 100):
         decimal = 2
-    qty_display = number_format(qty, decimal) + unit
+    if for_customer:
+        qty_display = number_format(qty, decimal) + unit
+    else:
+        qty_display = unit
     if price is not None:
         price = (price * qty).quantize(TWO_DECIMALS)
         price_display = " = " + number_format(price, 2)

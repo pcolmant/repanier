@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import get_current_site
 from django.contrib.sites.models import Site
@@ -20,8 +21,8 @@ from repanier.models import Permanence
 from repanier.models import Producer
 from repanier.models import Product
 from repanier.models import Purchase
-from repanier.tools import *
 from repanier.tools import recalculate_order_amount
+from repanier.tools import update_or_create_purchase
 import thread
 
 
