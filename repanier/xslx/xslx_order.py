@@ -264,7 +264,7 @@ def export_producer(permanence, producer, wb=None):
         a_price = (purchase.original_unit_price + purchase.unit_deposit) * qty_sum
         qty_display, price_display, price = get_display(
             qty_sum,
-            purchase.order_average_weight,
+            purchase.product.order_average_weight,
             purchase.order_unit,
             a_price,
             False
@@ -388,7 +388,7 @@ def export_producer(permanence, producer, wb=None):
         a_price = ( purchase.original_unit_price + purchase.unit_deposit ) * qty
         qty_display, price_display, price = get_display(
             qty,
-            purchase.order_average_weight,
+            purchase.product.order_average_weight,
             purchase.order_unit,
             0,
             False
