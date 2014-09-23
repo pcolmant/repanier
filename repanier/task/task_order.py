@@ -149,7 +149,6 @@ def admin_open_and_send(request, queryset):
             permanence.is_updated_on = now
             permanence.save(update_fields=['status', 'is_updated_on'])
             # open(permanence.id, current_site.name)
-            # i = 1 / 0
             thread.start_new_thread(open, (permanence.id, current_site.name))
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
@@ -222,20 +221,6 @@ def close(permanence_id, current_site_name):
                 p_value_id="1",
                 close_orders=True
             )
-    # Clear cache
-    cur_language = translation.get_language()
-    try:
-        for language in settings.LANGUAGES:
-            translation.activate(language[0])
-            permanence.cache_part_d = ""
-            permanence.save()
-            for offer_item in OfferItem.objects.filter(permanence_id=permanence_id).order_by():
-                offer_item.cache_part_a = ""
-                offer_item.cache_part_b = ""
-                offer_item.cache_part_c = ""
-                offer_item.save()
-    finally:
-        translation.activate(cur_language)
     #
     recalculate_order_amount(permanence_id, send_to_producer=True)
     email_order.send(permanence_id, current_site_name)
@@ -255,7 +240,7 @@ def admin_close_and_send(request, queryset):
             permanence.is_updated_on = now
             permanence.save(update_fields=['status', 'is_updated_on'])
             thread.start_new_thread(close, (permanence.id, current_site.name))
-            # task_order.close(permanence.id, current_site.name)
+            # close(permanence.id, current_site.name)
             user_message = _("The orders are being closed.")
             user_message_level = messages.INFO
         elif permanence.status == PERMANENCE_WAIT_FOR_SEND:

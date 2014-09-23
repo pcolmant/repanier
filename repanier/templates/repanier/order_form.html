@@ -48,141 +48,162 @@
                 background-color: transparent;
                 border-left: 2px solid #51a351;
             }
+            .display_none {
+                display:none;
+            }
         </style>
     {% endaddtoblock %}
     <div class="container">
-    {% if user.customer.may_order %}
-        <div class="row">
-            {% if permanence.offer_description %}
-            <div class="offer-description">
-                {{ permanence.offer_description | safe }}
-            </div>
-            {% endif %}
+    <div class="row">
+        <span id="connected" class="display_none">
             <br/>
-        </div>
-        <div class="row">
-        <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
-            <div class="fixed">
-                <ul class="nav nav-stacked" id="sidebar">
-                    <li>
-                        <b><a href="{% url "basket_view" permanence.id %}?offeritem=purchased"
-                           {% if offeritem_id == "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "Purchased product" %}
-                            <span id="prepared_amount">{{ prepared_amount }}</span> &euro; <span
-                                    class="glyphicon glyphicon-shopping-cart"></span></a></b>
-                    </li>
-                        {% if producer_set.count > 1 %}
-                        <li>
-                            <a href="?"
-                               {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
-                            <ul class="nav nav-stacked">
-                        {% for producer in producer_set %}
-                            <li><a href="?producer={{ producer.id|stringformat:"d" }}"
-                                   {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
-                            </li>
-                        {% endfor %}
-                            </ul>
-                        </li>
-                        {% endif %}
-                    {% if departementforcustomer_set.count > 1 %}
-                        <li>
-                            <b><a href="{% url "order_view" permanence.id %}"
-                               {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
-                            <ul class="nav nav-stacked">
-                                {% for departementforcustomer in departementforcustomer_set %}
-                                    {% ifchanged departementforcustomer.parent %}
-{#                                    {% if not forloop.first and departementforcustomer.parent.level == 0 %}</ul>{% endif %}#}
-                                    {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                                    <li><b><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.parent.id|stringformat:"d" }}"
-                                           {% if departementforcustomer.parent.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
-                                    </b></li>
-                                    {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
-                                    {% endifchanged %}
-                                    <li><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
-                                           {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
-                                    </li>
-{#                                    {% if forloop.last %}</ul>{% endif %}#}
-                                {% endfor %}
-                            </ul>
-                        </li>
-                    {% endif %}
-                </ul>
+            <div class="bg-danger">
+            <blockquote><small>
+                {% trans "You need to log in" %}<br/>
+            <br/>
+            <a href="{% url "login_form" %}" class="btn btn-default">{% trans "Login me" %}</a>
+            </small></blockquote>
             </div>
-        </nav>
-        <div class="col-sm-9">
-        <div class="row">
-        {% if offeritem_list %}
-                {% for offer in offeritem_list %}
-                    {% if offer.product.picture %}
-                        {% thumbnail offer.product.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                    <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="{{ product_thumbnail.url }}">
-                    {% else %}
-                    <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="">
-                    {% endif %}
-                        {{ offer.cache_part_a | safe }}
-                    </div>
-                    <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
-                        <select name="offer_item{{ offer.id|stringformat:"d" }}" id="offer_item{{ offer.id|stringformat:"d" }}" onchange="order_ajax({{ offer.id|stringformat:"d" }})" class="form-control">
-                        </select>
-                        {% if user.customer.vat_id %}
-                            {{ offer.cache_part_c | safe }}
-                        {% else %}
-                            {{ offer.cache_part_b | safe }}
-                        {% endif %}
-                    </div>
-                    <div class="clearfix {% cycle 'visible-sm-block visible-md-block' ' ' %}"></div>
-                    <hr class="visible-sm visible-xs visible-md {% cycle '  ' 'visible-lg' %}" />
-                {% endfor %}
-        {% else %}
-            <h3>{% trans "No offer found" %}</h3>
+        </span>
+        <span id="may_not_order" class="display_none">
+            <br/>
+            <div class="bg-danger">
+            <blockquote><small>
+            {% trans "You are not allowed to order products" %}
+            </small></blockquote>
+            </div>
+        </span>
+    </div>
+    <div class="row">
+        <span id="not_connected">
+        {% if permanence.offer_description %}
+        <div class="offer-description">
+            {{ permanence.offer_description | safe }}
+        </div>
         {% endif %}
+        <br/>
+        </span>
+    </div>
+    <div class="row">
+    <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
+        <div class="fixed">
+            <ul class="nav nav-stacked" id="sidebar">
+                <li>
+                    <b><a href="{% url "basket_view" permanence.id %}?offeritem=purchased"
+                       {% if offeritem_id == "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "Purchased product" %}
+                        <span id="prepared_amount">{{ prepared_amount }}</span> &euro; <span
+                                class="glyphicon glyphicon-shopping-cart"></span></a></b>
+                </li>
+                    {% if producer_set.count > 1 %}
+                    <li>
+                        <a href="?"
+                           {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
+                        <ul class="nav nav-stacked">
+                    {% for producer in producer_set %}
+                        <li><a href="?producer={{ producer.id|stringformat:"d" }}"
+                               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
+                        </li>
+                    {% endfor %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                {% if departementforcustomer_set.count > 1 %}
+                    <li>
+                        <b><a href="{% url "order_view" permanence.id %}"
+                           {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
+                        <ul class="nav nav-stacked">
+                            {% for departementforcustomer in departementforcustomer_set %}
+                                {% ifchanged departementforcustomer.parent %}
+{#                                    {% if not forloop.first and departementforcustomer.parent.level == 0 %}</ul>{% endif %}#}
+                                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
+                                <li><b><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.parent.id|stringformat:"d" }}"
+                                       {% if departementforcustomer.parent.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
+                                </b></li>
+                                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                                {% endifchanged %}
+                                <li><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                                </li>
+{#                                    {% if forloop.last %}</ul>{% endif %}#}
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
-        </div>
+    </nav>
+    <div class="col-sm-9">
+    <div class="row">
+    {% if offeritem_list %}
+            {% for offer in offeritem_list %}
+                {% if offer.product.picture %}
+                    {% thumbnail offer.product.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="{{ product_thumbnail.url }}">
+                {% else %}
+                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="">
+                {% endif %}
+                    {{ offer.cache_part_a | safe }}
+                </div>
+                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
+                    <select name="offer_item{{ offer.id|stringformat:"d" }}" id="offer_item{{ offer.id|stringformat:"d" }}" onchange="order_ajax({{ offer.id|stringformat:"d" }})" class="form-control">
+                    </select>
+                    {% if user.customer.vat_id %}
+                        {{ offer.cache_part_c | safe }}
+                    {% else %}
+                        {{ offer.cache_part_b | safe }}
+                    {% endif %}
+                </div>
+                <div class="clearfix {% cycle 'visible-sm-block visible-md-block' ' ' %}"></div>
+                <hr class="visible-sm visible-xs visible-md {% cycle '  ' 'visible-lg' %}" />
+            {% endfor %}
     {% else %}
-        <h3>{% trans "You are not allowed to order products" %}</h3>
+        <h3>{% trans "No offer found" %}</h3>
     {% endif %}
+    </div>
+    </div>
 {#        Order Modal starts#}
-        <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                        <h4 class="modal-title" id="orderModalLabel"></h4>
-                    </div>
-                    <div class="modal-body">
-                        <span id="orderDetails"></span>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
-                    </div>
+    <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                    <h4 class="modal-title" id="orderModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <span id="orderDetails"></span>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
                 </div>
             </div>
         </div>
+    </div>
 {#        Order modal ends#}
 {#        Other qty Modal starts#}
-        <div id="otherQtyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="otherQtyModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                        <h4 class="modal-title" id="otherQtyModalLabel"></h4>
-                    </div>
-                    <div class="modal-body">
-            <span id="otherQtyDetails">
-              {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br/>
-              <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br/>
-              <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.phone1 }}</b><br/>
-              <span class="glyphicon glyphicon-envelope"></span>  <a
-                    href="mailto:{{ staff_order.user.email }}">{{ staff_order.user.email }}</a><br/>
-            </span>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
-                    </div>
+    <div id="otherQtyModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="otherQtyModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                    <h4 class="modal-title" id="otherQtyModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+        <span id="otherQtyDetails">
+          {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br/>
+          <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br/>
+          <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.phone1 }}</b><br/>
+          <span class="glyphicon glyphicon-envelope"></span>  <a
+                href="mailto:{{ staff_order.user.email }}">{{ staff_order.user.email }}</a><br/>
+        </span>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
                 </div>
             </div>
         </div>
+    </div>
 {#        Other qty modal ends#}
     </div>
 </div>
@@ -254,7 +275,7 @@
                             }
                         },
                         error: function (result) {
-                            offer_item.html('<option value="0" selected>{% trans "Retry2" %}</option>');
+                            offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');
                         }
                     });
                 }
@@ -277,12 +298,17 @@
                     {% endfor %}
                 {% endif %}
                 lien = '{% url 'order_name' %}';
+{#                $("#may_not_order").hide();#}
                 $.ajax({
                     url: lien,
                     cache: false,
                     async: false,
                     success: function (result) {
                         $("#my_name").html(result);
+                        if(result == '{% trans "Anonymous" %}') {
+                            $("#connected").show();
+                            $("#not_connected").hide();
+                        }
                     },
                     error: function (result) {
                         $("#my_name").html("{% trans "Retry5" %}");

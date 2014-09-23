@@ -225,7 +225,7 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
 
 def get_user_order_amount(permanence_id, user=None):
     a_total_price_with_tax = 0
-    if user is not None:
+    if user is not None and not user.is_anonymous():
         customer_order_set = CustomerOrder.objects.filter(
             permanence_id=permanence_id,
             customer__user=user)[:1]
@@ -402,7 +402,7 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
                 else:
                     q_alert = offer_item.product.customer_alert_order_quantity
                 q_step = offer_item.product.customer_increment_order_quantity
-                p_value_id = abs(int(p_value_id[0:3]))
+                p_value_id = abs(int(float(p_value_id[0:3])))
                 if p_value_id == 0:
                     q_order = 0
                 elif p_value_id == 1:
@@ -507,4 +507,6 @@ def update_or_create_purchase(user=None, customer=None, p_offer_item_id=None, p_
                         # except:
                         # # user.customer doesn't exist -> the user is not a customer.
                         #   pass
+        else:
+            result = "ok0"
     return result

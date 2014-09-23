@@ -261,7 +261,7 @@ class Producer(models.Model):
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
-        default=settings.LANGUAGES[0][0],
+        default=settings.LANGUAGE_CODE,
         verbose_name=_("language"))
     phone1 = models.CharField(
         _("phone1"), max_length=20, null=True)
@@ -414,7 +414,7 @@ class Customer(models.Model):
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
-        default=settings.LANGUAGES[0][0],
+        default=settings.LANGUAGE_CODE,
         verbose_name=_("language"))
     phone1 = models.CharField(
         _("phone1"), max_length=25, null=True)

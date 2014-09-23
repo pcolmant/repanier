@@ -12,7 +12,7 @@ from repanier.tools import *
 
 
 def send(permanence_id, current_site_name):
-    translation.activate(settings.LANGUAGES[0][0])
+    translation.activate(settings.LANGUAGE_CODE)
     permanence = Permanence.objects.get(id=permanence_id)
     sender_email = settings.DEFAULT_FROM_EMAIL
     sender_function = ""

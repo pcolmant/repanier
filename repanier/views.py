@@ -5,6 +5,7 @@ import datetime
 from django.utils.timezone import utc
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.http import HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslationDoesNotExist
@@ -65,8 +66,6 @@ def contact_form(request):
 # import sys
 # import traceback
 
-@login_required()
-# @never_cache
 def product_form_ajax(request):
     if request.is_ajax():
         if request.method == 'GET':
@@ -92,66 +91,72 @@ def product_form_ajax(request):
     return HttpResponseRedirect('/')
 
 
-@login_required()
 @never_cache
 def order_name_ajax(request):
     if request.is_ajax():
         if request.method == 'GET':
             user = request.user
+            if user.is_anonymous():
+                return HttpResponse(_('Anonymous'))
             customer = Customer.objects.filter(
-                    user_id=user.id, is_active=True, may_order=True).order_by().first()
+                    user_id=user.id, is_active=True).order_by().first()
             if customer:
                 return HttpResponse(customer)
     # Not an AJAX, GET request
     return HttpResponseRedirect('/')
 
 
-@login_required()
 @never_cache
 def basket_amount_ajax(request):
     if request.is_ajax():
         if request.method == 'GET':
+            user = request.user
+            if user.is_anonymous():
+                return HttpResponse(0)
             if 'permanence' in request.GET:
                 p_permanence_id = request.GET['permanence']
-                user = request.user
                 customer = Customer.objects.filter(
                         user_id=user.id, is_active=True, may_order=True).order_by().first()
                 if customer:
                     return HttpResponse(get_user_order_amount(p_permanence_id,user=user))
+                else:
+                    return HttpResponse(0)
     # Not an AJAX, GET request
     return HttpResponseRedirect('/')
 
 
-@login_required()
 @never_cache
 def order_form_ajax(request):
     if request.is_ajax():
         if request.method == 'GET':
+            user = request.user
             result = "ko"
-            p_offer_item_id = None
-            if 'offer_item' in request.GET:
-                p_offer_item_id = request.GET['offer_item']
-            p_value_id = None
-            if 'value' in request.GET:
-                p_value_id = request.GET['value']
-            if p_offer_item_id and p_value_id:
-                result = update_or_create_purchase(
-                    user=request.user, p_offer_item_id=p_offer_item_id,
-                    p_value_id=p_value_id
-                )
+            if user.is_authenticated():
+                p_offer_item_id = None
+                if 'offer_item' in request.GET:
+                    p_offer_item_id = request.GET['offer_item']
+                p_value_id = None
+                if 'value' in request.GET:
+                    p_value_id = request.GET['value']
+                if p_offer_item_id and p_value_id:
+                    result = update_or_create_purchase(
+                        user=user, p_offer_item_id=p_offer_item_id,
+                        p_value_id=p_value_id
+                    )
+            else:
+                return HttpResponseForbidden()
             return HttpResponse(result)
     # Not an AJAX, GET request
     return HttpResponseRedirect('/')
 
-@login_required()
 @never_cache
 def ajax_order_init(request):
     if request.method == 'GET':
-        if 'offer_item' in request.GET:
+        user = request.user
+        if user.is_anonymous():
+            result = '<option value="0" selected>---</option>'
+        elif 'offer_item' in request.GET:
             p_offer_item_id = request.GET['offer_item']
-            result = "N/A1"
-            user = request.user
-            # try:
             customer = Customer.objects.filter(
                 user_id=user.id, is_active=True, may_order=True).order_by().first()
             if customer:
@@ -166,14 +171,12 @@ def ajax_order_init(request):
                     else:
                         a_price = offer_item.product.unit_price_with_vat
                     q_average_weight = offer_item.product.order_average_weight
-                    # result = '<select name="value" id="offer_item' + str(offer_item.id) + '" onchange="order_ajax(' + str(
-                    #     offer_item.id) + ')" class="form-control">'
                     purchase = Purchase.objects.filter(product_id=offer_item.product_id,
                                                                 permanence_id=offer_item.permanence_id,
                                                                 customer_id=customer.id).order_by().first()
                     if purchase:
                         q_order = purchase.quantity if purchase.permanence.status < PERMANENCE_SEND else purchase.quantity_send_to_producer
-                    if q_order<=0:
+                    if q_order <= 0:
                         result = '<option value="0" selected>---</option>'
                     else:
                         qty_display, price_display, price = get_display(
@@ -184,19 +187,15 @@ def ajax_order_init(request):
                         )
                         result = '<option value="' + str(q_order) + '" selected>' + \
                                  qty_display + price_display + '&nbsp;&euro;</option>'
-                    # result += '</select>'
                 else:
                     result = "N/A4"
             else:
-                result = "N/A3"
-            # except:
-            # # user.customer doesn't exist -> the user is not a customer.
-            # result = "N/A2"
-            return HttpResponse(result)
+                result = '<option value="0" selected>---</option>'
+        return HttpResponse(result)
     # Not an AJAX, GET request
     return HttpResponseRedirect('/')
 
-@login_required()
+# @login_required()
 @never_cache
 def ajax_order_select(request):
     # if request.is_ajax():
@@ -206,91 +205,72 @@ def ajax_order_select(request):
         if 'offer_item' in request.GET:
             p_offer_item_id = request.GET['offer_item']
             user = request.user
-            customer = Customer.objects.filter(
-                user_id=user.id, is_active=True, may_order=True).order_by().first()
-            if customer:
-                # The user is an active customer
-                offer_item = OfferItem.objects.get(id=p_offer_item_id)
-                if PERMANENCE_OPENED <= offer_item.permanence.status <= PERMANENCE_SEND:
-                    # The offer_item belong to a open permanence
-                    q_order = 0
-                    if offer_item.product.vat_level in [VAT_200, VAT_300] and customer.vat_id is not None and len(
-                        customer.vat_id) > 0:
-                        a_price = offer_item.product.unit_price_with_compensation
-                    else:
-                        a_price = offer_item.product.unit_price_with_vat
-                    q_average_weight = offer_item.product.order_average_weight
+            customer = None
+            if user.is_authenticated():
+                customer = Customer.objects.filter(
+                    user_id=user.id, is_active=True).order_by().first()
+            offer_item = OfferItem.objects.get(id=p_offer_item_id)
+            if PERMANENCE_OPENED <= offer_item.permanence.status <= PERMANENCE_SEND:
+                # The offer_item belong to a open permanence
+                q_order = 0
+                if customer is not None and offer_item.product.vat_level in [VAT_200, VAT_300] and \
+                    customer.vat_id is not None and \
+                    len(customer.vat_id) > 0:
+                    a_price = offer_item.product.unit_price_with_compensation
+                else:
+                    a_price = offer_item.product.unit_price_with_vat
+                q_average_weight = offer_item.product.order_average_weight
+                purchase = None
+                if customer is not None:
                     purchase = Purchase.objects.filter(product_id=offer_item.product_id,
                                                        permanence_id=offer_item.permanence_id,
                                                        customer_id=customer.id).order_by().first()
-                    if purchase:
-                        q_order = purchase.quantity if purchase.permanence.status < PERMANENCE_SEND else purchase.quantity_send_to_producer
-                    # The q_order is either the purchased quantity or 0
-                    q_min = offer_item.product.customer_minimum_order_quantity
-                    # Limit to available qty
-                    q_alert = offer_item.customer_alert_order_quantity + q_order if offer_item.limit_to_alert_order_quantity else offer_item.product.customer_alert_order_quantity
-                    q_step = offer_item.product.customer_increment_order_quantity
-                    # The q_min cannot be 0. In this case try to replace q_min by q_step.
-                    # In last resort by q_alert.
+                if purchase:
+                    q_order = purchase.quantity if purchase.permanence.status < PERMANENCE_SEND else purchase.quantity_send_to_producer
+                # The q_order is either the purchased quantity or 0
+                q_min = offer_item.product.customer_minimum_order_quantity
+                # Limit to available qty
+                q_alert = offer_item.customer_alert_order_quantity + q_order if offer_item.limit_to_alert_order_quantity else offer_item.product.customer_alert_order_quantity
+                q_step = offer_item.product.customer_increment_order_quantity
+                # The q_min cannot be 0. In this case try to replace q_min by q_step.
+                # In last resort by q_alert.
 
-                    q_order_is_displayed = False
-                    if q_step <= 0:
-                        q_step = q_min
-                    if q_min <= 0:
-                        q_min = q_step
-                    if q_min <= 0:
-                        q_min = q_alert
-                        q_step = q_alert
-                    if q_min <= 0 and offer_item.permanence.status == PERMANENCE_OPENED:
-                        option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
+                q_order_is_displayed = False
+                if q_step <= 0:
+                    q_step = q_min
+                if q_min <= 0:
+                    q_min = q_step
+                if q_min <= 0:
+                    q_min = q_alert
+                    q_step = q_alert
+                if q_min <= 0 and offer_item.permanence.status == PERMANENCE_OPENED:
+                    option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
+                    to_json.append(option_dict)
+                else:
+                    q_select_id = 0
+                    selected = ""
+                    if q_order <= 0:
+                        q_order_is_displayed = True
+                        selected = "selected"
+                    if (offer_item.permanence.status == PERMANENCE_OPENED or
+                            (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
+                        option_dict = {'value': '0', 'selected': selected, 'label': '---'}
                         to_json.append(option_dict)
-                    else:
-                        q_select_id = 0
+
+                    q_valid = q_min
+                    q_counter = 0  # Limit to avoid too long selection list
+                    while q_valid <= q_alert and q_counter <= 20:
+                        q_select_id += 1
+                        q_counter += 1
                         selected = ""
-                        if q_order <= 0:
-                            q_order_is_displayed = True
-                            selected = "selected"
+                        if not q_order_is_displayed:
+                            if q_order <= q_valid:
+                                q_order_is_displayed = True
+                                selected = "selected"
                         if (offer_item.permanence.status == PERMANENCE_OPENED or
                                 (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
-                            option_dict = {'value': '0', 'selected': selected, 'label': '---'}
-                            to_json.append(option_dict)
-
-                        q_valid = q_min
-                        q_counter = 0  # Limit to avoid too long selection list
-                        while q_valid <= q_alert and q_counter <= 20:
-                            q_select_id += 1
-                            q_counter += 1
-                            selected = ""
-                            if not q_order_is_displayed:
-                                if q_order <= q_valid:
-                                    q_order_is_displayed = True
-                                    selected = "selected"
-                            if (offer_item.permanence.status == PERMANENCE_OPENED or
-                                    (PERMANENCE_SEND <= offer_item.permanence.status and selected == "selected")):
-                                qty_display, price_display, price = get_display(
-                                    q_valid,
-                                    q_average_weight,
-                                    offer_item.product.order_unit,
-                                    a_price
-                                )
-                                option_dict = {'value': str(q_select_id), 'selected': selected,
-                                               'label': qty_display + price_display + '&nbsp;&euro;'}
-                                to_json.append(option_dict)
-                            if q_valid < q_step:
-                                # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
-                                # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
-                                q_valid = q_step
-                            else:
-                                # 1; 2; 3; 4 ... q_min = 1; q_step = 1
-                                # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
-                                q_valid = q_valid + q_step
-
-                        if not q_order_is_displayed:
-                            # An custom order_qty > q_alert
-                            q_select_id += 1
-                            selected = "selected"
                             qty_display, price_display, price = get_display(
-                                q_order,
+                                q_valid,
                                 q_average_weight,
                                 offer_item.product.order_unit,
                                 a_price
@@ -298,9 +278,31 @@ def ajax_order_select(request):
                             option_dict = {'value': str(q_select_id), 'selected': selected,
                                            'label': qty_display + price_display + '&nbsp;&euro;'}
                             to_json.append(option_dict)
-                        if offer_item.permanence.status == PERMANENCE_OPENED:
-                            option_dict = {'value': 'other_qty', 'selected': '', 'label': unicode(_("Other qty"))}
-                            to_json.append(option_dict)
+                        if q_valid < q_step:
+                            # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
+                            # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
+                            q_valid = q_step
+                        else:
+                            # 1; 2; 3; 4 ... q_min = 1; q_step = 1
+                            # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
+                            q_valid = q_valid + q_step
+
+                    if not q_order_is_displayed:
+                        # An custom order_qty > q_alert
+                        q_select_id += 1
+                        selected = "selected"
+                        qty_display, price_display, price = get_display(
+                            q_order,
+                            q_average_weight,
+                            offer_item.product.order_unit,
+                            a_price
+                        )
+                        option_dict = {'value': str(q_select_id), 'selected': selected,
+                                       'label': qty_display + price_display + '&nbsp;&euro;'}
+                        to_json.append(option_dict)
+                    if offer_item.permanence.status == PERMANENCE_OPENED:
+                        option_dict = {'value': 'other_qty', 'selected': '', 'label': unicode(_("Other qty"))}
+                        to_json.append(option_dict)
 
         return HttpResponse(json.dumps(to_json), content_type="application/json")
     # Not an AJAX, GET request
@@ -328,22 +330,22 @@ class OrderView(ListView):
 
     # @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated():
-            self.user = request.user
-            self.offeritem_id = 'all'
-            if self.request.GET.get('offeritem'):
-                self.offeritem_id = self.request.GET['offeritem']
-            self.producer_id = 'all'
-            if self.request.GET.get('producer'):
-                self.producer_id = self.request.GET['producer']
-            self.departementforcustomer_id = 'all'
-            if self.request.GET.get('departementforcustomer'):
-                self.departementforcustomer_id = self.request.GET['departementforcustomer']
-            return super(OrderView, self).dispatch(request, *args, **kwargs)
-        else:
-            return HttpResponseRedirect("/")
+        # if request.user.is_authenticated():
+        self.user = request.user
+        self.offeritem_id = 'all'
+        if self.request.GET.get('offeritem'):
+            self.offeritem_id = self.request.GET['offeritem']
+        self.producer_id = 'all'
+        if self.request.GET.get('producer'):
+            self.producer_id = self.request.GET['producer']
+        self.departementforcustomer_id = 'all'
+        if self.request.GET.get('departementforcustomer'):
+            self.departementforcustomer_id = self.request.GET['departementforcustomer']
+        return super(OrderView, self).dispatch(request, *args, **kwargs)
+        # else:
+        #     return HttpResponseRedirect("/")
             # return super(OrderView, self).dispatch(request, *args, **kwargs)
-        return
+        # return
 
     def get_context_data(self, **kwargs):
         context = super(OrderView, self).get_context_data(**kwargs)
@@ -379,15 +381,17 @@ class OrderView(ListView):
         qs = OfferItem.objects.none()
         if PERMANENCE_OPENED <= self.permanence.status <= PERMANENCE_SEND:
             qs = OfferItem.objects.filter(permanence_id=self.permanence.id, is_active=True)
-            if self.permanence.status == PERMANENCE_OPENED:
+            if self.permanence.status == PERMANENCE_OPENED or self.user.is_anonymous():
                 # Don't display technical products.
                 qs = qs.filter(product__order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT)
             if self.producer_id != 'all':
                 qs = qs.filter(product__producer=self.producer_id)
             if self.offeritem_id != 'all' or self.permanence.status == PERMANENCE_SEND:
                 # if asked or if status is close or send, then display only purchased product
-                qs = qs.filter(product__purchase__permanence=self.permanence.id,
-                               product__purchase__customer__user=self.user)
+                if self.user.is_authenticated():
+                    qs = qs.filter(product__purchase__permanence=self.permanence.id,
+                                   product__purchase__customer__user=self.user,
+                                   product__purchase__quantity__gt=0)
             if self.departementforcustomer_id != 'all':
                 department = LUT_DepartmentForCustomer.objects.filter(id=self.departementforcustomer_id
                     ).order_by().first()
@@ -411,7 +415,15 @@ class OrderView(ListView):
 class OrderViewWithoutCache(OrderView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        return super(OrderView, self).get(request, *args, **kwargs)
+        return super(OrderViewWithoutCache, self).get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        self.permanence = get_object_or_404(Permanence, id=self.args[0])
+        if not self.user.is_authenticated():
+            return OfferItem.objects.none()
+        else:
+            return super(OrderViewWithoutCache, self).get_queryset()
+
 
 @login_required()
 # @never_cache
