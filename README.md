@@ -17,5 +17,8 @@ http://commande.coopeco2.be/fr/
 
 http://exceptionnel.repanier.be/fr/
 
+http://biodici.be/fr/
+
+http://epidici.be/fr/
 
 Licence : GPL v3
