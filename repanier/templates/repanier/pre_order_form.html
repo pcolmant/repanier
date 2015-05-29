@@ -1,0 +1,162 @@
+{% extends 'subpage_base_wo_cms_toolbar.html' %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
+{% block sub_content %}
+{% addtoblock "css" %}
+<style type="text/css">
+body > .container {
+  padding: 60px 15px 0;
+}
+</style>
+<link href="/static/djangocms_text_ckeditor/css/cms.ckeditor.css" rel="stylesheet">
+{% endaddtoblock %}
+<div class="container">
+    {# {% debug %} #}
+    <div class="panel panel-success">
+        <div class="panel-heading">
+            <h4>{{ object }}</h4>
+            <small>{{ object.get_producers | safe }}</small>
+        </div>
+    </div>
+    <table class="table table-hover table-bordered">
+        <thead>
+        <tr>
+            <th>
+                {% trans "producer" %}
+            </th>
+            <th>
+                {% trans "Product" %}
+            </th>
+            <th>
+                {% trans "selling price" %} {% trans "wo tax" %}
+            </th>
+            <th>
+                {% trans "tax" %}
+            </th>
+            <th>
+                {% trans "Stock" %}
+            </th>
+        <tr>
+        </thead>
+        <tbody>
+        {% for offer_item in offer_item_set %}
+{#            {% if offer_item.producer_id == producer.id or offer_item.stock > 0 %}#}
+                {% if offer_item.producer_id == producer.id %}
+                <tr class="success" data-toggle="modal" data-id="{{ offer_item.id|stringformat:"d" }}" data-target="#offerModal">
+                {%  else %}
+                <tr>
+                {% endif %}
+                    <td>
+                        {{ offer_item.producer }}
+                    </td>
+                    <td>
+                        <span id="get_long_name">{{ offer_item.get_long_name | safe }}</span>
+                    </td>
+                    <td align="right">
+                        <span id="producer_unit_price_wo_tax">{{ offer_item.producer_unit_price_wo_tax|floatformat:-2 }}&nbsp;&euro;&nbsp;/&nbsp;{% if offer_item.order_unit == '115' %}({% trans "pc" %}){% else %}({% trans "kg" %}){% endif %}
+                        {% if offer_item.unit_deposit > 0 %}
+                            <br/><span class="glyphicon glyphicon-plus"></span>{{ offer_item.unit_deposit|floatformat:-2 }}&nbsp;&euro;<span class="glyphicon glyphicon-leaf"></span>
+                        {% endif %}</span>
+                    </td>
+                    <td>
+                        <span id="get_vat_level_display">{{ offer_item.get_vat_level_display }}</span>
+                    </td>
+                    <td align="right">
+                        <span id="stock">
+                        {% if offer_item.stock == 0 %}--
+                        {% else %}
+                        {% if offer_item.stock <= 1 %}
+                            {{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == '105' %}({% trans "kg" %}){% else %}({% trans "pc" %}){% endif %}
+                        {% else %}
+                            {{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == '105' %}({% trans "kg" %}){% else %}({% trans "pcs" %}){% endif %}
+                        {% endif %}
+                        {% endif %}
+                        </span>
+                    </td>
+                <tr>
+{#            {% endif %}#}
+        {% endfor %}
+        </tbody>
+        </table>
+</div>
+{#        Offer Modal starts#}
+    <div id="offerModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="offerModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="offerModalContent">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                    <h4 class="modal-title" id="offerModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <span id="offerDetails"></span>
+                </div>
+                <div class="clearfix"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{#        Order modal ends#}
+{% addtoblock "lastjs" %}
+    <script type="text/javascript">
+        var t_row=null;
+        $(document).ready(function () {
+            var lien = '{% url 'pre_order_name_ajax' producer.offer_uuid %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: false,
+                success: function (result) {
+                    $("#my_name").html(result);
+                    if(result == '{% trans "Anonymous" %}') {
+                        $("#connected").show();
+                        $("#not_connected").hide();
+                    }
+                },
+                error: function (result) {
+                    $("#my_name").html("{% trans "Retry5" %}");
+                }
+            });
+            $(function(){
+                $('#offerModal').modal({
+                    keyboard: true,
+                    backdrop: false,
+                    show: false
+                }).on('show.bs.modal', function (event) {
+                    t_row=$(event.relatedTarget);
+                    var getIdFromRow = t_row.data('id');
+                    t_row.attr('class', 'danger');
+                    var lien = '{% url 'producer_product_description_ajax' producer.offer_uuid %}/' + getIdFromRow + '/';
+                    $.ajax({
+                        url: lien,
+                        cache: false,
+                        async: false,
+                        success: function (result) {
+                            $('#offerModalContent').html(result)
+                        },
+                        error: function (result) {
+                            $('#offerModalLabel').html($('{% trans "Communication error" %}'));
+                            $('#offerDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))
+                        }
+                    });
+                });
+                $('#offerModal').on('hidden.bs.modal', function () {
+                    t_row.removeClass("danger").addClass("success").fadeIn('slow');
+                })
+            });
+        });
+    </script>
+{% endaddtoblock %}
+{% endblock %}
+{% block footer %}
+    <div class="hidden-xs">
+        <br/>
+    </div>
+    <div>
+    {{ producer.offer_uuid }}
+    </div>
+    <div class="hidden-xs">
+        <br/>
+    </div>
+{% endblock %}

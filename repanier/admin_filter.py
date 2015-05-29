@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8
+from __future__ import unicode_literals
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from settings import *
 from const import *
 from models import Customer
 from models import LUT_DepartmentForCustomer
@@ -117,18 +118,34 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
 
 
 class PurchaseFilterByPermanence(SimpleListFilter):
-    title = REPANIER_PERMANENCES_NAME
+    title = _("permanence")
     parameter_name = 'permanence'
 
     def lookups(self, request, model_admin):
         # This list is a collection of permanence.id, .name
-        return [(c.id, c.__unicode__()) for c in
-                Permanence.objects.filter(status__in=[PERMANENCE_OPENED, PERMANENCE_SEND])
+        return [(c.id, c.__str__()) for c in
+                Permanence.objects.filter(status__in=model_admin.permanence_status_list)
         ]
 
     def queryset(self, request, queryset):
         # This query set is a collection of permanence
         if self.value():
             return queryset.filter(permanence_id=self.value())
+        else:
+            return queryset
+
+
+class OfferItemSendFilter(SimpleListFilter):
+    title = _("products")
+    parameter_name = 'is_filled_exact'
+
+    def lookups(self, request, model_admin):
+        # This list is a collection of permanence.id, .name
+        return [(1, _('only invoiced')),]
+
+    def queryset(self, request, queryset):
+        # This query set is a collection of permanence
+        if self.value():
+            return queryset.exclude(quantity_invoiced=DECIMAL_ZERO)
         else:
             return queryset

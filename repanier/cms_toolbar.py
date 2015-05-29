@@ -1,12 +1,15 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8
+from __future__ import unicode_literals
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from cms.toolbar_pool import toolbar_pool
 from cms.toolbar.items import Break, SubMenu
 from cms.cms_toolbar import ADMIN_MENU_IDENTIFIER, ADMINISTRATION_BREAK
 from cms.toolbar_base import CMSToolbar
+from apps import repanier_settings
 
 from const import *
+from models import Configuration
 
 
 @toolbar_pool.register
@@ -27,12 +30,18 @@ class RepanierToolbar(CMSToolbar):
             position=position
         )
         # add_sideframe_item
+        config = Configuration.objects.all().only("id").order_by().first()
+        url = reverse('admin:repanier_configuration_change', args=(config.id,))
+        office_menu.add_sideframe_item(_('Configuration'), url=url)
         url = reverse('admin:repanier_staff_changelist')
         office_menu.add_sideframe_item(_('Staff Member List'), url=url)
         url = reverse('admin:repanier_lut_permanencerole_changelist')
         office_menu.add_sideframe_item(_('Permanence Role List'), url=url)
         url = reverse('admin:repanier_lut_productionmode_changelist')
         office_menu.add_sideframe_item(_('Production Mode List'), url=url)
+        if repanier_settings['DELIVERY_POINT']:
+            url = reverse('admin:repanier_lut_deliverypoint_changelist')
+            office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
         url = reverse('admin:repanier_lut_departmentforcustomer_changelist')
         office_menu.add_sideframe_item(_('Departement for Customer List'), url=url)
 
@@ -46,13 +55,18 @@ class RepanierToolbar(CMSToolbar):
 
         position += 1
         url = reverse('admin:repanier_permanenceinpreparation_changelist')
-        admin_menu.add_sideframe_item(_('Permanence in Preparation List'), url=url, position=position)
+        admin_menu.add_sideframe_item(_("%(name)s in preparation list") % {'name': repanier_settings['PERMANENCES_NAME']}, url=url, position=position)
 
-        if self.request.user.groups.filter(name=READ_ONLY_GROUP).count() == 0:
-            # Not visible for read-only users
+        if repanier_settings['INVOICE']:
             position += 1
             url = reverse('admin:repanier_permanencedone_changelist')
-            admin_menu.add_sideframe_item(_('Permanence done List'), url=url, position=position)
+            admin_menu.add_sideframe_item(_("%(name)s done list") % {'name': repanier_settings['PERMANENCES_NAME']}, url=url, position=position)
+
             position += 1
             url = reverse('admin:repanier_bankaccount_changelist')
             admin_menu.add_sideframe_item(_('Bank Account List'), url=url, position=position)
+        else:
+            position += 1
+            url = reverse('admin:repanier_permanencedone_changelist')
+            admin_menu.add_sideframe_item(_("%(name)s archived list") % {'name': repanier_settings['PERMANENCES_NAME']}, url=url, position=position)
+

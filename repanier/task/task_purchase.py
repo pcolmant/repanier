@@ -2,7 +2,7 @@
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
-from repanier.models import CustomerOrder
+from repanier.models import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
 from repanier.models import OfferItem
 from repanier.models import Purchase
 
@@ -13,7 +13,9 @@ def admin_delete(request, queryset):
     for permanence in queryset.filter(status=PERMANENCE_SEND)[:1]:
         Purchase.objects.filter(permanence_id=permanence.id).delete()
         OfferItem.objects.filter(permanence_id=permanence.id).delete()
-        CustomerOrder.objects.filter(permanence_id=permanence.id).delete()
+        CustomerInvoice.objects.filter(permanence_id=permanence.id).delete()
+        ProducerInvoice.objects.filter(permanence_id=permanence.id).delete()
+        CustomerProducerInvoice.objects.filter(permanence_id=permanence.id).delete()
         user_message = _(
             "The purchases of this permanence have been deleted. There is no way to restore them automaticaly.")
         user_message_level = messages.INFO

@@ -18,11 +18,11 @@ def admin_duplicate(queryset):
     user_message = _("The product is duplicated.")
     user_message_level = messages.INFO
     product_count = 0
-    long_name_postfix = unicode(_(" (COPY)"))
+    long_name_postfix = "%s" % _(" (COPY)")
     max_length = Product_Translation._meta.get_field('long_name').max_length - len(long_name_postfix)
     for product in queryset:
         product_count += 1
-        new_long_name = cap(product.long_name, max_length).decode("utf8") + long_name_postfix
+        new_long_name = "%s%s" % (cap(product.long_name, max_length), _(" (COPY)"))
         old_product_production_mode = product.production_mode.all()
         product.id = None
         product.reference = None

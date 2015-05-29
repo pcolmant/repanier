@@ -1,6 +1,13 @@
 {% extends 'subpage_base_wo_cms_toolbar.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block sub_content %}
+{% addtoblock "css" %}
+<style type="text/css">
+body > .container {
+  padding: 60px 15px 0;
+}
+</style>
+{% endaddtoblock %}
     <div class="container">
         {# {% debug %} #}
         <div class="panel {% if object.balance > 0 %}panel-danger{% else %}panel-success{% endif %}">
@@ -53,7 +60,7 @@
         {% else %}
             <h4>{% trans "No bank movement found" %}</h4>
         {% endif %}
-        {% if purchase_set %}
+        {% if offer_item_set %}
             <h4>{{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.total_price_with_tax }}&nbsp;&euro;</h4>
             {% if object.total_vat != 0 or object.total_compensation != 0 or object.total_deposit != 0 %}
                 <h4>
@@ -77,10 +84,7 @@
                 <thead>
                 <tr>
                     <th>
-                        {% trans "Date" %}
-                    </th>
-                    <th>
-                        {% trans "Customer" %}
+                        {% trans "reference" %}
                     </th>
                     <th>
                         {% trans "Product" %}
@@ -94,39 +98,35 @@
                     <th>
                         {% trans "Total price" %}
                     </th>
-                    <th>
-                        {% trans "Comment" %}
-                    </th>
                 <tr>
                 </thead>
                 <tbody>
-                {% for purchase in purchase_set %}
+                {% for offer_item in offer_item_set %}
                     <tr>
                         <td>
-                            {{ purchase.distribution_date }}
-                        </td>
-                        <td>
-                            {{ purchase.customer.short_basket_name | truncatechars:15 }}
-                        </td>
-                        <td>
-                            {{ purchase.long_name }}
-                        </td>
-                        <td align="right">
-                            {{ purchase.quantity | floatformat:3 }}
-                        </td>
-                        <td align="right">
-                            {{ purchase.real_unit_price }}&nbsp;&euro;{% if purchase.unit_deposit %}
-                            <span class="glyphicon glyphicon-plus"></span> {{ purchase.unit_deposit }}&nbsp;&euro;
-                            <span class="glyphicon glyphicon-leaf"></span>{% endif %}
-                        </td>
-                        <td align="right">
-                            {% if purchase.invoiced_price_with_compensation %}
-                                {{ purchase.price_with_compensation }}{% else %}{{ purchase.price_with_vat }}{% endif %}&nbsp;&euro;
-                        </td>
-                        <td>
-                            {% if purchase.comment %}
-                                {{ purchase.comment }}
+                            {% if offer_item.reference|length < 36 %}
+                                {{ offer_item.reference }}
                             {% endif %}
+                        </td>
+                        <td>
+                            {{ offer_item.get_long_name }}
+                        </td>
+                        <td align="right">
+                            {{ offer_item.get_producer_qty_invoiced }}
+                        </td>
+                        <td align="right">
+                        {% with producer_unit_price=offer_item.producer_unit_price customer_unit_price=offer_item.customer_unit_price %}
+                        {%  if producer_unit_price > customer_unit_price %}
+                            {{ customer_unit_price }}
+                        {% else %}
+                            {{ producer_unit_price }}
+                        {% endif %}&nbsp;&euro;{% if offer_item.unit_deposit %}
+                            <span class="glyphicon glyphicon-plus"></span> {{ offer_item.unit_deposit }}&nbsp;&euro;
+                            <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+                        {% endwith %}
+                        </td>
+                        <td align="right">
+                            {{ offer_item.get_producer_price_invoiced }}&nbsp;&euro;
                         </td>
                     <tr>
                 {% endfor %}
@@ -139,27 +139,67 @@
             <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small>
         </h4>
     </div>
+{% addtoblock "lastjs" %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            lien = '{% url 'order_name' %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: false,
+                success: function (result) {
+                    $("#my_name").html(result);
+                    if(result == '{% trans "Anonymous" %}') {
+                        $("#connected").show();
+                        $("#not_connected").hide();
+                    }
+                },
+                error: function (result) {
+                    $("#my_name").html("{% trans "Retry5" %}");
+                }
+            });
+            lien = '{% url 'my_balance' %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: false,
+                success: function (result) {
+                    $("#my_balance").html(result);
+                },
+                error: function (result) {
+                    $("#my_balance").html("{% trans "Retry7" %}");
+                }
+            });
+        });
+    </script>
+{% endaddtoblock %}
 {% endblock %}
 {% block footer %}
+    <div class="hidden-xs">
+        <br/>
+    </div>
     <div class="btn-group">
         {% if previous_producer_invoice_id %}
             <a href="
-                    {% if uuid %}{% url 'invoicep_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'invoicep_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-left"></span></a>
+                    {% if uuid %}{% url 'producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
         {% else %}
-            <a href="#" class="btn btn-disabled btn-xs"></a>
+            <a href="#" class="btn btn-disabled"></a>
         {% endif %}
         {% if previous_producer_invoice_id or next_producer_invoice_id %}
             <a href="
-                    {% if uuid %}{% url 'invoicep_uuid_view' 0 uuid %}{% else %}{% url 'invoicep_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-disabled btn-xs"> {% trans "Invoice" %} </a>
+                    {% if uuid %}{% url 'producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-disabled"> {% trans "Invoice" %} </a>
         {% endif %}
         {% if next_producer_invoice_id %}
             <a href="
-                    {% if uuid %}{% url 'invoicep_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'invoicep_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-right"></span></a>
+                    {% if uuid %}{% url 'producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
         {% else %}
-            <a href="#" class="btn btn-disabled btn-xs"></a>
+            <a href="#" class="btn btn-disabled"></a>
         {% endif %}
+    </div>
+    <div class="hidden-xs">
+        <br/>
     </div>
 {% endblock %}

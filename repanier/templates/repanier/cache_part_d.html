@@ -1,8 +1,8 @@
-{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
-{% if producer_set.count > 1 %}
-    <div class="btn-group btn-xs dropup">
-        <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
-            {% trans " P " %}
+{% load cms_tags sekizai_tags i18n l10n %}
+{% if producer_set %}
+    <div class="btn-group dropup">
+        <button type="button" class="btn btn-primary" data-toggle="dropdown">
+            &nbsp;&nbsp;&nbsp;&nbsp;{% trans " P " %}&nbsp;&nbsp;&nbsp;&nbsp;
             <span class="caret"></span>
         </button>
         <ul class="dropdown-menu">
@@ -13,10 +13,10 @@
         </ul>
     </div>
 {% endif %}
-{% if departementforcustomer_set.count > 1 %}
-    <div class="btn-group btn-xs dropup">
-        <button type="button" class="btn btn-primary btn-xs" data-toggle="dropdown">
-            {% trans " D " %}
+{% if departementforcustomer_set %}
+    <div class="btn-group dropup">
+        <button type="button" class="btn btn-primary" data-toggle="dropdown">
+            &nbsp;&nbsp;&nbsp;&nbsp;{% trans " D " %}&nbsp;&nbsp;&nbsp;&nbsp;
             <span class="caret"></span>
         </button>
         <ul class="dropdown-menu">

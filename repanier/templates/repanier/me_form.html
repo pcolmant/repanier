@@ -1,0 +1,12 @@
+{% extends 'subpage_base.html' %}
+{% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
+{% block sub_content %}
+    <div class="col-md-12">
+        {% if update %}<p class="bg-success">{% trans "Update done." %}</p>{% endif %}
+        <p>{% trans "All informations bellow are visible to all members except your phone and email. You have the choice to specify if your phone and/or mail are visible to others members." %}</p>
+        {% crispy form %}
+    </div>
+{% endblock %}
+{#{% block lastjs %}#}
+{#  {{ form.media }}#}
+{#{% endblock %}#}

@@ -1,5 +1,8 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8
+from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _not_lazy
+
 from django.http import HttpResponse
 from django.utils import translation
 from openpyxl.style import Border
@@ -7,7 +10,7 @@ from openpyxl.style import NumberFormat
 from openpyxl.workbook import Workbook
 
 from export_tools import *
-from repanier.models import Producer
+from repanier.models import Producer, OfferItem
 from repanier.models import Product
 from repanier.tools import *
 
@@ -18,7 +21,7 @@ def export(permanence, wb=None):
         ws = wb.get_active_sheet()
     else:
         ws = wb.create_sheet()
-    worksheet_setup_landscape_a4(ws, unicode(_("Planned")), unicode(permanence))
+    worksheet_setup_landscape_a4(ws, _("Planned"), permanence)
     row_num = 0
 
     if permanence.status == PERMANENCE_PLANNED:
@@ -30,26 +33,28 @@ def export(permanence, wb=None):
                 producer__in=producers_in_this_permanence, is_active=True, is_into_offer=True,
                 translations__language_code=translation.get_language()).order_by(
                 "producer__short_profile_name",
-                "department_for_customer",
-                "translations__long_name"):
+                "department_for_customer__tree_id",
+                "department_for_customer__lft",
+                "translations__long_name",
+                "order_average_weight"):
             row = [
-                (unicode(_("Producer")), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Department")), 15, product.department_for_customer.short_name, NumberFormat.FORMAT_TEXT,
+                (_("Producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
+                (_("Department"), 15, product.department_for_customer.short_name, NumberFormat.FORMAT_TEXT,
                  False),
-                (unicode(_("Product")), 60, product.long_name, NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Unit Price")), 10, product.original_unit_price,
-                 u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
-                (unicode(_("deposit")), 10, product.unit_deposit,
-                 u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
+                (_("Product"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
+                (_("Unit Price"), 10, product.producer_unit_price,
+                 '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
+                (_("deposit"), 10, product.unit_deposit,
+                 '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             ]
 
             if row_num == 0:
-                worksheet_set_header(ws, row_num, row)
-                row_num += 1
+                worksheet_set_header(ws, row)
+                row_num +=1
 
             for col_num in xrange(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
-                c.value = row[col_num][ROW_VALUE]
+                c.value = "%s" % (row[col_num][ROW_VALUE])
                 c.style.number_format.format_code = row[col_num][ROW_FORMAT]
                 if row[col_num][ROW_BOX]:
                     c.style.borders.top.border_style = Border.BORDER_THIN
@@ -65,15 +70,8 @@ def export(permanence, wb=None):
             q_step = product.customer_increment_order_quantity
             # The q_min cannot be 0. In this case try to replace q_min by q_step.
             # In last ressort by q_alert.
-            if q_step <= 0:
-                q_step = q_min
-            if q_min <= 0:
-                q_min = q_step
-            if q_min <= 0:
-                q_min = q_alert
-                q_step = q_alert
             c = ws.cell(row=row_num, column=col_num)
-            c.value = unicode('---')
+            c.value = '---'
             ws.column_dimensions[get_column_letter(col_num + 1)].width = 2.3
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             col_num += 1
@@ -82,11 +80,11 @@ def export(permanence, wb=None):
             while q_valid <= q_alert and q_counter <= 20:
                 q_counter += 1
                 c = ws.cell(row=row_num, column=col_num)
-                qty_display, price_display, price = get_display(
+                qty_display, price_display, base_unit, unit, price = get_display(
                     q_valid,
                     product.order_average_weight,
                     product.order_unit,
-                    product.unit_price_with_vat
+                    product.customer_unit_price
                 )
                 c.value = qty_display + price_display + u" €"
                 ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
@@ -107,28 +105,28 @@ def export(permanence, wb=None):
 
         for offer_item in OfferItem.objects.filter(permanence_id=permanence.id, is_active=True,
                 product__translations__language_code=translation.get_language()).order_by(
-                'product__producer__short_profile_name',
-                'product__department_for_customer',
+                'producer__short_profile_name',
+                'department_for_customer',
                 'product__translations__long_name'):
             row = [
-                (unicode(_("Producer")), 15, offer_item.product.producer.short_profile_name, NumberFormat.FORMAT_TEXT,
+                (_("Producer"), 15, offer_item.producer.short_profile_name, NumberFormat.FORMAT_TEXT,
                  False),
-                (unicode(_("Department")), 15, offer_item.product.department_for_customer.short_name,
+                (_("Department"), 15, offer_item.department_for_customer.short_name,
                  NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Product")), 60, offer_item.product.long_name, NumberFormat.FORMAT_TEXT, False),
-                (unicode(_("Unit Price")), 10, offer_item.product.original_unit_price,
-                 u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
-                (unicode(_("deposit")), 10, offer_item.product.unit_deposit,
-                 u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
+                (_("Product"), 60, offer_item.get_long_name(), NumberFormat.FORMAT_TEXT, False),
+                (_("Unit Price"), 10, offer_item.producer_unit_price,
+                 '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
+                (_("deposit"), 10, offer_item.unit_deposit,
+                 '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             ]
 
             if row_num == 0:
-                worksheet_set_header(ws, row_num, row)
+                worksheet_set_header(ws, row)
                 row_num += 1
 
             for col_num in xrange(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
-                c.value = row[col_num][ROW_VALUE]
+                c.value = "%s" % (row[col_num][ROW_VALUE])
                 c.style.number_format.format_code = row[col_num][ROW_FORMAT]
                 if row[col_num][ROW_BOX]:
                     c.style.borders.top.border_style = Border.BORDER_THIN
@@ -139,20 +137,11 @@ def export(permanence, wb=None):
                     c.style.borders.bottom.border_style = Border.BORDER_HAIR
 
             col_num = len(row)
-            q_min = offer_item.product.customer_minimum_order_quantity
-            q_alert = offer_item.product.customer_alert_order_quantity
-            q_step = offer_item.product.customer_increment_order_quantity
-            # The q_min cannot be 0. In this case try to replace q_min by q_step.
-            # In last ressort by q_alert.
-            if q_step <= 0:
-                q_step = q_min
-            if q_min <= 0:
-                q_min = q_step
-            if q_min <= 0:
-                q_min = q_alert
-                q_step = q_alert
+            q_min = offer_item.customer_minimum_order_quantity
+            q_alert = offer_item.customer_alert_order_quantity
+            q_step = offer_item.customer_increment_order_quantity
             c = ws.cell(row=row_num, column=col_num)
-            c.value = unicode('---')
+            c.value = '---'
             ws.column_dimensions[get_column_letter(col_num + 1)].width = 2.3
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             col_num += 1
@@ -161,11 +150,11 @@ def export(permanence, wb=None):
             while q_valid <= q_alert and q_counter <= 20:
                 q_counter += 1
                 c = ws.cell(row=row_num, column=col_num)
-                qty_display, price_display, price = get_display(
+                qty_display, price_display, base_unit, unit, price = get_display(
                     q_valid,
-                    offer_item.product.order_average_weight,
-                    offer_item.product.order_unit,
-                    offer_item.product.unit_price_with_vat
+                    offer_item.order_average_weight,
+                    offer_item.order_unit,
+                    offer_item.customer_unit_price
                 )
                 c.value = qty_display + price_display + u" €"
                 ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
@@ -187,8 +176,9 @@ def export(permanence, wb=None):
 
 def admin_export(request, queryset):
     permanence = queryset.first()
-    response = HttpResponse(mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    filename = (unicode(_("Preview")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('latin-1', errors='ignore')
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = ("%s - %s.xlsx" % (_("Preview report"), permanence)).encode('ascii', errors='replace').replace('?', '_')
+    # filename = (unicode(_("Preview")) + u" - " + permanence.__unicode__() + u'.xlsx').encode('latin-1', errors='ignore')
     response['Content-Disposition'] = 'attachment; filename=' + filename
     wb = export(permanence=permanence, wb=None)
     if wb is not None:

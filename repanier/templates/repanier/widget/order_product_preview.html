@@ -1,0 +1,24 @@
+{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
+<div data-id="{{ offer.id|stringformat:"d" }}" class="btn btn-primary" onclick="window.open('http://www.google.be', '{% trans "Preview" %}', 'height=500,width=800,resizable=yes,scrollbars=no');">
+{% trans "Preview" %}
+</div>
+<span id="id_preview_product_order"></span>
+<script type="text/javascript">
+function refresh_preview(event) {
+    t_row=$(event.relatedTarget);
+    var getIdFromRow = t_row.data('id');
+    t_row.attr('class', 'danger');
+    var lien = '{% url 'preview_product_order_ajax' producer.offer_uuid %}/' + getIdFromRow + '/';
+    $.ajax({
+        url: lien,
+        cache: false,
+        async: false,
+        success: function (result) {
+            $('span.id_preview_product_order').html(result)
+        },
+        error: function (result) {
+            $('span.id_preview_product_order').html($('{% trans "Communication error" %}'));
+        }
+    });
+}
+</script>

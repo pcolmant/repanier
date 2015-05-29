@@ -1,14 +1,24 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8
+from __future__ import unicode_literals
+from repanier.apps import repanier_settings
 from repanier.const import *
 from django.conf import settings
 from django.core.mail import send_mail
-from django.utils.translation import ugettext_lazy as _
+# from django.contrib.sites.models import get_current_site
 
 
-def send(permanence, current_site_name):
+def send(permanence):
     try:
-        send_mail('Alert - ' + " - " + unicode(permanence) + " - " + current_site_name, permanence.get_status_display(),
-                  settings.ALLOWED_HOSTS[0] + '@repanier.be', [v for k, v in settings.ADMINS])
+        send_mail("Alert - %s - %s" % (permanence, repanier_settings['GROUP_NAME']), permanence.get_status_display(),
+                  "%s@repanier.be" % (settings.ALLOWED_HOSTS[0]), [v for k, v in settings.ADMINS])
+    except:
+        pass
+
+
+def send_error(error_str):
+    try:
+        send_mail("Alert - %s" % repanier_settings['GROUP_NAME'], error_str,
+                  "%s@repanier.be" % (settings.ALLOWED_HOSTS[0]), [v for k, v in settings.ADMINS])
     except:
         pass
 

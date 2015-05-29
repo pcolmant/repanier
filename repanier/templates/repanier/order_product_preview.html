@@ -1,0 +1,45 @@
+{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
+<div>
+    <div class="col-sm-6 col-lg-3">
+        <b>{{ offer.get_long_name }}</b><br/>{{ offer.producer.short_profile_name }}
+        {% if offer.product.offer_description|length > 0 %} <b><span class="glyphicon glyphicon-info-sign"></span></b>{% endif %}<br/>
+            <small>{{ offer.department_for_customer.short_name }}</small>
+        <br/>
+        {% for production_mode in offer.product.production_mode.all %}
+            {% if production_mode.picture %}
+                {% thumbnail production_mode.picture "0x32"|extra_padding_y:5 crop="smart" as logo_thumbnail %}
+                <img class="img-rounded" style = "float: right; margin: 5px;" alt="{{ production_mode }}" title="{{ production_mode }}" src="{{ logo_thumbnail.url }}"/>
+            {% else %}
+                <small>{{ production_mode }}{% if not forloop.last %} - {% endif %}</small>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}">
+        <select name="offer_item{{ offer.id|stringformat:"d" }}" id="offer_item{{ offer.id|stringformat:"d" }}" class="form-control">
+        </select>
+        {% if offer.order_unit == "105" or offer.order_unit == "110" or offer.order_unit == "115" %}
+            <h5><small><i><b>
+            {{ offer.reference_price_with_vat }} &euro;
+            {% if offer.order_unit == "105" %}
+                {% trans "/ kg" %}{% else %}{% if offer.order_unit == "110" %}
+                {% trans "/ l" %}{% else %}
+                {% trans "/ pc" %}{% endif %}
+            {% endif %}
+            </b></i></small></h5>
+        {% endif %}
+            {{ offer.customer_unit_price }} &euro;
+            {% if offer.order_unit == "120" or offer.order_unit == "140" %}
+                {% trans "/ kg" %}{% else %}
+                {% if offer.order_unit == "150" %}
+                    {% trans "/ l" %}{% else %}{% if offer.order_unit != "115" %}{% trans "/ piece" %}{% endif %}{% endif %}{% endif %}
+                    {% if offer.unit_deposit %}
+                        <br/><span class="glyphicon glyphicon-plus"></span>
+                        {{ offer.unit_deposit }} &euro;
+                        <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+        {% if offer.product.picture %}
+            {% thumbnail offer.product.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+            <br/>
+            <img class="img-thumbnail" style = "margin-top: 5px;" alt="{{ offer.product }}" title="{{ offer.product }}" src="{{ product_thumbnail.url }}"/>
+        {% endif %}
+    </div>
+</div>

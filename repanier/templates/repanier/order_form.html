@@ -2,57 +2,60 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
 {% block sub_content %}
     {# {% debug %} #}
-    {% addtoblock "css" %}
-        <style type="text/css">
+{% addtoblock "css" %}
+<style type="text/css">
+body > .container {
+  padding: 60px 15px 0;
+}
 {#            /* sidebar */#}
-            .bs-docs-sidebar {
-                padding-left: 20px;
-                margin-top: 20px;
-                margin-bottom: 20px;
-            }
+.bs-docs-sidebar {
+    padding-left: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
 {#            /* all links */#}
-            .bs-docs-sidebar .nav > li > a {
-                color: #3c3c3c;
-                padding: 4px 20px;
-                font-size: 16px;
-                font-weight: 400;
-                border-left: 2px solid transparent;
-            }
-            .bs-docs-sidebar .nav > li > b > a {
-                color: #3c3c3c;
-                padding: 4px 20px;
-                font-size: 16px;
-                font-weight: bold;
-                border-left: 2px solid transparent;
-            }
+.bs-docs-sidebar .nav > li > a {
+    color: #3c3c3c;
+    padding: 4px 20px;
+    font-size: 16px;
+    font-weight: 400;
+    border-left: 2px solid transparent;
+}
+.bs-docs-sidebar .nav > li > b > a {
+    color: #3c3c3c;
+    padding: 4px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-left: 2px solid transparent;
+}
 {#            /* nested links */#}
-            .bs-docs-sidebar .nav .nav > li > a,
-            .bs-docs-sidebar .nav .nav > li > b > a {
-                padding-top: 1px;
-                padding-bottom: 1px;
-                padding-left: 30px;
-                font-size: 14px;
-            }
+.bs-docs-sidebar .nav .nav > li > a,
+.bs-docs-sidebar .nav .nav > li > b > a {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 30px;
+    font-size: 14px;
+}
 {#            /* active & hover links */#}
-            .bs-docs-sidebar .nav > .active > a,
-            .bs-docs-sidebar .nav > li > a:hover,
-            .bs-docs-sidebar .nav > li > a:focus,
-            .bs-docs-sidebar .nav > .active > b > a,
-            .bs-docs-sidebar .nav > li > b > a:hover,
-            .bs-docs-sidebar .nav > li > b > a:focus,
+.bs-docs-sidebar .nav > .active > a,
+.bs-docs-sidebar .nav > li > a:hover,
+.bs-docs-sidebar .nav > li > a:focus,
+.bs-docs-sidebar .nav > .active > b > a,
+.bs-docs-sidebar .nav > li > b > a:hover,
+.bs-docs-sidebar .nav > li > b > a:focus,
 {#                /* selected links */#}
-            .bs-docs-sidebar .nav > li > b > a.bs-docs-sidebar-active,
-            .bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
-                color: #51a351;
-                text-decoration: none;
-                background-color: transparent;
-                border-left: 2px solid #51a351;
-            }
-            .display_none {
-                display:none;
-            }
-        </style>
-    {% endaddtoblock %}
+.bs-docs-sidebar .nav > li > b > a.bs-docs-sidebar-active,
+.bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
+    color: #51a351;
+    text-decoration: none;
+    background-color: transparent;
+    border-left: 2px solid #51a351;
+}
+.display_none {
+    display:none;
+}
+</style>
+{% endaddtoblock %}
     <div class="container">
     <div class="row">
         <span id="connected" class="display_none">
@@ -61,7 +64,7 @@
             <blockquote><small>
                 {% trans "You need to log in" %}<br/>
             <br/>
-            <a href="{% url "login_form" %}" class="btn btn-default">{% trans "Login me" %}</a>
+            <a href="{% url "login_form" %}?next={% url 'basket_view' permanence.id %}" class="btn btn-default">{% trans "Login me" %}</a>
             </small></blockquote>
             </div>
         </span>
@@ -76,7 +79,7 @@
     </div>
     <div class="row">
         <span id="not_connected">
-        {% if permanence.offer_description %}
+        {% if permanence.offer_description and permanence.offer_description.strip %}
         <div class="offer-description">
             {{ permanence.offer_description | safe }}
         </div>
@@ -87,48 +90,97 @@
     <div class="row">
     <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
         <div class="fixed">
+            <form id="search_form" class="form-horizontal" class="navbar-form" role="search" action="{% url "orderq_view" permanence.id %}" method="get">
+{#                {% csrf_token %}#}
+                <div class="input-group">
+                    {% if q != None %}
+                        <input type="text" class="form-control" value="{{ q }}" name="q">
+                    {% else %}
+                        <input type="text" class="form-control" placeholder="{% trans "Search" %}" name="q">
+                    {% endif %}
+                    <input type="hidden" name="producer" value="{{ producer_id }}">
+                    <input type="hidden" name="departementforcustomer" value="{{ departementforcustomer_id }}">
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+            <br/>
             <ul class="nav nav-stacked" id="sidebar">
                 <li>
                     <b><a href="{% url "basket_view" permanence.id %}?offeritem=purchased"
                        {% if offeritem_id == "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "Purchased product" %}
-                        <span id="prepared_amount">{{ prepared_amount }}</span> &euro; <span
+                        <span id="prepared_amount"></span> &euro; <span
                                 class="glyphicon glyphicon-shopping-cart"></span></a></b>
                 </li>
-                    {% if producer_set.count > 1 %}
-                    <li>
-                        <a href="?"
-                           {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
-                        <ul class="nav nav-stacked">
-                    {% for producer in producer_set %}
-                        <li><a href="?producer={{ producer.id|stringformat:"d" }}"
-                               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
-                        </li>
-                    {% endfor %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                {% if departementforcustomer_set.count > 1 %}
-                    <li>
-                        <b><a href="{% url "order_view" permanence.id %}"
-                           {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
-                        <ul class="nav nav-stacked">
-                            {% for departementforcustomer in departementforcustomer_set %}
-                                {% ifchanged departementforcustomer.parent %}
-{#                                    {% if not forloop.first and departementforcustomer.parent.level == 0 %}</ul>{% endif %}#}
-                                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                                <li><b><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.parent.id|stringformat:"d" }}"
-                                       {% if departementforcustomer.parent.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
-                                </b></li>
-                                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
-                                {% endifchanged %}
-                                <li><a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
-                                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
-                                </li>
-{#                                    {% if forloop.last %}</ul>{% endif %}#}
-                            {% endfor %}
-                        </ul>
-                    </li>
-                {% endif %}
+{% if producer_set %}
+{% if anonymous_basket == "1" %}
+    <li>
+        <b><a href="{% url "basket_view" permanence.id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
+           {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a></b>
+        <ul class="nav nav-stacked">
+    {% for producer in producer_set.all %}
+        <li><a href="{% url "basket_view" permanence.id %}?producer={{ producer.id|stringformat:"d" }}&departementforcustomer={{ departementforcustomer_id }}"
+               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
+        </li>
+    {% endfor %}
+        </ul>
+    </li>
+{% else %}
+    <li>
+        <b><a href="{% url "order_view" permanence.id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
+           {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a></b>
+        <ul class="nav nav-stacked">
+    {% for producer in producer_set.all %}
+        <li><a href="{% url "order_view" permanence.id %}?producer={{ producer.id|stringformat:"d" }}&departementforcustomer={{ departementforcustomer_id }}"
+               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
+        </li>
+    {% endfor %}
+        </ul>
+    </li>
+{% endif %}
+{% endif %}
+{% if departementforcustomer_set %}
+{% if anonymous_basket == "1" %}
+    <li>
+        <b><a href="{% url "basket_view" permanence.id %}"
+           {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
+        <ul class="nav nav-stacked">
+            {% for departementforcustomer in departementforcustomer_set.all %}
+                {% ifchanged departementforcustomer.parent_id %}
+                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
+                <li><b><a href="{% url "basket_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|stringformat:"d" }}"
+                       {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
+                </b></li>
+                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                {% endifchanged %}
+                <li><a href="{% url "basket_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </li>
+{% else %}
+    <li>
+        <b><a href="{% url "order_view" permanence.id %}"
+           {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
+        <ul class="nav nav-stacked">
+            {% for departementforcustomer in departementforcustomer_set.all %}
+                {% ifchanged departementforcustomer.parent_id %}
+                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
+                <li><b><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|stringformat:"d" }}"
+                       {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
+                </b></li>
+                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                {% endifchanged %}
+                <li><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </li>
+{% endif %}
+{% endif %}
             </ul>
         </div>
     </nav>
@@ -136,15 +188,15 @@
     <div class="row">
     {% if offeritem_list %}
             {% for offer in offeritem_list %}
-                {% if offer.product.picture %}
-                    {% thumbnail offer.product.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="{{ product_thumbnail.url }}">
+                {% if offer.picture %}
+                    {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}" data-picture="{{ product_thumbnail.url }}">
                 {% else %}
-                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}" data-picture="">
+                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}" data-picture="">
                 {% endif %}
                     {{ offer.cache_part_a | safe }}
                 </div>
-                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.product.long_name }}">
+                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}">
                     <select name="offer_item{{ offer.id|stringformat:"d" }}" id="offer_item{{ offer.id|stringformat:"d" }}" onchange="order_ajax({{ offer.id|stringformat:"d" }})" class="form-control">
                     </select>
                     {% if user.customer.vat_id %}
@@ -161,6 +213,26 @@
     {% endif %}
     </div>
     </div>
+{#        Communication Modal starts#}
+    <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                    <h4 class="modal-title" id="communicationModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <span id="communicationDetails"></span>
+                </div>
+                <div class="clearfix"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{#        Communication modal ends#}
 {#        Order Modal starts#}
     <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
          aria-hidden="true">
@@ -173,8 +245,9 @@
                 <div class="modal-body">
                     <span id="orderDetails"></span>
                 </div>
+                <div class="clearfix"></div>
                 <div class="modal-footer">
-                    <button class="btn" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
                 </div>
             </div>
         </div>
@@ -195,11 +268,11 @@
           <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br/>
           <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.phone1 }}</b><br/>
           <span class="glyphicon glyphicon-envelope"></span>  <a
-                href="mailto:{{ staff_order.user.email }}">{{ staff_order.user.email }}</a><br/>
+                href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br/>
         </span>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
                 </div>
             </div>
         </div>
@@ -210,48 +283,54 @@
 {% endblock %}
 {% block footer %}
     <div class="visible-xs">
-        <div class="btn-group">
+        <div class="btn-group" align="center">
             {{ permanence.cache_part_d | safe }}
             {% if display_all_product_button %}
-                <div class="btn-group btn-xs">
-                <a href="?" class="btn btn-primary btn-xs">{% trans "All" %}</a>
+                <div class="btn-group">
+                <a href="?" class="btn btn-primary">{% trans "All" %}</a>
                 </div>
             {% endif %}
-            <div class="btn-group btn-xs">
-            <a href="{% url "basket_view" permanence.id %}?offeritem=purchased" class="btn btn-primary btn-xs"><span id="prepared_amount_visible_xs"
-                class="prepared_amount">{{ prepared_amount }}</span> &euro;
+            <div class="btn-group">
+            <a href="{% url "basket_view" permanence.id %}?offeritem=purchased" class="btn btn-primary"><span id="prepared_amount_visible_xs"
+                class="prepared_amount"></span> &euro;
                 <span class="glyphicon glyphicon-shopping-cart"></span></a>
             </div>
         </div>
     </div>
-
+    <div class="hidden-xs">
+        <br/>
+    </div>
     {% if is_paginated %}
         <div class="btn-group">
             <div class="btn-group">
                 {% if page_obj.has_previous %}
                      <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}&amp;offeritem={{ offeritem_id }}"
-                       class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-left"></span></a>
+                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                 {% else %}
-                    <a href="#" class="btn btn-disabled btn-xs"></a>
+                    <a href="#" class="btn btn-disabled"></a>
                 {% endif %}
                 {% if page_obj.has_previous or page_obj.has_next %}
                     <a href="#"
-                       class="btn btn-disabled btn-xs">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                       class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
                 {% endif %}
                 {% if page_obj.has_next %}
                     <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}&amp;offeritem={{ offeritem_id }}"
-                       class="btn btn-success btn-disabled btn-xs"><span class="glyphicon glyphicon-arrow-right"></span></a>
+                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                 {% else %}
-                    <a href="#" class="btn btn-disabled btn-xs"></a>
+                    <a href="#" class="btn btn-disabled"></a>
                 {% endif %}
             </div>
+        </div>
+        <div class="hidden-xs">
+            <br/>
         </div>
     {% endif %}
     {% addtoblock "lastjs" %}
         <script type="text/javascript">
-            var previously_edited_offer_item = null;
-            var previously_edited_offer_item_id = null;
+{#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
+            var saved_offer_item_id = 0;
             function order_ajax(offer_item_id) {
+                saved_offer_item_id = 0;
                 var offer_item = $("#offer_item" + offer_item_id);
                 var offer_item_val = $("option:selected", offer_item).val();
 
@@ -264,7 +343,7 @@
                     $.ajax({
                         url: lien,
                         cache: false,
-                        async: false,
+                        async: true,
                         success: function (result) {
                             if (result.indexOf("ok") != 0) {
                                 offer_item.html('<option value="0" selected>{% trans "Retry1" %}</option>');
@@ -282,104 +361,86 @@
             }
             $(document).ready(function () {
                 {% if offeritem_list %}
-                    {% for offer in offeritem_list %}
-                        var lien = '{% url 'ajax_order_init' %}?offer_item=' + {{ offer.id|stringformat:"d" }};
-                        $.ajax({
-                            url: lien,
-                            cache: false,
-                            async: true,
-                            success: function (result) {
-                                $("#offer_item{{ offer.id|stringformat:"d" }}").html(result);
-                            },
-                            error: function (result) {
-                                $("#offer_item{{ offer.id|stringformat:"d" }}").html('<option value="0" selected>{% trans "Retry3" %}</option>');
-                            }
-                        });
-                    {% endfor %}
-                {% endif %}
-                lien = '{% url 'order_name' %}';
-{#                $("#may_not_order").hide();#}
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    async: false,
-                    success: function (result) {
-                        $("#my_name").html(result);
-                        if(result == '{% trans "Anonymous" %}') {
-                            $("#connected").show();
-                            $("#not_connected").hide();
-                        }
-                    },
-                    error: function (result) {
-                        $("#my_name").html("{% trans "Retry5" %}");
-                    }
-                });
-                lien = '{% url 'basket_amount' %}?permanence=' + {{ permanence.id|stringformat:"d" }};
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    async: false,
-                    success: function (result) {
-                        $("#my_basket").html(result);
-                        $("#prepared_amount").html(result);
-                        $("#prepared_amount_visible_xs").html(result);
-                    },
-                    error: function (result) {
-                        $("#my_basket").html("{% trans "Retry 6" %}");
-                        $("#prepared_amount").html("{% trans "Retry 6" %}");
-                        $("#prepared_amount_visible_xs").html("{% trans "Retry 6" %}");
-                    }
-                });
-                $("#li_my_basket").show();
-                $("select").mouseenter(function (event) {
-                    var lien = "";
-                    var offer_item = $(this);
-                    var offer_item_id = offer_item.closest('div').data('id');
-                    lien = '{% url 'ajax_order_select' %}?offer_item=' + offer_item_id;
+                    var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}offer_item={{ offer.id|stringformat:"d" }}&{% endfor %}permanence={{ permanence.id|stringformat:"d" }}&communication={{ communication }}';
                     $.ajax({
                         url: lien,
                         cache: false,
                         dataType: 'json',
-                        async: false,
+                        async: true,
                         success: function (result) {
-                            var selectOption = '';
-                            var selectVal = 0;
                             $.each(result, function (key, val) {
-                                if (val.selected == "selected") {
-                                    selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                    selectVal = val.value
+                                if(val.id == '#may_not_order') {
+                                    $("#may_not_order").show();
+                                    $("#not_connected").hide();
+                                } else if(val.id == '#communication') {
+                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
+                                    $('#communicationDetails').html(val.html);
+                                    $('#communicationModal').modal('show')
                                 } else {
-                                    selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
+                                    $(val.id).html(val.html);
+                                    if(val.id == '#my_name' && val.html == '{% trans "Anonymous" %}') {
+                                        $("#connected").show();
+                                        $("#not_connected").hide();
+                                    }
                                 }
                             });
-                            offer_item.html(selectOption);
                         },
                         error: function (result) {
-                            offer_item.html('<option value="0" selected>{% trans "Retry4" %}</option>');
+                            {% for offer in offeritem_list %}
+                                $("#offer_item{{ offer.id|stringformat:"d" }}").html("{% trans "Retry4" %}");
+                            {% endfor %}
+                            $("#connected").show();
+                            $("#not_connected").hide();
                         }
                     });
+                {% endif %}
+                $("#li_my_basket").show();
+                $("select").mouseover(function (event) {
+                    var offer_item = $(this);
+                    var offer_item_id = offer_item.closest('div').data('id');
+                    if(saved_offer_item_id != offer_item_id) {
+{#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
+                        saved_offer_item_id = offer_item_id;
+                        var lien = '{% url 'order_select_ajax' %}?offer_item=' + offer_item_id;
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            dataType: 'json',
+                            async: false,
+                            success: function (result) {
+                                var selectOption = '';
+                                var selectVal = 0;
+                                $.each(result, function (key, val) {
+                                    if (val.selected == "selected") {
+                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                        selectVal = val.value
+                                    } else {
+                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
+                                    }
+                                });
+                                offer_item.html(selectOption);
+                            },
+                            error: function (result) {
+                                offer_item.html('<option value="0" selected>{% trans "Retry4" %}</option>');
+                            }
+                        });
+                    }
                 });
                 $('#orderModal').modal({
                     keyboard: true,
                     backdrop: false,
                     show: false
                 }).on('show.bs.modal', function (event) {
-                    var getIdFromRow = $(event.relatedTarget).data('id');
-                    var getProductFromRow = $(event.relatedTarget).data('product');
-                    var getPictureFromRow = $(event.relatedTarget).data('picture');
-                    var lien = '{% url 'product_form_ajax' %}?offer_item=' + getIdFromRow;
+                    t_row=$(event.relatedTarget);
+                    var getIdFromRow = t_row.data('id');
+                    var getProductFromRow = t_row.data('product');
+                    var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
                     var content =
                             $.ajax({
                                 url: lien,
                                 cache: false,
                                 async: false,
                                 success: function (result) {
-                                    if(getPictureFromRow!=""){
-                                        result = '<img class="img-responsive img-thumbnail" style = "float: left; margin: 5px;" alt="'+
-                                                getProductFromRow +'" title="'+ getProductFromRow +
-                                                '" src="'+ getPictureFromRow +'"/>' +
-                                                result
-                                    }
                                     $('#orderModalLabel').html(getProductFromRow);
                                     $('#orderDetails').html(result)
                                 },
