@@ -9,11 +9,47 @@ The database name ($NAME$), user ($USER$), password ($PASSWORD$) must be identic
 
 .. code:: bash
 
+    sudo dpkg-reconfigure locales >>>> fr_BE.UTF-8
 	sudo apt-get install postgresql
 	sudo -u postgres psql
 		CREATE USER $USER$ PASSWORD '$PASSWORD$';
 		ALTER ROLE $USER$ WITH CREATEDB;
-		CREATE DATABASE $NAME$ OWNER $USER$;
+		NOT >>>>>>>>>>>>>>> CREATE DATABASE $NAME$ OWNER $USER$ ENCODING 'UTF8';
+		CREATE DATABASE $NAME$ WITH TEMPLATE = template0 OWNER = $USER$ ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+		>>>>>>>>>>>> pg_dump -Fc -U repad ptidej > db.sql
+		>>>>>>>>>>>> pg_restore  --username=repad --format=c --no-owner --dbname=patrick db.sql
+
+                                    List of databases
+     Name      |  Owner   | Encoding  |   Collate   |    Ctype    |   Access privileges
+---------------+----------+-----------+-------------+-------------+-----------------------
+ apero         | repad    | SQL_ASCII | C           | C           |
+ bees          | repad    | SQL_ASCII | C           | C           |
+ coopeco2      | repad    | SQL_ASCII | C           | C           |
+ exceptionnel  | repad    | SQL_ASCII | C           | C           |
+ gasath        | repad    | SQL_ASCII | C           | C           |
+ lebio         | repad    | SQL_ASCII | C           | C           |
+ lelensois     | repad    | SQL_ASCII | C           | C           |
+ lepi          | repad    | SQL_ASCII | C           | C           |
+ postgres      | postgres | SQL_ASCII | C           | C           |
+ ptidej        | repad    | SQL_ASCII | C           | C           |
+ repanier      | repad    | SQL_ASCII | C           | C           |
+ template0     | postgres | SQL_ASCII | C           | C           | =c/postgres          +
+               |          |           |             |             | postgres=CTc/postgres
+ template1     | postgres | SQL_ASCII | C           | C           | =c/postgres          +
+               |          |           |             |             | postgres=CTc/postgres
+ uapero        | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ ubees         | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ ucoopeco2     | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ uexceptionnel | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ ugasath       | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ ulebio        | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ ulelensois    | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ ulepi         | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ uptidej       | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+ urepanier     | repad    | UTF8      | fr_BE.UTF-8 | fr_BE.UTF-8 |
+(23 rows)
+
+
 		CREATE USER test_$USER$ PASSWORD '$PASSWORD$';
 		ALTER ROLE test_$USER$ WITH CREATEDB;
 		\q

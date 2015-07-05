@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 from common_settings import *
+from django.utils.translation import ugettext_lazy as _
+gettext = lambda s: s
 
 # ## Site 3 specific parameters
 SITE_ID = 1
 ALLOWED_HOSTS = ['ptidej.repanier.be', 'ptidej.repanier.local']
+ROOT_URLCONF = 'ptidej.urls'
+WSGI_APPLICATION = 'ptidej.wsgi.application'
 EMAIL_SUBJECT_PREFIX = '[' + ALLOWED_HOSTS[0] + ']'
 # DEFAULT_FROM_EMAIL Used by PASSWORD RESET
 DEFAULT_FROM_EMAIL = ALLOWED_HOSTS[0] + "@repanier.be"
@@ -11,8 +15,21 @@ MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
 TEMPLATE_DIRS = (
     os.path.join(PROJECT_DIR, "templates"),
 )
-CACHE_MIDDLEWARE_KEY_PREFIX = ALLOWED_HOSTS[0]
-CMS_CACHE_PREFIX = ALLOWED_HOSTS[0]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache/' + ALLOWED_HOSTS[0],
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3
+        }
+    }
+}
+
+# CACHE_MIDDLEWARE_KEY_PREFIX = ALLOWED_HOSTS[0]
+# CMS_CACHE_PREFIX = ALLOWED_HOSTS[0]
 
 CMS_TEMPLATES = (
     ('home.html', gettext("Homepage")),
@@ -26,13 +43,40 @@ CMS_LANGUAGES[SITE_ID] = [
         # 'fallbacks': ['en', 'nl'],
         'public': True,
         # 'redirect_on_fallback':False,
+        # 'hide_untranslated': False,
     },
+    # {
+    #     'code': 'nl',
+    #     'name': gettext('Dutch'),
+    #     # 'fallbacks': ['en', 'fr'],
+    #     'public': True,
+    # },
+    # {
+    #     'code': 'en',
+    #     'name': gettext('English'),
+    #     'public': True,
+    # },
 ]
+
+PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+
+PARLER_LANGUAGES = {
+    SITE_ID: (
+        {'code': 'fr',},
+        # {'code': 'nl',},
+        # {'code': 'en',},
+    ),
+    'default': {
+        'fallback': 'fr',             # defaults to PARLER_DEFAULT_LANGUAGE_CODE
+        'hide_untranslated': False,   # the default; let .active_translations() return fallbacks too.
+    }
+}
+
 
 CMS_PLACEHOLDER_CONF = {
     'home-hero': {
         'name': gettext('Hero'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin', 'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin', ],
         # 'plugins': ['TextPlugin', 'LinkPlugin', 'StylePlugin', 'GoogleMapPlugin', 'MultiColumnPlugin', 'SnippetPlugin', 'VideoPlugin', 'CMSOembedVideoPlugin', 'TablePlugin'],
         'default_plugins': [
             {
@@ -51,47 +95,49 @@ CMS_PLACEHOLDER_CONF = {
     },
     'home-col-1': {
         'name': gettext('Column 1'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin', 'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin', ],
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        '<div class="panel panel-warning">' + \
-                        '<div class="panel-heading"><h4>Lorem ipsum</h4></div>' + \
-                        '<ul class="list-group">' + \
-                        '<li class="list-group-item">Lorem ipsum.</li>' + \
-                        '<li class="list-group-item">Lorem ipsum.</li>' + \
-                        '</ul>' + \
+                        '<div class="panel panel-warning">' +
+                        '<div class="panel-heading"><h4>Lorem ipsum</h4></div>' +
+                        '<div class="panel-body">' +
+                        '<ul class="list-group">' +
+                        '<li class="list-group-item">Lorem ipsum.</li>' +
+                        '<li class="list-group-item">Lorem ipsum.</li>' +
+                        '</ul>' +
+                        '</div>' +
                         '</div>'
-
                 },
             },
         ]
     },
     'home-col-2': {
         'name': gettext('Column 2'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin', 'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin', ],
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        '<div class="panel panel-warning">' + \
-                        '<div class="panel-heading"><h4>Lorem ipsum</h4></div>' + \
-                        '<ul class="list-group">' + \
-                        '<li class="list-group-item">Lorem ipsum.</li>' + \
-                        '<li class="list-group-item">Lorem ipsum.</li>' + \
-                        '</ul>' + \
+                        '<div class="panel panel-warning">' +
+                        '<div class="panel-heading"><h4>Lorem ipsum</h4></div>' +
+                        '<div class="panel-body">' +
+                        '<ul class="list-group">' +
+                        '<li class="list-group-item">Lorem ipsum.</li>' +
+                        '<li class="list-group-item">Lorem ipsum.</li>' +
+                        '</ul>' +
+                        '</div>' +
                         '</div>'
-
                 },
             },
         ]
     },
     'home-col-3': {
         'name': gettext('Column 3'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin', 'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin', ],
         # 'limits': {
         #     'global': 2,
         #     'TextPlugin': 1,
@@ -102,21 +148,21 @@ CMS_PLACEHOLDER_CONF = {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        '<div class="panel panel-warning">' + \
-                        '<div class="panel-heading"><h4>Lorem ipsum</h4></div>' + \
-                        '<ul class="list-group">' + \
-                        '<li class="list-group-item">Lorem ipsum.</li>' + \
-                        '<li class="list-group-item">Lorem ipsum.</li>' + \
-                        '</ul>' + \
-                        '</div>'
-
-                },
+                        '<div class="panel panel-warning">' +
+                        '<div class="panel-heading"><h4>Lorem ipsum</h4></div>' +
+                        '<div class="panel-body">' +
+                        '<ul class="list-group">' +
+                        '<li class="list-group-item">Lorem ipsum.</li>' +
+                        '<li class="list-group-item">Lorem ipsum.</li>' +
+                        '</ul>' +
+                        '</div>' +
+                        '</div>'                },
             },
         ]
     },
     'subpage_content': {
         'name': gettext('Content'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin', 'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin', ],
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -131,7 +177,7 @@ CMS_PLACEHOLDER_CONF = {
     },
     'footer': {
         'name': gettext('Footer'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin', 'FilerLinkPlugin', ],
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -145,15 +191,3 @@ CMS_PLACEHOLDER_CONF = {
     },
 }
 
-CMS_STYLE_NAMES = (
-    ('info', gettext("info")),
-    ('new', gettext("new")),
-    ('hint', gettext("hint")),
-)
-
-CMS_COLUMN_WIDTH_CHOICES = (
-    ('1', gettext("normal")),
-    ('2', gettext("2x")),
-    ('3', gettext("3x")),
-    ('4', gettext("4x"))
-)

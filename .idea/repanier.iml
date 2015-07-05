@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="django" name="Django">
+      <configuration>
+        <option name="rootFolder" value="$MODULE_DIR$" />
+        <option name="settingsModule" value="mysite/ptidej_settings.py" />
+        <option name="manageScript" value="manage.py" />
+        <option name="environment" value="&lt;map&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_EMAIL_USE_TLS&lt;/string&gt;&#10;    &lt;string&gt;True&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_EMAIL_HOST_USER&lt;/string&gt;&#10;    &lt;string&gt;pcolmant@repanier.be&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_ADMIN_NAME&lt;/string&gt;&#10;    &lt;string&gt;Patrick&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_ADMIN_EMAIL&lt;/string&gt;&#10;    &lt;string&gt;pcolmant@gmail.com&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_EMAIL_HOST&lt;/string&gt;&#10;    &lt;string&gt;mail.gandi.net&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_DEBUG&lt;/string&gt;&#10;    &lt;string&gt;True&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_DATABASE_PORT&lt;/string&gt;&#10;    &lt;string&gt;9002&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_DATABASE_NAME&lt;/string&gt;&#10;    &lt;string&gt;ptidej&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE&lt;/string&gt;&#10;    &lt;string&gt;ptidej.ptidej_settings&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_DATABASE_HOST&lt;/string&gt;&#10;    &lt;string&gt;127.0.0.1&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_EMAIL_PORT&lt;/string&gt;&#10;    &lt;string&gt;587&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_DATABASE_PASSWORD&lt;/string&gt;&#10;    &lt;string&gt;raspberry&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_EMAIL_HOST_PASSWORD&lt;/string&gt;&#10;    &lt;string&gt;k30Nao#Ku8t:&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;  &lt;entry&gt;&#10;    &lt;string&gt;DJANGO_SETTINGS_MODULE_DATABASE_USER&lt;/string&gt;&#10;    &lt;string&gt;pi&lt;/string&gt;&#10;  &lt;/entry&gt;&#10;&lt;/map&gt;" />
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/repanier" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/mysite" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Node.js v0.12.2 Core Modules" level="application" />
+  </component>
+  <component name="TemplatesService">
+    <option name="TEMPLATE_CONFIGURATION" value="Jinja2" />
+    <option name="TEMPLATE_FOLDERS">
+      <list>
+        <option value="$MODULE_DIR$/mysite/templates" />
+        <option value="$MODULE_DIR$/repanier/templates" />
+      </list>
+    </option>
+  </component>
+</module>

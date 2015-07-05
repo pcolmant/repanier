@@ -35,7 +35,7 @@ pip install -U Pillow
 pip install -U cmsplugin-filer
 pip install -U django-reversion
 pip install -U django_compressor
-pip install -U django-admin-sortable2
+# pip install -U django-admin-sortable2
 pip install -U openpyxl
 # pip install -U django-hvad
 # pip install -U docx

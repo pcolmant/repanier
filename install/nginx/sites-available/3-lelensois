@@ -1,0 +1,37 @@
+server {
+	listen 80;
+	server_name lepanierlensois.repanier.be;
+
+	access_log /var/log/nginx/3-lelensois_access.log;
+	error_log /var/log/nginx/3-lelensois_error.log;
+	client_max_body_size 3M;
+	location /media/ {
+		alias /home/repad/v1/lelensois/lelensois/media/public/;
+	}
+	location /static/ {
+		expires 7d;
+		alias /home/repad/v1/lelensois/lelensois/collect-static/;
+	}	
+	location /favicon.ico {
+		expires 30d;
+		alias /home/repad/v1/lelensois/lelensois/media/favicon.ico;
+	}
+	location /robots.txt {
+		expires 30d;
+		alias /home/repad/v1/lelensois/lelensois/media/robots.txt;
+	}
+        location /fr/repanier/order/ {
+                expires 72h;
+                include         uwsgi_params;
+                uwsgi_param HTTP_X_FORWARDED_HOST $server_name:80;         
+                uwsgi_pass      unix:///tmp/lelensois.sock;
+        }
+	location / {
+		include		uwsgi_params;
+		uwsgi_param HTTP_X_FORWARDED_HOST $server_name:80;
+		uwsgi_pass 	unix:///tmp/lelensois.sock;
+		uwsgi_read_timeout 600s;
+		uwsgi_send_timeout 60s;
+		uwsgi_connect_timeout 60s;
+	}
+}

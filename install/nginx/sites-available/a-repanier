@@ -1,0 +1,56 @@
+server {
+	listen 80;
+	server_name repanier.be;
+
+	access_log /var/log/nginx/a-repanier_access.log;
+	error_log /var/log/nginx/a-repanier_error.log;
+	client_max_body_size 3M;
+
+	rewrite ^/nl/(.*) $scheme://eetkorf.be:80/nl/$1 last;
+
+	location /media/ {
+		alias /home/repad/v1/mysite/mysite/media/public/;
+	}
+	location /static/ {
+		alias /home/repad/v1/mysite/mysite/collect-static/;
+	}	
+	location /favicon.ico {
+		alias /home/repad/v1/mysite/mysite/media/favicon.ico;
+	}
+	location /robots.txt {
+		alias /home/repad/v1/mysite/mysite/media/robots.txt;
+	}
+	location / {
+		include		uwsgi_params;
+		uwsgi_param HTTP_X_FORWARDED_HOST $server_name:80;
+		uwsgi_pass 	unix:///tmp/repanier.sock;
+	}
+}
+server {
+	listen 80;
+	server_name eetkorf.be;
+
+	access_log /var/log/nginx/a-repanier_access.log;
+	error_log /var/log/nginx/a-repanier_error.log;
+	client_max_body_size 3M;
+
+	rewrite ^/fr/(.*) $scheme://repanier.be:80/fr/$1 last;
+
+	location /media/ {
+		alias /home/repad/v1/mysite/mysite/media/public/;
+	}
+	location /static/ {
+		alias /home/repad/v1/mysite/mysite/collect-static/;
+	}	
+	location /favicon.ico {
+		alias /home/repad/v1/mysite/mysite/media/favicon.ico;
+	}
+	location /robots.txt {
+		alias /home/repad/v1/mysite/mysite/media/robots.txt;
+	}
+	location / {
+		include		uwsgi_params;
+		uwsgi_param HTTP_X_FORWARDED_HOST $server_name:80;
+		uwsgi_pass 	unix:///tmp/repanier.sock;
+	}
+}
