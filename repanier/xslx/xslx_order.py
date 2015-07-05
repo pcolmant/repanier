@@ -10,11 +10,11 @@ from openpyxl.style import NumberFormat
 from openpyxl.styles import Color
 from openpyxl.workbook import Workbook
 from django.contrib.sites.models import Site
-from repanier.apps import repanier_settings
+from repanier.apps import RepanierSettings
 
 from export_tools import *
 from repanier.const import *
-from repanier.models import Customer, PurchaseOpened, OfferItem
+from repanier.models import Customer, PurchaseOpenedOrClosed, OfferItem
 from repanier.models import Permanence
 from repanier.models import PermanenceBoard
 from repanier.models import Producer
@@ -198,7 +198,7 @@ def export_preparation(permanence, wb=None):
         while producer is not None:
             producer_save = producer
             if producer.invoice_by_basket:
-                purchases = PurchaseOpened.objects.filter(
+                purchases = PurchaseOpenedOrClosed.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer.id,
                     offer_item__translations__language_code=translation.get_language()
@@ -322,7 +322,7 @@ def export_preparation(permanence, wb=None):
             else:
                 # Using quantity_for_preparation_sort_order the order is by customer__short_basket_name if the product
                 # is to be distributed by piece, otherwise by lower qty first.
-                purchases = PurchaseOpened.objects.filter(
+                purchases = PurchaseOpenedOrClosed.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer.id,
                     offer_item__translations__language_code=translation.get_language()
@@ -497,7 +497,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                 if offer_item.wrapped: # or offer_item.limit_order_quantity_to_stock:
                     hide_column_short_basket_name = False
                     first_purchase = True
-                    for purchase in PurchaseOpened.objects.filter(
+                    for purchase in PurchaseOpenedOrClosed.objects.filter(
                         offer_item_id=offer_item.id,
                         offer_item__translations__language_code=translation.get_language()
                     ).exclude(
@@ -572,7 +572,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         qty = (qty / offer_item.order_average_weight).quantize(TWO_DECIMALS)
                         stock = DECIMAL_ZERO
                     c = ws.cell(row=row_num, column=0)
-                    c.value = repanier_settings['GROUP_NAME']
+                    c.value = RepanierSettings.group_name
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=1)
@@ -648,7 +648,7 @@ def export_producer_by_product(permanence, producer, wb=None):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 1:
-                c.value = "%s %s" % (_("Total Price"), repanier_settings['GROUP_NAME'])
+                c.value = "%s %s" % (_("Total Price"), RepanierSettings.group_name)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 6:
                 c.value = "=" + "+".join(formula_main_total)
@@ -684,7 +684,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
     show_column_reference = False
     hide_column_unit_deposit = True
     formula_main_total = []
-    purchases = PurchaseOpened.objects.filter(
+    purchases = PurchaseOpenedOrClosed.objects.filter(
         permanence_id=permanence.id,
         producer_id=producer.id,
         offer_item__translations__language_code=translation.get_language()
@@ -761,7 +761,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 0:
-                c.value = "%s %s" % (_("Total Price"), repanier_settings['GROUP_NAME'])
+                c.value = "%s %s" % (_("Total Price"), RepanierSettings.group_name)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 5:
                 c.value = "=" + "+".join(formula_main_total)
@@ -796,7 +796,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
     if customer is not None:
         translation.activate(customer.language)
         if deposit:
-            purchases = PurchaseOpened.objects.filter(
+            purchases = PurchaseOpenedOrClosed.objects.filter(
                 permanence_id=permanence.id,
                 customer_id=customer.id,
                 producer__isnull=False,
@@ -806,7 +806,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
                 "offer_item__translations__order_sort_order"
             ).iterator()
         else:
-            purchases = PurchaseOpened.objects.filter(
+            purchases = PurchaseOpenedOrClosed.objects.filter(
                 permanence_id=permanence.id,
                 customer_id=customer.id,
                 producer__isnull=False,
@@ -819,7 +819,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
             ).iterator()
     else:
         if deposit:
-            purchases = PurchaseOpened.objects.filter(
+            purchases = PurchaseOpenedOrClosed.objects.filter(
                 permanence_id=permanence.id,
                 producer__isnull=False,
                 offer_item__translations__language_code=translation.get_language(),
@@ -829,7 +829,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
                 "offer_item__translations__order_sort_order"
             ).iterator()
         else:
-            purchases = PurchaseOpened.objects.filter(
+            purchases = PurchaseOpenedOrClosed.objects.filter(
                 permanence_id=permanence.id,
                 producer__isnull=False,
                 offer_item__translations__language_code=translation.get_language(),
@@ -843,7 +843,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
     purchase = next_purchase(purchases)
     if purchase:
         if deposit:
-            if repanier_settings['PAGE_BREAK_ON_CUSTOMER_CHECK']:
+            if RepanierSettings.page_break_on_customer_check:
                 # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
                 wb, ws = new_landscape_a4_sheet(
                     wb,
@@ -859,7 +859,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
                     header
                 )
         else:
-            if repanier_settings['PAGE_BREAK_ON_CUSTOMER_CHECK']:
+            if RepanierSettings.page_break_on_customer_check:
                 # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
                 wb, ws = new_landscape_a4_sheet(
                     wb,
@@ -984,7 +984,7 @@ def export_customer(permanence, customer=None, wb=None, ws_preparation_title=Non
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
             row_num += 2
-            if deposit and repanier_settings['PAGE_BREAK_ON_CUSTOMER_CHECK']:
+            if deposit and RepanierSettings.page_break_on_customer_check:
                 ws.page_breaks.append(row_num)
 
         ws.column_dimensions[get_column_letter(1)].visible = False

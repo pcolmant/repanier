@@ -39,7 +39,9 @@ def export(permanence, wb=None):
                 "order_average_weight"):
             row = [
                 (_("Producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
-                (_("Department"), 15, product.department_for_customer.short_name, NumberFormat.FORMAT_TEXT,
+                (_("Department"), 15,
+                 product.department_for_customer.short_name if product.department_for_customer is not None else "",
+                 NumberFormat.FORMAT_TEXT,
                  False),
                 (_("Product"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
                 (_("Unit Price"), 10, product.producer_unit_price,
@@ -111,7 +113,8 @@ def export(permanence, wb=None):
             row = [
                 (_("Producer"), 15, offer_item.producer.short_profile_name, NumberFormat.FORMAT_TEXT,
                  False),
-                (_("Department"), 15, offer_item.department_for_customer.short_name,
+                (_("Department"), 15,
+                 offer_item.department_for_customer.short_name if offer_item.department_for_customer is not None else "",
                  NumberFormat.FORMAT_TEXT, False),
                 (_("Product"), 60, offer_item.get_long_name(), NumberFormat.FORMAT_TEXT, False),
                 (_("Unit Price"), 10, offer_item.producer_unit_price,

@@ -4,55 +4,20 @@
 {% block base_content %}
     <div class="container">
       <div class="jumbotron">
-        {% placeholder "home-hero" or %}
-<h3>Gasath Ptidej</h3>
-<p>Bienvenue sur le site de commande du groupe Gasath Ptidej.</p>
-<p class="text-muted"><span class="glyphicon glyphicon-pushpin"></span>&nbsp;Veuillez utiliser ce site pour passer vos commandes.</p>
-<h3>Premi&egrave;re connexion</h3>
-<p class="text-muted">Cliquez sur &quot;Connexion&quot; en haut &agrave; droite de l&#39;&eacute;cran. Ensuite sur &quot;Mot de passe perdu ?&quot;. Respectez bien les majuscules/minuscules/espaces.</p>
-        {% endplaceholder %}
+          {% placeholder "home-hero" %}
       </div>
     </div>
     <div class="container">
       <!-- Example row of columns -->
       <div class="row">
         <div class="col-md-4">
-
-          {% placeholder 'home-col-1'  or %}
- <div class="panel panel-warning">
-  <div class="panel-heading"><h4>Tableau des permanences</h4></div> 
-          <ul class="list-group">
-           <li class="list-group-item">Le tableau des permanences est à présent disponible à partir du menu "Permanence" en haut de l'écran, entrée "Tableau des permanences".</li>
-           <li class="list-group-item">Pour vous inscrire à une permanence, sélectionnez votre nom.</li>
-           <li class="list-group-item">Pour vous désinscrire, désélectionnez votre nom.</li>
-           <li class="list-group-item">Seules sont reprises les permanences planifiées par le/la responsable commandes.</li>
-          </ul>
-      </div>
-          {% endplaceholder %}
+            {% placeholder 'home-col-1' %}
         </div>
         <div class="col-md-4">
-          {% placeholder 'home-col-2' or %}
-<div class="panel panel-warning">
-  <div class="panel-heading"><h4>Commandes</h4></div>  
-          <ul class="list-group">
-           <li class="list-group-item">A partir du menu "Permanence" en haut de l'écran, vous sélectionnez une permanence.</li>
-           <li class="list-group-item">Si elle est ouverte, vous pouvez modifiez votre commande jusqu'à la clôture des commandes.</li>
-           <li class="list-group-item">Un récapitulatif vous perviendra par mail au moment de la clôture.</li>
-           <li class="list-group-item">Dès qu'elle est fermée, vous ne pouvez plus modifier votre commande.</li>
-          </ul>
-      </div>
-          {% endplaceholder %}
+            {% placeholder 'home-col-2' %}
         </div>
         <div class="col-md-4">
-          {% placeholder 'home-col-3' or %} 
-<div class="panel panel-warning">
-  <div class="panel-heading"><h4>Comptabilité</h4></div> 
-          <ul class="list-group">
-          <li class="list-group-item">Connecté, le solde de votre compte est affiché dans le menu "Mon solde" en haut de l'écran.</li>
-          <li class="list-group-item">En cliquant sur votre solde vous accédez à l'historique de vos achats et versements depuis le 1/1/2014.</li>
-          </ul>
-      </div>
-          {% endplaceholder %}
+            {% placeholder 'home-col-3' %}
         </div>
       </div>
     </div>

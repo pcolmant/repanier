@@ -8,7 +8,8 @@
         <h4 class="modal-title">{% trans "Password recovery" %}</h4>
       </div>
       <div class="modal-body">
-{% blocktrans %}Your password has successfully been reset. You can use it right now on the <a href="/go_repanier/">login page</a>.{% endblocktrans %}
+          {% trans "Your password has successfully been reset. You can use it right now on the" %} <a
+              href="{% url "login_form" %}" class="btn btn-primary">{% trans "login page" %}</a>
       </div><!-- /form -->
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

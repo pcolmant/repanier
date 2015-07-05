@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import json
 import datetime
+from os import sep as os_sep
 from django.contrib.sites.models import get_current_site
 from django.core import urlresolvers
 from django.core.mail import EmailMessage
@@ -17,15 +18,15 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext as _not_lazy
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
+from django.views.decorators.http import require_GET
 from parler.models import TranslationDoesNotExist
 from django.utils import translation
 from django.db.models import Q
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login,
     logout as auth_logout, get_user_model)
-
+from apps import RepanierSettings
 
 from tools import *
-from models import repanier_settings
 
 # from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
@@ -37,7 +38,7 @@ from django.views.generic import DetailView
 from django.shortcuts import render_to_response, get_object_or_404, resolve_url
 from django.template import RequestContext
 
-from models import LUT_DepartmentForCustomer, PurchaseClosed, PurchaseOpened
+from models import LUT_DepartmentForCustomer, PurchaseSend, PurchaseOpenedOrClosed
 from models import OfferItem
 from models import Permanence
 from models import Producer
@@ -255,7 +256,8 @@ def me(request):
                 customer.email2 = form.cleaned_data.get('email2').lower()
                 customer.accept_mails_from_members = form.cleaned_data.get('accept_mails_from_members')
                 customer.city = form.cleaned_data.get('city')
-                if repanier_settings['DELIVERY_POINT']:
+                customer.picture = form.cleaned_data.get('picture')
+                if RepanierSettings.delivery_point:
                     customer.delivery_point = form.cleaned_data.get('delivery_point')
                 customer.memo = form.cleaned_data.get('memo')
                 customer.save()
@@ -292,20 +294,24 @@ def me(request):
         field.initial = customer.accept_mails_from_members
         field = form.fields["city"]
         field.initial = customer.city
-        if repanier_settings['DELIVERY_POINT']:
+        field = form.fields["picture"]
+        field.initial = customer.picture
+        if hasattr(field.widget, 'upload_to'):
+            field.widget.upload_to = "customer" + os_sep + str(customer.id)
+        if RepanierSettings.delivery_point:
             field = form.fields["delivery_point"]
             field.initial = customer.delivery_point
         field = form.fields["memo"]
         field.initial = customer.memo
 
-
     return render_response(request, "repanier/me_form.html", {'form': form, 'update': None})
 
 
+@require_GET
 def customer_product_description_ajax(request):
     # import sys
     # import traceback
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         offer_item_id = sint(request.GET.get('offer_item', 0))
         offer_item = get_object_or_404(OfferItem, id=offer_item_id)
         if PERMANENCE_OPENED <= offer_item.permanence.status <= PERMANENCE_SEND:
@@ -324,8 +330,9 @@ def customer_product_description_ajax(request):
 
 
 @never_cache
+@require_GET
 def customer_name_ajax(request):
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         user = request.user
         if user.is_anonymous():
             return HttpResponse(_('Anonymous'))
@@ -337,8 +344,9 @@ def customer_name_ajax(request):
 
 
 @never_cache
+@require_GET
 def my_balance_ajax(request):
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         user = request.user
         if user.is_anonymous():
             return HttpResponse("")
@@ -361,8 +369,9 @@ def my_balance_ajax(request):
 
 
 @never_cache
+@require_GET
 def producer_name_ajax(request, offer_uuid=None):
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         producer = Producer.objects.filter(offer_uuid=offer_uuid, is_active=True).order_by().first()
         if producer is None:
             return HttpResponse(_('Anonymous'))
@@ -372,7 +381,7 @@ def producer_name_ajax(request, offer_uuid=None):
 
 @never_cache
 def producer_product_description_ajax(request, offer_uuid=None, offer_item_id=None):
-    if offer_item_id is None or not repanier_settings['PRODUCER_PRE_OPENING']:
+    if offer_item_id is None or not RepanierSettings.producer_pre_opening:
         raise Http404
     producer = Producer.objects.filter(offer_uuid=offer_uuid, is_active=True).order_by().first()
     if producer is None:
@@ -406,6 +415,7 @@ def producer_product_description_ajax(request, offer_uuid=None, offer_item_id=No
                 product.offer_description = form.cleaned_data.get('offer_description')
                 product.customer_minimum_order_quantity = product.customer_increment_order_quantity
                 product.customer_alert_order_quantity = product.stock
+                product.picture2 = form.cleaned_data.get('picture')
                 product.save()
                 offer_item_queryset = OfferItem.objects\
                     .filter(
@@ -447,6 +457,9 @@ def producer_product_description_ajax(request, offer_uuid=None, offer_item_id=No
             field.initial = offer_item.vat_level
             field = form.fields["offer_description"]
             field.initial = offer_item.product.offer_description
+            field = form.fields["picture"]
+            field.initial = offer_item.product.picture2
+            field.widget.upload_to = "product" + os_sep + str(offer_item.producer.id)
             update = None
 
         return render_response(
@@ -458,9 +471,9 @@ def producer_product_description_ajax(request, offer_uuid=None, offer_item_id=No
 
 
 @never_cache
+@require_GET
 def order_form_ajax(request):
-    result = "ko"
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         user = request.user
         if user.is_authenticated():
             offer_item_id = sint(request.GET.get('offer_item', 0))
@@ -477,8 +490,9 @@ def order_form_ajax(request):
 
 
 @never_cache
+@require_GET
 def order_init_ajax(request):
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         # construct a list which will contain all of the data for the response
         if 'offer_item' in request.GET:
             user = request.user
@@ -525,13 +539,13 @@ def order_init_ajax(request):
                             is_not_staff = Staff.objects.filter(
                                 customer_responsible_id=customer.id
                             ).order_by().first() is None
-                            if (repanier_settings['MAX_WEEK_WO_PARTICIPATION'] > DECIMAL_ZERO and is_not_staff) \
+                            if (RepanierSettings.max_week_wo_participation > DECIMAL_ZERO and is_not_staff) \
                                     or len(permanence_boards) > 0:
                                 if len(permanence_boards) == 0:
                                     count_activity = PermanenceBoard.objects.filter(
                                         customer_id=customer.id, permanence_date__lt=now,
                                         permanence_date__gte=now - datetime.timedelta(
-                                            days=float(repanier_settings['MAX_WEEK_WO_PARTICIPATION'])*7
+                                            days=float(RepanierSettings.max_week_wo_participation) * 7
                                         )
                                     ).count()
                                 else:
@@ -568,7 +582,7 @@ def order_init_ajax(request):
                         permanence = Permanence.objects.filter(id=offer_item.permanence_id)\
                             .only("status").order_by().first()
                         if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
-                            purchase = PurchaseOpened.objects.filter(
+                            purchase = PurchaseOpenedOrClosed.objects.filter(
                                 offer_item_id=offer_item.id, customer_id=customer.id)\
                                 .only("quantity_ordered").order_by().first()
                             if purchase is not None:
@@ -610,8 +624,10 @@ def order_init_ajax(request):
 
 
 @never_cache
+@require_GET
+# @login_required
 def order_select_ajax(request):
-    if request.is_ajax() and request.method == 'GET':
+    if request.is_ajax():  # and request.method == 'GET':
         # construct a list which will contain all of the data for the response
         user = request.user
         to_json = []
@@ -629,7 +645,7 @@ def order_select_ajax(request):
                     permanence = Permanence.objects.filter(id=offer_item.permanence_id)\
                         .only("status").order_by().first()
                     if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
-                        purchase = PurchaseOpened.objects.filter(
+                        purchase = PurchaseOpenedOrClosed.objects.filter(
                             offer_item_id=offer_item.id, customer_id=customer.id)\
                             .only("quantity_ordered").order_by().first()
                         if purchase is not None:
@@ -784,7 +800,7 @@ class OrderView(ListView):
         context['permanence'] = self.permanence
         if self.permanence is not None and self.permanence.status == PERMANENCE_OPENED:
             context['display_all_product_button'] = "Ok"
-        if repanier_settings['DISPLAY_PRODUCERS_ON_ORDER_FORM']:
+        if RepanierSettings.display_producer_on_order_form:
             producer_set = Producer.objects.filter(permanence=self.permanence.id).only("id", "short_profile_name")
         else:
             producer_set = None
@@ -884,7 +900,7 @@ class OrderViewWithoutCache(OrderView):
         return context
 
     def get_queryset(self):
-        if not repanier_settings['DISPLAY_ANONYMOUS_ORDER_FORM']:
+        if not RepanierSettings.display_anonymous_order_form:
             return OfferItem.objects.none()
         else:
             if not self.user.is_authenticated() and self.offeritem_id is not None and self.offeritem_id == 'purchased':
@@ -984,16 +1000,16 @@ class CustomerInvoiceView(DetailView):
         if customer_invoice:
             bank_account_set = BankAccount.objects.filter(customer_invoice=customer_invoice)
             context['bank_account_set'] = bank_account_set
-            context['DISPLAY_VAT'] = repanier_settings['DISPLAY_VAT']
-            if repanier_settings['DISPLAY_PRODUCERS_ON_ORDER_FORM']:
+            context['DISPLAY_VAT'] = RepanierSettings.display_vat
+            if RepanierSettings.display_producer_on_order_form:
                 context['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = True
-                purchase_set = PurchaseClosed.objects.filter(
+                purchase_set = PurchaseSend.objects.filter(
                     Q(customer_invoice=customer_invoice, quantity_invoiced__gt=DECIMAL_ZERO, offer_item__translations__language_code=translation.get_language()) |
                     Q(customer_invoice=customer_invoice, comment__gt="", offer_item__translations__language_code=translation.get_language())
                 ).order_by("producer", "offer_item__translations__order_sort_order")
             else:
                 context['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = False
-                purchase_set = PurchaseClosed.objects.filter(
+                purchase_set = PurchaseSend.objects.filter(
                     Q(customer_invoice=customer_invoice, quantity_invoiced__gt=DECIMAL_ZERO, offer_item__translations__language_code=translation.get_language()) |
                     Q(customer_invoice=customer_invoice, comment__gt="", offer_item__translations__language_code=translation.get_language())
                 ).order_by("offer_item__translations__order_sort_order")
@@ -1152,7 +1168,7 @@ class PreOrderView(DetailView):
                 ),
                 permanence_id=permanence_pre_opened.id,
                 translations__language_code=translation.get_language(),
-                producer_price_are_wo_vat=True,
+                # producer_price_are_wo_vat=True,
                 is_active=True
             ).order_by(
                 "translations__long_name"

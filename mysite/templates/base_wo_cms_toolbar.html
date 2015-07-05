@@ -3,15 +3,13 @@
 {%get_current_language as LANGUAGE_CODE%}
 <html lang="{{LANGUAGE_CODE}}">
   <head>
-    <title>Repanier | {% page_attribute "title" %}</title>
+    <title>{% page_attribute "title" %}</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"> -->
     {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
-    <!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css"> -->
-    <!-- <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap-theme.min.css"> -->
     {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
+      {#    {% addtoblock "css" %}<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">{% endaddtoblock %}#}
     {% addtoblock "css" %}
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -29,6 +27,26 @@
     </style>
     {% endaddtoblock %}
     {% render_block "css"  %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      // ensuring django namespace is set correctly
+      window.django = window.django || undefined;
+
+      // ensuring jQuery namespace is set correctly
+      window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
+
+      // ensuring Class namespace is set correctly
+      window.Class = window.Class || undefined;
+
+      // ensuring CMS namespace is set correctly
+      var CMS = {
+        '$': (typeof jQuery === 'function') ? jQuery : undefined,
+        'Class': (typeof Class === 'function') ? Class : undefined,
+        'API': {}
+      };
+    </script>
+
     {% render_block "jshead" %}
   </head>
   <body>
@@ -56,29 +74,29 @@
           </ul>
           <!-- Right Nav Section -->
           <ul class="nav navbar-nav navbar-right">
-            {% if user.is_authenticated %}
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Welkom" %} {{ user.username }} <b class="caret"></b></a>
+            <li id="li_my_name" class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Welkom" %} <span id="my_name"></span>
+                <b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li><a href="{% url "logout_form" %}">{% trans "Logout" %}</a></li>
                 </ul>
             </li>
-            <li id="li_my_basket" style="display:none" class="dropdown">
-              <a href="?offeritem=purchased"><span id="my_basket">{{ prepared_amount }}</span> &euro; <span class="glyphicon glyphicon-shopping-cart"></span></a>
+              {% if permanence %}
+                <li id="li_my_basket" style="display:none;" class="dropdown">
+                  <a href="{% url "basket_view" permanence.id %}?offeritem=purchased"><span
+                          id="my_basket"></span> &euro; <span class="glyphicon glyphicon-shopping-cart"></span></a>
             </li>
-            {% else %}
-            <li class="dropdown">
-              <a href="{% url "login_form" %}">{% trans "Login" %}</a>
-            </li>
-            {% endif %} 
-            {% if languages.count > 1 %}
+              {% endif %}
+              {% if languages %}
+                  {% if languages|length > 1 %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
               <ul class="dropdown-menu">
                 {% language_chooser "native" %}
               </ul>
             </li>
-            {% endif %} 
+                  {% endif %}
+              {% endif %}
           </ul> 
         </div><!--/.nav-collapse -->
       </div>
@@ -92,19 +110,14 @@
     {% block base_content%}{% endblock %}
     </div>
     <!-- Footer -->
-    <div class="navbar navbar-default navbar-fixed-bottom">
-    <div class="container">
-    <div class = "navbar-text">
+    <div class="footer">
+      <div class="container" align="center">
           {% block footer %}
-            {% static_placeholder 'footer' or %}{% trans "Contact" %} : coordi@repanier.be<span  class="hidden-xs"> | {% trans "Participer" %} : <a href="https://github.com/pcolmant/repanier">github</a></span>{% endstatic_placeholder %}
           {% endblock %}
+      </div>
     </div>
-    </div>
-    </div>
-    {% addtoblock "js" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>{% endaddtoblock %}
-    {% addtoblock "js" %}<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>{% endaddtoblock %}
     {% render_block "jsuncompressed" %}
     {% render_block "js" %}
-    {% render_block "lastjs"  %}
+    {% render_block "lastjs" %}
   </body>
 </html>

@@ -23,7 +23,7 @@ from repanier.tools import cap
 from views import import_xslx_view
 
 
-def export(producer, wb=None):
+def export(producer, wb=None, producer_prices=True):
     if wb is None:
         wb = Workbook()
         ws = wb.get_active_sheet()
@@ -34,22 +34,23 @@ def export(producer, wb=None):
     product_set = Product.objects.filter(
         producer_id=producer.id, is_active=True
     )
-    product_save = None
     now = timezone.localtime(timezone.now())
     worksheet_setup_landscape_a4(ws, producer.short_profile_name, now.strftime('%d-%m-%Y %H:%M'))
     for product in product_set:
         row = [
             (_("Id"), 10, product.id, '#,##0', False),
-            (_("department_for_customer"), 15, product.department_for_customer.short_name,
+            (_("department_for_customer"), 15,
+             product.department_for_customer.short_name if product.department_for_customer is not None else " ",
              NumberFormat.FORMAT_TEXT, False),
-            (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else None,
+            (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else _("No"),
              NumberFormat.FORMAT_TEXT, False),
             (_("long_name"), 60, product.long_name, NumberFormat.FORMAT_TEXT, False),
             (_("order unit"), 15, product.get_order_unit_display(), NumberFormat.FORMAT_TEXT, False),
-            (_("wrapped"), 7, _("Yes") if product.wrapped else None,
+            (_("wrapped"), 7, _("Yes") if product.wrapped else _("No"),
              NumberFormat.FORMAT_TEXT, False),
             (_("order_average_weight"), 10, product.order_average_weight, '#,##0.???', False),
-            (_("producer unit price"), 10, product.producer_unit_price,
+            (_("producer unit price"), 10,
+             product.producer_unit_price if producer_prices else product.customer_unit_price,
              '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             (_("deposit"), 10, product.unit_deposit, '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ',
              False),
@@ -80,10 +81,6 @@ def export(producer, wb=None):
                 c.style.borders.right.border_style = Border.BORDER_THIN
             else:
                 c.style.borders.bottom.border_style = Border.BORDER_HAIR
-            if product_save != product.department_for_customer.id:
-                c.style.borders.top.border_style = Border.BORDER_THIN
-        if product_save != product.department_for_customer.id:
-            product_save = product.department_for_customer.id
         row_num += 1
         # Now, for helping the user encoding new purchases
     row = [
@@ -135,13 +132,13 @@ def export(producer, wb=None):
     dv.ranges.append('E2:E5000')
     # Data validation Yes/
     # List of Yes/
-    valid_values = [_('Yes'), ]
+    valid_values = [_('Yes'), _("No")]
     dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
                         allow_blank=True)
     ws.add_data_validation(dv)
     dv.ranges.append('C2:C5000')
     # List of Yes/
-    valid_values = [_('Yes'), ]
+    valid_values = [_('Yes'), _("No")]
     dv = DataValidation(ValidationType.LIST, formula1=get_validation_formula(wb=wb, valid_values=valid_values),
                         allow_blank=True)
     ws.add_data_validation(dv)
@@ -180,14 +177,14 @@ def export(producer, wb=None):
     return wb
 
 
-def admin_export(request, queryset):
+def admin_export(request, queryset, producer_prices=True):
     queryset = queryset.order_by("-short_profile_name")
     wb = None
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     filename = ("%s.xlsx" % (_("products"))).encode('ascii', errors='replace').replace('?', '_')
     response['Content-Disposition'] = 'attachment; filename=' + filename
     for producer in queryset:
-        wb = export(producer=producer, wb=wb)
+        wb = export(producer=producer, wb=wb, producer_prices=producer_prices)
     wb.save(response)
     return response
 
@@ -212,10 +209,7 @@ def import_product_sheet(worksheet, producer=None,
                 if row[_('department_for_customer')] in department_for_customer_2_id_dict:
                     department_for_customer_id = department_for_customer_2_id_dict[row[_('department_for_customer')]]
                 else:
-                    error = True
-                    # transaction.rollback()
-                    error_msg = _("Row %(row_num)d : No valid departement for customer") % {'row_num': row_num + 1}
-                    break
+                    department_for_customer_id = None
 
                 producer_unit_price = None if row[_('producer_unit_price')] is None else Decimal(
                     row[_('producer_unit_price')])
@@ -261,7 +255,10 @@ def import_product_sheet(worksheet, producer=None,
                         # Let only update if the given id is the same as the product found id
                         product.producer_id = producer.id
                         product.long_name = long_name
-                        product.department_for_customer_id = department_for_customer_id
+                        if department_for_customer_id is not None:
+                            product.department_for_customer_id = department_for_customer_id
+                        else:
+                            product.department_for_customer = None
                         product.order_unit = order_unit
                         if order_average_weight is not None:
                             product.order_average_weight = order_average_weight
@@ -275,8 +272,8 @@ def import_product_sheet(worksheet, producer=None,
                             product.customer_increment_order_quantity = customer_increment_order_quantity
                         if customer_alert_order_quantity is not None:
                             product.customer_alert_order_quantity = customer_alert_order_quantity
-                        product.is_into_offer = (row[_('is_into_offer')] is not None)
-                        product.wrapped = (row[_('wrapped')] is not None)
+                        product.is_into_offer = (row[_('is_into_offer')] == _("Yes"))
+                        product.wrapped = (row[_('wrapped')] == _("Yes"))
                         product.vat_level = vat_level
                         product.is_active = True
                         # product.product_reorder = product_reorder

@@ -94,9 +94,10 @@ body > .container {
 {#                {% csrf_token %}#}
                 <div class="input-group">
                     {% if q != None %}
-                        <input type="text" class="form-control" value="{{ q }}" name="q">
+                        <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
                     {% else %}
-                        <input type="text" class="form-control" placeholder="{% trans "Search" %}" name="q">
+                        <input type="search" autosave="repanier" class="form-control" placeholder="{% trans "Search" %}"
+                               name="q">
                     {% endif %}
                     <input type="hidden" name="producer" value="{{ producer_id }}">
                     <input type="hidden" name="departementforcustomer" value="{{ departementforcustomer_id }}">

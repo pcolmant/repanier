@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 from repanier.const import *
-from repanier.models import Permanence, OfferItem
+from repanier.models import Permanence
 from repanier.tools import recalculate_order_amount
 
 

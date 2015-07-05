@@ -78,12 +78,12 @@ def export_stock(permanence, customer_price=False, wb=None, ws_customer_title=No
             while offer_item is not None and producer_save.id == offer_item.producer_id:
                 department_for_customer_save = offer_item.department_for_customer
                 c = ws.cell(row=row_num, column=3)
-                c.value = producer_save.short_profile_name + " - " + department_for_customer_save.short_name
+                c.value = producer_save.short_profile_name + " - " + department_for_customer_save.short_name if department_for_customer is not None else ""
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c.style.alignment.horizontal = 'right'
                 c.style.font.italic = True
                 row_num += 1
-                while offer_item is not None and producer_save.id == offer_item.producer_id and department_for_customer_save.id == offer_item.department_for_customer_id:
+                while offer_item is not None and producer_save.id == offer_item.producer_id and department_for_customer_save == offer_item.department_for_customer:
                     if len(offer_item.reference) < 36:
                         offer_item_reference = offer_item.reference
                         show_column_reference = True

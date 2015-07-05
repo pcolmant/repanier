@@ -49,7 +49,13 @@ body > .container {
                         {{ offer_item.producer }}
                     </td>
                     <td>
-                        <span id="get_long_name">{{ offer_item.get_long_name | safe }}</span>
+                        <span id="get_long_name">{{ offer_item.get_long_name | safe }}
+                            {% if offer_item.picture2 %}
+                                <img class="img-responsive img-rounded"
+                                     style="float:right; margin:5px; min-height:32px; min-width:32px; max-height:48px; max-width:48px;"
+                                     src="{{ MEDIA_URL }}{{ offer_item.picture2 }}"/>
+                            {% endif %}
+                        </span>
                     </td>
                     <td align="right">
                         <span id="producer_unit_price_wo_tax">{{ offer_item.producer_unit_price_wo_tax|floatformat:-2 }}&nbsp;&euro;&nbsp;/&nbsp;{% if offer_item.order_unit == '115' %}({% trans "pc" %}){% else %}({% trans "kg" %}){% endif %}
@@ -100,7 +106,7 @@ body > .container {
 {#        Order modal ends#}
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
-        var t_row=null;
+        var t_row = null;
         $(document).ready(function () {
             var lien = '{% url 'pre_order_name_ajax' producer.offer_uuid %}';
             $.ajax({
@@ -109,22 +115,22 @@ body > .container {
                 async: false,
                 success: function (result) {
                     $("#my_name").html(result);
-                    if(result == '{% trans "Anonymous" %}') {
+                    if (result == '{% trans "Anonymous" %}') {
                         $("#connected").show();
                         $("#not_connected").hide();
-                    }
+                }
                 },
                 error: function (result) {
                     $("#my_name").html("{% trans "Retry5" %}");
                 }
             });
-            $(function(){
+            $(function () {
                 $('#offerModal').modal({
                     keyboard: true,
                     backdrop: false,
                     show: false
                 }).on('show.bs.modal', function (event) {
-                    t_row=$(event.relatedTarget);
+                    t_row = $(event.relatedTarget);
                     var getIdFromRow = t_row.data('id');
                     t_row.attr('class', 'danger');
                     var lien = '{% url 'producer_product_description_ajax' producer.offer_uuid %}/' + getIdFromRow + '/';
@@ -139,12 +145,12 @@ body > .container {
                             $('#offerModalLabel').html($('{% trans "Communication error" %}'));
                             $('#offerDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))
                         }
-                    });
                 });
+            });
                 $('#offerModal').on('hidden.bs.modal', function () {
                     t_row.removeClass("danger").addClass("success").fadeIn('slow');
                 })
-            });
+        });
         });
     </script>
 {% endaddtoblock %}

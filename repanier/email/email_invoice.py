@@ -8,6 +8,7 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslationDoesNotExist
 from openpyxl.writer.excel import save_virtual_workbook
+from repanier.apps import RepanierSettings
 from repanier.models import Customer
 from repanier.models import Permanence
 from repanier.models import Producer
@@ -22,7 +23,7 @@ def send(permanence_id):
     permanence = Permanence.objects.get(id=permanence_id)
     sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_invoice_email=True)
 
-    if repanier_settings['SEND_INVOICE_MAIL_TO_PRODUCER']:
+    if RepanierSettings.send_invoice_mail_to_producer:
         # To the producer we speak of "payment".
         # This is the detail of the paiment to the producer, i.e. received products
         filename = ("%s - %s.xlsx" % (_("Payment"), permanence)).encode('ascii', errors='replace').replace('?', '_')
@@ -33,16 +34,18 @@ def send(permanence_id):
                 long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name
                 wb = xslx_invoice.export(permanence=permanence, producer=producer, sheet_name=long_profile_name)
                 if wb is not None:
-                    invoice_producer_mail = repanier_settings['CONFIG'].invoice_producer_mail
+                    invoice_producer_mail = RepanierSettings.config.invoice_producer_mail
                     template = Template(invoice_producer_mail)
                     context = djangoContext({
                         'long_profile_name' : long_profile_name,
                         'permanence': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('producer_invoice_uuid_view', args=(0, producer.uuid)), permanence)),
-                        'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+                        'signature': mark_safe(
+                            '%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
                     })
                     html_content = template.render(context)
                     email = EmailMultiAlternatives(
-                        "%s - %s - %s - %s" % (_('Payment'), permanence, repanier_settings['GROUP_NAME'], long_profile_name),
+                        "%s - %s - %s - %s" % (
+                        _('Payment'), permanence, RepanierSettings.group_name, long_profile_name),
                         strip_tags(html_content),
                         sender_email,
                         [producer.email],
@@ -54,7 +57,7 @@ def send(permanence_id):
                     email.attach_alternative(html_content, "text/html")
                     send_email(email=email)
 
-    if repanier_settings['SEND_INVOICE_MAIL_TO_CUSTOMER']:
+    if RepanierSettings.send_invoice_mail_to_customer:
         # To the customer we speak of "invoice".
         # This is the detail of the invoice, i.e. sold products
         filename = ("%s - %s.xlsx" % (_("Invoice"), permanence)).encode('ascii', errors='replace').replace('?', '_')
@@ -71,17 +74,18 @@ def send(permanence_id):
                 email_customer = [customer.user.email,]
                 if customer.email2 is not None and len(customer.email2) > 0:
                     email_customer.append(customer.email2)
-                invoice_customer_mail = repanier_settings['CONFIG'].invoice_customer_mail
+                invoice_customer_mail = RepanierSettings.config.invoice_customer_mail
                 template = Template(invoice_customer_mail)
                 context = djangoContext({
                     'long_basket_name' : long_basket_name,
                     'permanence': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('producer_invoice_uuid_view', args=(0, producer.uuid)), permanence)),
                     'invoice_description' : invoice_description,
-                    'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+                    'signature': mark_safe(
+                        '%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
                 })
                 html_content = template.render(context)
                 email = EmailMultiAlternatives(
-                    "%s - %s - %s - %s" % (_('Invoice'), permanence, repanier_settings['GROUP_NAME'], long_basket_name),
+                    "%s - %s - %s - %s" % (_('Invoice'), permanence, RepanierSettings.group_name, long_basket_name),
                     strip_tags(html_content),
                     sender_email,
                     email_customer,

@@ -3,7 +3,7 @@
 {%get_current_language as LANGUAGE_CODE%}
 <html lang="{{LANGUAGE_CODE}}">
   <head>
-    <title>Repanier | {% page_attribute "title" %}</title>
+    <title>{% page_attribute "title" %}</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,6 +12,7 @@
     {# <!-- <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css"> --> #}
     {# <!-- <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap-theme.min.css"> --> #}
     {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
+      {#    {% addtoblock "css" %}<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">{% endaddtoblock %}#}
     {% addtoblock "css" %}
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -29,6 +30,8 @@
     </style>
     {% endaddtoblock %}
     {% render_block "css"  %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     {% render_block "jshead" %}
   </head>
   <body>
@@ -68,16 +71,18 @@
             <li class="dropdown">
               <a href="{% url "login_form" %}">{% trans "Login" %}</a>
             </li>
-            {% endif %} 
-            {% if languages.count > 1 %}
+            {% endif %}
+              {% if languages %}
+                  {% if languages|length > 1 %}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
               <ul class="dropdown-menu">
                 {% language_chooser "native" %}
               </ul>
             </li>
-            {% endif %} 
-          </ul> 
+            {% endif %}
+              {% endif %}
+          </ul>
         </div>
       </div>
     </div>
@@ -97,8 +102,6 @@
         </p>
       </div>
     </div>
-    {% addtoblock "js" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>{% endaddtoblock %}
-    {% addtoblock "js" %}<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>{% endaddtoblock %}
     {% render_block "jsuncompressed" %}
     {% render_block "js" %}
     {% render_block "lastjs"  %}

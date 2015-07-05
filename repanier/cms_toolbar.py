@@ -6,7 +6,7 @@ from cms.toolbar_pool import toolbar_pool
 from cms.toolbar.items import Break, SubMenu
 from cms.cms_toolbar import ADMIN_MENU_IDENTIFIER, ADMINISTRATION_BREAK
 from cms.toolbar_base import CMSToolbar
-from apps import repanier_settings
+from apps import RepanierSettings
 
 from const import *
 from models import Configuration
@@ -39,7 +39,7 @@ class RepanierToolbar(CMSToolbar):
         office_menu.add_sideframe_item(_('Permanence Role List'), url=url)
         url = reverse('admin:repanier_lut_productionmode_changelist')
         office_menu.add_sideframe_item(_('Production Mode List'), url=url)
-        if repanier_settings['DELIVERY_POINT']:
+        if RepanierSettings.delivery_point:
             url = reverse('admin:repanier_lut_deliverypoint_changelist')
             office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
         url = reverse('admin:repanier_lut_departmentforcustomer_changelist')
@@ -55,12 +55,14 @@ class RepanierToolbar(CMSToolbar):
 
         position += 1
         url = reverse('admin:repanier_permanenceinpreparation_changelist')
-        admin_menu.add_sideframe_item(_("%(name)s in preparation list") % {'name': repanier_settings['PERMANENCES_NAME']}, url=url, position=position)
+        admin_menu.add_sideframe_item(_("%(name)s in preparation list") % {'name': RepanierSettings.permanences_name},
+                                      url=url, position=position)
 
-        if repanier_settings['INVOICE']:
+        if RepanierSettings.invoice:
             position += 1
             url = reverse('admin:repanier_permanencedone_changelist')
-            admin_menu.add_sideframe_item(_("%(name)s done list") % {'name': repanier_settings['PERMANENCES_NAME']}, url=url, position=position)
+            admin_menu.add_sideframe_item(_("%(name)s done list") % {'name': RepanierSettings.permanences_name},
+                                          url=url, position=position)
 
             position += 1
             url = reverse('admin:repanier_bankaccount_changelist')
@@ -68,5 +70,5 @@ class RepanierToolbar(CMSToolbar):
         else:
             position += 1
             url = reverse('admin:repanier_permanencedone_changelist')
-            admin_menu.add_sideframe_item(_("%(name)s archived list") % {'name': repanier_settings['PERMANENCES_NAME']}, url=url, position=position)
-
+            admin_menu.add_sideframe_item(_("%(name)s archived list") % {'name': RepanierSettings.permanences_name},
+                                          url=url, position=position)

@@ -1,5 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
+from picture.const import SIZE_XS, SIZE_M, SIZE_S
+from picture.fields import AjaxPictureField
 from cms.toolbar_pool import toolbar_pool
 from django.contrib.sites.models import Site
 from django.core.validators import MinLengthValidator
@@ -9,7 +11,7 @@ from django.db.models import F
 
 from const import *
 from django.conf import settings
-from apps import repanier_settings
+from apps import RepanierSettings
 from django.db import models
 from django.db import transaction
 from django.db.models.signals import pre_save
@@ -192,49 +194,49 @@ def configuration_post_save(sender, **kwargs):
 
     config = kwargs['instance']
     if config.id is not None:
-        repanier_settings['CONFIG'] = config
+        RepanierSettings.config = config
         site = Site.objects.get_current()
         if site is not None:
             site.name = config.group_name
             site.domain = settings.ALLOWED_HOSTS[0]
             site.save()
-        repanier_settings['GROUP_NAME'] = config.group_name
+        RepanierSettings.group_name = config.group_name
         if config.name == PERMANENCE_NAME_PERMANENCE:
-            repanier_settings['PERMANENCE_NAME'] = _("Permanence")
-            repanier_settings['PERMANENCES_NAME'] = _("Permanences")
-            repanier_settings['PERMANENCE_ON_NAME'] = _("Permanence on ")
+            RepanierSettings.permanence_name = _("Permanence")
+            RepanierSettings.permanences_name = _("Permanences")
+            RepanierSettings.permanence_on_name = _("Permanence on ")
         elif config.name == PERMANENCE_NAME_CLOSURE:
-            repanier_settings['PERMANENCE_NAME'] = _("Closure")
-            repanier_settings['PERMANENCES_NAME'] = _("Closures")
-            repanier_settings['PERMANENCE_ON_NAME'] = _("Closure on ")
+            RepanierSettings.permanence_name = _("Closure")
+            RepanierSettings.permanences_name = _("Closures")
+            RepanierSettings.permanence_on_name = _("Closure on ")
         elif config.name == PERMANENCE_NAME_DELIVERY:
-            repanier_settings['PERMANENCE_NAME'] = _("Delivery")
-            repanier_settings['PERMANENCES_NAME'] = _("Deliveries")
-            repanier_settings['PERMANENCE_ON_NAME'] = _("Delivery on ")
+            RepanierSettings.permanence_name = _("Delivery")
+            RepanierSettings.permanences_name = _("Deliveries")
+            RepanierSettings.permanence_on_name = _("Delivery on ")
         else:
-            # PERMANENCE_NAME_ORDER
-            repanier_settings['PERMANENCE_NAME'] = _("Order")
-            repanier_settings['PERMANENCES_NAME'] = _("Orders")
-            repanier_settings['PERMANENCE_ON_NAME'] = _("Order on ")
-        repanier_settings['TEST_MODE'] = config.test_mode
-        repanier_settings['MAX_WEEK_WO_PARTICIPATION'] = config.max_week_wo_participation
-        repanier_settings['SEND_OPENING_MAIL_TO_CUSTOMER'] = config.send_opening_mail_to_customer
-        repanier_settings['SEND_ORDER_MAIL_TO_CUSTOMER'] = config.send_order_mail_to_customer
-        repanier_settings['SEND_ORDER_MAIL_TO_PRODUCER'] = config.send_order_mail_to_producer
-        repanier_settings['SEND_ORDER_MAIL_TO_BOARD'] = config.send_order_mail_to_board
-        repanier_settings['SEND_INVOICE_MAIL_TO_CUSTOMER'] = config.send_invoice_mail_to_customer
-        repanier_settings['SEND_INVOICE_MAIL_TO_PRODUCER'] = config.send_invoice_mail_to_producer
-        repanier_settings['INVOICE'] = config.invoice
-        repanier_settings['STOCK'] = config.stock
-        repanier_settings['DISPLAY_ANONYMOUS_ORDER_FORM'] = config.display_anonymous_order_form
-        repanier_settings['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = config.display_producer_on_order_form
-        repanier_settings['BANK_ACCOUNT'] = config.bank_account
-        repanier_settings['PRODUCER_ORDER_ROUNDED'] = config.producer_order_rounded
-        repanier_settings['PRODUCER_PRE_OPENING'] = config.producer_pre_opening
-        repanier_settings['ACCEPT_CHILD_GROUP'] = config.accept_child_group
-        repanier_settings['DELIVERY_POINT'] = config.delivery_point
-        repanier_settings['DISPLAY_VAT'] = config.display_vat
-        repanier_settings['VAT_ID'] = config.vat_id
+            RepanierSettings.permanence_name = _("Order")
+            RepanierSettings.permanences_name = _("Orders")
+            RepanierSettings.permanence_on_name = _("Order on ")
+        RepanierSettings.test_mode = config.test_mode
+        RepanierSettings.max_week_wo_participation = config.max_week_wo_participation
+        RepanierSettings.send_opening_mail_to_customer = config.send_opening_mail_to_customer
+        RepanierSettings.send_order_mail_to_customer = config.send_order_mail_to_customer
+        RepanierSettings.send_order_mail_to_producer = config.send_order_mail_to_producer
+        RepanierSettings.send_order_mail_to_board = config.send_order_mail_to_board
+        RepanierSettings.send_invoice_mail_to_customer = config.send_invoice_mail_to_customer
+        RepanierSettings.send_invoice_mail_to_producer = config.send_invoice_mail_to_producer
+        RepanierSettings.invoice = config.invoice
+        RepanierSettings.stock = config.stock
+        RepanierSettings.display_anonymous_order_form = config.display_anonymous_order_form
+        RepanierSettings.display_producer_on_order_form = config.display_producer_on_order_form
+        RepanierSettings.bank_account = config.bank_account
+        RepanierSettings.producer_order_rounded = config.producer_order_rounded
+        RepanierSettings.producer_pre_opening = config.producer_pre_opening
+        RepanierSettings.accept_child_group = config.accept_child_group
+        RepanierSettings.delivery_point = config.delivery_point
+        RepanierSettings.display_vat = config.display_vat
+        RepanierSettings.vat_id = config.vat_id
+        RepanierSettings.page_break_on_customer_check = config.page_break_on_customer_check
 
         if not config.stock:
             Producer.objects.all().update(manage_stock=False)
@@ -263,6 +265,11 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
     picture = FilerImageField(
         verbose_name=_("picture"), related_name="production_mode_picture",
         null=True, blank=True)
+    picture2 = AjaxPictureField(
+        verbose_name=_("picture"),
+        null=True, blank=True,
+        upload_to="label", size=SIZE_XS)
+
     is_active = models.BooleanField(_("is_active"), default=True)
     objects = LUT_ProductionModeManager()
 
@@ -289,9 +296,6 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="delivery_point_picture",
-        null=True, blank=True)
     is_active = models.BooleanField(_("is_active"), default=True)
     objects = LUT_DeliveryPointManager()
 
@@ -318,9 +322,6 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="department_picture",
-        null=True, blank=True)
     is_active = models.BooleanField(_("is_active"), default=True)
     objects = LUT_ProductionModeManager()
 
@@ -347,11 +348,8 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="permanence_role_picture",
-        null=True, blank=True)
+
     is_active = models.BooleanField(_("is_active"), default=True)
-    # automatically_added = models.BooleanField(_("automatically added to the new permanences"), default=False)
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
@@ -417,7 +415,7 @@ class Producer(models.Model):
         verbose_name=_("Default tax"))
 
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today())
+        _("date_balance"), default=datetime.date.today)
     balance = models.DecimalField(
         _("balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # The initial balance is needed to compute the invoice control list
@@ -569,7 +567,10 @@ class Customer(models.Model):
         LUT_DeliveryPoint, verbose_name=_("delivery point"),
         null=True, blank=True, default=None,
         on_delete=models.PROTECT)
-
+    picture = AjaxPictureField(
+        verbose_name=_("picture"),
+        null=True, blank=True,
+        upload_to="customer", size=SIZE_S)
     phone1 = models.CharField(
         _("phone1"),
         max_length=25,
@@ -593,7 +594,7 @@ class Customer(models.Model):
     password_reset_on = models.DateTimeField(
         _("password_reset_on"), null=True, blank=True, default=None)
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today())
+        _("date_balance"), default=datetime.date.today)
     balance = models.DecimalField(
         _("balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # The initial balance is needed to compute the invoice control list
@@ -716,6 +717,7 @@ class Staff(models.Model):
     password_reset_on = models.DateTimeField(
         _("password_reset_on"), null=True, blank=True, default=None)
     is_active = models.BooleanField(_("is_active"), default=True)
+    is_active = models.BooleanField(_("is_active"), default=True)
 
     def natural_key(self):
         return self.user.natural_key()
@@ -781,11 +783,16 @@ class Product(TranslatableModel):
     picture = FilerImageField(
         verbose_name=_("picture"), related_name="product_picture",
         null=True, blank=True)
+    picture2 = AjaxPictureField(
+        verbose_name=_("picture"),
+        null=True, blank=True,
+        upload_to="product", size=SIZE_M)
+
     reference = models.CharField(
         _("reference"), max_length=36, blank=True, null=True)
 
     department_for_customer = models.ForeignKey(
-        LUT_DepartmentForCustomer,
+        LUT_DepartmentForCustomer, null=True, blank=True,
         verbose_name=_("department_for_customer"),
         on_delete=models.PROTECT)
 
@@ -818,7 +825,7 @@ class Product(TranslatableModel):
     compensation = models.DecimalField(
         _("compensation"),
         help_text=_("compensation to add to the customer unit price"),
-                    default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
+        default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     unit_deposit = models.DecimalField(
         _("deposit"),
         help_text=_('deposit to add to the original unit price'),
@@ -1062,7 +1069,9 @@ class Permanence(TranslatableModel):
     def get_producers(self):
         if self.id is not None:
             if len(self.producers.all()) > 0:
-                if self.status == PERMANENCE_PLANNED:
+                if self.status < PERMANENCE_OPENED:
+                    return ", ".join([p.short_profile_name for p in self.producers.all()])
+                elif self.status == PERMANENCE_OPENED:
                     changelist_url = urlresolvers.reverse(
                         'admin:repanier_product_changelist',
                     )
@@ -1139,9 +1148,9 @@ class Permanence(TranslatableModel):
     def get_customers(self):
         if self.id is not None:
             customers = ""
-            if self.status == PERMANENCE_OPENED:
+            if self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
                 changelist_url = urlresolvers.reverse(
-                    'admin:repanier_purchaseopenedforupdate_changelist',
+                    'admin:repanier_purchaseopenedorclosedforupdate_changelist',
                 )
                 customers += ", ".join(['<a href="' + changelist_url + \
                                    '?permanence=' + str(self.id) + \
@@ -1150,7 +1159,7 @@ class Permanence(TranslatableModel):
                                    for c in Customer.objects.filter(purchase__permanence_id=self.id).distinct()])
             elif self.status == PERMANENCE_SEND:
                 changelist_url = urlresolvers.reverse(
-                    'admin:repanier_purchaseclosedforupdate_changelist',
+                    'admin:repanier_purchasesendforupdate_changelist',
                 )
                 customers += ", ".join(['<a href="' + changelist_url + \
                                    '?permanence=' + str(self.id) + \
@@ -1229,12 +1238,12 @@ class Permanence(TranslatableModel):
         try:
             if self.short_name is not None and len(self.short_name) > 0:
                 result = '%s%s (%s)' % (
-                    repanier_settings['PERMANENCE_ON_NAME'], self.permanence_date.strftime('%d-%m-%Y'), self.short_name)
+                    RepanierSettings.permanence_on_name, self.permanence_date.strftime('%d-%m-%Y'), self.short_name)
         except TranslationDoesNotExist:
             pass
         if len(result) == 0:
             result = '%s%s' % (
-                repanier_settings['PERMANENCE_ON_NAME'], self.permanence_date.strftime('%d-%m-%Y'))
+                RepanierSettings.permanence_on_name, self.permanence_date.strftime('%d-%m-%Y'))
         return result
         # except:
         #     exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -1242,8 +1251,8 @@ class Permanence(TranslatableModel):
         #     print ''.join('!! ' + line for line in lines)
 
     class Meta:
-        verbose_name = repanier_settings['PERMANENCE_NAME']
-        verbose_name_plural = repanier_settings['PERMANENCES_NAME']
+        verbose_name = RepanierSettings.permanence_name
+        verbose_name_plural = RepanierSettings.permanences_name
         index_together = [
             ["permanence_date"],
         ]
@@ -1254,7 +1263,7 @@ class PermanenceBoard(models.Model):
         Customer, verbose_name=_("customer"),
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'])
+        Permanence, verbose_name=RepanierSettings.permanence_name)
     # permanence_date duplicated to quickly calculate # participation of lasts 12 months
     permanence_date = models.DateField(_("permanence_date"), db_index=True)
     permanence_role = models.ForeignKey(
@@ -1300,12 +1309,12 @@ class CustomerInvoice(models.Model):
         Customer, verbose_name=_("customer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'], on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
     invoice_sort_order = models.IntegerField(
         _("invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
     date_previous_balance = models.DateField(
-        _("date_previous_balance"), default=datetime.date.today())
+        _("date_previous_balance"), default=datetime.date.today)
     previous_balance = models.DecimalField(
         _("previous_balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # Calculated with Purchase
@@ -1332,7 +1341,7 @@ class CustomerInvoice(models.Model):
         _("bank_amount_out"), help_text=_('payment_from_the_account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today())
+        _("date_balance"), default=datetime.date.today)
     balance = models.DecimalField(
         _("balance"),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
@@ -1355,12 +1364,12 @@ class ProducerInvoice(models.Model):
         Producer, verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'], on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
     invoice_sort_order = models.IntegerField(
         _("invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
     date_previous_balance = models.DateField(
-        _("date_previous_balance"), default=datetime.date.today())
+        _("date_previous_balance"), default=datetime.date.today)
     previous_balance = models.DecimalField(
         _("previous_balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # Calculated with Purchase
@@ -1387,7 +1396,7 @@ class ProducerInvoice(models.Model):
         _("bank_amount_out"), help_text=_('payment_from_the_account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today())
+        _("date_balance"), default=datetime.date.today)
     balance = models.DecimalField(
         _("balance"),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
@@ -1412,7 +1421,7 @@ class CustomerProducerInvoice(models.Model):
         Producer, verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'], on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
     # Calculated with Purchase
     total_purchase_with_tax = models.DecimalField(
         _("producer amount invoiced"),
@@ -1465,7 +1474,7 @@ class OfferItem(TranslatableModel):
             default=0, db_index=True)
     )
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'], on_delete=models.PROTECT,
+        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT,
          db_index=True
     )
     product = models.ForeignKey(
@@ -1473,6 +1482,11 @@ class OfferItem(TranslatableModel):
     picture = FilerImageField(
         verbose_name=_("picture"), related_name="offeritem_picture",
         null=True, blank=True)
+    picture2 = AjaxPictureField(
+        verbose_name=_("picture"),
+        null=True, blank=True,
+        upload_to="product", size=SIZE_M)
+
     reference = models.CharField(
         _("reference"), max_length=36, blank=True, null=True)
     department_for_customer = models.ForeignKey(
@@ -1861,7 +1875,7 @@ class OfferItemClosed(OfferItem):
 @python_2_unicode_compatible
 class Purchase(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'], on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
     permanence_date = models.DateField(_("permanence_date"))
     offer_item = models.ForeignKey(
         OfferItem, verbose_name=_("offer_item"), blank=True, null=True, on_delete=models.PROTECT)
@@ -1964,7 +1978,7 @@ class Purchase(models.Model):
         ]
 
 
-class PurchaseOpened(Purchase):
+class PurchaseOpenedOrClosed(Purchase):
 
     def get_quantity(self):
         return self.quantity_ordered
@@ -1988,10 +2002,10 @@ class PurchaseOpened(Purchase):
         verbose_name_plural = _("purchases")
 
 
-class PurchaseOpenedForUpdate(Purchase):
+class PurchaseOpenedOrClosedForUpdate(Purchase):
 
     def __init__(self, *args, **kwargs):
-        super(PurchaseOpenedForUpdate, self).__init__(*args, **kwargs)
+        super(PurchaseOpenedOrClosedForUpdate, self).__init__(*args, **kwargs)
         if self.id is not None:
             self.previous_quantity_ordered = self.quantity_ordered
             self.previous_selling_price = self.selling_price
@@ -2046,9 +2060,9 @@ class PurchaseOpenedForUpdate(Purchase):
             # Do not do it twice
             self.previous_quantity_ordered = self.quantity_ordered
             self.previous_selling_price = self.selling_price
-            super(PurchaseOpenedForUpdate, self).save(*args, **kwargs)
+            super(PurchaseOpenedOrClosedForUpdate, self).save(*args, **kwargs)
         elif self.previous_comment != self.comment:
-            super(PurchaseOpenedForUpdate, self).save(*args, **kwargs)
+            super(PurchaseOpenedOrClosedForUpdate, self).save(*args, **kwargs)
 
     @property
     def is_quantity_invoiced(self):
@@ -2070,7 +2084,7 @@ class PurchaseOpenedForUpdate(Purchase):
         verbose_name_plural = _("purchases")
 
 
-class PurchaseClosed(Purchase):
+class PurchaseSend(Purchase):
 
     def get_quantity(self):
         return self.quantity_invoiced
@@ -2094,10 +2108,10 @@ class PurchaseClosed(Purchase):
         verbose_name_plural = _("purchases")
 
 
-class PurchaseClosedForUpdate(Purchase):
+class PurchaseSendForUpdate(Purchase):
 
     def __init__(self, *args, **kwargs):
-        super(PurchaseClosedForUpdate, self).__init__(*args, **kwargs)
+        super(PurchaseSendForUpdate, self).__init__(*args, **kwargs)
         if self.id is not None:
             self.previous_quantity_invoiced = self.quantity_invoiced
             self.previous_purchase_price = self.purchase_price
@@ -2237,9 +2251,9 @@ class PurchaseClosedForUpdate(Purchase):
             self.previous_quantity_invoiced = self.quantity_invoiced
             self.previous_purchase_price = self.purchase_price
             self.previous_selling_price = self.selling_price
-            super(PurchaseClosedForUpdate, self).save(*args, **kwargs)
+            super(PurchaseSendForUpdate, self).save(*args, **kwargs)
         elif self.previous_comment != self.comment:
-            super(PurchaseClosedForUpdate, self).save(*args, **kwargs)
+            super(PurchaseSendForUpdate, self).save(*args, **kwargs)
 
     @property
     def is_quantity_invoiced(self):
@@ -2263,7 +2277,7 @@ class PurchaseClosedForUpdate(Purchase):
 
 class BankAccount(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=repanier_settings['PERMANENCE_NAME'],
+        Permanence, verbose_name=RepanierSettings.permanence_name,
         on_delete=models.PROTECT, blank=True, null=True)
     producer = models.ForeignKey(
         Producer, verbose_name=_("producer"),

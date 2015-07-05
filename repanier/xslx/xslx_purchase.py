@@ -16,7 +16,7 @@ from django.contrib.sites.models import Site
 from export_tools import *
 from import_tools import *
 from repanier.const import *
-from repanier.models import PurchaseClosed, PurchaseClosedForUpdate
+from repanier.models import PurchaseSend, PurchaseSendForUpdate
 from repanier.models import Producer
 from repanier.tools import cap
 from views import import_xslx_view
@@ -74,7 +74,7 @@ def export_purchase(permanence=None, year=None, queryset=None, wb=None):
             count_producer_purchase = 0
             if producer.invoice_by_basket:
                 if year is None:
-                    purchases = PurchaseClosed.objects.filter(
+                    purchases = PurchaseSend.objects.filter(
                         permanence_id=permanence.id,
                         producer_id=producer.id,
                         offer_item__translations__language_code=translation.get_language()
@@ -83,7 +83,7 @@ def export_purchase(permanence=None, year=None, queryset=None, wb=None):
                         "offer_item__translations__order_sort_order"
                     ).iterator()
                 else:
-                    purchases = PurchaseClosed.objects.filter(
+                    purchases = PurchaseSend.objects.filter(
                         permanence__status__gte=PERMANENCE_DONE,
                         permanence__permanence_date__year=year,
                         producer_id=producer.id,
@@ -229,7 +229,7 @@ def export_purchase(permanence=None, year=None, queryset=None, wb=None):
                 if year is None:
                     # Using quantity_for_preparation_sort_order the order is by customer__short_basket_name if the product
                     # is to be distributed by piece, otherwise by lower qty first.
-                    purchases = PurchaseClosed.objects.filter(
+                    purchases = PurchaseSend.objects.filter(
                         permanence_id=permanence.id,
                         producer_id=producer.id,
                         offer_item__translations__language_code=translation.get_language()
@@ -239,7 +239,7 @@ def export_purchase(permanence=None, year=None, queryset=None, wb=None):
                         "customer__short_basket_name"
                     ).iterator()
                 else:
-                    purchases = PurchaseClosed.objects.filter(
+                    purchases = PurchaseSend.objects.filter(
                         permanence__status__gte=PERMANENCE_DONE,
                         permanence__permanence_date__year=year,
                         producer_id=producer.id,
@@ -462,7 +462,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                         break
                     row_id = Decimal(row[_('Id')])
 
-                    purchase = PurchaseClosedForUpdate.objects.filter(id=row_id).order_by().first()
+                    purchase = PurchaseSendForUpdate.objects.filter(id=row_id).order_by().first()
                     if purchase is None:
                         error = True
                         error_msg = _("Row %(row_num)d : No purchase corresponding to the given purchase id.") % {

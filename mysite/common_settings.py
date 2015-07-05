@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-import os
-
 from settings import *
 
+import os
+import sys
 gettext = lambda s: s
 PROJECT_PATH = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 os.sys.path.insert(0, os.path.dirname(PROJECT_DIR))
 
-# ##################### DEBUG
+###################### DEBUG
 
 # Defined into /etc/uwsgi/apps-available/*.ini
 DEBUG = True if os.getenv('DJANGO_SETTINGS_MODULE_DEBUG', '') == 'True' else False
 TEMPLATE_DEBUG = DEBUG
+DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 ADMINS = (
     (
         os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_NAME', ''),
@@ -47,6 +48,10 @@ EMAIL_HOST_USER = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_HOST_PASSWORD', '')
 EMAIL_PORT = os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_PORT', '')
 EMAIL_USE_TLS = True if os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_USE_TLS', '') == 'True' else False
+if not EMAIL_USE_TLS:
+    EMAIL_USE_SSL = True if os.getenv('DJANGO_SETTINGS_MODULE_EMAIL_USE_SSL', '') == 'True' else False
+else:
+    EMAIL_USE_SSL = False
 # if DEBUG:
 #     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ###################### I18N
@@ -64,10 +69,10 @@ DECIMAL_SEPARATOR = ','
 
 ##################### Django & Django CMS
 LANGUAGES = [
-    ('fr', 'Français'),
-    ('nl', 'Neederlands'),
-    ('en', 'English'),
-]
+    ('fr', u'Français'),
+    ('nl', u'Neederlands'),
+    ('en', u'English'),
+    ('it', u'italiano'), ]
 
 CMS_LANGUAGES = {
     'default': {
@@ -82,19 +87,53 @@ LOCALE_PATHS = (
     os.path.join(PROJECT_DIR, "locale"),
 )
 
+INSTALLED_APPS = (
+    'django.contrib.sites',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
+    'django.contrib.formtools',
+    'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
+    'cms',
+    "treebeard",
+    'mptt',
+    'menus',
+    'sekizai',
+    'djangocms_admin_style',  # note this needs to be above the 'django.contrib.admin' entry
+    'django.contrib.admin',
+    'django_mptt_admin',
+    'filer',
+    'easy_thumbnails',
+    'cmsplugin_filer_file',
+    'cmsplugin_filer_folder',
+    'cmsplugin_filer_link',
+    'cmsplugin_filer_image',
+    'cmsplugin_filer_video',
+    'reversion',
+    'password_reset',
+    'parler',
+
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.doc.XViewMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    # 'cms.middleware.language.LanguageCookieMiddleware', Disable to avoid cookies advertising requirement
-    'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.page.CurrentPageMiddleware',
+    'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
+    # 'cms.middleware.language.LanguageCookieMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
@@ -110,85 +149,61 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'sekizai.context_processors.sekizai',
 )
 
-INSTALLED_APPS = (
-    'django.contrib.sites',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sitemaps',
-    'django.contrib.formtools',
-    'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
-    'cms',
-    'mptt',
-    'menus',
-    'south',
-    'sekizai',
-    'djangocms_admin_style',  # note this needs to be above
-    # the 'django.contrib.admin' entry
-    'django.contrib.admin',
-    'adminsortable',
-    # 'hvad',
-    'filer',
-    'easy_thumbnails',
-
-    'cmsplugin_filer_file',
-    'cmsplugin_filer_folder',
-    'cmsplugin_filer_image',
-    'cmsplugin_filer_video',
-    'cmsplugin_filer_link',
-    'reversion',
-    'password_reset',
-
+TEMPLATE_LOADERS = (
+    ('django.template.loaders.cached.Loader', (
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader',
+    )),
 )
+
+MIGRATION_MODULES = {
+    'cms': 'cms.migrations_django',
+    'menus': 'menus.migrations_django',
+    'filer': 'filer.migrations_django',
+    'djangocms_text_ckeditor': 'djangocms_text_ckeditor.migrations_django',
+    'cmsplugin_filer_file': 'cmsplugin_filer_file.migrations_django',
+    'cmsplugin_filer_folder': 'cmsplugin_filer_folder.migrations_django',
+    'cmsplugin_filer_link': 'cmsplugin_filer_link.migrations_django',
+    'cmsplugin_filer_image': 'cmsplugin_filer_image.migrations_django',
+    'cmsplugin_filer_video': 'cmsplugin_filer_video.migrations_django',
+}
 
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
+# CMS_PUBLIC_FOR = 'staff'
 CMS_SHOW_START_DATE = False
 CMS_SHOW_END_DATE = False
 CMS_SEO_FIELDS = False
 CMS_URL_OVERWRITE = True
 CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
-LOGIN_URL = "/go_repanier/"
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_URL = "/leave_repanier/"
 
 CKEDITOR_SETTINGS = {
     'language': '{{ language }}',
-	'toolbar_CMS': [
-		['Undo', 'Redo'],
-		['cmsplugins', '-', 'ShowBlocks'],
-		 # ['Format', 'Styles'],
-		['Format', 'Templates'],
-		['TextColor', 'BGColor', '-', 'PasteText'], #, 'PasteFromWord'],
-		['Maximize', ''],
-		'/',
-		['Bold', 'Italic', 'Underline', '-', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
-		['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
-		['HorizontalRule'],
-		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
-		['Source']
-	],
-	'toolbar_HTMLField': [
-		['Undo', 'Redo'],
-		['ShowBlocks', 'Format'],
-		['TextColor', 'BGColor', '-', 'PasteText'], #, 'PasteFromWord'],
-		['Maximize', ''],
-		'/',
-		['Bold', 'Italic', 'Underline', '-', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
-		['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
-		['HorizontalRule'],
-		['Link', 'Unlink'],
-		['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
-		['Source']
-	],
+    'toolbar_CMS': [
+        ['Undo', 'Redo'],
+        ['cmsplugins', '-', 'ShowBlocks'],
+        ['Format', 'Templates'],
+        ['TextColor', 'BGColor', '-', 'PasteText'],
+        ['Maximize', ''],
+        '/',
+        ['Bold', 'Italic', 'Underline', '-', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
+        ['JustifyLeft', 'JustifyCenter', 'JustifyRight'],
+        ['HorizontalRule'],
+        ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
+        ['Source']
+    ],
+    'toolbar_HTMLField': [
+        ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
+        ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
+        ['Maximize', '']
+    ],
+    'forcePasteAsPlainText': 'true',
     'skin': 'moono',
     # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
     # 'stylesSet' : [],
-    'extraPlugins': 'cmsplugins,templates',
-    'format_tags': 'p;h1;h2;h3;h4;h5;blockquote;mutted;success;info;danger;heart;infosign;warningsign;pushpin;div',
+    # 'extraPlugins': 'cmsplugins',
+    'format_tags': 'p;h4;h5;blockquote;mutted;success;info;danger;heart;pushpin',
     'format_blockquote': {'element': 'blockquote', 'name': 'Blockquote'},
     'format_heart': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
     'format_infosign': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-info-sign'}},
@@ -203,15 +218,36 @@ CKEDITOR_SETTINGS = {
     # 'contentsCss' : '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
     'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
     # 'extraAllowedContent' : '*(*)',
-    # 'removeFormatTags' : 'b,big,code,del,dfn,em,font,i,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var'
+    'removeFormatTags': 'big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    'basicEntities': False,
+    'entities': False,
+    'removePlugins': 'elementspath',
+}
+
+CKEDITOR_SETTINGS_MODEL2 = {
+    'language': '{{ language }}',
+    'toolbar_HTMLField': [
+        ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
+        ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
+        ['Maximize', '']
+    ],
+    'forcePasteAsPlainText': 'true',
+    'skin': 'moono',
+    'format_tags': 'p;h4;h5',
+    'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
+    'removeFormatTags': 'big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    'basicEntities': False,
+    'entities': False,
+    'removePlugins': 'elementspath',
 }
 
 TEXT_ADDITIONAL_TAGS = ('span',)
-TEXT_ADDITIONAL_ATTRIBUTES  = ('class',)
-# TEXT_HTML_SANITIZE = False
+TEXT_ADDITIONAL_ATTRIBUTES = ('class',)
+TEXT_HTML_SANITIZE = True
 # TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
 # TEXT_SAVE_IMAGE_FUNCTION = 'djangocms_text_ckeditor.picture_save.create_picture_plugin'
 TEXT_SAVE_IMAGE_FUNCTION = None
+TEXT_PLUGINS_INTEGRATION = 'buttons'
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True
@@ -219,7 +255,7 @@ FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = True
 FILER_ENABLE_PERMISSIONS = False
 FILER_IS_PUBLIC_DEFAULT = True
 FILER_SUBJECT_LOCATION_IMAGE_DEBUG = True
-FILER_DEBUG = DEBUG
+FILER_DEBUG = False
 
 THUMBNAIL_PROCESSORS = (
     'easy_thumbnails.processors.colorspace',
@@ -228,14 +264,14 @@ THUMBNAIL_PROCESSORS = (
     'filer.thumbnail_processors.scale_and_crop_with_subject_location',
     'easy_thumbnails.processors.filters',
 )
-THUMBNAIL_DEBUG = DEBUG
+THUMBNAIL_HIGH_RESOLUTION = True
+THUMBNAIL_DEBUG = FILER_DEBUG
 
 # https://docs.djangoproject.com/en/1.5/howto/static-files/
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
 USE_X_FORWARDED_HOST = True
-SEND_BROKEN_LINK_EMAILS = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_ENGINE = "django.contrib.sessions.backends.file"
 SESSION_COOKIE_HTTPONLY = True
@@ -248,16 +284,20 @@ AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
 # ADMIN_LOGIN = 'pise'
 # ADMIN_PASSWORD = 'raspberry'
 INSTALLED_APPS += (
-'repanier',
+    'repanier',
 )
-
+LOGIN_URL = "/repanier/go_repanier/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_URL = "/repanier/leave_repanier/"
 
 ################# Django_crispy_forms
-# INSTALLED_APPS += (
-#     'crispy_forms',
-# )
+INSTALLED_APPS += (
+    'crispy_forms',
+    # 'crispy_forms_foundation',
+)
 
-# CRISPY_TEMPLATE_PACK = "bootstrap3"
+CRISPY_TEMPLATE_PACK = "bootstrap3"
+# # CRISPY_TEMPLATE_PACK = "foundation"
 # JSON_MODULE = 'ujson'
 
 ################# Django_compressor
@@ -311,32 +351,34 @@ COMPRESS_OFFLINE = False
 CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = 3600
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/tmp/django_cache',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-            'CULL_FREQUENCY': 3
-        }
-    }
-}
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+#         'LOCATION': '/var/tmp/django_cache',
+#         'TIMEOUT': 300,
+#         'OPTIONS': {
+#             'MAX_ENTRIES': 1000,
+#             'CULL_FREQUENCY': 3
+#         }
+#     }
+# }
 
 CMS_CACHE_DURATIONS = {
     'content': 300,  # default 60
     'menus': 3600,  # default 3600
     'permissions': 3600  # default: 3600
 }
-CMS_PAGE_CACHE = True
-CMS_PLACEHOLDER_CACHE = True
-CMS_PLUGIN_CACHE = True
 
-SOUTH_MIGRATION_MODULES = {
-    'easy_thumbnails': 'easy_thumbnails.south_migrations',
-}
+# SOUTH_MIGRATION_MODULES = {
+#     'easy_thumbnails': 'easy_thumbnails.south_migrations',
+# }
 ###################### EASYMAP
 #EASY_MAPS_CENTER = ( 50.630545,3.776955 )
+
+##################### DECIMAL
+from decimal import getcontext, ROUND_HALF_UP
+
+getcontext().rounding = ROUND_HALF_UP
 
 #INSTALLED_APPS += (
 #    'easy_maps',
@@ -348,8 +390,8 @@ SOUTH_MIGRATION_MODULES = {
 #     l = logging.getLogger('django.db.backends')
 #     l.setLevel(logging.DEBUG)
 #     l.addHandler(logging.StreamHandler())
-
-
+#
+#
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,

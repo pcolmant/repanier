@@ -1,4 +1,3 @@
-from crispy_forms.bootstrap import AppendedText, StrictButton, FieldWithButtons
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
@@ -8,9 +7,11 @@ from django.forms import Textarea
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
-from apps import repanier_settings
+from apps import RepanierSettings
 from const import *
 from models import LUT_DeliveryPoint, Staff
+from picture.const import SIZE_M, SIZE_S
+from picture.widgets import AjaxPictureWidget
 from widget import SelectWidgetBootstrap, SelectProducerOrderUnitWidget
 
 
@@ -101,6 +102,11 @@ class CustomerForm(forms.Form):
         widget=SelectWidgetBootstrap,
         required=True
     )
+    picture = forms.CharField(
+        label=_("picture"),
+        widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
+        required=False)
+
     memo = forms.CharField(label=_('About you'), widget=TextEditorWidget, required=False)
     # memo = forms.CharField(label=_('About you'), widget=Textarea, required=False)
 
@@ -138,7 +144,7 @@ class CustomerForm(forms.Form):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-10'
         self.helper.add_input(Submit('submit', _('Update')))
-        if not repanier_settings['DELIVERY_POINT']:
+        if not RepanierSettings.delivery_point:
             del self.fields['delivery_point']
 
 
@@ -172,6 +178,10 @@ class ProducerProductDescriptionForm(forms.Form):
         widget=SelectWidgetBootstrap,
         required=True
     )
+    picture = forms.CharField(
+        label=_("picture"),
+        widget=AjaxPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
+        required=False)
     # offer_description = forms.CharField(label=_('offer_description'), widget=Textarea, required=False)
     offer_description = forms.CharField(label=_('offer_description'), widget=TextEditorWidget, required=False)
 

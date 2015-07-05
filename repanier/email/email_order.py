@@ -12,6 +12,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.writer.excel import save_virtual_workbook
+from repanier.apps import RepanierSettings
 from repanier.models import Customer, CustomerInvoice
 from repanier.models import Permanence
 from repanier.models import PermanenceBoard
@@ -46,7 +47,7 @@ def send(permanence_id):
             board_composition_and_description += "%s%s<br/>" % (member, r.description)
 
     # Orders send to our producers
-    if repanier_settings['SEND_ORDER_MAIL_TO_PRODUCER']:
+    if RepanierSettings.send_order_mail_to_producer:
         producer_set = Producer.objects.filter(
             permanence=permanence_id).order_by()
         for producer in producer_set:
@@ -65,19 +66,20 @@ def send(permanence_id):
                         wb = xslx_order.export_producer_by_customer(permanence=permanence, producer=producer, wb=wb)
                     else:
                         duplicate = False
-                order_producer_mail = repanier_settings['CONFIG'].order_producer_mail
+                order_producer_mail = RepanierSettings.config.order_producer_mail
                 template = Template(order_producer_mail)
                 context = djangoContext({
                     'long_profile_name': long_profile_name,
                     'order_empty': order_empty,
                     'duplicate': duplicate,
                     'permanence': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                    'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+                    'signature': mark_safe(
+                        '%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
                 })
                 html_content = template.render(context)
 
                 email = EmailMultiAlternatives(
-                    "%s - %s - %s - %s" % (_('Order'), permanence, repanier_settings['GROUP_NAME'], long_profile_name),
+                    "%s - %s - %s - %s" % (_('Order'), permanence, RepanierSettings.group_name, long_profile_name),
                     strip_tags(html_content),
                     sender_email,
                     [producer.email],
@@ -93,7 +95,7 @@ def send(permanence_id):
                 send_email(email=email)
 
     # Orders send to our customers
-    if repanier_settings['SEND_ORDER_MAIL_TO_CUSTOMER']:
+    if RepanierSettings.send_order_mail_to_customer:
         customer_set = Customer.objects.filter(
             purchase__permanence=permanence_id, represent_this_buyinggroup=False).order_by().distinct()
         for customer in customer_set:
@@ -106,14 +108,17 @@ def send(permanence_id):
                 email_customer = [customer.user.email,]
                 if customer.email2 is not None and len(customer.email2) > 0:
                     email_customer.append(customer.email2)
-                if repanier_settings['INVOICE'] is not None:
+                if RepanierSettings.invoice is not None:
                     customer_last_balance = "%s %s %s %s &euro;" % (_('The balance of your account as of'),
                         customer.date_balance.strftime('%d-%m-%Y'), _('is'), number_format(customer.balance, 2))
-                    if repanier_settings['BANK_ACCOUNT'] is not None:
+                    if RepanierSettings.bank_account is not None:
                         if (order_amount - customer.balance) > 0:
                             customer_payment_needed = "%s %s &euro; %s %s %s \"%s, %s\"" % (_('Please pay'),
                                 number_format(order_amount - customer.balance, 2), _('to the bank account number'),
-                                repanier_settings['BANK_ACCOUNT'], _('with communication'), customer.short_basket_name, permanence)
+                                                                                            RepanierSettings.bank_account,
+                                                                                            _('with communication'),
+                                                                                            customer.short_basket_name,
+                                                                                            permanence)
                         else:
                             customer_payment_needed = "%s" % (_('Your account balance is sufficient'))
                     else:
@@ -122,7 +127,7 @@ def send(permanence_id):
                     customer_last_balance = ""
                     customer_payment_needed = ""
                 long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
-                order_customer_mail = repanier_settings['CONFIG'].order_customer_mail
+                order_customer_mail = RepanierSettings.config.order_customer_mail
                 template = Template(order_customer_mail)
                 context = djangoContext({
                     'long_basket_name': long_basket_name,
@@ -132,11 +137,12 @@ def send(permanence_id):
                     'customer_order_amount': number_format(order_amount, 2),
                     'customer_payment_needed': mark_safe(customer_payment_needed),
                     'customer_delivery_point': customer.delivery_point,
-                    'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+                    'signature': mark_safe(
+                        '%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
                 })
                 html_content = template.render(context)
                 email = EmailMultiAlternatives(
-                    "%s - %s - %s - %s" % (_('Order'), permanence, repanier_settings['GROUP_NAME'], long_basket_name),
+                    "%s - %s - %s - %s" % (_('Order'), permanence, RepanierSettings.group_name, long_basket_name),
                     strip_tags(html_content),
                     sender_email,
                     email_customer
@@ -160,17 +166,17 @@ def send(permanence_id):
             if permanenceboard.customer:
                 to_email_board.append(permanenceboard.customer.user.email)
 
-        order_staff_mail = repanier_settings['CONFIG'].order_staff_mail
+        order_staff_mail = RepanierSettings.config.order_staff_mail
         template = Template(order_staff_mail)
         context = djangoContext({
             'permanence': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
             'board_composition': mark_safe(board_composition),
             'board_composition_and_description': mark_safe(board_composition_and_description),
-            'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+            'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
         })
         html_content = template.render(context)
         email = EmailMultiAlternatives(
-            "%s - %s - %s" % (_('Permanence preparation list'), permanence, repanier_settings['GROUP_NAME']),
+            "%s - %s - %s" % (_('Permanence preparation list'), permanence, RepanierSettings.group_name),
             strip_tags(html_content),
             sender_email,
             to_email_board,
@@ -181,7 +187,7 @@ def send(permanence_id):
                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         email.attach_alternative(html_content, "text/html")
 
-        if not repanier_settings['SEND_ORDER_MAIL_TO_BOARD']:
+        if not RepanierSettings.send_order_mail_to_board:
             email.to = cc_email_staff
             email.cc = []
             email.bcc = []

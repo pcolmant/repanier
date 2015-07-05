@@ -6,6 +6,7 @@ from views import OrderView, OrderViewWithoutCache, PreOrderView
 from views import CustomerInvoiceView
 from views import ProducerInvoiceView
 from views import PermanenceView
+from picture.views import ajax_picture
 
 urlpatterns = patterns('',
     url(r'^go_repanier/$', views.login, name='login_form'),
@@ -29,6 +30,7 @@ urlpatterns = patterns('',
         views.producer_product_description_ajax, name='producer_product_description_ajax'),
     url(r'^ajax/producer-product-description/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<offer_item_id>\d+)/$',
         views.producer_product_description_ajax, name='producer_product_description_ajax'),
+                       url('^ajax/upload-picture/(?P<upload_to>.*)/(?P<size>\d+)/$', ajax_picture, name='ajax_picture'),
     # url(r'^producer-product-description/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<offer_item_id>\d+)/$',
     #     views.producer_product_description, name='producer_product_description'),
 

@@ -11,7 +11,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
 from repanier.const import *
-from repanier.models import repanier_settings
 from repanier.models import BankAccount
 from repanier.models import Customer
 from repanier.models import CustomerInvoice
@@ -30,9 +29,10 @@ import thread
 
 @transaction.atomic
 def generate(request, permanence, payment_date, producers_to_be_paid_set):
-    if repanier_settings['INVOICE']:
+    if RepanierSettings.invoice:
         validation_passed = True
         getcontext().rounding=ROUND_HALF_UP
+        new_bank_latest_total = DECIMAL_ZERO
         bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by().first()
         if bank_account is None:
             # If not latest total exists, create it with operation date before all movements
@@ -51,20 +51,20 @@ def generate(request, permanence, payment_date, producers_to_be_paid_set):
             producer_buyinggroup = Producer.objects.filter(is_active=True, represent_this_buyinggroup=True).order_by().first()
             if producer_buyinggroup is None:
                 producer_buyinggroup = Producer.objects.create(
-                    short_profile_name="z-%s" % repanier_settings['GROUP_NAME'],
-                    long_profile_name=repanier_settings['GROUP_NAME'],
+                    short_profile_name="z-%s" % RepanierSettings.group_name,
+                    long_profile_name=RepanierSettings.group_name,
                     represent_this_buyinggroup=True
                 )
             if producer_buyinggroup is not None:
                 customer_buyinggroup = Customer.objects.filter(is_active=True, represent_this_buyinggroup=True).order_by().first()
                 if customer_buyinggroup is None:
                     user = User.objects.create_user(
-                        username="z-%s" % repanier_settings['GROUP_NAME'], email=None, password=uuid.uuid1().hex,
-                        first_name="", last_name=repanier_settings['GROUP_NAME'])
+                        username="z-%s" % RepanierSettings.group_name, email=None, password=uuid.uuid1().hex,
+                        first_name="", last_name=RepanierSettings.group_name)
                     customer_buyinggroup = Customer.objects.create(
                         user=user,
-                        short_basket_name="z-%s" % repanier_settings['GROUP_NAME'],
-                        long_basket_name=repanier_settings['GROUP_NAME'],
+                        short_basket_name="z-%s" % RepanierSettings.group_name,
+                        long_basket_name=RepanierSettings.group_name,
                         represent_this_buyinggroup=True
                     )
 
@@ -566,7 +566,7 @@ def admin_generate(request, producers_to_be_paid_set=Producer.objects.none(), pe
 
 
 def admin_send(request, queryset):
-    if repanier_settings['INVOICE']:
+    if RepanierSettings.invoice:
         user_message = _("The status of this permanence prohibit you to send invoices.")
         user_message_level = messages.ERROR
         for permanence in queryset[:1]:
@@ -584,7 +584,7 @@ def admin_send(request, queryset):
 def admin_cancel(request, queryset):
     user_message = _("The status of this permanence prohibit you to cancel invoices.")
     user_message_level = messages.ERROR
-    if repanier_settings['INVOICE']:
+    if RepanierSettings.invoice:
         latest_total = BankAccount.objects.filter(
             operation_status=BANK_LATEST_TOTAL).only(
             "permanence"

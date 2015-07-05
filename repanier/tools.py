@@ -2,10 +2,10 @@
 from __future__ import unicode_literals
 from django.template.loader import render_to_string
 from django.utils import translation
+from apps import RepanierSettings
 from const import *
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
-from models import repanier_settings
 from django.utils.formats import number_format
 from django.db import transaction
 import models
@@ -55,7 +55,7 @@ def get_allowed_mail_extension():
 
 def send_email(email=None):
     if settings.DEBUG:
-        if repanier_settings["TEST_MODE"]:
+        if RepanierSettings.test_mode:
             coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by().first()
             if coordinator is not None:
                 email.to = [coordinator.user.email]
@@ -66,7 +66,7 @@ def send_email(email=None):
             email.send()
         else:
             pass
-    elif repanier_settings["TEST_MODE"]:
+    elif RepanierSettings.test_mode:
         coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by().first()
         if coordinator is not None:
             email.to = [coordinator.user.email]
@@ -399,29 +399,29 @@ def recalculate_order_amount(permanence_id=None,
         if customer_id is None:
             if offer_item_queryset is not None:
                 if permanence_status < PERMANENCE_SEND:
-                    purchase_set = models.PurchaseOpenedForUpdate.objects\
+                    purchase_set = models.PurchaseOpenedOrClosedForUpdate.objects \
                         .filter(permanence_id=permanence_id, offer_item__in=offer_item_queryset)\
                         .order_by()
                 else:
-                    purchase_set = models.PurchaseClosedForUpdate.objects\
+                    purchase_set = models.PurchaseSendForUpdate.objects \
                         .filter(permanence_id=permanence_id, offer_item__in=offer_item_queryset)\
                         .order_by()
             else:
                 if permanence_status < PERMANENCE_SEND:
-                    purchase_set = models.PurchaseOpenedForUpdate.objects\
+                    purchase_set = models.PurchaseOpenedOrClosedForUpdate.objects \
                         .filter(permanence_id=permanence_id)\
                         .order_by()
                 else:
-                    purchase_set = models.PurchaseClosedForUpdate.objects\
+                    purchase_set = models.PurchaseSendForUpdate.objects \
                         .filter(permanence_id=permanence_id)\
                         .order_by()
         else:
             if permanence_status < PERMANENCE_SEND:
-                purchase_set = models.PurchaseOpenedForUpdate.objects\
+                purchase_set = models.PurchaseOpenedOrClosedForUpdate.objects \
                     .filter(permanence_id=permanence_id, customer_id=customer_id)\
                     .order_by()
             else:
-                purchase_set = models.PurchaseClosedForUpdate.objects\
+                purchase_set = models.PurchaseSendForUpdate.objects \
                     .filter(permanence_id=permanence_id, customer_id=customer_id)\
                     .order_by()
 
@@ -492,7 +492,7 @@ def update_or_create_purchase(user_id=None, customer=None, offer_item_id=None, v
                 # when the status is PERMANENCE_WAIT_FOR_SEND
                 if (permanence.status == PERMANENCE_OPENED) or close_orders:
                     # The offer_item belong to an open permanence
-                    purchase = models.PurchaseOpenedForUpdate.objects.filter(
+                    purchase = models.PurchaseOpenedOrClosedForUpdate.objects.filter(
                         offer_item_id=offer_item.id,
                         permanence_id=permanence.id,
                         customer_id=customer.id)\
@@ -537,7 +537,7 @@ def update_or_create_purchase(user_id=None, customer=None, offer_item_id=None, v
                                 is_compensation = True
                             else:
                                 is_compensation = False
-                            models.PurchaseOpenedForUpdate.objects.create(
+                            models.PurchaseOpenedOrClosedForUpdate.objects.create(
                                 permanence_id=permanence.id,
                                 permanence_date=permanence.permanence_date,
                                 offer_item_id=offer_item.id,
@@ -566,7 +566,7 @@ def update_or_create_purchase(user_id=None, customer=None, offer_item_id=None, v
 def clean_offer_item(permanence, queryset, reorder=False):
     cur_language = translation.get_language()
     for offer_item in queryset:
-        offer_item.picture = offer_item.product.picture
+        offer_item.picture2 = offer_item.product.picture2
         offer_item.reference = offer_item.product.reference
         offer_item.department_for_customer_id = offer_item.product.department_for_customer_id
         offer_item.producer_id = offer_item.product.producer_id
@@ -602,10 +602,14 @@ def clean_offer_item(permanence, queryset, reorder=False):
         translation.activate(language["code"])
         for offer_item in queryset:
             offer_item.long_name = offer_item.product.long_name
-            offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html', {'offer': offer_item})
-            offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html', {'offer': offer_item})
-            offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html', {'offer': offer_item})
-            offer_item.cache_part_e = render_to_string('repanier/cache_part_e.html', {'offer': offer_item})
+            offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html',
+                                                       {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
+            offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html',
+                                                       {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
+            offer_item.cache_part_c = render_to_string('repanier/cache_part_c.html',
+                                                       {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
+            offer_item.cache_part_e = render_to_string('repanier/cache_part_e.html',
+                                                       {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
             offer_item.save_translations()
         if reorder:
             # The "order_by" of the queryset is only relevant after the previous "for" has been done.
@@ -631,7 +635,7 @@ def clean_offer_item(permanence, queryset, reorder=False):
             .distinct("id", "tree_id", "lft")
         if departementforcustomer_set:
             pass
-        if repanier_settings['DISPLAY_PRODUCERS_ON_ORDER_FORM']:
+        if RepanierSettings.display_producer_on_order_form:
             producer_set = models.Producer.objects.filter(permanence=permanence.id).only("id", "short_profile_name")
         else:
             producer_set = None

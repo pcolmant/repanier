@@ -1,6 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
-from repanier.apps import repanier_settings
+from repanier.apps import RepanierSettings
 from repanier.const import *
 from django.conf import settings
 from django.core.mail import send_mail
@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 
 def send(permanence):
     try:
-        send_mail("Alert - %s - %s" % (permanence, repanier_settings['GROUP_NAME']), permanence.get_status_display(),
+        send_mail("Alert - %s - %s" % (permanence, RepanierSettings.group_name), permanence.get_status_display(),
                   "%s@repanier.be" % (settings.ALLOWED_HOSTS[0]), [v for k, v in settings.ADMINS])
     except:
         pass
@@ -17,7 +17,7 @@ def send(permanence):
 
 def send_error(error_str):
     try:
-        send_mail("Alert - %s" % repanier_settings['GROUP_NAME'], error_str,
+        send_mail("Alert - %s" % RepanierSettings.group_name, error_str,
                   "%s@repanier.be" % (settings.ALLOWED_HOSTS[0]), [v for k, v in settings.ADMINS])
     except:
         pass

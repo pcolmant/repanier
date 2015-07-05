@@ -1,6 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
-from repanier.models import repanier_settings
+from repanier.apps import RepanierSettings
 from django.utils import translation
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
@@ -15,7 +15,7 @@ from repanier.models import Customer
 from repanier.models import CustomerInvoice
 from repanier.models import Producer
 from repanier.models import ProducerInvoice
-from repanier.models import PurchaseClosed
+from repanier.models import PurchaseSend
 from repanier.tools import get_invoice_unit
 from repanier.xslx.xslx_stock import export_stock
 
@@ -171,7 +171,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
 
         ws = None
 
-        purchase_set = PurchaseClosed.objects.filter(
+        purchase_set = PurchaseSend.objects.filter(
             permanence_id=permanence.id,
             offer_item__translations__language_code=translation.get_language()
         ).order_by(
@@ -181,7 +181,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
         hide_producer_prices = False
         hide_customer_prices = False
     elif customer is not None:
-        purchase_set = PurchaseClosed.objects.filter(
+        purchase_set = PurchaseSend.objects.filter(
             permanence_id=permanence.id, customer=customer,
             offer_item__translations__language_code=translation.get_language()
         ).order_by(
@@ -190,7 +190,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
         hide_producer_prices = True
         hide_customer_prices = False
     else:
-        purchase_set = PurchaseClosed.objects.filter(
+        purchase_set = PurchaseSend.objects.filter(
             permanence_id=permanence.id, producer=producer,
             offer_item__translations__language_code=translation.get_language()
         ).order_by(
@@ -235,7 +235,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
             (_("Producer"), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
             (_("Basket"), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
             (_("Department"), 15,
-             purchase.offer_item.department_for_customer.short_name,
+             purchase.offer_item.department_for_customer.short_name if purchase.offer_item.department_for_customer is not None else "",
              NumberFormat.FORMAT_TEXT, False),
             (_("Product"), 60, purchase.offer_item.get_long_name(), NumberFormat.FORMAT_TEXT, False),
             (_("Quantity"), 10, qty, '#,##0.????',
@@ -272,7 +272,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
                 (_("selling price"), 10, purchase.selling_price,
                  '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ ', False),
             ]
-            if repanier_settings['DISPLAY_VAT']:
+            if RepanierSettings.display_vat:
                 row += [
                     (_("Vat"), 10, DECIMAL_ZERO if purchase.invoiced_price_with_compensation else
                     (purchase.offer_item.customer_vat * purchase.get_quantity()).quantize(FOUR_DECIMALS),
@@ -282,7 +282,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
                 row += [
                     (_("Vat"), 10, '', NumberFormat.FORMAT_TEXT, False),
                 ]
-        if repanier_settings['DISPLAY_VAT'] or not hide_producer_prices:
+        if RepanierSettings.display_vat or not hide_producer_prices:
             row += [
                 (_("Compensation"), 10, (purchase.offer_item.compensation * purchase.get_quantity()).quantize(FOUR_DECIMALS) if
                 purchase.invoiced_price_with_compensation else  DECIMAL_ZERO,
@@ -325,7 +325,7 @@ def export(permanence, customer=None, producer=None, wb=None, sheet_name=""):
             ws.column_dimensions[get_column_letter(8)].visible = False
             ws.column_dimensions[get_column_letter(9)].visible = False
             ws.column_dimensions[get_column_letter(10)].visible = False
-            if not repanier_settings['DISPLAY_VAT']:
+            if not RepanierSettings.display_vat:
                 ws.column_dimensions[get_column_letter(13)].visible = False
         if hide_customer_prices:
             ws.column_dimensions[get_column_letter(11)].visible = False

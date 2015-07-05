@@ -1,4 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-default_app_config = 'repanier.apps.RepanierSettings'
+SIZE_XS = 48
+SIZE_S = 110
+SIZE_M = 225

@@ -16,6 +16,7 @@ from django.utils.html import strip_tags
 # from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslationDoesNotExist
+from repanier.apps import RepanierSettings
 from repanier.models import Permanence, Producer
 from repanier.models import Staff
 from repanier.models import Customer
@@ -23,9 +24,9 @@ from repanier.tools import *
 
 
 def send_pre_opening(permanence_id):
-    if repanier_settings['SEND_OPENING_MAIL_TO_CUSTOMER']:
+    if RepanierSettings.producer_pre_opening:
         translation.activate(settings.LANGUAGE_CODE)
-        offer_producer_mail = repanier_settings['CONFIG'].offer_producer_mail
+        offer_producer_mail = RepanierSettings.config.offer_producer_mail
         permanence = Permanence.objects.get(id=permanence_id)
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
         try:
@@ -46,11 +47,12 @@ def send_pre_opening(permanence_id):
                     'permanence': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('pre_order_uuid_view', args=(0, producer.offer_uuid)), _("offer"))),
                     'offer_description': mark_safe(offer_description),
                     'offer': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('pre_order_uuid_view', args=(0, producer.offer_uuid)), _("offer"))),
-                    'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+                    'signature': mark_safe(
+                        '%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
                 })
                 html_content = template.render(context)
                 email = EmailMultiAlternatives(
-                    "%s - %s - %s" % (_("Pre-opening of orders"), permanence, repanier_settings['GROUP_NAME']),
+                    "%s - %s - %s" % (_("Pre-opening of orders"), permanence, RepanierSettings.group_name),
                     strip_tags(html_content),
                     sender_email,
                     [producer.email],
@@ -61,7 +63,7 @@ def send_pre_opening(permanence_id):
 
 
 def send(permanence_id):
-    if repanier_settings['SEND_OPENING_MAIL_TO_CUSTOMER']:
+    if RepanierSettings.send_opening_mail_to_customer:
         translation.activate(settings.LANGUAGE_CODE)
         permanence = Permanence.objects.get(id=permanence_id)
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
@@ -74,12 +76,12 @@ def send(permanence_id):
             offer_description = permanence.offer_description
         except TranslationDoesNotExist:
             offer_description = ""
-        offer_customer_mail = repanier_settings['CONFIG'].offer_customer_mail
+        offer_customer_mail = RepanierSettings.config.offer_customer_mail
         template = Template(offer_customer_mail)
         context = djangoContext({
             'permanence': mark_safe('<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
             'offer_description': mark_safe(offer_description),
-            'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, repanier_settings['GROUP_NAME']))
+            'signature': mark_safe('%s<br/>%s<br/>%s' % (signature, sender_function, RepanierSettings.group_name))
         })
         html_content = template.render(context)
         # import sys
@@ -89,7 +91,7 @@ def send(permanence_id):
         # print "%s" % html_content
         # i = 1 / 0
         email = EmailMultiAlternatives(
-            "%s - %s - %s" % (_("Opening of orders"), permanence, repanier_settings['GROUP_NAME']),
+            "%s - %s - %s" % (_("Opening of orders"), permanence, RepanierSettings.group_name),
             strip_tags(html_content),
             sender_email,
             bcc=cc_email_staff

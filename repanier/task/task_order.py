@@ -8,8 +8,8 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
+from repanier.apps import RepanierSettings
 from repanier.const import *
-from repanier.models import repanier_settings
 from repanier.email import email_alert
 from repanier.email import email_offer
 from repanier.email import email_order
@@ -96,8 +96,7 @@ def common_to_pre_open_and_open(permanence_id):
 @transaction.atomic
 def pre_open(permanence_id):
     permanence = common_to_pre_open_and_open(permanence_id)
-    if repanier_settings['PRODUCER_PRE_OPENING']:
-        email_offer.send_pre_opening(permanence_id)
+    email_offer.send_pre_opening(permanence_id)
     now = timezone.now()
     permanence.status = PERMANENCE_PRE_OPEN
     if permanence.highest_status < PERMANENCE_PRE_OPEN:
@@ -110,7 +109,7 @@ def pre_open(permanence_id):
 @transaction.atomic
 def open(permanence_id):
     permanence = common_to_pre_open_and_open(permanence_id)
-    if repanier_settings['SEND_OPENING_MAIL_TO_CUSTOMER']:
+    if RepanierSettings.send_opening_mail_to_customer:
         email_offer.send(permanence_id)
     now = timezone.now()
     permanence.status = PERMANENCE_OPENED
@@ -191,7 +190,7 @@ def admin_open_and_send(request, queryset):
     now = timezone.now()
     for permanence in queryset[:1]:
         if permanence.status in [PERMANENCE_PLANNED, PERMANENCE_PRE_OPEN]:
-            if repanier_settings['PRODUCER_PRE_OPENING'] and permanence.status == PERMANENCE_PLANNED:
+            if RepanierSettings.producer_pre_opening and permanence.status == PERMANENCE_PLANNED:
                 permanence_already_pre_opened = Permanence.objects.filter(
                     status__in=[PERMANENCE_WAIT_FOR_PRE_OPEN, PERMANENCE_PRE_OPEN]
                 ).order_by("-is_updated_on").only("id").first()
@@ -225,7 +224,7 @@ def admin_open_and_send(request, queryset):
                 if permanence.status == PERMANENCE_WAIT_FOR_PRE_OPEN:
                     permanence.status = PERMANENCE_PLANNED
                 else:
-                    if repanier_settings['PRODUCER_PRE_OPENING']:
+                    if RepanierSettings.producer_pre_opening:
                         permanence.status = PERMANENCE_PRE_OPEN
                     else:
                         permanence.status = PERMANENCE_PLANNED
@@ -327,7 +326,7 @@ def close(permanence_id):
     now = timezone.now()
     permanence.is_updated_on = now
     permanence.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-    if not repanier_settings['INVOICE']:
+    if not RepanierSettings.invoice:
         # Put send permanences to the done status, because they will "never" be invoiced
         for permanence in Permanence.objects.filter(status=PERMANENCE_SEND):
             permanence.status = PERMANENCE_DONE

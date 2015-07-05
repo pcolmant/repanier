@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import datetime
 
 from django.conf import settings
-from models import repanier_settings
+from apps import RepanierSettings
 from django.utils.formats import number_format
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
@@ -24,7 +24,7 @@ class PermanenceMenu(Menu):
         # if request.user.is_authenticated():
         master_id = 2
         node = NavigationNode(
-            "%s" % repanier_settings['PERMANENCE_NAME'],
+            "%s" % RepanierSettings.permanence_name,
             "/",
             id=master_id,
             visible=True
@@ -61,7 +61,7 @@ class PermanenceMenu(Menu):
                 nodes.append(node)
                 submenu_id += 1
             first_pass = False
-            if repanier_settings['DISPLAY_ANONYMOUS_ORDER_FORM']:
+            if RepanierSettings.display_anonymous_order_form:
                 path = reverse('basket_view', args=(permanence.id,))
             else:
                 path = reverse('order_view', args=(permanence.id,))

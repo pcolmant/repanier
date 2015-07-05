@@ -14,12 +14,24 @@
 	{% blocktrans %}Hi, <strong>{{ username }}</strong>. Please choose your new password.{% endblocktrans %}
 	<form method="post" action="{% url "password_reset_reset" token %}" accept-charset="UTF-8" role="form">
 		{% csrf_token %}
-		{{ form.as_p }}
+        <div id="div_id_password1" class="form-group">
+            <label for="id_password1" class="control-label  requiredField">{% trans "New password" %}<span
+                    class="asteriskField">*</span></label>
+
+            <div class="controls "><input class="textinput textInput form-control" id="id_password1" name="password1"
+                                          type="password"/></div>
+        </div>
+        <div id="div_id_password2" class="form-group">
+            <label for="id_password2" class="control-label  requiredField">{% trans "New password (confirm)" %}<span
+                    class="asteriskField">*</span></label>
+
+            <div class="controls "><input class="textinput textInput form-control" id="id_password2" name="password2"
+                                          type="password"/></div>
+        </div>
 		<button class="btn btn-primary" type="submit">{% trans "Set new password" %}</button>
 	</form>
 {% endif %}
       </div><!-- /form -->
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
-</div>
 {% endblock %}

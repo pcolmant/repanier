@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-14 10:15+0200\n"
-"PO-Revision-Date: 2014-03-18 21:20+0100\n"
+"POT-Creation-Date: 2015-04-02 08:38+0200\n"
+"PO-Revision-Date: 2015-04-02 08:41+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 1.6.4\n"
+"X-Generator: Poedit 1.7.1\n"
 
 #: collect-static/admin/js/SelectFilter2.js:45
 #, c-format
@@ -82,15 +82,15 @@ msgstr "Tout supprimer"
 msgid "Click to remove all chosen %s at once."
 msgstr "Cliquer pour supprimer tous les %s choisis en même temps."
 
-#: collect-static/admin/js/actions.js:18
+#: collect-static/admin/js/actions.js:22
 #: collect-static/admin/js/actions.min.js:1
 msgid "%(sel)s of %(cnt)s selected"
 msgid_plural "%(sel)s of %(cnt)s selected"
 msgstr[0] "%(sel)s parmi %(cnt)s sélectionné"
 msgstr[1] "%(sel)s parmi %(cnt)s sélectionnés"
 
-#: collect-static/admin/js/actions.js:109
-#: collect-static/admin/js/actions.min.js:5
+#: collect-static/admin/js/actions.js:114
+#: collect-static/admin/js/actions.min.js:4
 msgid ""
 "You have unsaved changes on individual editable fields. If you run an "
 "action, your unsaved changes will be lost."
@@ -98,7 +98,7 @@ msgstr ""
 "Vous voulez quitter sans avoir sauvegarder les modifications. Elles seront "
 "perdues."
 
-#: collect-static/admin/js/actions.js:121
+#: collect-static/admin/js/actions.js:126
 #: collect-static/admin/js/actions.min.js:5
 msgid ""
 "You have selected an action, but you haven't saved your changes to "
@@ -108,8 +108,8 @@ msgstr ""
 "Vous voulez sauvegarder sans avoir fait de modification. Ne vous êtes-vous "
 "pas trompé de bouton..."
 
-#: collect-static/admin/js/actions.js:123
-#: collect-static/admin/js/actions.min.js:6
+#: collect-static/admin/js/actions.js:128
+#: collect-static/admin/js/actions.min.js:5
 msgid ""
 "You have selected an action, and you haven't made any changes on individual "
 "fields. You're probably looking for the Go button rather than the Save "
@@ -117,6 +117,67 @@ msgid ""
 msgstr ""
 "Vous voulez sauvegarder sans avoir fait de modification. Ne vous êtes-vous "
 "pas trompé de bouton..."
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:79
+#, c-format
+msgid "Note: You are %s hour ahead of server time."
+msgid_plural "Note: You are %s hours ahead of server time."
+msgstr[0] "Note: Vous êtes %s heure à l'avance sur l'heure du serveur."
+msgstr[1] "Note: Vous êtes %s heures à l'avance sur l'heure du serveur."
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:87
+#, c-format
+msgid "Note: You are %s hour behind server time."
+msgid_plural "Note: You are %s hours behind server time."
+msgstr[0] "Note: Vous êtes %s heure en retard sur l'heure du serveur."
+msgstr[1] "Note: Vous êtes %s heures en retard sur l'heure du serveur."
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:114
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:149
+msgid "Now"
+msgstr "Maintenant"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:118
+msgid "Clock"
+msgstr "Horloge"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:146
+msgid "Choose a time"
+msgstr "Choisir une heure"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:150
+msgid "Midnight"
+msgstr "Minuit"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:151
+msgid "6 a.m."
+msgstr "6 a.m."
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:152
+msgid "Noon"
+msgstr "Midi"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:156
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:276
+msgid "Cancel"
+msgstr "Annuler"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:216
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:269
+msgid "Today"
+msgstr "Aujourd'hui"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:220
+msgid "Calendar"
+msgstr "Calendrier"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:267
+msgid "Yesterday"
+msgstr "Hier"
+
+#: collect-static/admin/js/admin/DateTimeShortcuts.js:271
+msgid "Tomorrow"
+msgstr "Demain"
 
 #: collect-static/admin/js/calendar.js:8
 msgid ""
@@ -141,53 +202,18 @@ msgstr "Afficher"
 msgid "Hide"
 msgstr "Masquer"
 
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:52
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:88
-msgid "Now"
-msgstr "Maintenant"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:56
-msgid "Clock"
-msgstr "Horloge"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:84
-msgid "Choose a time"
-msgstr "Choisir une heure"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:89
-msgid "Midnight"
-msgstr "Minuit"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:90
-msgid "6 a.m."
-msgstr "6 a.m."
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:91
-msgid "Noon"
-msgstr "Midi"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:95
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:208
-msgid "Cancel"
-msgstr "Annuler"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:148
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:201
-msgid "Today"
-msgstr "Aujourd'hui"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:152
-msgid "Calendar"
-msgstr "Calendrier"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:199
-msgid "Yesterday"
-msgstr "Hier"
-
-#: collect-static/admin/js/admin/DateTimeShortcuts.js:203
-msgid "Tomorrow"
-msgstr "Demain"
-
 #: collect-static/cms/js/modules/cms.changeform.js:60
 msgid "Are you sure you want to change tabs without saving the page first?"
 msgstr "Etes-vous sur de changer d'onglet sans avoir d'abord sauvegardé?"
+
+#: collect-static/treebeard/treebeard-admin.js:158
+msgid "Abort"
+msgstr "Abandonner"
+
+#: collect-static/treebeard/treebeard-admin.js:180
+msgid "As Sibling"
+msgstr "Comme pair"
+
+#: collect-static/treebeard/treebeard-admin.js:198
+msgid "As child"
+msgstr "Comme enfant"

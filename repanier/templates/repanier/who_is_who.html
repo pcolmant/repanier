@@ -6,24 +6,42 @@
         {% if coordinator %}
 {% for customer in customer_list %}
     <p>
+    <div class="col-xs-2">
+        {% if customer.picture %}
+            <img class="img-rounded" style="margin: 5px;" alt="{{ customer.long_basket_name }}"
+                 title="{{ customer.long_basket_name }}" src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+        {% endif %}
+    </div>
+    <div class="col-xs-10">
     <b>{{ customer.long_basket_name }}</b>
     {% if customer.long_basket_name != customer.short_basket_name %} ({{customer.short_basket_name }}){% endif %}
     {% if customer.city %}<br/>{{ customer.city }}{% endif %}
     {% if customer.memo %}<br/>{{ customer.memo }}{% endif %}
     <br/>{% trans "Phone" %} : {{ customer.phone1 }}{% if customer.phone2 %}, {{ customer.phone2 }}{% endif %}
     <br/>{% trans "Email" %} : {{ customer.user.email }}{% if customer.email2 %}, {{ customer.email2 }}{% endif %}
+    </div>
     </p>
+    <div class="clearfix"></div>
 {% endfor %}
         {% else %}
 {% for customer in customer_list %}
     <p>
+    <div class="col-xs-2">
+        {% if customer.picture %}
+            <img class="img-rounded" style="margin: 5px;" alt="{{ customer.long_basket_name }}"
+                 title="{{ customer.long_basket_name }}" src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+        {% endif %}
+    </div>
+    <div class="col-xs-10">
     <b>{{ customer.long_basket_name }}</b>
 {#                {% if customer.long_basket_name != customer.short_basket_name %} ({{customer.short_basket_name }}){% endif %}#}
     {% if customer.city %}<br/>{{ customer.city }}{% endif %}
     {% if customer.memo %}<br/>{{ customer.memo | safe }}{% endif %}
     {% if customer.accept_phone_call_from_members %}<br/>{% trans "Phone" %} : {{ customer.phone1 }}{% if customer.phone2 %}, {{ customer.phone2 }}{% endif %}{% endif %}
     {% if customer.accept_mails_from_members %}<br/>{% trans "Email" %} : {{ customer.user.email }}{% if customer.email2 %}, {{ customer.email2 }}{% endif %}{% endif %}
+    </div>
     </p>
+    <div class="clearfix"></div>
 {% endfor %}
         {% endif %}
     </div>

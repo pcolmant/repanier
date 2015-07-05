@@ -1,5 +1,4 @@
 {% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
-{#<div class="col-md-12">#}
 <form id="producer_product_description_form" class="form-horizontal">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
@@ -32,10 +31,7 @@
                   {% endfor %}
                   </p>
                 {% endif %}
-                <div class="clearfix"></div>
-{#                    {{ form.long_name }}#}
                 <input class="form-control" id="{{ id_for_label }}" name="long_name" value="{{ form.long_name.value }}" type="text">
-{#                <span class="help-block">{{ form.long_name.help_text }}</span>#}
             </div>
             {% endwith %}
         </div>
@@ -109,13 +105,7 @@
                 <input class="form-control" id="{{ id_for_label }}" name="order_average_weight" value="{{ form.order_average_weight.value|unlocalize }}" min="0" step="0.1" type="number">
                 <div class="input-group-addon">{% trans "kg(s)" %}</div>
             </div>
-            <div id="div_{{ id_for_label }}" class="controls col-xs-1">
-{#                {{ form.customer_increment_order_quantity.errors }}#}
-{#                <label for="{{ id_for_label }}" class="control-label">#}
-{#                    {% trans "~kg(s) of 1 pc" %}#}
-{#                </label>#}
-            </div>
-            <div id="div_{{ id_for_label }}" class="controls col-xs-3">
+                <div id="div_{{ id_for_label }}" class="controls col-xs-4">
             </div>
             {% endwith %}
         </div>
@@ -177,68 +167,92 @@
         <div class="form-group">
             {% with id_for_label=form.offer_description.id_for_label %}
             <div id="div_{{ id_for_label }}" class="col-xs-12">
-                <label for="{{id_for_label }}" class="control-label">
-                    {{ form.offer_description.label }}
-                </label>
-                {% if form.offer_description.errors %}
-                  <p class="bg-danger">
-                  {% for error in form.offer_description.errors %}
-                    {{ error }}
-                  {% endfor %}
-                  </p>
-                {% endif %}
-                <div class="clearfix"></div>
-                <div class="controls">
-                <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}" name="offer_description">{{ form.offer_description.value }}</textarea>
-                <script>window.CKEDITOR_BASEPATH = "/static/djangocms_text_ckeditor/ckeditor/";</script>
-                <script src="/static/djangocms_text_ckeditor/ckeditor/ckeditor.js"></script>
-                <script>
-{#                    CKEDITOR.replace( "{{ id_for_label }}")#}
-                    CKEDITOR.replace( "{{ id_for_label }}",{
-                        language: 'fr',
-                        forcePasteAsPlainText : true,
-                        toolbar: [
-                            ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat' ],
-                            ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo' ],
-                            ['Maximize', '']
-                        ],
-                        format_tags: "p;h4;h5;blockquote;mutted;success;info;danger;pushpin",
-                        format_blockquote: {"name": "Blockquote", "element": "blockquote"},
-                        format_mutted: {"attributes": {"class": "text-muted"}, "name": "Mutted", "element": "p"},
-                        format_success: {"attributes": {"class": "bg-success"}, "name": "Success", "element": "p"},
-                        format_info: {"attributes": {"class": "bg-info"}, "name": "Info", "element": "p"},
-                        format_danger: {"attributes": {"class": "bg-danger"}, "name": "Danger", "element": "p"},
-                        format_pushpin: {"attributes": {"class": "glyphicon glyphicon-pushpin"}, "element": "span"},
-                        contentsCss : "/static/bootstrap/css/bootstrap.css",
-                        width: '100%',
-                        height: '8em',
-                        removePlugins: 'elementspath'
-                    });
-                </script>
+                <div class="col-xs-4">
+                    <label for="{{ id_for_label }}" class="control-label">
+                        {{ form.offer_description.label }}
+                    </label>
+                    {% if form.offer_description.errors %}
+                        <p class="bg-danger">
+                            {% for error in form.offer_description.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                    {% if form.picture.errors %}
+                        <p class="bg-danger">
+                            {% for error in form.picture.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                    <div class="clearfix"></div>
+                    {{ form.picture }}
+                </div>
+                <div class="col-xs-8">
+                    <div class="controls">
+                        <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                  name="offer_description">{{ form.offer_description.value }}</textarea>
+                        <script>window.CKEDITOR_BASEPATH = "/static/djangocms_text_ckeditor/ckeditor/";</script>
+                        <script src="/static/djangocms_text_ckeditor/ckeditor/ckeditor.js"></script>
+                        <script>
+                            CKEDITOR.replace("{{ id_for_label }}", {
+                                language: 'fr',
+                                forcePasteAsPlainText: true,
+                                toolbar: [
+                                    ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
+                                    ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
+                                    ['Maximize', '']
+                                ],
+                                format_tags: "p;h4;h5;blockquote;mutted;success;info;danger;pushpin",
+                                format_blockquote: {"name": "Blockquote", "element": "blockquote"},
+                                format_mutted: {
+                                    "attributes": {"class": "text-muted"},
+                                    "name": "Mutted",
+                                    "element": "p"
+                                },
+                                format_success: {
+                                    "attributes": {"class": "bg-success"},
+                                    "name": "Success",
+                                    "element": "p"
+                                },
+                                format_info: {"attributes": {"class": "bg-info"}, "name": "Info", "element": "p"},
+                                format_danger: {"attributes": {"class": "bg-danger"}, "name": "Danger", "element": "p"},
+                                format_pushpin: {
+                                    "attributes": {"class": "glyphicon glyphicon-pushpin"},
+                                    "element": "span"
+                                },
+                                contentsCss: "/static/bootstrap/css/bootstrap.css",
+                                width: '100%',
+                                height: '8em',
+                                removePlugins: 'elementspath'
+                            });
+                        </script>
+                    </div>
                 </div>
             </div>
             {% endwith %}
         </div>
     </div>
-{#    <div class="clearfix"></div>#}
     <div class="modal-footer">
-{#        <div class="form-actions">#}
             <input name="submit" value="{% trans "Update" %}" class="btn btn-primary" id="submit-id-submit" type="submit">
         {% if update %}
             <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
             <script>
-            t_row.find('span[id=get_long_name]').html('{{ offer_item.get_long_name | safe }}');
-            row = '{{ offer_item.producer_unit_price_wo_tax|floatformat:-2 }}&nbsp;&euro;&nbsp;/&nbsp;{% if offer_item.order_unit == "115" %}({% trans "pc" %}){% else %}({% trans "kg" %}){% endif %}'
-            row += '{% if offer_item.unit_deposit > 0 %}<br/><span class=\'glyphicon glyphicon-plus\'></span>{{ offer_item.unit_deposit|floatformat:-2 }}&nbsp;&euro;<span class=\'glyphicon glyphicon-leaf\'></span>{% endif %}'
+                t_row.find('span[id=get_long_name]').html('{{ offer_item.get_long_name | safe }}{% if offer_item.picture2 %}<img class="img-responsive img-rounded" style = "float:right; margin:5px; min-height:32px; min-width:32px; max-height:48px; max-width:48px;" src="{{ MEDIA_URL }}{{ offer_item.picture2 }}"/>{% endif %}');
+                row = '{{ offer_item.producer_unit_price_wo_tax|floatformat:-2 }}&nbsp;&euro;&nbsp;/&nbsp;
+                        {% if offer_item.order_unit == "115" %}({% trans "pc" %}){% else %}({% trans "kg" %}
+                            ){% endif %}';
+                row += '{% if offer_item.unit_deposit > 0 %}<br/><span class=\'glyphicon glyphicon-plus\'></span>
+                    {{ offer_item.unit_deposit|floatformat:-2 }}
+                    &nbsp;&euro;<span class=\'glyphicon glyphicon-leaf\'></span>{% endif %}';
             t_row.find('span[id=producer_unit_price_wo_tax]').html(row);
             t_row.find('span[id=get_vat_level_display]').html('{{ offer_item.get_vat_level_display }}');
-            row='{% if offer_item.stock == 0 %}--{% else %}{% if offer_item.stock <= 1 %}{{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == "105" %}({% trans "kg" %}){% else %}({% trans "pc" %}){% endif %}{% else %}{{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == "105" %}({% trans "kg" %}){% else %}({% trans "pcs" %}){% endif %}{% endif %}{% endif %}'
+                row = '{% if offer_item.stock == 0 %}--{% else %}{% if offer_item.stock <= 1 %}{{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == "105" %}({% trans "kg" %}){% else %}({% trans "pc" %}){% endif %}{% else %}{{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == "105" %}({% trans "kg" %}){% else %}({% trans "pcs" %}){% endif %}{% endif %}{% endif %}';
             t_row.find('span[id=stock]').html(row);
             </script>
         {%  else %}
             <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Cancel" %}</button>
         {% endif %}
-{#        </div>#}
     </div>
 </form>
 <script>
@@ -251,22 +265,9 @@ $('#producer_product_description_form').on('submit', function(event){
         cache: false,
         async: false,
         data: $(this).serialize(), // data sent with the post request
-
-{#        // handle a successful response#}
-{#          success: function (result) {#}
-{#              $.each(result, function (key, val) {#}
-{#                  console.log(key);#}
-{#                  console.log(val.id);#}
-{#                  console.log(val.html);#}
-{#               });#}
-{#                $('#offerModal').modal('hide')#}
-{#          },#}
-            success: function (result) {
-                $('#offerModalContent').html(result)
-            },
-
-
-        // handle a non-successful response
+        success: function (result) {
+            $('#offerModalContent').html(result)
+        },
         error : function(xhr,errmsg,err) {
             $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
                 " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
@@ -275,4 +276,3 @@ $('#producer_product_description_form').on('submit', function(event){
     });
 });
 </script>
-{#</div>#}
