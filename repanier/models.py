@@ -949,7 +949,8 @@ class Product(TranslatableModel):
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
 
     permanences = models.ManyToManyField(
-        'Permanence', through='OfferItem')
+        'Permanence', through='OfferItem',
+        blank=True)
     is_into_offer = models.BooleanField(_("is_into_offer"), default=True)
 
     order_unit = models.CharField(
