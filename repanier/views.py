@@ -185,7 +185,7 @@ def send_mail_to_coordinators(request):
 def send_mail_to_all_members(request):
     if request.user.is_staff:
         raise Http404
-    is_coordinator = request.user.is_superuser or Staff.objects.filter(
+    is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
         customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
     ).order_by().first() is not None
     if request.method == 'POST':
@@ -234,15 +234,11 @@ def who_is_who(request):
     customer_list = Customer.objects.filter(may_order=True, represent_this_buyinggroup=False).order_by("short_basket_name")
     if q is not None:
         customer_list = customer_list.filter(Q(long_basket_name__icontains=q) | Q(city__icontains=q))
-    staff = request.user.is_superuser or Staff.objects.filter(
+    is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
         customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
-    ).order_by().first()
-    if staff is not None:
-        coordinator = True
-    else:
-        coordinator = False
+    ).order_by().first() is not None
     return render_response(
-        request, "repanier/who_is_who.html", {'customer_list': customer_list, 'coordinator': coordinator, 'q': q}
+        request, "repanier/who_is_who.html", {'customer_list': customer_list, 'coordinator': is_coordinator, 'q': q}
     )
 
 
