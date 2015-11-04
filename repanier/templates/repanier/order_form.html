@@ -2,95 +2,63 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
 {% block sub_content %}
     {# {% debug %} #}
-{% addtoblock "css" %}
-<style type="text/css">
-body > .container {
-  padding: 60px 15px 0;
-}
-{#            /* sidebar */#}
-.bs-docs-sidebar {
-    padding-left: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-{#            /* all links */#}
-.bs-docs-sidebar .nav > li > a {
-    color: #3c3c3c;
-    padding: 4px 20px;
-    font-size: 16px;
-    font-weight: 400;
-    border-left: 2px solid transparent;
-}
-.bs-docs-sidebar .nav > li > b > a {
-    color: #3c3c3c;
-    padding: 4px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    border-left: 2px solid transparent;
-}
-{#            /* nested links */#}
-.bs-docs-sidebar .nav .nav > li > a,
-.bs-docs-sidebar .nav .nav > li > b > a {
-    padding-top: 1px;
-    padding-bottom: 1px;
-    padding-left: 30px;
-    font-size: 14px;
-}
-{#            /* active & hover links */#}
-.bs-docs-sidebar .nav > .active > a,
-.bs-docs-sidebar .nav > li > a:hover,
-.bs-docs-sidebar .nav > li > a:focus,
-.bs-docs-sidebar .nav > .active > b > a,
-.bs-docs-sidebar .nav > li > b > a:hover,
-.bs-docs-sidebar .nav > li > b > a:focus,
-{#                /* selected links */#}
-.bs-docs-sidebar .nav > li > b > a.bs-docs-sidebar-active,
-.bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
-    color: #51a351;
-    text-decoration: none;
-    background-color: transparent;
-    border-left: 2px solid #51a351;
-}
-.display_none {
-    display:none;
-}
-</style>
-{% endaddtoblock %}
     <div class="container">
+    {% if anonymous %}
     <div class="row">
-        <span id="connected" class="display_none">
-            <br/>
-            <div class="bg-danger">
-            <blockquote><small>
-                {% trans "You need to log in" %}<br/>
-            <br/>
-            <a href="{% url "login_form" %}?next={% url 'basket_view' permanence.id %}" class="btn btn-default">{% trans "Login me" %}</a>
-            </small></blockquote>
+        <div class="panel panel-danger">
+            <div class="panel-heading">
+                {% trans "You need to log in" %}<br/><br/>
+                <a href="{% url "login_form" %}?next={% url 'order_view' permanence.id %}" class="btn btn-primary">{% trans "Login me" %}</a>
             </div>
-        </span>
-        <span id="may_not_order" class="display_none">
-            <br/>
-            <div class="bg-danger">
-            <blockquote><small>
-            {% trans "You are not allowed to order products" %}
-            </small></blockquote>
-            </div>
-        </span>
+        </div>
     </div>
+    {% else %} {# anonymous#}
+    <span id="may_not_order" class="display_none">
     <div class="row">
-        <span id="not_connected">
+        <div class="panel panel-danger">
+            <div class="panel-heading">
+                {% trans "You are not allowed to order products" %}
+            </div>
+        </div>
+    </div>
+    </span>
+    {% if basket %}
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <b>{% trans "This order will be charged." %}</b><br/>
+                <span id="basket_message"></span>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+
+
+    <div class="panel panel-default">
         {% if permanence.offer_description and permanence.offer_description.strip %}
-        <div class="offer-description">
-            {{ permanence.offer_description | safe }}
+        <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse-offer-description">
+             <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
+        </div>
+        <div id="collapse-offer-description" class="panel-collapse collapse">
+            <div class="panel-body bg-primary">
+                <div class="col-xs-12">
+                    {{ permanence.offer_description | safe }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="panel-heading">
+             <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
         </div>
         {% endif %}
-        <br/>
-        </span>
     </div>
+            <br/>
+        </div>
+    {% endif %}
+    {% endif %} {# anonymous#}
     <div class="row">
     <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
         <div class="fixed">
-            <form id="search_form" class="form-horizontal" class="navbar-form" role="search" action="{% url "orderq_view" permanence.id %}" method="get">
+            <form id="search_form" class="form-horizontal navbar-form" role="search" method="get">
 {#                {% csrf_token %}#}
                 <div class="input-group">
                     {% if q != None %}
@@ -109,28 +77,15 @@ body > .container {
             <br/>
             <ul class="nav nav-stacked" id="sidebar">
                 <li>
-                    <b><a href="{% url "basket_view" permanence.id %}?offeritem=purchased"
-                       {% if offeritem_id == "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "Purchased product" %}
+                    <b><a href="{% url "order_view_wo_cache" permanence.id %}"
+                       {% if basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "Purchased product" %}
                         <span id="prepared_amount"></span> &euro; <span
                                 class="glyphicon glyphicon-shopping-cart"></span></a></b>
                 </li>
 {% if producer_set %}
-{% if anonymous_basket == "1" %}
-    <li>
-        <b><a href="{% url "basket_view" permanence.id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
-           {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a></b>
-        <ul class="nav nav-stacked">
-    {% for producer in producer_set.all %}
-        <li><a href="{% url "basket_view" permanence.id %}?producer={{ producer.id|stringformat:"d" }}&departementforcustomer={{ departementforcustomer_id }}"
-               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
-        </li>
-    {% endfor %}
-        </ul>
-    </li>
-{% else %}
     <li>
         <b><a href="{% url "order_view" permanence.id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
-           {% if producer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a></b>
+           {% if producer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a></b>
         <ul class="nav nav-stacked">
     {% for producer in producer_set.all %}
         <li><a href="{% url "order_view" permanence.id %}?producer={{ producer.id|stringformat:"d" }}&departementforcustomer={{ departementforcustomer_id }}"
@@ -140,48 +95,35 @@ body > .container {
         </ul>
     </li>
 {% endif %}
-{% endif %}
 {% if departementforcustomer_set %}
-{% if anonymous_basket == "1" %}
-    <li>
-        <b><a href="{% url "basket_view" permanence.id %}"
-           {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
-        <ul class="nav nav-stacked">
-            {% for departementforcustomer in departementforcustomer_set.all %}
-                {% ifchanged departementforcustomer.parent_id %}
-                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                <li><b><a href="{% url "basket_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|stringformat:"d" }}"
-                       {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
-                </b></li>
-                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
-                {% endifchanged %}
-                <li><a href="{% url "basket_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
-                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-    </li>
-{% else %}
     <li>
         <b><a href="{% url "order_view" permanence.id %}"
-           {% if departementforcustomer_id == "all" and offeritem_id != "purchased" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
+           {% if departementforcustomer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
         <ul class="nav nav-stacked">
             {% for departementforcustomer in departementforcustomer_set.all %}
-                {% ifchanged departementforcustomer.parent_id %}
-                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                <li><b><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|stringformat:"d" }}"
-                       {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
-                </b></li>
-                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
-                {% endifchanged %}
-                <li><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
-                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
-                </li>
+                {% if departementforcustomer.level > 0 %}
+                    {% ifchanged departementforcustomer.parent_id %}
+                    {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
+                    <li><b><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|stringformat:"d" }}"
+                           {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
+                    </b></li>
+                    {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                    {% endifchanged %}
+                    <li>
+                        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                           {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                    </li>
+                {% else %}
+                        </ul><li><b>
+                        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                           {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                        </b></li><ul class="nav nav-stacked">
+                {% endif %}
             {% endfor %}
         </ul>
     </li>
 {% endif %}
-{% endif %}
+{#{% endif %}#}
             </ul>
         </div>
     </nav>
@@ -217,7 +159,7 @@ body > .container {
 {#        Communication Modal starts#}
     <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
@@ -237,7 +179,7 @@ body > .container {
 {#        Order Modal starts#}
     <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
@@ -292,7 +234,7 @@ body > .container {
                 </div>
             {% endif %}
             <div class="btn-group">
-            <a href="{% url "basket_view" permanence.id %}?offeritem=purchased" class="btn btn-primary"><span id="prepared_amount_visible_xs"
+            <a href="{% url "order_view_wo_cache" permanence.id %}" class="btn btn-primary"><span id="prepared_amount_visible_xs"
                 class="prepared_amount"></span> &euro;
                 <span class="glyphicon glyphicon-shopping-cart"></span></a>
             </div>
@@ -305,7 +247,7 @@ body > .container {
         <div class="btn-group">
             <div class="btn-group">
                 {% if page_obj.has_previous %}
-                     <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}&amp;offeritem={{ offeritem_id }}"
+                     <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
                        class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                 {% else %}
                     <a href="#" class="btn btn-disabled"></a>
@@ -315,7 +257,7 @@ body > .container {
                        class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}&amp;offeritem={{ offeritem_id }}"
+                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
                        class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
                 {% else %}
                     <a href="#" class="btn btn-disabled"></a>
@@ -361,8 +303,9 @@ body > .container {
                 }
             }
             $(document).ready(function () {
-                {% if offeritem_list %}
-                    var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}offer_item={{ offer.id|stringformat:"d" }}&{% endfor %}permanence={{ permanence.id|stringformat:"d" }}&communication={{ communication }}';
+{#                {% if offeritem_list %}#}
+
+                    var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}offer_item={{ offer.id|stringformat:"d" }}&{% endfor %}permanence={{ permanence.id|stringformat:"d" }}{% if communication %}&communication={{ communication }}{% endif %}{% if basket %}&basket={{ basket }}{%  endif %}';
                     $.ajax({
                         url: lien,
                         cache: false,
@@ -372,17 +315,12 @@ body > .container {
                             $.each(result, function (key, val) {
                                 if(val.id == '#may_not_order') {
                                     $("#may_not_order").show();
-                                    $("#not_connected").hide();
                                 } else if(val.id == '#communication') {
                                     $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
                                     $('#communicationDetails').html(val.html);
                                     $('#communicationModal').modal('show')
                                 } else {
                                     $(val.id).html(val.html);
-                                    if(val.id == '#my_name' && val.html == '{% trans "Anonymous" %}') {
-                                        $("#connected").show();
-                                        $("#not_connected").hide();
-                                    }
                                 }
                             });
                         },
@@ -390,11 +328,10 @@ body > .container {
                             {% for offer in offeritem_list %}
                                 $("#offer_item{{ offer.id|stringformat:"d" }}").html("{% trans "Retry4" %}");
                             {% endfor %}
-                            $("#connected").show();
-                            $("#not_connected").hide();
                         }
                     });
-                {% endif %}
+
+{#                {% endif %}#}
                 $("#li_my_basket").show();
                 $("select").mouseover(function (event) {
                     var offer_item = $(this);

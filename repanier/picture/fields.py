@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 from django.core.files.storage import default_storage
 from django.db.models.fields.files import FileDescriptor, FieldFile
 from django.db.models import Field
-from django.conf import settings
+# from django.conf import settings
 from .widgets import AjaxPictureWidget
 
 
 class AjaxPictureField(Field):
+
     storage = default_storage
     attr_class = FieldFile
     descriptor_class = FileDescriptor
@@ -43,7 +44,6 @@ class AjaxPictureField(Field):
         return super(AjaxPictureField, self).formfield(**defaults)
 
 
-if 'south' in settings.INSTALLED_APPS:
-    from south.modelsinspector import add_introspection_rules
-
-    add_introspection_rules([], ["^repanier\.picture\.fields\.AjaxPictureField"])
+# if 'south' in settings.INSTALLED_APPS:
+#     from south.modelsinspector import add_introspection_rules
+#     add_introspection_rules([], ["^repanier\.picture\.fields\.AjaxPictureField"])

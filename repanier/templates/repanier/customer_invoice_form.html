@@ -1,5 +1,5 @@
 {% extends 'subpage_base_wo_cms_toolbar.html' %}
-{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags cache %}
 {% block sub_content %}
 {% addtoblock "css" %}
 <style type="text/css">
@@ -12,9 +12,10 @@ body > .container {
         {# {% debug %} #}
         <div class="panel {% if object.balance < 0 %}panel-danger{% else %}panel-success{% endif %}">
             <div class="panel-heading">
-                <small>{{ object.date_balance | date:"DATE_FORMAT" }}</small>
+                <small>{{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_customer_invoice_id %} - {% trans "latest invoice" %}{% endif %}</small>
                 <h4>{% trans "New balance" %} {{ object.customer.long_basket_name }}
                     : {{ object.balance }}&nbsp;&euro;</h4>
+                <span id="basket_message">{{ basket_message }}</span>
             </div>
         </div>
         {% if bank_account_set %}
@@ -64,22 +65,18 @@ body > .container {
             <h4>{{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.total_price_with_tax }}&nbsp;&euro;</h4>
             {% if DISPLAY_VAT == True %}
                 {% if object.total_vat != 0 or object.total_compensation != 0 or object.total_deposit != 0 %}
-                    <h4>
-                        <small>{% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                            {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}&nbsp;&euro;{% endif %}
-                        </small>
-                    </h4>
-                    <h4>
-                        <small>{% if object.total_compensation != 0 %}{% if object.total_vat != 0 %}
-                            , {% endif %}{% trans "Compensation" %} : {{ object.total_compensation }}&nbsp;
-                            &euro;{% endif %}</small>
-                    </h4>
-                    <h4>
-                        <small>{% if object.total_deposit != 0 %}
-                            {% if object.total_vat != 0 or object.total_compensation != 0 %}
-                                , {% endif %}{% trans "Deposit" %} : {{ object.total_deposit }}&nbsp;
-                            &euro;{% endif %}</small>
-                    </h4>
+                    <h4><small>
+                        {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
+                        {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}&nbsp;&euro;{% endif %}
+                        {% if object.total_compensation != 0 %}
+                            {% if object.total_vat != 0 %}, {% endif %}
+                            {% trans "Compensation" %} : {{ object.total_compensation }}&nbsp;&euro;
+                        {% endif %}
+                        {% if object.total_deposit != 0 %}
+                            {% if object.total_vat != 0 or object.total_compensation != 0 %}, {% endif %}
+                            {% trans "Deposit" %} : {{ object.total_deposit }}&nbsp;&euro;
+                        {% endif %}
+                    </small></h4>
                 {% endif %}
             {% endif %}
             <table class="table table-hover table-bordered">
@@ -206,4 +203,29 @@ body > .container {
     <div class="hidden-xs">
         <br/>
     </div>
+{% addtoblock "lastjs" %}
+    {% if not next_customer_invoice_id %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var lien = '{% url 'basket_message_form_ajax' object.customer.id %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                dataType: 'json',
+                async: true,
+                success: function (result) {
+                    $.each(result, function (key, val) {
+                        $(val.id).html(val.html);
+                    });
+                },
+                error: function (result) {
+                    $("#basket_message").html("{% trans "Retry" %}");
+                }
+            });
+
+        });
+    </script>
+    {% endif %}
+{% endaddtoblock %}
+
 {% endblock %}

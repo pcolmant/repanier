@@ -13,6 +13,7 @@ EMPTY_STRING = ''
 DECIMAL_ZERO = Decimal('0')
 DECIMAL_ONE = Decimal('1')
 DECIMAL_TWO = Decimal('2')
+DECIMAL_THREE = Decimal('3')
 DECIMAL_1_02 = Decimal('1.02')
 DECIMAL_1_06 = Decimal('1.06')
 DECIMAL_1_12 = Decimal('1.12')
@@ -117,6 +118,7 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
 LUT_PRODUCER_PRODUCT_ORDER_UNIT = (
     (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold by piece")),
     (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold by weight")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold by l")),
     (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by piece, invoiced following the weight")),
 )
 
@@ -167,3 +169,6 @@ LUT_PERMANENCE_NAME = (
     (PERMANENCE_NAME_DELIVERY, _('Delivery')),
     (PERMANENCE_NAME_ORDER, _('Order')),
 )
+
+LIMIT_ORDER_QTY_ITEM = 50
+LIMIT_DISPLAYED_PERMANENCE = 25

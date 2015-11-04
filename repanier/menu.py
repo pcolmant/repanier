@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 import datetime
 
 from django.conf import settings
-from apps import RepanierSettings
+from django.utils import timezone
+import apps
 from django.utils.formats import number_format
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
-from django.utils.timezone import utc
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
@@ -21,21 +21,20 @@ from models import PermanenceBoard
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
         nodes = []
-        # if request.user.is_authenticated():
         master_id = 2
         node = NavigationNode(
-            "%s" % RepanierSettings.permanence_name,
+            "%s" % apps.REPANIER_SETTINGS_PERMANENCES_NAME,
             "/",
             id=master_id,
             visible=True
         )
         nodes.append(node)
-        submenu_id = master_id + 1
+        submenu_id = master_id
 
         separator = False
-        # now = datetime.datetime.utcnow().replace(tzinfo=utc)
         permanence_board_set = PermanenceBoard.objects.filter(permanence__status__lte=PERMANENCE_WAIT_FOR_DONE).only("id").order_by()
         if permanence_board_set.exists():
+            submenu_id += 1
             node = NavigationNode(
                 _('Permanence board '),
                 reverse('permanence_view'),
@@ -43,15 +42,17 @@ class PermanenceMenu(Menu):
                 visible=True
             )
             nodes.append(node)
-            submenu_id += 1
             separator = True
 
+        displayed_permanence_counter = 0
         msg = _(' (opened)')
         first_pass = True
         for permanence in Permanence.objects.filter(status=PERMANENCE_OPENED)\
                 .only("id", "permanence_date")\
                 .order_by('permanence_date'):
+            displayed_permanence_counter+=1
             if first_pass and separator:
+                submenu_id += 1
                 node = NavigationNode(
                     '------',
                     "/",
@@ -59,12 +60,10 @@ class PermanenceMenu(Menu):
                     visible=True
                 )
                 nodes.append(node)
-                submenu_id += 1
             first_pass = False
-            if RepanierSettings.display_anonymous_order_form:
-                path = reverse('basket_view', args=(permanence.id,))
-            else:
-                path = reverse('order_view', args=(permanence.id,))
+            separator = True
+            path = reverse('order_view', args=(permanence.id,))
+            submenu_id += 1
             node = NavigationNode(
                 '%s %s' % (permanence, msg),
                 path,
@@ -72,14 +71,16 @@ class PermanenceMenu(Menu):
                 visible=True
             )
             nodes.append(node)
-            submenu_id += 1
 
         msg = _(' (closed)')
         first_pass = True
+        closed_separator = separator
         for permanence in Permanence.objects.filter(status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND])\
                 .only("id", "permanence_date")\
                 .order_by('-permanence_date'):
-            if first_pass and separator:
+            displayed_permanence_counter+=1
+            if first_pass and closed_separator:
+                submenu_id += 1
                 node = NavigationNode(
                     '------',
                     "/",
@@ -87,40 +88,65 @@ class PermanenceMenu(Menu):
                     visible=True
                 )
                 nodes.append(node)
-                submenu_id += 1
             first_pass = False
+            separator = True
+            closed_separator = False
+            submenu_id += 1
             node = NavigationNode(
                 '%s %s' % (permanence, msg),
-                reverse('basket_view', args=(permanence.id,)),
+                reverse('order_view', args=(permanence.id,)),
                 id=submenu_id, parent_id=master_id,
                 visible=True
             )
             nodes.append(node)
-            submenu_id += 1
-
-        if request.user.is_authenticated():
-            last_customer_invoice = CustomerInvoice.objects.filter(
-                customer__user_id=request.user.id,
-                invoice_sort_order__isnull=False)\
-                .only("balance", "date_balance")\
-                .order_by('-invoice_sort_order')
-            if last_customer_invoice.exists():
-                if separator:
+        if displayed_permanence_counter < 4:
+            msg = _(' (invoiced)')
+            max_counter = 4 - displayed_permanence_counter
+            for permanence in Permanence.objects.filter(status__in=[PERMANENCE_DONE, PERMANENCE_ARCHIVED])\
+                    .only("id", "permanence_date")\
+                    .order_by('-permanence_date'):
+                if permanence.permanence_date >= (timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)).date():
+                    if first_pass and closed_separator:
+                        submenu_id += 1
+                        node = NavigationNode(
+                            '------',
+                            "/",
+                            id=submenu_id, parent_id=master_id,
+                            visible=True
+                        )
+                        nodes.append(node)
+                    first_pass = False
+                    separator = True
+                    submenu_id += 1
                     node = NavigationNode(
-                        '------',
-                        "/",
+                        '%s %s' % (permanence, msg),
+                        reverse('order_view', args=(permanence.id,)),
                         id=submenu_id, parent_id=master_id,
                         visible=True
                     )
                     nodes.append(node)
-                    submenu_id += 1
+                max_counter -= 1
+                if max_counter <= 0:
+                    break
+
+        if apps.REPANIER_SETTINGS_INVOICE:
+            if separator:
+                submenu_id += 1
                 node = NavigationNode(
-                    '<span id="my_balance">%s</span>' % _('My balance'),
-                    reverse('customer_invoice_view', args=(0,)),
+                    '------',
+                    "/",
                     id=submenu_id, parent_id=master_id,
                     visible=True
                 )
                 nodes.append(node)
+            submenu_id += 1
+            node = NavigationNode(
+                '<span id="my_balance">%s</span>' % _('My balance'),
+                reverse('customer_invoice_view', args=(0,)),
+                id=submenu_id, parent_id=master_id,
+                visible=True
+            )
+            nodes.append(node)
 
                 # for node in nodes:
                 #     logging.debug('Node before : %s' % node.get_menu_title())

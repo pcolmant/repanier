@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from const import *
 
+
 class SelectWidgetBootstrap(forms.Select):
     selected_choice = None
 
@@ -21,35 +22,29 @@ class SelectWidgetBootstrap(forms.Select):
         super(SelectWidgetBootstrap, self).__setattr__(k, value)
 
     def render(self, name, value, attrs=None, choices=()):
-        output = ["""<div id="%(name)s_dropdown" class="btn-group pull-left btn-group-form">"""
-                  """    <button id="%(name)s_button_label" class="btn btn-default dropdown-toggle%(disabled)s" type="button" data-toggle="dropdown">%(label)s</button>"""
-                  """    <button class="btn btn-default dropdown-toggle%(disabled)s" type="button" data-toggle="dropdown">"""
-                  """        <span class="caret"></span>"""
-                  """    </button>"""
-                  """    <ul class="dropdown-menu">"""
-                  """        %(options)s"""
-                  """    </ul>"""
-                  """    <input type="hidden" name="%(name)s" value="%(value)s" class="btn-group-value"/>"""
-                  """<script type="text/javascript">"""
-                  # """    $(document).ready(function() {"""
-                  # """        $('#%(name)s_dropdown').on('show.bs.dropdown', function () {"""
-                  # """            $("#%(name)s_dropdown ul").empty();"""
-                  # """            $("#%(name)s_dropdown ul").append('<li><a href="#">Hello</a></li>');"""
-                  # """        });"""
-                  # """    });"""
-                  """    function %(name)s_select(value, label) {"""
-                  """        $('input[name=%(name)s]').val(value);"""
-                  """        $('button[id=%(name)s_button_label]').html(label);"""
-                  """    }"""
-                  """</script>"""
-                  """</div>"""
-                   % {'options': self.render_options2(choices, [value, ""], name),
-                      'label': self.selected_choice,
-                      'name': name,
-                      'value': value,
-                      'disabled': ' disabled' if self.disabled else ''
-                      }]
-        return mark_safe(u'\n'.join(output))
+        if value is None:
+            value = ''
+        output = """
+            <div id="{name}_dropdown" class="btn-group pull-left btn-group-form">
+                <button id="{name}_button_label" class="btn btn-default dropdown-toggle{disabled}" type="button" data-toggle="dropdown">{label}</button>
+                <button class="btn btn-default dropdown-toggle{disabled}" type="button" data-toggle="dropdown"><span class="caret"></span></button>
+                <ul class="dropdown-menu">{options}</ul>
+                <input type="hidden" name="{name}" value="{value}" class="btn-group-value"/>
+                <script type="text/javascript">
+                    function {name}_select(value, label) {{
+                        $('input[name={name}]').val(value);
+                        $('button[id={name}_button_label]').html(label);
+                    }}
+                </script>
+            </div>
+        """.format(
+            options=self.render_options2(choices, [value, ""], name),
+            label=self.selected_choice,
+            name=name,
+            value=value,
+            disabled=' disabled' if self.disabled else ''
+        )
+        return mark_safe(output)
 
     def render_option2(self, selected_choices, option_value, option_label, name):
         option_value = force_unicode(option_value)
@@ -93,89 +88,107 @@ class SelectProducerOrderUnitWidget(forms.Select):
         super(SelectProducerOrderUnitWidget, self).__setattr__(k, value)
 
     def render(self, name, value, attrs=None, choices=()):
-        output = ["""<div id="%(name)s_dropdown" class="btn-group pull-left btn-group-form">"""
-                  """    <button id="%(name)s_button_label" class="btn btn-default dropdown-toggle%(disabled)s" type="button" data-toggle="dropdown">%(label)s</button>"""
-                  """    <button class="btn btn-default dropdown-toggle%(disabled)s" type="button" data-toggle="dropdown">"""
-                  """        <span class="caret"></span>"""
-                  """    </button>"""
-                  """    <ul class="dropdown-menu">"""
-                  """        %(options)s"""
-                  """    </ul>"""
-                  """    <input type="hidden" name="%(name)s" value="%(value)s" class="btn-group-value"/>"""
-                  """<script type="text/javascript">"""
-                  """switch($('input[name=%(name)s]').val()) {"""
-                  """   case '%(PRODUCT_ORDER_UNIT_PC_PRICE_PC)s':"""
-                  """       $('span[id=customer_increment_order_quantity_label]').html('%(INCREMENT_ORDER_UNIT_PC_PRICE_PC_LABEL)s');"""
-                  """       $('span[id=customer_increment_order_quantity_addon]').html('%(INCREMENT_ORDER_UNIT_PC_PRICE_PC_ADDON)s');"""
-                  """       $('span[id=stock_label]').html('%(STOCK_ORDER_UNIT_PC_PRICE_PC_LABEL)s');"""
-                  """       $('span[id=stock_addon]').html('%(STOCK_ORDER_UNIT_PC_PRICE_PC_ADDON)s');"""
-                  """       $('span[id=producer_unit_price_addon]').html('%(PRICE_ORDER_UNIT_PC_PRICE_PC_ADDON)s');"""
-                  """       $('div[id=div_id_order_average_weight]').hide();"""
-                  """       break;"""
-                  """   case '%(PRODUCT_ORDER_UNIT_PC_PRICE_KG)s':"""
-                  """       $('span[id=customer_increment_order_quantity_label]').html('%(INCREMENT_ORDER_UNIT_PC_PRICE_KG_LABEL)s');"""
-                  """       $('span[id=customer_increment_order_quantity_addon]').html('%(INCREMENT_ORDER_UNIT_PC_PRICE_KG_ADDON)s');"""
-                  """       $('span[id=stock_label]').html('%(STOCK_ORDER_UNIT_PC_PRICE_KG_LABEL)s');"""
-                  """       $('span[id=stock_addon]').html('%(STOCK_ORDER_UNIT_PC_PRICE_KG_ADDON)s');"""
-                  """       $('span[id=producer_unit_price_addon]').html('%(PRICE_ORDER_UNIT_PC_PRICE_KG_ADDON)s');"""
-                  """       $('div[id=div_id_order_average_weight]').hide();"""
-                  """       break;"""
-                  """   case '%(PRODUCT_ORDER_UNIT_PC_KG)s':"""
-                  """       $('span[id=customer_increment_order_quantity_label]').html('%(INCREMENT_ORDER_UNIT_PC_KG_LABEL)s');"""
-                  """       $('span[id=customer_increment_order_quantity_addon]').html('%(INCREMENT_ORDER_UNIT_PC_KG_ADDON)s');"""
-                  """       $('span[id=stock_label]').html('%(STOCK_ORDER_UNIT_PC_KG_LABEL)s');"""
-                  """       $('span[id=stock_addon]').html('%(STOCK_ORDER_UNIT_PC_KG_ADDON)s');"""
-                  """       $('span[id=producer_unit_price_addon]').html('%(PRICE_ORDER_UNIT_PC_KG_ADDON)s');"""
-                  """       $('div[id=div_id_order_average_weight]').show();"""
-                  """       break;"""
-                  """};"""
-                  """function %(name)s_select(value, label, customer_increment_order_quantity_label, stock_label, increment_order_quantity_addon, stock_addon, price_addon) {"""
-                  """       $('input[name=%(name)s]').val(value);"""
-                  """       $('button[id=%(name)s_button_label]').html(label);"""
-                  """       $('span[id=customer_increment_order_quantity_label]').html(customer_increment_order_quantity_label);"""
-                  """       $('span[id=customer_increment_order_quantity_addon]').html(increment_order_quantity_addon);"""
-                  """       $('span[id=stock_label]').html(stock_label);"""
-                  """       $('span[id=stock_addon]').html(stock_addon);"""
-                  """       $('span[id=producer_unit_price_addon]').html(price_addon);"""
-                  """       switch(value) {"""
-                  """           case '%(PRODUCT_ORDER_UNIT_PC_PRICE_PC)s':"""
-                  """               $('div[id=div_id_order_average_weight]').hide();"""
-                  """               break;"""
-                  """           case '%(PRODUCT_ORDER_UNIT_PC_PRICE_KG)s':"""
-                  """               $('div[id=div_id_order_average_weight]').hide();"""
-                  """               break;"""
-                  """           case '%(PRODUCT_ORDER_UNIT_PC_KG)s':"""
-                  """               $('div[id=div_id_order_average_weight]').show();"""
-                  """               break;"""
-                  """       };"""
-                  """}"""
-                  """</script>"""
-                  """</div>"""
-                   % {'options': self.render_options2(choices, [value, ""], name),
-                      'label': self.selected_choice,
-                      'name': name,
-                      'value': value,
-                      'disabled': ' disabled' if self.disabled else '',
-                      'PRODUCT_ORDER_UNIT_PC_PRICE_PC': PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-                      'INCREMENT_ORDER_UNIT_PC_PRICE_PC_LABEL': _('By multiple of'),
-                      'INCREMENT_ORDER_UNIT_PC_PRICE_PC_ADDON': _('pc(s)'),
-                      'STOCK_ORDER_UNIT_PC_PRICE_PC_LABEL': _('Stock'),
-                      'STOCK_ORDER_UNIT_PC_PRICE_PC_ADDON': _('pc(s)'),
-                      'PRICE_ORDER_UNIT_PC_PRICE_PC_ADDON': _('/pc'),
-                      'PRODUCT_ORDER_UNIT_PC_PRICE_KG': PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-                      'INCREMENT_ORDER_UNIT_PC_PRICE_KG_LABEL': _('By multiple of'),
-                      'INCREMENT_ORDER_UNIT_PC_PRICE_KG_ADDON': _('kg(s)'),
-                      'STOCK_ORDER_UNIT_PC_PRICE_KG_LABEL': _('Stock'),
-                      'STOCK_ORDER_UNIT_PC_PRICE_KG_ADDON': _('kg(s)'),
-                      'PRICE_ORDER_UNIT_PC_PRICE_KG_ADDON': _('/kg'),
-                      'PRODUCT_ORDER_UNIT_PC_KG': PRODUCT_ORDER_UNIT_PC_KG,
-                      'INCREMENT_ORDER_UNIT_PC_KG_LABEL': _('By multiple of'),
-                      'INCREMENT_ORDER_UNIT_PC_KG_ADDON': _('pc(s)'),
-                      'STOCK_ORDER_UNIT_PC_KG_LABEL': _('Stock'),
-                      'STOCK_ORDER_UNIT_PC_KG_ADDON': _('pc(s)'),
-                      'PRICE_ORDER_UNIT_PC_KG_ADDON': _('/kg'),
-                      }]
-        return mark_safe(u'\n'.join(output))
+        if value is None:
+            value = ''
+        output = """
+            <div id="{name}_dropdown" class="btn-group pull-left btn-group-form">
+                <button id="{name}_button_label" class="btn btn-default dropdown-toggle{disabled}" type="button" data-toggle="dropdown">{label}</button>
+                <button class="btn btn-default dropdown-toggle{disabled}" type="button" data-toggle="dropdown"><span class="caret"></span></button>
+                <ul class="dropdown-menu">{options}</ul>
+                <input type="hidden" name="{name}" value="{value}" class="btn-group-value"/>
+                <script type="text/javascript">
+                switch($('input[name={name}]').val()) {{
+                 case '{PRODUCT_ORDER_UNIT_PC_PRICE_PC}':
+                     $('span[id=customer_increment_order_quantity_label]').html('{INCREMENT_ORDER_UNIT_PC_PRICE_PC_LABEL}');
+                     $('span[id=customer_increment_order_quantity_addon]').html('{INCREMENT_ORDER_UNIT_PC_PRICE_PC_ADDON}');
+                     $('span[id=stock_label]').html('{STOCK_ORDER_UNIT_PC_PRICE_PC_LABEL}');
+                     $('span[id=stock_addon]').html('{STOCK_ORDER_UNIT_PC_PRICE_PC_ADDON}');
+                     $('span[id=producer_unit_price_addon]').html('{PRICE_ORDER_UNIT_PC_PRICE_PC_ADDON}');
+                     $('div[id=div_id_order_average_weight]').hide();
+                     break;
+                 case '{PRODUCT_ORDER_UNIT_PC_PRICE_KG}':
+                     $('span[id=customer_increment_order_quantity_label]').html('{INCREMENT_ORDER_UNIT_PC_PRICE_KG_LABEL}');
+                     $('span[id=customer_increment_order_quantity_addon]').html('{INCREMENT_ORDER_UNIT_PC_PRICE_KG_ADDON}');
+                     $('span[id=stock_label]').html('{STOCK_ORDER_UNIT_PC_PRICE_KG_LABEL}');
+                     $('span[id=stock_addon]').html('{STOCK_ORDER_UNIT_PC_PRICE_KG_ADDON}');
+                     $('span[id=producer_unit_price_addon]').html('{PRICE_ORDER_UNIT_PC_PRICE_KG_ADDON}');
+                     $('div[id=div_id_order_average_weight]').hide();
+                     break;
+                 case '{PRODUCT_ORDER_UNIT_PC_PRICE_LT}':
+                     $('span[id=customer_increment_order_quantity_label]').html('{INCREMENT_ORDER_UNIT_PC_PRICE_LT_LABEL}');
+                     $('span[id=customer_increment_order_quantity_addon]').html('{INCREMENT_ORDER_UNIT_PC_PRICE_LT_ADDON}');
+                     $('span[id=stock_label]').html('{STOCK_ORDER_UNIT_PC_PRICE_LT_LABEL}');
+                     $('span[id=stock_addon]').html('{STOCK_ORDER_UNIT_PC_PRICE_LT_ADDON}');
+                     $('span[id=producer_unit_price_addon]').html('{PRICE_ORDER_UNIT_PC_PRICE_LT_ADDON}');
+                     $('div[id=div_id_order_average_weight]').hide();
+                     break;
+                 case '{PRODUCT_ORDER_UNIT_PC_KG}':
+                     $('span[id=customer_increment_order_quantity_label]').html('{INCREMENT_ORDER_UNIT_PC_KG_LABEL}');
+                     $('span[id=customer_increment_order_quantity_addon]').html('{INCREMENT_ORDER_UNIT_PC_KG_ADDON}');
+                     $('span[id=stock_label]').html('{STOCK_ORDER_UNIT_PC_KG_LABEL}');
+                     $('span[id=stock_addon]').html('{STOCK_ORDER_UNIT_PC_KG_ADDON}');
+                     $('span[id=producer_unit_price_addon]').html('{PRICE_ORDER_UNIT_PC_KG_ADDON}');
+                     $('div[id=div_id_order_average_weight]').show();
+                     break;
+                }};
+                function {name}_select(value, label, customer_increment_order_quantity_label, stock_label, 
+                increment_order_quantity_addon, stock_addon, price_addon) {{
+                     $('input[name={name}]').val(value);
+                     $('button[id={name}_button_label]').html(label);
+                     $('span[id=customer_increment_order_quantity_label]').html(customer_increment_order_quantity_label);
+                     $('span[id=customer_increment_order_quantity_addon]').html(increment_order_quantity_addon);
+                     $('span[id=stock_label]').html(stock_label);
+                     $('span[id=stock_addon]').html(stock_addon);
+                     $('span[id=producer_unit_price_addon]').html(price_addon);
+                     switch(value) {{
+                         case '{PRODUCT_ORDER_UNIT_PC_PRICE_PC}':
+                             $('div[id=div_id_order_average_weight]').hide();
+                             break;
+                         case '{PRODUCT_ORDER_UNIT_PC_PRICE_KG}':
+                             $('div[id=div_id_order_average_weight]').hide();
+                             break;
+                         case '{PRODUCT_ORDER_UNIT_PC_PRICE_LT}':
+                             $('div[id=div_id_order_average_weight]').hide();
+                             break;
+                         case '{PRODUCT_ORDER_UNIT_PC_KG}':
+                             $('div[id=div_id_order_average_weight]').show();
+                             break;
+                     }};
+                }}
+                </script>
+            </div>
+        """.format(
+            options=self.render_options2(choices, [value, ""], name),
+            label=self.selected_choice,
+            name=name,
+            value=value,
+            disabled=' disabled' if self.disabled else '',
+            PRODUCT_ORDER_UNIT_PC_PRICE_PC=PRODUCT_ORDER_UNIT_PC_PRICE_PC,
+            INCREMENT_ORDER_UNIT_PC_PRICE_PC_LABEL=_('By multiple of'),
+            INCREMENT_ORDER_UNIT_PC_PRICE_PC_ADDON=_('pc(s)'),
+            STOCK_ORDER_UNIT_PC_PRICE_PC_LABEL=_('Stock'),
+            STOCK_ORDER_UNIT_PC_PRICE_PC_ADDON=_('pc(s)'),
+            PRICE_ORDER_UNIT_PC_PRICE_PC_ADDON=_('/pc'),
+            PRODUCT_ORDER_UNIT_PC_PRICE_KG=PRODUCT_ORDER_UNIT_PC_PRICE_KG,
+            INCREMENT_ORDER_UNIT_PC_PRICE_KG_LABEL=_('By multiple of'),
+            INCREMENT_ORDER_UNIT_PC_PRICE_KG_ADDON=_('kg(s)'),
+            STOCK_ORDER_UNIT_PC_PRICE_KG_LABEL=_('Stock'),
+            STOCK_ORDER_UNIT_PC_PRICE_KG_ADDON=_('kg(s)'),
+            PRICE_ORDER_UNIT_PC_PRICE_KG_ADDON=_('/kg'),
+            PRODUCT_ORDER_UNIT_PC_PRICE_LT=PRODUCT_ORDER_UNIT_PC_PRICE_KG,
+            INCREMENT_ORDER_UNIT_PC_PRICE_LT_LABEL=_('By multiple of'),
+            INCREMENT_ORDER_UNIT_PC_PRICE_LT_ADDON=_('l(s)'),
+            STOCK_ORDER_UNIT_PC_PRICE_LT_LABEL=_('Stock'),
+            STOCK_ORDER_UNIT_PC_PRICE_LT_ADDON=_('l(s)'),
+            PRICE_ORDER_UNIT_PC_PRICE_LT_ADDON=_('/l'),
+            PRODUCT_ORDER_UNIT_PC_KG=PRODUCT_ORDER_UNIT_PC_KG,
+            INCREMENT_ORDER_UNIT_PC_KG_LABEL=_('By multiple of'),
+            INCREMENT_ORDER_UNIT_PC_KG_ADDON=_('pc(s)'),
+            STOCK_ORDER_UNIT_PC_KG_LABEL=_('Stock'),
+            STOCK_ORDER_UNIT_PC_KG_ADDON=_('pc(s)'),
+            PRICE_ORDER_UNIT_PC_KG_ADDON=_('/kg'),
+        )
+        return mark_safe(output)
 
     def render_option2(self, selected_choices, option_value, option_label, name):
         option_value = force_unicode(option_value)
@@ -196,6 +209,12 @@ class SelectProducerOrderUnitWidget(forms.Select):
             stock_label = _('Stock')
             stock_addon = _('kg(s)')
             price_addon = _('/kg')
+        elif option_value == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
+            increment_order_quantity_label = _('By multiple of')
+            increment_order_quantity_addon = _('l(s)')
+            stock_label = _('Stock')
+            stock_addon = _('l(s)')
+            price_addon = _('/l')
         elif option_value == PRODUCT_ORDER_UNIT_PC_KG:
             increment_order_quantity_label = _('By multiple of')
             increment_order_quantity_addon = _('pc(s)')
@@ -233,130 +252,138 @@ class SelectAdminOrderUnitWidget(forms.Select):
         super(SelectAdminOrderUnitWidget, self).__setattr__(k, value)
 
     def render(self, name, value, attrs=None, choices=()):
+        if value is None:
+            value = ''
         final_attrs = self.build_attrs(attrs, name=name)
-        output = [format_html('<select{} onchange="%(name)s_select(this.value)">' % {'name': name, }, flatatt(final_attrs))]
-        options = self.render_options(choices, [value])
-        if options:
-            output.append(options)
-        output.append('</select>')
-        output.append('<script type="text/javascript">')
-        output.append('django.jQuery(document).ready(function() {%(name)s_select("%(value)s");});' % {'name': name, 'value': value})
-        output.append('function %(name)s_select(value) {' % {'name': name, })
-        output.append('(function($){')
-        output.append('    switch (value) {')
-        output.append('        case "100":')
-        output.append('            $("div.field-box.field-unit_deposit").show();')
-        output.append('            $("div.field-box.field-order_average_weight").hide();')
-        output.append('            $("div.field-box.field-customer_minimum_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_increment_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_alert_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_unit_price").show();')
-        output.append('            $("div.field-box.field-wrapped").show();')
-        output.append('            break;')
-        output.append('        case "105":')
-        output.append('        case "110":')
-        output.append('        case "115":')
-        output.append('            $("div.field-box.field-unit_deposit").show();')
-        output.append('            $("div.field-box.field-order_average_weight").show();')
-        output.append('            $("div.field-box.field-order_average_weight").show();')
-        output.append('            $("div.field-box.field-customer_minimum_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_alert_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_unit_price").show();')
-        output.append('            $("div.field-box.field-wrapped").show();')
-        output.append('            break;')
-        output.append('        case "140":')
-        output.append('            $("div.field-box.field-unit_deposit").hide();')
-        output.append('            $("div.field-box.field-order_average_weight").show();')
-        output.append('            $("div.field-box.field-customer_minimum_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_increment_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_alert_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_unit_price").show();')
-        output.append('            $("div.field-box.field-wrapped").show();')
-        output.append('            break;')
-        output.append('        case "120":')
-        output.append('        case "150":')
-        output.append('            $("div.field-box.field-unit_deposit").hide();')
-        output.append('            $("div.field-box.field-order_average_weight").hide();')
-        output.append('            $("div.field-box.field-customer_minimum_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_increment_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_alert_order_quantity").show();')
-        output.append('            $("div.field-box.field-customer_unit_price").show();')
-        output.append('            $("div.field-box.field-wrapped").show();')
-        output.append('            break;')
-        output.append('        case "300":')
-        output.append('        case "400":')
-        output.append('        case "500":')
-        output.append('            $("div.field-box.field-unit_deposit").hide();')
-        output.append('            $("div.field-box.field-order_average_weight").hide();')
-        output.append('            $("div.field-box.field-customer_minimum_order_quantity").hide();')
-        output.append('            $("div.field-box.field-customer_increment_order_quantity").hide();')
-        output.append('            $("div.field-box.field-customer_alert_order_quantity").hide();')
-        output.append('            $("div.field-box.field-customer_unit_price").hide();')
-        output.append('            $("div.field-box.field-wrapped").hide();')
-        output.append('            break;')
-        output.append('    }')
-        output.append('    switch (value) {')
-        output.append('        case "105":')
-        output.append('            $("div.field-box.field-order_average_weight label").html("%s");'
-                      % _("Piece weight in kg"))
-        output.append('            break;')
-        output.append('        case "110":')
-        output.append('            $("div.field-box.field-order_average_weight label").html("%s");'
-                      % _("Piece content in l"))
-        output.append('            break;')
-        output.append('        case "115":')
-        output.append('            $("div.field-box.field-order_average_weight label").html("%s");'
-                      % _("Number of pieces in a pack"))
-        output.append('            break;')
-        output.append('        case "140":')
-        output.append('            $("div.field-box.field-order_average_weight label").html("%s");'
-                      % _("Average weight in kg of a piece"))
-        output.append('            break;')
-        output.append('    }')
-        output.append('    switch (value) {')
-        output.append('        case "100":')
-        output.append('        case "105":')
-        output.append('        case "110":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one piece"))
-        output.append('            $("div.field-box.field-customer_unit_price label").html("%s");'
-                      % _("Customer price for one piece"))
-        output.append('            break;')
-        output.append('        case "115":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one pack"))
-        output.append('            $("div.field-box.field-customer_unit_price label").html("%s");'
-                      % _("Customer price for one pack"))
-        output.append('            break;')
-        output.append('        case "120":')
-        output.append('        case "140":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one kg"))
-        output.append('            $("div.field-box.field-customer_unit_price label").html("%s");'
-                      % _("Customer price for one kg"))
-        output.append('            break;')
-        output.append('        case "150":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one l"))
-        output.append('            $("div.field-box.field-customer_unit_price label").html("%s");'
-                      % _("Customer price for one l"))
-        output.append('            break;')
-        output.append('        case "300":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one deposit"))
-        output.append('            break;')
-        output.append('        case "400":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one subscription"))
-        output.append('            break;')
-        output.append('        case "500":')
-        output.append('            $("div.field-box.field-producer_unit_price label").html("%s");'
-                      % _("Producer price for one transportation"))
-        output.append('    }')
-        output.append('}(django.jQuery))')
-        output.append('}')
-        output.append('</script>')
-        return mark_safe('\n'.join(output))
+        output = """
+            <select{final_attrs} onchange="{name}_select(this.value)">
+                {options}
+            </select>
+            <script type="text/javascript">
+                django.jQuery(document).ready(function() {{ {name}_select("{value}");}});
+                function {name}_select(value) {{
+                    (function($){{
+                        switch (value) {{
+                            case "100":
+                                $("div.field-box.field-unit_deposit").show();
+                                $("div.field-box.field-order_average_weight").hide();
+                                $("div.field-box.field-customer_minimum_order_quantity").show();
+                                $("div.field-box.field-customer_increment_order_quantity").show();
+                                $("div.field-box.field-customer_alert_order_quantity").show();
+                                $("div.field-box.field-customer_unit_price").show();
+                                $("div.field-box.field-wrapped").show();
+                                break;
+                            case "105":
+                            case "110":
+                            case "115":
+                                $("div.field-box.field-unit_deposit").show();
+                                $("div.field-box.field-order_average_weight").show();
+                                $("div.field-box.field-order_average_weight").show();
+                                $("div.field-box.field-customer_minimum_order_quantity").show();
+                                $("div.field-box.field-customer_alert_order_quantity").show();
+                                $("div.field-box.field-customer_unit_price").show();
+                                $("div.field-box.field-wrapped").show();
+                                break;
+                            case "140":
+                                $("div.field-box.field-unit_deposit").hide();
+                                $("div.field-box.field-order_average_weight").show();
+                                $("div.field-box.field-customer_minimum_order_quantity").show();
+                                $("div.field-box.field-customer_increment_order_quantity").show();
+                                $("div.field-box.field-customer_alert_order_quantity").show();
+                                $("div.field-box.field-customer_unit_price").show();
+                                $("div.field-box.field-wrapped").show();
+                                break;
+                            case "120":
+                            case "150":
+                                $("div.field-box.field-unit_deposit").hide();
+                                $("div.field-box.field-order_average_weight").hide();
+                                $("div.field-box.field-customer_minimum_order_quantity").show();
+                                $("div.field-box.field-customer_increment_order_quantity").show();
+                                $("div.field-box.field-customer_alert_order_quantity").show();
+                                $("div.field-box.field-customer_unit_price").show();
+                                $("div.field-box.field-wrapped").show();
+                                break;
+                            case "300":
+                            case "400":
+                            case "500":
+                                $("div.field-box.field-unit_deposit").hide();
+                                $("div.field-box.field-order_average_weight").hide();
+                                $("div.field-box.field-customer_minimum_order_quantity").hide();
+                                $("div.field-box.field-customer_increment_order_quantity").hide();
+                                $("div.field-box.field-customer_alert_order_quantity").hide();
+                                $("div.field-box.field-customer_unit_price").hide();
+                                $("div.field-box.field-wrapped").hide();
+                                break;
+                        }}
+                    switch (value) {{
+                        case "105":
+                            $("div.field-box.field-order_average_weight label").html("{PIECE_WEIGHT_IN_KG}");
+                            break;
+                        case "110":
+                            $("div.field-box.field-order_average_weight label").html("{PIECE_CONTENT_IN_L}");
+                            break;
+                        case "115":
+                            $("div.field-box.field-order_average_weight label").html("{PIECES_IN_A_PACK}");
+                            break;
+                        case "140":
+                            $("div.field-box.field-order_average_weight label").html("{AVERAGE_WEIGHT_IN_KG}");
+                            break;
+                    }}
+                    switch (value) {{
+                        case "100":
+                        case "105":
+                        case "110":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_PIECE}");
+                            $("div.field-box.field-customer_unit_price label").html("{CUSTOMER_PRICE_ONE_PIECE}");
+                            break;
+                        case "115":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_PACK}");
+                            $("div.field-box.field-customer_unit_price label").html("{CUSTOMER_PRICE_ONE_PACK}");
+                            break;
+                        case "120":
+                        case "140":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_KG}");
+                            $("div.field-box.field-customer_unit_price label").html("{CUSTOMER_PRICE_ONE_KG}");
+                            break;
+                        case "150":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_L}");
+                            $("div.field-box.field-customer_unit_price label").html("{CUSTOMER_PRICE_ONE_L}");
+                            break;
+                        case "300":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_DEPOSIT}");
+                            break;
+                        case "400":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_SUBSCRIPTION}");
+                            break;
+                        case "500":
+                            $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_TRASPORTATION}");
+                    }}
+                }}(django.jQuery))
+                }}
+            </script>
+
+        """.format(
+            final_attrs=flatatt(final_attrs),
+            name=name,
+            options=self.render_options(choices, [value]),
+            value=value,
+            PIECE_WEIGHT_IN_KG=_("Piece weight in kg"),
+            PIECE_CONTENT_IN_L=_("Piece content in l"),
+            PIECES_IN_A_PACK=_("Number of pieces in a pack"),
+            AVERAGE_WEIGHT_IN_KG=_("Average weight in kg of a piece"),
+            PRODUCER_PRICE_ONE_PIECE=_("Producer price for one piece"),
+            PRODUCER_PRICE_ONE_PACK=_("Producer price for one pack"),
+            PRODUCER_PRICE_ONE_KG=_("Producer price for one kg"),
+            PRODUCER_PRICE_ONE_L=_("Producer price for one l"),
+            PRODUCER_PRICE_ONE_DEPOSIT=_("Producer price for one deposit"),
+            PRODUCER_PRICE_ONE_SUBSCRIPTION=_("Producer price for one subscription"),
+            PRODUCER_PRICE_ONE_TRASPORTATION=_("Producer price for one transportation"),
+            CUSTOMER_PRICE_ONE_PIECE=_("Customer price for one piece"),
+            CUSTOMER_PRICE_ONE_PACK=_("Customer price for one pack"),
+            CUSTOMER_PRICE_ONE_KG=_("Customer price for one kg"),
+            CUSTOMER_PRICE_ONE_L=_("Customer price for one l")
+        )
+        return mark_safe(output)
 
 # COLORPICKER_COLORS = [
 #     'b4da35',
@@ -365,6 +392,7 @@ class SelectAdminOrderUnitWidget(forms.Select):
 #     'cfcc00',
 #     'fdb735',
 # ]
+
 
 class PreviewProductOrderWidget(forms.Widget):
     template_name = 'repanier/widget/order_product_preview.html'
@@ -384,3 +412,4 @@ class PreviewProductOrderWidget(forms.Widget):
             'url': '/'
         }
         return mark_safe(render_to_string(self.template_name, context))
+

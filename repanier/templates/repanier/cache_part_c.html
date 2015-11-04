@@ -8,16 +8,18 @@
         {% trans "/ pc" %}{% endif %}
     {% endif %}
     </b></i></small></h5>
-{% endif %}
+    {{ offer.unit_price_with_compensation }} &euro;
+{% else %}
     {{ offer.unit_price_with_compensation }} &euro;
     {% if offer.order_unit == "120" or offer.order_unit == "140" %}
-        {% trans "/ kg" %}{% else %}
-        {% if offer.order_unit == "150" %}
-            {% trans "/ l" %}{% else %}{% if offer.order_unit != "115" %}{% trans "/ piece" %}{% endif %}{% endif %}{% endif %}
-            {% if offer.unit_deposit %}
-                <br/><span class="glyphicon glyphicon-plus"></span>
-                {{ offer.unit_deposit }} &euro;
-                <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+        {% trans "/ kg" %}
+    {% else %}
+        {% if offer.order_unit == "150" %}{% trans "/ l" %}{% else %}{% trans "/ piece" %}{% endif %}
+    {% endif %}
+{% endif %}
+{% if offer.unit_deposit %}
+    <br/><span class="glyphicon glyphicon-plus"></span>{{ offer.unit_deposit }} &euro;<span class="glyphicon glyphicon-leaf"></span>
+{% endif %}
 {% if offer.picture2 %}
     <br/>
     <span data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}"

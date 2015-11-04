@@ -1,5 +1,9 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
+from django.core.exceptions import ValidationError
+from django.template import Template, Context as djangoContext
+from django.core.cache import cache
+from django.utils.safestring import mark_safe
 from picture.const import SIZE_XS, SIZE_M, SIZE_S
 from picture.fields import AjaxPictureField
 from cms.toolbar_pool import toolbar_pool
@@ -10,8 +14,8 @@ import uuid
 from django.db.models import F
 
 from const import *
+import apps
 from django.conf import settings
-from apps import RepanierSettings
 from django.db import models
 from django.db import transaction
 from django.db.models.signals import pre_save
@@ -32,19 +36,19 @@ from django.dispatch import receiver
 from djangocms_text_ckeditor.fields import HTMLField
 from django.utils.translation import ugettext_lazy as _
 from django.utils.formats import number_format
-from filer.fields.image import FilerImageField
+from django.utils import timezone
+# from filer.fields.image import FilerImageField
 from django.core import urlresolvers
-# import tools
 import datetime
 from tools import get_display
 
-try:
-    from south.modelsinspector import add_introspection_rules
-
-    add_introspection_rules([],
-                              ['^djangocms_text_ckeditor\.fields\.HTMLField'])
-except ImportError:
-    pass
+# try:
+#     from south.modelsinspector import add_introspection_rules
+#
+#     add_introspection_rules([],
+#                               ['^djangocms_text_ckeditor\.fields\.HTMLField'])
+# except ImportError:
+#     pass
 
 
 class Configuration(TranslatableModel):
@@ -54,6 +58,8 @@ class Configuration(TranslatableModel):
     login_attempt_counter = models.DecimalField(
         _("login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
+    password_reset_on = models.DateTimeField(
+        _("password_reset_on"), null=True, blank=True, default=None)
     name = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_NAME,
@@ -64,186 +70,206 @@ class Configuration(TranslatableModel):
         help_text=_("0 mean : never display a pop up."),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     send_opening_mail_to_customer = models.BooleanField(_("send opening mail to customers"), default=False)
+    send_abstract_order_mail_to_customer = models.BooleanField(_("send abstract order mail to customers"), default=False)
     send_order_mail_to_customer = models.BooleanField(_("send order mail to customers"), default=False)
+    send_abstract_order_mail_to_producer = models.BooleanField(_("send abstract order mail to producers"), default=False)
     send_order_mail_to_producer = models.BooleanField(_("send order mail to producers"), default=False)
     send_order_mail_to_board = models.BooleanField(_("send order mail to board"), default=False)
     send_invoice_mail_to_customer = models.BooleanField(_("send invoice mail to customers"), default=False)
     send_invoice_mail_to_producer = models.BooleanField(_("send invoice mail to producers"), default=False)
     invoice = models.BooleanField(_("activate invoice"), default=True)
-    stock = models.BooleanField(_("activate stock"), default=False)
     display_anonymous_order_form = models.BooleanField(_("display anonymous order form"), default=True)
-    display_producer_on_order_form = models.BooleanField(_("display producer on order form"), default=True)
+    display_producer_on_order_form = models.BooleanField(_("display producers on order form"), default=True)
     bank_account = models.CharField(_("bank account"), max_length=100, default=EMPTY_STRING)
-    producer_order_rounded = models.BooleanField(_("producer order rounded"), default=False)
-    producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
-    accept_child_group = models.BooleanField(_("accept child group"), default=False)
-    delivery_point = models.BooleanField(_("display delivery point"), default=False)
+    delivery_point = models.BooleanField(_("display deliveries point"), default=False)
     display_vat = models.BooleanField(_("display vat"), default=False)
     vat_id = models.CharField(
         _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     page_break_on_customer_check = models.BooleanField(_("page break on customer check"), default=False)
     translations = TranslatedFields(
         offer_customer_mail=HTMLField(_("offer customer mail"),
-            help_text=_(
-                "This message is send by mail to all customers when opening the order"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Bonjour,<br />"""
-                """<br />"""
-                """Les commandes de la {{ permanence }} sont maintenant ouvertes.{% if offer_description %}<br />"""
-                """<br />"""
-                """{{ offer_description }}{% endif %}<br />"""
-                """<br />"""
+                """Bonjour,<br/>"""
+                """<br/>"""
+                """Les commandes de la {{ permanence }} sont maintenant ouvertes.<br/>"""
+                """{% if offer_description %}{{ offer_description }}<br/>{% endif %}"""
+                """Les commandes sont ouvertes auprès de : {{ offer_producer }}.<br/>"""
+                """Les produits suivants sont en offre :<br/>{{ offer_detail }}"""
+                """<br/>"""
                 """{{ signature }}""",
             blank=False),
         offer_producer_mail=HTMLField(_("offer producer mail"),
-            help_text=_(
-                "This message is send by mail to all producers when pre-opening the order"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère {{ long_profile_name }},<br />"""
+                """Cher/Chère {{ name }},<br/>"""
                 """<br /"""
-                """Les commandes de la {{ permanence }} vont bientôt être ouvertes.{% if offer_description %}<br />"""
-                """Voici l'annonce consommateur :<br />"""
-                """<br />"""
-                """{{ offer_description }}{% endif %}<br />"""
-                """<br />"""
-                """Veuillez vérifier votre <strong>{{ offer }}</strong>.<br />"""
-                """<br />"""
+                """Les commandes de la {{ permanence }} vont bientôt être ouvertes.{% if offer_description %}<br/>"""
+                """Voici l'annonce consommateur :<br/>"""
+                """<br/>"""
+                """{{ offer_description }}{% endif %}<br/>"""
+                """<br/>"""
+                """Veuillez vérifier votre <strong>{{ offer }}</strong>.<br/>"""
+                """<br/>"""
                 """{{ signature }}""",
             blank=False),
 
         order_customer_mail=HTMLField(_("order customer mail"),
-            help_text=_(
-                "This message is send by mail to each customer who have an order"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Bonjour {{ long_basket_name }},<br />"""
-                """<br />"""
-                """En pièce jointe vous trouverez le détail de votre pannier {{ short_basket_name }}  de la {{ permanence }}.<br />"""
-                """{{ customer_last_balance }}.<br />"""
-                """Le montant de votre commande s'élève à {{ customer_order_amount }} €.<br />"""
-                """{% if customer_payment_needed != "" %}{{ customer_payment_needed }}.{% endif %}<br />"""
-                """{% if customer_delivery_point != "" %}Votre point d'enlèvement est : {{ customer_delivery_point }}.{% endif %}<br />"""
-                """<br />"""
+                """Bonjour {{ long_basket_name }},<br/>"""
+                """<br/>"""
+                """En pièce jointe vous trouverez le détail de votre pannier {{ short_basket_name }} de la {{ permanence }}.<br/>"""
+                """{{ last_balance }}.<br/>"""
+                """Le montant de votre commande s'élève à {{ order_amount }} €.<br/>"""
+                """{% if customer_on_hold_movement != "" %}{{ customer_on_hold_movement }}<br/>{% endif %}"""
+                """{% if payment_needed != "" %}{{ payment_needed }}<br/>{% endif %}"""
+                """{% if delivery_point %}Votre point d'enlèvement est : {{ delivery_point }}.<br/>{% endif %}"""
+                """<br/>"""
                 """{{ signature }}""",
             blank=False),
         order_staff_mail=HTMLField(_("order staff mail"),
-            help_text=_(
-                "This message is send by mail to the preparation team and the staff"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère membre de l'équipe de préparation,<br />"""
-                """<br />"""
-                """En pièce jointe vous trouverez la liste de préparation pour la {{ permanence }}.<br />"""
-                """<br />"""
-                """L'équipe de préparation est composée de :<br />"""
-                """{{ board_composition }}<br />"""
-                """ou de<br />"""
-                """{{ board_composition_and_description }}<br />"""
-                """<br />"""
+                """Cher/Chère membre de l'équipe de préparation,<br/>"""
+                """<br/>"""
+                """En pièce jointe vous trouverez la liste de préparation pour la {{ permanence }}.<br/>"""
+                """<br/>"""
+                """L'équipe de préparation est composée de :<br/>"""
+                """{{ board_composition }}<br/>"""
+                """ou de<br/>"""
+                """{{ board_composition_and_description }}<br/>"""
+                """<br/>"""
                 """{{ signature }}""",
             blank=False),
         order_producer_mail=HTMLField(_("order producer mail"),
-            help_text=_(
-                "This message is send by mail to each producer with the order of the group"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère {{ long_profile_name }},<br />"""
-                """<br />"""
-                """{% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{  permanence  }}.{% if duplicate %}<br />"""
-                """<strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br />"""
-                """<br />"""
+                """Cher/Chère {{ name }},<br/>"""
+                """<br/>"""
+                """{% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{  permanence  }}.{% if duplicate %}<br/>"""
+                """<strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br/>"""
+                """<br/>"""
                 """{{ signature }}""",
               blank=False),
 
         invoice_customer_mail=HTMLField(_("invoice customer mail"),
-            help_text=_(
-                "This message is send by mail to each customer with they invoice"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Bonjour {{ long_basket_name }},<br />"""
-                """<br />"""
-                """En pièce jointe vous trouverez votre facture pour la {{ permanence }}.{% if invoice_description %}<br />"""
-                """<br />"""
-                """{{ invoice_description }}{% endif %}<br />"""
-                """<br />"""
+                """Bonjour {{ name }},<br/>"""
+                """<br/>"""
+                """En pièce jointe vous trouverez votre facture pour la {{ permanence }}.{% if invoice_description %}<br/>"""
+                """<br/>"""
+                """{{ invoice_description }}{% endif %}<br/>"""
+                """<br/>"""
                 """{{ signature }}""",
             blank=False),
         invoice_producer_mail=HTMLField(_("invoice producer mail"),
-            help_text=_(
-                "This message is send by mail to each producer with they invoice"),
+            help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère {{ long_profile_name }},<br />"""
-                """<br />"""
-                """En pièce jointe vous trouverez le détail de notre paiement pour la {{ permanence }}.<br />"""
-                """<br />"""
+                """Cher/Chère {{ profile_name }},<br/>"""
+                """<br/>"""
+                """En pièce jointe vous trouverez le détail de notre paiement pour la {{ permanence }}.<br/>"""
+                """<br/>"""
                 """{{ signature }}""",
             blank=False),
     )
 
+    def clean(self):
+        try:
+            template = Template(self.offer_customer_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.offer_customer_mail,error_str)))
+        try:
+            template = Template(self.offer_producer_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.offer_producer_mail,error_str)))
+        try:
+            template = Template(self.order_customer_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.order_customer_mail,error_str)))
+        try:
+            template = Template(self.order_staff_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.order_staff_mail,error_str)))
+        try:
+            template = Template(self.order_producer_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.order_producer_mail,error_str)))
+        try:
+            template = Template(self.invoice_customer_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.invoice_customer_mail,error_str)))
+        try:
+            template = Template(self.invoice_producer_mail)
+        except Exception as error_str:
+            raise ValidationError(mark_safe("%s : %s" % (self.invoice_producer_mail,error_str)))
 
     class Meta:
         verbose_name = _("configuration")
         verbose_name_plural = _("configurations")
 
 @receiver(post_save, sender=Configuration)
-def configuration_post_save(sender, **kwargs):
+def configuration_post_save(sender, instance=None, **kwargs):
     from cms_toolbar import RepanierToolbar
 
-    config = kwargs['instance']
+    config = instance
     if config.id is not None:
-        RepanierSettings.config = config
+        apps.REPANIER_SETTINGS_CONFIG = config
+        apps.REPANIER_SETTINGS_TEST_MODE = config.test_mode
         site = Site.objects.get_current()
         if site is not None:
             site.name = config.group_name
             site.domain = settings.ALLOWED_HOSTS[0]
             site.save()
-        RepanierSettings.group_name = config.group_name
+        apps.REPANIER_SETTINGS_GROUP_NAME = config.group_name
         if config.name == PERMANENCE_NAME_PERMANENCE:
-            RepanierSettings.permanence_name = _("Permanence")
-            RepanierSettings.permanences_name = _("Permanences")
-            RepanierSettings.permanence_on_name = _("Permanence on ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence on ")
         elif config.name == PERMANENCE_NAME_CLOSURE:
-            RepanierSettings.permanence_name = _("Closure")
-            RepanierSettings.permanences_name = _("Closures")
-            RepanierSettings.permanence_on_name = _("Closure on ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Closure")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure on ")
         elif config.name == PERMANENCE_NAME_DELIVERY:
-            RepanierSettings.permanence_name = _("Delivery")
-            RepanierSettings.permanences_name = _("Deliveries")
-            RepanierSettings.permanence_on_name = _("Delivery on ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Delivery")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery on ")
         else:
-            RepanierSettings.permanence_name = _("Order")
-            RepanierSettings.permanences_name = _("Orders")
-            RepanierSettings.permanence_on_name = _("Order on ")
-        RepanierSettings.test_mode = config.test_mode
-        RepanierSettings.max_week_wo_participation = config.max_week_wo_participation
-        RepanierSettings.send_opening_mail_to_customer = config.send_opening_mail_to_customer
-        RepanierSettings.send_order_mail_to_customer = config.send_order_mail_to_customer
-        RepanierSettings.send_order_mail_to_producer = config.send_order_mail_to_producer
-        RepanierSettings.send_order_mail_to_board = config.send_order_mail_to_board
-        RepanierSettings.send_invoice_mail_to_customer = config.send_invoice_mail_to_customer
-        RepanierSettings.send_invoice_mail_to_producer = config.send_invoice_mail_to_producer
-        RepanierSettings.invoice = config.invoice
-        RepanierSettings.stock = config.stock
-        RepanierSettings.display_anonymous_order_form = config.display_anonymous_order_form
-        RepanierSettings.display_producer_on_order_form = config.display_producer_on_order_form
-        RepanierSettings.bank_account = config.bank_account
-        RepanierSettings.producer_order_rounded = config.producer_order_rounded
-        RepanierSettings.producer_pre_opening = config.producer_pre_opening
-        RepanierSettings.accept_child_group = config.accept_child_group
-        RepanierSettings.delivery_point = config.delivery_point
-        RepanierSettings.display_vat = config.display_vat
-        RepanierSettings.vat_id = config.vat_id
-        RepanierSettings.page_break_on_customer_check = config.page_break_on_customer_check
-
-        if not config.stock:
-            Producer.objects.all().update(manage_stock=False)
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Order")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order on ")
+        apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
+        apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER = config.send_opening_mail_to_customer
+        apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER = config.send_order_mail_to_customer
+        apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
+        apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER = config.send_order_mail_to_producer
+        apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER = config.send_abstract_order_mail_to_producer
+        apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
+        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
+        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = config.send_invoice_mail_to_producer
+        apps.REPANIER_SETTINGS_INVOICE = config.invoice
+        apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
+        apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM = config.display_producer_on_order_form
+        # print('----------------------------- set REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM')
+        # print(apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM)
+        apps.REPANIER_SETTINGS_BANK_ACCOUNT = config.bank_account
+        apps.REPANIER_SETTINGS_DELIVERY_POINT = config.delivery_point
+        apps.REPANIER_SETTINGS_DISPLAY_VAT = config.display_vat
+        apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
+        apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = config.page_break_on_customer_check
 
         menu_pool.clear()
         toolbar_pool.unregister(RepanierToolbar)
         toolbar_pool.register(RepanierToolbar)
+        cache.clear()
 
 
 class LUT_ProductionModeQuerySet(TranslatableQuerySet):
@@ -262,9 +288,9 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="production_mode_picture",
-        null=True, blank=True)
+    # picture = FilerImageField(
+    #     verbose_name=_("picture"), related_name="production_mode_picture",
+    #     null=True, blank=True)
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,
@@ -348,6 +374,10 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
+    delivery_points = models.ManyToManyField(
+        LUT_DeliveryPoint,
+        verbose_name=_("delivery points"),
+        blank=True)
 
     is_active = models.BooleanField(_("is_active"), default=True)
     objects = LUT_ProductionModeManager()
@@ -388,6 +418,8 @@ class Producer(models.Model):
         null=True, default=EMPTY_STRING)
     phone2 = models.CharField(
         _("phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
+    vat_id = models.CharField(
+        _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     fax = models.CharField(
         _("fax"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     address = models.TextField(_("address"), null=True, blank=True, default=EMPTY_STRING)
@@ -395,11 +427,17 @@ class Producer(models.Model):
         _("memo"), null=True, blank=True, default=EMPTY_STRING)
     # uuid used to access to producer invoices without login
     uuid = models.CharField(
-        _("uuid"), max_length=36, null=True, default=EMPTY_STRING)
+        _("uuid"), max_length=36, null=True, default=EMPTY_STRING,
+        db_index=True
+    )
     offer_uuid = models.CharField(
-        _("uuid"), max_length=36, null=True, default=EMPTY_STRING)
+        _("uuid"), max_length=36, null=True, default=EMPTY_STRING,
+        db_index=True
+    )
+    offer_filled = models.BooleanField(_("offer filled"), default=False)
     invoice_by_basket = models.BooleanField(_("invoice by basket"), default=False)
     manage_stock = models.BooleanField(_("manage stock"), default=False)
+    producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
     producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
 
     price_list_multiplier = models.DecimalField(
@@ -454,24 +492,24 @@ class Producer(models.Model):
             elif self.balance == DECIMAL_ZERO:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#32CD32">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             elif self.balance > 30:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#FF0000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#696969">%s</span>' % (number_format(self.balance, 2))) + '</a>'
         else:
             if self.balance < DECIMAL_ZERO:
                 return '<span style="color:#298A08">%s</span>' % (number_format(self.balance, 2))
             elif self.balance == DECIMAL_ZERO:
-                return '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))
+                return '<span style="color:#32CD32">%s</span>' % (number_format(self.balance, 2))
             elif self.balance > 30:
-                return '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))
+                return '<span style="color:#FF0000">%s</span>' % (number_format(self.balance, 2))
             else:
-                return '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))
+                return '<span style="color:#696969">%s</span>' % (number_format(self.balance, 2))
 
     get_balance.short_description = _("balance")
     get_balance.allow_tags = True
@@ -484,23 +522,23 @@ class Producer(models.Model):
                 return '<span style="color:#298A08">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax == DECIMAL_ZERO:
-                return '<span style="color:#74DF00">%s</span>' % (
+                return '<span style="color:#32CD32">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax > 30:
-                return '<span style="color:#FF4000">%s</span>' % (
+                return '<span style="color:#FF0000">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             else:
-                return '<span style="color:#DF013A">%s</span>' % (
+                return '<span style="color:#696969">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
         else:
-            return '<span style="color:#74DF00">%s</span>' % (number_format(0, 2))
+            return '<span style="color:#32CD32">%s</span>' % (number_format(0, 2))
 
     get_last_invoice.short_description = _("last invoice")
     get_last_invoice.allow_tags = True
 
     def __str__(self):
-        if self.producer_price_are_wo_vat :
-            return "%s %s" % (self.short_profile_name, _("wo tax"))
+        # if self.producer_price_are_wo_vat :
+        #     return "%s %s" % (self.short_profile_name, _("wo tax"))
         return self.short_profile_name
 
     class Meta:
@@ -514,6 +552,10 @@ def producer_pre_save(sender, **kwargs):
     producer = kwargs['instance']
     if producer.email is not None:
         producer.email = producer.email.lower()
+    if producer.producer_pre_opening:
+        # Important to make difference between the stock of the group and the stock of the producer
+        producer.manage_stock = False
+        producer.is_resale_price_fixed = False
     if producer.manage_stock:
         # Important to compute ProducerInvoice.total_price_with_tax
         producer.invoice_by_basket = False
@@ -585,6 +627,8 @@ class Customer(models.Model):
         _("address"), null=True, blank=True, default=EMPTY_STRING)
     city = models.CharField(
         _("city"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
+    about_me = models.TextField(
+        _("about me"), null=True, blank=True, default=EMPTY_STRING)
     memo = models.TextField(
         _("memo"), null=True, blank=True, default=EMPTY_STRING)
     accept_mails_from_members = models.BooleanField(
@@ -613,26 +657,53 @@ class Customer(models.Model):
             if self.balance >= 30:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#32CD32">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             elif self.balance >= -10:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#696969">%s</span>' % (number_format(self.balance, 2))) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
+                           '<span style="color:#FF0000">%s</span>' % (number_format(self.balance, 2))) + '</a>'
         else:
             if self.balance >= 30:
-                return '<span style="color:#74DF00">%s</span>' % (number_format(self.balance, 2))
+                return '<span style="color:#32CD32">%s</span>' % (number_format(self.balance, 2))
             elif self.balance >= -10:
-                return '<span style="color:#DF013A">%s</span>' % (number_format(self.balance, 2))
+                return '<span style="color:#696969">%s</span>' % (number_format(self.balance, 2))
             else:
-                return '<span style="color:#FF4000">%s</span>' % (number_format(self.balance, 2))
+                return '<span style="color:#FF0000">%s</span>' % (number_format(self.balance, 2))
 
     get_balance.short_description = _("balance")
     get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
+
+    def get_participation(self):
+        now = timezone.now()
+        return PermanenceBoard.objects.filter(
+            customer_id=self.id,
+            permanence_date__gte=now - datetime.timedelta(
+            days=float(apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION) * 7 * 4),
+            permanence_date__lt=now
+        ).count()
+    get_participation.short_description = _("participation")
+    get_participation.allow_tags = True
+
+    def get_purchase(self):
+        now = timezone.now()
+        return CustomerInvoice.objects.filter(
+            customer_id=self.id,
+            total_price_with_tax__gt=DECIMAL_ZERO,
+            date_balance__gte=now - datetime.timedelta(
+            days=float(apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION) * 7 * 4)
+        ).count()
+    get_purchase.short_description = _("purchase")
+    get_purchase.allow_tags = True
+
+    @property
+    def who_is_who_display(self):
+        return self.picture or self.accept_mails_from_members or self.accept_phone_call_from_members \
+               or (self.about_me and len(self.about_me) > 1)
 
     def natural_key(self):
         return self.short_basket_name
@@ -699,6 +770,9 @@ class Staff(models.Model):
     customer_responsible = models.ForeignKey(
         Customer, verbose_name=_("customer_responsible"),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
+    login_attempt_counter = models.DecimalField(
+        _("login attempt counter"),
+        default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     long_name = models.CharField(
         _("long_name"), max_length=100, null=True, default=EMPTY_STRING)
     function_description = HTMLField(
@@ -712,11 +786,8 @@ class Staff(models.Model):
                                                     default=False)
     is_coordinator = models.BooleanField(_("is_coordinator"),
                                                     default=False)
-    # is_external_group = models.BooleanField(_("is external group"),
-    #                                         default=False)
     password_reset_on = models.DateTimeField(
         _("password_reset_on"), null=True, blank=True, default=None)
-    is_active = models.BooleanField(_("is_active"), default=True)
     is_active = models.BooleanField(_("is_active"), default=True)
 
     def natural_key(self):
@@ -728,7 +799,7 @@ class Staff(models.Model):
         try:
             return self.customer_responsible.phone1
         except:
-            return "N/A"
+            return "----"
 
     get_customer_phone1.short_description = (_("phone1"))
     get_customer_phone1.allow_tags = False
@@ -740,7 +811,12 @@ class Staff(models.Model):
         verbose_name = _("staff member")
         verbose_name_plural = _("staff members")
         ordering = ("long_name",)
-        # ordering = ("customer_responsible__short_basket_name",)
+
+
+@receiver(pre_save, sender=Staff)
+def staff_pre_save(sender, **kwargs):
+    staff = kwargs['instance']
+    staff.login_attempt_counter = DECIMAL_ZERO
 
 
 @receiver(post_save, sender=Staff)
@@ -763,7 +839,6 @@ def staff_post_save(sender, **kwargs):
             user.groups.add(group_id)
 
 
-
 @receiver(post_delete, sender=Staff)
 def staff_post_delete(sender, **kwargs):
     staff = kwargs['instance']
@@ -778,11 +853,12 @@ class Product(TranslatableModel):
     long_name = TranslatedField()
     offer_description = TranslatedField()
     production_mode = models.ManyToManyField(
-        LUT_ProductionMode, null=True, blank=True,
-        verbose_name=_("production mode"))
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="product_picture",
-        null=True, blank=True)
+        LUT_ProductionMode,
+        verbose_name=_("production mode"),
+        blank=True)
+    # picture = FilerImageField(
+    #     verbose_name=_("picture"), related_name="product_picture",
+    #     null=True, blank=True)
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,
@@ -853,9 +929,13 @@ class Product(TranslatableModel):
         _("customer_alert_order_quantity"),
         help_text=_('maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 pieces, 9 Kg)'),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
+    producer_order_by_quantity = models.DecimalField(
+        _("Producer order by quantity"),
+        help_text=_('1,5 Kg [i.e. 1500 gr], 1 piece, 3 Kg)'),
+        default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
 
     permanences = models.ManyToManyField(
-        'Permanence', through='OfferItem', null=True, blank=True)
+        'Permanence', through='OfferItem')
     is_into_offer = models.BooleanField(_("is_into_offer"), default=True)
 
     order_unit = models.CharField(
@@ -874,7 +954,7 @@ class Product(TranslatableModel):
 
     def get_long_name(self):
         if self.id:
-            qty_display, price_display, base_unit, unit, price = get_display(
+            qty_display, price_display = get_display(
                 1,
                 self.order_average_weight,
                 self.order_unit,
@@ -895,7 +975,7 @@ class Product(TranslatableModel):
     natural_key.dependencies = ['repanier.producer']
 
     def __str__(self):
-        qty_display, price_display, base_unit, unit, price = get_display(
+        qty_display, price_display = get_display(
             1,
             self.order_average_weight,
             self.order_unit,
@@ -917,6 +997,7 @@ class Product(TranslatableModel):
 @receiver(pre_save, sender=Product)
 def product_pre_save(sender, **kwargs):
     product = kwargs['instance']
+    producer = product.producer
     if not product.is_active:
         product.is_into_offer = False
     if product.order_unit not in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG,
@@ -932,7 +1013,7 @@ def product_pre_save(sender, **kwargs):
         product.vat_level = VAT_100
 
     product.producer_vat = DECIMAL_ZERO
-    if product.producer.producer_price_are_wo_vat:
+    if producer.producer_price_are_wo_vat:
         if product.vat_level == VAT_400:
             product.producer_vat = (product.producer_unit_price * DECIMAL_0_06).quantize(FOUR_DECIMALS)
         elif product.vat_level == VAT_500:
@@ -940,9 +1021,9 @@ def product_pre_save(sender, **kwargs):
         elif product.vat_level == VAT_600:
             product.producer_vat = (product.producer_unit_price * DECIMAL_0_21).quantize(FOUR_DECIMALS)
 
-        if not product.producer.is_resale_price_fixed:
+        if not producer.is_resale_price_fixed:
             if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                product.customer_unit_price = (product.producer_unit_price * product.producer.price_list_multiplier).quantize(
+                product.customer_unit_price = (product.producer_unit_price * producer.price_list_multiplier).quantize(
                     TWO_DECIMALS)
             else:
                 if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT and product.producer_unit_price > DECIMAL_ZERO:
@@ -962,7 +1043,7 @@ def product_pre_save(sender, **kwargs):
         elif product.vat_level == VAT_300:
             product.compensation = (product.customer_unit_price * DECIMAL_0_06).quantize(FOUR_DECIMALS)
 
-        if not product.producer.is_resale_price_fixed:
+        if not producer.is_resale_price_fixed:
             product.customer_unit_price += product.customer_vat
     else:
         if product.vat_level == VAT_400:
@@ -972,9 +1053,9 @@ def product_pre_save(sender, **kwargs):
         elif product.vat_level == VAT_600:
             product.producer_vat = product.producer_unit_price - (product.producer_unit_price / DECIMAL_1_21).quantize(FOUR_DECIMALS)
 
-        if not product.producer.is_resale_price_fixed:
+        if not producer.is_resale_price_fixed:
             if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                product.customer_unit_price = (product.producer_unit_price * product.producer.price_list_multiplier).quantize(
+                product.customer_unit_price = (product.producer_unit_price * producer.price_list_multiplier).quantize(
                     TWO_DECIMALS)
             else:
                 product.customer_unit_price = product.producer_unit_price
@@ -991,9 +1072,10 @@ def product_pre_save(sender, **kwargs):
             product.compensation = (product.customer_unit_price * DECIMAL_0_02).quantize(FOUR_DECIMALS)
         elif product.vat_level == VAT_300:
             product.compensation = (product.customer_unit_price * DECIMAL_0_06).quantize(FOUR_DECIMALS)
-
+    if producer.producer_pre_opening:
+        product.limit_order_quantity_to_stock = True
     # print("----------------------")
-    # print("Producer price wo tax : " + str(product.producer.producer_price_wotax))
+    # print("Producer price wo tax : " + str(producer.producer_price_wotax))
     # print("vat_level : %s" % product.vat_level)
     # print("producer_unit_price : %f" % product.producer_unit_price)
     # print("producer_vat : %f" % product.producer_vat)
@@ -1004,8 +1086,8 @@ def product_pre_save(sender, **kwargs):
         product.customer_increment_order_quantity = DECIMAL_ONE
     if product.customer_minimum_order_quantity <= DECIMAL_ZERO:
         product.customer_minimum_order_quantity = product.customer_increment_order_quantity
-    if product.customer_alert_order_quantity <= product.customer_minimum_order_quantity:
-        product.customer_alert_order_quantity = product.customer_minimum_order_quantity
+    # if product.customer_alert_order_quantity <= product.customer_minimum_order_quantity:
+    #     product.customer_alert_order_quantity = product.customer_minimum_order_quantity
     if product.order_average_weight <= DECIMAL_ZERO:
         product.order_average_weight = DECIMAL_ONE
     if product.reference is None or product.reference == "":
@@ -1050,8 +1132,10 @@ class Permanence(TranslatableModel):
     permanence_date = models.DateField(_("permanence_date"), db_index=True)
     payment_date = models.DateField(_("payment_date"), blank=True, null=True, db_index=True)
     producers = models.ManyToManyField(
-        Producer, null=True, blank=True,
-        verbose_name=_("producers"))
+        Producer,
+        verbose_name=_("producers"),
+        blank=True
+    )
     automatically_closed = models.BooleanField(
         _("automatically_closed"), default=False)
     is_updated_on = models.DateTimeField(
@@ -1069,15 +1153,15 @@ class Permanence(TranslatableModel):
     def get_producers(self):
         if self.id is not None:
             if len(self.producers.all()) > 0:
-                if self.status < PERMANENCE_OPENED:
-                    return ", ".join([p.short_profile_name for p in self.producers.all()])
-                elif self.status == PERMANENCE_OPENED:
+                if self.status == PERMANENCE_PLANNED:
                     changelist_url = urlresolvers.reverse(
                         'admin:repanier_product_changelist',
                     )
                     return ", ".join(['<a href="' + changelist_url +
                                        '?producer=' + str(p.id) + '" target="_blank" class="addlink">&nbsp;' +
                                        p.short_profile_name + '</a>' for p in self.producers.all()])
+                elif self.status == PERMANENCE_PRE_OPEN:
+                    return ", ".join([p.short_profile_name + " (" + p.phone1 + ")" for p in self.producers.all()])
                 elif self.status == PERMANENCE_CLOSED:
                     offeritem_changelist_url = urlresolvers.reverse(
                         'admin:repanier_offeritemclosed_changelist',
@@ -1092,8 +1176,7 @@ class Permanence(TranslatableModel):
                                p.short_profile_name + '</a>'
                             )
                         else:
-                            link.append('&nbsp;' + p.short_profile_name);
-                            producers = link;
+                            link.append('&nbsp;' + p.short_profile_name)
                     return ", ".join(link)
                 elif self.status == PERMANENCE_SEND:
                     offeritem_changelist_url = urlresolvers.reverse(
@@ -1160,6 +1243,15 @@ class Permanence(TranslatableModel):
             elif self.status == PERMANENCE_SEND:
                 changelist_url = urlresolvers.reverse(
                     'admin:repanier_purchasesendforupdate_changelist',
+                )
+                customers += ", ".join(['<a href="' + changelist_url + \
+                                   '?permanence=' + str(self.id) + \
+                                   '&customer=' + str(c.id) + '" target="_blank"  class="addlink">&nbsp;' + \
+                                   c.short_basket_name + '</a>'
+                                   for c in Customer.objects.filter(purchase__permanence_id=self.id).distinct()])
+            elif self.status in [PERMANENCE_DONE, PERMANENCE_ARCHIVED]:
+                changelist_url = urlresolvers.reverse(
+                    'admin:repanier_purchaseinvoiced_changelist',
                 )
                 customers += ", ".join(['<a href="' + changelist_url + \
                                    '?permanence=' + str(self.id) + \
@@ -1233,58 +1325,46 @@ class Permanence(TranslatableModel):
     get_board.short_description = (_("permanence board"))
     get_board.allow_tags = True
 
+    def set_status(self, new_status, update_payment_date=False):
+        now = timezone.now()
+        self.is_updated_on = now
+        self.status = new_status
+        if self.highest_status < new_status:
+            self.highest_status = new_status
+        if update_payment_date:
+            self.payment_date = now
+            self.save(update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
+        else:
+            self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
+        menu_pool.clear()
+
+
     def __str__(self):
         result = ""
         try:
             if self.short_name is not None and len(self.short_name) > 0:
                 result = '%s%s (%s)' % (
-                    RepanierSettings.permanence_on_name, self.permanence_date.strftime('%d-%m-%Y'), self.short_name)
+                    apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, self.permanence_date.strftime('%d-%m-%Y'), self.short_name)
         except TranslationDoesNotExist:
             pass
         if len(result) == 0:
             result = '%s%s' % (
-                RepanierSettings.permanence_on_name, self.permanence_date.strftime('%d-%m-%Y'))
+                apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, self.permanence_date.strftime('%d-%m-%Y'))
         return result
         # except:
         #     exc_type, exc_value, exc_traceback = sys.exc_info()
         #     lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         #     print ''.join('!! ' + line for line in lines)
 
+    def get_permanence_display(self):
+        return ("%s - %s" % (self, self.get_status_display()))
+
     class Meta:
-        verbose_name = RepanierSettings.permanence_name
-        verbose_name_plural = RepanierSettings.permanences_name
+        verbose_name = apps.REPANIER_SETTINGS_PERMANENCE_NAME
+        verbose_name_plural = apps.REPANIER_SETTINGS_PERMANENCES_NAME
         index_together = [
             ["permanence_date"],
         ]
-
-
-class PermanenceBoard(models.Model):
-    customer = models.ForeignKey(
-        Customer, verbose_name=_("customer"),
-        null=True, blank=True, db_index=True, on_delete=models.PROTECT)
-    permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name)
-    # permanence_date duplicated to quickly calculate # participation of lasts 12 months
-    permanence_date = models.DateField(_("permanence_date"), db_index=True)
-    permanence_role = models.ForeignKey(
-        LUT_PermanenceRole, verbose_name=_("permanence_role"),
-        on_delete=models.PROTECT)
-
-    class Meta:
-        verbose_name = _("permanence board")
-        verbose_name_plural = _("permanences board")
-        ordering = ("permanence", "permanence_role", "customer",)
-        unique_together = ("permanence", "permanence_role", "customer",)
-        index_together = [
-            ["permanence", "permanence_role", "customer"],
-            ["permanence_date", "permanence", "permanence_role"],
-        ]
-
-
-@receiver(pre_save, sender=PermanenceBoard)
-def permanence_board_pre_save(sender, **kwargs):
-    permanence_board = kwargs['instance']
-    permanence_board.permanence_date = permanence_board.permanence.permanence_date
 
 
 class PermanenceInPreparation(Permanence):
@@ -1303,13 +1383,45 @@ class PermanenceDone(Permanence):
         verbose_name_plural = _("permanences done")
 
 
+class PermanenceBoard(models.Model):
+    customer = models.ForeignKey(
+        Customer, verbose_name=_("customer"),
+        null=True, blank=True, db_index=True, on_delete=models.PROTECT)
+    permanence = models.ForeignKey(
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME)
+    # permanence_date duplicated to quickly calculate # participation of lasts 12 months
+    permanence_date = models.DateField(_("permanence_date"), db_index=True)
+    permanence_role = models.ForeignKey(
+        LUT_PermanenceRole, verbose_name=_("permanence_role"),
+        on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = _("permanence board")
+        verbose_name_plural = _("permanences board")
+        ordering = ("permanence", "permanence_role", "customer",)
+        unique_together = ("permanence", "permanence_role", "customer",)
+        index_together = [
+            ["permanence", "permanence_role", "customer"],
+            ["permanence_date", "permanence", "permanence_role"],
+        ]
+
+    def __str__(self):
+        return ""
+
+@receiver(pre_save, sender=PermanenceBoard)
+def permanence_board_pre_save(sender, **kwargs):
+    permanence_board = kwargs['instance']
+    permanence_board.permanence_date = permanence_board.permanence.permanence_date
+
+
 @python_2_unicode_compatible
 class CustomerInvoice(models.Model):
     customer = models.ForeignKey(
         Customer, verbose_name=_("customer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME,
+        on_delete=models.PROTECT, db_index=True)
     invoice_sort_order = models.IntegerField(
         _("invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
@@ -1319,16 +1431,16 @@ class CustomerInvoice(models.Model):
         _("previous_balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # Calculated with Purchase
     total_price_with_tax = models.DecimalField(
-        _("Total price"),
-        help_text=_('Total price vat or compensation if applicable included'),
+        _("Total amount"),
+        help_text=_('Total purchase amount vat or compensation if applicable included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     total_vat = models.DecimalField(
         _("Total vat"),
-        help_text=_('Vat part of the total price'),
+        help_text=_('Vat part of the total purchased'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_compensation = models.DecimalField(
         _("Total compensation"),
-        help_text=_('Compensation part of the total price'),
+        help_text=_('Compensation part of the total purchased'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_deposit = models.DecimalField(
         _("deposit"),
@@ -1364,7 +1476,8 @@ class ProducerInvoice(models.Model):
         Producer, verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME,
+        on_delete=models.PROTECT, db_index=True)
     invoice_sort_order = models.IntegerField(
         _("invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
@@ -1421,7 +1534,7 @@ class CustomerProducerInvoice(models.Model):
         Producer, verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT, db_index=True)
     # Calculated with Purchase
     total_purchase_with_tax = models.DecimalField(
         _("producer amount invoiced"),
@@ -1474,14 +1587,14 @@ class OfferItem(TranslatableModel):
             default=0, db_index=True)
     )
     permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT,
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT,
          db_index=True
     )
     product = models.ForeignKey(
         Product, verbose_name=_("product"), blank=True, null=True, on_delete=models.PROTECT)
-    picture = FilerImageField(
-        verbose_name=_("picture"), related_name="offeritem_picture",
-        null=True, blank=True)
+    # picture = FilerImageField(
+    #     verbose_name=_("picture"), related_name="offeritem_picture",
+    #     null=True, blank=True)
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,
@@ -1555,7 +1668,10 @@ class OfferItem(TranslatableModel):
         _("customer amount invoiced"),
         help_text=_('Total selling amount vat or compensation if applicable included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    # Calculated with Purchase
+    # Calculated with Purchase.
+    # If Permanence.status < SEND this is the order quantity
+    # During sending the orders to the producer this become the invoiced quantity
+    # via tools.recalculate_order_amount(..., send_to_producer=True)
     quantity_invoiced = models.DecimalField(
         _("quantity invoiced"),
         help_text=_('quantity invoiced to our customer'),
@@ -1564,6 +1680,7 @@ class OfferItem(TranslatableModel):
     is_active = models.BooleanField(_("is_active"), default=True)
     limit_order_quantity_to_stock = models.BooleanField(_("limit maximum order qty of the group to stock qty"), default=False)
     manage_stock = models.BooleanField(_("manage stock"), default=False)
+    producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
 
     price_list_multiplier = models.DecimalField(
         _("price_list_multiplier"),
@@ -1593,6 +1710,10 @@ class OfferItem(TranslatableModel):
     customer_alert_order_quantity = models.DecimalField(
         _("customer_alert_order_quantity"),
         help_text=_('maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 pieces, 9 Kg)'),
+        default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
+    producer_order_by_quantity = models.DecimalField(
+        _("Producer order by quantity"),
+        help_text=_('1,5 Kg [i.e. 1500 gr], 1 piece, 3 Kg)'),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
 
     def __init__(self, *args, **kwargs):
@@ -1646,33 +1767,23 @@ class OfferItem(TranslatableModel):
         super(OfferItem, self).save(*args, **kwargs)
 
     def get_producer(self):
-        if self.id:
-            return self.product.producer.short_profile_name
-        return "N/A"
+        return self.producer.short_profile_name
 
     get_producer.short_description = (_("producers"))
     get_producer.allow_tags = False
 
     def get_product(self):
-        if self.id:
-            return self.product.long_name
-        return "N/A"
+        return self.product.long_name
 
     get_product.short_description = (_("products"))
     get_product.allow_tags = False
-
-    def get_delta_qty_invoiced(self):
-        quantity = self.quantity_invoiced
-        if quantity <= self.stock:
-            delta = quantity
-        else:
-            delta = self.stock
-        return delta
 
     def get_producer_qty_stock_invoiced(self):
         # Return quantity to buy to the producer and stock used to deliver the invoiced quantity
         if self.quantity_invoiced > DECIMAL_ZERO:
             if self.manage_stock:
+                # if RepanierSettings.producer_pre_opening then the stock is the max available qty by the producer,
+                # not into our stock
                 if self.stock == DECIMAL_ZERO:
                     return self.quantity_invoiced, DECIMAL_ZERO
                 else:
@@ -1731,8 +1842,8 @@ class OfferItem(TranslatableModel):
     get_HTML_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
     def get_long_name(self, is_quantity_invoiced=False):
-        if self.order_unit == PRODUCT_ORDER_UNIT_PC_KG and is_quantity_invoiced:
-            qty_display, price_display, base_unit, unit, price = get_display(
+        if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            qty_display, price_display = get_display(
                 1,
                 self.order_average_weight,
                 PRODUCT_ORDER_UNIT_KG,
@@ -1740,7 +1851,7 @@ class OfferItem(TranslatableModel):
                 False
             )
         else:
-            qty_display, price_display, base_unit, unit, price = get_display(
+            qty_display, price_display = get_display(
                 1,
                 self.order_average_weight,
                 self.order_unit,
@@ -1754,7 +1865,7 @@ class OfferItem(TranslatableModel):
     get_long_name.admin_order_field = 'translations__long_name'
 
     def get_qty_display(self):
-        qty_display, price_display, base_unit, unit, price = get_display(
+        qty_display, price_display = get_display(
             1,
             self.order_average_weight,
             self.order_unit,
@@ -1777,14 +1888,13 @@ class OfferItem(TranslatableModel):
 
     @property
     def unit_price_with_compensation(self):
-        return self.customer_unit_price + self.compensation
+        return (self.customer_unit_price + self.compensation).quantize(TWO_DECIMALS)
 
     @property
     def reference_price_with_compensation(self):
         if self.order_average_weight > DECIMAL_ZERO:
-            reference_price = ((DECIMAL_ONE / self.order_average_weight) * (
-                self.customer_unit_price + self.compensation)).quantize(TWO_DECIMALS)
             if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
+                reference_price = ((self.customer_unit_price + self.compensation) / self.order_average_weight).quantize(TWO_DECIMALS)
                 return number_format(reference_price, 2)
             else:
                 return ""
@@ -1794,8 +1904,8 @@ class OfferItem(TranslatableModel):
     @property
     def reference_price_with_vat(self):
         if self.order_average_weight > DECIMAL_ZERO:
-            reference_price = ((DECIMAL_ONE / self.order_average_weight) * self.customer_unit_price).quantize(TWO_DECIMALS)
             if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
+                reference_price = (self.customer_unit_price / self.order_average_weight).quantize(TWO_DECIMALS)
                 return number_format(reference_price, 2)
             else:
                 return ""
@@ -1808,33 +1918,13 @@ class OfferItem(TranslatableModel):
     class Meta:
         verbose_name = _("offer's item")
         verbose_name_plural = _("offer's items")
-        # ordering = ("permanence", "translations__order_sort_order",)
         unique_together = ("permanence", "product",)
         index_together = [
             ["permanence", "product"],
-            # ["permanence", "department_for_customer", "product"],
         ]
 
 
 class OfferItemSend(OfferItem):
-
-    def get_HTML_producer_qty_stock_invoiced(self):
-        qty, stock = self.get_producer_qty_stock_invoiced()
-        if qty == DECIMAL_ZERO:
-            if stock == DECIMAL_ZERO:
-                return ""
-            else:
-                return _("stock %(stock)s") % {'stock': number_format(stock, 4)}
-        else:
-            if stock == DECIMAL_ZERO:
-                return _("<b>%(qty)s</b>") % {'qty': number_format(qty, 4)}
-            else:
-                return _("<b>%(qty)s</b> + stock %(stock)s") % {'qty': number_format(qty, 4),
-                                                                'stock': number_format(stock, 4)}
-
-    get_HTML_producer_qty_stock_invoiced.short_description = (_("quantity invoiced"))
-    get_HTML_producer_qty_stock_invoiced.allow_tags = True
-    get_HTML_producer_qty_stock_invoiced.admin_order_field = 'quantity_invoiced'
 
     class Meta:
         proxy = True
@@ -1844,24 +1934,6 @@ class OfferItemSend(OfferItem):
 
 @python_2_unicode_compatible
 class OfferItemClosed(OfferItem):
-
-    def get_HTML_producer_qty_stock_invoiced(self):
-        qty, stock = self.get_producer_qty_stock_invoiced()
-        if qty == DECIMAL_ZERO:
-            if stock == DECIMAL_ZERO:
-                return ""
-            else:
-                return _("stock %(stock)s") % {'stock': number_format(stock, 4)}
-        else:
-            if stock == DECIMAL_ZERO:
-                return _("<b>%(qty)s</b>") % {'qty': number_format(qty, 4)}
-            else:
-                return _("<b>%(qty)s</b> + stock %(stock)s") % {'qty': number_format(qty, 4),
-                                                                'stock': number_format(stock, 4)}
-
-    get_HTML_producer_qty_stock_invoiced.short_description = (_("quantity invoiced"))
-    get_HTML_producer_qty_stock_invoiced.allow_tags = True
-    get_HTML_producer_qty_stock_invoiced.admin_order_field = 'quantity_invoiced'
 
     def __str__(self):
         return '%s, %s' % (self.producer.short_profile_name, self.get_long_name(is_quantity_invoiced=True))
@@ -1875,7 +1947,7 @@ class OfferItemClosed(OfferItem):
 @python_2_unicode_compatible
 class Purchase(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name, on_delete=models.PROTECT, db_index=True)
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT, db_index=True)
     permanence_date = models.DateField(_("permanence_date"))
     offer_item = models.ForeignKey(
         OfferItem, verbose_name=_("offer_item"), blank=True, null=True, on_delete=models.PROTECT)
@@ -1966,7 +2038,9 @@ class Purchase(models.Model):
     get_HTML_unit_deposit.allow_tags = True
 
     def __str__(self):
-        return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
+        # Use to not display label (inline_admin_form.original) into the inline form (tabular.html)
+        return ""
+        # return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
 
     class Meta:
         verbose_name = _("purchase")
@@ -2275,9 +2349,33 @@ class PurchaseSendForUpdate(Purchase):
         verbose_name_plural = _("purchases")
 
 
+class PurchaseInvoiced(Purchase):
+
+    def get_quantity(self):
+        return self.quantity_invoiced
+
+    get_quantity.short_description = (_("quantity invoiced"))
+    get_quantity.allow_tags = False
+
+    def get_long_name(self):
+        if self.offer_item is not None:
+            return self.offer_item.get_long_name(is_quantity_invoiced=True)
+        else:
+            raise AttributeError
+
+    get_long_name.short_description = (_("long_name"))
+    get_long_name.allow_tags = False
+    get_long_name.admin_order_field = 'offer_item__translations__long_name'
+
+    class Meta:
+        proxy = True
+        verbose_name = _("purchase")
+        verbose_name_plural = _("purchases")
+
+
 class BankAccount(models.Model):
     permanence = models.ForeignKey(
-        Permanence, verbose_name=RepanierSettings.permanence_name,
+        Permanence, verbose_name=apps.REPANIER_SETTINGS_PERMANENCE_NAME,
         on_delete=models.PROTECT, blank=True, null=True)
     producer = models.ForeignKey(
         Producer, verbose_name=_("producer"),
@@ -2313,60 +2411,46 @@ class BankAccount(models.Model):
         _("is_updated_on"), auto_now=True)
 
     def get_bank_amount_in(self):
-        if self.id:
-            if self.bank_amount_in != DECIMAL_ZERO:
-                return self.bank_amount_in
-            else:
-                return ""
-        return "N/A"
+        return self.bank_amount_in if self.bank_amount_in != DECIMAL_ZERO else ""
 
     get_bank_amount_in.short_description = (_("bank_amount_in"))
     get_bank_amount_in.allow_tags = False
     get_bank_amount_in.admin_order_field = 'bank_amount_in'
 
     def get_bank_amount_out(self):
-        if self.id:
-            if self.bank_amount_out != DECIMAL_ZERO:
-                return self.bank_amount_out
-            else:
-                return ""
-        return "N/A"
+        return self.bank_amount_out if self.bank_amount_out != DECIMAL_ZERO else ""
 
     get_bank_amount_out.short_description = (_("bank_amount_out"))
     get_bank_amount_out.allow_tags = False
     get_bank_amount_out.admin_order_field = 'bank_amount_out'
 
     def get_producer(self):
-        if self.id:
-            if self.producer:
-                return self.producer
-            else:
-                if self.customer == None:
-                    # This is a total, show it
-                    if self.operation_status == BANK_LATEST_TOTAL:
-                        return "=============="
-                    else:
-                        return "--------------"
-                return ""
-        return "N/A"
+        if self.producer:
+            return self.producer
+        else:
+            if self.customer is None:
+                # This is a total, show it
+                if self.operation_status == BANK_LATEST_TOTAL:
+                    return "=============="
+                else:
+                    return "--------------"
+            return ""
 
     get_producer.short_description = (_("producer"))
     get_producer.allow_tags = False
     get_producer.admin_order_field = 'producer'
 
     def get_customer(self):
-        if self.id:
-            if self.customer:
-                return self.customer
-            else:
-                if self.producer == None:
-                    # This is a total, show it
-                    if self.operation_status == BANK_LATEST_TOTAL:
-                        return "=============="
-                    else:
-                        return "--------------"
-                return ""
-        return "N/A"
+        if self.customer:
+            return self.customer
+        else:
+            if self.producer is None:
+                # This is a total, show it
+                if self.operation_status == BANK_LATEST_TOTAL:
+                    return "=============="
+                else:
+                    return "--------------"
+            return ""
 
     get_customer.short_description = (_("customers"))
     get_customer.allow_tags = False

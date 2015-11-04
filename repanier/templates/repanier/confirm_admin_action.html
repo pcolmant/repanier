@@ -1,8 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
-
 {% block content %}
-
     <form action="" method="post">{% csrf_token %}
         <div>
             {% for obj in queryset %}

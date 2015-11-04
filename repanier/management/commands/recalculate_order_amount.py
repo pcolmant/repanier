@@ -12,10 +12,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for permanence in Permanence.objects.filter(
                 # status=PERMANENCE_SEND
-                status__in=[PERMANENCE_SEND, PERMANENCE_DONE]
+                # status__in=[PERMANENCE_SEND, PERMANENCE_DONE]
+            id=74
         ).order_by('permanence_date'):
             print "%s" % permanence
             recalculate_order_amount(permanence_id=permanence.id,
                  permanence_status=PERMANENCE_SEND,
-                 migrate=True)
+                 send_to_producer=False,
+                 re_init=True)
 

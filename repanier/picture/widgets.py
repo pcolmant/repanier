@@ -10,6 +10,7 @@ from const import SIZE_M
 
 
 class AjaxPictureWidget(widgets.TextInput):
+
     html = """
     <div id="{element_id}_file_dropbox">
         {input_part}
@@ -148,8 +149,8 @@ class AjaxPictureWidget(widgets.TextInput):
                                     }}
                                 }});
                                 {element_id}_file_elem.val("");
-                                {element_id}_file_select.show();
-                                {element_id}_file_remove.show();
+                                {element_id}_file_select.css('display', 'inline');
+                                {element_id}_file_remove.css('display', 'inline');
                                 {element_id}_file_elem.hide();
                                 {element_id}_file_elem_select.hide();
                                 if(msg != "") {{
@@ -194,7 +195,7 @@ class AjaxPictureWidget(widgets.TextInput):
                 cancel(e);
                 {element_id}_file_select.hide();
                 {element_id}_file_remove.hide();
-                {element_id}_file_elem_select.show();
+                {element_id}_file_elem_select.css('display', 'inline');
                 {element_id}_file_path.val("");
             }});
             {element_id}_file_elem.on('change', function(e){{
@@ -251,7 +252,7 @@ class AjaxPictureWidget(widgets.TextInput):
                 <a id="{element_id}_file_select" style="display:{display_picture}" target="_blank" href="{file_url}">
                     <img id="{element_id}_file_img" src="{file_url}" class="img-responsive img-thumbnail" style="margin:5px; min-height:32px; min-width:32px; max-height:225px; max-width:225px;">
                 </a>
-                <p style="display:{display_picture}"></br><a id="{element_id}_file_remove" class="btn btn-default" href="#remove">{remove}&nbsp;<img id="id_picture_clear" src="/static/admin/img/icon_deletelink.gif" alt="{remove}" title="{remove}" height="10" width="10"></a></p>
+                <p id="{element_id}_file_remove" style="display:{display_picture}"><a id="{element_id}_file_remove" class="btn btn-danger" href="#remove">{remove}</a></p>
                 <input id="{element_id}_file_elem" type="file" style="display:none" accept="image/*"/>
                 <a href="#" id="{element_id}_file_elem_select" class="btn btn-default" style="display:{display_upload}"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
             """
@@ -262,7 +263,7 @@ class AjaxPictureWidget(widgets.TextInput):
                 </a>
                 <button id="{element_id}_file_remove" style="display:{display_picture}">{remove}&nbsp;<img id="id_picture_clear" src="/static/admin/img/icon_deletelink.gif" alt="{remove}" title="{remove}" height="10" width="10"></button>
                 <input id="{element_id}_file_elem" type="file" style="display:none" accept="image/*"/>
-                <button id="{element_id}_file_elem_select" class="btn btn-default" style="display:{display_upload}">{select_a_file}</button>
+                <button id="{element_id}_file_elem_select" style="display:{display_upload}">{select_a_file}</button>
             """
 
         output_with_input_part = self.html.replace(
@@ -281,7 +282,7 @@ class AjaxPictureWidget(widgets.TextInput):
             remove="%s" % _('Remove'),
             file_is_not_an_image="%s" % _('File is not an image'),
             stop_waiting="%s" % _('Processing this image take too much time'),
-            select_a_file="%s" % _('Select a file'),
+            select_a_file="%s" % _('Select a picture'),
             width=width,
             height=height
         )

@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.db.models import F, Q
-from const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_TWO
+from const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_TWO, EMPTY_STRING, DECIMAL_THREE
 from email.email_alert import send_error
 from models import Customer, Staff, Configuration
 from django.utils.translation import ugettext_lazy as _
@@ -17,104 +17,93 @@ class RepanierCustomBackend(ModelBackend):
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(RepanierCustomBackend, self).__init__(*args, **kwargs)
+        super(RepanierCustomBackend, self).__init__()
 
     def authenticate(self, username=None, password=None, confirm=None, **kwargs):
         self.user = None
-        # try: (Q(income__gte=5000) | Q(income__isnull=True))
         user_username = User.objects.filter(Q(username=username[:30]) | Q(email=username)).order_by().first()
+        staff = customer = None
+        login_attempt_counter = DECIMAL_THREE
         if user_username is not None:
             username = user_username.username
-            staff = Staff.objects.filter(
+            customer = Customer.objects.filter(
                 user=user_username, is_active=True
             ).order_by().first()
-            if staff is not None:
-                customer = staff.customer_responsible
-            else:
-                customer = Customer.objects.filter(
+            if customer is None:
+                staff = Staff.objects.filter(
                     user=user_username, is_active=True
                 ).order_by().first()
-            user_or_none = super(RepanierCustomBackend, self).authenticate(username, password)
-            if customer is not None:
-                # This is a customer or staff member
+                if staff is None:
+                    login_attempt_counter = Configuration.objects.filter(
+                        id=DECIMAL_ONE
+                    ).only(
+                        'login_attempt_counter'
+                    ).first().login_attempt_counter
+                else:
+                    login_attempt_counter = staff.login_attempt_counter
+            else:
                 login_attempt_counter = customer.login_attempt_counter
-                if login_attempt_counter > DECIMAL_TWO:
-                    # if confirm is None:
-                    #     confirm = ""
-                    # else:
-                    #     confirm = str(sint(confirm))
-                    phone_digits = ""
-                    i = 0
-                    phone1 = customer.phone1
-                    while i < len(phone1):
-                        if '0' <= phone1[i] <= '9':
-                            phone_digits += phone1[i]
-                        i += 1
-                    if confirm is not None and len(confirm) >= 4 and phone_digits.endswith(confirm):
-                        pass
-                    else:
-                        # Sorry you may no log in because the four last digits of your phone are not given
-                        user_or_none = None
-                if user_or_none is None:
-                    if login_attempt_counter < 20:
-                        Customer.objects.filter(id=customer.id).update(
-                            login_attempt_counter=F('login_attempt_counter') +
-                                                  DECIMAL_ONE
-                        )
-                    else:
-                        # That's really not normal
-                        Customer.objects.filter(id=customer.id).update(
-                            may_order=False
-                        )
-                        Staff.objects.filter(customer_responsible_id=customer.id).update(
-                            is_active=False
-                        )
-                    if login_attempt_counter > DECIMAL_ONE:
-                        raise forms.ValidationError(
-                            _("Too many attempt."),
-                            code='attempt',
-                        )
-                else:
+
+        user_or_none = super(RepanierCustomBackend, self).authenticate(username, password)
+
+        if user_or_none is None:
+            # Failed to log in
+            if login_attempt_counter < 20:
+                # Do not increment indefinitely
+                if customer is not None:
                     Customer.objects.filter(id=customer.id).update(
-                        login_attempt_counter=DECIMAL_ZERO
+                        login_attempt_counter=F('login_attempt_counter') +
+                        DECIMAL_ONE
                     )
-            elif user_username is not None and user_username.is_superuser:
-                # This is the superuser. One and only one superuser should be defined.
-                login_attempt_counter = Configuration.objects.filter(
-                    id=DECIMAL_ONE
-                ).only(
-                    'login_attempt_counter'
-                ).first().login_attempt_counter
-                if user_or_none is None:
-                    # Failed to log in
-                    if login_attempt_counter < 50:
-                        Configuration.objects.filter(id=DECIMAL_ONE).update(
-                            login_attempt_counter=F('login_attempt_counter') +
-                                                  DECIMAL_ONE
-                        )
-                    if login_attempt_counter > DECIMAL_ONE:
-                        send_error("Login attempt failed : %s" % username)
+                elif staff is not None:
+                    Staff.objects.filter(id=staff.id).update(
+                        login_attempt_counter=F('login_attempt_counter') +
+                        DECIMAL_ONE
+                    )
                 else:
-                    # Log in successful
-                    if login_attempt_counter > 6:
-                        # Sorry you may no log in because of too many failed log in attempt
-                        user_or_none = None
-                    else:
+                    Configuration.objects.filter(id=DECIMAL_ONE).update(
+                        login_attempt_counter=F('login_attempt_counter') +
+                        DECIMAL_ONE
+                    )
+            if login_attempt_counter >= DECIMAL_THREE:
+                raise forms.ValidationError(
+                    _("Because you tried to log in too many time without success, you must now first reset your password."),
+                    # _("Too many attempt."),
+                    code='attempt',
+                )
+        else:
+            if login_attempt_counter >= DECIMAL_THREE:
+                raise forms.ValidationError(
+                    _("Because you tried to log in too many time without success, you must now first reset your password."),
+                    # _("Too many attempt."),
+                    code='attempt',
+                )
+            else:
+                # Reset login_attempt_counter
+                if customer is not None:
+                    if login_attempt_counter > DECIMAL_ZERO:
+                        Customer.objects.filter(id=customer.id).update(
+                            login_attempt_counter=DECIMAL_ZERO
+                        )
+                elif staff is not None:
+                    if login_attempt_counter > DECIMAL_ZERO:
+                        Staff.objects.filter(id=staff.id).update(
+                            login_attempt_counter=DECIMAL_ZERO
+                        )
+                else:
+                    if login_attempt_counter > DECIMAL_ZERO:
                         Configuration.objects.filter(id=DECIMAL_ONE).update(
                             login_attempt_counter=DECIMAL_ZERO
                         )
-                        if login_attempt_counter > DECIMAL_TWO:
-                            send_error("Login attempt success : %s" % username)
-            # except:
-            #     user_or_none = None
-            self.user = user_or_none
-            # if user_or_none :
-            # print ('Authenticate user : %s' % getattr(user_or_none, get_user_model().USERNAME_FIELD))
-            # else:
-            # print ('Authenticate user : not defined')
-            return user_or_none
-        else:
-            return None
+
+        # except:
+        #     user_or_none = None
+        self.user = user_or_none
+        # if user_or_none :
+        # print ('Authenticate user : %s' % getattr(user_or_none, get_user_model().USERNAME_FIELD))
+        # else:
+        # print ('Authenticate user : not defined')
+        return user_or_none
 
     def get_user(self, user_id):
         if self.user is not None and self.user.id == user_id:

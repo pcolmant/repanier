@@ -2,7 +2,6 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import get_current_site
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from repanier.models import BankAccount

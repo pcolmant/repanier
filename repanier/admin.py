@@ -3,12 +3,17 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from os import sep as os_sep
 import uuid
+from django.contrib.auth.models import User
 from django.forms import Textarea
-from django.utils.timezone import utc
+from import_export import resources, fields
+from import_export.admin import ImportExportMixin, ExportMixin
+from import_export.widgets import DateWidget, ForeignKeyWidget
 import parler
-from apps import RepanierSettings
 from fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from widget import SelectAdminOrderUnitWidget, PreviewProductOrderWidget
+from xlsx.widget import TwoDecimalsWidget, TranslatedForeignKeyWidget, ThreeDecimalsWidget, OneToOneWidget, \
+    DecimalBooleanWidget, FourDecimalsWidget, ZeroDecimalsWidget, IdWidget
+from xlsx.widget import ChoiceWidget
 
 try:
     from urllib.parse import parse_qsl
@@ -24,6 +29,7 @@ from django.contrib.auth import get_user_model
 import datetime
 from django.utils.translation import ugettext_lazy as _
 from django.utils import translation
+from django.utils import timezone
 from django.core import validators
 from django.db.models import Q, F
 from django import forms
@@ -33,7 +39,7 @@ from django_mptt_admin.admin import DjangoMpttAdmin
 from parler.admin import TranslatableAdmin, TranslatableModelForm
 
 from models import LUT_ProductionMode, OfferItemSend, PurchaseSendForUpdate, \
-    PurchaseOpenedOrClosedForUpdate, CustomerSend, OfferItemClosed, CustomerInvoice, ProducerInvoice
+    PurchaseOpenedOrClosedForUpdate, CustomerSend, OfferItemClosed, CustomerInvoice, ProducerInvoice, PurchaseInvoiced
 from models import Configuration
 from models import LUT_DepartmentForCustomer
 from models import LUT_PermanenceRole
@@ -52,14 +58,12 @@ from models import Purchase
 from models import BankAccount
 from views import render_response
 
-from xslx import xslx_offer
-from xslx import xslx_order
-from xslx import xslx_product
-from xslx import xslx_invoice
-from xslx import xslx_purchase
-from xslx import xslx_stock
-
-from menus.menu_pool import menu_pool
+from xlsx import xslx_offer
+from xlsx import xslx_order
+from xlsx import xslx_product
+from xlsx import xslx_invoice
+from xlsx import xslx_purchase
+from xlsx import xslx_stock
 
 from task import task_invoice
 from task import task_order
@@ -105,27 +109,60 @@ class LUTPermanenceRoleAdmin(TranslatableAdmin, DjangoMpttAdmin):
     list_per_page = 17
     list_max_show_all = 17
 
+    def get_fields(self, request, obj=None):
+        if apps.REPANIER_SETTINGS_DELIVERY_POINT:
+            return [
+                ('parent',),
+                ('delivery_points'),
+                ('is_active'),
+                ('short_name'),
+                ('description',)
+            ]
+        else:
+            return [
+                ('parent',),
+                ('is_active'),
+                ('short_name'),
+                ('description',)
+            ]
+
 
 admin.site.register(LUT_PermanenceRole, LUTPermanenceRoleAdmin)
 
 
-def create__producer_action(year):
-    def action(modeladmin, request, queryset):
-        queryset = queryset.order_by()
-        return xslx_purchase.admin_export_in(year, queryset)
+class ConfigurationDataForm(TranslatableModelForm):
+    # preview_product_order = forms.CharField(label="", widget=PreviewProductOrderWidget)
 
-    name = "export_producer_%d" % (year,)
-    return (name, (action, name, _("Export purchases of %s") % (year,)))
+    def __init__(self, *args, **kwargs):
+        super(ConfigurationDataForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super(ConfigurationDataForm, self).clean()
+        send_order_mail_to_customer = self.cleaned_data["send_order_mail_to_customer"]
+        send_abstract_order_mail_to_customer = self.cleaned_data["send_abstract_order_mail_to_customer"]
+        if send_abstract_order_mail_to_customer and not send_order_mail_to_customer:
+            self.add_error(
+                'send_abstract_order_mail_to_customer',
+                _('The abstract can only be send if the order is also send to customer'))
+        send_order_mail_to_producer = self.cleaned_data["send_order_mail_to_producer"]
+        send_abstract_order_mail_to_producer = self.cleaned_data["send_abstract_order_mail_to_producer"]
+        if send_abstract_order_mail_to_producer and not send_order_mail_to_producer:
+            self.add_error(
+                'send_abstract_order_mail_to_customer',
+                _('The abstract can only be send if the order is also send to producer'))
+
+        return cleaned_data
 
 
 class ConfigurationAdmin(TranslatableAdmin):
+    form = ConfigurationDataForm
     fieldsets = [
         (None, {
             'fields':
                 (('test_mode', 'group_name', 'name'),
                 'display_anonymous_order_form',
                 ('display_producer_on_order_form', 'max_week_wo_participation'),
-                ('display_vat', 'invoice', 'bank_account', 'vat_id')),
+                ('invoice', 'bank_account', 'vat_id')),
         }),
         (_('Opening mails'), {
             'classes': ('collapse',),
@@ -138,8 +175,8 @@ class ConfigurationAdmin(TranslatableAdmin):
             'classes': ('collapse',),
             'fields':
                 (
-                    'send_order_mail_to_customer', 'order_customer_mail',
-                    'send_order_mail_to_producer', 'order_producer_mail',
+                    'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail',
+                    'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer', 'order_producer_mail',
                     'send_order_mail_to_board', 'order_staff_mail',
                 ),
         }),
@@ -155,16 +192,27 @@ class ConfigurationAdmin(TranslatableAdmin):
         (_('Advanced options'), {
             'classes': ('collapse',),
             'fields':
-                (('accept_child_group', 'delivery_point'),
-                'page_break_on_customer_check',
-                ('stock', 'producer_order_rounded',),
-                'producer_pre_opening', 'offer_producer_mail'),
+                # (('accept_child_group', 'delivery_point'),
+                ('delivery_point',
+                ('page_break_on_customer_check', 'display_vat'),
+                # ('stock', 'producer_order_rounded',),
+                'offer_producer_mail'),
         }),
         ]
 
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     def get_readonly_fields(self, request, configuration=None):
-        permanence = Permanence.objects.all().order_by().first()
-        if permanence is None:
+        permanence = Permanence.objects.all().order_by()
+        is_coordinator = request.user.is_superuser or Staff.objects.filter(
+            id=request.user.staff.id, is_coordinator=True, is_active=True
+        ).order_by().first() is not None
+
+        if is_coordinator or permanence.first() is None:
             return []
         else:
             return ['bank_account']
@@ -173,13 +221,94 @@ class ConfigurationAdmin(TranslatableAdmin):
 admin.site.register(Configuration, ConfigurationAdmin)
 
 
-class ProducerAdmin(admin.ModelAdmin):
+# Custom Producer
+class ProducerResource(resources.ModelResource):
+    id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
+    price_list_multiplier = fields.Field(attribute='price_list_multiplier', widget=TwoDecimalsWidget())
+    vat_level = fields.Field(attribute='vat_level', widget=ChoiceWidget(LUT_VAT, LUT_VAT_REVERSE))
+    date_balance = fields.Field(attribute='date_balance', widget=DateWidget(format='%d-%m-%Y'), readonly=True)
+    balance = fields.Field(attribute='balance', widget=TwoDecimalsWidget(), readonly=True)
+    invoice_by_basket = fields.Field(attribute='invoice_by_basket', widget=DecimalBooleanWidget())
+    manage_stock = fields.Field(attribute='manage_stock', widget=DecimalBooleanWidget())
+    is_resale_price_fixed = fields.Field(attribute='is_resale_price_fixed', widget=DecimalBooleanWidget())
+    represent_this_buyinggroup = fields.Field(attribute='represent_this_buyinggroup', widget=DecimalBooleanWidget())
+    is_active = fields.Field(attribute='is_active', widget=DecimalBooleanWidget())
 
+    def before_save_instance(self, instance, dry_run):
+        """
+        Override to add additional logic.
+        """
+        if instance.id is not None:
+            producer = Producer.objects.filter(short_profile_name=instance.short_profile_name).exclude(id=instance.id).order_by().only('id')
+            if producer.exists():
+                raise ValueError(_("The short_basket_name %s is already used by another producer.") % instance.short_profile_name)
+
+    class Meta:
+        model = Producer
+        fields = (
+            'id', 'short_profile_name', 'long_profile_name',
+            'email', 'language', 'phone1', 'phone2',
+            'fax', 'address', 'invoice_by_basket', 'manage_stock',
+            'producer_pre_opening', 'producer_price_are_wo_vat', 'vat_level',
+            'price_list_multiplier', 'is_resale_price_fixed',
+            'date_balance', 'balance', 'represent_this_buyinggroup', 'is_active'
+        )
+        export_order = fields
+        import_id_fields = ('id',)
+        skip_unchanged = True
+        report_skipped = False
+        use_transactions = False
+
+
+def create__producer_action(year):
+    def action(modeladmin, request, queryset):
+        queryset = queryset.order_by()
+        return xslx_purchase.admin_export_in(year, queryset)
+
+    name = "export_producer_%d" % (year,)
+    return (name, (action, name, _("Export purchases of %s") % (year,)))
+
+
+class ProducerDataForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ProducerDataForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super(ProducerDataForm, self).clean()
+        if 'producer_pre_opening' in self.cleaned_data:
+            producer_pre_opening = self.cleaned_data["producer_pre_opening"]
+        else:
+            producer_pre_opening = False
+        manage_stock = self.cleaned_data["manage_stock"]
+        if manage_stock and producer_pre_opening:
+            # The producer set his stock -> no possibility to manage stock
+            self.add_error('producer_pre_opening', _("Either 'manage stock' or 'producer pre opening' may be set. Not both."))
+            self.add_error('manage_stock', _("Either 'manage stock' or 'producer pre opening' may be set. Not both."))
+        invoice_by_basket = self.cleaned_data["invoice_by_basket"]
+        if manage_stock and invoice_by_basket:
+            # The group manage the stock -> no possibility for the producer to prepare basket
+            self.add_error('invoice_by_basket', _("Either 'manage stock' or 'invoice by basket' may be set. Not both."))
+            self.add_error('manage_stock', _("Either 'manage stock' or 'invoice by basket' may be set. Not both."))
+        is_resale_price_fixed = self.cleaned_data["is_resale_price_fixed"]
+        if is_resale_price_fixed and producer_pre_opening:
+            # The producer set his price -> no possibility to fix the resale price
+            self.add_error('producer_pre_opening', _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
+            self.add_error('is_resale_price_fixed', _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
+        return cleaned_data
+
+
+class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
+
+    form=ProducerDataForm
+    resource_class = ProducerResource
     search_fields = ('short_profile_name', 'email')
+    # list_display = ('short_profile_name', 'get_products', 'get_balance', 'phone1', 'email', 'manage_stock', 'is_active')
     list_per_page = 17
     list_max_show_all = 17
     list_filter = ('is_active', 'invoice_by_basket', 'manage_stock', 'is_resale_price_fixed')
-    actions = ['export_xlsx_producer_prices', 'export_xlsx_customer_prices', 'import_xlsx', 'recalculate_prices']
+    # actions = ['export_xlsx_producer_prices', 'export_xlsx_customer_prices', 'import_xlsx', 'recalculate_prices']
+    actions = ['recalculate_prices']
 
     def export_xlsx_producer_prices(self, request, queryset):
         return xslx_product.admin_export(request, queryset, producer_prices=True)
@@ -205,12 +334,11 @@ class ProducerAdmin(admin.ModelAdmin):
                 for permanence in Permanence.objects.filter(
                         status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND]
                 ):
-                    offer_item_queryset = OfferItem.objects\
-                        .filter(
-                            permanence_id=permanence.id,
-                            product_id=product.id,
-                            is_active=True
-                        ).order_by()
+                    offer_item_queryset = OfferItem.objects.filter(
+                        permanence_id=permanence.id,
+                        product_id=product.id,
+                        is_active=True
+                    ).order_by()
                     clean_offer_item(permanence, offer_item_queryset, reorder=False)
                     recalculate_order_amount(permanence_id=permanence.id,
                                              permanence_status=permanence.status,
@@ -223,15 +351,12 @@ class ProducerAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         actions = super(ProducerAdmin, self).get_actions(request)
-        this_year = datetime.datetime.utcnow().replace(tzinfo=utc).year
+        this_year = timezone.now().year
         actions.update(OrderedDict(create__producer_action(y) for y in [this_year, this_year-1, this_year-2]))
         return actions
 
     def get_list_display(self, request):
-        if RepanierSettings.stock:
-            return ('short_profile_name', 'get_products', 'get_balance', 'phone1', 'email', 'manage_stock', 'is_active')
-        else:
-            return ('short_profile_name', 'get_products', 'get_balance', 'phone1', 'email', 'is_active')
+        return ('short_profile_name', 'get_products', 'get_balance', 'phone1', 'email', 'producer_pre_opening', 'manage_stock')
 
     def get_fields(self, request, producer=None):
         fields = [
@@ -239,26 +364,22 @@ class ProducerAdmin(admin.ModelAdmin):
             ('email', 'fax'),
             ('phone1', 'phone2',)
         ]
-        if RepanierSettings.display_vat:
+        if apps.REPANIER_SETTINGS_DISPLAY_VAT:
             fields += [
-                ('price_list_multiplier', 'producer_price_are_wo_vat', 'is_resale_price_fixed', 'vat_level'),
+                ('price_list_multiplier', 'is_resale_price_fixed'),
+                ('producer_price_are_wo_vat', 'vat_level', 'vat_id'),
             ]
         else:
             fields += [
                 ('price_list_multiplier', 'is_resale_price_fixed'),
             ]
-        if RepanierSettings.stock:
-            fields += [
-                ('invoice_by_basket', 'manage_stock',),
-            ]
-        else:
-            fields += [
-                ('invoice_by_basket',),
-            ]
+        fields += [
+            ('invoice_by_basket', 'manage_stock', 'producer_pre_opening'),
+        ]
         fields += [
             ('address', 'memo'),
         ]
-        if RepanierSettings.invoice:
+        if apps.REPANIER_SETTINGS_INVOICE:
             fields += [
                 ('initial_balance', 'date_balance', 'balance', 'represent_this_buyinggroup'),
             ]
@@ -268,7 +389,7 @@ class ProducerAdmin(admin.ModelAdmin):
         return fields
 
     def get_readonly_fields(self, request, producer=None):
-        if RepanierSettings.invoice:
+        if apps.REPANIER_SETTINGS_INVOICE:
             if producer is not None:
                 producer_invoice = ProducerInvoice.objects.filter(producer_id=producer.id).order_by().first()
                 if producer_invoice is not None:
@@ -380,6 +501,8 @@ class UserDataForm(forms.ModelForm):
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
             user.username = username
+            user.first_name = ""
+            user.last_name = username
             user.email = email
             user.save()
         else:
@@ -391,28 +514,90 @@ class UserDataForm(forms.ModelForm):
 
 
 # Customer
+class CustomerResource(resources.ModelResource):
+    id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
+    email = fields.Field(attribute='user', widget=OneToOneWidget(User, 'email'), readonly=False)
+    delivery_point = fields.Field(attribute='delivery_point', widget=TranslatedForeignKeyWidget(LUT_DeliveryPoint, 'short_name'))
+    date_balance = fields.Field(attribute='date_balance', widget=DateWidget(format='%d-%m-%Y'), readonly=True)
+    balance = fields.Field(attribute='balance', widget=TwoDecimalsWidget(), readonly=True)
+    may_order = fields.Field(attribute='may_order', widget=DecimalBooleanWidget())
+    is_active = fields.Field(attribute='is_active', widget=DecimalBooleanWidget())
+    purchase = fields.Field(attribute='get_purchase', widget=ZeroDecimalsWidget(), readonly=True)
+    participation = fields.Field(attribute='get_participation', widget=ZeroDecimalsWidget(), readonly=True)
+
+    def before_save_instance(self, instance, dry_run):
+        """
+        Override to add additional logic.
+        """
+        user_model = get_user_model()
+        if instance.id is not None:
+            customer = Customer.objects.filter(id=instance.id).order_by().only('id', 'user_id').first()
+            user = user_model.objects.filter(email=instance.user.email).exclude(id=customer.user_id).order_by().only('id')
+        else:
+            user = user_model.objects.filter(email=instance.user.email).order_by().only('id')
+        if user.exists():
+            raise ValueError(_("The email %s is already used by another user.") % instance.user.email)
+        if instance.id is not None:
+            user = user_model.objects.filter(username=instance.short_basket_name).exclude(id=customer.user_id).order_by().only('id')
+        else:
+            user = user_model.objects.filter(username=instance.short_basket_name).order_by().only('id')
+        if user.exists():
+            raise ValueError(_("The short_basket_name %s is already used by another user.") % instance.short_basket_name)
+        if not dry_run:
+            if instance.id is not None:
+                email = instance.user.email
+                instance.user = user_model.objects.get(id=customer.user_id)
+                instance.user.username = instance.short_basket_name
+                instance.user.first_name = ""
+                instance.user.last_name = instance.short_basket_name
+                instance.user.email = email
+                instance.user.save()
+            else:
+                instance.user = user_model.objects.create_user(
+                    username=instance.short_basket_name, email=instance.user.email, password=uuid.uuid1().hex,
+                    first_name="", last_name=instance.short_basket_name)
+                instance.user_id = instance.user.id
+
+    class Meta:
+        model = Customer
+        fields = (
+            'id', 'short_basket_name', 'long_basket_name', 'email',
+            'email2', 'language', 'delivery_point',
+            'phone1', 'phone2', 'address', 'city',
+            'date_balance', 'balance', 'may_order', 'is_active', 'participation', 'purchase'
+        )
+        export_order = fields
+        import_id_fields = ('id',)
+        skip_unchanged = True
+        report_skipped = False
+        use_transactions = False
+
+
 class CustomerWithUserDataForm(UserDataForm):
 
     class Meta:
         widgets = {
-            'address': Textarea(attrs={'rows': 4, 'cols': 80}),
-            'memo': Textarea(attrs={'rows': 4, 'cols': 80}),
+            'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
+            'memo': Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
         }
         model = Customer
         fields = "__all__"
 
 
-class CustomerWithUserDataAdmin(admin.ModelAdmin):
+class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
+    # http://stackoverflow.com/questions/17919361/how-can-i-add-a-button-into-django-admin-change-list-view-page
+    # class Media:
+    #     js = ('js/adminfix.js', )
+
     form = CustomerWithUserDataForm
+    resource_class = CustomerResource
     list_display = (
         'short_basket_name', 'get_balance', 'may_order', 'long_basket_name', 'phone1', 'get_email',
         'get_last_login')
     search_fields = ('short_basket_name', 'long_basket_name', 'user__email', 'email2')
     list_per_page = 17
     list_max_show_all = 17
-    list_filter = ('is_active',
-                   'may_order',
-                   'delivery_point')
+    list_filter = ('is_active', 'may_order', 'delivery_point')
 
     def get_email(self, customer):
         if customer.user is not None:
@@ -432,7 +617,7 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
     get_date_joined.short_description = _("date joined")
 
     def get_last_login(self, customer):
-        if customer.user is not None:
+        if customer.user is not None and customer.user.last_login is not None:
             return customer.user.last_login.strftime('%d-%m-%Y')
         else:
             return ''
@@ -446,19 +631,13 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
             ('email', 'email2', 'accept_mails_from_members'),
             ('phone1', 'phone2', 'accept_phone_call_from_members'),
         ]
-        if RepanierSettings.invoice:
-            if RepanierSettings.delivery_point:
-                fields += [
-                    ('delivery_point', 'vat_id'),
-                ]
-            else:
-                fields += [
-                    ('vat_id',),
-                ]
-        elif RepanierSettings.delivery_point:
+        if apps.REPANIER_SETTINGS_DELIVERY_POINT:
             fields += [
                 ('delivery_point',),
             ]
+        fields += [
+            ('vat_id',),
+        ]
         if customer is not None:
             fields += [
                 ('address', 'city', 'picture'),
@@ -471,7 +650,7 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
                 'memo',
             ]
 
-        if RepanierSettings.invoice:
+        if apps.REPANIER_SETTINGS_INVOICE:
             if customer is not None:
                 customer_invoice = CustomerInvoice.objects.filter(customer_id=customer.id).order_by().first()
                 if customer_invoice is not None:
@@ -489,30 +668,30 @@ class CustomerWithUserDataAdmin(admin.ModelAdmin):
                 ]
         fields += [
             ('may_order', 'is_active'),
-            ('get_last_login', 'get_date_joined')
+            ('get_last_login', 'get_date_joined', 'get_participation', 'get_purchase')
         ]
         return fields
 
     def get_readonly_fields(self, request, customer=None):
-        if RepanierSettings.invoice:
+        if apps.REPANIER_SETTINGS_INVOICE:
             if customer is not None:
                 customer_invoice = CustomerInvoice.objects.filter(customer_id=customer.id).order_by().first()
                 if customer_invoice is not None:
                     # Do not modify the initial balance, an invoice already exist
                     return ['represent_this_buyinggroup', 'date_balance', 'balance', 'get_last_login',
-                            'get_date_joined']
+                            'get_date_joined', 'get_participation', 'get_purchase']
                 else:
-                    return ['represent_this_buyinggroup', 'get_last_login', 'get_date_joined']
+                    return ['represent_this_buyinggroup', 'get_last_login', 'get_date_joined', 'get_participation', 'get_purchase']
             else:
-                return ['represent_this_buyinggroup', 'get_last_login', 'get_date_joined']
-        return ['get_last_login', 'get_date_joined']
+                return ['represent_this_buyinggroup', 'get_last_login', 'get_date_joined', 'get_participation', 'get_purchase']
+        return ['get_last_login', 'get_date_joined', 'get_participation', 'get_purchase']
 
     def get_form(self, request, customer=None, **kwargs):
         form = super(CustomerWithUserDataAdmin, self).get_form(request, customer, **kwargs)
         username_field = form.base_fields['username']
         email_field = form.base_fields['email']
 
-        if RepanierSettings.delivery_point:
+        if apps.REPANIER_SETTINGS_DELIVERY_POINT:
             delivery_point_field = form.base_fields["delivery_point"]
             delivery_point_field.empty_label = None
             delivery_point_field.queryset = LUT_DeliveryPoint.objects.filter(
@@ -560,7 +739,8 @@ class StaffWithUserDataAdmin(admin.ModelAdmin):
               'is_coordinator', 'is_webmaster',
               'customer_responsible', 'long_name', 'function_description',
               'is_active']
-    list_display = ('user', 'long_name', 'customer_responsible', 'get_customer_phone1', 'is_active')
+    list_display = ('user', 'long_name', 'customer_responsible', 'get_customer_phone1')
+    list_filter = ('is_active',)
     list_select_related = ('customer_responsible',)
     list_per_page = 17
     list_max_show_all = 17
@@ -606,6 +786,39 @@ admin.site.register(Staff, StaffWithUserDataAdmin)
 
 
 # Custom Product
+class ProductResource(resources.ModelResource):
+    id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
+    producer_name = fields.Field(attribute='producer', widget=ForeignKeyWidget(Producer, 'short_profile_name'))
+    long_name = fields.Field(attribute='long_name')
+    department_for_customer = fields.Field(attribute='department_for_customer', widget=TranslatedForeignKeyWidget(LUT_DepartmentForCustomer, 'short_name'))
+    order_unit = fields.Field(attribute='order_unit', widget=ChoiceWidget(LUT_PRODUCT_ORDER_UNIT, LUT_PRODUCT_ORDER_UNIT_REVERSE))
+    order_average_weight = fields.Field(attribute='order_average_weight', widget=ThreeDecimalsWidget())
+    producer_unit_price = fields.Field(attribute='producer_unit_price', widget=TwoDecimalsWidget())
+    customer_unit_price = fields.Field(attribute='customer_unit_price', widget=TwoDecimalsWidget())
+    unit_deposit = fields.Field(attribute='unit_deposit', widget=TwoDecimalsWidget())
+    vat_level = fields.Field(attribute='vat_level', widget=ChoiceWidget(LUT_VAT, LUT_VAT_REVERSE))
+    customer_minimum_order_quantity = fields.Field(attribute='customer_minimum_order_quantity', widget=ThreeDecimalsWidget())
+    customer_increment_order_quantity = fields.Field(attribute='customer_increment_order_quantity', widget=ThreeDecimalsWidget())
+    customer_alert_order_quantity = fields.Field(attribute='customer_alert_order_quantity', widget=ThreeDecimalsWidget())
+    wrapped = fields.Field(attribute='wrapped', widget=DecimalBooleanWidget())
+
+    class Meta:
+        model = Product
+        fields = (
+            'id',
+            'producer_name', 'reference', 'department_for_customer',
+            'long_name',
+            'order_unit',
+            'wrapped', 'order_average_weight', 'producer_unit_price', 'customer_unit_price',
+            'unit_deposit', 'vat_level', 'customer_minimum_order_quantity',
+            'customer_increment_order_quantity', 'customer_alert_order_quantity'
+        )
+        export_order = fields
+        import_id_fields = ('id',)
+        skip_unchanged = True
+        report_skipped = False
+        use_transactions = False
+
 class ProductDataForm(TranslatableModelForm):
     # preview_product_order = forms.CharField(label="", widget=PreviewProductOrderWidget)
 
@@ -614,6 +827,30 @@ class ProductDataForm(TranslatableModelForm):
 
     def clean(self):
         cleaned_data = super(ProductDataForm, self).clean()
+        customer_minimum_order_quantity = self.cleaned_data["customer_minimum_order_quantity"]
+        customer_increment_order_quantity = self.cleaned_data["customer_increment_order_quantity"]
+        customer_alert_order_quantity = self.cleaned_data["customer_alert_order_quantity"]
+        if "limit_order_quantity_to_stock" in self.cleaned_data:
+            limit_order_quantity_to_stock = self.cleaned_data["limit_order_quantity_to_stock"]
+        else:
+            limit_order_quantity_to_stock = False
+
+        if customer_increment_order_quantity <= DECIMAL_ZERO:
+            customer_increment_order_quantity = DECIMAL_ONE
+        if customer_minimum_order_quantity <= DECIMAL_ZERO:
+            customer_minimum_order_quantity = customer_increment_order_quantity
+        # if customer_alert_order_quantity <= customer_minimum_order_quantity:
+        #     customer_alert_order_quantity = customer_minimum_order_quantity
+        if customer_alert_order_quantity > DECIMAL_ZERO:
+            limit_order_qty_item = customer_alert_order_quantity / customer_increment_order_quantity
+            if customer_increment_order_quantity > customer_minimum_order_quantity:
+                limit_order_qty_item += 1
+
+            if not limit_order_quantity_to_stock and limit_order_qty_item > LIMIT_ORDER_QTY_ITEM:
+                self.add_error(
+                    'customer_alert_order_quantity',
+                    _('This alert quantity will generate more than %(qty_item)d choices for the customer into the order form') % {'qty_item': LIMIT_ORDER_QTY_ITEM,})
+
         return cleaned_data
 
     class Meta:
@@ -627,12 +864,11 @@ class ProductDataForm(TranslatableModelForm):
 def create_product_action(permanence):
     def action(modeladmin, request, queryset):
         queryset = queryset.order_by()
-        offer_item_queryset = OfferItem.objects\
-            .filter(
-                permanence_id=permanence.id,
-                product__in=queryset,
-                is_active=True
-            ).order_by()
+        offer_item_queryset = OfferItem.objects.filter(
+            permanence_id=permanence.id,
+            product__in=queryset,
+            is_active=True
+        ).order_by()
         clean_offer_item(permanence, offer_item_queryset, reorder=False)
         recalculate_order_amount(permanence_id=permanence.id,
                                  permanence_status=permanence.status,
@@ -646,12 +882,13 @@ def create_product_action(permanence):
     return (name, (action, name, _("Apply to %s") % (permanence,)))
 
 
-class ProductAdmin(TranslatableAdmin):
+class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     form = ProductDataForm
-    # TODO makemigrations
-    list_display = ('get_long_name', 'producer_unit_price', 'customer_alert_order_quantity', 'stock')
+    resource_class = ProductResource
+    list_display = ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'producer_unit_price',
+                'unit_deposit', 'customer_alert_order_quantity', 'stock')
     list_display_links = ('get_long_name',)
-    list_editable = ('producer_unit_price', 'customer_alert_order_quantity', 'stock')
+    list_editable = ('producer_unit_price', 'stock')
     readonly_fields = ('is_created_on',
                        'is_updated_on')
     list_select_related = ('producer', 'department_for_customer')
@@ -680,27 +917,33 @@ class ProductAdmin(TranslatableAdmin):
     duplicate_product.short_description = _('duplicate product')
 
     def get_list_display(self, request):
-        # list_editable interacts with a couple of other options in particular ways;
-        #
-        # Any field in list_editable must also be in list_display. You can’t edit a field that’s not displayed!
-        # You’ll get a validation error if either of these rules are broken.
-        if RepanierSettings.stock:
-            return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'producer_unit_price',
-                'unit_deposit', 'customer_alert_order_quantity', 'stock', 'is_active')
+        producer_id = sint(request.GET.get('producer', 0))
+        if producer_id != 0:
+            producer_queryset = Producer.objects.filter(id=producer_id).order_by()
+            producer = producer_queryset.first()
         else:
-            #
-            return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'producer_unit_price',
-                'unit_deposit', 'customer_alert_order_quantity', 'stock', 'is_active')
+            producer = None
+        if producer is not None:
+            if producer.manage_stock:
+                return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
+                    'unit_deposit', 'customer_alert_order_quantity', 'stock')
+            elif producer.producer_pre_opening:
+                return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
+                    'unit_deposit', 'stock')
+            else:
+                return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
+                    'unit_deposit', 'customer_alert_order_quantity')
+        else:
+            return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
+                'unit_deposit', 'customer_alert_order_quantity', 'stock')
 
     def get_form(self, request, product=None, **kwargs):
         department_for_customer_id = None
         is_active_value = None
         is_into_offer_value = None
         producer_queryset = Producer.objects.none()
-        producer = None
-        if product:
+        if product is not None:
             producer_queryset = Producer.objects.filter(id=product.producer_id).order_by()
-            producer = product.producer
         else:
             preserved_filters = request.GET.get('_changelist_filters', None)
             if preserved_filters:
@@ -709,13 +952,13 @@ class ProductAdmin(TranslatableAdmin):
                     producer_id = param['producer']
                     if producer_id:
                         producer_queryset = Producer.objects.filter(id=producer_id).order_by()
-                        producer = producer_queryset.first()
                 if 'department_for_customer' in param:
                     department_for_customer_id = param['department_for_customer']
                 if 'is_active__exact' in param:
                     is_active_value = param['is_active__exact']
                 if 'is_into_offer__exact' in param:
                     is_into_offer_value = param['is_into_offer__exact']
+        producer = producer_queryset.first()
         self.fields = [
             ('producer', 'long_name', 'picture2'),
             # 'preview_product_order',
@@ -733,20 +976,22 @@ class ProductAdmin(TranslatableAdmin):
         self.fields += [
             ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity'),
             ('department_for_customer', 'placement'),
+        ]
+        if producer is not None and (producer.manage_stock or producer.producer_pre_opening):
+            self.fields += [
+                ('stock', 'limit_order_quantity_to_stock', 'producer_order_by_quantity'),
+            ]
+        self.fields += [
             'production_mode',
             'offer_description',
         ]
-        if RepanierSettings.display_vat:
+        if apps.REPANIER_SETTINGS_DISPLAY_VAT or (producer is not None and producer.producer_pre_opening):
             self.fields += [
             ('reference', 'vat_level'),
             ]
         else:
             self.fields += [
             ('reference',),
-            ]
-        if producer is not None and producer.manage_stock:
-            self.fields += [
-                ('stock', 'limit_order_quantity_to_stock'),
             ]
         self.fields += [
             ('is_into_offer', 'is_active', 'is_created_on', 'is_updated_on')
@@ -759,15 +1004,17 @@ class ProductAdmin(TranslatableAdmin):
         production_mode_field = form.base_fields["production_mode"]
         picture_field = form.base_fields["picture2"]
 
-        producer_field.widget.can_add_related = False
-        department_for_customer_field.widget.can_add_related = False
-        production_mode_field.widget.can_add_related = False
-        # One folder by producer for clarity
-        if hasattr(picture_field.widget, 'upload_to'):
-            # picture_field.widget.upload_to += os_sep + str(producer.id)
-            picture_field.widget.upload_to = "product" + os_sep + str(producer.id)
+        # producer_field.widget.can_add_related = False
+        # department_for_customer_field.widget.can_add_related = False
+        # production_mode_field.widget.can_add_related = False
 
-        if product:
+        if producer is not None:
+            # One folder by producer for clarity
+            if hasattr(picture_field.widget, 'upload_to'):
+                # picture_field.widget.upload_to += os_sep + str(producer.id)
+                picture_field.widget.upload_to = "product" + os_sep + str(producer.id)
+
+        if product is not None:
             producer_field.empty_label = None
             producer_field.queryset = producer_queryset
             # department_for_customer_field.empty_label = None
@@ -777,11 +1024,16 @@ class ProductAdmin(TranslatableAdmin):
             production_mode_field.empty_label = None
         else:
             if producer is not None:
-                if RepanierSettings.display_vat:
+                if "vat_level" in form.base_fields:
                     vat_level_field = form.base_fields["vat_level"]
                     vat_level_field.initial = producer.vat_level
                 producer_field.empty_label = None
                 producer_field.queryset = producer_queryset
+                if producer.producer_pre_opening:
+                    order_unit_field = form.base_fields["order_unit"]
+                    order_unit_field.choices = LUT_PRODUCER_PRODUCT_ORDER_UNIT
+                    limit_order_quantity_to_stock_field = form.base_fields["limit_order_quantity_to_stock"]
+                    limit_order_quantity_to_stock_field.initial = True
             else:
                 producer_field.choices = [('-1', _("Please select first a producer in the filter of previous screen"))]
             if department_for_customer_id is not None:
@@ -808,9 +1060,6 @@ class ProductAdmin(TranslatableAdmin):
         production_mode_field.queryset = LUT_ProductionMode.objects.filter(
             rght=F('lft') + 1, is_active=True, translations__language_code=translation.get_language()).order_by(
             'translations__short_name')
-        if RepanierSettings.producer_pre_opening:
-            order_unit_field = form.base_fields["order_unit"]
-            order_unit_field.choices = LUT_PRODUCER_PRODUCT_ORDER_UNIT
         return form
 
     def save_model(self, request, product, form, change):
@@ -819,12 +1068,11 @@ class ProductAdmin(TranslatableAdmin):
         for permanence in Permanence.objects.filter(
                 status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND]
         ):
-            offer_item_queryset = OfferItem.objects\
-                .filter(
-                    permanence_id=permanence.id,
-                    product_id=product.id,
-                    is_active=True
-                ).order_by()
+            offer_item_queryset = OfferItem.objects.filter(
+                permanence_id=permanence.id,
+                product_id=product.id,
+                is_active=True
+            ).order_by()
             clean_offer_item(permanence, offer_item_queryset, reorder=False)
             recalculate_order_amount(permanence_id=permanence.id,
                                      permanence_status=permanence.status,
@@ -847,13 +1095,14 @@ admin.site.register(Product, ProductAdmin)
 
 # Permanence
 class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
+
     model = PermanenceBoard
     fields = ['permanence_role', 'customer']
     extra = 1
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer":
-            kwargs["queryset"] = Customer.objects.filter(is_active=True)
+            kwargs["queryset"] = Customer.objects.filter(may_order=True)
         if db_field.name == "permanence_role":
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(is_active=True)
         return super(PermanenceBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
@@ -877,19 +1126,19 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     filter_horizontal = ('producers',)
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
-    list_display = ('__str__', 'get_producers', 'get_customers', 'get_board', 'status')
+    list_display = ('__str__', 'all_languages_column', 'get_producers', 'get_customers', 'get_board', 'status')
     ordering = ('permanence_date',)
     actions = [
         'export_xlsx_offer',
         'open_and_send_offer',
         'close_order',
-        'export_xlsx_customer_order',
-        'export_xlsx_producer_order',
-        'import_xlsx_stock',
         'send_order',
         'delete_purchases',
         'back_to_planned',
         'undo_back_to_planned',
+        'export_xlsx_customer_order',
+        'export_xlsx_producer_order',
+        # 'import_xlsx_stock',
         'generate_next_week',
         'generate_next_12_week'
     ]
@@ -911,10 +1160,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     export_xlsx_customer_order.short_description = _("Export xlsx customers orders")
 
-    def import_xlsx_stock(self, request, queryset):
-        return xslx_stock.admin_import(self, admin, request, queryset, action='import_xlsx_stock')
-
-    import_xlsx_stock.short_description = _("Import stock from a xlsx file")
+    # def import_xlsx_stock(self, request, queryset):
+    #     return xslx_stock.admin_import(self, admin, request, queryset, action='import_xlsx_stock')
+    #
+    # import_xlsx_stock.short_description = _("Import stock from a xlsx file")
 
     def export_xlsx_producer_order(self, request, queryset):
         return xslx_order.admin_producer_export(request, queryset)
@@ -1104,7 +1353,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 for producer in permanence.producers.all():
                     new_permanence.producers.add(producer)
 
-
     generate_next_12_week.short_description = _("Duplicate this permanence during 12 week")
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
@@ -1112,20 +1360,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
         return super(PermanenceInPreparationAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs)
-
-    def get_actions(self, request):
-        actions = super(PermanenceInPreparationAdmin, self).get_actions(request)
-        if not RepanierSettings.stock:
-            del actions['import_xlsx_stock']
-
-        if not actions:
-            try:
-                self.list_display.remove('action_checkbox')
-            except ValueError:
-                pass
-            except AttributeError:
-                pass
-        return actions
 
     def get_queryset(self, request):
         qs = super(PermanenceInPreparationAdmin, self).get_queryset(request)
@@ -1143,7 +1377,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def save_related(self, request, form, formsets, change):
         super(PermanenceInPreparationAdmin, self).save_related(request, form, formsets, change)
-
 
 admin.site.register(PermanenceInPreparation, PermanenceInPreparationAdmin)
 
@@ -1324,7 +1557,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         actions = super(PermanenceDoneAdmin, self).get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
-        if not RepanierSettings.invoice:
+        if not apps.REPANIER_SETTINGS_INVOICE:
             del actions['export_xlsx']
             del actions['import_xlsx']
             del actions['generate_invoices']
@@ -1365,28 +1598,14 @@ admin.site.register(PermanenceDone, PermanenceDoneAdmin)
 
 # --------------------------------------------------------------
 
-class OfferItemClosedAdmin(admin.ModelAdmin):
-    list_display = ('department_for_customer', 'producer', 'get_long_name', 'stock',
-                    'get_HTML_producer_qty_stock_invoiced', 'add_2_stock')
-    list_display_links = ('get_long_name',)
-    list_editable = ('stock', 'add_2_stock')
+class OfferItemClosedOrSendAdmin(admin.ModelAdmin):
     search_fields = ('translations__long_name',)
-    list_per_page = 13
-    list_max_show_all = 13
-    ordering = ('permanence', 'translations__order_sort_order')
-    fields = (
-        ('permanence', 'department_for_customer', 'product'),
-        ('stock', 'get_HTML_producer_qty_stock_invoiced', 'add_2_stock',)
+    list_display_links = ('get_long_name',)
+    list_filter = (
+        OfferItemFilter,
+        ProductFilterByDepartmentForThisProducer,
+        PurchaseFilterByProducerForThisPermanence,
     )
-    readonly_fields = ('get_HTML_producer_qty_stock_invoiced',)
-    list_filter = (OfferItemSendFilter,)
-
-    def get_queryset(self, request):
-        queryset = super(OfferItemClosedAdmin, self).get_queryset(request)\
-            .filter(translations__language_code=translation.get_language())\
-            .distinct()
-            # .distinct("id", "translations__order_sort_order")
-        return queryset
 
     def has_add_permission(self, request):
         return False
@@ -1394,8 +1613,16 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_queryset(self, request):
+        queryset = super(OfferItemClosedOrSendAdmin, self).get_queryset(request).filter(
+            permanence__status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+            translations__language_code=translation.get_language()
+        ).distinct()
+            # .distinct("id", "translations__order_sort_order")
+        return queryset
+
     def get_form(self, request, obj=None, **kwargs):
-        form = super(OfferItemClosedAdmin, self).get_form(request, obj, **kwargs)
+        form = super(OfferItemClosedOrSendAdmin, self).get_form(request, obj, **kwargs)
         permanence_field = form.base_fields["permanence"]
         department_for_customer_field = form.base_fields["department_for_customer"]
         product_field = form.base_fields["product"]
@@ -1421,7 +1648,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         return form
 
     def get_actions(self, request):
-        actions = super(OfferItemClosedAdmin, self).get_actions(request)
+        actions = super(OfferItemClosedOrSendAdmin, self).get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
         if not actions:
@@ -1432,6 +1659,21 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             except AttributeError:
                 pass
         return actions
+
+
+class OfferItemClosedAdmin(OfferItemClosedOrSendAdmin):
+    list_display = ('department_for_customer', 'producer', 'get_long_name', 'stock',
+                    'get_HTML_producer_qty_stock_invoiced', 'add_2_stock')
+    list_editable = ('stock', 'add_2_stock')
+    list_per_page = 13
+    list_max_show_all = 13
+    ordering = ('permanence', 'translations__order_sort_order')
+    fields = (
+        ('permanence', 'department_for_customer', 'product'),
+        ('stock', 'get_HTML_producer_qty_stock_invoiced', 'add_2_stock',)
+    )
+    readonly_fields = ('get_HTML_producer_qty_stock_invoiced',)
+
 
 admin.site.register(OfferItemClosed, OfferItemClosedAdmin)
 
@@ -1491,9 +1733,12 @@ class OfferItemSendDataForm(forms.ModelForm):
         super(OfferItemSendDataForm, self).__init__(*args, **kwargs)
         offer_item = self.instance
         if offer_item.id is not None:
-            qty, stock  = offer_item.get_producer_qty_stock_invoiced()
-            self.fields["offer_purchase_price"].initial = ((offer_item.producer_unit_price +
-                offer_item.unit_deposit) * (qty)).quantize(TWO_DECIMALS)
+            if offer_item.manage_stock:
+                qty, stock = offer_item.get_producer_qty_stock_invoiced()
+                self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax - ((offer_item.producer_unit_price +
+                    offer_item.unit_deposit) * stock).quantize(TWO_DECIMALS)
+            else:
+                self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
             # if offer_item.wrapped or offer_item.order_unit not in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
             #     self.fields["offer_purchase_price"].widget.attrs['readonly'] = True
             #     self.fields["rule_of_3"].widget.attrs['readonly'] = True
@@ -1515,29 +1760,14 @@ class OfferItemSendDataForm(forms.ModelForm):
         return cleaned_data
 
 
-class OfferItemSendAdmin(admin.ModelAdmin):
+class OfferItemSendAdmin(OfferItemClosedOrSendAdmin):
     form = OfferItemSendDataForm
-    list_per_page = 17
-    list_max_show_all = 17
     inlines = [OfferItemPurchaseSendInline]
     list_display = ('department_for_customer', 'producer', 'get_long_name', 'get_HTML_producer_qty_stock_invoiced',
                     'get_HTML_producer_price_purchased')
-    list_display_links = ('get_long_name',)
-    search_fields = ('translations__long_name',)
+    list_per_page = 17
+    list_max_show_all = 17
     ordering = ('translations__order_sort_order',)
-    list_filter = (OfferItemSendFilter,)
-
-    def get_queryset(self, request):
-        queryset = super(OfferItemSendAdmin, self).get_queryset(request)\
-            .filter(translations__language_code=translation.get_language())\
-            .distinct()
-        return queryset
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None and obj.manage_stock:
@@ -1547,6 +1777,14 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         return ('producer_unit_price', 'customer_unit_price', 'unit_deposit',
                        'get_HTML_producer_qty_stock_invoiced',
                        'vat_level')
+
+    def get_queryset(self, request):
+        queryset = super(OfferItemClosedOrSendAdmin, self).get_queryset(request).filter(
+            permanence__status=PERMANENCE_SEND,
+            translations__language_code=translation.get_language()
+        ).distinct()
+            # .distinct("id", "translations__order_sort_order")
+        return queryset
 
     def get_form(self, request, obj=None, **kwargs):
         if not obj.wrapped and obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
@@ -1577,47 +1815,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 )
 
         form = super(OfferItemSendAdmin, self).get_form(request, obj, **kwargs)
-
-        permanence_field = form.base_fields["permanence"]
-        department_for_customer_field = form.base_fields["department_for_customer"]
-        product_field = form.base_fields["product"]
-
-        permanence_field.widget.can_add_related = False
-        department_for_customer_field.widget.can_add_related = False
-        product_field.widget.can_add_related = False
-        permanence_field.empty_label = None
-        department_for_customer_field.empty_label = None
-        product_field.empty_label = None
-
-        if obj is not None:
-            permanence_field.queryset = Permanence.objects \
-                .filter(id=obj.permanence_id)
-            department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects \
-                .filter(id=obj.department_for_customer_id)
-            product_field.queryset = Product.objects \
-                .filter(id=obj.product_id)
-        else:
-            permanence_field.queryset = Permanence.objects.none()
-            department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.none()
-            product_field.queryset = Product.objects.none()
         return form
-
-    def get_actions(self, request):
-        actions = super(OfferItemSendAdmin, self).get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        if not actions:
-            try:
-                self.list_display.remove('action_checkbox')
-            except ValueError:
-                pass
-            except AttributeError:
-                pass
-        return actions
-
-    def save_model(self, request, offer_item, form, change):
-        super(OfferItemSendAdmin, self).save_model(
-            request, offer_item, form, change)
 
     def save_related(self, request, form, formsets, change):
         for formset in formsets:
@@ -1688,7 +1886,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                         for i, purchase_form in enumerate(formsets[0], start=1):
                             purchase = purchase_form.instance
                             if i == max_purchase_counter:
-                                delta = (rule_of_3_target - adjusted_invoice).quantize(TWO_DECIMALS)
+                                delta = rule_of_3_target - adjusted_invoice
                                 if offer_item.producer_unit_price != DECIMAL_ZERO:
                                     purchase.quantity_invoiced = (delta / offer_item.producer_unit_price).quantize(FOUR_DECIMALS)
                                 else:
@@ -1737,7 +1935,6 @@ class CustomerPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
             .order_by("offer_item__translations__order_sort_order")\
             .distinct()
         return queryset
-
 
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_object = obj
@@ -1979,6 +2176,7 @@ class PurchaseWithProductAdmin(admin.ModelAdmin):
     def __init__(self, model, admin_site):
         super(PurchaseWithProductAdmin, self).__init__(model, admin_site)
         self.q_previous_order = DECIMAL_ZERO
+        self.producer_id = None
 
     def get_department_for_customer(self, obj):
         return obj.offer_item.department_for_customer
@@ -2002,7 +2200,7 @@ class PurchaseWithProductAdmin(admin.ModelAdmin):
         # If we are coming from a list screen, use the filter to pre-fill the form
         permanence_id = None
         customer_id = None
-        producer_id = None
+        self.producer_id = None
         preserved_filters = request.GET.get('_changelist_filters', None)
         if preserved_filters:
             param = dict(parse_qsl(preserved_filters))
@@ -2011,7 +2209,7 @@ class PurchaseWithProductAdmin(admin.ModelAdmin):
             if 'customer' in param:
                 customer_id = param['customer']
             if 'producer' in param:
-                producer_id = param['producer']
+                self.producer_id = param['producer']
         if "permanence" in form.base_fields:
             permanence_field = form.base_fields["permanence"]
             customer_field = form.base_fields["customer"]
@@ -2041,9 +2239,9 @@ class PurchaseWithProductAdmin(admin.ModelAdmin):
                 else:
                     permanence_field.queryset = Permanence.objects \
                         .filter(status__in=self.permanence_status_list)
-                if producer_id is not None:
+                if self.producer_id is not None:
                     product_field.choices = [(o.id, str(o)) for o in Product.objects
-                        .filter(is_active=True,producer_id=producer_id,
+                        .filter(is_active=True,producer_id=self.producer_id,
                                 translations__language_code=translation.get_language()
                                 ).order_by('translations__long_name')]
                 else:
@@ -2053,7 +2251,7 @@ class PurchaseWithProductAdmin(admin.ModelAdmin):
                     customer_field.empty_label = None
                     customer_field.queryset = Customer.objects.filter(id=customer_id, is_active=True, may_order=True)
                 else:
-                    customer_field.queryset = Customer.objects.filter(is_active=True, may_order=True)
+                    customer_field.queryset = Customer.objects.filter(is_active=True)
         return form
 
     @transaction.atomic
@@ -2068,6 +2266,7 @@ class PurchaseWithProductAdmin(admin.ModelAdmin):
                 OfferItem.objects.create(
                     permanence_id=purchase.permanence_id,
                     product_id=product_id,
+                    producer_id=self.producer_id,
                     is_active=True
                 )
                 clean_offer_item(purchase.permanence, queryset, reorder=False)
@@ -2122,7 +2321,56 @@ class PurchaseOpenedOrClosedAdmin(PurchaseWithProductAdmin):
 admin.site.register(PurchaseOpenedOrClosedForUpdate, PurchaseOpenedOrClosedAdmin)
 
 
-class PurchaseSendAdmin(PurchaseWithProductAdmin):
+class PurchaseSendOrInvoicedResource(resources.ModelResource):
+    id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
+    short_name = fields.Field(attribute='permanence__short_name', readonly=True)
+    date = fields.Field(attribute='permanence_date', widget=DateWidget(format='%d-%m-%Y'), readonly=True)
+    product = fields.Field(attribute='offer_item__get_long_name', readonly=True)
+    producer_name = fields.Field(attribute='producer__short_profile_name', readonly=True)
+    customer_name = fields.Field(attribute='customer__short_basket_name', readonly=True)
+    # customer_invoice = fields.Field(attribute='customer_invoice', readonly=True)
+    # producer_invoice = fields.Field(attribute='producer_invoice', readonly=True)
+    unit_deposit = fields.Field(attribute='offer_item__unit_deposit', widget=TwoDecimalsWidget(), readonly=True)
+    producer_unit_price_wo_tax = fields.Field(attribute='offer_item__producer_unit_price_wo_tax', widget=TwoDecimalsWidget(), readonly=True)
+    producer_vat = fields.Field(attribute='offer_item__producer_vat', widget=TwoDecimalsWidget(), readonly=True)
+    customer_unit_price = fields.Field(attribute='offer_item__customer_unit_price', widget=TwoDecimalsWidget(), readonly=True)
+    customer_vat = fields.Field(attribute='offer_item__customer_vat', widget=TwoDecimalsWidget(), readonly=True)
+    quantity_invoiced = fields.Field(attribute='quantity_invoiced', widget=FourDecimalsWidget(), readonly=True)
+    producer_row_price = fields.Field(attribute='purchase_price', widget=TwoDecimalsWidget(), readonly=True)
+    customer_row_price = fields.Field(attribute='selling_price', widget=TwoDecimalsWidget(), readonly=True)
+    invoiced_price_with_compensation = fields.Field(attribute='invoiced_price_with_compensation', widget=DecimalBooleanWidget(), readonly=True)
+    vat_level = fields.Field(attribute='offer_item__vat_level', widget=ChoiceWidget(LUT_VAT, LUT_VAT_REVERSE), readonly=True)
+
+
+    class Meta:
+        model = PurchaseSendForUpdate
+        fields = (
+            'id', 'date', 'short_name',
+            'producer_name',
+            'product',
+            'customer_name',
+            'quantity_invoiced', 'unit_deposit',
+            'producer_unit_price_wo_tax',
+            'producer_vat',
+            'customer_unit_price',
+            'customer_vat',
+            'producer_row_price',
+            'customer_row_price',
+            'vat_level',
+            'invoiced_price_with_compensation',
+            'comment'
+        )
+        export_order = fields
+        import_id_fields = ('id',)
+        skip_unchanged = True
+        report_skipped = False
+        use_transactions = False
+
+
+class PurchaseSendAdmin(ExportMixin, PurchaseWithProductAdmin):
+
+    resource_class = PurchaseSendOrInvoicedResource
+
     fields = (
         'permanence',
         'customer',
@@ -2141,7 +2389,63 @@ class PurchaseSendAdmin(PurchaseWithProductAdmin):
 admin.site.register(PurchaseSendForUpdate, PurchaseSendAdmin)
 
 
-# Accounting
+class PurchaseInvoicedAdmin(ExportMixin, PurchaseWithProductAdmin):
+
+    resource_class = PurchaseSendOrInvoicedResource
+    list_display_links = None
+
+    fields = (
+        'permanence',
+        'customer',
+        'product',
+        'quantity_ordered',
+        'quantity_invoiced',
+        'comment'
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    @property
+    def permanence_status_list(self):
+        return [PERMANENCE_DONE, PERMANENCE_ARCHIVED]
+
+
+admin.site.register(PurchaseInvoiced, PurchaseInvoicedAdmin)
+
+
+# Bank
+class BankAccountResource(resources.ModelResource):
+    id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
+    permanence = fields.Field(attribute='permanence', readonly=True)
+    operation_date = fields.Field(attribute='operation_date', widget=DateWidget(format='%d-%m-%Y'), readonly=True)
+    producer_name = fields.Field(attribute='producer__short_profile_name', readonly=True)
+    customer_name = fields.Field(attribute='customer__short_basket_name', readonly=True)
+    bank_amount_in = fields.Field(attribute='bank_amount_in', widget=TwoDecimalsWidget(), readonly=True)
+    bank_amount_out = fields.Field(attribute='bank_amount_out', widget=TwoDecimalsWidget(), readonly=True)
+    customer_invoice = fields.Field(attribute='customer_invoice', readonly=True)
+    producer_invoice = fields.Field(attribute='producer_invoice', readonly=True)
+
+    class Meta:
+        model = BankAccount
+        fields = (
+            'id',
+            'permanence',
+            'operation_date',
+            'producer_name',
+            'customer_name',
+            'bank_amount_in',
+            'bank_amount_out',
+            'operation_comment',
+            'customer_invoice',
+            'producer_invoice'
+        )
+        export_order = fields
+        import_id_fields = ('id', )
+        skip_unchanged = True
+        report_skipped = False
+        use_transactions = False
+
 class BankAccountDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BankAccountDataForm, self).__init__(*args, **kwargs)
@@ -2176,18 +2480,22 @@ class BankAccountDataForm(forms.ModelForm):
         fields = "__all__"
 
 
-class BankAccountAdmin(admin.ModelAdmin):
+class BankAccountAdmin(ExportMixin, admin.ModelAdmin):
     form = BankAccountDataForm
-    fields = ('operation_date',
-              ('producer', 'customer'), 'operation_comment', 'bank_amount_in',
-              'bank_amount_out',
-              ('customer_invoice', 'producer_invoice'),
-              ('is_created_on', 'is_updated_on') )
+    resource_class = BankAccountResource
+    fields = (
+        'operation_date',
+        ('producer', 'customer'), 'operation_comment', 'bank_amount_in',
+        'bank_amount_out',
+        ('customer_invoice', 'producer_invoice'),
+        ('is_created_on', 'is_updated_on')
+    )
     list_per_page = 17
     list_max_show_all = 17
     list_display = ['operation_date', 'get_producer', 'get_customer',
                     'get_bank_amount_in', 'get_bank_amount_out', 'operation_comment']
     date_hierarchy = 'operation_date'
+    list_filter = (BankAccountFilterByPermanence,)
     ordering = ('-operation_date', '-id')
     search_fields = ('producer__short_profile_name', 'customer__short_basket_name', 'operation_comment')
     actions = []
@@ -2230,11 +2538,11 @@ class BankAccountAdmin(admin.ModelAdmin):
             customer_field = form.base_fields["customer"]
             producer_field.widget.can_add_related = False
             customer_field.widget.can_add_related = False
-            producer_field.queryset = Producer.objects.filter(represent_this_buyinggroup=False,
-                                                              is_active=True).order_by(
-                "short_profile_name")
-            # customer.queryset = Customer.objects.filter(represent_this_buyinggroup=False, is_active=True).order_by(
-            #     "short_basket_name")
+            producer_field.queryset = Producer.objects.filter(
+                represent_this_buyinggroup=False,is_active=True
+            ).order_by(
+                "short_profile_name"
+            )
             customer_field.queryset = Customer.objects.filter(is_active=True).order_by(
                 "short_basket_name")
         return form
@@ -2262,6 +2570,5 @@ class BankAccountAdmin(admin.ModelAdmin):
                 # You may only insert the first latest bank total at initialisation of the website
                 bank_account.operation_status = BANK_LATEST_TOTAL
         super(BankAccountAdmin, self).save_model(request, bank_account, form, change)
-
 
 admin.site.register(BankAccount, BankAccountAdmin)

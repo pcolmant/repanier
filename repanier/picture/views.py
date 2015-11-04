@@ -64,8 +64,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
         else:
             image = Image.open(file_)
             if image.size[0] > size or image.size[1] > size:
-                data = json.dumps({'error': _not_lazy('Wrong size.')})
-                return HttpResponse(data, content_type="application/json", status=403)
+                return HttpResponse(json.dumps({'error': _not_lazy('Wrong size.')}), content_type="application/json", status=403)
 
         file_name = default_storage.save(name, image.fp)
         url = default_storage.url(file_name)

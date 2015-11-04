@@ -72,7 +72,7 @@ class Command(BaseCommand):
         record.picture2 = path
         record.save()
 
-    def resize(image, name, size):
+    def resize(self, image, name, size):
         if image.size[0] > size[0] or image.size[1] > size[1]:
             new_mode = 'RGB'
             if image.mode in ('RGBA', 'LA') or (image.mode == 'P' and 'transparency' in image.info):

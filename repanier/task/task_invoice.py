@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from decimal import getcontext, ROUND_HALF_UP
-# from django.utils.timezone import utc
 import uuid
 from django.contrib import messages
 from django.contrib.sites.models import get_current_site
@@ -22,6 +21,7 @@ from repanier.models import ProducerInvoice
 from repanier.models import Purchase
 from repanier.task import task_producer
 from repanier.tools import *
+import repanier.apps
 from repanier.email import email_invoice
 import datetime
 import thread
@@ -29,7 +29,7 @@ import thread
 
 @transaction.atomic
 def generate(request, permanence, payment_date, producers_to_be_paid_set):
-    if RepanierSettings.invoice:
+    if repanier.apps.REPANIER_SETTINGS_INVOICE:
         validation_passed = True
         getcontext().rounding=ROUND_HALF_UP
         new_bank_latest_total = DECIMAL_ZERO
@@ -38,7 +38,7 @@ def generate(request, permanence, payment_date, producers_to_be_paid_set):
             # If not latest total exists, create it with operation date before all movements
             bank_account = BankAccount.objects.all().order_by("operation_date").first()
             if bank_account is None:
-                bank_account = BankAccount.objects.create(operation_date = timezone.localtime(timezone.now()).date())
+                bank_account = BankAccount.objects.create(operation_date=timezone.now().date())
             if bank_account is not None:
                 operation_date = bank_account.operation_date
                 operation_date += datetime.timedelta(days=-1)
@@ -51,20 +51,20 @@ def generate(request, permanence, payment_date, producers_to_be_paid_set):
             producer_buyinggroup = Producer.objects.filter(is_active=True, represent_this_buyinggroup=True).order_by().first()
             if producer_buyinggroup is None:
                 producer_buyinggroup = Producer.objects.create(
-                    short_profile_name="z-%s" % RepanierSettings.group_name,
-                    long_profile_name=RepanierSettings.group_name,
+                    short_profile_name="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
+                    long_profile_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                     represent_this_buyinggroup=True
                 )
             if producer_buyinggroup is not None:
                 customer_buyinggroup = Customer.objects.filter(is_active=True, represent_this_buyinggroup=True).order_by().first()
                 if customer_buyinggroup is None:
                     user = User.objects.create_user(
-                        username="z-%s" % RepanierSettings.group_name, email=None, password=uuid.uuid1().hex,
-                        first_name="", last_name=RepanierSettings.group_name)
+                        username="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME, email=None, password=uuid.uuid1().hex,
+                        first_name="", last_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
                     customer_buyinggroup = Customer.objects.create(
                         user=user,
-                        short_basket_name="z-%s" % RepanierSettings.group_name,
-                        long_basket_name=RepanierSettings.group_name,
+                        short_basket_name="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
+                        long_basket_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                         represent_this_buyinggroup=True
                     )
 
@@ -237,9 +237,9 @@ def generate(request, permanence, payment_date, producers_to_be_paid_set):
             # Calculate if the customer representing the buying group has received/lost money
             # Either from initial negative customer balance or subscription
             result_set = Customer.objects.aggregate(Sum('balance'))
-            customer_total_balance = result_set["balance__sum"]
+            customer_total_balance = result_set["balance__sum"] if result_set["balance__sum"] is not None else DECIMAL_ZERO
             result_set = Producer.objects.aggregate(Sum('balance'))
-            producer_total_balance = result_set["balance__sum"]
+            producer_total_balance = result_set["balance__sum"] if result_set["balance__sum"] is not None else DECIMAL_ZERO
             delta_wrong_encoding = customer_total_balance + producer_total_balance - new_bank_latest_total
             # print("---------------------------------")
             # print("customer_total_balance : %f" % customer_total_balance)
@@ -544,10 +544,10 @@ def admin_generate(request, producers_to_be_paid_set=Producer.objects.none(), pe
                     .exclude(id=permanence.id).order_by("permanence_date").first()
                 if next_permanence_not_invoiced is not None:
                     payment_date = next_permanence_not_invoiced.payment_date
-                    if payment_date is None or payment_date > timezone.localtime(timezone.now()).date():
-                        payment_date = timezone.localtime(timezone.now()).date()
+                    if payment_date is None or payment_date > timezone.now().date():
+                        payment_date = timezone.now().date()
                 else:
-                    payment_date = timezone.localtime(timezone.now()).date()
+                    payment_date = timezone.now().date()
                 bank_account = BankAccount.objects.filter(
                     operation_status=BANK_LATEST_TOTAL)\
                     .only("operation_date").order_by("-id").first()
@@ -566,13 +566,13 @@ def admin_generate(request, producers_to_be_paid_set=Producer.objects.none(), pe
 
 
 def admin_send(request, queryset):
-    if RepanierSettings.invoice:
+    if repanier.apps.REPANIER_SETTINGS_INVOICE:
         user_message = _("The status of this permanence prohibit you to send invoices.")
         user_message_level = messages.ERROR
         for permanence in queryset[:1]:
             if permanence.status == PERMANENCE_DONE:
-                thread.start_new_thread(email_invoice.send, (permanence.id,))
-                # email_invoice.send(permanence.id)
+                thread.start_new_thread(email_invoice.send_invoice, (permanence.id,))
+                # email_invoice.send_invoice(permanence.id)
                 user_message = _("Emails containing the invoices will be send to the customers and the producers.")
                 user_message_level = messages.INFO
     else:
@@ -584,7 +584,7 @@ def admin_send(request, queryset):
 def admin_cancel(request, queryset):
     user_message = _("The status of this permanence prohibit you to cancel invoices.")
     user_message_level = messages.ERROR
-    if RepanierSettings.invoice:
+    if repanier.apps.REPANIER_SETTINGS_INVOICE:
         latest_total = BankAccount.objects.filter(
             operation_status=BANK_LATEST_TOTAL).only(
             "permanence"

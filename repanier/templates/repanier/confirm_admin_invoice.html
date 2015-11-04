@@ -2,14 +2,13 @@
 {% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
 
 {% block content %}
-    <br/>
     <h4>{{ permanence }}, {% trans "when producing invoices, generate bank account movements corresponding to the balance of the selected producers" %}
-        :</h4><br/><br/>
+        :</h4>
     <form action="" method="post">{% csrf_token %}
         <div>
             {% for obj in queryset %}
                 <h4><input type="checkbox" name="{{ action_checkbox_name }}" value="{{ obj.id|unlocalize }}"
-                           checked/>{{ obj.short_profile_name }}</h4><br/><br/>
+                           checked/>&nbsp;&nbsp;{{ obj.short_profile_name }}</h4>
             {% endfor %}
             <input type="hidden" name="permanence" value="{{ permanence.id }}"/>
             <input type="hidden" name="action" value="{{ action }}"/>

@@ -2,13 +2,13 @@
 {% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
 
 {% block content %}
-    <br/>
-    <h4>{{ permanence }} :</h4><br/><br/>
+    <h4>{{ permanence }} :</h4>
     <form action="" method="post">{% csrf_token %}
         <div>
             {% for obj in queryset %}
                 {{ obj.producer.short_profile_name }}, <b>{{ obj.bank_amount_out }} &euro;</b>,
-                {{ obj.operation_comment }}<br/><br/>
+                {{ obj.operation_comment }}
+                <br/><br/>
             {% endfor %}
             <input type="hidden" name="permanence" value="{{ permanence.id }}"/>
             <input type="hidden" name="action" value="{{ action }}"/>

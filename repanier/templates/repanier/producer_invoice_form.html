@@ -63,22 +63,18 @@ body > .container {
         {% if offer_item_set %}
             <h4>{{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.total_price_with_tax }}&nbsp;&euro;</h4>
             {% if object.total_vat != 0 or object.total_compensation != 0 or object.total_deposit != 0 %}
-                <h4>
-                    <small>{% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                        {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}&nbsp;&euro;{% endif %}
-                    </small>
-                </h4>
-                <h4>
-                    <small>{% if object.total_compensation != 0 %}{% if object.total_vat != 0 %}
-                        , {% endif %}{% trans "Compensation" %} : {{ object.total_compensation }}&nbsp;
-                        &euro;{% endif %}</small>
-                </h4>
-                <h4>
-                    <small>{% if object.total_deposit != 0 %}
-                        {% if object.total_vat != 0 or object.total_compensation != 0 %}
-                            , {% endif %}{% trans "Deposit" %} : {{ object.total_deposit }}&nbsp;
-                        &euro;{% endif %}</small>
-                </h4>
+                <h4><small>
+                    {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
+                    {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}&nbsp;&euro;{% endif %}
+                    {% if object.total_compensation != 0 %}
+                        {% if object.total_vat != 0 %}, {% endif %}
+                        {% trans "Compensation" %} : {{ object.total_compensation }}&nbsp;&euro;
+                    {% endif %}
+                    {% if object.total_deposit != 0 %}
+                        {% if object.total_vat != 0 or object.total_compensation != 0 %}, {% endif %}
+                        {% trans "Deposit" %} : {{ object.total_deposit }}&nbsp;&euro;
+                    {% endif %}
+                </small></h4>
             {% endif %}
             <table class="table table-hover table-bordered">
                 <thead>
