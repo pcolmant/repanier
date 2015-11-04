@@ -1,0 +1,122 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  /* background-color: #f5f5f5; */
+}
+
+/* sidebar */
+.bs-docs-sidebar {
+    padding-left: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+/* all links */
+.bs-docs-sidebar .nav > li > a {
+    color: #3c3c3c;
+    padding: 4px 20px;
+    font-size: 16px;
+    font-weight: 400;
+    border-left: 2px solid transparent;
+}
+.bs-docs-sidebar .nav > li > b > a {
+    color: #3c3c3c;
+    padding: 4px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-left: 2px solid transparent;
+}
+/* nested links */
+.bs-docs-sidebar .nav .nav > li > a,
+.bs-docs-sidebar .nav .nav > li > b > a {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 30px;
+    font-size: 14px;
+}
+/* active & hover links */
+.bs-docs-sidebar .nav > .active > a,
+.bs-docs-sidebar .nav > li > a:hover,
+.bs-docs-sidebar .nav > li > a:focus,
+.bs-docs-sidebar .nav > .active > b > a,
+.bs-docs-sidebar .nav > li > b > a:hover,
+.bs-docs-sidebar .nav > li > b > a:focus,
+/* selected links */
+.bs-docs-sidebar .nav > li > b > a.bs-docs-sidebar-active,
+.bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
+    color: #51a351;
+    text-decoration: none;
+    background-color: transparent;
+    border-left: 2px solid #51a351;
+}
+.display_none {
+    display:none;
+}
+.panel-heading.accordion-toggle:after {
+    /* symbol for "opening" panels */
+    font-family:'Glyphicons Halflings';
+    /* essential for enabling glyphicon */
+    content:"\e114";
+    /* adjust as needed, taken from bootstrap.css */
+    float: right;
+    position: relative;
+    bottom: 23px;
+    font-size: 15pt;
+    color: grey;
+}
+.panel-heading.accordion-toggle.collapsed:after {
+    /* symbol for "collapsed" panels */
+    content:"\e080";
+}
+
+.panel-heading:hover {
+    cursor: pointer;
+}
+
+.panel-heading:hover h4 {
+    text-decoration: underline;
+}
+
+
+/* Custom page CSS
+-------------------------------------------------- */
+
+.offer-description {
+  position: relative;
+  height: 200px;
+  margin-top: 20px;
+  overflow: auto;
+}
+
+body > .container {
+  padding: 0 15px 0;
+}
+.container .text-muted {
+  margin: 20px 0;
+}
+
+.footer > .container {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+code {
+  font-size: 80%;
+}
+
+/* automaticaly display menu on mouse over */
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+    display: block;    
+}

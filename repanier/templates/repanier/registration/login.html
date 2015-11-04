@@ -1,0 +1,64 @@
+{% extends "base.html" %}{% load i18n admin_static %}
+{% block base_content %}
+{#{% trans "Too many attempt." as too_many_attempt %}#}
+<div id="content-main">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="loginModalLabel">{% trans "Login" %}</h4>
+      </div>
+      <div class="modal-body">
+
+<form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8" id="login-form">{% csrf_token %}
+    <div class="form-group">
+    {% if form.non_field_errors %}
+        <p class="bg-danger">
+        {% for error in form.non_field_errors %}
+{#            {% if error != too_many_attempt %}#}
+                {{ error }}
+{#            {% endif %}#}
+        {% endfor %}
+        </p>
+    {% endif %}
+    <label for="id_username">{% trans "Username" %}</label>
+    {% if form.username.errors %}
+      <p class="bg-danger">
+      {% for error in form.username.errors %}
+        {{ error }}
+      {% endfor %}
+      </p>
+    {% endif %}
+    <input type="text" class="form-control" id="id_username" placeholder="{% trans "Username" %}" name="username">
+    <br/>
+    <label for="id_password">{% trans "Password" %}</label>
+    {% if form.password.errors %}
+      <p class="bg-danger">
+      {% for error in form.password.errors %}
+        {{ error }}
+      {% endfor %}
+      </p>
+    {% endif %}
+    <input type="password" class="form-control" id="id_password" placeholder="{% trans "Password" %}" name="password">
+    <input type="hidden" name="this_is_the_login_form" value="1" />
+    <input type="hidden" name="next" value="{{ next }}" />
+{#    {% if form.non_field_errors %}#}
+{#        {% for error in form.non_field_errors %}#}
+{#            {% if error == too_many_attempt %}#}
+{#                <br/>#}
+{#                <label for="id_confirm">{% trans "Validation code (4 latest digits of your phone number)" %}</label>#}
+{#                <input type="text" class="form-control" id="id_confirm" placeholder="{% trans "Validation code" %}" name="confirm">#}
+{#            {% endif %}#}
+{#        {% endfor %}#}
+{#    {% endif %}#}
+    </div>
+    <button class="btn btn-primary" type="submit">{% trans "Login" %}</button>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" style="color : inherit;">{% trans "Password reset" %}</a>
+</form>
+      </div><!-- /form -->
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+<script type="text/javascript">
+document.getElementById('id_username').focus()
+</script>
+</div>
+{% endblock %}
