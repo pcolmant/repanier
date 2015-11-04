@@ -888,7 +888,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     list_display = ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'producer_unit_price',
                 'unit_deposit', 'customer_alert_order_quantity', 'stock')
     list_display_links = ('get_long_name',)
-    list_editable = ('producer_unit_price', 'stock')
+    list_editable = None
     readonly_fields = ('is_created_on',
                        'is_updated_on')
     list_select_related = ('producer', 'department_for_customer')
@@ -923,6 +923,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             producer = producer_queryset.first()
         else:
             producer = None
+        self.list_editable = ('producer_unit_price', 'stock')
         if producer is not None:
             if producer.manage_stock:
                 return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
@@ -931,6 +932,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
                     'unit_deposit', 'stock')
             else:
+                self.list_editable = ('producer_unit_price',)
                 return ('is_into_offer', 'producer','department_for_customer', 'get_long_name', 'all_languages_column', 'producer_unit_price',
                     'unit_deposit', 'customer_alert_order_quantity')
         else:
