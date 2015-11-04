@@ -192,7 +192,7 @@ class Configuration(TranslatableModel):
                 En pièce jointe vous trouverez le détail de notre paiement pour la {{ permanence }}.<br/>
                 <br/>
                 {{ signature }}
-                """,
+                ace """,
             blank=False),
     )
 
