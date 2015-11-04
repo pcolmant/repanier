@@ -2,8 +2,16 @@
 import os
 import sys
 
+
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ptidej.settings")
+
+    os_environ = "DJANGO_SETTINGS_MODULE"
+    project = os.path.split(os.path.abspath(os.path.dirname(__file__)))[-1]
+    django_settings = "%s.common_settings" % project
+    os.environ.setdefault(os_environ, django_settings)
+    if os.environ.get(os_environ) != django_settings:
+        os.environ.pop(os_environ)
+        os.environ.setdefault(os_environ, django_settings)
 
     from django.core.management import execute_from_command_line
 
