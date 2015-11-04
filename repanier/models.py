@@ -91,94 +91,108 @@ class Configuration(TranslatableModel):
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Bonjour,<br/>"""
-                """<br/>"""
-                """Les commandes de la {{ permanence }} sont maintenant ouvertes.<br/>"""
-                """{% if offer_description %}{{ offer_description }}<br/>{% endif %}"""
-                """Les commandes sont ouvertes auprès de : {{ offer_producer }}.<br/>"""
-                """Les produits suivants sont en offre :<br/>{{ offer_detail }}"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Bonjour,<br/>
+                <br/>
+                Les commandes de la {{ permanence }} sont maintenant ouvertes.<br/>
+                {% if offer_description %}{{ offer_description }}<br/>{% endif %}
+                Les commandes sont ouvertes auprès de : {{ offer_producer }}.<br/>
+                Les produits suivants sont en offre :<br/>{{ offer_detail }}
+                <br/>
+                {{ signature }}
+                """,
             blank=False),
         offer_producer_mail=HTMLField(_("offer producer mail"),
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère {{ name }},<br/>"""
-                """<br /"""
-                """Les commandes de la {{ permanence }} vont bientôt être ouvertes.{% if offer_description %}<br/>"""
-                """Voici l'annonce consommateur :<br/>"""
-                """<br/>"""
-                """{{ offer_description }}{% endif %}<br/>"""
-                """<br/>"""
-                """Veuillez vérifier votre <strong>{{ offer }}</strong>.<br/>"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Cher/Chère {{ name }},<br/>
+                <br />
+                Les commandes de la {{ permanence }} vont bientôt être ouvertes.{% if offer_description %}<br/>
+                Voici l'annonce consommateur :<br/>
+                <br/>
+                {{ offer_description }}{% endif %}<br/>
+                <br/>
+                Veuillez vérifier votre <strong>{{ offer }}</strong>.<br/>
+                <br/>
+                {{ signature }}
+                """,
             blank=False),
 
         order_customer_mail=HTMLField(_("order customer mail"),
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Bonjour {{ long_basket_name }},<br/>"""
-                """<br/>"""
-                """En pièce jointe vous trouverez le détail de votre pannier {{ short_basket_name }} de la {{ permanence }}.<br/>"""
-                """{{ last_balance }}.<br/>"""
-                """Le montant de votre commande s'élève à {{ order_amount }} €.<br/>"""
-                """{% if customer_on_hold_movement != "" %}{{ customer_on_hold_movement }}<br/>{% endif %}"""
-                """{% if payment_needed != "" %}{{ payment_needed }}<br/>{% endif %}"""
-                """{% if delivery_point %}Votre point d'enlèvement est : {{ delivery_point }}.<br/>{% endif %}"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Bonjour {{ long_basket_name }},<br/>
+                <br/>
+                En pièce jointe vous trouverez le détail de votre pannier {{ short_basket_name }} de la {{ permanence }}.<br/>
+                {{ last_balance }}.<br/>
+                Le montant de votre commande s'élève à {{ order_amount }} €.<br/>
+                {% if customer_on_hold_movement != "" %}{{ customer_on_hold_movement }}<br/>{% endif %}
+                {% if payment_needed != "" %}{{ payment_needed }}<br/>{% endif %}
+                {% if delivery_point %}Votre point d'enlèvement est : {{ delivery_point }}.<br/>{% endif %}
+                <br/>
+                {{ signature }}
+                """,
             blank=False),
         order_staff_mail=HTMLField(_("order staff mail"),
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère membre de l'équipe de préparation,<br/>"""
-                """<br/>"""
-                """En pièce jointe vous trouverez la liste de préparation pour la {{ permanence }}.<br/>"""
-                """<br/>"""
-                """L'équipe de préparation est composée de :<br/>"""
-                """{{ board_composition }}<br/>"""
-                """ou de<br/>"""
-                """{{ board_composition_and_description }}<br/>"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Cher/Chère membre de l'équipe de préparation,<br/>
+                <br/>
+                En pièce jointe vous trouverez la liste de préparation pour la {{ permanence }}.<br/>
+                <br/>
+                L'équipe de préparation est composée de :<br/>
+                {{ board_composition }}<br/>
+                ou de<br/>
+                {{ board_composition_and_description }}<br/>
+                <br/>
+                {{ signature }}
+                """,
             blank=False),
         order_producer_mail=HTMLField(_("order producer mail"),
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère {{ name }},<br/>"""
-                """<br/>"""
-                """{% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{  permanence  }}.{% if duplicate %}<br/>"""
-                """<strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br/>"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Cher/Chère {{ name }},<br/>
+                <br/>
+                {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{  permanence  }}.{% if duplicate %}<br/>
+                <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br/>
+                <br/>
+                {{ signature }}
+                """,
               blank=False),
 
         invoice_customer_mail=HTMLField(_("invoice customer mail"),
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Bonjour {{ name }},<br/>"""
-                """<br/>"""
-                """En pièce jointe vous trouverez votre facture pour la {{ permanence }}.{% if invoice_description %}<br/>"""
-                """<br/>"""
-                """{{ invoice_description }}{% endif %}<br/>"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Bonjour {{ name }},<br/>
+                <br/>
+                En pièce jointe vous trouverez votre facture pour la {{ permanence }}.{% if invoice_description %}<br/>
+                <br/>
+                {{ invoice_description }}{% endif %}<br/>
+                <br/>
+                {{ signature }}
+                """,
             blank=False),
         invoice_producer_mail=HTMLField(_("invoice producer mail"),
             help_text="",
             configuration='CKEDITOR_SETTINGS_MODEL2',
             default=
-                """Cher/Chère {{ profile_name }},<br/>"""
-                """<br/>"""
-                """En pièce jointe vous trouverez le détail de notre paiement pour la {{ permanence }}.<br/>"""
-                """<br/>"""
-                """{{ signature }}""",
+                """
+                Cher/Chère {{ profile_name }},<br/>
+                <br/>
+                En pièce jointe vous trouverez le détail de notre paiement pour la {{ permanence }}.<br/>
+                <br/>
+                {{ signature }}
+                """,
             blank=False),
     )
 
