@@ -115,6 +115,12 @@
     {% render_block "jsuncompressed" %}
     {% render_block "js" %}
     <script src="{{ STATIC_URL}}fluidvids/fluidvids.js"></script>
+    <script>
+    fluidvids.init({
+      selector: ['iframe'],
+      players: ['www.youtube.com', 'player.vimeo.com']
+    });
+    </script>
     {% render_block "lastjs" %}
   </body>
 </html>
