@@ -35,13 +35,10 @@
     <script type="text/javascript">
       // ensuring django namespace is set correctly
       window.django = window.django || undefined;
-
       // ensuring jQuery namespace is set correctly
       window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
-
       // ensuring Class namespace is set correctly
       window.Class = window.Class || undefined;
-
       // ensuring CMS namespace is set correctly
       var CMS = {
         '$': (typeof jQuery === 'function') ? jQuery : undefined,
@@ -90,17 +87,13 @@
                           id="my_basket"></span> &euro; <span class="glyphicon glyphicon-shopping-cart"></span></a>
             </li>
               {% endif %}
-{#              {% if languages %}#}
-{#                  {% if languages|length > 1 %}#}
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
               <ul class="dropdown-menu">
                 {% language_chooser "native" %}
               </ul>
             </li>
-{#                  {% endif %}#}
-{#              {% endif %}#}
-          </ul> 
+          </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>
@@ -121,6 +114,7 @@
     </div>
     {% render_block "jsuncompressed" %}
     {% render_block "js" %}
+    <script src="{{ STATIC_URL}}fluidvids/fluidvids.js"></script>
     {% render_block "lastjs" %}
   </body>
 </html>
