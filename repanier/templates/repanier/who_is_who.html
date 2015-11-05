@@ -50,6 +50,11 @@
         <p>{% trans "If you want to show information about you, then" %} <a href="{% url 'me_view' %}">{% trans "update your profil" %}</a>.</p>
 <div class="panel-group" id="accordion">
         {% if coordinator %}
+<div class="bg-danger">
+<blockquote><small>
+{% trans "As a coordinator you see all information of group members." %}
+</small></blockquote>
+</div>
 {% for customer in customer_list %}
     <div class="panel panel-default">
         <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse{{ customer.id|stringformat:"d" }}">
