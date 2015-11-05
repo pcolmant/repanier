@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-05 01:23+0100\n"
-"PO-Revision-Date: 2015-11-05 07:47+0100\n"
+"PO-Revision-Date: 2015-11-05 14:35+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -2262,7 +2262,9 @@ msgstr ""
 
 #: templates/repanier/order_form.html:28
 msgid "This order will be charged."
-msgstr "/!\\ Cette commande vous sera facturée."
+msgstr ""
+"/!\\ Cette commande est confirmée. Elle vous sera facturée. Modifiez-la si "
+"nécessaire."
 
 #: templates/repanier/order_form.html:67 templates/repanier/who_is_who.html:10
 msgid "Search"
