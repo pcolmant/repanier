@@ -12,6 +12,7 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslationDoesNotExist
 import repanier.apps
+from repanier.email.email_alert import send_sms
 from repanier.models import Permanence, Producer, OfferItem
 from repanier.models import Customer
 from repanier.tools import *
@@ -52,6 +53,7 @@ def send_pre_open_order(permanence_id):
             )
             email.attach_alternative(html_content, "text/html")
             send_email(email=email)
+            send_sms(sms_nr=producer.phone1, sms_msg="%s - %s - %s" % (_("Pre-opening of orders")))
 
 
 def send_open_order(permanence_id):

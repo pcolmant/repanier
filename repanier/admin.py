@@ -10,6 +10,7 @@ from import_export.admin import ImportExportMixin, ExportMixin
 from import_export.widgets import DateWidget, ForeignKeyWidget
 import parler
 from fkey_choice_cache_mixin import ForeignKeyCacheMixin
+from repanier.email.email_alert import send_sms
 from widget import SelectAdminOrderUnitWidget, PreviewProductOrderWidget
 from xlsx.widget import TwoDecimalsWidget, TranslatedForeignKeyWidget, ThreeDecimalsWidget, OneToOneWidget, \
     DecimalBooleanWidget, FourDecimalsWidget, ZeroDecimalsWidget, IdWidget
@@ -1141,7 +1142,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         'export_xlsx_producer_order',
         # 'import_xlsx_stock',
         'generate_next_week',
-        'generate_next_12_week'
+        'generate_next_12_week',
+        "test"
     ]
 
     def get_readonly_fields(self, request, obj=None):
@@ -1160,6 +1162,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return xslx_order.admin_customer_export(request, queryset)
 
     export_xlsx_customer_order.short_description = _("Export xlsx customers orders")
+
+    def test(self, request, queryset):
+        return send_sms(sms_nr="+32 499 96 64 32 (pat)", sms_msg="Test SMS v8")
+
+    test.short_description = _("Test")
 
     # def import_xlsx_stock(self, request, queryset):
     #     return xslx_stock.admin_import(self, admin, request, queryset, action='import_xlsx_stock')

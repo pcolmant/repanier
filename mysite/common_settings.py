@@ -50,6 +50,7 @@ try:
     DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
     DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE')
     DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION')
+    DJANGO_SETTINGS_ANDROID_SMS_GATEWAY_MAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ANDROID_SMS_GATEWAY_MAIL')
     DJANGO_SETTINGS_ALLOWED_HOSTS = []
     for name in config.options('ALLOWED_HOSTS'):
         DJANGO_SETTINGS_ALLOWED_HOSTS.append(config.get('ALLOWED_HOSTS', name))
@@ -61,6 +62,8 @@ except IOError:
     print ("Unable to open %s settings" % (conf_file_name,))
     raise SystemExit(-1)
 
+###################### ANDROID SMS GATEWAY MAIL
+ANDROID_SMS_GATEWAY_MAIL = DJANGO_SETTINGS_ANDROID_SMS_GATEWAY_MAIL
 ###################### DEBUG
 
 DEBUG = DJANGO_SETTINGS_DEBUG
@@ -240,7 +243,7 @@ CKEDITOR_SETTINGS = {
     'toolbar_CMS': [
         ['Undo', 'Redo'],
         ['cmsplugins', '-', 'ShowBlocks'],
-        ['Format', 'Templates'],
+        ['Format',],
         ['TextColor', 'BGColor', '-', 'PasteText'],
         ['Maximize', ''],
         '/',
@@ -275,9 +278,15 @@ CKEDITOR_SETTINGS = {
     # 'contentsCss' : '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
     'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
     # 'extraAllowedContent' : '*(*)',
-    'removeFormatTags': 'big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    # 'extraAllowedContent' : 'iframe[*]',
+    # 'removeFormatTags': 'big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    # NOTE: Some versions of CKEditor will pre-sanitize your text before
+    # passing it to the web server, rendering the above settings useless.
+    # To ensure this does not happen, you may need to add
+    # the following parameters to CKEDITOR_SETTINGS:
     'basicEntities': False,
     'entities': False,
+    # Do not dispaly the HTML Path below the edit window
     'removePlugins': 'elementspath',
 }
 
@@ -298,13 +307,17 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'removePlugins': 'elementspath',
 }
 
-TEXT_ADDITIONAL_TAGS = ('span',)
-TEXT_ADDITIONAL_ATTRIBUTES = ('class',)
-TEXT_HTML_SANITIZE = True
 # TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
 # TEXT_SAVE_IMAGE_FUNCTION = 'djangocms_text_ckeditor.picture_save.create_picture_plugin'
 TEXT_SAVE_IMAGE_FUNCTION = None
-TEXT_PLUGINS_INTEGRATION = 'buttons'
+# djangocms-text-ckeditor uses html5lib to sanitize HTML
+# to avoid security issues and to check for correct HTML code.
+# Sanitisation may strip tags usesful for some use cases such as iframe;
+# you may customize the tags and attributes allowed by overriding
+# the TEXT_ADDITIONAL_TAGS and TEXT_ADDITIONAL_ATTRIBUTES settings:
+TEXT_ADDITIONAL_TAGS = ('span', 'iframe',)
+TEXT_ADDITIONAL_ATTRIBUTES = ('class', 'scrolling', 'allowfullscreen', 'frameborder')
+TEXT_HTML_SANITIZE = True
 
 FILER_ENABLE_LOGGING = False
 FILER_IMAGE_USE_ICON = True

@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 import repanier.apps
 from repanier.const import *
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
+
+
 # from django.contrib.sites.models import get_current_site
 
 
@@ -21,6 +23,28 @@ def send_error(error_str):
                   "%s@repanier.be" % (settings.ALLOWED_HOSTS[0]), [v for k, v in settings.ADMINS])
     except:
         pass
+
+
+def send_sms(sms_nr=None, sms_msg=None):
+    try:
+        if sms_nr is not None and sms_msg is not None:
+            valid_nr = "0"
+            i = 0
+            while i < len(sms_nr) and not sms_nr[i] == '4':
+                i += 1
+            while i < len(sms_nr):
+                if '0' <= sms_nr[i] <= '9':
+                    valid_nr += sms_nr[i]
+                i += 1
+            if len(valid_nr) == 10:
+                # Send SMS with free gateway : Sms Gateway - Android.
+                email = EmailMessage(valid_nr, sms_msg, "no-reply@repanier.be",
+                          [settings.ANDROID_SMS_GATEWAY_MAIL,])
+                email.send()
+    except:
+        pass
+
+
 
 # subject, from_email, to = 'Order Confirmation', 'admin@yourdomain.com', 'someone@somewhere.com'
 
