@@ -64,7 +64,7 @@ div.parler-language-tabs span.current:before { color: red; content:"\26FF";}
     <div class="breadcrumbs">
 {#    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>#}
 {#    {% if title %} &rsaquo; {{ title }}{% endif %}#}
-{% if opts.verbose_name and opts.verbose_name %}<h2 style="color: #FFF;"><a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+{% if opts.verbose_name and opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2 style="color: #FFF;">{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
 &rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% endif %}
     </div>
 {#    {% endblock %}#}
