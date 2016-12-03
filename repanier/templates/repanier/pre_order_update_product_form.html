@@ -111,7 +111,7 @@
             {% with id_for_label=form.producer_unit_price.id_for_label %}
             <div id="div_{{ id_for_label }}" class="col-xs-3">
                 <label for="{{ id_for_label }}" class="control-label">
-                    {% trans "selling price" %}&nbsp;{% if offer_item.producer.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}
+                    {% trans "selling price" %}&nbsp;{% if offer_item.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}
                 </label>
                 {% if form.producer_unit_price.errors %}
                   <p class="bg-danger">
@@ -191,8 +191,8 @@
                 <div class="controls col-xs-8">
                     <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
                               name="offer_description">{{ form.offer_description.value }}</textarea>
-                    <script>window.CKEDITOR_BASEPATH = "/static/djangocms_text_ckeditor/ckeditor/";</script>
-                    <script src="/static/djangocms_text_ckeditor/ckeditor/ckeditor.js"></script>
+                    <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                    <script src="{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/ckeditor.js"></script>
                     <script>
                         CKEDITOR.replace("{{ id_for_label }}", {
                             language: 'fr',
@@ -220,7 +220,7 @@
                                 "attributes": {"class": "glyphicon glyphicon-pushpin"},
                                 "element": "span"
                             },
-                            contentsCss: "/static/bootstrap/css/bootstrap.css",
+                            contentsCss: "{{ STATIC_URL}}bootstrap/css/bootstrap.css",
                             width: '100%',
                             height: '8em',
                             removePlugins: 'elementspath'
@@ -240,12 +240,12 @@
             <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
             <script>
                 t_row.find('span[id=get_long_name]').html('{{ offer_item.get_long_name | safe }}{% if offer_item.picture2 %}<img class="img-responsive img-rounded" style = "float:right; margin:5px; min-height:32px; min-width:32px; max-height:48px; max-width:48px;" src="{{ MEDIA_URL }}{{ offer_item.picture2 }}"/>{% endif %}');
-                row = '{{ offer_item.producer_unit_price_wo_tax|floatformat:-2 }}&nbsp;&euro;'
+                row = '{{ offer_item.producer_unit_price_wo_tax }}'
                 {% if offer_item.order_unit == "140" %}
                     row += '&nbsp;/&nbsp;({% trans "kg" %})';
                 {% endif %}
                 {% if offer_item.unit_deposit > 0 %}
-                    row += '<br/><span class=\'glyphicon glyphicon-plus\'></span>{{ offer_item.unit_deposit|floatformat:-2 }}&nbsp;&euro;<span class=\'glyphicon glyphicon-leaf\'></span>';
+                    row += '<br/><span class=\'glyphicon glyphicon-plus\'></span>{{ offer_item.unit_deposit }}<span class=\'glyphicon glyphicon-leaf\'></span>';
                 {% endif %}
                 t_row.find('span[id=producer_unit_price_wo_tax]').html(row);
                 t_row.find('span[id=get_vat_level_display]').html('{{ offer_item.get_vat_level_display }}');

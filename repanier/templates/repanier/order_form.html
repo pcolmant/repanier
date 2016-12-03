@@ -1,42 +1,32 @@
-{% extends 'subpage_base_wo_cms_toolbar.html' %}
-{% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
-{% block sub_content %}
+{% extends 'base.html' %}
+{% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags %}
+{% block base_content %}
     {# {% debug %} #}
-    <div class="container">
-    {% if anonymous %}
+    <div class="container-repanier">
+    {% if is_anonymous %}
     <div class="row">
-        <div class="panel panel-danger">
-            <div class="panel-heading">
-                {% trans "You need to log in" %}<br/><br/>
-                <a href="{% url "login_form" %}?next={% url 'order_view' permanence.id %}" class="btn btn-primary">{% trans "Login me" %}</a>
-            </div>
+    <div class="panel panel-danger">
+        <div class="panel-heading">
+            {% trans "You need to log in" %}<br/><br/>
+            <a href="{% url "login_form" %}?next={% url 'order_view' permanence.id delivery_id %}" class="btn btn-primary">{% trans "Login me" %}</a>
         </div>
     </div>
-    {% else %} {# anonymous#}
+    </div>
+    {% else %} {# is_anonymous#}
     <span id="may_not_order" class="display_none">
     <div class="row">
-        <div class="panel panel-danger">
-            <div class="panel-heading">
-                {% trans "You are not allowed to order products" %}
-            </div>
+    <div class="panel panel-danger">
+        <div class="panel-heading">
+            {% trans "You are not allowed to order products" %}
         </div>
     </div>
+    </div>
     </span>
-    {% if basket %}
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <b>{% trans "This order will be charged." %}</b><br/>
-                <span id="basket_message"></span>
-            </div>
-        </div>
-    {% else %}
-        <div class="row">
-
-
+    <div class="row">
     <div class="panel panel-default">
         {% if permanence.offer_description and permanence.offer_description.strip %}
         <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse-offer-description">
-             <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
+            <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
         </div>
         <div id="collapse-offer-description" class="panel-collapse collapse">
             <div class="panel-body bg-primary">
@@ -51,10 +41,29 @@
         </div>
         {% endif %}
     </div>
-            <br/>
+    </div>
+    {% if basket %}
+    <div class="row">
+    <div class="panel panel-default">
+        <div class="panel-heading accordion-toggle" data-toggle="collapse" data-target="#collapse-basket-description" aria-expanded="true">
+            <h4 class="panel-title">{% trans "Details of your order" %}</h4>
         </div>
+        <div id="collapse-basket-description" class="panel-collapse collapse in" aria-expanded="true">
+            <div class="panel-body bg-primary">
+                <div class="col-xs-12">
+                <span id="span_btn_confirm_order"></span>
+{#                <span id="basket_message"></span>#}
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    {% else %}
+        {% if offeritem_list %}
+            <span id="span_btn_confirm_order"></span>
+        {% endif %}
     {% endif %}
-    {% endif %} {# anonymous#}
+    {% endif %} {# is_anonymous#}
     <div class="row">
     <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
         <div class="fixed">
@@ -76,48 +85,67 @@
             </form>
             <br/>
             <ul class="nav nav-stacked" id="sidebar">
-                <li>
-                    <b><a href="{% url "order_view_wo_cache" permanence.id %}"
-                       {% if basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "Purchased product" %}
-                        <span id="prepared_amount"></span> &euro; <span
-                                class="glyphicon glyphicon-shopping-cart"></span></a></b>
-                </li>
+{#                <li>#}
+{#                    <b><a href="{% url "basket_view" permanence.id %}"#}
+{#                       {% if basket %}class="bs-docs-sidebar-active"{% endif %}>#}
+{#                        <span class="glyphicon glyphicon-shopping-cart"></span> <span id="prepared_amount"></span> &euro;</a></b>#}
+{#                </li>#}
+
+<li><a href="{% url "like_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box=all"
+               {% if like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My likes" %} <span class="glyphicon glyphicon-heart"></span></a>
+</li>
+{% if box_set %}
+    {% for box in box_set.all %}
+        <li><a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
+               {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} 📦{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
+    {% endfor %}
+{% endif %}
 {% if producer_set %}
     <li>
-        <b><a href="{% url "order_view" permanence.id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
-           {% if producer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a></b>
+        <a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
+           {% if producer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
         <ul class="nav nav-stacked">
     {% for producer in producer_set.all %}
-        <li><a href="{% url "order_view" permanence.id %}?producer={{ producer.id|stringformat:"d" }}&departementforcustomer={{ departementforcustomer_id }}"
-               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name  | truncatechars:15 }}</a>
+        {% if producer.minimum_order_value > 0 %}
+        <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
+               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span><span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
         </li>
+        {%  else %}
+        <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
+               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}<span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
+        </li>
+        {%  endif %}
     {% endfor %}
         </ul>
     </li>
-{% endif %}
+{% else %}{% if not departementforcustomer_set %}{% if like or basket or box or q %}
+    <li>
+        <a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all">{% trans "All products" %}</a>
+    </li>
+{% endif %}{% endif %}{% endif %}
 {% if departementforcustomer_set %}
     <li>
-        <b><a href="{% url "order_view" permanence.id %}"
-           {% if departementforcustomer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a></b>
+        <a href="{% url "order_view" permanence.id delivery_id %}"
+           {% if departementforcustomer_id == "all" and not basket and not like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
         <ul class="nav nav-stacked">
             {% for departementforcustomer in departementforcustomer_set.all %}
                 {% if departementforcustomer.level > 0 %}
                     {% ifchanged departementforcustomer.parent_id %}
                     {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                    <li><b><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|stringformat:"d" }}"
+                    <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}"
                            {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
-                    </b></li>
+                    </li>
                     {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                     {% endifchanged %}
                     <li>
-                        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                        <a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                     </li>
                 {% else %}
-                        </ul><li><b>
-                        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|stringformat:"d" }}"
+                        </ul><li>
+                        <a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
-                        </b></li><ul class="nav nav-stacked">
+                        </li><ul class="nav nav-stacked">
                 {% endif %}
             {% endfor %}
         </ul>
@@ -130,27 +158,74 @@
     <div class="col-sm-9">
     <div class="row">
     {% if offeritem_list %}
-            {% for offer in offeritem_list %}
-                {% if offer.picture %}
-                    {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}" data-picture="{{ product_thumbnail.url }}">
+        {% for offer in offeritem_list %}
+            {% if offer.picture %}
+                {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="{{ product_thumbnail.url }}">
+            {% else %}
+                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="">
+            {% endif %}
+{#            {% if offer.is_box %}#}
+{#                <i>{{ offer.cache_part_a | safe }}</i>#}
+{#            {% else %}#}
+                {{ offer.cache_part_a | safe }}
+{#            {% endif %}#}
+            </div>
+            <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
+                {% if offer.may_order %}<select name="offer_item{{ offer.id|unlocalize }}" id="offer_item{{ offer.id|unlocalize }}" onchange="order_ajax({{ offer.id|unlocalize }})" class="form-control"></select>{% endif %}
+                <span id="box_offer_item{{ offer.id|unlocalize }}"></span>
+{#                {% if user.customer.vat_id %}#}
+{#                    {{ offer.cache_part_c | safe }}#}
+{#                {% else %}#}
+                {{ offer.cache_part_b | safe }}
+{#                {% endif %}#}
+                {% if not offer.is_box %}<br/><span class="btn_like{{ offer.id|unlocalize }}" style="cursor: pointer;"></span>{% endif %}
+            </div>
+            {% if offer.is_box %}
+                <div class="clearfix"></div>
+                <div class="col-sm-12 col-lg-12">
+                {{ box_description |safe }}
+                </div>
+{#                    <div class="clearfix"></div>#}
+{#                    <hr/>#}
+            {% endif %}
+            {% if not forloop.last %}
+                {% if box %}
+                    <div class="clearfix {% cycle ' ' 'visible-sm-block visible-md-block' %}"></div>
+                    <hr class="visible-sm visible-xs visible-md {% cycle 'visible-lg' ' ' %}" />
                 {% else %}
-                <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}" data-picture="">
+                    <div class="clearfix {% cycle 'visible-sm-block visible-md-block' ' ' %}"></div>
+                    <hr class="visible-sm visible-xs visible-md {% cycle ' ' 'visible-lg' %}" />
+                {%  endif %}
+            {% else %}
+                {% if is_paginated %}
+                    <div class="hidden-xs">
+                        <div class="clearfix"></div>
+                        <hr/>
+                        <div class="btn-group">
+                            <div class="btn-group">
+                                {% if page_obj.has_previous %}
+                                     <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
+                                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                                {% else %}
+                                    <a href="#" class="btn btn-disabled"></a>
+                                {% endif %}
+                                {% if page_obj.has_previous or page_obj.has_next %}
+                                    <a href="#"
+                                       class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                                {% endif %}
+                                {% if page_obj.has_next %}
+                                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
+                                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                                {% else %}
+                                    <a href="#" class="btn btn-disabled"></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
-                    {{ offer.cache_part_a | safe }}
-                </div>
-                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|stringformat:"d" }}" data-product="{{ offer.get_long_name }}">
-                    <select name="offer_item{{ offer.id|stringformat:"d" }}" id="offer_item{{ offer.id|stringformat:"d" }}" onchange="order_ajax({{ offer.id|stringformat:"d" }})" class="form-control">
-                    </select>
-                    {% if user.customer.vat_id %}
-                        {{ offer.cache_part_c | safe }}
-                    {% else %}
-                        {{ offer.cache_part_b | safe }}
-                    {% endif %}
-                </div>
-                <div class="clearfix {% cycle 'visible-sm-block visible-md-block' ' ' %}"></div>
-                <hr class="visible-sm visible-xs visible-md {% cycle '  ' 'visible-lg' %}" />
-            {% endfor %}
+            {% endif %}
+        {% endfor %}
     {% else %}
         <h3>{% trans "No offer found" %}</h3>
     {% endif %}
@@ -228,21 +303,31 @@
     <div class="visible-xs">
         <div class="btn-group" align="center">
             {{ permanence.cache_part_d | safe }}
+            {% if box_set %}
+                <div class="btn-group dropup">
+                    <button type="button" class="btn btn-primary" data-toggle="dropdown">
+                        &nbsp;&nbsp;&nbsp;&nbsp;{# <span class="glyphicon glyphicon-gift"></span> #}📦&nbsp;&nbsp;&nbsp;&nbsp;
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for box in box_set.all %}
+                            <li><a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
+                                   {% if box %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} {# <span class="glyphicon glyphicon-gift"></span> #}📦</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
             {% if display_all_product_button %}
                 <div class="btn-group">
-                <a href="?" class="btn btn-primary">{% trans "All" %}</a>
+                <a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-primary">{% trans "All" %}</a>
                 </div>
             {% endif %}
             <div class="btn-group">
-            <a href="{% url "order_view_wo_cache" permanence.id %}" class="btn btn-primary"><span id="prepared_amount_visible_xs"
-                class="prepared_amount"></span> &euro;
-                <span class="glyphicon glyphicon-shopping-cart"></span></a>
+            <a href="{% url "basket_view" permanence.id delivery_id %}" class="btn btn-primary">
+                <span id="prepared_amount_visible_xs"></span></a>
             </div>
         </div>
-    </div>
-    <div class="hidden-xs">
-        <br/>
-    </div>
     {% if is_paginated %}
         <div class="btn-group">
             <div class="btn-group">
@@ -264,14 +349,14 @@
                 {% endif %}
             </div>
         </div>
-        <div class="hidden-xs">
-            <br/>
-        </div>
     {% endif %}
+        </div>
     {% addtoblock "lastjs" %}
         <script type="text/javascript">
 {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
             var saved_offer_item_id = 0;
+{#            saved_delivery_val is a fix for firefox throwings mouseover repeatingly #}
+            var saved_delivery_val = 0;
             function order_ajax(offer_item_id) {
                 saved_offer_item_id = 0;
                 var offer_item = $("#offer_item" + offer_item_id);
@@ -282,19 +367,19 @@
                     $('#otherQtyModalLabel').html(getProductFromRow);
                     $('#otherQtyModal').modal('show');
                 } else {
-                    var lien = '{% url 'order_form_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id;
+                    var lien = '{% url 'order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if basket %}&basket={{ basket }}{%  endif %}";
                     $.ajax({
                         url: lien,
                         cache: false,
                         async: true,
                         success: function (result) {
-                            if (result.indexOf("ok") != 0) {
-                                offer_item.html('<option value="0" selected>{% trans "Retry1" %}</option>');
-                            } else {
-                                $('#prepared_amount').text(result.substring(2));
-                                $('#prepared_amount_visible_xs').text(result.substring(2));
-                                $('#my_basket').text(result.substring(2));
-                            }
+                            $.each(result, function (key, val) {
+                                if(val.id == '#error') {
+                                    offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                } else {
+                                    $(val.id).html(val.html);
+                                }
+                            });
                         },
                         error: function (result) {
                             offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');
@@ -302,46 +387,141 @@
                     });
                 }
             }
-            $(document).ready(function () {
-{#                {% if offeritem_list %}#}
-
-                    var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}offer_item={{ offer.id|stringformat:"d" }}&{% endfor %}permanence={{ permanence.id|stringformat:"d" }}{% if communication %}&communication={{ communication }}{% endif %}{% if basket %}&basket={{ basket }}{%  endif %}';
+            function delivery_select_ajax() {
+                var delivery = $("#delivery");
+                var delivery_val = $("option:selected", delivery).val();
+                if(saved_delivery_val == 0){
+                    saved_delivery_val=1;
+                    var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
                     $.ajax({
-                        url: lien,
+                        url: lien2,
                         cache: false,
                         dataType: 'json',
-                        async: true,
+                        async: false,
                         success: function (result) {
+                            var selectOption = '';
+                            var selectVal = 0;
                             $.each(result, function (key, val) {
-                                if(val.id == '#may_not_order') {
-                                    $("#may_not_order").show();
-                                } else if(val.id == '#communication') {
-                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
-                                    $('#communicationDetails').html(val.html);
-                                    $('#communicationModal').modal('show')
+                                if (val.selected == "selected") {
+                                    selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                    selectVal = val.value
                                 } else {
-                                    $(val.id).html(val.html);
+                                    selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
                                 }
                             });
+                            delivery.html(selectOption);
                         },
                         error: function (result) {
-                            {% for offer in offeritem_list %}
-                                $("#offer_item{{ offer.id|stringformat:"d" }}").html("{% trans "Retry4" %}");
-                            {% endfor %}
+                            delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
                         }
                     });
 
-{#                {% endif %}#}
+                }
+
+            }
+            function delivery_ajax() {
+                var delivery = $("#delivery");
+                var delivery_val = $("option:selected", delivery).val();
+
+                var lien = '{% url 'delivery_ajax' %}?delivery=' + delivery_val + "&permanence=" + {{ permanence.id|unlocalize }} + "{% if basket %}&basket={{ basket }}{%  endif %}";
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    async: true,
+                    success: function (result) {
+                        $.each(result, function (key, val) {
+                            if(val.id == '#error') {
+                                delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
+                            } else {
+                                $(val.id).html(val.html);
+                            }
+                        });
+                        saved_delivery_val=0;
+                    },
+                    error: function (result) {
+                        delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
+                        saved_delivery_val=0;
+                    }
+                });
+            }
+            function btn_receive_order_email() {
+                var receive_email = $("#btn_confirm_order");
+                receive_email.attr("disabled", true);
+                receive_email.removeClass("btn-info");
+
+                var lien = '{% url 'btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    async: true,
+                    success: function (result) {
+                        $.each(result, function (key, val) {
+                            $(val.id).html(val.html);
+                        });
+                    },
+                    error: function (result) {
+                        receive_email.attr("disabled", false);
+                        receive_email.addClass("btn-info");
+                    }
+                });
+
+            }
+            function like_ajax(offer_item_id) {
+                var lien = '{% url 'like_ajax' %}?offer_item=' + offer_item_id;
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    async: true,
+                    success: function (result) {
+                        $.each(result, function (key, val) {
+{#                            $(val.id).html(val.html);#}
+{#                            console.log(val.id);#}
+                            $(val.id).each(function( index ) { $( this ).html(val.html)});
+                        });
+                    }
+                });
+            }
+            $(document).ready(function () {
+                var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}oi={{ offer.id|unlocalize }}&{% endfor %}pe={{ permanence.id|unlocalize }}{% if delivery_id > 0 %}&de={{ delivery_id|unlocalize }}{% endif %}{% if communication %}&co={{ communication }}{% endif %}{% if basket %}&ba={{ basket }}{%  endif %}';
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    dataType: 'json',
+                    async: true,
+                    success: function (result) {
+                        $.each(result, function (key, val) {
+                            if(val.id == '#may_not_order') {
+                                $("#may_not_order").show();
+                            } else if(val.id == '#communication') {
+                                $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
+                                $('#communicationDetails').html(val.html);
+                                $('#communicationModal').modal('show')
+                            } else {
+{#                                $(val.id).html(val.html);#}
+                                $(val.id).each(function( index ) { $( this ).html(val.html)});
+                            }
+                        });
+                    },
+                    error: function (result) {
+                        {% for offer in offeritem_list %}
+                            $("#offer_item{{ offer.id|unlocalize }}").html("{% trans "retry" %}");
+                        {% endfor %}
+                    }
+                });
                 $("#li_my_basket").show();
+                $('#btn_receive_email').on('click', function(event) {
+                    event.preventDefault(); // To prevent following the link (optional)
+                    $("#receive_email").hide();
+                });
                 $("select").mouseover(function (event) {
-                    var offer_item = $(this);
-                    var offer_item_id = offer_item.closest('div').data('id');
-                    if(saved_offer_item_id != offer_item_id) {
-{#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
-                        saved_offer_item_id = offer_item_id;
-                        var lien = '{% url 'order_select_ajax' %}?offer_item=' + offer_item_id;
+                    var object = $(this);
+                    var object_id = object.closest('div').data('id');
+                    if(saved_offer_item_id != object_id) {
+                        saved_offer_item_id = object_id;
+                        saved_delivery_val=0;
+                        var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + object_id;
                         $.ajax({
-                            url: lien,
+                            url: lien1,
                             cache: false,
                             dataType: 'json',
                             async: false,
@@ -349,17 +529,21 @@
                                 var selectOption = '';
                                 var selectVal = 0;
                                 $.each(result, function (key, val) {
-                                    if (val.selected == "selected") {
-                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                        selectVal = val.value
+                                    if (val.html) {
+                                        selectOption += val.html
                                     } else {
-                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
+                                        if (val.selected == "selected") {
+                                            selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                            selectVal = val.value
+                                        } else {
+                                            selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
+                                        }
                                     }
                                 });
-                                offer_item.html(selectOption);
+                                object.html(selectOption);
                             },
                             error: function (result) {
-                                offer_item.html('<option value="0" selected>{% trans "Retry4" %}</option>');
+                                object.html('<option value="0" selected>{% trans "retry" %}</option>');
                             }
                         });
                     }
@@ -391,4 +575,5 @@
             });
         </script>
     {% endaddtoblock %}
+    {% static_placeholder 'footer' %}
 {% endblock %}

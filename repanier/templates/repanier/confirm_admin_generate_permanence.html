@@ -2,18 +2,35 @@
 {% load cms_tags menu_tags compress i18n l10n crispy_forms_tags %}
 {% block content %}
 {#    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}#}
-{#    <script type="text/javascript">if (typeof CMS === 'undefined') {#}
-{#        CMS.$ = $#}
-{#    }</script>#}
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
-
         <h6>{{ permanence }}</h6>
+        <fieldset class="module aligned ">
+        <div class="form-row">
+            <div class="field-box">
+                <div class="fieldWrapper">
+                    {{ form.repeat_counter.errors }}
+                    {{ form.repeat_counter.label_tag }} {{ form.repeat_counter }}
+                    {% if form.repeat_counter.help_text %}
+                    <p class="help">{{ form.repeat_counter.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="field-box">
+                <div class="fieldWrapper">
+                    {{ form.repeat_step.errors }}
+                    {{ form.repeat_step.label_tag }} {{ form.repeat_step }}
+                    {% if form.repeat_step.help_text %}
+                    <p class="help">{{ form.repeat_step.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        </fieldset>
         <div class="submit-row">
-{#            {% if email_will_be_sent %}<button type="submit" name="test" value="test">{% trans "Test email" %}</button>{% endif %}#}
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
             <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
         </div>

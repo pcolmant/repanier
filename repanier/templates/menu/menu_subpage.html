@@ -1,21 +1,21 @@
 {% load menu_tags %}
 {% for child in children %}
-    {% if child.level == 1 %}
-    {% if child.selected or child.ancestor %}
+    {% if child.level >= 1 and child.level < 4 %}
+{#    {% if child.selected or child.ancestor %}#}
     <li class="{% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
     <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="bs-docs-sidebar-active"{% endif %}>{{ child.get_menu_title }}</a>
     </li>
     {% if child.children %}
     <ul class="nav nav-stacked">{% show_menu from_level to_level extra_inactive extra_active template "" "" child %}</ul>
     {% endif %}
-    {% endif %}
-    {% elif child.level == 2 or child.level == 3 %}
-    <li class="{% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
-    <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="bs-docs-sidebar-active"{% endif %}>{{ child.get_menu_title }}</a>
-    </li>
-    {% if child.children %}
-    <ul class="nav nav-stacked">{% show_menu from_level to_level extra_inactive extra_active template "" "" child %}</ul>
-    {% endif %}
+{#    {% endif %}#}
+{#    {% elif child.level == 2 or child.level == 3 %}#}
+{#    <li class="{% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">#}
+{#    <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="bs-docs-sidebar-active"{% endif %}>{{ child.get_menu_title }}</a>#}
+{#    </li>#}
+{#    {% if child.children %}#}
+{#    <ul class="nav nav-stacked">{% show_menu from_level to_level extra_inactive extra_active template "" "" child %}</ul>#}
+{#    {% endif %}#}
     {% elif child.level == 4 %}
     <li class="{% if child.ancestor %}ancestor{% endif %}{% if child.sibling %}sibling{% endif %}{% if child.descendant %}descendant{% endif %}">
     <a href="{{ child.attr.redirect_url|default:child.get_absolute_url }}" {% if child.selected %} class="bs-docs-sidebar-active"{% endif %}>{{ child.get_menu_title }}</a>

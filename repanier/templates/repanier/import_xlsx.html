@@ -1,26 +1,26 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
-
+{% load cms_tags sekizai_tags menu_tags compress i18n l10n crispy_forms_tags %}
 {% block content %}
-
-    <form enctype="multipart/form-data" action="" method="post">
-        <div>
-            {% csrf_token %}
-            {{ import_xlsx_form }}
-            {{ context_instance }}
-            <p></p>
-
-            <p></p>
-
-            <p>{% trans "The importation concern :" %}</p>
-            <ul>{{ objects | unordered_list }}</ul>
-            <p></p>
-
-            <p></p>
-            <input type="hidden" name="action" value="{{ action }}"/>
-            <button type="submit" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-            <button type="submit" name="apply" value="apply">{% trans "Execute the import" %}</button>
+    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
+{#    <script type="text/javascript">if (typeof CMS === 'undefined') {#}
+{#        CMS.$ = $#}
+{#    }</script>#}
+    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
+    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
+    <h4>{{ sub_title }}</h4>
+    <p></p>
+    <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+        <fieldset class="module aligned ">
+        <div class="field-box">
+            <h6>{% trans "The importation concern :" %} {% for object in queryset.all  %}{{ object }}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>{% if not forloop.last %}, {% endif %}{% endfor %}</h6>
+            <label for="id_file_to_import"><h6>{% trans "File to import :"%}</h6></label><input id="id_file_to_import" name="file_to_import" type="file" />
         </div>
-    </form>
+        </fieldset>
+        <div class="submit-row">
+            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Execute the import" %}</h6></button>
+        </div>
 
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
 {% endblock %}

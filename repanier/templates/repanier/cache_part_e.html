@@ -14,7 +14,7 @@
 {% for production_mode in offer.product.production_mode.all %}
     {% if production_mode.picture2 %}
         <img class="img-rounded" style="float: left; margin: 5px;" alt="{{ production_mode }}"
-             title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}"/>
+             title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="24" width="24"/>
         {% if production_mode.description %}<br/>
             <small>{{ production_mode.description | safe }}</small>{% if not forloop.last %}<br/>{% endif %}{% endif %}
     {% else %}

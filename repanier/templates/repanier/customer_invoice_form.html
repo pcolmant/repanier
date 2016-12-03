@@ -1,87 +1,129 @@
-{% extends 'subpage_base_wo_cms_toolbar.html' %}
+{% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags cache %}
-{% block sub_content %}
-{% addtoblock "css" %}
-<style type="text/css">
-body > .container {
-  padding: 60px 15px 0;
-}
-</style>
-{% endaddtoblock %}
-    <div class="container">
+{% block base_content %}
+{#{% addtoblock "css" %}#}
+{#<style type="text/css">#}
+{#body > .container {#}
+{#  padding: 60px 15px 0;#}
+{#}#}
+{#</style>#}
+{#{% endaddtoblock %}#}
+    <div class="container-repanier">
         {# {% debug %} #}
-        <div class="panel {% if object.balance < 0 %}panel-danger{% else %}panel-success{% endif %}">
-            <div class="panel-heading">
-                <small>{{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_customer_invoice_id %} - {% trans "latest invoice" %}{% endif %}</small>
-                <h4>{% trans "New balance" %} {{ object.customer.long_basket_name }}
-                    : {{ object.balance }}&nbsp;&euro;</h4>
-                <span id="basket_message">{{ basket_message }}</span>
-            </div>
-        </div>
-        {% if bank_account_set %}
-            <h4>{% trans "Bank movement(s) :" %}</h4>
-            <table class="table table-hover table-bordered">
-                <thead>
-                <tr>
-                    <th>
-                        {% trans "Date" %}
-                    </th>
-                    <th align="right">
-                        {% trans "Payment" %}
-                    </th>
-                    <th align="right">
-                        {% trans "Refund" %}
-                    </th>
-                    <th>
-                        {% trans "Comment" %}
-                    </th>
-                <tr>
-                </thead>
-                <tbody>
-                {% for bank_account in bank_account_set %}
-                    <tr>
-                        <td>
-                            {{ bank_account.operation_date }}
-                        </td>
-                        <td align="right">
-                            {{ bank_account.bank_amount_in }}&nbsp;&euro;
-                        </td>
-                        <td align="right">
-                            {{ bank_account.bank_amount_out }}&nbsp;&euro;
-                        </td>
-                        <td>
-                            {% if bank_account.operation_comment %}
-                                {{ bank_account.operation_comment }}
-                            {% endif %}
-                        </td>
-                    <tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <h4>{% trans "No bank movement found" %}</h4>
-        {% endif %}
-        {% if purchase_set %}
-            <h4>{{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.total_price_with_tax }}&nbsp;&euro;</h4>
-            {% if DISPLAY_VAT == True %}
-                {% if object.total_vat != 0 or object.total_compensation != 0 or object.total_deposit != 0 %}
-                    <h4><small>
-                        {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                        {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}&nbsp;&euro;{% endif %}
-                        {% if object.total_compensation != 0 %}
-                            {% if object.total_vat != 0 %}, {% endif %}
-                            {% trans "Compensation" %} : {{ object.total_compensation }}&nbsp;&euro;
-                        {% endif %}
+{#    <div class="panel">#}
+        <h4>{{ customer.long_basket_name }}</h4>
+        {% if object %}
+        {% trans "Previous balance" %} : {{ object.previous_balance }}
+            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br/>
+        {%  endif %}
+        {% if purchase_set or purchase_by_other_set %}
+            {{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.get_total_price_with_tax }}
+            {% if object.customer_id != object.customer_who_pays_id %}
+                <br/>
+                {% if object.delivery %}
+                    <small>{% trans "Delivery point" %} : {{ object.delivery }}</small><br/>
+                {% endif %}
+                <small>{% trans "Payment centralized by" %} : {{ object.customer_who_pays }}</small><br/>
+            {% else %}
+                {% if object.total_vat != 0 or object.total_deposit != 0 or object.transport != 0 %}
+                    <small>
+                        . {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
+                        {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}{% endif %}
                         {% if object.total_deposit != 0 %}
-                            {% if object.total_vat != 0 or object.total_compensation != 0 %}, {% endif %}
-                            {% trans "Deposit" %} : {{ object.total_deposit }}&nbsp;&euro;
+                            {% if object.total_vat != 0 %}; {% endif %}
+                            {% trans "Deposit" %} : {{ object.total_deposit }}
                         {% endif %}
-                    </small></h4>
+                        {% if object.transport != 0 %}
+                            {% if object.total_vat != 0 or object.total_deposit != 0 %}; {% endif %}
+                            {% trans "Shipping cost" %} : {{ object.delta_transport }}
+                        {% endif %}
+                    </small>
+                {% endif %}
+                <br/>
+                {% if object.delivery %}
+                    <small>{% trans "Delivery point" %} : {{ object.delivery }}</small><br/>
+                {% endif %}
+                {% if object.customer.price_list_multiplier != 1 %}
+                    <small>{% trans "Customer price list multiplier" %} : {{ object.customer.price_list_multiplier }}</small><br/>
+                {% endif %}
+                {% if object.get_delta_price_with_tax != 0 or object.delta_vat != 0 %}
+                    {% if object.get_delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}
+                    <small>
+                        . {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
+                            {% trans "Vat" %} : {{ object.get_abs_delta_vat }}<br/>
+                    </small>
                 {% endif %}
             {% endif %}
+        {% endif %}
+        {% for bank_account in bank_account_set %}
+            {% if bank_account.bank_amount_in != 0 %}
+                    {% if bank_account.operation_comment %}
+                        {{ bank_account.operation_comment }}
+                    {% else %}
+                        {% trans "Payment" %}
+                    {% endif %} : {{ bank_account.bank_amount_in }}
+                    <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+            {% endif %}
+            {% if bank_account.bank_amount_out != 0 %}
+                    {% if bank_account.operation_comment %}
+                        {{ bank_account.operation_comment }}
+                    {% else %}
+                        {% trans "Refund" %}
+                    {% endif %} : {{ bank_account.bank_amount_out }}
+                    <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+            {% endif %}
+        {% endfor %}
+        <div class="panel">
+{#            <div class="panel-heading">#}
+                {% if object %}
+                <h4>{% trans "New balance" %} : {{ object.balance }}
+                    <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_customer_invoice_id %} - {% trans "latest invoice" %}{% endif %})</small>
+                </h4>
+                {% else %}
+                <h4>{% trans "New balance" %} : {{ customer.balance }}
+                    <small>({{ customer.date_balance | date:"DATE_FORMAT" }}{% if not next_customer_invoice_id %} - {% trans "latest invoice" %}{% endif %})</small>
+                </h4>
+                {% endif %}
+                <span id="basket_message">{{ basket_message }}</span>
+{#            </div>#}
+        </div>
+    <center>
+    <div class="btn-group">
+        {% if previous_customer_invoice_id %}
+            <a href="{% url 'customer_invoice_view' previous_customer_invoice_id %}" class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span
+                    class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+{#        {% else %}#}
+{#            <a href="#" class="btn btn-disabled"></a>#}
+        {% endif %}
+        {% if next_customer_invoice_id %}
+            <a href="{% url 'customer_invoice_view' 0 %}?customer={{ object.customer.id }}" class="btn btn-disabled"> {% trans "Invoice" %} </a>
+        {% else %}
+            <span class="btn btn-disabled">{% trans "Invoice" %}</span>
+        {% endif %}
+        {% if next_customer_invoice_id %}
+            <a href="{% url 'customer_invoice_view' next_customer_invoice_id %}"
+               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+{#        {% else %}#}
+{#            <a href="#" class="btn btn-disabled"></a>#}
+        {% endif %}
+    </div>
+    </center>
+{#    </div>#}
+{#        {% if object.permanence %}#}
+{#            {% if object.delta_price_with_tax != 0 %}#}
+{#                {% if object.delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}#}
+{#            {% endif %}#}
+{#        {% endif %}#}
+        {% if purchase_set %}
+            <br/>
             <table class="table table-hover table-bordered">
                 <thead>
                 <tr>
+                    {% if purchase_by_other_set %}
+                        <th>
+                            {% trans "Customer" %}
+                        </th>
+                    {%  endif %}
                     <th>
                     {% if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
                         {% trans "Producer" %}
@@ -109,6 +151,11 @@ body > .container {
                 <tbody>
                 {% for purchase in purchase_set %}
                     <tr>
+                        {% if purchase_by_other_set %}
+                            <td>
+                                {{ purchase.customer.short_basket_name }}
+                            </td>
+                        {%  endif %}
                         <td>
                         {%  if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
                             {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
@@ -117,18 +164,22 @@ body > .container {
                         {% endif %}
                         </td>
                         <td>
-                            {{ purchase.offer_item.get_long_name }}
+                            {{ purchase.get_long_name }}
                         </td>
                         <td align="right">
                             {{ purchase.quantity_invoiced | floatformat:3 }}
                         </td>
                         <td align="right">
-                            {{ purchase.get_customer_unit_price }}&nbsp;&euro;{% if purchase.offer_item.unit_deposit %}
-                            <span class="glyphicon glyphicon-plus"></span> {{ purchase.offer_item.unit_deposit }}&nbsp;&euro;
-                            <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+                            {{ purchase.get_customer_unit_price }}{% if purchase.offer_item.unit_deposit != 0 %}
+                            + ♻ {{ purchase.offer_item.unit_deposit }}
+                            {% endif %}
                         </td>
                         <td align="right">
-                            {{ purchase.selling_price }}&nbsp;&euro;
+                            {% if purchase.selling_price.amount != 0  %}
+                                {{ purchase.selling_price }}
+                            {% else %}
+                                --
+                            {% endif %}
                         </td>
                         <td>
                             {{ purchase.comment|default:"" }}
@@ -138,31 +189,107 @@ body > .container {
                 </tbody>
             </table>
         {% else %}
-            <h4>{% trans "No purchase found" %}</h4>
+{#            {%  if object.permanence %}#}
+                {% if not purchase_by_other_set %}
+                    <h4>{{ object.permanence }} - {% trans "No purchase found" %}</h4>
+                {% endif %}
+{#            {% else %}#}
+{#                <h4>{% trans "No purchase found" %}</h4>#}
+{#            {% endif %}#}
         {% endif %}
-        <h4>{% trans "Previous balance" %} : {{ object.previous_balance }}&nbsp;&euro;
-            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small>
-        </h4>
+        {% if purchase_by_other_set %}
+            <br/>
+            <table class="table table-hover table-bordered">
+                <thead>
+                <tr>
+                    <th>
+                        {% trans "Customer" %}
+                    </th>
+                    <th>
+                        {% if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                            {% trans "Producer" %}
+                        {% else %}
+                            {% trans "Department" %}
+                        {% endif %}
+                    </th>
+                    <th>
+                        {% trans "Product" %}
+                    </th>
+                    <th>
+                        {% trans "Qty" %}
+                    </th>
+                    <th>
+                        {% trans "Unit price" %}
+                    </th>
+                    <th>
+                        {% trans "Total price" %}
+                    </th>
+                    <th>
+                        {% trans "Comment" %}
+                    </th>
+                <tr>
+                </thead>
+                <tbody>
+                {% for purchase in purchase_by_other_set %}
+                    <tr>
+                        <td>
+                            {{ purchase.customer.short_basket_name }}
+                        </td>
+                        <td>
+                            {%  if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                                {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
+                            {% else %}
+                                {{ purchase.offer_item.department_for_customer.short_name | truncatechars:15 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ purchase.get_long_name }}
+                        </td>
+                        <td align="right">
+                            {{ purchase.quantity_invoiced | floatformat:3 }}
+                        </td>
+                        <td align="right">
+                            {{ purchase.get_customer_unit_price }}{% if purchase.offer_item.unit_deposit != 0 %}, ♻ {{ purchase.offer_item.unit_deposit }}
+                            {% endif %}
+                        </td>
+                        <td align="right">
+                            {% if purchase.selling_price.amount != 0  %}
+                                {{ purchase.selling_price }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ purchase.comment|default:"" }}
+                        </td>
+                    <tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+    <div class="hidden-xs">
+        <br/>
     </div>
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
         $(document).ready(function () {
-            lien = '{% url 'order_name' %}';
-            $.ajax({
-                url: lien,
-                cache: false,
-                async: false,
-                success: function (result) {
-                    $("#my_name").html(result);
-                    if(result == '{% trans "Anonymous" %}') {
-                        $("#connected").show();
-                        $("#not_connected").hide();
-                    }
-                },
-                error: function (result) {
-                    $("#my_name").html("{% trans "Retry5" %}");
-                }
-            });
+{#            lien = '{% url 'order_name' %}';#}
+{#            $.ajax({#}
+{#                url: lien,#}
+{#                cache: false,#}
+{#                async: false,#}
+{#                success: function (result) {#}
+{#                    $("#my_name").html(result);#}
+{#                    if(result == '{% trans "Anonymous" %}') {#}
+{#                        $("#connected").show();#}
+{#                        $("#not_connected").hide();#}
+{#                    }#}
+{#                },#}
+{#                error: function (result) {#}
+{#                    $("#my_name").html("{% trans "Retry5" %}");#}
+{#                }#}
+{#            });#}
             lien = '{% url 'my_balance' %}';
             $.ajax({
                 url: lien,
@@ -178,36 +305,11 @@ body > .container {
         });
     </script>
 {% endaddtoblock %}
-{% endblock %}
-{% block footer %}
-    <div class="hidden-xs">
-        <br/>
-    </div>
-    <div class="btn-group">
-        {% if previous_customer_invoice_id %}
-            <a href="{% url 'customer_invoice_view' previous_customer_invoice_id %}" class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span
-                    class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-        {% else %}
-            <a href="#" class="btn btn-disabled"></a>
-        {% endif %}
-        {% if previous_customer_invoice_id or next_customer_invoice_id %}
-            <a href="#" class="btn btn-disabled"> {% trans "Invoice" %} </a>
-        {% endif %}
-        {% if next_customer_invoice_id %}
-            <a href="{% url 'customer_invoice_view' next_customer_invoice_id %}"
-               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-        {% else %}
-            <a href="#" class="btn btn-disabled"></a>
-        {% endif %}
-    </div>
-    <div class="hidden-xs">
-        <br/>
-    </div>
 {% addtoblock "lastjs" %}
     {% if not next_customer_invoice_id %}
     <script type="text/javascript">
         $(document).ready(function () {
-            var lien = '{% url 'basket_message_form_ajax' object.customer.id %}';
+            var lien = '{% url 'basket_message_form_ajax' customer.id %}';
             $.ajax({
                 url: lien,
                 cache: false,
@@ -227,5 +329,4 @@ body > .container {
     </script>
     {% endif %}
 {% endaddtoblock %}
-
 {% endblock %}

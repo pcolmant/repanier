@@ -1,81 +1,97 @@
-{% extends 'subpage_base_wo_cms_toolbar.html' %}
+{% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
-{% block sub_content %}
-{% addtoblock "css" %}
-<style type="text/css">
-body > .container {
-  padding: 60px 15px 0;
-}
-</style>
-{% endaddtoblock %}
-    <div class="container">
+{% block base_content %}
+{#{% addtoblock "css" %}#}
+{#<style type="text/css">#}
+{#body > .container {#}
+{#  padding: 60px 15px 0;#}
+{#}#}
+{#</style>#}
+{#{% endaddtoblock %}#}
+    <div class="container-repanier">
         {# {% debug %} #}
-        <div class="panel {% if object.balance > 0 %}panel-danger{% else %}panel-success{% endif %}">
-            <div class="panel-heading">
-                <small>{{ object.date_balance | date:"DATE_FORMAT" }}</small>
-                <h4>{% trans "New balance" %} {{ object.producer.long_profile_name }}
-                    : {{ object.balance }}&nbsp;&euro;</h4>
-            </div>
-        </div>
-        {% if bank_account_set %}
-            <h4>{% trans "Bank movement(s) :" %}</h4>
-            <table class="table table-hover table-bordered">
-                <thead>
-                <tr>
-                    <th>
-                        {% trans "Date" %}
-                    </th>
-                    <th align="right">
-                        {% trans "Refund" %}
-                    </th>
-                    <th align="right">
-                        {% trans "Payment" %}
-                    </th>
-                    <th>
-                        {% trans "Comment" %}
-                    </th>
-                <tr>
-                </thead>
-                <tbody>
-                {% for bank_account in bank_account_set %}
-                    <tr>
-                        <td>
-                            {{ bank_account.operation_date }}
-                        </td>
-                        <td align="right">
-                            {{ bank_account.bank_amount_in }}&nbsp;&euro;
-                        </td>
-                        <td align="right">
-                            {{ bank_account.bank_amount_out }}&nbsp;&euro;
-                        </td>
-                        <td>
-                            {% if bank_account.operation_comment %}
-                                {{ bank_account.operation_comment }}
-                            {% endif %}
-                        </td>
-                    <tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <h4>{% trans "No bank movement found" %}</h4>
-        {% endif %}
+        <h4>{{ producer.long_profile_name }}</h4>
+        {% if object %}
+        {% trans "Previous balance" %} : {{ object.previous_balance }}
+            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br/>
+        {%  endif %}
         {% if offer_item_set %}
-            <h4>{{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.total_price_with_tax }}&nbsp;&euro;</h4>
-            {% if object.total_vat != 0 or object.total_compensation != 0 or object.total_deposit != 0 %}
-                <h4><small>
-                    {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                    {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}&nbsp;&euro;{% endif %}
-                    {% if object.total_compensation != 0 %}
-                        {% if object.total_vat != 0 %}, {% endif %}
-                        {% trans "Compensation" %} : {{ object.total_compensation }}&nbsp;&euro;
+            {{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.get_total_price_with_tax }}
+            {% if object.get_total_vat != 0 or object.get_total_deposit != 0 %}
+                <small>
+                    . {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
+                    {% if object.get_total_vat != 0 %}{% trans "Vat" %} : {{ object.get_total_vat }}{% endif %}
+                    {% if object.get_total_deposit != 0 %}
+                        {% if object.get_total_vat != 0 %}; {% endif %}
+                        {% trans "Deposit" %} : {{ object.get_total_deposit }}
                     {% endif %}
-                    {% if object.total_deposit != 0 %}
-                        {% if object.total_vat != 0 or object.total_compensation != 0 %}, {% endif %}
-                        {% trans "Deposit" %} : {{ object.total_deposit }}&nbsp;&euro;
+                    {% if object.delta_transport != 0 %}
+                        {% if object.get_total_vat != 0 or object.get_total_deposit != 0 %}; {% endif %}
+                        {% trans "Shipping cost" %} : {{ object.delta_transport }}
                     {% endif %}
-                </small></h4>
+                </small>
+                <br/>
+                {% if object.delta_price_with_tax != 0 %}
+                    {% if object.delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br/>
+                {% endif %}
             {% endif %}
+        {% endif %}
+        {% for bank_account in bank_account_set %}
+            {% if bank_account.bank_amount_in != 0 %}
+                    {% if bank_account.operation_comment %}
+                        {{ bank_account.operation_comment }}
+                    {% else %}
+                        {% trans "Refund" %}
+                    {% endif %} : {{ bank_account.bank_amount_in }}
+                    <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+            {% endif %}
+            {% if bank_account.bank_amount_out != 0 %}
+                    {% if bank_account.operation_comment %}
+                        {{ bank_account.operation_comment }}
+                    {% else %}
+                        {% trans "Payment" %}
+                    {% endif %} : {{ bank_account.bank_amount_out }}
+                    <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+            {% endif %}
+        {% endfor %}
+        <div class="panel">
+{#            <div class="panel-heading">#}
+                {% if object %}
+                <h4>{% trans "New balance" %} : {{ object.balance }}
+                    <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id and not object.to_be_paid %} - {% trans "last sale" %}{% endif %})</small>
+                </h4>
+                {% else %}
+                <h4>{% trans "New balance" %} : {{ producer.balance }}
+                    <small>({{ producer.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id %} - {% trans "last sale" %}{% endif %})</small>
+                </h4>
+                {% endif %}
+{#            </div>#}
+        </div>
+    <center>
+    <div class="btn-group">
+        {% if previous_producer_invoice_id %}
+            <a href="{% if uuid %}{% url 'producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+{#        {% else %}#}
+{#            <a href="#" class="btn btn-disabled"></a>#}
+        {% endif %}
+        {% if next_producer_invoice_id %}
+            <a href="{% if uuid %}{% url 'producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-disabled"> {% trans "Invoice" %} </a>
+        {% else %}
+            <span class="btn btn-disabled">{% trans "Invoice" %}</span>
+        {% endif %}
+        {% if next_producer_invoice_id %}
+            <a href="
+                    {% if uuid %}{% url 'producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+{#        {% else %}#}
+{#            <a href="#" class="btn btn-disabled"></a>#}
+        {% endif %}
+    </div>
+    </center>
+        {% if offer_item_set %}
+            <br/>
             <table class="table table-hover table-bordered">
                 <thead>
                 <tr>
@@ -116,13 +132,12 @@ body > .container {
                             {{ customer_unit_price }}
                         {% else %}
                             {{ producer_unit_price }}
-                        {% endif %}&nbsp;&euro;{% if offer_item.unit_deposit %}
-                            <span class="glyphicon glyphicon-plus"></span> {{ offer_item.unit_deposit }}&nbsp;&euro;
-                            <span class="glyphicon glyphicon-leaf"></span>{% endif %}
+                        {% endif %}{% if offer_item.unit_deposit != 0 %}, ♻ {{ offer_item.unit_deposit }}
+                            {% endif %}
                         {% endwith %}
                         </td>
                         <td align="right">
-                            {{ offer_item.get_producer_price_invoiced }}&nbsp;&euro;
+                            {{ offer_item.get_producer_price_invoiced }}
                         </td>
                     <tr>
                 {% endfor %}
@@ -131,10 +146,14 @@ body > .container {
         {% else %}
             <h4>{% trans "No purchase found" %}</h4>
         {% endif %}
-        <h4>{% trans "Previous balance" %} : {{ object.previous_balance }}&nbsp;&euro;
-            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small>
-        </h4>
+{#        <h4>{% trans "Previous balance" %} : {{ object.previous_balance }}#}
+{#            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small>#}
+{#        </h4>#}
     </div>
+    <div class="hidden-xs">
+        <br/>
+    </div>
+
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
         $(document).ready(function () {
@@ -169,33 +188,4 @@ body > .container {
         });
     </script>
 {% endaddtoblock %}
-{% endblock %}
-{% block footer %}
-    <div class="hidden-xs">
-        <br/>
-    </div>
-    <div class="btn-group">
-        {% if previous_producer_invoice_id %}
-            <a href="
-                    {% if uuid %}{% url 'producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-        {% else %}
-            <a href="#" class="btn btn-disabled"></a>
-        {% endif %}
-        {% if previous_producer_invoice_id or next_producer_invoice_id %}
-            <a href="
-                    {% if uuid %}{% url 'producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-disabled"> {% trans "Invoice" %} </a>
-        {% endif %}
-        {% if next_producer_invoice_id %}
-            <a href="
-                    {% if uuid %}{% url 'producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-        {% else %}
-            <a href="#" class="btn btn-disabled"></a>
-        {% endif %}
-    </div>
-    <div class="hidden-xs">
-        <br/>
-    </div>
 {% endblock %}

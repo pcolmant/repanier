@@ -1,17 +1,16 @@
-{% load admin_static admin_urls %}{% load firstof from future %}<!DOCTYPE html>
+{% load i18n admin_static admin_urls %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}{% get_current_language_bidi as LANGUAGE_BIDI %}
 <html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
 <head>
 <title>{% block title %}{% endblock %}</title>
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
 {% block extrastyle %}{% endblock %}
-<!--[if lte IE 7]><link rel="stylesheet" type="text/css" href="{% block stylesheet_ie %}{% static "admin/css/ie.css" %}{% endblock %}" /><![endif]-->
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
-<script type="text/javascript">window.__admin_media_prefix__ = "{% filter escapejs %}{% static "admin/" %}{% endfilter %}";</script>
-<script type="text/javascript">window.__admin_utc_offset__ = "{% filter escapejs %}{% now "Z" %}{% endfilter %}";</script>
 {% block extrahead %}{% endblock %}
 <style type="text/css">
 body.cms-admin-sideframe #header{display:none}
-body.cms-admin-sideframe #container{padding-top:45px}
+body.cms-admin-sideframe #container{padding-top:46px}
+body.cms-admin-sideframe:not(.djangocms-admin-style) {margin-top: 0px;}
 body.cms-admin-sideframe #container .breadcrumbs{display:block;background:#666 !important}
 body.cms-admin-sideframe #content{padding-top:10px}
 body.cms-admin-sideframe #content h1:first-child{margin-top:0}
@@ -21,53 +20,29 @@ body.cms-admin-sideframe .submit-row input.default,.object-tools .addlink{font-w
 body.cms-admin-sideframe .submit-row input.default:hover,.submit-row input.default:active,.submit-row input.default:focus,.object-tools .addlink:hover,.object-tools .addlink:active,.object-tools .addlink:focus{background:#0e72ec !important;-webkit-box-shadow:none !important;-moz-box-shadow:none !important;box-shadow:none !important}
 body.cms-admin-sideframe .submit-row input.default:active,.submit-row input.default:focus,.object-tools .addlink:active,.object-tools .addlink:focus{background:#0b5bbc !important}.object-tools .recoverlink,.submit-row input{font-weight:200 !important;padding:5px 12px !important;margin-bottom:5px !important;border:1px solid #e6e6e6 !important;-webkit-box-shadow:none !important;-moz-box-shadow:none !important;box-shadow:none !important}
 div.cms-content-wizard form input, div.cms-content-wizard form textarea {border-radius: 3px; width: 100% !important;}
-label.translatable-field:before { color: red; content:"\26FF";}
-div.parler-language-tabs span.current:before { color: red; content:"\26FF";}
+label.translatable-field:before { color: red; content:"\2691\a0";}
+div.parler-language-tabs span.current:before { color: red; content:"\2691\a0";}
+#changelist table thead th {
+    padding: 0;
+    white-space: normal;
+    vertical-align: middle;
+}
 </style>
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
 </head>
 {% load i18n %}
 
-<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
+  data-admin-utc-offset="{% now "Z" %}">
 
 <!-- Container -->
 <div id="container">
 
     {% if not is_popup %}
-    <!-- Header -->
-{#    <div id="header">#}
-{#        <div id="branding">#}
-{#        {% block branding %}{% endblock %}#}
-{#        </div>#}
-{#        {% if user.is_active and user.is_staff %}#}
-{#        <div id="user-tools">#}
-{#            {% block welcome-msg %}#}
-{#                {% trans 'Welcome,' %}#}
-{#                <strong>{% firstof user.get_short_name user.get_username %}</strong>.#}
-{#            {% endblock %}#}
-{#            {% block userlinks %}#}
-{#                {% url 'django-admindocs-docroot' as docsroot %}#}
-{#                {% if docsroot %}#}
-{#                    <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /#}
-{#                {% endif %}#}
-{#                {% if user.has_usable_password %}#}
-{#                <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /#}
-{#                {% endif %}#}
-{#                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>#}
-{#            {% endblock %}#}
-{#        </div>#}
-{#        {% endif %}#}
-{#        {% block nav-global %}{% endblock %}#}
-{#    </div>#}
-    <!-- END Header -->
-{#    {% block breadcrumbs %}#}
     <div class="breadcrumbs">
-{#    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>#}
-{#    {% if title %} &rsaquo; {{ title }}{% endif %}#}
-{% if opts.verbose_name and opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2 style="color: #FFF;">{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
-&rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% endif %}
+{% if opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2 style="color: #FFF;">{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+&rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% else %}<h2 style="font-size: 130%; line-height: 1.75em; margin-top: 0; margin-bottom: 0;">&nbsp;</h2>{% endif %}
     </div>
-{#    {% endblock %}#}
     {% endif %}
 
     {% block messages %}

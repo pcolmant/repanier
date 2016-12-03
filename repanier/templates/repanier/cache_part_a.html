@@ -1,12 +1,12 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
-<b>{{ offer.get_long_name }}</b><br/>{{ offer.producer.short_profile_name }}
+<b>{{ offer.get_order_name }}</b><br/>{{ offer.producer.short_profile_name }}
 {% if offer.product.offer_description|length > 0 %} <b><span class="glyphicon glyphicon-info-sign"></span></b>{% endif %}<br/>
     <small>{{ offer.department_for_customer.short_name }}</small>
 <br/>
 {% for production_mode in offer.product.production_mode.all %}
     {% if production_mode.picture2 %}
         <img class="img-rounded" style="float: left; margin: 5px;" alt="{{ production_mode }}"
-             title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}"/>
+             title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="24" width="24"/>
     {% else %}
         <small>{{ production_mode }}{% if not forloop.last %} - {% endif %}</small>
     {% endif %}

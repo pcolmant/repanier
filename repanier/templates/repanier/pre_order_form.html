@@ -1,15 +1,15 @@
-{% extends 'subpage_base_wo_cms_toolbar.html' %}
+{% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
-{% block sub_content %}
+{% block base_content %}
 {% addtoblock "css" %}
-<style type="text/css">
-body > .container {
-  padding: 60px 15px 0;
-}
-</style>
-<link href="/static/djangocms_text_ckeditor/css/cms.ckeditor.css" rel="stylesheet">
+{#<style type="text/css">#}
+{#body > .container {#}
+{#  padding: 60px 15px 0;#}
+{#}#}
+{#</style>#}
+<link href="{{ STATIC_URL}}djangocms_text_ckeditor/css/cms.ckeditor.css" rel="stylesheet">
 {% endaddtoblock %}
-<div class="container">
+<div class="container-repanier">
     {# {% debug %} #}
     <div class="panel panel-success" data-toggle="modal" data-target="#productModal">
         <div class="panel-heading">
@@ -52,12 +52,12 @@ body > .container {
         <tbody>
         {% for offer_item in offer_item_set %}
             {% if offer_item.producer_id == producer.id %}
-            <tr class="success" data-toggle="modal" data-id="{{ offer_item.id|stringformat:"d" }}" data-target="#productModal">
+            <tr class="success" data-toggle="modal" data-id="{{ offer_item.id|unlocalize }}" data-target="#productModal">
             {%  else %}
             <tr>
             {% endif %}
                 <td>
-                    {{ offer_item.producer }}
+                    {{ offer_item.producer.short_profile_name }}
                 </td>
                 <td>
                     <span id="get_long_name">{{ offer_item.get_long_name | safe }}
@@ -69,9 +69,9 @@ body > .container {
                     </span>
                 </td>
                 <td align="right">
-                    <span id="producer_unit_price_wo_tax">{{ offer_item.producer_unit_price_wo_tax|floatformat:-2 }}&nbsp;&euro;{% if offer_item.order_unit == '140' %}&nbsp;/&nbsp;({% trans "kg" %}){% endif %}
+                    <span id="producer_unit_price_wo_tax">{{ offer_item.producer_unit_price_wo_tax }}{% if offer_item.order_unit == '140' %}&nbsp;/&nbsp;({% trans "kg" %}){% endif %}
                     {% if offer_item.unit_deposit > 0 %}
-                        <br/><span class="glyphicon glyphicon-plus"></span>{{ offer_item.unit_deposit|floatformat:-2 }}&nbsp;&euro;<span class="glyphicon glyphicon-leaf"></span>
+                        <br/><span class="glyphicon glyphicon-plus"></span>{{ offer_item.unit_deposit }}<span class="glyphicon glyphicon-leaf"></span>
                     {% endif %}</span>
                 </td>
                 <td>

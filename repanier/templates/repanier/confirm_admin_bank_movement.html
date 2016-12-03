@@ -1,19 +1,25 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
-
+{% load cms_tags  menu_tags compress i18n l10n crispy_forms_tags %}
 {% block content %}
-    <h4>{{ permanence }} :</h4>
+{#    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}#}
+    <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">
+    <h4>{{ sub_title }}</h4>
+    <p></p>
     <form action="" method="post">{% csrf_token %}
-        <div>
-            {% for obj in queryset %}
-                {{ obj.producer.short_profile_name }}, <b>{{ obj.bank_amount_out }} &euro;</b>,
-                {{ obj.operation_comment }}
-                <br/><br/>
-            {% endfor %}
-            <input type="hidden" name="permanence" value="{{ permanence.id }}"/>
-            <input type="hidden" name="action" value="{{ action }}"/>
-            <button type="submit" name="done" value="done">{% trans "Done" %}</button>
+        <h6>{{ permanence }} :</h6>
+        <div class="submit-row">
+            <button type="submit" name="done" value="done"><h6>{% trans "Done" %}</h6></button>
         </div>
+        <fieldset class="module aligned ">
+        <div class="form-row">
+            {% for bankaccount in bankaccounts %}
+                <h6>{{ bankaccount.producer.short_profile_name }}, {{ bankaccount.bank_amount_out }},
+                {{ bankaccount.operation_comment }}</h6>
+            {% endfor %}
+        </div>
+        </fieldset>
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
     </form>
-
 {% endblock %}

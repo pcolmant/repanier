@@ -1,21 +1,152 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n %}
-
+{% load cms_tags menu_tags compress i18n l10n crispy_forms_tags %}
 {% block content %}
-    <h4>{{ permanence }}, {% trans "when producing invoices, generate bank account movements corresponding to the balance of the selected producers" %}
-        :</h4>
-    <form action="" method="post">{% csrf_token %}
-        <div>
-            {% for obj in queryset %}
-                <h4><input type="checkbox" name="{{ action_checkbox_name }}" value="{{ obj.id|unlocalize }}"
-                           checked/>&nbsp;&nbsp;{{ obj.short_profile_name }}</h4>
-            {% endfor %}
-            <input type="hidden" name="permanence" value="{{ permanence.id }}"/>
-            <input type="hidden" name="action" value="{{ action }}"/>
-            <button type="submit" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-            <button type="submit" name="apply"
-                    value="apply">{% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}</button>
-        </div>
-    </form>
+{#    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}#}
+    <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">
+<style type="text/css">
+.form-group input[type="checkbox"] {
+    display: none;
+}
+.form-group input[type="checkbox"] + .btn-group > label span {
+    width: 20px;
+}
+.form-group input[type="checkbox"] + .btn-group > label span:first-child {
+    display: none;
+}
+.form-group input[type="checkbox"] + .btn-group > label span:last-child {
+    display: inline-block;
+}
+.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
+    display: inline-block;
+}
+.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
+    display: none;
+}
+.colorgraph {
+  height: 5px;
+  border-top: 0;
+  background: #c4e17f;
+  border-radius: 5px;
+  background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
+  background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
+  background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
+  background-image: linear-gradient(to right, #c4e17f, #62c2e4);
+}
+</style>
 
+    <h4>{{ sub_title }}</h4>
+    <p></p>
+    <form action="" method="post">{% csrf_token %}
+        <h6>{{ permanence }}, {% trans "when producing invoices, generate bank account movements corresponding to the balance of the selected producers" %} :</h6>
+        <div class="submit-row">
+            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}</h6></button>
+            {{ producer_invoiced_formset.management_form }}
+        </div>
+{#        <fieldset class="module aligned ">#}
+{#        {{ producer_invoiced_formset.management_form }}#}
+{#        <div class="form-row">#}
+{#            {% for f_form in producer_invoiced_formset %}#}
+{#                <div class="input-group">#}
+{#                <h6><input id="id_form-{{ forloop.counter0 }}-selected" name="form-{{ forloop.counter0 }}-selected" type="checkbox" checked/>#}
+{#                    &nbsp;&nbsp;{{ f_form.short_profile_name.value }} {% trans ", balance claimed by the supplier : " %}#}
+{#                    {{ f_form.to_be_invoiced_balance }}#}
+{#                    {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}#}
+{#                    {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}</h6>#}
+{#                <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name" name="form-{{ forloop.counter0 }}-short_profile_name" value="{{ f_form.short_profile_name.value }}"/>#}
+{#                </div>#}
+{#            {% endfor %}#}
+{#        </div>#}
+{#        </fieldset>#}
+        <fieldset class="module aligned ">
+            <div class="form-row">
+                <div class="[ form-group ]">
+                    <h6>{{ permanence_form.non_field_errors }}</h6>
+                    <div class="fieldWrapper">
+                        {% if permanence_form.payment_date.errors %}
+                            <ul class="errorlist">
+                            {% for error in permanence_form.payment_date.errors %}
+                                <li><h6>{{ error|escape }}</h6></li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
+{#                        {{ permanence_form.payment_date.errors }}#}
+{#                        {{ permanence_form.payment_date.label_tag }}#}
+                        <label for="id_payment_date"><h6>{% trans "payment date" %}&nbsp;:</h6></label>
+                        {{ permanence_form.payment_date }}
+                    </div>
+{#        {{ permanence_form.payment_date }}#}
+                </div>
+            </div>
+        </fieldset>
+        {% for f_form in producer_invoiced_formset %}
+            {% if forloop.first %}
+                <fieldset class="module aligned ">
+                    <div class="form-row">
+                        <div class="[ form-group ]">
+                            <input id="all-producers" name="all-producers" onClick="toggle_all_producers(this)" autocomplete="off" type="checkbox" checked>
+                            <div class="[ btn-group ]">
+                                <label for="all-producers" class="[ btn btn-primary btn-sm ]">
+                                    <span class="[ glyphicon glyphicon-ok ]"></span>
+                                    <span>&nbsp;</span>
+                                </label>
+                                <label for="all-producers" class="[ btn active btn-sm ]">
+                                    {% trans "Select all producers." %}
+                                </label>
+                            </div>
+                        </div>
+                        <hr class="colorgraph">
+            {% endif %}
+            <span class="[ form-group ]">
+                <input id="id_form-{{ forloop.counter0 }}-selected" name="form-{{ forloop.counter0 }}-selected" onClick="toggle_producer(this)" autocomplete="off" type="checkbox" checked>
+                <div class="[ btn-group ]">
+                    <label for="id_form-{{ forloop.counter0 }}-selected" class="[ btn btn-info btn-xs ]">
+                        <span class="[ glyphicon glyphicon-ok ]"></span>
+                        <span>&nbsp;</span>
+                    </label>
+                    <label for="id_form-{{ forloop.counter0 }}-selected" class="[ btn active btn-xs ]">
+                        {{ f_form.short_profile_name.value }}
+                        {% trans ", calculated : " %}
+{#                        {% if f_form.calculated_invoiced_balance.value == f_form.to_be_invoiced_balance.value %}#}
+                            {{ f_form.calculated_invoiced_balance.value }}
+{#                        {% else %}#}
+{#                            <b>{{ f_form.calculated_invoiced_balance.value }}</b>#}
+{#                        {% endif %}#}
+                        {% trans ", balance claimed by the supplier : " %}
+                        {{ f_form.to_be_invoiced_balance }}
+                        {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}
+                        {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
+                        <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name" name="form-{{ forloop.counter0 }}-short_profile_name" value="{{ f_form.short_profile_name.value }}"/>
+                    </label>
+                </div>
+            </span>
+            {% if forloop.last %}
+                    </div>
+                </fieldset>
+            {%  endif %}
+        {% endfor %}
+
+
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+        <script type="text/javascript">
+        function toggle_all_producers(source) {
+            {% for f_form in producer_invoiced_formset %}
+                checkbox = document.getElementsByName("form-{{ forloop.counter0 }}-selected");
+                checkbox[0].checked = source.checked;
+            {% endfor %}
+        }
+        function toggle_producer(source) {
+            source.checked != source.checked;
+            all_checked = true;
+            {% for f_form in producer_invoiced_formset %}
+                checkbox = document.getElementsByName("form-{{ forloop.counter0 }}-selected");
+                all_checked &= checkbox[0].checked;
+            {% endfor %}
+            all_checkboxes = document.getElementsByName("all-producers");
+            all_checkboxes[0].checked = all_checked;
+        }
+    </script>
 {% endblock %}

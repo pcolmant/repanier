@@ -1,4 +1,4 @@
-{% extends 'subpage_base.html' %}
+{% extends 'cms_subpage.html' %}
 {% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
 {% block search %}
     <form id="search_form" class="form-horizontal" class="navbar-form" role="search" method="post">
@@ -47,6 +47,17 @@
 {% endaddtoblock %}
 
     <div class="col-md-12">
+{% for staff in staff_list %}
+    <b>{{ staff.long_name }}</b> :
+    {% if staff.customer_responsible.long_basket_name %}
+        {{ staff.customer_responsible.long_basket_name }}
+    {% else %}
+        {{ staff.customer_responsible.short_basket_name }}
+    {% endif %}
+    ({{ staff.customer_responsible.phone1 }})
+    <br/>
+{% endfor %}
+<br/>
         <p>{% trans "If you want to show information about you, then" %} <a href="{% url 'me_view' %}">{% trans "update your profil" %}</a>.</p>
 <div class="panel-group" id="accordion">
         {% if coordinator %}
@@ -57,10 +68,10 @@
 </div>
 {% for customer in customer_list %}
     <div class="panel panel-default">
-        <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse{{ customer.id|stringformat:"d" }}">
+        <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse{{ customer.id|unlocalize }}">
              <h4 class="panel-title">{{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}){% endif %}</h4>
         </div>
-        <div id="collapse{{ customer.id|stringformat:"d" }}" class="panel-collapse collapse">
+        <div id="collapse{{ customer.id|unlocalize }}" class="panel-collapse collapse">
             <div class="panel-body bg-primary">
                 <div class="col-xs-2">
                     {% if customer.picture %}
@@ -83,7 +94,7 @@
 {% for customer in customer_list %}
     <div class="panel panel-default">
         {% if customer.who_is_who_display %}
-        <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse{{ customer.id|stringformat:"d" }}">
+        <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse{{ customer.id|unlocalize }}">
              <h4 class="panel-title">{{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}){% endif %}</h4>
         </div>
         <div id="collapse{{ customer.id|stringformat:"d" }}" class="panel-collapse collapse">

@@ -1,4 +1,4 @@
-{% extends 'subpage_base.html' %}
+{% extends 'cms_subpage.html' %}
 {% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
 {% addtoblock "jshead" %}
     <script type="text/javascript">if (typeof CMS === 'undefined') {
@@ -6,8 +6,10 @@
     }</script>{% endaddtoblock %}
 {% block sub_content %}
     <div class="col-md-12">
-        {% if update %}<p class="bg-success">{% trans "Update done." %}</p>{% endif %}
+        {% if update == "Ok" %}<p class="bg-success" style="color: #cec7c7"><strong>{% trans "Update done." %}</strong></p>{% endif %}
+        {% if update == "Nok" %}<div class="has-error"><span class="help-block"><strong>{% trans "Update not done." %}</strong></span></div>{% endif %}
         <p>{% trans "All informations bellow are visible to all members except your phone and email. You have the choice to specify if your phone and/or mail are visible to others members." %}</p>
+        <p>{% if membership_fee_valid_until %}<b>{% trans "Your membership fee is valid until" %} : {{ membership_fee_valid_until }}</b>{% endif %}</p>
         {% crispy form %}
     </div>
 {% endblock %}
