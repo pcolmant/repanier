@@ -398,7 +398,7 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         else:
             unit = "%s" % (_('l'))
     elif order_unit in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG]:
-        display_qty = not (order_average_weight == 1 and order_unit != PRODUCT_ORDER_UNIT_PC_KG)
+        # display_qty = not (order_average_weight == 1 and order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG)
         average_weight = order_average_weight
         if for_customer:
             average_weight *= qty
@@ -423,10 +423,10 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
             if qty == DECIMAL_ZERO:
                 unit = EMPTY_STRING
             else:
-                if display_qty:
-                    unit = "%s%s%s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
-                else:
+                if order_average_weight == 1 and order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
                     unit = "%s%s %s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+                else:
+                    unit = "%s%s%s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
         else:
             if qty == DECIMAL_ZERO:
                 unit = EMPTY_STRING
