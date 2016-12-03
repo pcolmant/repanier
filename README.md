@@ -11,7 +11,6 @@ Customers :
 https://apero.repanier.be/fr/
 https://arcos.repanier.be/es/
 https://bloum.be/fr/
-https://bruyere.repanier.be/fr/
 https://commande.coopeco2.be/fr/
 https://commande.lenid.ch/fr/
 https://commandes.gac-hamois.be/fr/
@@ -19,7 +18,6 @@ https://exceptionnel.repanier.be/fr/
 https://exceptionnel.repanier.be/fr/
 https://gac-mutsaard.repanier.be/
 https://gac-sombreffe.repanier.be/
-https://gac1.repanier.be/fr/
 https://gacmonssud.repanier.be/fr/
 https://gassines.be/fr/
 https://koedalhof.repanier.be/
