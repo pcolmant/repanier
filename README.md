@@ -15,7 +15,6 @@ https://commande.coopeco2.be/fr/
 https://commande.lenid.ch/fr/
 https://commandes.gac-hamois.be/fr/
 https://exceptionnel.repanier.be/fr/
-https://exceptionnel.repanier.be/fr/
 https://gac-mutsaard.repanier.be/
 https://gac-sombreffe.repanier.be/
 https://gacmonssud.repanier.be/fr/
