@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
+
 from const import SIZE_XS, SIZE_M, SIZE_S
 from repanier.tools import sint
 
@@ -10,12 +11,10 @@ except ImportError:
 import os
 import json
 from PIL import Image
-from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext as _not_lazy
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
@@ -55,16 +54,17 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
         if default_storage.exists(name):
             return HttpResponse(
                 json.dumps(
-                    {'url': default_storage.url(name),
+                    {'url'     : default_storage.url(name),
                      'filename': name,
-                     'msg': _not_lazy(
+                     'msg'     : _not_lazy(
                          'An image with same file name already exist. Please, check the file name and rename it if necessary.')
                      }
                 ), content_type="application/json")
         else:
             image = Image.open(file_)
             if image.size[0] > size or image.size[1] > size:
-                return HttpResponse(json.dumps({'error': _not_lazy('Wrong size.')}), content_type="application/json", status=403)
+                return HttpResponse(json.dumps({'error': _not_lazy('Wrong size.')}), content_type="application/json",
+                                    status=403)
 
         file_name = default_storage.save(name, image.fp)
         url = default_storage.url(file_name)

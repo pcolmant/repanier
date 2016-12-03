@@ -2,5 +2,7 @@
 {% load cms_tags %}
 
 {% block base_content %}
-{% placeholder subpage_content %}
+    <div class="container-repanier">
+    {% block sub_content %}{% placeholder subpage_content %}{% endblock %}
+    </div>
 {% endblock %}

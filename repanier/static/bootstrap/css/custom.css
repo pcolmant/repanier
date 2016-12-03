@@ -19,42 +19,28 @@ body {
 
 /* sidebar */
 .bs-docs-sidebar {
-    padding-left: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    padding: 0px 0px 1px 20px;
+    margin-top: 1px;
+    margin-bottom: 1px;
 }
 /* all links */
 .bs-docs-sidebar .nav > li > a {
     color: #3c3c3c;
-    padding: 4px 20px;
-    font-size: 16px;
-    font-weight: 400;
-    border-left: 2px solid transparent;
-}
-.bs-docs-sidebar .nav > li > b > a {
-    color: #3c3c3c;
-    padding: 4px 20px;
-    font-size: 16px;
+    padding-top: 0px;
     font-weight: bold;
     border-left: 2px solid transparent;
 }
 /* nested links */
-.bs-docs-sidebar .nav .nav > li > a,
-.bs-docs-sidebar .nav .nav > li > b > a {
-    padding-top: 1px;
-    padding-bottom: 1px;
+.bs-docs-sidebar .nav .nav > li > a {
     padding-left: 30px;
-    font-size: 14px;
+    /*font-size: 16px;*/
+    font-weight: normal;
 }
 /* active & hover links */
 .bs-docs-sidebar .nav > .active > a,
 .bs-docs-sidebar .nav > li > a:hover,
 .bs-docs-sidebar .nav > li > a:focus,
-.bs-docs-sidebar .nav > .active > b > a,
-.bs-docs-sidebar .nav > li > b > a:hover,
-.bs-docs-sidebar .nav > li > b > a:focus,
 /* selected links */
-.bs-docs-sidebar .nav > li > b > a.bs-docs-sidebar-active,
 .bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
     color: #51a351;
     text-decoration: none;
@@ -89,10 +75,6 @@ body {
     text-decoration: underline;
 }
 
-
-/* Custom page CSS
--------------------------------------------------- */
-
 .offer-description {
   position: relative;
   height: 200px;
@@ -101,7 +83,7 @@ body {
 }
 
 body > .container {
-  padding: 0 15px 0;
+  padding: 0px 15px 0;
 }
 .container .text-muted {
   margin: 20px 0;
@@ -117,6 +99,26 @@ code {
 }
 
 /* automaticaly display menu on mouse over */
+
 ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;    
+}
+
+a.skip_link{
+   position:absolute;
+   left:-1000px;
+   top:-1000px;
+}
+.white, .white a {
+    color: #fff;
+}
+.container-bootstrap {
+    margin-top: 65px;
+}
+.container-repanier {
+    margin: 15px 15px 0;
+    padding: 15px 15px 0;
+}
+.container-menu {
+    padding: 0 15px 0;
 }

@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
 from django.utils import translation
+from django.utils.translation import ugettext_lazy as _
+
 from repanier.const import *
-from repanier.models import Product, Product_Translation
+from repanier.models import Product_Translation
 from repanier.tools import cap
 
 
 def flip_flop_is_into_offer(queryset):
-    for product in queryset.order_by():
+    for product in queryset.order_by('?'):
         if product.is_active:
             product.is_into_offer = not product.is_into_offer
             product.save(update_fields=['is_into_offer'])
 
 
-def admin_duplicate(queryset):
+def admin_duplicate(queryset, producer):
     user_message = _("The product is duplicated.")
     user_message_level = messages.INFO
     product_count = 0
@@ -26,18 +27,17 @@ def admin_duplicate(queryset):
         old_product_production_mode = product.production_mode.all()
         product.id = None
         product.reference = None
+        product.producer = producer
         product.save()
         for production_mode in old_product_production_mode:
             product.production_mode.add(production_mode.id)
         Product_Translation.objects.create(
             master_id=product.id,
             long_name=new_long_name,
-            offer_description='',
+            offer_description=EMPTY_STRING,
             language_code=translation.get_language()
         )
 
     if product_count > 1:
         user_message = _("The products are duplicated.")
     return user_message, user_message_level
-
-

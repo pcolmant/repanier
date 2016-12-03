@@ -2,28 +2,51 @@
 import ConfigParser
 import codecs
 import logging
+
+from django.utils.translation import get_language_info
+from django.utils.translation import ugettext_lazy as _
+
+from repanier.const import *
 from settings import *
 
 import os
 
 gettext = lambda s: s
 
+
+def get_allowed_mail_extension():
+    allowed_mail_extension = "@%s" % DJANGO_SETTINGS_ALLOWED_HOSTS[0]
+    cut_index = len(DJANGO_SETTINGS_ALLOWED_HOSTS[0]) - 1
+    point_counter = 0
+    while cut_index >= 0:
+        if DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index] == ".":
+            point_counter += 1
+            if point_counter == 2:
+                allowed_mail_extension = "@%s" % DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index + 1:]
+                break
+        cut_index -= 1
+    if allowed_mail_extension.endswith("local"):
+        allowed_mail_extension = "@repanier.be"
+    return allowed_mail_extension
+
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 PROJECT_PATH = os.path.split(os.path.realpath(os.path.dirname(__file__)))[0]
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 os.sys.path.insert(0, PROJECT_PATH)
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
-MEDIA_URL = "/media/"
+MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
-STATIC_URL = "/static/"
+STATIC_URL = "%s%s%s" % (os.sep, "static_001", os.sep)
 # STATICFILES_DIRS = (
 #     os.path.join(PROJECT_PATH, "repanier", "static"),
 # )
 
+DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
 config = ConfigParser.RawConfigParser(allow_no_value=True)
-conf_file_name = '%s/%s.ini' % (
+conf_file_name = '%s%s%s.ini' % (
             PROJECT_DIR,
-            os.path.split(PROJECT_DIR)[-1]
+            os.sep,
+            DJANGO_SETTINGS_SITE_NAME
 )
 try:
     # Open the file with the correct encoding
@@ -47,34 +70,42 @@ try:
     DJANGO_SETTINGS_ENV = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ENV')
     DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE')
     DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING')
-    DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
     DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE')
     DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION')
-    DJANGO_SETTINGS_ANDROID_SMS_GATEWAY_MAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ANDROID_SMS_GATEWAY_MAIL')
+    DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY')
     DJANGO_SETTINGS_ALLOWED_HOSTS = []
     for name in config.options('ALLOWED_HOSTS'):
-        DJANGO_SETTINGS_ALLOWED_HOSTS.append(config.get('ALLOWED_HOSTS', name))
+        allowed_host = config.get('ALLOWED_HOSTS', name)
+        if allowed_host.startswith("demo"):
+            DJANGO_SETTINGS_DEMO = True
+        DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
     logging.info("Settings loaded from %s" % (conf_file_name,))
     print ("Settings loaded from %s" % (conf_file_name,))
     print(DJANGO_SETTINGS_ALLOWED_HOSTS)
+    DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 except IOError:
     logging.exception("Unable to open %s settings" % (conf_file_name,))
     print ("Unable to open %s settings" % (conf_file_name,))
     raise SystemExit(-1)
+DJANGO_SETTINGS_DATE = "%d-%m-%Y"
+DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
-###################### ANDROID SMS GATEWAY MAIL
-ANDROID_SMS_GATEWAY_MAIL = DJANGO_SETTINGS_ANDROID_SMS_GATEWAY_MAIL
+
 ###################### DEBUG
-
+# if DJANGO_SETTINGS_DEMO:
+    # No debug available in demo mode
+    # DJANGO_SETTINGS_DEBUG = False
 DEBUG = DJANGO_SETTINGS_DEBUG
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
+TEMPLATE_DEBUG = False
+
 ADMINS = (
     (
         DJANGO_SETTINGS_ADMIN_NAME,
         DJANGO_SETTINGS_ADMIN_EMAIL
     ),
 )
-SERVER_EMAIL = DJANGO_SETTINGS_ADMIN_EMAIL
+SERVER_EMAIL = "%s%s" % (DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
 ######################
 
 DATABASES = {
@@ -120,11 +151,11 @@ ROOT_URLCONF = '%s.urls' % (DJANGO_SETTINGS_SITE_NAME,)
 WSGI_APPLICATION = '%s.wsgi.application' % (DJANGO_SETTINGS_SITE_NAME,)
 EMAIL_SUBJECT_PREFIX = '[' + DJANGO_SETTINGS_ALLOWED_HOSTS[0] + ']'
 # DEFAULT_FROM_EMAIL Used by PASSWORD RESET
-DEFAULT_FROM_EMAIL = DJANGO_SETTINGS_ALLOWED_HOSTS[0] + "@repanier.be"
+DEFAULT_FROM_EMAIL = "no-reply%s" % DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION
 
 USE_X_FORWARDED_HOST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_ENGINE = "django.contrib.sessions.backends.file"
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_FILE_PATH = DJANGO_SETTINGS_SESSION
 # SOUTH_TESTS_MIGRATE = DEBUG
@@ -135,55 +166,62 @@ LOCALE_PATHS = (
 )
 
 INSTALLED_APPS = (
-    'django.contrib.sites',
+    'repanier', # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
+    'djangocms_admin_style',  # note this needs to be above the 'django.contrib.admin' entry
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sitemaps',
-    'filer',
-    'repanier', # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
-    'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
-    'cmsplugin_cascade',
-    'cmsplugin_cascade.extra_fields',  # optional
-    'cmsplugin_cascade.sharable',  # optional
-    'cms',
-    "treebeard",
-    'mptt',
-    'menus',
-    'djangocms_admin_style',  # note this needs to be above the 'django.contrib.admin' entry
     'django.contrib.admin',
-    'django_mptt_admin',
-    'easy_thumbnails',
-    'easy_thumbnails.optimize',
-    'sekizai',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
+    'django.contrib.staticfiles',
+    'django.contrib.messages',
+
+    'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
+    'django_select2',
     'cmsplugin_filer_file',
     'cmsplugin_filer_folder',
     'cmsplugin_filer_link',
     'cmsplugin_filer_image',
     'cmsplugin_filer_video',
+    # 'cmsplugin_filer_utils',
+    'cmsplugin_cascade',
+    'cmsplugin_cascade.clipboard',  # optional
+    'cmsplugin_cascade.extra_fields',  # optional
+    'cmsplugin_cascade.sharable',  # optional
+    'cmsplugin_cascade.segmentation',  # optiona
+    'cms',
+    # 'cms_bootstrap3',
+    'menus',
+    'treebeard',
+    'filer',
+    'easy_thumbnails',
+    'easy_thumbnails.optimize',
+    # 'sass_processor',
+    'sekizai',
+    'mptt',
+    'django_mptt_admin',
     'reversion',
     'aldryn_reversion',
     'parler',
     'import_export',
-
-
-    # 'aldryn_bootstrap3',
+    'rest_framework',
+    'easy_select2',
 )
+
+# https://docs.djangoproject.com/fr/1.9/ref/middleware/
+# http://docs.django-cms.org/en/develop/how_to/caching.html
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
+    'cms.middleware.utils.ApphookReloadMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.doc.XViewMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.page.CurrentPageMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
@@ -197,22 +235,27 @@ TEMPLATES = [
     'DIRS': [
         os.path.join(PROJECT_DIR, "templates"),
     ],
-    'APP_DIRS': True,
+    # 'APP_DIRS': True,
     'OPTIONS': {
         'context_processors': [
             'django.contrib.auth.context_processors.auth',
-            'django.template.context_processors.debug',
-            'django.template.context_processors.i18n',
-            'django.template.context_processors.media',
-            'django.template.context_processors.static',
-            'django.template.context_processors.tz',
-            'django.template.context_processors.csrf',
-            'django.template.context_processors.request',
             'django.contrib.messages.context_processors.messages',
-            'cms.context_processors.cms_settings',
+            'django.template.context_processors.i18n',
+            'django.template.context_processors.debug',
+            'django.template.context_processors.request',
+            'django.template.context_processors.media',
+            'django.template.context_processors.csrf',
+            'django.template.context_processors.tz',
             'sekizai.context_processors.sekizai',
+            'django.template.context_processors.static',
+            'cms.context_processors.cms_settings'
         ],
-    }
+        'loaders': [
+            'django.template.loaders.filesystem.Loader',
+            'django.template.loaders.app_directories.Loader',
+            'django.template.loaders.eggs.Loader'
+        ],
+    },
 },
 ]
 
@@ -220,12 +263,12 @@ MIGRATION_MODULES = {
     # 'cms': 'cms.migrations_django',
     # 'menus': 'menus.migrations_django',
     # 'filer': 'filer.migrations_django',
-    'djangocms_text_ckeditor': 'djangocms_text_ckeditor.migrations_django',
-    'cmsplugin_filer_file': 'cmsplugin_filer_file.migrations_django',
-    'cmsplugin_filer_folder': 'cmsplugin_filer_folder.migrations_django',
-    'cmsplugin_filer_link': 'cmsplugin_filer_link.migrations_django',
-    'cmsplugin_filer_image': 'cmsplugin_filer_image.migrations_django',
-    'cmsplugin_filer_video': 'cmsplugin_filer_video.migrations_django',
+    # 'djangocms_text_ckeditor': 'djangocms_text_ckeditor.migrations_django',
+    # 'cmsplugin_filer_file': 'cmsplugin_filer_file.migrations_django',
+    # 'cmsplugin_filer_folder': 'cmsplugin_filer_folder.migrations_django',
+    # 'cmsplugin_filer_link': 'cmsplugin_filer_link.migrations_django',
+    # 'cmsplugin_filer_image': 'cmsplugin_filer_image.migrations_django',
+    # 'cmsplugin_filer_video': 'cmsplugin_filer_video.migrations_django',
 }
 
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
@@ -256,7 +299,7 @@ CKEDITOR_SETTINGS = {
     'toolbar_HTMLField': [
         ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
-        ['Maximize', '']
+        ['Source']
     ],
     'forcePasteAsPlainText': 'true',
     'skin': 'moono',
@@ -286,6 +329,7 @@ CKEDITOR_SETTINGS = {
     # the following parameters to CKEDITOR_SETTINGS:
     'basicEntities': False,
     'entities': False,
+    'enterMode' : 2,
     # Do not dispaly the HTML Path below the edit window
     'removePlugins': 'elementspath',
 }
@@ -295,21 +339,24 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'toolbar_HTMLField': [
         ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
-        ['Maximize', '']
+        ['Source']
+        # ['Maximize', '']
     ],
     'forcePasteAsPlainText': 'true',
     'skin': 'moono',
     'format_tags': 'p;h4;h5',
     'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
-    'removeFormatTags': 'big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities': False,
     'entities': False,
+    'enterMode' : 2,
     'removePlugins': 'elementspath',
 }
 
-# TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
+TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
 # TEXT_SAVE_IMAGE_FUNCTION = 'djangocms_text_ckeditor.picture_save.create_picture_plugin'
-TEXT_SAVE_IMAGE_FUNCTION = None
+# TEXT_SAVE_IMAGE_FUNCTION = None
+
 # djangocms-text-ckeditor uses html5lib to sanitize HTML
 # to avoid security issues and to check for correct HTML code.
 # Sanitisation may strip tags usesful for some use cases such as iframe;
@@ -352,10 +399,6 @@ AUTH_USER_MODEL = 'auth.User'
 AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
 # ADMIN_LOGIN = 'pi'
 # ADMIN_PASSWORD = 'raspberry'
-# ! Important : for template precedence Repanier must be first INSTALLED_APPS
-# INSTALLED_APPS = (
-#     'repanier',
-# ) + INSTALLED_APPS
 LOGIN_URL = "/repanier/go_repanier/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/repanier/leave_repanier/"
@@ -419,24 +462,20 @@ from decimal import getcontext, ROUND_HALF_UP
 
 getcontext().rounding = ROUND_HALF_UP
 
-##################### DJANGOCMS-CASCADE
-CMSPLUGIN_CASCADE_PLUGINS = (
-    'cmsplugin_cascade.bootstrap3',
-    'cmsplugin_cascade.link',)
-CMSPLUGIN_CASCADE_ALIEN_PLUGINS = ('TextPlugin', )
+##################### DJANGO REST_FRAMEWORK
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'PAGE_SIZE': 10
+}
 
 ##################### DJANGO IMPORT EXPORT
 IMPORT_EXPORT_USE_TRANSACTIONS = True
-DATE_INPUT_FORMATS = ('%d-%m-%Y',)
-DATETIME_INPUT_FORMATS = ("%d-%m-%Y %H:%M:%S",)
+
+
+DATE_INPUT_FORMATS = (DJANGO_SETTINGS_DATE, "%d/%m/%Y", "%Y-%m-%d")
+DATETIME_INPUT_FORMATS = (DJANGO_SETTINGS_DATETIME,)
 
 if DJANGO_SETTINGS_LOGGING:
-    import logging
-    l = logging.getLogger('django.db.backends')
-    l.setLevel(logging.DEBUG)
-    l.addHandler(logging.StreamHandler())
-
-
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -450,8 +489,9 @@ if DJANGO_SETTINGS_LOGGING:
                 'level': 'ERROR',
                 'filters': ['require_debug_false'],
                 'class': 'django.utils.log.AdminEmailHandler'
-            },'console': {
-                'level': 'DEBUG',
+            },
+            'console': {
+                'level': 'INFO',
                 'class': 'logging.StreamHandler',
             },
         },
@@ -460,7 +500,8 @@ if DJANGO_SETTINGS_LOGGING:
                 'handlers': ['mail_admins'],
                 'level': 'ERROR',
                 'propagate': True,
-            },'django.db.backends': {
+            },
+            'django.db.backends': {
                 'level': 'DEBUG',
                 'handlers': ['console'],
             },
@@ -469,22 +510,24 @@ if DJANGO_SETTINGS_LOGGING:
 
 
 CMS_TEMPLATES = (
-    ('cms_home.html', gettext("Homepage")),
-    ('cms_page.html', gettext("Primary Page")),
-    ('cms_subpage.html', gettext("Secondary Page")),
+    ('cms_page.html', gettext("Internal page")),
+    ('cms_subpage.html', gettext("Internal page with menu on left")),
+    ('cms_home.html', gettext("Home page")),
+    ('cms_bootstrap_page.html', gettext("Bootstrap page")),
+    ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
 )
 
 if DJANGO_SETTINGS_LANGUAGE == 'fr':
 
     LANGUAGE_CODE = 'fr'
     LANGUAGES = [
-        ('fr', u'Français'),
+        ('fr', get_language_info('fr')['name_local']),
     ]
     CMS_LANGUAGES = {
         SITE_ID: [
             {
             'code': 'fr',
-            'name': gettext('French'),
+            'name': get_language_info('fr')['name'],
             'public': True,
             'hide_untranslated': False,
             },
@@ -493,38 +536,68 @@ if DJANGO_SETTINGS_LANGUAGE == 'fr':
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
         SITE_ID: (
-            {'code': 'fr',},
+            {'code': LANGUAGE_CODE,},
         ),
+        'default': {
+            'fallbacks'        : [LANGUAGE_CODE],
+            'hide_untranslated': False,
+        },
+    }
+
+elif DJANGO_SETTINGS_LANGUAGE == 'es':
+
+    LANGUAGE_CODE = 'es'
+    LANGUAGES = [
+        ('es', get_language_info('es')['name_local']),
+    ]
+    CMS_LANGUAGES = {
+        SITE_ID: [
+            {
+            'code': 'es',
+            'name': get_language_info('es')['name'],
+            'public': True,
+            'hide_untranslated': False,
+            },
+        ]
+    }
+    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+    PARLER_LANGUAGES = {
+        SITE_ID: (
+            {'code': LANGUAGE_CODE,},
+        ),
+        'default': {
+            'fallbacks'        : [LANGUAGE_CODE],
+            'hide_untranslated': False,
+        },
     }
 
 elif DJANGO_SETTINGS_LANGUAGE == 'fr-nl-en':
 
     LANGUAGE_CODE = 'fr'
     LANGUAGES = [
-        ('fr', u'Français'),
-        ('nl', u'Neederlands'),
-        ('en', u'English'),
+        ('fr', get_language_info('fr')['name_local']),
+        ('nl', get_language_info('nl')['name_local']),
+        ('en', get_language_info('en')['name_local']),
     ]
     CMS_LANGUAGES = {
         SITE_ID: [
             {
                 'code': 'fr',
-                'name': gettext('French'),
-                'fallbacks': ['en', 'nl'],
+                'name': get_language_info('fr')['name'],
                 'public': True,
                 'redirect_on_fallback':False,
                 'hide_untranslated': False,
             },
             {
                 'code': 'nl',
-                'name': gettext('Dutch'),
+                'name': get_language_info('nl')['name'],
                 'fallbacks': ['en', 'fr'],
                 'public': True,
             },
             {
                 'code': 'en',
-                'name': gettext('English'),
-                'fallbacks': ['fr'],
+                'name': get_language_info('en')['name'],
+                'fallbacks': [LANGUAGE_CODE],
                 'public': True,
             },
         ]
@@ -537,21 +610,79 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-nl-en':
             {'code': 'en',},
         ),
         'default': {
-                'fallbacks': ['fr'],
+                'fallbacks': [LANGUAGE_CODE],
+                'hide_untranslated': False,
+        },
+    }
+elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
+
+    LANGUAGE_CODE = 'fr'
+    LANGUAGES = [
+        ('fr', get_language_info('fr')['name_local']),
+        ('en', get_language_info('en')['name_local']),
+    ]
+    CMS_LANGUAGES = {
+        SITE_ID: [
+            {
+                'code': 'fr',
+                'name': get_language_info('fr')['name'],
+                'public': True,
+                'redirect_on_fallback':False,
+                'hide_untranslated': False,
+            },
+            {
+                'code': 'en',
+                'name': get_language_info('en')['name'],
+                'fallbacks': [LANGUAGE_CODE],
+                'public': True,
+            },
+        ]
+    }
+    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+    PARLER_LANGUAGES = {
+        SITE_ID: (
+            {'code': 'fr',},
+            {'code': 'en',},
+        ),
+        'default': {
+                'fallbacks': [LANGUAGE_CODE],
                 'hide_untranslated': False,
         },
     }
 
-DJANGOCMS_CASCADE_COLUMN_GLOSSARY = {
-    'breakpoints': ['xs', 'sm', 'md', 'lg'],
-    'container_max_widths': {'xs': 750, 'sm': 750, 'md': 970, 'lg': 1170},
-    'fluid': False,
-    'media_queries': {
-        'xs': ['(max-width: 768px)'],
-        'sm': ['(min-width: 768px)', '(max-width: 992px)'],
-        'md': ['(min-width: 992px)', '(max-width: 1200px)'],
-        'lg': ['(min-width: 1200px)'],
+##################### DJANGOCMS-CASCADE
+CMSPLUGIN_CASCADE_PLUGINS = (
+    'cmsplugin_cascade.generic',
+    'cmsplugin_cascade.link',
+    'cmsplugin_cascade.sharable',
+    'cmsplugin_cascade.bootstrap3',
+    'cmsplugin_cascade.segmentation',
+)
+
+from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
+CMSPLUGIN_CASCADE = {
+    'plugins_with_extra_fields': {
+        'BootstrapRowPlugin': PluginExtraFieldsConfig(inline_styles={
+            'extra_fields:Margins': ['margin-top', 'margin-bottom'],
+            'extra_units:Margins': 'px,em'}),
+        'BootstrapJumbotronPlugin': PluginExtraFieldsConfig(inline_styles={
+            # 'extra_fields:Margins': ['margin-top', 'margin-bottom'],
+            # 'extra_units:Margins': 'px,em',
+            'extra_fields:Margins': ['padding-top', 'padding-bottom', 'margin-bottom'],
+            'extra_units:Margins': 'px,em'}),
     },
+    'bootstrap3': (
+        ('xs', (768, 'mobile', _("mobile phones"), 750, 768)),
+        ('sm', (768, 'tablet', _("tablets"), 750, 992)),
+        ('md', (992, 'laptop', _("laptops"), 970, 1200)),
+        ('lg', (1200, 'desktop', _("large desktops"), 1170, 2500)),
+    ),
+    'segmentation_mixins': (
+        (
+            'cmsplugin_cascade.segmentation.mixins.EmulateUserModelMixin',
+            'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
+        ),
+    ),
 }
 
 CMS_PLACEHOLDER_CONF = {
@@ -561,7 +692,10 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin',
+            'FilerLinkPlugin',
+            'FilerImagePlugin',
+            'FilerFilePlugin',
+            'FilerVideoPlugin'
         ],
         'default_plugins': [
             {
@@ -585,7 +719,10 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin',
+            'FilerLinkPlugin',
+            'FilerImagePlugin',
+            'FilerFilePlugin',
+            'FilerVideoPlugin'
         ],
         'default_plugins': [
             {
@@ -609,13 +746,15 @@ CMS_PLACEHOLDER_CONF = {
     },
     'home-col-2': {
         'name': gettext('Column 2'),
-        'plugins': [
+        'plugins'          : [
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin',
+            'FilerLinkPlugin',
+            'FilerImagePlugin',
+            'FilerFilePlugin',
+            'FilerVideoPlugin'
         ],
-
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -638,11 +777,14 @@ CMS_PLACEHOLDER_CONF = {
     },
     'home-col-3': {
         'name': gettext('Column 3'),
-        'plugins': [
+        'plugins'          : [
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin',
+            'FilerLinkPlugin',
+            'FilerImagePlugin',
+            'FilerFilePlugin',
+            'FilerVideoPlugin'
         ],
         'default_plugins': [
             {
@@ -666,35 +808,16 @@ CMS_PLACEHOLDER_CONF = {
     },
     'subpage_content': {
         'name': gettext('Content'),
-        'plugins': [
+        'plugins'          : [
             'TextPlugin',
-            'BootstrapRowPlugin',
-            # Aldryn start
-            # 'Bootstrap3BlockquoteCMSPlugin',
-            # 'Bootstrap3IconCMSPlugin',
-            # 'Bootstrap3LabelCMSPlugin',
-            # 'Bootstrap3WellCMSPlugin',
-            # 'Bootstrap3AlertCMSPlugin',
-            # 'Bootstrap3ButtonCMSPlugin',
-            # 'Bootstrap3ImageCMSPlugin',
-            # 'Bootstrap3SpacerCMSPlugin',
-            # 'Bootstrap3FileCMSPlugin',
-            # 'Bootstrap3PanelCMSPlugin',
-            # 'Bootstrap3RowCMSPlugin',
-            # 'Bootstrap3AccordionCMSPlugin',
-            # 'Bootstrap3ListGroupCMSPlugin',
-            # 'Bootstrap3CarouselCMSPlugin',
-            # Aldryn end
-
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin', 'FilerImagePlugin', 'FilerFilePlugin', 'FilerVideoPlugin',
+            'TextLinkPlugin',
+            'FilerLinkPlugin',
+            'FilerImagePlugin',
+            'FilerFilePlugin',
+            'FilerVideoPlugin'
         ],
-        'parent_classes': {
-            'BootstrapRowPlugin': [],
-        },
-        'require_parent': False,
-        'glossary': DJANGOCMS_CASCADE_COLUMN_GLOSSARY,
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -709,10 +832,40 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
+    'bootstrap_content': {
+        'name'           : gettext('Bootstrap Content'),
+        'plugins'        : [
+            'BootstrapContainerPlugin',
+            'BootstrapJumbotronPlugin',
+        ],
+        'text_only_plugins': [
+            # 'FilerLinkPlugin',
+            'TextLinkPlugin',
+            'FilerImagePlugin',
+            'FilerFilePlugin',
+            'FilerVideoPlugin'
+        ],
+        'parent_classes' : {
+            'BootstrapContainerPlugin': None,
+            'BootstrapJumbotronPlugin': None,
+        },
+        'glossary': {
+            'breakpoints': ['xs', 'sm', 'md', 'lg'],
+            'container_max_widths': {'xs': 750, 'sm': 750, 'md': 970, 'lg': 1170},
+            'fluid': False,
+            'media_queries': {
+                'xs': ['(max-width: 768px)'],
+                'sm': ['(min-width: 768px)', '(max-width: 992px)'],
+                'md': ['(min-width: 992px)', '(max-width: 1200px)'],
+                'lg': ['(min-width: 1200px)'],
+            },
+        },
+    },
+
     'footer': {
         'name': gettext('Footer'),
         'plugins': ['TextPlugin', ],
-        'text_only_plugins': ['FilerLinkPlugin',],
+        'text_only_plugins': ['TextLinkPlugin'],
         'limits': {
             'TextPlugin': 1,
         },
@@ -728,3 +881,72 @@ CMS_PLACEHOLDER_CONF = {
         ]
     },
 }
+
+##################### REPANIER VAT/RATE
+
+if DJANGO_SETTINGS_COUNTRY == "ch":
+    # Switzerland
+    DICT_VAT_DEFAULT = VAT_325
+    LUT_VAT = (
+        (VAT_100, _('none')),
+        (VAT_325, _('vat 2.5%')),
+        (VAT_350, _('vat 3.8%')),
+        (VAT_430, _('vat 8%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('none'), VAT_100),
+        (_('vat 2.5%'), VAT_325),
+        (_('vat 3.8%'), VAT_350),
+        (_('vat 8%'), VAT_430),
+    )
+elif DJANGO_SETTINGS_COUNTRY == "fr":
+    # France
+    DICT_VAT_DEFAULT = VAT_375
+    LUT_VAT = (
+        (VAT_100, _('none')),
+        (VAT_315, _('vat 2.1%')),
+        (VAT_375, _('vat 5.5%')),
+        (VAT_460, _('vat 10%')),
+        (VAT_590, _('vat 20%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('none'), VAT_100),
+        (_('vat 2.1%'), VAT_315),
+        (_('vat 5.5%'), VAT_375),
+        (_('vat 10%'), VAT_460),
+        (_('vat 20%'), VAT_590),
+    )
+elif DJANGO_SETTINGS_COUNTRY == "es":
+    # Espagne
+    DICT_VAT_DEFAULT = VAT_460
+    LUT_VAT = (
+        (VAT_100, _('none')),
+        (VAT_360, _('vat 4%')),
+        (VAT_460, _('vat 10%')),
+        (VAT_600, _('vat 21%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('none'), VAT_100),
+        (_('vat 4%'), VAT_360),
+        (_('vat 10%'), VAT_460),
+        (_('vat 21%'), VAT_600),
+    )
+else:
+    # Belgium
+    DICT_VAT_DEFAULT = VAT_400
+    LUT_VAT = (
+        (VAT_100, _('none')),
+        (VAT_400, _('vat 6%')),
+        (VAT_500, _('vat 12%')),
+        (VAT_600, _('vat 21%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('none'), VAT_100),
+        (_('vat 6%'), VAT_400),
+        (_('vat 12%'), VAT_500),
+        (_('vat 21%'), VAT_600),
+    )

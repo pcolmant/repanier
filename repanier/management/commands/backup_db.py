@@ -19,20 +19,31 @@ class Command(BaseCommand):
         db_name = settings.DATABASES['default']['NAME']
         db_user = settings.DATABASES['default']['USER']
         backup_file = NamedTemporaryFile(prefix=db_name + '-db.bak.', suffix='.gz')
+        # pg_dump  -Fc -U pi _8_dev_gassines -f db.bak
+
+        # sudo /etc/init.d/postgresql restart
+        # sudo -u postgres psql
+        # drop database _8_dev_gassines;
+        # CREATE DATABASE _8_dev_gassines WITH TEMPLATE = template0 OWNER = pi ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+        # \q
+        # pg_restore  --username=pi --format=c --no-owner --dbname=_8_dev_gassines db.bak
+
         result = call("pg_dump -Fc -U " + db_user + " " + db_name + " | gzip", stdout=backup_file, shell=True)
         if result == 0:
-            email = EmailMultiAlternatives(
-                "Backup " + db_name,
-                "Backup of the DB : " + db_name,
-                settings.DEFAULT_FROM_EMAIL,
-                [os.getenv('DJANGO_SETTINGS_MODULE_ADMIN_EMAIL', 'pcolmant@gmail.com')]
-            )
-            email.attach_file(os.path.abspath(backup_file.name),
-                              'application/zip')
-            if not settings.DEBUG:
-                email.send()
-            else:
-                email.to = [v for k, v in settings.ADMINS]
-                email.cc = []
-                email.bcc = []
+            migrations_files = NamedTemporaryFile(prefix=db_name + '-mig.bak.', suffix='.gz')
+            repanier_path = "%s%s%s" % (os.path.dirname(settings.PROJECT_DIR), os.sep, "repanier")
+            result = call("cd %s && tar -zcf %s migrations%s*.py" % (repanier_path, migrations_files.name, os.sep),
+                          stdout=migrations_files, shell=True)
+
+            if result == 0:
+                email = EmailMultiAlternatives(
+                    "Backup " + db_name,
+                    "Backup of the DB : " + db_name,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [v for k, v in settings.ADMINS]
+                )
+                email.attach_file(os.path.abspath(backup_file.name),
+                                  'application/zip')
+                email.attach_file(os.path.abspath(migrations_files.name),
+                                  'application/zip')
                 email.send()

@@ -1,24 +1,18 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
-from django.conf import settings
 from django.contrib import admin
-from django.contrib import auth
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.contrib.sitemaps.views import sitemap
 from cms.sitemaps import CMSSitemap
 
 # admin.autodiscover
 
-# urlpatterns = patterns('',
-#     url(r'^jsi18n/(?P<packages>\S+?)/$', 'django.views.i18n.javascript_catalog'),
-# )
-
-urlpatterns = i18n_patterns('',
+urlpatterns = i18n_patterns(
     url(r'^repanier/', include('repanier.urls')),
     url(r'^coordi/', include(admin.site.urls)),
-    url(r'^sitemap\.xml$', 'django.contrib.sitemaps.views.sitemap', {'sitemaps': {'cmspages': CMSSitemap}}),
-    # url(r'^', include('filer.server.urls')),
-    # url(r'^', include('password_reset.urls')),
+    # url(r'^sitemap\.xml$', 'django.contrib.sitemaps.views.sitemap', {'sitemaps': {'cmspages': CMSSitemap}}),
+    url(r'^sitemap\.xml$', sitemap, {'sitemaps': {'cmspages': CMSSitemap}}, name='django.contrib.sitemaps.views.sitemap'),
     url(r'^', include('cms.urls')),
 )
 

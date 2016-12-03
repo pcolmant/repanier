@@ -1,16 +1,20 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
+
 import os
+
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.urlresolvers import reverse
 from django.forms import widgets
 from django.utils.safestring import mark_safe
-from django.core.urlresolvers import reverse
-from django.core.files.storage import default_storage
 from django.utils.translation import ugettext as _
+
 from const import SIZE_M
+from repanier.const import EMPTY_STRING
 
 
 class AjaxPictureWidget(widgets.TextInput):
-
     html = """
     <div id="{element_id}_file_dropbox">
         {input_part}
@@ -224,7 +228,7 @@ class AjaxPictureWidget(widgets.TextInput):
         element_id = final_attrs.get('id')
 
         kwargs = {'upload_to': self.upload_to,
-                  'size': self.size}
+                  'size'     : self.size}
         upload_url = reverse('ajax_picture', kwargs=kwargs)
 
         # NB convert to string and do not rely on value.url
@@ -239,11 +243,11 @@ class AjaxPictureWidget(widgets.TextInput):
             file_url = default_storage.url(file_path)
             file_name = os.path.basename(file_url)
         else:
-            file_path = ''
+            file_path = EMPTY_STRING
             display_picture = "none"
             display_upload = "inline"
-            file_url = ''
-            file_name = ''
+            file_url = EMPTY_STRING
+            file_name = EMPTY_STRING
 
         height = width = self.size
 
@@ -261,7 +265,7 @@ class AjaxPictureWidget(widgets.TextInput):
                 <a id="{element_id}_file_select" style="display:{display_picture}" target="_blank" href="{file_url}">
                     <img id="{element_id}_file_img" src="{file_url}" style="min-height:32px; min-width:32px; max-height:225px; max-width:225px;">
                 </a>
-                <button id="{element_id}_file_remove" style="display:{display_picture}">{remove}&nbsp;<img id="id_picture_clear" src="/static/admin/img/icon_deletelink.gif" alt="{remove}" title="{remove}" height="10" width="10"></button>
+                <button id="{element_id}_file_remove" style="display:{display_picture}">{remove}&nbsp;<img id="id_picture_clear" src="{static}admin/img/icon_deletelink.gif" alt="{remove}" title="{remove}" height="10" width="10"></button>
                 <input id="{element_id}_file_elem" type="file" style="display:none" accept="image/*"/>
                 <button id="{element_id}_file_elem_select" style="display:{display_upload}">{select_a_file}</button>
             """
@@ -284,7 +288,8 @@ class AjaxPictureWidget(widgets.TextInput):
             stop_waiting="%s" % _('Processing this image take too much time'),
             select_a_file="%s" % _('Select a picture'),
             width=width,
-            height=height
+            height=height,
+            static=settings.STATIC_URL
         )
 
         return mark_safe(output)
