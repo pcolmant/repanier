@@ -1,14 +1,8 @@
 {% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block base_content %}
-{#{% addtoblock "css" %}#}
-{#<style type="text/css">#}
-{#body > .container {#}
-{#  padding: 60px 15px 0;#}
-{#}#}
-{#</style>#}
-{#{% endaddtoblock %}#}
     <div class="container-repanier">
+    <div class="container">
         {# {% debug %} #}
         <h4>{{ producer.long_profile_name }}</h4>
         {% if object %}
@@ -55,7 +49,6 @@
             {% endif %}
         {% endfor %}
         <div class="panel">
-{#            <div class="panel-heading">#}
                 {% if object %}
                 <h4>{% trans "New balance" %} : {{ object.balance }}
                     <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id and not object.to_be_paid %} - {% trans "last sale" %}{% endif %})</small>
@@ -65,15 +58,12 @@
                     <small>({{ producer.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id %} - {% trans "last sale" %}{% endif %})</small>
                 </h4>
                 {% endif %}
-{#            </div>#}
         </div>
     <center>
     <div class="btn-group">
         {% if previous_producer_invoice_id %}
             <a href="{% if uuid %}{% url 'producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
                class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-{#        {% else %}#}
-{#            <a href="#" class="btn btn-disabled"></a>#}
         {% endif %}
         {% if next_producer_invoice_id %}
             <a href="{% if uuid %}{% url 'producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
@@ -85,8 +75,6 @@
             <a href="
                     {% if uuid %}{% url 'producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
                class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-{#        {% else %}#}
-{#            <a href="#" class="btn btn-disabled"></a>#}
         {% endif %}
     </div>
     </center>
@@ -146,9 +134,7 @@
         {% else %}
             <h4>{% trans "No purchase found" %}</h4>
         {% endif %}
-{#        <h4>{% trans "Previous balance" %} : {{ object.previous_balance }}#}
-{#            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small>#}
-{#        </h4>#}
+    </div>
     </div>
     <div class="hidden-xs">
         <br/>

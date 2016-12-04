@@ -1,16 +1,8 @@
 {% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags cache %}
 {% block base_content %}
-{#{% addtoblock "css" %}#}
-{#<style type="text/css">#}
-{#body > .container {#}
-{#  padding: 60px 15px 0;#}
-{#}#}
-{#</style>#}
-{#{% endaddtoblock %}#}
     <div class="container-repanier">
-        {# {% debug %} #}
-{#    <div class="panel">#}
+    <div class="container">
         <h4>{{ customer.long_basket_name }}</h4>
         {% if object %}
         {% trans "Previous balance" %} : {{ object.previous_balance }}
@@ -85,15 +77,12 @@
                 </h4>
                 {% endif %}
                 <span id="basket_message">{{ basket_message }}</span>
-{#            </div>#}
         </div>
     <center>
     <div class="btn-group">
         {% if previous_customer_invoice_id %}
             <a href="{% url 'customer_invoice_view' previous_customer_invoice_id %}" class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span
                     class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-{#        {% else %}#}
-{#            <a href="#" class="btn btn-disabled"></a>#}
         {% endif %}
         {% if next_customer_invoice_id %}
             <a href="{% url 'customer_invoice_view' 0 %}?customer={{ object.customer.id }}" class="btn btn-disabled"> {% trans "Invoice" %} </a>
@@ -103,17 +92,9 @@
         {% if next_customer_invoice_id %}
             <a href="{% url 'customer_invoice_view' next_customer_invoice_id %}"
                class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-{#        {% else %}#}
-{#            <a href="#" class="btn btn-disabled"></a>#}
         {% endif %}
     </div>
     </center>
-{#    </div>#}
-{#        {% if object.permanence %}#}
-{#            {% if object.delta_price_with_tax != 0 %}#}
-{#                {% if object.delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}#}
-{#            {% endif %}#}
-{#        {% endif %}#}
         {% if purchase_set %}
             <br/>
             <table class="table table-hover table-bordered">
@@ -189,13 +170,9 @@
                 </tbody>
             </table>
         {% else %}
-{#            {%  if object.permanence %}#}
                 {% if not purchase_by_other_set %}
                     <h4>{{ object.permanence }} - {% trans "No purchase found" %}</h4>
                 {% endif %}
-{#            {% else %}#}
-{#                <h4>{% trans "No purchase found" %}</h4>#}
-{#            {% endif %}#}
         {% endif %}
         {% if purchase_by_other_set %}
             <br/>
@@ -268,28 +245,13 @@
             </table>
         {% endif %}
     </div>
+    </div>
     <div class="hidden-xs">
         <br/>
     </div>
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
         $(document).ready(function () {
-{#            lien = '{% url 'order_name' %}';#}
-{#            $.ajax({#}
-{#                url: lien,#}
-{#                cache: false,#}
-{#                async: false,#}
-{#                success: function (result) {#}
-{#                    $("#my_name").html(result);#}
-{#                    if(result == '{% trans "Anonymous" %}') {#}
-{#                        $("#connected").show();#}
-{#                        $("#not_connected").hide();#}
-{#                    }#}
-{#                },#}
-{#                error: function (result) {#}
-{#                    $("#my_name").html("{% trans "Retry5" %}");#}
-{#                }#}
-{#            });#}
             lien = '{% url 'my_balance' %}';
             $.ajax({
                 url: lien,

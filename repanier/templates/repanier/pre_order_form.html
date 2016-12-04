@@ -2,14 +2,10 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block base_content %}
 {% addtoblock "css" %}
-{#<style type="text/css">#}
-{#body > .container {#}
-{#  padding: 60px 15px 0;#}
-{#}#}
-{#</style>#}
 <link href="{{ STATIC_URL}}djangocms_text_ckeditor/css/cms.ckeditor.css" rel="stylesheet">
 {% endaddtoblock %}
 <div class="container-repanier">
+<div class="container">
     {# {% debug %} #}
     <div class="panel panel-success" data-toggle="modal" data-target="#productModal">
         <div class="panel-heading">
@@ -82,11 +78,6 @@
                     {% if offer_item.stock == 0 %}--
                     {% else %}
                         {{ offer_item.stock|floatformat:-2 }}
-{#                    {% if offer_item.stock <= 1 %}#}
-{#                        {{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == '105' %}({% trans "kg" %}){% else %}({% trans "pc" %}){% endif %}#}
-{#                    {% else %}#}
-{#                        {{ offer_item.stock|floatformat:-2 }} {% if offer_item.order_unit == '105' %}({% trans "kg" %}){% else %}({% trans "pcs" %}){% endif %}#}
-{#                    {% endif %}#}
                     {% endif %}
                     </span>
                 </td>
@@ -94,6 +85,7 @@
         {% endfor %}
         </tbody>
         </table>
+</div>
 </div>
 {#        Update Modal starts#}
     <div id="productModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="productModalLabel"

@@ -1,14 +1,8 @@
 {% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}
 {% block base_content %}
-{#{% addtoblock "css" %}#}
-{#<style type="text/css">#}
-{#body > .container {#}
-{#  padding: 60px 15px 0;#}
-{#}#}
-{#</style>#}
-{#{% endaddtoblock %}#}
 <div class="container-repanier">
+<div class="container">
     {% if permanenceboard_list %}
         <br/>
         {% for permanenceboard in permanenceboard_list %}
@@ -69,22 +63,6 @@
                     //store old value of "select" to restore it when Ajax calls fails
                     $(this).data('oldValue', $(this).val());
                 });
-{#                lien = '{% url 'order_name' %}';#}
-{#                $.ajax({#}
-{#                    url: lien,#}
-{#                    cache: false,#}
-{#                    async: false,#}
-{#                    success: function (result) {#}
-{#                        $("#my_name").html(result);#}
-{#                        if(result == '{% trans "Anonymous" %}') {#}
-{#                            $("#connected").show();#}
-{#                            $("#not_connected").hide();#}
-{#                        }#}
-{#                    },#}
-{#                    error: function (result) {#}
-{#                        $("#my_name").html("{% trans "Retry5" %}");#}
-{#                    }#}
-{#                });#}
                 lien = '{% url 'my_balance' %}';
                 $.ajax({
                     url: lien,
@@ -100,6 +78,7 @@
             });
         </script>
     {% endaddtoblock %}
+</div>
 </div>
 {% endblock %}
 {% block footer %}

@@ -1,28 +1,38 @@
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n repanier_tags %}
-<!DOCTYPE html>{%get_current_language as LANGUAGE_CODE%}
+{% load cms_tags sekizai_tags menu_tags compress i18n l10n repanier_tags %}{% spaceless %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
+{% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
+{% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{{ STATIC_URL}}fluidvids/fluidvids.js"></script>{% endaddtoblock %}
+{% addtoblock "lastjs" %}{% spaceless %}
+    <script>
+    fluidvids.init({
+      selector: ['iframe'],
+      players: ['www.youtube.com', 'player.vimeo.com']
+    });
+    </script>
+{% endspaceless %}{% endaddtoblock %}
+{% addtoblock "css" %}
+    <!-- django CMS toolbar adjustment -->
+    {% if request.toolbar %}
+    <style>
+    .cms-toolbar-expanded .navbar-custom {
+        margin-top: 45px;
+    }
+    </style>
+    {% endif %}
+{% endaddtoblock %}
+{% endspaceless %}<!DOCTYPE html>{%get_current_language as LANGUAGE_CODE%}
 <html lang="{{LANGUAGE_CODE}}">
+
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {#    <meta name="description" content="{% page_attribute 'meta_description' %}">#}
     <title>{% page_attribute "title" %}</title>
-    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
-    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
     {% render_block "css"  %}
-    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
-    {% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
     {% render_block "jshead" %}
-{% addtoblock "css" %}
-<!-- django CMS toolbar adjustment -->
-{% if request.toolbar %}
-<style>
-.cms-toolbar-expanded .navbar-custom {
-    margin-top: 45px;
-}
-</style>
-{% endif %}
-{% endaddtoblock %}
     <script type="text/javascript">
       // ensuring django namespace is set correctly
       window.django = window.django || undefined;
@@ -37,11 +47,11 @@
         'API': {}
       };
     </script>
-
    </head>
   <body>
     <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
     {% cms_toolbar %}
+    {% spaceless %}
     {# <!-- Header and Nav --> #}
     <div class="navbar navbar-default navbar-fixed-top navbar-custom" role="navigation">
       <div class="container-menu">
@@ -98,9 +108,7 @@
       </div>
     </div>
     <a name="content"></a><section>
-    <div class="container-bootstrap">
     {% block base_content%}{% endblock %}
-    </div>
     </section>
     <div class="footer">
       <div class="container">
@@ -111,15 +119,7 @@
         </p>
       </div>
     </div>
-    {% addtoblock "js" %}<script src="{{ STATIC_URL}}fluidvids/fluidvids.js"></script>{% endaddtoblock %}
-    {% addtoblock "lastjs" %}
-    <script>
-    fluidvids.init({
-      selector: ['iframe'],
-      players: ['www.youtube.com', 'player.vimeo.com']
-    });
-    </script>
-    {% endaddtoblock %}
+    {% endspaceless %}
     {% render_block "jsuncompressed" %}
     {% render_block "js" %}
     {% render_block "lastjs"  %}

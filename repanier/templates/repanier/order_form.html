@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags %}
 {% block base_content %}
-    {# {% debug %} #}
     <div class="container-repanier">
+    <div class="container">
     {% if is_anonymous %}
     <div class="row">
     <div class="panel panel-danger">
@@ -52,7 +52,6 @@
             <div class="panel-body bg-primary">
                 <div class="col-xs-12">
                 <span id="span_btn_confirm_order"></span>
-{#                <span id="basket_message"></span>#}
                 </div>
             </div>
         </div>
@@ -85,11 +84,6 @@
             </form>
             <br/>
             <ul class="nav nav-stacked" id="sidebar">
-{#                <li>#}
-{#                    <b><a href="{% url "basket_view" permanence.id %}"#}
-{#                       {% if basket %}class="bs-docs-sidebar-active"{% endif %}>#}
-{#                        <span class="glyphicon glyphicon-shopping-cart"></span> <span id="prepared_amount"></span> &euro;</a></b>#}
-{#                </li>#}
 
 <li><a href="{% url "like_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box=all"
                {% if like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My likes" %} <span class="glyphicon glyphicon-heart"></span></a>
@@ -151,7 +145,6 @@
         </ul>
     </li>
 {% endif %}
-{#{% endif %}#}
             </ul>
         </div>
     </nav>
@@ -165,20 +158,12 @@
             {% else %}
                 <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="">
             {% endif %}
-{#            {% if offer.is_box %}#}
-{#                <i>{{ offer.cache_part_a | safe }}</i>#}
-{#            {% else %}#}
                 {{ offer.cache_part_a | safe }}
-{#            {% endif %}#}
             </div>
             <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
                 {% if offer.may_order %}<select name="offer_item{{ offer.id|unlocalize }}" id="offer_item{{ offer.id|unlocalize }}" onchange="order_ajax({{ offer.id|unlocalize }})" class="form-control"></select>{% endif %}
                 <span id="box_offer_item{{ offer.id|unlocalize }}"></span>
-{#                {% if user.customer.vat_id %}#}
-{#                    {{ offer.cache_part_c | safe }}#}
-{#                {% else %}#}
                 {{ offer.cache_part_b | safe }}
-{#                {% endif %}#}
                 {% if not offer.is_box %}<br/><span class="btn_like{{ offer.id|unlocalize }}" style="cursor: pointer;"></span>{% endif %}
             </div>
             {% if offer.is_box %}
@@ -186,8 +171,6 @@
                 <div class="col-sm-12 col-lg-12">
                 {{ box_description |safe }}
                 </div>
-{#                    <div class="clearfix"></div>#}
-{#                    <hr/>#}
             {% endif %}
             {% if not forloop.last %}
                 {% if box %}
@@ -298,6 +281,8 @@
 {#        Other qty modal ends#}
     </div>
 </div>
+    </div>
+    </div>
 {% endblock %}
 {% block footer %}
     <div class="visible-xs">
@@ -306,7 +291,7 @@
             {% if box_set %}
                 <div class="btn-group dropup">
                     <button type="button" class="btn btn-primary" data-toggle="dropdown">
-                        &nbsp;&nbsp;&nbsp;&nbsp;{# <span class="glyphicon glyphicon-gift"></span> #}📦&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;📦&nbsp;&nbsp;&nbsp;&nbsp;
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
@@ -474,8 +459,6 @@
                     async: true,
                     success: function (result) {
                         $.each(result, function (key, val) {
-{#                            $(val.id).html(val.html);#}
-{#                            console.log(val.id);#}
                             $(val.id).each(function( index ) { $( this ).html(val.html)});
                         });
                     }
@@ -497,7 +480,6 @@
                                 $('#communicationDetails').html(val.html);
                                 $('#communicationModal').modal('show')
                             } else {
-{#                                $(val.id).html(val.html);#}
                                 $(val.id).each(function( index ) { $( this ).html(val.html)});
                             }
                         });
