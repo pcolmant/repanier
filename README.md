@@ -3,8 +3,10 @@ Repanier
 
 Collective buying group management web site using Django CMS 3.4.1 / Bootstrap 3.
 
-https://repanier.be/fr/
-https://demo.repanier.be/fr/
+- https://repanier.be/fr/documentation/survol/
+
+- https://repanier.be/fr/
+- access to https://demo.repanier.be/fr/ on demand
 
 Customers :
 
