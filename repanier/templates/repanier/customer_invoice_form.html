@@ -17,21 +17,20 @@
                 {% endif %}
                 <small>{% trans "Payment centralized by" %} : {{ object.customer_who_pays }}</small><br/>
             {% else %}
-                {% if object.total_vat != 0 or object.total_deposit != 0 or object.transport != 0 %}
+                {% if object.total_vat != 0 %} = {{ object.get_total_price_wo_tax }} + {{ object.get_total_tax }} {% trans "Vat" %}{% endif %}.
+                <br/>
+                {% if object.total_deposit != 0 or object.transport != 0 %}
                     <small>
-                        . {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                        {% if object.total_vat != 0 %}{% trans "Vat" %} : {{ object.total_vat }}{% endif %}
+                        {% trans "This price include" %}
                         {% if object.total_deposit != 0 %}
-                            {% if object.total_vat != 0 %}; {% endif %}
                             {% trans "Deposit" %} : {{ object.total_deposit }}
                         {% endif %}
                         {% if object.transport != 0 %}
-                            {% if object.total_vat != 0 or object.total_deposit != 0 %}; {% endif %}
+                            {% if object.total_deposit != 0 %}; {% endif %}
                             {% trans "Shipping cost" %} : {{ object.delta_transport }}
-                        {% endif %}
-                    </small>
+                        {% endif %}.
+                    </small><br/>
                 {% endif %}
-                <br/>
                 {% if object.delivery %}
                     <small>{% trans "Delivery point" %} : {{ object.delivery }}</small><br/>
                 {% endif %}
@@ -40,10 +39,6 @@
                 {% endif %}
                 {% if object.get_delta_price_with_tax != 0 or object.delta_vat != 0 %}
                     {% if object.get_delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}
-                    <small>
-                        . {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                            {% trans "Vat" %} : {{ object.get_abs_delta_vat }}<br/>
-                    </small>
                 {% endif %}
             {% endif %}
         {% endif %}
