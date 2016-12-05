@@ -90,8 +90,8 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                     "%s - %s - %s" % (
                     _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME),
                     strip_tags(html_content),
-                    sender_email,
-                    to_email_board,
+                    from_email=sender_email,
+                    to=to_email_board,
                     cc=cc_email_staff
                 )
                 if group_wb is not None:
@@ -170,9 +170,9 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 email = EmailMultiAlternatives(
                     subject,
                     strip_tags(html_content),
-                    sender_email,
-                    to,
-                    cc
+                    from_email=sender_email,
+                    to=to,
+                    cc=cc
                 )
                 if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER and wb is not None:
                     if REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER:
@@ -241,19 +241,19 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
             wb = xlsx_order.export_customer(permanence=permanence, customer=customer, xlsx_formula=False, wb=None)
             if wb is not None:
 
-                email_customer = [customer.user.email, ]
+                to_email_customer = [customer.user.email]
                 if cancel_order or REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-                    email_customer.append(sender_email)
-                if customer.email2 is not None and len(customer.email2.strip()) > 0:
-                    email_customer.append(customer.email2)
+                    to_email_customer.append(sender_email)
+                if customer.email2:
+                    to_email_customer.append(customer.email2)
                 if customer_invoice.delivery is not None:
                     delivery_point = customer_invoice.delivery
                     if delivery_point.delivery_point.customer_responsible is not None:
                         customer_responsible = delivery_point.delivery_point.customer_responsible
                         if customer_responsible.id != customer.id:
-                            email_customer.append(customer_responsible.user.email)
-                            if customer_responsible.email2 is not None and len(customer_responsible.email2.strip()) > 0:
-                                email_customer.append(customer_responsible.email2)
+                            to_email_customer.append(customer_responsible.user.email)
+                            if customer_responsible.email2:
+                                to_email_customer.append(customer_responsible.email2)
                 else:
                     delivery_point = EMPTY_STRING
                 customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
@@ -297,8 +297,8 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                 email = EmailMultiAlternatives(
                     subject,
                     strip_tags(html_content),
-                    sender_email,
-                    email_customer
+                    from_email=sender_email,
+                    to=to_email_customer
                 )
                 if not cancel_order and REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER:
                     if abstract_ws is not None:

@@ -57,15 +57,15 @@ def send_invoice(permanence_id):
                     })
                     html_content = template.render(context)
                     if producer.email2:
-                        to = [producer.email, producer.email2]
+                        to_email_producer = [producer.email, producer.email2]
                     else:
-                        to = [producer.email]
+                        to_email_producer = [producer.email]
                     email = EmailMultiAlternatives(
                         "%s - %s - %s - %s" % (
                             _('Payment'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_profile_name),
                         strip_tags(html_content),
-                        sender_email,
-                        to
+                        from_email=sender_email,
+                        to=to_email_producer
                     )
                     email.attach_alternative(html_content, "text/html")
                     send_email(email=email)
@@ -88,9 +88,9 @@ def send_invoice(permanence_id):
                 if Purchase.objects.filter(
                     permanence_id=permanence.id, customer_who_pays_id=customer.id
                 ).order_by('?').exists():
-                    email_customer = [customer.user.email, ]
+                    to_email_customer = [customer.user.email]
                     if customer.email2 is not None and len(customer.email2.strip()) > 0:
-                        email_customer.append(customer.email2)
+                        to_email_customer.append(customer.email2)
                     try:
                         invoice_customer_mail = config.invoice_customer_mail
                     except TranslationDoesNotExist:
@@ -123,8 +123,8 @@ def send_invoice(permanence_id):
                         "%s - %s - %s - %s" % (_('Invoice'), permanence, REPANIER_SETTINGS_GROUP_NAME,
                                                long_basket_name),
                         strip_tags(html_content),
-                        sender_email,
-                        email_customer
+                        from_email=sender_email,
+                        to=to_email_customer
                     )
                     email.attach_alternative(html_content, "text/html")
                     send_email(email=email)

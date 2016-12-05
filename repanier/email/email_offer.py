@@ -62,14 +62,14 @@ def send_pre_open_order(permanence_id):
             })
             html_content = template.render(context)
             if producer.email2:
-                to = [producer.email, producer.email2]
+                to_email_producer = [producer.email, producer.email2]
             else:
-                to = [producer.email]
+                to_email_producer = [producer.email]
             email = EmailMultiAlternatives(
                 "%s - %s - %s" % (_("Pre-opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME),
                 strip_tags(html_content),
-                sender_email,
-                to,
+                from_email=sender_email,
+                to=to_email_producer,
                 cc=cc_email_staff
             )
             email.attach_alternative(html_content, "text/html")
@@ -91,16 +91,17 @@ def send_open_order(permanence_id):
             translation.activate(language_code)
             permanence = Permanence.objects.get(id=permanence_id)
             config = Configuration.objects.get(id=DECIMAL_ONE)
-            sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
+            sender_email, sender_function, signature, to_email_staff = get_signature(is_reply_to_order_email=True)
+            to_email_customer = []
             for customer in Customer.objects.filter(
                     is_active=True,
                     represent_this_buyinggroup=False,
                     may_order=True,
                     language=language_code
             ).order_by('?'):
-                cc_email_staff.append(customer.user.email)
+                to_email_customer.append(customer.user.email)
                 if customer.email2 is not None and len(customer.email2.strip()) > 0:
-                    cc_email_staff.append(customer.email2)
+                    to_email_customer.append(customer.email2)
             try:
                 offer_description = permanence.offer_description
             except TranslationDoesNotExist:
@@ -138,8 +139,8 @@ def send_open_order(permanence_id):
             email = EmailMultiAlternatives(
                 "%s - %s - %s" % (_("Opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME),
                 strip_tags(html_content),
-                sender_email,
-                bcc=cc_email_staff
+                from_email=sender_email,
+                bcc=list(set(to_email_staff) | set(to_email_customer))
             )
             email.attach_alternative(html_content, "text/html")
             send_email(email=email, track_customer_on_error=True)

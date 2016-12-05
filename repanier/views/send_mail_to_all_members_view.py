@@ -45,9 +45,9 @@ def send_mail_to_all_members_view(request):
             email = EmailMessage(
                 strip_tags(form.cleaned_data.get('subject')),
                 strip_tags(form.cleaned_data.get('message')),
-                settings.DEFAULT_FROM_EMAIL,
-                to,
-                cc=to_email_customer
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=to,
+                bcc=to_email_customer
             )
             send_email(email=email)
             return HttpResponseRedirect('/')  # Redirect after POST

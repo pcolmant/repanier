@@ -32,12 +32,12 @@ def send_mail_to_coordinators_view(request):
                 if form.cleaned_data.get('staff_%d' % staff.id):
                     to_email_staff.append(staff.user.email)
             if len(to_email_staff) > 0:
-                to = (request.user.email,)
+                to_email_customer = [request.user.email]
                 email = EmailMessage(
                     strip_tags(form.cleaned_data.get('subject')),
                     strip_tags(form.cleaned_data.get('message')),
-                    settings.DEFAULT_FROM_EMAIL,
-                    to,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=to_email_customer,
                     cc=to_email_staff
                 )
                 send_email(email=email)
