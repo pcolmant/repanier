@@ -40,30 +40,19 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
             return wb
         customer_set = Customer.objects.filter(customerinvoice__isnull=False).distinct()
         for customer in customer_set:
-            # bank_amount_in = bank_amount_out = payment = DECIMAL_ZERO
             bank_amount_in = bank_amount_out = DECIMAL_ZERO
             prepared = DECIMAL_ZERO
-            # last_customer_invoice = CustomerInvoice.objects.filter(
-            #     customer_id=customer.id,
-            #     permanence_id=permanence.id,
-            #     invoice_sort_order__lte=bank_account.id
-            # ).order_by('-invoice_sort_order').first()
             customer_invoice = CustomerInvoice.objects.filter(
                 customer_id=customer.id,
                 permanence_id=permanence.id
             ).order_by('?').first()
             if customer_invoice is not None:
-                # if last_customer_invoice.permanence_id == permanence.id:
                 balance_before = customer_invoice.previous_balance.amount
-                # payment = last_customer_invoice.bank_amount_in.amount - last_customer_invoice.bank_amount_out.amount
                 bank_amount_in = customer_invoice.bank_amount_in.amount
                 bank_amount_out = customer_invoice.bank_amount_out.amount
                 if customer_invoice.customer_id == customer_invoice.customer_who_pays_id:
                     prepared = customer_invoice.get_total_price_with_tax().amount
                 balance_after = customer_invoice.balance.amount
-                # else:
-                #     balance_before = last_customer_invoice.balance.amount
-                #     balance_after = last_customer_invoice.balance.amount
             else:
                 last_customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=customer.id,
@@ -80,7 +69,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
             row = [
                 (_('Name'), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
                 (_('Balance before'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-                # (_('Payment'), 10, payment, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
                 (_('bank_amount_in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
                 (_('bank_amount_out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
                 (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
@@ -107,26 +95,16 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
         for producer in producer_set:
             bank_amount_in = bank_amount_out = payment = DECIMAL_ZERO
             prepared = DECIMAL_ZERO
-            # last_producer_invoice = ProducerInvoice.objects.filter(
-            #     producer_id=producer.id,
-            #     permanence_id=permanence.id,
-            #     invoice_sort_order__lte=bank_account.id
-            # ).order_by('-invoice_sort_order').first()
             producer_invoice = ProducerInvoice.objects.filter(
                 producer_id=producer.id,
                 permanence_id=permanence.id,
             ).order_by('?').first()
             if producer_invoice is not None:
-                # if last_producer_invoice.permanence_id == permanence.id:
                 balance_before = -producer_invoice.previous_balance.amount
-                # payment = producer_invoice.bank_amount_out.amount - producer_invoice.bank_amount_in.amount
                 bank_amount_in = producer_invoice.bank_amount_in.amount
                 bank_amount_out = producer_invoice.bank_amount_out.amount
                 prepared = producer_invoice.get_total_price_with_tax().amount
                 balance_after = -producer_invoice.balance.amount
-                # else:
-                #     balance_before = -last_producer_invoice.balance.amount
-                #     balance_after = -last_producer_invoice.balance.amount
             else:
                 last_producer_invoice = ProducerInvoice.objects.filter(
                     producer_id=producer.id,
@@ -143,7 +121,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
             row = [
                 (_('Name'), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
                 (_('Balance before'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-                # (_('Payment'), 10, payment, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
                 (_('bank_amount_in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
                 (_('bank_amount_out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
                 (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
@@ -181,7 +158,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
         c.value = initial_bank_amount
         c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
         c = ws.cell(row=row_num, column=4)
-        # formula = 'B%s+SUM(C%s:C%s)-SUM(C%s:C%s)' % (row_num + 1, 2, row_break, row_break + 2, row_num - 1)
         formula = 'B%s+SUM(C%s:C%s)-SUM(D%s:D%s)' % (row_num + 1, 2, row_num - 1, 2, row_num - 1)
         c.value = '=' + formula
         c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
@@ -230,7 +206,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
     row_num = 0
 
     hide_column_deposit = True
-    # hide_column_compensation = True
 
     for purchase in purchase_set:
 
@@ -252,8 +227,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
 
         qty = purchase.quantity_invoiced
 
-        # if purchase.offer_item.compensation.amount != DECIMAL_ZERO:
-        #     hide_column_compensation = False
         if purchase.offer_item.unit_deposit.amount != DECIMAL_ZERO:
             hide_column_deposit = False
 
@@ -303,17 +276,14 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
                 (purchase.offer_item.customer_vat.amount * purchase.get_quantity()).quantize(FOUR_DECIMALS),
                  repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
             ]
-        # if not hide_producer_prices:
-        #     row += [
-        #         (_("Compensation"), 10,
-        #          (purchase.offer_item.compensation.amount * purchase.get_quantity()).quantize(FOUR_DECIMALS) if
-        #          purchase.invoiced_price_with_compensation else  DECIMAL_ZERO,
-        #          repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-        #     ]
-        # else:
-        row += [
-            (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-        ]
+        if hide_producer_prices and hide_customer_prices:
+            row += [
+                (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
+            ]
+        else:
+            row += [
+                (EMPTY_STRING, 10, purchase.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+            ]
         row += [
             (_("comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
              False),
@@ -342,8 +312,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
     if wb is not None and ws is not None:
         if hide_column_deposit:
             ws.column_dimensions[get_column_letter(7)].visible = False
-        # if hide_column_compensation:
-        ws.column_dimensions[get_column_letter(14)].visible = False
         if hide_producer_prices:
             ws.column_dimensions[get_column_letter(8)].visible = False
             ws.column_dimensions[get_column_letter(9)].visible = False
@@ -352,6 +320,8 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
             ws.column_dimensions[get_column_letter(11)].visible = False
             ws.column_dimensions[get_column_letter(12)].visible = False
             ws.column_dimensions[get_column_letter(13)].visible = False
+        if hide_producer_prices and hide_customer_prices:
+            ws.column_dimensions[get_column_letter(14)].visible = False
         if customer is not None or producer is not None:
             for col_num in range(14):
                 c = ws.cell(row=row_num, column=col_num)
@@ -380,11 +350,6 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
-                if col_num == 13:
-                    formula = 'SUM(N%s:N%s)' % (2, row_num)
-                    c.value = '=' + formula
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    c.style.font.bold = True
         if customer is not None:
             config = Configuration.objects.get(id=DECIMAL_ONE)
             group_label = config.group_label
@@ -406,8 +371,6 @@ def admin_export(request, queryset):
     wb = export_permanence_stock(permanence=permanence, wb=wb, ws_customer_title=None)
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        # filename = force_filename("%s - %s.xlsx" % (_("Accounting report"), permanence))
-        # response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
             slugify(_("Accounting report")),
             slugify(permanence)
