@@ -256,7 +256,6 @@ def export_preparation(permanence, deliveries_id=None, wb=None):
 
 
 def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permanence, wb, yellowFill):
-    # reorder_offer_items(permanence.id)
     producer_set = Producer.objects.filter(
         producerinvoice__permanence_id=permanence.id
     ).only('invoice_by_basket', 'short_profile_name')
@@ -272,7 +271,11 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
             header
         )
         row_num = 1
+        producer_counter = 0
+        hide_placement = True
+        placement_save = None
         while producer is not None:
+            producer_counter += 1
             producer_save = producer
             at_least_one_product = False
             ######################################################################################################################
@@ -294,14 +297,9 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                 purchase = next_purchase(purchases)
                 while purchase is not None:
                     at_least_one_product = True
-                    # c = ws.cell(row=row_num, column=3)
-                    # c.value = producer_save.short_profile_name
-                    # c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                    # c.style.font.bold = True
                     customer_save = purchase.customer
                     c = ws.cell(row=row_num, column=6)
                     c.style.font.bold = True
-                    # row_start_purchase = row_num + 2
                     row_num += 1
                     count_purchase = 0
                     purchases_price = DECIMAL_ZERO
@@ -310,7 +308,6 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                         department_for_customer_save = purchase.offer_item.department_for_customer
                         department_for_customer_save__short_name = department_for_customer_save.short_name \
                             if department_for_customer_save is not None else EMPTY_STRING
-                        # row_num += 1
                         while purchase is not None and customer_save.id == purchase.customer_id \
                                 and department_for_customer_save == purchase.offer_item.department_for_customer:
                             qty = purchase.get_quantity()
@@ -327,6 +324,11 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 c.style.number_format.format_code = NumberFormat.FORMAT_DATE_DDMMYYYY
                                 c = ws.cell(row=row_num, column=2)
                                 c.value = purchase.offer_item.get_placement_display()
+                                if placement_save is None:
+                                    placement_save = c.value
+                                elif hide_placement:
+                                    if placement_save != c.value:
+                                        hide_placement = False
                                 c = ws.cell(row=row_num, column=3)
                                 c.value = producer_save.short_profile_name
                                 c = ws.cell(row=row_num, column=4)
@@ -427,10 +429,6 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                     purchase = next_purchase(purchases)
                     while purchase is not None:
                         at_least_one_product = True
-                        # c = ws.cell(row=row_num + 1, column=3)
-                        # c.value = producer_save.short_profile_name
-                        # c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                        # c.style.font.bold = True
                         while purchase is not None:
                             department_for_customer_save = purchase.offer_item.department_for_customer
                             department_for_customer_save__short_name = department_for_customer_save.short_name \
@@ -444,8 +442,6 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                             purchases_quantity = DECIMAL_ZERO
                             row_num += 1
                             while purchase is not None and offer_item_save == purchase.offer_item:
-                                # if purchase.quantity_ordered > DECIMAL_ZERO \
-                                #         or purchase.offer_item.order_unit >= PRODUCT_ORDER_UNIT_DEPOSIT:
                                 qty = purchase.get_quantity()
                                 if qty != DECIMAL_ZERO:
                                     base_unit = get_base_unit(
@@ -460,13 +456,13 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                     if count_offer_item == 0:
                                         c = ws.cell(row=row_num, column=2)
                                         c.value = purchase.offer_item.get_placement_display()
+                                        if placement_save is None:
+                                            placement_save = c.value
+                                        elif hide_placement:
+                                            if placement_save != c.value:
+                                                hide_placement = False
                                         c = ws.cell(row=row_num, column=3)
                                         c.value = producer_save.short_profile_name
-                                        # c = ws.cell(row=row_num, column=4)
-                                        # c.value = department_for_customer_save__short_name
-                                        # c.style.font.italic = True
-                                        # c.style.alignment.horizontal = 'right'
-                                        # c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     c = ws.cell(row=row_num, column=5)
                                     if department_for_customer_save__short_name is not None:
                                         c.value = "%s - %s" % (
@@ -526,7 +522,6 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 )
                             row_num -= 1
 
-            # row_num += 1
             if at_least_one_product:
                 for col_num in range(11):
                     c = ws.cell(row=row_num, column=col_num)
@@ -534,6 +529,11 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                 row_num += 1
             producer = next_row(producers)
         ws.column_dimensions[get_column_letter(2)].visible = False
+        if hide_placement:
+            ws.column_dimensions[get_column_letter(3)].visible = False
+        if producer_counter <= 1:
+            # hide producer name
+            ws.column_dimensions[get_column_letter(4)].visible = False
         ws.column_dimensions[get_column_letter(5)].visible = False
     return wb
 
@@ -596,7 +596,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                 if offer_item.unit_deposit != DECIMAL_ZERO:
                     hide_column_unit_deposit = False
                 show_column_reference = show_column_reference | len(offer_item.reference) < 36
-                if offer_item.wrapped:  # or offer_item.limit_order_quantity_to_stock:
+                if offer_item.wrapped:
                     hide_column_short_basket_name = False
                     first_purchase = True
                     purchase_set = Purchase.objects.filter(
@@ -613,9 +613,6 @@ def export_producer_by_product(permanence, producer, wb=None):
                         else:
                             qty = purchase.get_quantity()
                         if qty != DECIMAL_ZERO:
-                            # if purchase.status >= PERMANENCE_SEND:
-                            #     if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG and offer_item.order_average_weight > DECIMAL_ZERO:
-                            #         qty = (qty / offer_item.order_average_weight).quantize(TWO_DECIMALS)
                             base_unit = get_base_unit(
                                 qty,
                                 offer_item.order_unit,
@@ -649,7 +646,6 @@ def export_producer_by_product(permanence, producer, wb=None):
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             if first_purchase:
-                                # c.style.font.bold = True
                                 first_purchase = False
                             else:
                                 c.style.font.color.index = 'FF939393'
@@ -729,7 +725,6 @@ def export_producer_by_product(permanence, producer, wb=None):
                         c.value = offer_item.get_long_name(customer_price=False)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
-                        # c.style.font.bold = True
                         c = ws.cell(row=row_num, column=5)
                         producer_unit_price = offer_item.producer_unit_price.amount
                         customer_unit_price = offer_item.customer_unit_price.amount
@@ -843,7 +838,6 @@ def export_producer_by_customer(permanence, producer, wb=None):
         permanence_id=permanence.id,
         producer_id=producer.id,
         offer_item__translations__language_code=translation.get_language(),
-        # quantity_ordered__gt=DECIMAL_ZERO
     ).order_by(
         "customer__short_basket_name",
         "offer_item__translations__preparation_sort_order"
@@ -870,9 +864,6 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 qty = purchase.get_quantity()
                 if qty != DECIMAL_ZERO:
                     offer_item_save = purchase.offer_item
-                    # if purchase.status >= PERMANENCE_SEND:
-                    #     if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG and offer_item_save.order_average_weight > DECIMAL_ZERO:
-                    #         qty = (qty / offer_item_save.order_average_weight).quantize(TWO_DECIMALS)
                     base_unit = get_base_unit(
                         qty,
                         purchase.offer_item.order_unit,
@@ -896,13 +887,8 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     if first_purchase:
-                        # c.style.font.bold = True
                         first_purchase = False
                     c = ws.cell(row=row_num, column=4)
-                    # if not purchase.offer_item.producer_pre_opening:
-                    #     unit_price = purchase.get_producer_unit_price(with_price_list_multiplier=False)
-                    # else:
-                    #     unit_price = purchase.get_customer_unit_price(with_price_list_multiplier=False)
                     producer_unit_price = purchase.get_producer_unit_price(with_price_list_multiplier=False)
                     customer_unit_price = purchase.get_customer_unit_price(with_price_list_multiplier=False)
                     if producer_unit_price < customer_unit_price:
@@ -924,9 +910,6 @@ def export_producer_by_customer(permanence, producer, wb=None):
                         c.value = '=ROUND(A%s*(E%s+F%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
-                    # if purchase.invoiced_price_with_compensation:
-                    #     c = ws.cell(row=row_num, column=7)
-                    #     c.value = "%s" % _('compensation')
                     row_num += 1
                 purchase = next_row(purchases)
             for col_num in range(7):
@@ -1030,7 +1013,6 @@ def export_customer_for_a_delivery(
                 customer_id=customer.id,
                 producer__isnull=False,
                 offer_item__translations__language_code=customer.language,
-                # quantity_ordered__gt=DECIMAL_ZERO,
             ).exclude(
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
             ).order_by(
@@ -1055,7 +1037,6 @@ def export_customer_for_a_delivery(
                 permanence_id=permanence.id,
                 producer__isnull=False,
                 offer_item__translations__language_code=language_code,
-                # quantity_ordered__gt=DECIMAL_ZERO,
             ).exclude(
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
             ).order_by(
@@ -1132,7 +1113,6 @@ def export_customer_for_a_delivery(
                             offer_item_save.order_unit,
                             purchase.status
                         )
-                        # if qty != 0 or offer_item_save.order_unit == PRODUCT_ORDER_UNIT_DEPOSIT:
                         c = ws.cell(row=row_num, column=0)
                         c.value = purchase.id
                         c = ws.cell(row=row_num, column=1)
@@ -1211,8 +1191,6 @@ def export_customer_for_a_delivery(
                                     [str(purchases_price)], True, wb,
                                     None, None, yellowFill
                                 )
-                        # c = ws.cell(row=row_num, column=10)
-                        # c.value = str(purchases_price)
 
                         c = ws.cell(row=row_num, column=10)
                         c.value = purchase.customer.short_basket_name
@@ -1276,8 +1254,6 @@ def admin_customer_export(permanence, deliveries_id=None):
 
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        # filename = force_filename("%s - %s.xlsx" % (_("Customer"), permanence))
-        # response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
             slugify(_("Customers")),
             slugify(permanence)
@@ -1299,8 +1275,6 @@ def admin_producer_export(permanence):
             )
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        # filename = ("%s - %s.xlsx" % (_("Producer"), permanence)).encode('ascii', errors='replace').replace('?', '_')
-        # response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
             slugify(_("Producers")),
             slugify(permanence)
