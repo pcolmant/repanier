@@ -135,6 +135,13 @@ class CustomerInvoice(models.Model):
             else:
                 return self.customer_who_pays if self.total_price_with_tax != DECIMAL_ZERO else DECIMAL_ZERO
 
+    def get_total_price_wo_tax(self):
+        return self.get_total_price_with_tax() - self.get_total_tax()
+
+    def get_total_tax(self):
+        # round to 2 decimals
+        return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
+
     @transaction.atomic
     def set_delivery(self, delivery):
         # May not use delivery_id because it won't reload customer_invoice.delivery
