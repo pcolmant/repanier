@@ -61,10 +61,6 @@ class CustomerInvoice(models.Model):
         _("Total vat"),
         help_text=_('Vat part of the total purchased'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    # total_compensation = ModelMoneyField(
-    #     _("Total compensation"),
-    #     help_text=_('Compensation part of the total purchased'),
-    #     default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_deposit = ModelMoneyField(
         _("deposit"),
         help_text=_('deposit to add to the original unit price'),
@@ -77,19 +73,11 @@ class CustomerInvoice(models.Model):
         _("Total vat"),
         help_text=_('vat to add'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    # delta_compensation = ModelMoneyField(
-    #     _("Total compensation"),
-    #     help_text=_('compensation to add'),
-    #     default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_transport = ModelMoneyField(
         _("Delivery point transport"),
         help_text=_("transport to add"),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
-    # delta_deposit = ModelMoneyField(
-    #     _("deposit"),
-    #     help_text=_('deposit to add'),
-    #     default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     bank_amount_in = ModelMoneyField(
         _("bank_amount_in"), help_text=_('payment_on_the_account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)

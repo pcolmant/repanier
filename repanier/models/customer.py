@@ -111,6 +111,7 @@ class Customer(models.Model):
     is_active = models.BooleanField(_("is_active"), default=True)
     may_order = models.BooleanField(_("may_order"), default=True)
     valid_email = models.NullBooleanField(_("valid_email"), default=None)
+    preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     def get_admin_date_balance(self):
         return timezone.now().date()

@@ -50,7 +50,7 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 # At least one order
 
                 group_wb = xlsx_order.export_customer_label(
-                    permanence, deliveries_id=closed_deliveries_id, wb=group_wb
+                    permanence=permanence, deliveries_id=closed_deliveries_id, wb=group_wb
                 )
                 group_wb = xlsx_order.export_preparation(
                     permanence=permanence, deliveries_id=closed_deliveries_id, wb=group_wb

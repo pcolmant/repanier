@@ -29,55 +29,119 @@ def next_purchase(purchases):
 
 def export_abstract(permanence, deliveries_id=None, wb=None):
     if permanence is not None:
-        header = [
-            (_("Basket"), 20),
-            (_('Family'), 35),
-            (_('Phone1'), 15),
-            (_('Phone2'), 15),
-            (_('Total vat'), 15),
-            (_('vat_id'), 30)
-        ]
-        wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
         row_num = 1
         # Customer info
-        customer_set = Customer.objects.filter(
-            customerinvoice__permanence_id=permanence.id, represent_this_buyinggroup=False)
+        Customer.objects.all().update(preparation_order=0)
+        preparation_order = 1
         if deliveries_id is not None:
-            customer_set = customer_set.filter(customerinvoice__delivery_id__in=deliveries_id)
-
-        for customer in customer_set.distinct():
-            invoice = CustomerInvoice.objects.filter(
-                permanence=permanence, customer=customer
-            ).order_by('?').first()
-            if invoice is None:
-                total_price_with_tax = REPANIER_MONEY_ZERO
-            else:
-                total_price_with_tax = invoice.total_price_with_tax
-            row = [
-                customer.short_basket_name,
-                customer.long_basket_name,
-                customer.phone1,
-                customer.phone2,
-                total_price_with_tax.amount,
-                customer.vat_id,
+            header = [
+                (_('delivery point'),20),
+                (_('Family'), 35),
+                (_('Phone1'), 15),
+                (_('Phone2'), 15),
+                (_('Total vat'), 15),
+                (_('email'), 35),
             ]
-            for col_num in range(len(row)):
-                c = ws.cell(row=row_num, column=col_num)
-                c.value = row[col_num]
-                if col_num == 4:
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                else:
-                    c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                    c.style.alignment.wrap_text = False
-            row_num += 1
+            wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
+            for delivery_ref, delivery in enumerate(DeliveryBoard.objects.filter(id__in=deliveries_id).order_by("id")):
+                customer_set = Customer.objects.filter(
+                    customerinvoice__permanence_id=permanence.id,
+                    represent_this_buyinggroup=False,
+                    customerinvoice__delivery_id=delivery.id
+                )
+                for customer in customer_set:
+                    invoice = CustomerInvoice.objects.filter(
+                        permanence=permanence, customer=customer
+                    ).order_by('?').first()
+                    if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
+                        customer.preparation_order = preparation_order
+                        customer.save(update_fields=['preparation_order'])
+                        preparation_order += 1
+
+                        row = [
+                            "%d - %s" % (delivery_ref, delivery.get_delivery_display()),
+                            "  %d - %s" % (customer.preparation_order, customer.long_basket_name),
+                            customer.phone1,
+                            customer.phone2,
+                            invoice.total_price_with_tax.amount,
+                            # Used to send mail to customer with an order (via copy-paste to mail)
+                            ";".join(
+                                [customer.user.email, customer.email2, EMPTY_STRING]
+                            ) if customer.email2 else ";".join(
+                                [customer.user.email, customer.email2]
+                            )
+                        ]
+                        for col_num in range(len(row)):
+                            c = ws.cell(row=row_num, column=col_num)
+                            c.value = row[col_num]
+                            if col_num == 4:
+                                c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            else:
+                                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                                c.style.alignment.wrap_text = False
+                            if row_num % 2 == 0:
+                                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                        row_num += 1
+        else:
+            header = [
+                (_("Basket"), 20),
+                (_('Family'), 35),
+                (_('Phone1'), 15),
+                (_('Phone2'), 15),
+                (_('Total vat'), 15),
+                (_('email'), 35),
+            ]
+            wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
+            customer_set = Customer.objects.filter(
+                customerinvoice__permanence_id=permanence.id,
+                represent_this_buyinggroup=False
+            )
+            for customer in customer_set:
+                invoice = CustomerInvoice.objects.filter(
+                    permanence=permanence, customer=customer
+                ).order_by('?').first()
+                if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
+                    customer.preparation_order = preparation_order
+                    customer.save(update_fields=['preparation_order'])
+                    preparation_order += 1
+
+                    row = [
+                        "%d - %s" % (customer.preparation_order, customer.short_basket_name),
+                        customer.long_basket_name,
+                        customer.phone1,
+                        customer.phone2,
+                        invoice.total_price_with_tax.amount,
+                        # Used to send mail to customer with an order (via copy-paste to mail)
+                        ";".join(
+                            [customer.user.email, customer.email2, EMPTY_STRING]
+                        ) if customer.email2 else ";".join(
+                            [customer.user.email, customer.email2]
+                        )
+                    ]
+                    for col_num in range(len(row)):
+                        c = ws.cell(row=row_num, column=col_num)
+                        c.value = row[col_num]
+                        if col_num == 4:
+                            c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        else:
+                            c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                            c.style.alignment.wrap_text = False
+                        if row_num % 2 == 0:
+                            c.style.borders.bottom.border_style = Border.BORDER_THIN
+                    row_num += 1
+
+        for col_num in range(5):
+            c = ws.cell(row=row_num-1, column=col_num)
+            c.style.borders.bottom.border_style = Border.BORDER_THIN
+
         c = ws.cell(row=row_num, column=0)
-        c.value = "******"
+        c.value = "-------"
         c = ws.cell(row=row_num, column=1)
         c.value = "%s" % (_('Permanence Board Member List'))
         c.style.alignment.wrap_text = False
         c.style.font.bold = True
         c = ws.cell(row=row_num, column=2)
-        c.value = "******"
+        c.value = "-------"
         row_num += 1
         # Permanence board info
         permanence_date_save = None
@@ -107,14 +171,18 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                             c.style.font.bold = True
                             permanence_date_save = next_permanence.permanence_date
                     row_num += 1
+            for col_num in range(5):
+                c = ws.cell(row=row_num, column=col_num)
+                c.style.borders.bottom.border_style = Border.BORDER_THIN
+            row_num += 1
         c = ws.cell(row=row_num, column=0)
-        c.value = "******"
+        c.value = "-------"
         c = ws.cell(row=row_num, column=1)
         c.value = "%s" % (_('Staff Member List'))
         c.style.alignment.wrap_text = False
         c.style.font.bold = True
         c = ws.cell(row=row_num, column=2)
-        c.value = "******"
+        c.value = "-------"
         row_num += 1
         for staff in Staff.objects.filter(is_active=True).order_by('?'):
             c = staff.customer_responsible
@@ -136,14 +204,18 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                     c.style.alignment.wrap_text = True
                 row_num += 1
 
+        for col_num in range(5):
+            c = ws.cell(row=row_num-1, column=col_num)
+            c.style.borders.bottom.border_style = Border.BORDER_THIN
+
         c = ws.cell(row=row_num, column=0)
-        c.value = "******"
+        c.value = "-------"
         c = ws.cell(row=row_num, column=1)
         c.value = "%s" % (_('producers'))
         c.style.alignment.wrap_text = False
         c.style.font.bold = True
         c = ws.cell(row=row_num, column=2)
-        c.value = "******"
+        c.value = "-------"
         row_num += 1
         # Producer info
         for producer in Producer.objects.filter(permanence=permanence).order_by("short_profile_name"):
@@ -160,7 +232,6 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                 producer.phone1,
                 producer.phone2,
                 total_price_with_tax.amount,
-                producer.vat_id,
             ]
             for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
@@ -171,22 +242,23 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.alignment.wrap_text = False
             row_num += 1
-        if deliveries_id is not None:
-            c = ws.cell(row=row_num, column=0)
-            c.value = "******"
-            c = ws.cell(row=row_num, column=1)
-            c.value = "%s" % (_('Delivery Point List'))
-            c.style.alignment.wrap_text = False
-            c.style.font.bold = True
-            c = ws.cell(row=row_num, column=2)
-            c.value = "******"
-            row_num += 1
-            for ref, delivery in enumerate(DeliveryBoard.objects.filter(id__in=deliveries_id).order_by("id")):
-                c = ws.cell(row=row_num, column=0)
-                c.value = ref
-                c = ws.cell(row=row_num, column=1)
-                c.value = delivery.get_delivery_display()
-                row_num += 1
+        # if deliveries_id is not None:
+        #     c = ws.cell(row=row_num, column=0)
+        #     c.value = "-------"
+        #     c = ws.cell(row=row_num, column=1)
+        #     c.value = "%s" % (_('Delivery Point List'))
+        #     c.style.alignment.wrap_text = False
+        #     c.style.font.bold = True
+        #     c = ws.cell(row=row_num, column=2)
+        #     c.value = "-------"
+        #     row_num += 1
+        #     for delivery_ref, delivery in enumerate(DeliveryBoard.objects.filter(id__in=deliveries_id).order_by("id")):
+        #         c = ws.cell(row=row_num, column=0)
+        #         c.value = delivery_ref
+        #         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+        #         c = ws.cell(row=row_num, column=1)
+        #         c.value = delivery.get_delivery_display()
+        #         row_num += 1
 
         return wb
 
@@ -198,14 +270,19 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
     wb, ws = new_portrait_a4_sheet(wb, _('Label'), permanence, add_print_title=False)
     row_num = 0
     customer_set = Customer.objects.filter(
-        customerinvoice__permanence_id=permanence.id, represent_this_buyinggroup=False)
+        customerinvoice__permanence_id=permanence.id,
+        represent_this_buyinggroup=False,
+        preparation_order__gt=0
+    ).order_by(
+        'preparation_order'
+    )
 
     if deliveries_id is not None:
         customer_set = customer_set.filter(customerinvoice__delivery_id__in=deliveries_id)
 
-    for customer in customer_set.distinct():
+    for customer in customer_set:
         c = ws.cell(row=row_num, column=0)
-        c.value = customer.short_basket_name
+        c.value = "%d - %s" % (customer.preparation_order, customer.short_basket_name)
         c.style.font.size = 36
         c.style.alignment.wrap_text = False
         c.style.borders.top.border_style = Border.BORDER_THIN
@@ -250,8 +327,8 @@ def export_preparation(permanence, deliveries_id=None, wb=None):
     if deliveries_id is None:
         return export_preparation_for_a_delivery(0, None, header, permanence, wb, yellowFill)
     else:
-        for delivery_cpt, delivery_id in enumerate(deliveries_id):
-            wb = export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permanence, wb, yellowFill)
+        for delivery_ref, delivery_id in enumerate(deliveries_id):
+            wb = export_preparation_for_a_delivery(delivery_ref, delivery_id, header, permanence, wb, yellowFill)
         return wb
 
 
@@ -271,8 +348,13 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
             header
         )
         row_num = 1
+        if delivery_id is not None:
+            c = ws.cell(row=row_num, column=5)
+            c.style.font.bold = True
+            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
+            row_num += 1
         producer_counter = 0
-        hide_placement = True
+        hide_column_placement = True
         placement_save = None
         while producer is not None:
             producer_counter += 1
@@ -326,9 +408,9 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 c.value = purchase.offer_item.get_placement_display()
                                 if placement_save is None:
                                     placement_save = c.value
-                                elif hide_placement:
+                                elif hide_column_placement:
                                     if placement_save != c.value:
-                                        hide_placement = False
+                                        hide_column_placement = False
                                 c = ws.cell(row=row_num, column=3)
                                 c.value = producer_save.short_profile_name
                                 c = ws.cell(row=row_num, column=4)
@@ -344,7 +426,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                     c.value = "%s" % purchase.get_long_name()
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=6)
-                                c.value = customer_save.short_basket_name
+                                c.value = "%d - %s" % (customer_save.preparation_order, customer_save.short_basket_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=7)
                                 c.value = qty
@@ -458,9 +540,9 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                         c.value = purchase.offer_item.get_placement_display()
                                         if placement_save is None:
                                             placement_save = c.value
-                                        elif hide_placement:
+                                        elif hide_column_placement:
                                             if placement_save != c.value:
-                                                hide_placement = False
+                                                hide_column_placement = False
                                         c = ws.cell(row=row_num, column=3)
                                         c.value = producer_save.short_profile_name
                                     c = ws.cell(row=row_num, column=5)
@@ -473,7 +555,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                         c.style.font.color.index = 'FF939393'
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     c = ws.cell(row=row_num, column=6)
-                                    c.value = purchase.customer.short_basket_name
+                                    c.value = "%d - %s" % (purchase.customer.preparation_order, purchase.customer.short_basket_name)
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     c = ws.cell(row=row_num, column=7)
                                     c.value = qty
@@ -529,7 +611,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                 row_num += 1
             producer = next_row(producers)
         ws.column_dimensions[get_column_letter(2)].visible = False
-        if hide_placement:
+        if hide_column_placement:
             ws.column_dimensions[get_column_letter(3)].visible = False
         if producer_counter <= 1:
             # hide producer name
@@ -619,7 +701,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 status
                             )
                             c = ws.cell(row=row_num, column=0)
-                            c.value = purchase.customer.short_basket_name
+                            c.value = "%d - %s" % (purchase.customer.preparation_order, purchase.customer.short_basket_name)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=1)
@@ -855,7 +937,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
         while purchase is not None:
             customer_save = purchase.customer
             c = ws.cell(row=row_num, column=0)
-            c.value = customer_save.short_basket_name
+            c.value = "%d - %s" % (customer_save.preparation_order, customer_save.short_basket_name)
             c.style.font.bold = True
             row_num += 1
             row_start_customer = row_num
@@ -1049,7 +1131,7 @@ def export_customer_for_a_delivery(
             purchase_set = purchase_set.filter(customer_invoice__delivery_id=delivery_id)
     purchases = purchase_set.iterator()
     purchase = next_purchase(purchases)
-    if purchase:
+    if purchase is not None:
         config = Configuration.objects.get(id=DECIMAL_ONE)
         group_label = config.group_label
         if deposit:
@@ -1085,9 +1167,16 @@ def export_customer_for_a_delivery(
                     header
                 )
         hide_column_placement = True
+        hide_column_producer = True
         offer_item_save = purchase.offer_item
         placement_save = offer_item_save.placement
+        producer_save = offer_item_save.producer
         row_num = 1
+        if delivery_id is not None:
+            c = ws.cell(row=row_num, column=4)
+            c.style.font.bold = True
+            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
+            row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
             ref_preparation_sheet = ws_preparation_title if delivery_id is None else "%d-%s" % (
             delivery_cpt, ws_preparation_title)
@@ -1106,6 +1195,8 @@ def export_customer_for_a_delivery(
                                 offer_item_save.department_for_customer_id == department_for_customer_save__id:
                     if placement_save != offer_item_save.placement:
                         hide_column_placement = False
+                    if producer_save != offer_item_save.producer:
+                        hide_column_producer = False
                     qty = purchase.get_quantity()
                     if qty != DECIMAL_ZERO:
                         base_unit = get_base_unit(
@@ -1193,7 +1284,10 @@ def export_customer_for_a_delivery(
                                 )
 
                         c = ws.cell(row=row_num, column=10)
-                        c.value = purchase.customer.short_basket_name
+                        if xlsx_formula:
+                            c.value = "%d - %s" % (purchase.customer.preparation_order, purchase.customer.short_basket_name)
+                        else:
+                            c.value = purchase.customer.long_basket_name
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if first_purchase:
@@ -1231,6 +1325,8 @@ def export_customer_for_a_delivery(
         ws.column_dimensions[get_column_letter(2)].visible = False
         if hide_column_placement:
             ws.column_dimensions[get_column_letter(3)].visible = False
+        if hide_column_producer:
+            ws.column_dimensions[get_column_letter(4)].visible = False
     translation.activate(language_code)
     return wb
 
@@ -1239,6 +1335,9 @@ def admin_customer_export(permanence, deliveries_id=None):
     response = None
     wb = export_abstract(permanence=permanence, deliveries_id=deliveries_id, wb=None)
     if wb is not None:
+        wb = export_customer_label(
+            permanence=permanence, deliveries_id=deliveries_id, wb=wb
+        )
         wb = export_preparation(permanence=permanence, deliveries_id=deliveries_id, wb=wb)
         if wb is not None:
             ws_preparation_title = cap("%s" % (_("Preparation")), 31)
