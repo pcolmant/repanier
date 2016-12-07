@@ -408,17 +408,16 @@ class Permanence(TranslatableModel):
     get_full_status_display.allow_tags = True
 
     def get_permanence_display(self, with_status=True):
-        short_name = EMPTY_STRING
+        permanence_display = '%s%s' % (
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME,
+            self.permanence_date.strftime(settings.DJANGO_SETTINGS_DATE)
+        )
         try:
-            if self.short_name is not None and len(self.short_name.strip()) > 0:
-                short_name = " (%s)" % self.short_name
+            if self.short_name:
+                permanence_display = "%s" % self.short_name
         except TranslationDoesNotExist:
             pass
-        long_name = '%s%s%s' % (
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME,
-            self.permanence_date.strftime(settings.DJANGO_SETTINGS_DATE),
-            short_name
-        )
+
         if with_status:
             if self.with_delivery_point:
                 if self.status == PERMANENCE_OPENED:
@@ -430,11 +429,11 @@ class Permanence(TranslatableModel):
             else:
                 deliveries_count = 0
             if deliveries_count == 0:
-                return "%s - %s" % (long_name, self.get_status_display())
-        return long_name
+                return "%s - %s" % (permanence_display, self.get_status_display())
+        return permanence_display
 
     def get_permanence_customer_display(self, with_status=True):
-        long_name = self.get_permanence_display(with_status=False)
+        permanence_display = self.get_permanence_display(with_status=False)
         if with_status:
             if self.with_delivery_point:
                 if self.status == PERMANENCE_OPENED:
@@ -449,10 +448,10 @@ class Permanence(TranslatableModel):
                 deliveries_count = 0
             if deliveries_count == 0:
                 if self.status != PERMANENCE_SEND:
-                    return "%s - %s" % (long_name, self.get_status_display())
+                    return "%s - %s" % (permanence_display, self.get_status_display())
                 else:
-                    return "%s - %s" % (long_name, _('orders closed'))
-        return long_name
+                    return "%s - %s" % (permanence_display, _('orders closed'))
+        return permanence_display
 
     def __str__(self):
         return self.get_permanence_display(with_status=False)
