@@ -75,6 +75,13 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                     order_staff_mail = config.order_staff_mail
                 except TranslationDoesNotExist:
                     order_staff_mail = EMPTY_STRING
+                order_staff_mail_subject = "%s - %s - %s" % (
+                    _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME)
+                try:
+                    if config.order_staff_mail_subject:
+                        order_staff_mail_subject = config.order_staff_mail_subject
+                except TranslationDoesNotExist:
+                    pass
 
                 template = Template(order_staff_mail)
                 context = TemplateContext({
@@ -87,8 +94,7 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 })
                 html_content = template.render(context)
                 email = EmailMultiAlternatives(
-                    "%s - %s - %s" % (
-                    _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME),
+                    order_staff_mail_subject,
                     strip_tags(html_content),
                     from_email=sender_email,
                     to=to_email_board,
@@ -134,6 +140,13 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                     order_producer_mail = config.order_producer_mail
                 except TranslationDoesNotExist:
                     order_producer_mail = EMPTY_STRING
+                order_producer_mail_subject = "%s - %s - %s" % (
+                    _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME)
+                try:
+                    if config.order_producer_mail_subject:
+                        order_producer_mail_subject = config.order_producer_mail_subject
+                except TranslationDoesNotExist:
+                    pass
 
                 template = Template(order_producer_mail)
                 context = TemplateContext({
@@ -148,8 +161,6 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 })
                 html_content = template.render(context)
 
-                subject = "%s - %s - %s - %s" % (_('Order'), permanence, REPANIER_SETTINGS_GROUP_NAME,
-                                                 long_profile_name)
                 producer_invoice = models.ProducerInvoice.objects.filter(
                     producer_id=producer.id, permanence_id=permanence.id
                 ).only("total_price_with_tax").order_by('?').first()
@@ -157,9 +168,9 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                         and producer_invoice.total_price_with_tax < producer.minimum_order_value:
                     to = cc_email_staff
                     html_content = \
-                        subject + '<br/><br/>' + html_content
+                        order_producer_mail_subject + '<br/><br/>' + html_content
                     cc = []
-                    subject = _(
+                    order_producer_mail_subject = _(
                         '/!\ Mail not send to our producer %s because the minimum order value has not been reached.') % long_profile_name
                 else:
                     if producer.email2:
@@ -168,7 +179,7 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                         to = [producer.email]
                     cc = cc_email_staff
                 email = EmailMultiAlternatives(
-                    subject,
+                    order_producer_mail_subject,
                     strip_tags(html_content),
                     from_email=sender_email,
                     to=to,
@@ -264,11 +275,25 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                         order_customer_mail = config.cancel_order_customer_mail
                     except TranslationDoesNotExist:
                         order_customer_mail = EMPTY_STRING
+                    order_customer_mail_subject = "%s - %s - %s - %s" % (
+                        _('/!\ Order cancelled'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_basket_name)
+                    try:
+                        if config.cancel_order_customer_mail_subject:
+                            order_customer_mail_subject = config.cancel_order_customer_mail_subject
+                    except TranslationDoesNotExist:
+                        pass
                 else:
                     try:
                         order_customer_mail = config.order_customer_mail
                     except TranslationDoesNotExist:
                         order_customer_mail = EMPTY_STRING
+                    order_customer_mail_subject = "%s - %s - %s - %s" % (
+                        _('Order'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_basket_name)
+                    try:
+                        if config.order_customer_mail_subject:
+                            order_customer_mail_subject = config.order_customer_mail_subject
+                    except TranslationDoesNotExist:
+                        pass
                 template = Template(order_customer_mail)
                 context = TemplateContext({
                     'name'             : long_basket_name,
@@ -288,14 +313,8 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                         '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
-                if cancel_order:
-                    subject = "%s - %s - %s - %s" % (
-                        _('/!\ Order cancelled'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_basket_name)
-                else:
-                    subject = "%s - %s - %s - %s" % (
-                        _('Order'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_basket_name)
                 email = EmailMultiAlternatives(
-                    subject,
+                    order_customer_mail_subject,
                     strip_tags(html_content),
                     from_email=sender_email,
                     to=to_email_customer

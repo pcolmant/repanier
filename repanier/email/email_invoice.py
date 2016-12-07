@@ -42,6 +42,14 @@ def send_invoice(permanence_id):
                         invoice_producer_mail = config.invoice_producer_mail
                     except TranslationDoesNotExist:
                         invoice_producer_mail = EMPTY_STRING
+                    invoice_producer_mail_subject = "%s - %s - %s - %s" % (
+                            _('Payment'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_profile_name)
+                    try:
+                        if config.invoice_producer_mail_subject:
+                            invoice_producer_mail_subject = config.invoice_producer_mail_subject
+                    except TranslationDoesNotExist:
+                        pass
+
                     template = Template(invoice_producer_mail)
                     context = TemplateContext({
                         'name'             : long_profile_name,
@@ -61,8 +69,7 @@ def send_invoice(permanence_id):
                     else:
                         to_email_producer = [producer.email]
                     email = EmailMultiAlternatives(
-                        "%s - %s - %s - %s" % (
-                            _('Payment'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_profile_name),
+                        invoice_producer_mail_subject,
                         strip_tags(html_content),
                         from_email=sender_email,
                         to=to_email_producer
@@ -95,6 +102,13 @@ def send_invoice(permanence_id):
                         invoice_customer_mail = config.invoice_customer_mail
                     except TranslationDoesNotExist:
                         invoice_customer_mail = EMPTY_STRING
+                    invoice_customer_mail_subject = "%s - %s - %s - %s" % (_('Invoice'), permanence, REPANIER_SETTINGS_GROUP_NAME,
+                                               long_basket_name)
+                    try:
+                        if config.invoice_customer_mail_subject:
+                            invoice_customer_mail_subject = config.invoice_customer_mail_subject
+                    except TranslationDoesNotExist:
+                        pass
                     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
                         customer, permanence)
                     template = Template(invoice_customer_mail)
@@ -120,8 +134,7 @@ def send_invoice(permanence_id):
                     })
                     html_content = template.render(context)
                     email = EmailMultiAlternatives(
-                        "%s - %s - %s - %s" % (_('Invoice'), permanence, REPANIER_SETTINGS_GROUP_NAME,
-                                               long_basket_name),
+                        invoice_customer_mail_subject,
                         strip_tags(html_content),
                         from_email=sender_email,
                         to=to_email_customer

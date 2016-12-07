@@ -35,6 +35,12 @@ def send_pre_open_order(permanence_id):
             offer_description = permanence.offer_description
         except TranslationDoesNotExist:
             offer_description = EMPTY_STRING
+        offer_producer_mail_subject = "%s - %s - %s" % (_("Pre-opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME)
+        try:
+            if config.offer_producer_mail_subject:
+                offer_producer_mail_subject = config.offer_producer_mail_subject
+        except TranslationDoesNotExist:
+            pass
         template = Template(offer_producer_mail)
         producer_set = Producer.objects.filter(
             permanence=permanence_id, producer_pre_opening=True,
@@ -66,7 +72,7 @@ def send_pre_open_order(permanence_id):
             else:
                 to_email_producer = [producer.email]
             email = EmailMultiAlternatives(
-                "%s - %s - %s" % (_("Pre-opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME),
+                offer_producer_mail_subject,
                 strip_tags(html_content),
                 from_email=sender_email,
                 to=to_email_producer,
@@ -110,6 +116,12 @@ def send_open_order(permanence_id):
                 offer_customer_mail = config.offer_customer_mail
             except TranslationDoesNotExist:
                 offer_customer_mail = EMPTY_STRING
+            offer_customer_mail_subject = "%s - %s - %s" % (_("Opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME)
+            try:
+                if config.offer_customer_mail_subject:
+                    offer_customer_mail_subject = config.offer_customer_mail_subject
+            except TranslationDoesNotExist:
+                pass
             offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
             qs = OfferItem.objects.filter(
                 permanence_id=permanence_id, is_active=True,
@@ -137,7 +149,7 @@ def send_open_order(permanence_id):
             })
             html_content = template.render(context)
             email = EmailMultiAlternatives(
-                "%s - %s - %s" % (_("Opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME),
+                offer_customer_mail_subject,
                 strip_tags(html_content),
                 from_email=sender_email,
                 bcc=list(set(to_email_staff) | set(to_email_customer))

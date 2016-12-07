@@ -64,7 +64,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                     'classes': ('collapse',),
                     'fields' :
                         (
-                            'offer_producer_mail',
+                            'offer_producer_mail_subject', 'offer_producer_mail',
                         ),
                 }),
             ]
@@ -73,25 +73,25 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'classes': ('collapse',),
                 'fields' :
                     (
-                        'send_opening_mail_to_customer', 'offer_customer_mail',
+                        'send_opening_mail_to_customer', 'offer_customer_mail_subject', 'offer_customer_mail',
                     ),
             }),
             (_('Ordering mails'), {
                 'classes': ('collapse',),
                 'fields' :
                     (
-                        'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail',
-                        'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail',
-                        'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer', 'order_producer_mail',
-                        'send_order_mail_to_board', 'order_staff_mail',
+                        'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail_subject', 'order_customer_mail',
+                        'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail_subject', 'cancel_order_customer_mail',
+                        'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer', 'order_producer_mail_subject', 'order_producer_mail',
+                        'send_order_mail_to_board', 'order_staff_mail_subject', 'order_staff_mail',
                     ),
             }),
             (_('Invoicing mails'), {
                 'classes': ('collapse',),
                 'fields' :
                     (
-                        'send_invoice_mail_to_customer', 'invoice_customer_mail',
-                        'send_invoice_mail_to_producer', 'invoice_producer_mail',
+                        'send_invoice_mail_to_customer', 'invoice_customer_mail_subject', 'invoice_customer_mail',
+                        'send_invoice_mail_to_producer', 'invoice_producer_mail_subject', 'invoice_producer_mail',
                     ),
             }),
             (_('Advanced options'), {
