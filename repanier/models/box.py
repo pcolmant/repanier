@@ -88,13 +88,6 @@ class BoxContent(models.Model):
     get_calculated_customer_content_price.short_description = (_("customer content price"))
     get_calculated_customer_content_price.allow_tags = False
 
-    # def get_calculated_content_deposit(self):
-    #     workaround for a display problem with Money field in the admin list_display
-        # return self.calculated_content_deposit
-    #
-    # get_calculated_content_deposit.short_description = (_("content deposit"))
-    # get_calculated_content_deposit.allow_tags = False
-
     class Meta:
         verbose_name = _("box content")
         verbose_name_plural = _("boxes content")

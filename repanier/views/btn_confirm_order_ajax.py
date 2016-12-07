@@ -44,10 +44,6 @@ def btn_confirm_order_ajax(request):
     ).order_by('?')
     if not customer_invoice.exists():
         raise Http404
-    # if customer_invoice.is_order_confirm_send or customer_invoice.total_price_with_tax <= DECIMAL_ZERO:
-    #     raise Http404
-
-    # filename = force_filename("%s - %s.xlsx" % (_("Order"), permanence))
     filename = "{0}-{1}.xlsx".format(
         slugify(_("Order")),
         slugify(permanence)
@@ -58,7 +54,6 @@ def btn_confirm_order_ajax(request):
         customer, filename, permanence, sender_email,
         sender_function, signature
     )
-    # confirm_customer_invoice(permanence_id, customer.id)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,
         customer_id=customer.id

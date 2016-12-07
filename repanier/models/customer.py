@@ -55,7 +55,6 @@ class Customer(models.Model):
     phone1 = models.CharField(
         _("phone1"),
         max_length=25,
-        # validators=[MinLengthValidator(2)],
         null=True, blank=True, default=EMPTY_STRING)
     phone2 = models.CharField(
         _("phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)

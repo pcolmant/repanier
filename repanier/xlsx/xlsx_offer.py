@@ -122,8 +122,6 @@ def admin_export(request, permanence):
     wb = export_offer(permanence=permanence, wb=None)
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        # filename = force_filename("%s - %s.xlsx" % (_("Preview report"), permanence))
-        # response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
             slugify(_("Preview report")),
             slugify(permanence)

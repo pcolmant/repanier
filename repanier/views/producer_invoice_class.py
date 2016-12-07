@@ -25,10 +25,6 @@ class ProducerInvoiceView(DetailView):
             obj = None  # ProducerInvoice.objects.none()
         return obj
 
-    # @method_decorator(never_cache)
-    # def get(self, request, *args, **kwargs):
-    #     return super(ProducerInvoiceView, self).get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super(ProducerInvoiceView, self).get_context_data(**kwargs)
         if context['object'] is None:

@@ -242,23 +242,6 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.alignment.wrap_text = False
             row_num += 1
-        # if deliveries_id is not None:
-        #     c = ws.cell(row=row_num, column=0)
-        #     c.value = "-------"
-        #     c = ws.cell(row=row_num, column=1)
-        #     c.value = "%s" % (_('Delivery Point List'))
-        #     c.style.alignment.wrap_text = False
-        #     c.style.font.bold = True
-        #     c = ws.cell(row=row_num, column=2)
-        #     c.value = "-------"
-        #     row_num += 1
-        #     for delivery_ref, delivery in enumerate(DeliveryBoard.objects.filter(id__in=deliveries_id).order_by("id")):
-        #         c = ws.cell(row=row_num, column=0)
-        #         c.value = delivery_ref
-        #         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-        #         c = ws.cell(row=row_num, column=1)
-        #         c.value = delivery.get_delivery_display()
-        #         row_num += 1
 
         return wb
 

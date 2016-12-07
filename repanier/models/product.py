@@ -243,11 +243,7 @@ class Product(TranslatableModel):
     class Meta:
         verbose_name = _("product")
         verbose_name_plural = _("products")
-        # ordering = ("producer", "long_name",)
         unique_together = ("producer", "reference",)
-        # index_together = [
-        #     ["producer", "reference"],
-        # ]
 
 
 @receiver(pre_save, sender=Product)

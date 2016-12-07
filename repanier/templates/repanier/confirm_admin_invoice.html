@@ -1,7 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags compress i18n l10n crispy_forms_tags %}
 {% block content %}
-{#    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}#}
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">
 <style type="text/css">
@@ -44,21 +43,6 @@
             <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}</h6></button>
             {{ producer_invoiced_formset.management_form }}
         </div>
-{#        <fieldset class="module aligned ">#}
-{#        {{ producer_invoiced_formset.management_form }}#}
-{#        <div class="form-row">#}
-{#            {% for f_form in producer_invoiced_formset %}#}
-{#                <div class="input-group">#}
-{#                <h6><input id="id_form-{{ forloop.counter0 }}-selected" name="form-{{ forloop.counter0 }}-selected" type="checkbox" checked/>#}
-{#                    &nbsp;&nbsp;{{ f_form.short_profile_name.value }} {% trans ", balance claimed by the supplier : " %}#}
-{#                    {{ f_form.to_be_invoiced_balance }}#}
-{#                    {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}#}
-{#                    {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}</h6>#}
-{#                <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name" name="form-{{ forloop.counter0 }}-short_profile_name" value="{{ f_form.short_profile_name.value }}"/>#}
-{#                </div>#}
-{#            {% endfor %}#}
-{#        </div>#}
-{#        </fieldset>#}
         <fieldset class="module aligned ">
             <div class="form-row">
                 <div class="[ form-group ]">
@@ -71,12 +55,9 @@
                             {% endfor %}
                             </ul>
                         {% endif %}
-{#                        {{ permanence_form.payment_date.errors }}#}
-{#                        {{ permanence_form.payment_date.label_tag }}#}
                         <label for="id_payment_date"><h6>{% trans "payment date" %}&nbsp;:</h6></label>
                         {{ permanence_form.payment_date }}
                     </div>
-{#        {{ permanence_form.payment_date }}#}
                 </div>
             </div>
         </fieldset>
@@ -108,11 +89,7 @@
                     <label for="id_form-{{ forloop.counter0 }}-selected" class="[ btn active btn-xs ]">
                         {{ f_form.short_profile_name.value }}
                         {% trans ", calculated : " %}
-{#                        {% if f_form.calculated_invoiced_balance.value == f_form.to_be_invoiced_balance.value %}#}
                             {{ f_form.calculated_invoiced_balance.value }}
-{#                        {% else %}#}
-{#                            <b>{{ f_form.calculated_invoiced_balance.value }}</b>#}
-{#                        {% endif %}#}
                         {% trans ", balance claimed by the supplier : " %}
                         {{ f_form.to_be_invoiced_balance }}
                         {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}

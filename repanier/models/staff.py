@@ -59,27 +59,12 @@ class Staff(TranslatableModel):
     class Meta:
         verbose_name = _("staff member")
         verbose_name_plural = _("staff members")
-        # ordering = ("long_name",)
 
 
 @receiver(pre_save, sender=Staff)
 def staff_pre_save(sender, **kwargs):
     staff = kwargs["instance"]
     staff.login_attempt_counter = DECIMAL_ZERO
-    # if staff.is_contributor:
-    #     staff.is_reply_to_order_email = False
-    #     staff.is_reply_to_invoice_email = False
-    #     staff.is_webmaster = False
-    #     # Do not kill yourself
-    #     if not staff.user.groups.filter(name=COORDINATION_GROUP).exists():
-    #         staff.is_coordinator = False
-    # if staff.is_webmaster:
-    #     staff.is_reply_to_order_email = False
-    #     staff.is_reply_to_invoice_email = False
-    #     staff.is_contributor = False
-    #     # Do not kill yourself
-    #     if not staff.user.groups.filter(name=COORDINATION_GROUP).exists():
-    #         staff.is_coordinator = False
 
 
 @receiver(post_save, sender=Staff)

@@ -65,13 +65,3 @@ class SelectBootstrapWidget(forms.Select):
         for option_value, option_label in chain(self.choices, choices):
             output.append(self.render_option2(selected_choices, option_value, option_label, name))
         return u'\n'.join(output)
-
-        # class Media:
-        #     css = {
-        #         "all": ("bootstrap/css/bootstrap.css",
-        #                 "bootstrap/css/custom.css"
-        #         )
-        #     }
-        #     js = ("https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js",
-        #           "//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"
-        #     )

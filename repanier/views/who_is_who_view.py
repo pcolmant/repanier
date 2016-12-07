@@ -15,7 +15,6 @@ from repanier.models import Customer, Staff
 @never_cache
 def who_is_who_view(request):
     q = request.POST.get('q', None)
-    # Classer les membres par ordre alphabétique du prénom
     customer_list = Customer.objects.filter(may_order=True, represent_this_buyinggroup=False).order_by(
         "long_basket_name")
     if q is not None:

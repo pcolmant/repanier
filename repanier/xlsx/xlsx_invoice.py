@@ -213,15 +213,11 @@ def export_invoice(permanence, customer=None, producer=None, wb=None, sheet_name
             if producer is not None:
                 # To the producer we speak of "payment".
                 # This is the detail of the payment to the producer, i.e. received products
-                # worksheet_setup_landscape_a4(ws, "%s %s" % (_('Payment'), sheet_name),
-                #                              permanence)
                 wb, ws = new_landscape_a4_sheet(wb, "%s %s" % (_('Payment'), sheet_name),
                                                 permanence)
             else:
                 # To the customer we speak of "invoice".
                 # This is the detail of the invoice, i.e. sold products
-                # worksheet_setup_landscape_a4(ws, "%s %s" % (_('Invoice'), sheet_name),
-                #                              permanence)
                 wb, ws = new_landscape_a4_sheet(wb, "%s %s" % (_('Invoice'), sheet_name),
                                                 permanence)
 

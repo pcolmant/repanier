@@ -232,10 +232,6 @@ class CustomerWithUserDataForm(UserDataForm):
 
 
 class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
-    # http://stackoverflow.com/questions/17919361/how-can-i-add-a-button-into-django-admin-change-list-view-page
-    # class Media:
-    #     js = ('js/is_order_confirm_send.js', )
-
     form = CustomerWithUserDataForm
     resource_class = CustomerResource
     list_display = (
@@ -244,7 +240,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     search_fields = ('short_basket_name', 'long_basket_name', 'user__email', 'email2')
     list_per_page = 16
     list_max_show_all = 16
-    list_filter = ('is_active', 'may_order', 'valid_email')  # 'delivery_point')
+    list_filter = ('is_active', 'may_order', 'valid_email')
 
     def has_delete_permission(self, request, customer=None):
         if request.user.groups.filter(

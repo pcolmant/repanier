@@ -17,11 +17,6 @@ def repanier_home(*args, **kwargs):
     return REPANIER_SETTINGS_HOME_SITE
 
 
-# @register.simple_tag(takes_context=False)
-# def repanier_uuid(*args, **kwargs):
-#     return uuid.uuid4()
-
-
 @register.simple_tag(takes_context=False)
 def repanier_display_task(*args, **kwargs):
     result = EMPTY_STRING

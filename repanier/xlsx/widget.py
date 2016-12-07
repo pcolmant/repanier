@@ -174,10 +174,6 @@ class CustomerNameWidget(ForeignKeyWidget):
 class TranslatedManyToManyWidget(ManyToManyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if not value:
-            # File "/home/pi/d2/local/lib/python2.7/site-packages/django/db/models/fields/related_descriptors.py", line 887, in set
-            #   objs = tuple(objs)
-            #   TypeError: 'NoneType' object is not iterable
-            # value = " "
             return self.model.objects.none()
         result = []
         if value:

@@ -42,8 +42,6 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
             (_("Add 2 stock"), 10),
             (_("Final stock"), 10),
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
-            # (_("Current stock"), 10),
-            # (_('€'), 15),
         ]
         offer_items = OfferItem.objects.filter(
             Q(
@@ -205,10 +203,6 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             c.value = '=ROUND(M%s*(E%s+F%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
                             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            # Check if new stock (column=12) is the same as the offer_item.new_stock
-                            # c = ws.cell(row=row_num, column=14)
-                            # c.value = offer_item.new_stock
-                            # c.style.borders.bottom.border_style = Border.BORDER_THIN
                             row_num += 1
                         offer_item = next_row(offer_items)
                 row_num += 1
@@ -429,8 +423,6 @@ def admin_export(request, queryset):
     ).order_by("short_profile_name"), wb=None)
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        # filename = force_filename("%s.xlsx" % (_("Current stock"),))
-        # response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
             slugify(_("Current stock"))
         )
@@ -478,19 +470,12 @@ def handle_uploaded_file(request, producers, file_to_import):
     error_msg = None
     wb = load_workbook(file_to_import)
     if wb is not None:
-        # ws = None
-        # producer = object
-        # ws_sc_name = cap(producer, 31)
-        # for sheet in wb.worksheets:
-        #     if ws_sc_name == sheet.title:
-        #         ws = sheet
         ws = wb.get_sheet_by_name(cap("%s" % _('Current stock'), 31))
         if ws is not None:
             error, error_msg = import_producer_stock(
                 ws,
                 producers=producers
             )
-            # ws = wb.get_sheet_by_name(ws_sc_name)
             if error:
                 error_msg = cap("%s" % _('Current stock'), 31) + " > " + error_msg
     return error, error_msg

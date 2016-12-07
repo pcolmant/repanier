@@ -27,10 +27,8 @@ class PermanenceBoard(models.Model):
     class Meta:
         verbose_name = _("permanence board")
         verbose_name_plural = _("permanences board")
-        # ordering = ("permanence", "permanence_role", "customer",)
         unique_together = ("permanence", "permanence_role", "customer",)
         index_together = [
-            # ["permanence", "permanence_role", "customer"],
             ["permanence_date", "permanence", "permanence_role"],
         ]
 

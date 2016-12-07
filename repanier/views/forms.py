@@ -206,40 +206,12 @@ class CustomerForm(forms.Form):
     email2 = forms.EmailField(label=_('Your secondary email'), required=False)
     city = forms.CharField(label=_('Your city'), max_length=50, required=False)
     address = forms.CharField(label=_('address'), widget=Textarea(attrs={'cols': '40', 'rows': '3'}), required=False)
-    # delivery_point = forms.ModelChoiceField(
-    #     LUT_DeliveryPoint.objects.filter(is_active=True),
-    #     label=_("delivery point"),
-    #     # choices=LUT_DeliveryPoint.objects.filter(
-    #     #     is_active=True, translations__language_code=translation.get_language()
-    #     # ).only("id", "translations__short_name"),
-    #     widget=SelectBootstrapWidget,
-    #     required=True
-    # )
     picture = forms.CharField(
         label=_("picture"),
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
     about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
-
-    # about_me = forms.CharField(label=_('About me'), widget=Textarea, required=False)
-
-    # def clean_phone1(self):
-    #     # do something that validates your data
-    #     i = 0
-    #     k = 0
-    #     phone1 = self.cleaned_data['phone1']
-    #     while i < len(phone1):
-    #         if '0' <= phone1[i] <= '9':
-    #             k += 1
-    #         if k == 4:
-    #             break
-    #         i += 1
-    #     if k < 4:
-    #         self.add_error(
-    #             'phone1',
-    #             _('The phone number must ends with 4 digits, eventually separated'))
-    #     return phone1
 
     def clean_email1(self):
         email1 = self.cleaned_data['email1']
@@ -301,7 +273,6 @@ class ProducerProductForm(forms.Form):
         label=_("picture"),
         widget=AjaxPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
         required=False)
-    # offer_description = forms.CharField(label=_('offer_description'), widget=Textarea, required=False)
     offer_description = forms.CharField(label=_('offer_description'), widget=TextEditorWidget, required=False)
 
     def __init__(self, *args, **kwargs):

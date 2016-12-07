@@ -31,7 +31,6 @@ class OfferItem(TranslatableModel):
                                    default=EMPTY_STRING, blank=True, null=True),
         cache_part_a=HTMLField(default=EMPTY_STRING, blank=True),
         cache_part_b=HTMLField(default=EMPTY_STRING, blank=True),
-        # cache_part_c=HTMLField(default=EMPTY_STRING, blank=True),
         cache_part_e=HTMLField(default=EMPTY_STRING, blank=True),
         order_sort_order=models.IntegerField(
             _("customer sort order for optimization"),
@@ -99,10 +98,6 @@ class OfferItem(TranslatableModel):
     customer_vat = ModelMoneyField(
         _("vat"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
-    # compensation = ModelMoneyField(
-    #     _("compensation"),
-    #     help_text=_("compensation to add to the customer unit price"),
-    #     default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     unit_deposit = ModelMoneyField(
         _("deposit"),
         help_text=_('deposit to add to the unit price'),
@@ -274,32 +269,8 @@ class OfferItem(TranslatableModel):
         else:
             return self.producer_unit_price - self.producer_vat
 
-    # def get_customer_unit_price(self):
-    #     # workaround for a display problem with Money field in the admin list_display
-    #     return self.customer_unit_price
-    #
-    # get_customer_unit_price.short_description = (_("customer unit price"))
-    # get_customer_unit_price.allow_tags = False
-
-    # def get_producer_unit_price(self):
-    #     # workaround for a display problem with Money field in the admin list_display
-    #     return self.producer_unit_price
-    #
-    # get_producer_unit_price.short_description = (_("producer unit price"))
-    # get_producer_unit_price.allow_tags = False
-
-    # def get_unit_deposit(self):
-    #     # workaround for a display problem with Money field in the admin list_display
-    #     return self.unit_deposit
-    #
-    # get_unit_deposit.short_description = (_("deposit"))
-    # get_unit_deposit.allow_tags = False
-
     def get_unit_price(self, customer_price=True):
         if customer_price:
-            # if with_compensation:
-            #     unit_price = self.customer_unit_price + self.compensation
-            # else:
             unit_price = self.customer_unit_price
         else:
             unit_price = self.producer_unit_price
@@ -313,24 +284,11 @@ class OfferItem(TranslatableModel):
         else:
             return "%s" % (unit_price,)
 
-    # @property
-    # def unit_price_with_compensation(self):
-    #     return self.get_unit_price(with_compensation=True)
-
-    # @property
-    # def unit_price_with_vat(self, customer_price=True):
-    #     return self.get_unit_price(with_compensation=False, customer_price=True)
-
     def get_reference_price(self, customer_price=True):
         if self.order_average_weight > DECIMAL_ZERO and self.order_average_weight != DECIMAL_ONE:
             if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT,
                                    PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
                 if customer_price:
-                    # if with_compensation:
-                    #     reference_price = (
-                    #                           self.customer_unit_price.amount + self.compensation.amount) \
-                    #                       / self.order_average_weight
-                    # else:
                     reference_price = self.customer_unit_price.amount / self.order_average_weight
                 else:
                     reference_price = self.producer_unit_price.amount / self.order_average_weight
@@ -346,14 +304,6 @@ class OfferItem(TranslatableModel):
                 return EMPTY_STRING
         else:
             return EMPTY_STRING
-
-    # @property
-    # def reference_price_with_compensation(self):
-    #     return self.get_reference_price(with_compensation=True)
-
-    # @property
-    # def reference_price_with_vat(self):
-    #     return self.get_reference_price()
 
     @property
     def email_offer_price_with_vat(self):

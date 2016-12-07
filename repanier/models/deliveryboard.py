@@ -97,8 +97,3 @@ class DeliveryBoard(TranslatableModel):
     class Meta:
         verbose_name = _("delivery board")
         verbose_name_plural = _("deliveries board")
-        # ordering = ("id",)
-        # unique_together = ("permanence", "delivery_point", "delivery_date",)
-        # index_together = [
-        #     ["permanence", "delivery_point", "delivery_date"],
-        # ]

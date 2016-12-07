@@ -6,9 +6,6 @@
         <div class="form-group">
             {% with id_for_label=form.long_name.id_for_label %}
             <div id="div_{{ id_for_label }}" class="col-xs-12">
-{#                <label for="{{ id_for_label }}" class="control-label requiredField">#}
-{#                    {{ form.long_name.label }}<span class="asteriskField">*</span>#}
-{#                </label>#}
                 {% if form.long_name.errors %}
                   <p class="bg-danger">
                   {% for error in form.long_name.errors %}

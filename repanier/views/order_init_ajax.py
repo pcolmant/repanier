@@ -44,11 +44,8 @@ def order_init_ajax(request):
                 "balance", "date_balance", "may_order"
             ).order_by('?').first()
             if customer is None:
-                # my_name = _not_lazy('Anonymous')
                 my_basket(False, REPANIER_MONEY_ZERO, to_json)
             else:
-                # my_name = customer.short_basket_name
-                # delivery_id = sint(request.GET.get('de', 0))
                 customer_invoice = CustomerInvoice.objects.filter(
                     permanence_id=permanence.id,
                     customer_id=customer.id
@@ -61,8 +58,6 @@ def order_init_ajax(request):
                         customer_id=customer.id,
                         status=permanence.status,
                         customer_who_pays_id=customer.id,
-                        # transport=repanier.apps.REPANIER_SETTINGS_TRANSPORT,
-                        # min_transport=repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT
                     )
                     customer_invoice.set_delivery(delivery=None)
                     customer_invoice.save()

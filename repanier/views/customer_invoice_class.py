@@ -17,7 +17,7 @@ class CustomerInvoiceView(DetailView):
         try:
             obj = super(CustomerInvoiceView, self).get_object(queryset)
         except Http404:
-            obj = None  # CustomerInvoice.objects.none()
+            obj = None
         return obj
 
     def get_context_data(self, **kwargs):

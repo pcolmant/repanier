@@ -1,7 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags compress i18n l10n crispy_forms_tags %}
 {% block content %}
-{#    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}#}
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">
     <h4>{{ sub_title }}</h4>
@@ -34,27 +33,8 @@
                                     language: 'fr',
                                     forcePasteAsPlainText: true,
                                     toolbar: [
-{#                                        ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],#}
                                         ['Preview', 'Source']
                                     ],
-{#                                    format_tags: "p;h4;h5;blockquote;mutted;success;info;danger;pushpin",#}
-{#                                    format_blockquote: {"name": "Blockquote", "element": "blockquote"},#}
-{#                                    format_mutted: {#}
-{#                                        "attributes": {"class": "text-muted"},#}
-{#                                        "name": "Mutted",#}
-{#                                        "element": "p"#}
-{#                                    },#}
-{#                                    format_success: {#}
-{#                                        "attributes": {"class": "bg-success"},#}
-{#                                        "name": "Success",#}
-{#                                        "element": "p"#}
-{#                                    },#}
-{#                                    format_info: {"attributes": {"class": "bg-info"}, "name": "Info", "element": "p"},#}
-{#                                    format_danger: {"attributes": {"class": "bg-danger"}, "name": "Danger", "element": "p"},#}
-{#                                    format_pushpin: {#}
-{#                                        "attributes": {"class": "glyphicon glyphicon-pushpin"},#}
-{#                                        "element": "span"#}
-{#                                    },#}
                                     contentsCss: "{{ STATIC_URL}}bootstrap/css/bootstrap.css",
                                     width: '100%',
                                     height: '24em',
@@ -91,27 +71,8 @@
                                     language: 'fr',
                                     forcePasteAsPlainText: true,
                                     toolbar: [
-{#                                        ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],#}
                                         ['Preview', 'Source']
                                     ],
-{#                                    format_tags: "p;h4;h5;blockquote;mutted;success;info;danger;pushpin",#}
-{#                                    format_blockquote: {"name": "Blockquote", "element": "blockquote"},#}
-{#                                    format_mutted: {#}
-{#                                        "attributes": {"class": "text-muted"},#}
-{#                                        "name": "Mutted",#}
-{#                                        "element": "p"#}
-{#                                    },#}
-{#                                    format_success: {#}
-{#                                        "attributes": {"class": "bg-success"},#}
-{#                                        "name": "Success",#}
-{#                                        "element": "p"#}
-{#                                    },#}
-{#                                    format_info: {"attributes": {"class": "bg-info"}, "name": "Info", "element": "p"},#}
-{#                                    format_danger: {"attributes": {"class": "bg-danger"}, "name": "Danger", "element": "p"},#}
-{#                                    format_pushpin: {#}
-{#                                        "attributes": {"class": "glyphicon glyphicon-pushpin"},#}
-{#                                        "element": "span"#}
-{#                                    },#}
                                     contentsCss: "{{ STATIC_URL}}bootstrap/css/bootstrap.css",
                                     width: '100%',
                                     height: '24em',

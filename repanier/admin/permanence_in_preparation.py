@@ -66,7 +66,6 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
 class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
     model = DeliveryBoard
     ordering = ("id",)
-    # ordering = ("delivery_date", "delivery_point__tree_id", "delivery_point__lft",)
     fields = ['delivery_date', 'delivery_comment', 'delivery_point', 'status', ]
     extra = 0
     readonly_fields = ['status', ]

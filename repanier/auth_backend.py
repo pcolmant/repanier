@@ -71,7 +71,6 @@ class RepanierCustomBackend(ModelBackend):
                 raise forms.ValidationError(
                     _(
                         "Because you tried to log in too many time without success, you must now first reset your password."),
-                    # _("Too many attempt."),
                     code='attempt',
                 )
         else:
@@ -79,7 +78,6 @@ class RepanierCustomBackend(ModelBackend):
                 raise forms.ValidationError(
                     _(
                         "Because you tried to log in too many time without success, you must now first reset your password."),
-                    # _("Too many attempt."),
                     code='attempt',
                 )
             else:

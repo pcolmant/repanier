@@ -40,7 +40,6 @@ class CustomerPurchaseSendInlineForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CustomerPurchaseSendInlineForm, self).__init__(*args, **kwargs)
-        # if self.instance.id is not None:
         purchase = self.instance
         self.fields["previous_purchase_price"].initial = purchase.purchase_price
         self.fields["previous_offer_item"].initial = purchase.offer_item

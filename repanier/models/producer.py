@@ -44,7 +44,6 @@ class Producer(models.Model):
     phone1 = models.CharField(
         _("phone1"),
         max_length=25,
-        # validators=[MinLengthValidator(2)],
         null=True, blank=True, default=EMPTY_STRING)
     phone2 = models.CharField(
         _("phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
@@ -113,13 +112,6 @@ class Producer(models.Model):
 
     get_products.short_description = (_("link to his products"))
     get_products.allow_tags = True
-
-    # def get_initial_balance(self):
-    #     # workaround for a display problem with Money field in the admin
-    #     return self.initial_balance
-    #
-    # get_initial_balance.short_description = (_("initial balance"))
-    # get_initial_balance.allow_tags = False
 
     def get_admin_date_balance(self):
         if self.id is not None:

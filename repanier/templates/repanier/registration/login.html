@@ -1,6 +1,5 @@
 {% extends "base.html" %}{% load i18n admin_static %}
 {% block base_content %}
-{#{% trans "Too many attempt." as too_many_attempt %}#}
 <div id="content-main" class="container-repanier">
 <div class="container">
   <div class="modal-dialog">
@@ -15,9 +14,7 @@
     {% if form.non_field_errors %}
         <p class="bg-danger">
         {% for error in form.non_field_errors %}
-{#            {% if error != too_many_attempt %}#}
                 {{ error }}
-{#            {% endif %}#}
         {% endfor %}
         </p>
     {% endif %}
@@ -42,15 +39,6 @@
     <input type="password" class="form-control" id="id_password" placeholder="{% trans "Password" %}" name="password">
     <input type="hidden" name="this_is_the_login_form" value="1" />
     <input type="hidden" name="next" value="{{ next }}" />
-{#    {% if form.non_field_errors %}#}
-{#        {% for error in form.non_field_errors %}#}
-{#            {% if error == too_many_attempt %}#}
-{#                <br/>#}
-{#                <label for="id_confirm">{% trans "Validation code (4 latest digits of your phone number)" %}</label>#}
-{#                <input type="text" class="form-control" id="id_confirm" placeholder="{% trans "Validation code" %}" name="confirm">#}
-{#            {% endif %}#}
-{#        {% endfor %}#}
-{#    {% endif %}#}
     </div>
     <button class="btn btn-primary" type="submit">{% trans "Login" %}</button>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" style="color : inherit;">{% trans "Password reset" %}</a>

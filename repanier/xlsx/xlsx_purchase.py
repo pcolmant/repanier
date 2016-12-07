@@ -135,16 +135,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             department_for_customer_save = offer_item_save.department_for_customer
                             department_for_customer_save__short_name = department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else EMPTY_STRING
-                            # if year is None:
-                            #     c = ws.cell(row=row_num, column=4)
-                            #     c.value = department_for_customer_save.short_name \
-                            #         if department_for_customer_save is not None else "---"
-                            #     c.style.font.italic = True
-                            #     c.style.alignment.horizontal = 'right'
-                            #     for col_num in range(14):
-                            #         c = ws.cell(row=row_num, column=col_num)
-                            #         c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            #     row_num += 1
 
                             while purchase is not None and permanence_save.id == purchase.permanence_id \
                                     and customer_save.id == purchase.customer_id \
@@ -215,9 +205,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     )
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=10)
-                                # if purchase.invoiced_price_with_compensation:
-                                #     c.value = '=G%s*%s' % (row_num + 1, purchase.offer_item.compensation.amount)
-                                # else:
                                 c.value = '=G%s*%s' % (row_num + 1, purchase.offer_item.customer_vat.amount)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=12)
@@ -331,13 +318,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         department_for_customer_save = purchase.offer_item.department_for_customer
                         department_for_customer_save__short_name = department_for_customer_save.short_name \
                             if department_for_customer_save is not None else EMPTY_STRING
-                        # if year is None:
-                        #     c = ws.cell(row=row_num, column=4)
-                        #     c.value = department_for_customer_save.short_name \
-                        #         if department_for_customer_save is not None else "---"
-                        #     c.style.font.italic = True
-                        #     c.style.alignment.horizontal = 'right'
-                        #     row_num += 1
                         while purchase is not None and permanence_save.id == purchase.permanence_id \
                                 and producer_save == purchase.producer \
                                 and department_for_customer_save == purchase.offer_item.department_for_customer:
@@ -350,9 +330,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                             row_start_offer_item = 0
                             while purchase is not None and offer_item_save == purchase.offer_item:
-                                # if purchase.quantity_invoiced > DECIMAL_ZERO \
-                                #         or purchase.offer_item.order_unit >= PRODUCT_ORDER_UNIT_DEPOSIT:
-
                                 c = ws.cell(row=row_num, column=1)
                                 c.value = purchase.id
                                 c = ws.cell(row=row_num, column=2)
@@ -429,9 +406,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         None, None, yellowFill
                                     )
                                 c = ws.cell(row=row_num, column=10)
-                                # if purchase.invoiced_price_with_compensation:
-                                #     c.value = '=G%s*%s' % (row_num + 1, purchase.offer_item.compensation.amount)
-                                # else:
                                 c.value = '=G%s*%s' % (row_num + 1, purchase.offer_item.customer_vat.amount)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=12)
@@ -467,9 +441,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     )
                                     c = ws.cell(row=row_num, column=0)
                                     c.value = "D"
-
-                                    # if purchase is not None and department_for_customer_save != purchase.offer_item.department_for_customer:
-                                    #     row_num += 1
 
                             producer_price += offer_items_price
 
@@ -539,8 +510,6 @@ def admin_export_permanence_by_producer(request, permanence):
     wb = export_purchase(permanence=permanence, wb=None)
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        # filename = force_filename("%s - %s.xlsx" % (_("invoices"), permanence))
-        # response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
             slugify(_("Invoices")),
             slugify(permanence)
@@ -553,8 +522,6 @@ def admin_export_permanence_by_producer(request, permanence):
 
 def admin_export_year_by_producer(year, queryset):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    # filename = ("%s - %s.xlsx" % (_("invoices"), str(year))).encode('ascii', errors='replace').replace('?', '_')
-    # response['Content-Disposition'] = 'attachment; filename=' + filename
     response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
         slugify(_("Invoices")),
         str(year)
@@ -569,8 +536,6 @@ def admin_export_year_by_producer(year, queryset):
 
 def admin_export_year_by_customer(year, queryset):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    # filename = ("%s - %s.xlsx" % (_("invoices"), str(year))).encode('ascii', errors='replace').replace('?', '_')
-    # response['Content-Disposition'] = 'attachment; filename=' + filename
     response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
         slugify(_("Invoices")),
         str(year)

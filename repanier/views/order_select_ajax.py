@@ -58,9 +58,6 @@ def order_select_ajax(request):
                             status = customer_invoice.status
                             if PERMANENCE_OPENED <= status <= PERMANENCE_SEND:
                                 a_price = offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
-                                # if customer is not None and customer.vat_id is not None:
-                                #     a_price += offer_item.compensation.amount
-                                # The q_order is either the purchased quantity or 0
                                 q_min = offer_item.customer_minimum_order_quantity
                                 if status == PERMANENCE_OPENED and offer_item.limit_order_quantity_to_stock:
                                     q_alert = offer_item.stock - offer_item.quantity_invoiced + q_previous_order

@@ -34,9 +34,6 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
-    # picture = FilerImageField(
-    #     verbose_name=_("picture"), related_name="production_mode_picture",
-    #     null=True, blank=True)
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,
@@ -142,10 +139,6 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
     )
-    # delivery_points = models.ManyToManyField(
-    #     LUT_DeliveryPoint,
-    #     verbose_name=_("delivery points"),
-    #     blank=True)
 
     is_counted_as_participation = models.BooleanField(_("is_counted_as_participation"), default=True)
     customers_may_register = models.BooleanField(_("customers_may_register"), default=True)

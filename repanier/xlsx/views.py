@@ -9,7 +9,6 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class ImportXlsxForm(forms.Form):
-    # _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
     file_to_import = forms.FileField(
         label=_('File to import'),
         allow_empty_file=False
@@ -22,12 +21,7 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
         if form.is_valid():
             file_to_import = request.FILES['file_to_import']
             if ('.xlsx' in file_to_import.name) and (file_to_import.size <= 1000000):
-                # error = False
-                # error_msg = EMPTY_STRING
-                # # for object in queryset:
                 error, error_msg = handle_uploaded_file(request, queryset, file_to_import)
-                # if error:
-                #     break
                 if error:
                     if error_msg is None:
                         admin_ui.message_user(request,

@@ -19,12 +19,6 @@ class OrderView(ListView):
     paginate_by = 28
     paginate_orphans = 6
 
-    # def get_urls(self):
-    # my_urls = patterns('',
-    # url(r'^purchase_update/$', self.update, name='sortable_update'),
-    # )
-    # return my_urls + super(SortableAdminMixin, self).get_urls()
-
     def __init__(self, **kwargs):
         super(OrderView, self).__init__(**kwargs)
         self.user = None
@@ -55,12 +49,6 @@ class OrderView(ListView):
             self.like = False
         if self.permanence.with_delivery_point:
             self.delivery_id = sint(kwargs.get('delivery_id', 0))
-            # if self.delivery_id <= 0:
-            #     delivery = DeliveryBoard.objects.filter(permanence_id=permanence_id).order_by('?').first()
-            #     if delivery is not None:
-            #         self.delivery_id = delivery.id
-            #     else:
-            #         raise Http404
         if self.user.is_anonymous() or self.user.is_staff:
             self.is_anonymous = True
             self.may_order = False

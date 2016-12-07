@@ -66,7 +66,6 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
             self.fields["customer"].widget.can_delete_related = False
             if self.instance.offer_item.order_unit not in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
                 self.fields["purchase_price"].widget.attrs['readonly'] = True
-                # self.fields["purchase_price"].disabled = True
 
     class Meta:
         widgets = {
@@ -183,10 +182,6 @@ class OfferItemSendDataForm(forms.ModelForm):
                 # Important : linked with vvvv
         return offer_item
 
-    # class Meta:
-    #     model = OfferItem
-    #     fields = "__all__"
-
 
 class OfferItemSendAdmin(admin.ModelAdmin):
     form = OfferItemSendDataForm
@@ -207,7 +202,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     list_max_show_all = 16
     # Important : Do not order by 'translations__order_sort_order'
     # because in this case, when searching on the long_name, records may be duplicated in the admin result list.
-    # ordering = ('translations__long_name',) #, 'translations__order_sort_order',)
     ordering = ('translations__long_name',)
     readonly_fields = ('get_html_producer_qty_stock_invoiced', 'get_vat_level')
 

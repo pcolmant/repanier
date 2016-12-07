@@ -53,15 +53,6 @@ class PermanenceMenu(Menu):
         for permanence in Permanence.objects.filter(status=PERMANENCE_OPENED) \
                 .only("id", "permanence_date", "with_delivery_point") \
                 .order_by('permanence_date'):
-            # if permanence.with_delivery_point:
-            #     for delivery in DeliveryBoard.objects.filter(permanence_id=permanence.id).order_by("id"):
-            #         displayed_permanence_counter += 1
-            #         if first_pass and separator:
-            #             submenu_id = self.append_separator(nodes, master_id, submenu_id)
-            #         first_pass = False
-            #         separator = True
-            #         submenu_id = self.append_delivery(is_anonymous, permanence, delivery, nodes, master_id, submenu_id)
-            # else:
             displayed_permanence_counter += 1
             if first_pass and separator:
                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
