@@ -68,9 +68,6 @@ class Permanence(TranslatableModel):
         verbose_name=_("highest permanence_status"),
         help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
 
-    def natural_key(self):
-        return self.permanence_date, self.short_name
-
     def get_producers(self):
         if self.id is not None:
             if len(self.producers.all()) > 0:

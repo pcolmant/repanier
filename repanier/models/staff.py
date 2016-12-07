@@ -44,11 +44,6 @@ class Staff(TranslatableModel):
         _("password_reset_on"), null=True, blank=True, default=None)
     is_active = models.BooleanField(_("is_active"), default=True)
 
-    def natural_key(self):
-        return self.user.natural_key()
-
-    natural_key.dependencies = ['auth.user']
-
     def get_customer_phone1(self):
         try:
             return self.customer_responsible.phone1

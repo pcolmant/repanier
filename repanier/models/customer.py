@@ -262,11 +262,6 @@ class Customer(models.Model):
         return self.picture or self.accept_mails_from_members or self.accept_phone_call_from_members \
                or (self.about_me is not None and len(self.about_me.strip()) > 1)
 
-    def natural_key(self):
-        return self.short_basket_name
-
-    natural_key.dependencies = ['repanier.customer']
-
     def __str__(self):
         return self.short_basket_name
 

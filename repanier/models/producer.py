@@ -100,9 +100,6 @@ class Producer(models.Model):
         _("represent_this_buyinggroup"), default=False)
     is_active = models.BooleanField(_("is_active"), default=True)
 
-    def natural_key(self):
-        return self.short_profile_name
-
     def get_products(self):
         link = EMPTY_STRING
         if self.id:
