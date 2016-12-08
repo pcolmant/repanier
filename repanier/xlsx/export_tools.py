@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.sites.models import Site
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.cell import get_column_letter
 from openpyxl.style import NumberFormat
@@ -15,8 +16,8 @@ from repanier.tools import cap
 
 
 def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
-    title1 = "%s" % (title1)
-    worksheet.title = cap(title1, 31)
+    title1 = "%s" % title1
+    worksheet.title = cap(slugify(title1), 31)
     worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
     worksheet.page_setup.fitToPage = True
     worksheet.page_setup.fitToHeight = 0
