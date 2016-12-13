@@ -6,7 +6,10 @@ from django.core import urlresolvers
 from django.core.cache import cache
 from django.db import models
 from django.db.models import F
+from django.db.models.signals import post_init
+from django.dispatch import receiver
 from django.utils import timezone
+from django.utils import translation
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -78,11 +81,11 @@ class Permanence(TranslatableModel):
                     link = []
                     for p in self.producers.all():
                         link.append(
-                            '<a href=%s?producer=%d target="_blank" class="addlink">&nbsp;%s</a>' % (
+                            '<a href=%s?producer=%d>&nbsp;%s</a>' % (
                                 changelist_url, p.id, p.short_profile_name))
-                    return ", ".join(link)
+                    return '<div class="wrap-text">%s</div>' % ", ".join(link)
                 elif self.status == PERMANENCE_PRE_OPEN:
-                    return ", ".join([p.short_profile_name + " (" + p.phone1 + ")" for p in self.producers.all()])
+                    return '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name + " (" + p.phone1 + ")" for p in self.producers.all()])
                 elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
                     close_offeritem_changelist_url = urlresolvers.reverse(
                         'admin:repanier_offeritemclosed_changelist',
@@ -116,9 +119,9 @@ class Permanence(TranslatableModel):
                             label = ('%s ' % (p.short_profile_name,)).replace(' ', '&nbsp;')
                             offeritem_changelist_url = close_offeritem_changelist_url
                         link.append(
-                            '<a href="%s?permanence=%s&producer=%d" target="_blank" class="addlink">%s</a>' % (
+                            '<a href="%s?permanence=%s&producer=%d">%s</a>' % (
                                 offeritem_changelist_url, self.id, p.id, label))
-                    return ", ".join(link)
+                    return '<div class="wrap-text">%s</div>' % ", ".join(link)
                 elif self.status == PERMANENCE_SEND:
                     send_offeritem_changelist_url = urlresolvers.reverse(
                         'admin:repanier_offeritemsend_changelist',
@@ -137,16 +140,16 @@ class Permanence(TranslatableModel):
                         if pi is not None:
                             label = '%s (%s) %s' % (p.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)
                             link.append(
-                                '<a href="%s?permanence=%d&producer=%d" target="_blank" class="addlink">&nbsp;%s</a>' % (
+                                '<a href="%s?permanence=%d&producer=%d">&nbsp;%s</a>' % (
                                     changelist_url, self.id, p.id, label.replace(' ', '&nbsp;')
                                 ))
                         else:
                             link.append(
-                                '<a href="%s?permanence=%d&producer=%d" target="_blank" class="addlink">&nbsp;%s</a>' % (
+                                '<a href="%s?permanence=%d&producer=%d">&nbsp;%s</a>' % (
                                     changelist_url, self.id, p.id, p.short_profile_name.replace(' ', '&nbsp;')
                                 ))
 
-                    return ", ".join(link)
+                    return '<div class="wrap-text">%s</div>' % ", ".join(link)
                 elif self.status in [PERMANENCE_DONE, PERMANENCE_ARCHIVED]:
                     link = []
                     for pi in invoice.ProducerInvoice.objects.filter(permanence_id=self.id).select_related(
@@ -157,15 +160,15 @@ class Permanence(TranslatableModel):
                             pi.get_to_be_paid_display()
                         )
                         link.append(
-                            '<a href="%s?producer=%d" target="_blank"%s>%s</a>'
+                            '<a href="%s?producer=%d" target="_blank" %s>%s</a>'
                             % (
                                 urlresolvers.reverse('producer_invoice_view', args=(pi.id,)),
                                 pi.producer_id,
-                                EMPTY_STRING if not pi.to_be_paid else ' class="addlink"',
+                                EMPTY_STRING if not pi.to_be_paid else '',
                                 label.replace(' ', '&nbsp;')))
                     producers = ", ".join(link)
                     msg_html = """
-                        <button
+                        <div class="wrap-text"><button
                         onclick="django.jQuery('#id_get_producers_%d').toggle();
                             if(django.jQuery(this).html()=='%s'){
                                 django.jQuery(this).html('%s')
@@ -174,7 +177,7 @@ class Permanence(TranslatableModel):
                             };
                             return false;"
                         >%s</button>
-                        <div id="id_get_producers_%d" style="display:none;">%s</div>
+                        <div id="id_get_producers_%d" style="display:none;">%s</div></div>
                     """ % (
                         self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, producers
                     )
@@ -186,7 +189,7 @@ class Permanence(TranslatableModel):
                                                producerinvoice__permanence_id=self.id).only(
                                                'short_profile_name')])
             else:
-                return _("No offer")
+                return '<div class="wrap-text">%s</div>' % _("No offer")
         return "?"
 
     get_producers.short_description = (_("producers in this permanence"))
@@ -212,7 +215,7 @@ class Permanence(TranslatableModel):
                             ci.customer.short_basket_name, ci.total_price_with_tax,
                             ci.get_is_order_confirm_send_display())
                     link.append(
-                        '<a href="%s?permanence=%d&customer=%d" target="_blank"  class="addlink">%s</a>'
+                        '<a href="%s?permanence=%d&customer=%d" target="_blank">%s</a>'
                         % (changelist_url, self.id, ci.customer_id, label.replace(' ', '&nbsp;')))
                 customers = ", ".join(link)
             elif self.status == PERMANENCE_DONE:
@@ -225,7 +228,7 @@ class Permanence(TranslatableModel):
                         ci.get_is_order_confirm_send_display()
                     )
                     link.append(
-                        '<a href="%s?customer=%d" target="_blank" >%s</a>'
+                        '<a href="%s?customer=%d" target="_blank">%s</a>'
                         % (
                             urlresolvers.reverse('customer_invoice_view', args=(ci.id,)),
                             ci.customer_id,
@@ -240,7 +243,7 @@ class Permanence(TranslatableModel):
                                            'short_basket_name')])
             if len(customers) > 0:
                 msg_html = """
-                    <button
+                    <div class="wrap-text"><button
                     onclick="django.jQuery('#id_get_customers_%d').toggle();
                         if(django.jQuery(this).html()=='%s'){
                             django.jQuery(this).html('%s')
@@ -249,13 +252,13 @@ class Permanence(TranslatableModel):
                         };
                         return false;"
                     >%s</button>
-                    <div id="id_get_customers_%d" style="display:none;">%s</div>
+                    <div id="id_get_customers_%d" style="display:none;">%s</div></div>
                 """ % (
                     self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, customers
                 )
                 return msg_html
             else:
-                return _("No purchase")
+                return '<div class="wrap-text">%s</div>' % _("No purchase")
         return "?"
 
     get_customers.short_description = (_("customers in this permanence"))
@@ -287,7 +290,7 @@ class Permanence(TranslatableModel):
                             args=(c.id,)
                         )
                         c_link = '&nbsp;->&nbsp;<a href="' + c_url + \
-                                 '" target="_blank">' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
+                                 '" > target="_blank"' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
                     if not first_board:
                         board += '<br/>'
                     board += r_link + c_link
@@ -295,7 +298,7 @@ class Permanence(TranslatableModel):
             if not first_board:
                 # At least one role is defined in the permanence board
                 msg_html = """
-                    <button
+                    <div class="wrap-text"><button
                     onclick="django.jQuery('#id_get_board_%d').toggle();
                         if(django.jQuery(this).html()=='%s'){
                             django.jQuery(this).html('%s')
@@ -304,13 +307,13 @@ class Permanence(TranslatableModel):
                         };
                         return false;"
                     >%s</button>
-                    <div id="id_get_board_%d" style="display:none;">%s</div>
+                    <div id="id_get_board_%d" style="display:none;">%s</div></div>
                 """ % (
                     self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, board
                 )
                 return msg_html
             else:
-                return _("Empty board")
+                return '<div class="wrap-text">%s</div>' % _("Empty board")
         return "?"
 
     get_board.short_description = (_("permanence board"))

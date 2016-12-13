@@ -13,9 +13,9 @@ from django.http import HttpResponseRedirect
 from django.template import Context as TemplateContext, Template
 from django.utils import translation
 from django.utils.safestring import mark_safe
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
+from parler.forms import TranslatableModelForm
 from parler.models import TranslationDoesNotExist
 from parler.utils.context import switch_language
 
@@ -25,7 +25,7 @@ from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, Ge
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models import Customer, Purchase, Producer, PermanenceBoard, LUT_PermanenceRole, PermanenceInPreparation, \
-    Box, OfferItem, DeliveryBoard, LUT_DeliveryPoint, ProducerInvoice, Product
+    Box, OfferItem, DeliveryBoard, LUT_DeliveryPoint, ProducerInvoice, Product, Configuration
 from repanier.task import task_order, task_purchase
 from repanier.tools import send_email_to_who, get_signature, get_board_composition
 from repanier.xlsx import xlsx_offer, xlsx_order
@@ -94,7 +94,30 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
         return super(DeliveryBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class PermanenceInPreparationForm(TranslatableModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
+        # if self.instance.id is None:
+        #     config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
+        #     self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
+        # else:
+        #     try:
+        #         check_if_translation_exists = self.instance.offer_customer_mail_subject
+        #         print('------------------ check_if_translation_exists')
+        #         print('<%s>' % check_if_translation_exists)
+        #     except TranslationDoesNotExist:
+        #         The translation doesn't exists
+                # config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
+                # self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
+
+    class Meta:
+        model = PermanenceInPreparation
+        fields = "__all__"
+
+
 class PermanenceInPreparationAdmin(TranslatableAdmin):
+    form = PermanenceInPreparationForm
     exclude = ['invoice_description']
     list_per_page = 10
     list_max_show_all = 10
@@ -102,7 +125,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = (
-    '__str__', 'all_languages_column', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display')
+        '__str__', 'language_column', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display'
+    )
     ordering = ('permanence_date',)
     if settings.DJANGO_SETTINGS_ENV == "dev":
         actions = [
@@ -147,12 +171,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def get_fields(self, request, permanence=None):
         fields = [
-            ('permanence_date', 'short_name',),
+            'permanence_date',
             'automatically_closed',
+            'short_name',
             'offer_description',
-            'producers',
-            'get_boxes'
+            'producers'
         ]
+        if self.get_boxes():
+            fields.append('get_boxes')
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
@@ -161,8 +187,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 return ['status', 'producers', 'get_boxes']
         return ['status', 'get_boxes']
 
-    def get_boxes(self, obj=None):
-        if obj is None or obj.status == PERMANENCE_PLANNED:
+    def get_boxes(self, permanence=None):
+        if permanence is None or permanence.status == PERMANENCE_PLANNED:
             qs = Box.objects.filter(
                 is_box=True,
                 is_into_offer=True,
@@ -175,7 +201,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             result = ", ".join(o.long_name for o in qs)
         else:
             qs = OfferItem.objects.filter(
-                permanence_id=obj.id,
+                permanence_id=permanence.id,
                 is_box=True,
                 may_order=True,
                 translations__language_code=translation.get_language()
@@ -183,7 +209,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 "translations__preparation_sort_order"
             )
             result = ", ".join(o.long_name for o in qs)
-        return result if result is not None else _("None")
+        return result if result is not None else EMPTY_STRING
 
     get_boxes.short_description = _("boxes")
 

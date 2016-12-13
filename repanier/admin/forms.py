@@ -78,10 +78,10 @@ class ProducerInvoicedForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ProducerInvoicedForm, self).__init__(*args, **kwargs)
-        self.fields["to_be_invoiced_balance"].widget.attrs['style'] = "width:100px"
-        self.fields["invoice_reference"].widget.attrs['style'] = "width:300px"
+        self.fields["to_be_invoiced_balance"].widget.attrs['style'] = "width:100px !important"
+        self.fields["invoice_reference"].widget.attrs['style'] = "width:250px !important"
         self.fields["calculated_invoiced_balance"].widget.attrs['readonly'] = True
-        self.fields["calculated_invoiced_balance"].widget.attrs['style'] = "width:100px"
+        # self.fields["calculated_invoiced_balance"].widget.attrs['style'] = "width:100px"
 
 
 ProducerInvoicedFormSet = formset_factory(ProducerInvoicedForm, extra=0)

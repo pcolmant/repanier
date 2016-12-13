@@ -251,9 +251,9 @@ class MoneyInput(NumberInput):
             # Only add the 'value' attribute if a value is non-empty.
             final_attrs['value'] = force_text(self._format_value(value))
         if repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            return format_html('<input{} /> {}', flatatt(final_attrs), repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
+            return format_html('<input{} />&nbsp;{}', flatatt(final_attrs), repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
         else:
-            return format_html('{} <input{} />', repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, flatatt(final_attrs))
+            return format_html('{}&nbsp;<input{} />', repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, flatatt(final_attrs))
 
 
 class FormMoneyField(DecimalField):

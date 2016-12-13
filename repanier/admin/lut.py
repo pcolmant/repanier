@@ -119,8 +119,8 @@ class LUTDeliveryPointAdmin(LUTAdmin):
 
     def get_fields(self, request, obj=None):
         if obj is None:
-            return ['parent', 'is_active', 'short_name', 'description', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
-        return ['parent', 'is_active', 'short_name', 'description', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
+            return [('parent',), 'is_active', 'short_name', 'description', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
+        return [('parent',), 'is_active', 'short_name', 'description', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):

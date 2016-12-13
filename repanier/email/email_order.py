@@ -75,13 +75,9 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                     order_staff_mail = config.order_staff_mail
                 except TranslationDoesNotExist:
                     order_staff_mail = EMPTY_STRING
-                order_staff_mail_subject = "%s - %s - %s" % (
-                    _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME)
-                try:
-                    if config.order_staff_mail_subject:
-                        order_staff_mail_subject = config.order_staff_mail_subject
-                except TranslationDoesNotExist:
-                    pass
+                # order_staff_mail_subject = "%s - %s - %s" % (
+                #     _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME)
+                order_staff_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 template = Template(order_staff_mail)
                 context = TemplateContext({
@@ -140,13 +136,9 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                     order_producer_mail = config.order_producer_mail
                 except TranslationDoesNotExist:
                     order_producer_mail = EMPTY_STRING
-                order_producer_mail_subject = "%s - %s - %s" % (
-                    _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME)
-                try:
-                    if config.order_producer_mail_subject:
-                        order_producer_mail_subject = config.order_producer_mail_subject
-                except TranslationDoesNotExist:
-                    pass
+                # order_producer_mail_subject = "%s - %s - %s" % (
+                #     _('Permanence preparation list'), permanence, REPANIER_SETTINGS_GROUP_NAME)
+                order_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 template = Template(order_producer_mail)
                 context = TemplateContext({
@@ -275,25 +267,17 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                         order_customer_mail = config.cancel_order_customer_mail
                     except TranslationDoesNotExist:
                         order_customer_mail = EMPTY_STRING
-                    order_customer_mail_subject = "%s - %s - %s - %s" % (
-                        _('/!\ Order cancelled'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_basket_name)
-                    try:
-                        if config.cancel_order_customer_mail_subject:
-                            order_customer_mail_subject = config.cancel_order_customer_mail_subject
-                    except TranslationDoesNotExist:
-                        pass
+                    order_customer_mail_subject = "%s - %s - %s" % (
+                        _('/!\ Order cancelled'), REPANIER_SETTINGS_GROUP_NAME, permanence)
                 else:
                     try:
                         order_customer_mail = config.order_customer_mail
                     except TranslationDoesNotExist:
                         order_customer_mail = EMPTY_STRING
-                    order_customer_mail_subject = "%s - %s - %s - %s" % (
-                        _('Order'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_basket_name)
-                    try:
-                        if config.order_customer_mail_subject:
-                            order_customer_mail_subject = config.order_customer_mail_subject
-                    except TranslationDoesNotExist:
-                        pass
+                    # order_customer_mail_subject = "%s - %s - %s" % (
+                    #     _('Order'), REPANIER_SETTINGS_GROUP_NAME, permanence)
+                    order_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+
                 template = Template(order_customer_mail)
                 context = TemplateContext({
                     'name'             : long_basket_name,

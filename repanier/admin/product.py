@@ -359,22 +359,22 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if producer is not None:
             if producer.producer_pre_opening:
                 self.list_editable = ('producer_unit_price', 'stock')
-                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'all_languages_column',
+                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
                         'producer_unit_price',
                         'stock')
             elif producer.manage_replenishment or producer.manage_production:
                 self.list_editable = ('producer_unit_price', 'stock')
-                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'all_languages_column',
+                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
                         'producer_unit_price',
                         'get_customer_alert_order_quantity', 'stock')
             else:
                 self.list_editable = ('producer_unit_price',)
-                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'all_languages_column',
+                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
                         'producer_unit_price',
                         'get_customer_alert_order_quantity')
         else:
             self.list_editable = ('producer_unit_price', 'stock')
-            return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'all_languages_column',
+            return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
                     'producer_unit_price',
                     'get_customer_alert_order_quantity', 'stock')
 

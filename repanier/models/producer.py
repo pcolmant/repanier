@@ -106,7 +106,7 @@ class Producer(models.Model):
             changeproductslist_url = urlresolvers.reverse(
                 'admin:repanier_product_changelist',
             )
-            link = '<a href="%s?is_active__exact=1&producer=%s" target="_blank" class="addlink">&nbsp;%s</a>' \
+            link = '<a href="%s?is_active__exact=1&producer=%s" class="addlink">&nbsp;%s</a>' \
                    % (changeproductslist_url, str(self.id), _("his_products"))
         return link
 
@@ -231,19 +231,19 @@ class Producer(models.Model):
         if last_producer_invoice_set.exists():
             if balance.amount < 0:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#298A08">%s</span>' % (balance,)) + '</a>'
             elif balance.amount == 0:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#32CD32">%s</span>' % (balance,)) + '</a>'
             elif balance.amount > 30:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#FF0000">%s</span>' % (balance,)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#696969">%s</span>' % (balance,)) + '</a>'
         else:
             if balance.amount < 0:

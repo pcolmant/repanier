@@ -221,7 +221,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             self.fields = (
                 ('permanence', 'department_for_customer', 'product', 'get_vat_level',),
                 prices,
-                ('stock', 'qty_prepared', 'qty_delivered', 'offer_purchase_price')
+                ('stock', 'qty_delivered', 'qty_prepared', 'offer_purchase_price')
             )
         else:
             if not obj.wrapped and obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:

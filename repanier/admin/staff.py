@@ -115,7 +115,7 @@ class StaffWithUserDataAdmin(TranslatableAdmin):
               'is_coordinator', 'is_contributor', 'is_webmaster',
               'customer_responsible', 'long_name', 'function_description',
               'is_active']
-    list_display = ('user', 'all_languages_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
+    list_display = ('user', 'language_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
     list_filter = ('is_active',)
     list_select_related = ('customer_responsible',)
     list_per_page = 16

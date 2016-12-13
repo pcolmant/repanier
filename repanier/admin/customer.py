@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import uuid
 from collections import OrderedDict
 from os import sep as os_sep
-from re import compile
 
 from decimal import Decimal
 from django import forms

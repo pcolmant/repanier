@@ -169,15 +169,15 @@ class Customer(models.Model):
         if last_customer_invoice.exists():
             if balance.amount >= 30:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#32CD32">%s</span>' % (balance,)) + '</a>'
             elif balance.amount >= -10:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#696969">%s</span>' % (balance,)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" >' + (
                            '<span style="color:#FF0000">%s</span>' % (balance,)) + '</a>'
         else:
             if balance.amount >= 30:

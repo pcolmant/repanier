@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import re
 from django import forms
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.db.models import F, Q
 from django.utils import translation
@@ -127,4 +128,13 @@ class RepanierCustomBackend(ModelBackend):
                     user_or_none = None
         self.user = user_or_none
         return user_or_none
+
+    def has_perm(self, user_obj, perm, obj=None):
+        if perm.startswith('dummy_cmsplugin_cascade'):
+            codename = perm.split('.', 1)[1]
+            if not Permission.objects.filter(codename=codename).exists():
+                perm_splitted = codename.split('_', 1)
+                codename = '%s_bootstrapcontainerpluginmodel' % perm_splitted[0]
+            perm = 'cmsplugin_cascade.%s' % codename
+            return super(RepanierCustomBackend, self).has_perm(user_obj, perm, obj)
 

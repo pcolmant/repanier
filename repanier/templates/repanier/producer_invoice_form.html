@@ -143,6 +143,8 @@
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
         $(document).ready(function () {
+            setTimeout(function () {$(".cms-sideframe").hide();}, 500);
+            setTimeout(function () {$(".cms-sideframe").hide();}, 1000);
             lien = '{% url 'order_name' %}';
             $.ajax({
                 url: lien,

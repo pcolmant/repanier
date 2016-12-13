@@ -150,7 +150,7 @@ class BoxAdmin(TranslatableAdmin):
     model = Box
 
     list_display = (
-        'is_into_offer', 'get_long_name', 'all_languages_column',
+        'is_into_offer', 'get_long_name', 'language_column',
     )
     list_display_links = ('get_long_name',)
     list_per_page = 16

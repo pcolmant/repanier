@@ -42,13 +42,9 @@ def send_invoice(permanence_id):
                         invoice_producer_mail = config.invoice_producer_mail
                     except TranslationDoesNotExist:
                         invoice_producer_mail = EMPTY_STRING
-                    invoice_producer_mail_subject = "%s - %s - %s - %s" % (
-                            _('Payment'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_profile_name)
-                    try:
-                        if config.invoice_producer_mail_subject:
-                            invoice_producer_mail_subject = config.invoice_producer_mail_subject
-                    except TranslationDoesNotExist:
-                        pass
+                    # invoice_producer_mail_subject = "%s - %s - %s - %s" % (
+                    #         _('Payment'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_profile_name)
+                    invoice_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                     template = Template(invoice_producer_mail)
                     context = TemplateContext({
@@ -102,13 +98,9 @@ def send_invoice(permanence_id):
                         invoice_customer_mail = config.invoice_customer_mail
                     except TranslationDoesNotExist:
                         invoice_customer_mail = EMPTY_STRING
-                    invoice_customer_mail_subject = "%s - %s - %s - %s" % (_('Invoice'), permanence, REPANIER_SETTINGS_GROUP_NAME,
-                                               long_basket_name)
-                    try:
-                        if config.invoice_customer_mail_subject:
-                            invoice_customer_mail_subject = config.invoice_customer_mail_subject
-                    except TranslationDoesNotExist:
-                        pass
+                    # invoice_customer_mail_subject = "%s - %s - %s - %s" % (_('Invoice'), permanence, REPANIER_SETTINGS_GROUP_NAME,
+                    #                            long_basket_name)
+                    invoice_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
                     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
                         customer, permanence)
                     template = Template(invoice_customer_mail)

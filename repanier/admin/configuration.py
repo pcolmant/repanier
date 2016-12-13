@@ -54,7 +54,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                      'display_anonymous_order_form',
                      ('display_producer_on_order_form', 'max_week_wo_participation'),
                      'customers_must_confirm_orders',
-                     ('bank_account', 'vat_id'),
+                     'bank_account',
                      ('membership_fee', 'membership_fee_duration')),
             }),
         ]
@@ -64,7 +64,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                     'classes': ('collapse',),
                     'fields' :
                         (
-                            'offer_producer_mail_subject', 'offer_producer_mail',
+                            'offer_producer_mail',
                         ),
                 }),
             ]
@@ -73,25 +73,25 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'classes': ('collapse',),
                 'fields' :
                     (
-                        'send_opening_mail_to_customer', 'offer_customer_mail_subject', 'offer_customer_mail',
+                        'send_opening_mail_to_customer', 'offer_customer_mail',
                     ),
             }),
             (_('Ordering mails'), {
                 'classes': ('collapse',),
                 'fields' :
                     (
-                        'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail_subject', 'order_customer_mail',
-                        'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail_subject', 'cancel_order_customer_mail',
-                        'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer', 'order_producer_mail_subject', 'order_producer_mail',
-                        'send_order_mail_to_board', 'order_staff_mail_subject', 'order_staff_mail',
+                        'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail',
+                        'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail',
+                        'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer', 'order_producer_mail',
+                        'send_order_mail_to_board', 'order_staff_mail',
                     ),
             }),
             (_('Invoicing mails'), {
                 'classes': ('collapse',),
                 'fields' :
                     (
-                        'send_invoice_mail_to_customer', 'invoice_customer_mail_subject', 'invoice_customer_mail',
-                        'send_invoice_mail_to_producer', 'invoice_producer_mail_subject', 'invoice_producer_mail',
+                        'send_invoice_mail_to_customer', 'invoice_customer_mail',
+                        'send_invoice_mail_to_producer', 'invoice_producer_mail',
                     ),
             }),
             (_('Advanced options'), {
@@ -99,13 +99,13 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'fields' :
                     (
                         'home_site',
-                        'transport',
-                        'min_transport',
+                        ('transport', 'min_transport'),
                         'group_label',
                         'page_break_on_customer_check',
                         'close_wo_sending',
                         'sms_gateway_mail',
-                        ('currency', 'invoice',),
+                        'invoice',
+                        ('currency', 'vat_id'),
                     ),
             }),
         ]

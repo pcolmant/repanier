@@ -1745,14 +1745,14 @@ def get_full_status_display(permanence):
                 status_list.append("<b>%s</b>" % delivery.get_status_display())
             status_list.append("- %s" % delivery)
         if status_counter > 1:
-            return "<br/>".join(status_list)
+            return '<div class="wrap-text">%s</div>' % "<br/>".join(status_list)
     if need_to_refresh_status:
         url = urlresolvers.reverse(
                             'display_status',
                             args=(permanence.id,)
                         )
         msg_html = """
-            <div id="id_get_status_%d">
+            <div class="wrap-text" id="id_get_status_%d">
             <script type="text/javascript">
                 window.setTimeout(function(){
                     django.jQuery.ajax({
@@ -1771,4 +1771,4 @@ def get_full_status_display(permanence):
         )
         return mark_safe(msg_html)
     else:
-        return mark_safe(permanence.get_status_display())
+        return mark_safe('<div class="wrap-text">%s</div>' % permanence.get_status_display())
