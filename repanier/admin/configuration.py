@@ -52,9 +52,9 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'fields':
                     (('test_mode', 'group_name', 'name'),
                      'display_anonymous_order_form',
-                     ('display_producer_on_order_form', 'max_week_wo_participation'),
+                     'display_producer_on_order_form',
                      'customers_must_confirm_orders',
-                     'bank_account',
+                     ('bank_account', 'max_week_wo_participation'),
                      ('membership_fee', 'membership_fee_duration')),
             }),
         ]
