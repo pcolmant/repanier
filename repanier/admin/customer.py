@@ -81,8 +81,8 @@ class UserDataForm(forms.ModelForm):
                         _(
                             'This customer is responsible of the delivery point (%(delivery_point)s). A customer responsible of a delivery point may not pass order.') % {
                             'delivery_point': delivery_point,})
-            is_active = self.cleaned_data["is_active"]
-            if not is_active:
+            is_active = self.cleaned_data.get("is_active")
+            if is_active is not None and not is_active:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
                     customer_responsible=self.instance.id
                 ).order_by('?').first()
