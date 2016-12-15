@@ -11,7 +11,8 @@
 </ul>
 </div>
 <div class="col-sm-9">
-<h3>{% page_attribute "page_title" %}</h3>
+{% page_attribute "page_title" as title %}
+{% if title %}<h3>title</h3>{% endif %}
     {% block sub_content %}{% placeholder subpage_content %}{% endblock %}
 </div>
 </div>

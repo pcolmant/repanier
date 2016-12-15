@@ -43,29 +43,29 @@
         </div>
 {% if permanence.with_delivery_point %}
         <fieldset class="module aligned ">
-        <div class="form-row">
-<div class="[ form-group ]">
+        <div class="submit-row">
+<div class="form-group">
     <input id="all-deliveries" name="all-deliveries" onClick="toggle_all_deliveries(this)" autocomplete="off" type="checkbox">
-    <div class="[ btn-group ]">
-        <label for="all-deliveries" class="[ btn btn-primary btn-sm ]">
-            <span class="[ glyphicon glyphicon-ok ]"></span>
+    <div class="btn-group">
+        <label for="all-deliveries" class="btn btn-primary btn-sm">
+            <span class="glyphicon glyphicon-ok"></span>
             <span>&nbsp;</span>
         </label>
-        <label for="all-deliveries" class="[ btn active btn-sm ]">
+        <label for="all-deliveries" class="btn active btn-sm">
             {% trans "Select all deliveries." %}
         </label>
     </div>
 </div>
 <hr class="colorgraph">
             {% for delivery in deliveries %}
-<span class="[ form-group ]">
+<span class="form-group">
     <input id="deliveries-{{ forloop.counter0 }}" name="deliveries" onClick="toggle_delivery(this)" value="{{ delivery.id|unlocalize }}" autocomplete="off" type="checkbox">
-    <div class="[ btn-group ]">
-        <label for="deliveries-{{ forloop.counter0 }}" class="[ btn btn-info btn-xs ]">
-            <span class="[ glyphicon glyphicon-ok ]"></span>
+    <div class="btn-group">
+        <label for="deliveries-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
+            <span class="glyphicon glyphicon-ok"></span>
             <span>&nbsp;</span>
         </label>
-        <label for="deliveries-{{ forloop.counter0 }}" class="[ btn active btn-xs ]">
+        <label for="deliveries-{{ forloop.counter0 }}" class="btn active btn-xs">
             {{ delivery }}
         </label>
     </div>
@@ -87,7 +87,7 @@
           return source.checked
         }
         function toggle(source, elementName) {
-          source.checked != source.checked;
+          source.checked = ! source.checked;
           all_checked = true;
           none_checked = true;
           checkboxes = document.getElementsByName(elementName);

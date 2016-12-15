@@ -11,7 +11,7 @@
             <button type="submit" name="done" value="done"><h6>{% trans "Done" %}</h6></button>
         </div>
         <fieldset class="module aligned ">
-        <div class="form-row">
+        <div class="submit-row">
             {% for bankaccount in bankaccounts %}
                 <h6>{{ bankaccount.producer.short_profile_name }}, {{ bankaccount.bank_amount_out }},
                 {{ bankaccount.operation_comment }}</h6>

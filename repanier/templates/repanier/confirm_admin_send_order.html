@@ -44,29 +44,29 @@
         </div>
 {% if permanence.with_delivery_point %}
         <fieldset class="module aligned ">
-        <div class="form-row">
-<div class="[ form-group ]">
+        <div class="submit-row">
+<div class="form-group">
     <input id="all-deliveries" name="all-deliveries" onClick="toggle_all_deliveries(this)" autocomplete="off" type="checkbox" checked>
-    <div class="[ btn-group ]">
-        <label for="all-deliveries" class="[ btn btn-primary btn-sm ]">
-            <span class="[ glyphicon glyphicon-ok ]"></span>
+    <div class="btn-group">
+        <label for="all-deliveries" class="btn btn-primary btn-sm">
+            <span class="glyphicon glyphicon-ok"></span>
             <span>&nbsp;</span>
         </label>
-        <label for="all-deliveries" class="[ btn active btn-sm ]">
+        <label for="all-deliveries" class="btn active btn-sm">
             {% trans "Select all deliveries." %}
         </label>
     </div>
 </div>
 <hr class="colorgraph">
             {% for delivery in deliveries %}
-<span class="[ form-group ]">
+<span class="form-group">
     <input id="deliveries-{{ forloop.counter0 }}" name="deliveries" onClick="toggle_delivery(this)" value="{{ delivery.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
-    <div class="[ btn-group ]">
-        <label for="deliveries-{{ forloop.counter0 }}" class="[ btn btn-info btn-xs ]">
-            <span class="[ glyphicon glyphicon-ok ]"></span>
+    <div class="btn-group">
+        <label for="deliveries-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
+            <span class="glyphicon glyphicon-ok"></span>
             <span>&nbsp;</span>
         </label>
-        <label for="deliveries-{{ forloop.counter0 }}" class="[ btn active btn-xs ]">
+        <label for="deliveries-{{ forloop.counter0 }}" class="btn active btn-xs">
             {{ delivery }}
         </label>
     </div>
@@ -79,29 +79,29 @@
 {% endif %}
 {% if producer_invoices %}
         <fieldset class="module aligned ">
-        <div class="form-row">
-<div class="[ form-group ]">
+        <div class="submit-row">
+<div class="form-group">
     <input id="all-producer-invoices" name="all-producer-invoices" onClick="toggle_all_producers(this)" autocomplete="off" type="checkbox" checked>
-    <div class="[ btn-group ]">
-        <label for="all-producer-invoices" class="[ btn btn-primary btn-sm ]">
-            <span class="[ glyphicon glyphicon-ok ]"></span>
+    <div class="btn-group">
+        <label for="all-producer-invoices" class="btn btn-primary btn-sm">
+            <span class="glyphicon glyphicon-ok"></span>
             <span>&nbsp;</span>
         </label>
-        <label for="all-producer-invoices" class="[ btn active btn-sm ]">
+        <label for="all-producer-invoices" class="btn active btn-sm">
             {% trans "Select all producers." %}
         </label>
     </div>
 </div>
 <hr class="colorgraph">
             {% for producer_invoice in producer_invoices %}
-<span class="[ form-group ]">
+<span class="form-group">
     <input id="producer-invoices-{{ forloop.counter0 }}" name="producer-invoices" onClick="toggle_producer(this)" value="{{ producer_invoice.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
-    <div class="[ btn-group ]">
-        <label for="producer-invoices-{{ forloop.counter0 }}" class="[ btn btn-info btn-xs ]">
-            <span class="[ glyphicon glyphicon-ok ]"></span>
+    <div class="btn-group">
+        <label for="producer-invoices-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
+            <span class="glyphicon glyphicon-ok"></span>
             <span>&nbsp;</span>
         </label>
-        <label for="producer-invoices-{{ forloop.counter0 }}" class="[ btn active btn-xs ]">
+        <label for="producer-invoices-{{ forloop.counter0 }}" class="btn active btn-xs">
             {{ producer_invoice.producer }}
         </label>
     </div>
@@ -114,7 +114,7 @@
 {% endif %}
     <div id="id_mail_to_customers">
         <fieldset class="module aligned ">
-        <div class="form-row">
+        <div class="submit-row">
             <div class="field-box">
                 <h6>{% trans "order mail to customers" %} :</h6>
             </div>
@@ -153,7 +153,7 @@
         </fieldset>
     </div>
         <fieldset class="module aligned ">
-        <div class="form-row">
+        <div class="submit-row">
             <div class="field-box">
                 <h6>{% trans "order mail to producers" %} :</h6>
             </div>
@@ -192,7 +192,7 @@
         </fieldset>
     <div id="id_mail_to_board">
         <fieldset class="module aligned ">
-        <div class="form-row">
+        <div class="submit-row">
             <div class="field-box">
                 <h6>{% trans "order mail to board" %} :</h6>
             </div>
@@ -347,4 +347,5 @@
             }
         }
 </script>
+    </div>
 {% endblock %}

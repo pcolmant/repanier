@@ -7,15 +7,17 @@
     <p></p>
     <form action="" method="post">{% csrf_token %}
         <h6>{{ sub_title }}</h6>
-        <div class="submit-row">
-            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
-        </div>
+    <div class="submit-row">
+        <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+        <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
+    </div>
         <fieldset class="module aligned ">
-        <div class="form-row">
+        <div class="submit-row">
             <div class="field-box">
-                <h6>{{ email_will_be_sent_to }}</h6>
+            <h6>{{ email_will_be_sent_to }}</h6>
             </div>
+        </div>
+        <div class="form-row">
         {% if email_will_be_sent %}
             <div class="field-box">
                 {% with id_for_label=form.template_offer_customer_mail.id_for_label %}

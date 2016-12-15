@@ -44,8 +44,8 @@
             {{ producer_invoiced_formset.management_form }}
         </div>
         <fieldset class="module aligned ">
-            <div class="form-row">
-                <div class="[ form-group ]">
+            <div class="submit-row">
+                <div class="form-group">
                     <h6>{{ permanence_form.non_field_errors }}</h6>
                     <div class="fieldWrapper">
                         {% if permanence_form.payment_date.errors %}
@@ -64,29 +64,29 @@
         {% for f_form in producer_invoiced_formset %}
             {% if forloop.first %}
                 <fieldset class="module aligned ">
-                    <div class="form-row">
-                        <div class="[ form-group ]">
+                    <div class="submit-row">
+                        <div class="form-group">
                             <input id="all-producers" name="all-producers" onClick="toggle_all_producers(this)" autocomplete="off" type="checkbox" checked>
-                            <div class="[ btn-group ]">
-                                <label for="all-producers" class="[ btn btn-primary btn-sm ]">
-                                    <span class="[ glyphicon glyphicon-ok ]"></span>
+                            <div class="btn-group">
+                                <label for="all-producers" class="btn btn-primary btn-sm">
+                                    <span class="glyphicon glyphicon-ok"></span>
                                     <span>&nbsp;</span>
                                 </label>
-                                <label for="all-producers" class="[ btn active btn-sm ]">
+                                <label for="all-producers" class="btn active btn-sm">
                                     {% trans "Select all producers." %}
                                 </label>
                             </div>
                         </div>
                         <hr class="colorgraph">
             {% endif %}
-            <span class="[ form-group ]">
+            <span class="form-group">
                 <input id="id_form-{{ forloop.counter0 }}-selected" name="form-{{ forloop.counter0 }}-selected" onClick="toggle_producer(this)" autocomplete="off" type="checkbox" checked>
-                <div class="[ btn-group ]">
-                    <label for="id_form-{{ forloop.counter0 }}-selected" class="[ btn btn-info btn-xs ]">
-                        <span class="[ glyphicon glyphicon-ok ]"></span>
+                <div class="btn-group">
+                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn btn-info btn-sm">
+                        <span class="glyphicon glyphicon-ok"></span>
                         <span>&nbsp;</span>
                     </label>
-                    <label for="id_form-{{ forloop.counter0 }}-selected" class="[ btn active btn-xs ]">
+                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn active btn-sm">
                         {{ f_form.short_profile_name.value }}
                         {% trans ", calculated : " %}
                             {{ f_form.calculated_invoiced_balance.value }}
