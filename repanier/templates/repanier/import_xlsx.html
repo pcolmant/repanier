@@ -3,7 +3,7 @@
 {% block content %}
     {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
     {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
-    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
+    {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}css/custom.css">{% endaddtoblock %}
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}

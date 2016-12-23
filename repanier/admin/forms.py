@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.admin.widgets import AdminDateWidget
 from django.forms.formsets import formset_factory
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
@@ -57,7 +58,7 @@ class InvoiceOrderForm(forms.Form):
 
 
 class PermanenceInvoicedForm(forms.Form):
-    payment_date = forms.DateField(label=_("payment date"), required=True)
+    payment_date = forms.DateField(label=_("payment date"), required=True) #, widget=AdminDateWidget())
 
     def __init__(self, *args, **kwargs):
         self.payment_date = kwargs.pop('payment_date', None)

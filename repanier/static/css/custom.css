@@ -1,5 +1,4 @@
-/* Sticky footer styles
--------------------------------------------------- */
+/* Sticky footer styles */
 html {
   position: relative;
   min-height: 100%;
@@ -97,9 +96,7 @@ body > .container {
 code {
   font-size: 80%;
 }
-
 /* automaticaly display menu on mouse over */
-
 ul.nav li.dropdown:hover > ul.dropdown-menu {
     display: block;    
 }
@@ -121,4 +118,56 @@ a.skip_link{
 }
 .container-menu {
     padding: 0 15px 0;
+}
+/* django-angular : style.css */
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+	display: none !important;
+}
+
+form.ng-submitted .ng-invalid,
+form .ng-invalid-bound.ng-pristine,
+form .ng-invalid.ng-dirty {
+	border-color: #e9322d;
+}
+
+form.ng-submitted .ng-invalid:focus,
+form .ng-invalid-bound.ng-pristine:focus,
+form .ng-invalid.ng-dirty:focus {
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #ce8483;
+}
+label.djng-field-required::after {
+	content: "\00a0*";
+}
+ul.djng-form-errors, ul.djng-field-errors {
+	display: inline-block;
+	list-style-type: none;
+	margin: 5px 0 0 0;
+	padding: 0;
+}
+ul.djng-form-errors li, ul.djng-field-errors li {
+	color: #e9322d;
+}
+ul.djng-field-errors li.invalid::before {
+	content: "\2716";
+	margin-right: 10px;
+}
+ul.djng-field-errors li.valid::before {
+	color: #00c900;
+	content: "\2714";
+}
+/* django-angular : bootstrap3.css */
+.djng-form-control-feedback {
+	position: absolute;
+	text-align: right;
+	/*top: -5px;*/
+    top: 36px;
+	right: 10px;
+}
+.djng-line-spreader {
+	height: 20px;
+	margin-bottom: 10px;
+}
+.checkbox + ul.djng-field-errors,
+.checkbox + ul.djng-field-errors + ul.djng-field-errors {
+    display: none;
 }

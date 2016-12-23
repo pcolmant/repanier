@@ -1,6 +1,6 @@
 {% load cms_tags sekizai_tags menu_tags compress i18n l10n repanier_tags %}{% spaceless %}
 {% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
-{% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/custom.css">{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}css/custom.css">{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
 {% addtoblock "js" %}<script src="{{ STATIC_URL}}fluidvids/fluidvids.js"></script>{% endaddtoblock %}
@@ -22,9 +22,10 @@
     </style>
     {% endif %}
 {% endaddtoblock %}
-{% endspaceless %}<!DOCTYPE html>{%get_current_language as LANGUAGE_CODE%}
-<html lang="{{LANGUAGE_CODE}}">
-
+{% endspaceless %}
+{%get_current_language as LANGUAGE_CODE%}
+<!DOCTYPE html>
+<html lang="{{LANGUAGE_CODE}}" ng-app="repanier">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -46,6 +47,10 @@
         'Class': (typeof Class === 'function') ? Class : undefined,
         'API': {}
       };
+      var my_app  = undefined;
+      if (angular) {
+        my_app  = angular.module('repanier', ['djng.forms']);
+      }
     </script>
    </head>
   <body>

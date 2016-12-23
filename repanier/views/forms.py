@@ -1,8 +1,10 @@
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
+# -*- coding: utf-8
+from __future__ import unicode_literals
+
+from djng.styling.bootstrap3.forms import Bootstrap3Form
 from django import forms
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
@@ -15,12 +17,10 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
-from parler.models import TranslationDoesNotExist
 
-import repanier.apps
 from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, LUT_PRODUCER_PRODUCT_ORDER_UNIT, EMPTY_STRING, DEMO_EMAIL
 from repanier.models import LUT_ProductionMode, Staff, Customer, Configuration
-from repanier.picture.const import SIZE_M, SIZE_S
+from repanier.picture.const import SIZE_M
 from repanier.picture.widgets import AjaxPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
@@ -151,85 +151,14 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
         return self.user
 
 
-class CoordinatorsContactForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_id = 'contact_form'
-        self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-lg-2'
-        self.helper.field_class = 'col-lg-10'
-        for staff in Staff.objects.filter(is_active=True, is_contributor=False):
-            r = staff.customer_responsible
-            if r is not None:
-                try:
-                    sender_function = staff.long_name
-                except TranslationDoesNotExist:
-                    sender_function = EMPTY_STRING
-                if r.long_basket_name is not None:
-                    signature = "%s : %s" % (sender_function, r.long_basket_name)
-                else:
-                    signature = "%s :%s" % (sender_function, r.short_basket_name)
-                self.fields["staff_%d" % staff.id] = forms.BooleanField(label=signature, required=False)
-        self.fields["your_email"] = forms.EmailField(label=_('Your Email'))
-        self.fields["subject"] = forms.CharField(label=_('Subject'))
-        self.fields["message"] = forms.CharField(label=_('Message'), widget=Textarea)
-        self.helper.add_input(Submit('submit', _('Send e-mail')))
+class RepanierForm(Bootstrap3Form):
+    required_css_class = 'djng-field-required'
 
-
-class MembersContactForm(forms.Form):
-    recipient = forms.CharField(label=_('Recipient(s)'))
-    your_email = forms.EmailField(label=_('Your Email'))
-    subject = forms.CharField(label=_('Subject'))
-    message = forms.CharField(label=_('Message'), widget=Textarea)
-
-    def __init__(self, *args, **kwargs):
-        super(MembersContactForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_id = 'contact_form'
-        self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-lg-2'
-        self.helper.field_class = 'col-lg-10'
-        self.helper.add_input(Submit('submit', _('Send e-mail')))
-
-
-class CustomerForm(forms.Form):
-    # error_css_class = 'has-warning'
-
-    long_basket_name = forms.CharField(label=_("Your name"), max_length=100)
-    accept_phone_call_from_members = forms.BooleanField(label=_('My phones numbers are visible to all members'),
-                                                        required=False)
-    phone1 = forms.CharField(label=_('Your main phone'), max_length=25)
-    phone2 = forms.CharField(label=_('Your secondary phone'), max_length=25, required=False)
-    accept_mails_from_members = forms.BooleanField(label=_('My emails are visible to all members'), required=False)
-    email1 = forms.EmailField(label=_('Your main email, used for password recovery and login'))
-    email2 = forms.EmailField(label=_('Your secondary email'), required=False)
-    city = forms.CharField(label=_('Your city'), max_length=50, required=False)
-    address = forms.CharField(label=_('address'), widget=Textarea(attrs={'cols': '40', 'rows': '3'}), required=False)
-    picture = forms.CharField(
-        label=_("picture"),
-        widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
-        required=False)
-
-    about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
-
-    def clean_email1(self):
-        email1 = self.cleaned_data['email1']
-        user_model = get_user_model()
-        user = user_model.objects.filter(email=email1).order_by('?').first()
-        if user is not None and user.id != self.request.user.id:
-            self.add_error('email1', _('The given email is used by another user'))
-        return email1
-
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)
-        super(CustomerForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_id = 'customer_form'
-        self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-lg-2'
-        self.helper.field_class = 'col-lg-10'
-        self.helper.add_input(Submit('submit', _('Update')))
+    class Media:
+        js = (
+            'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js',
+            'djng/js/django-angular.js'
+        )
 
 
 class ProducerProductForm(forms.Form):

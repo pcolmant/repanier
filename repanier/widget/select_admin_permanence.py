@@ -38,35 +38,34 @@ class SelectAdminPermanenceWidget(forms.Select):
                 else:
                     case_hide_hide += 'case "%d": ' % option_value
         output = """
-            <select{final_attrs} onchange="{name}_select(this.value)">
-                {options}
-            </select>
-            <script type="text/javascript">
-                django.jQuery(document).ready(function() {{ {name}_select("{value}");}});
-                function {name}_select(value) {{
-                    (function($){{
-                        switch (value) {{
-                            {case_show_show}
-                                $("div.form-row.field-quantity_ordered").show();
-                                $("div.form-row.field-quantity_invoiced").show();
-                                break;
-                            {case_show_hide}
-                                $("div.form-row.field-quantity_ordered").show();
-                                $("div.form-row.field-quantity_invoiced").hide();
-                                break;
-                            {case_hide_show}
-                                $("div.form-row.field-quantity_ordered").hide();
-                                $("div.form-row.field-quantity_invoiced").show();
-                                break;
-                            {case_hide_hide}
-                                $("div.form-row.field-quantity_ordered").hide();
-                                $("div.form-row.field-quantity_invoiced").hide();
-                                break;
-                        }}
-                    }}(django.jQuery))
-                }}
-            </script>
-
+<select{final_attrs} onchange="{name}_select(this.value)">
+    {options}
+</select>
+<script type="text/javascript">
+    django.jQuery(document).ready(function() {{ {name}_select("{value}");}});
+    function {name}_select(value) {{
+        (function($){{
+            switch (value) {{
+                {case_show_show}
+                    $("div.form-row.field-quantity_ordered").show();
+                    $("div.form-row.field-quantity_invoiced").show();
+                    break;
+                {case_show_hide}
+                    $("div.form-row.field-quantity_ordered").show();
+                    $("div.form-row.field-quantity_invoiced").hide();
+                    break;
+                {case_hide_show}
+                    $("div.form-row.field-quantity_ordered").hide();
+                    $("div.form-row.field-quantity_invoiced").show();
+                    break;
+                {case_hide_hide}
+                    $("div.form-row.field-quantity_ordered").hide();
+                    $("div.form-row.field-quantity_invoiced").hide();
+                    break;
+            }}
+        }}(django.jQuery))
+    }}
+</script>
         """.format(
             final_attrs=flatatt(final_attrs),
             name=name,

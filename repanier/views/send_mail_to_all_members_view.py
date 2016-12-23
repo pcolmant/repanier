@@ -1,8 +1,11 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.mail import EmailMessage
+from django.forms import Textarea
 from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -10,12 +13,26 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from django.conf import settings
+from djng.forms import NgFormValidationMixin
 
-from forms import MembersContactForm
 from repanier.const import EMPTY_STRING
 from repanier.models import Customer, Staff
 from repanier.tools import send_email
+from repanier.views.forms import RepanierForm
+
+
+class MembersContactForm(RepanierForm):
+    recipient = forms.CharField(label=_('Recipient(s)'))
+    your_email = forms.EmailField(label=_('Your Email'))
+    subject = forms.CharField(label=_('Subject'), max_length=100)
+    message = forms.CharField(label=_('Message'), widget=Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super(MembersContactForm, self).__init__(*args, **kwargs)
+
+
+class MembersContactValidationForm(NgFormValidationMixin, MembersContactForm):
+    pass
 
 
 @login_required()
@@ -28,7 +45,7 @@ def send_mail_to_all_members_view(request):
         customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
     ).order_by('?').first() is not None
     if request.method == 'POST':
-        form = MembersContactForm(request.POST)  # A form bound to the POST data
+        form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             to_email_customer = []
             if is_coordinator:
@@ -52,7 +69,7 @@ def send_mail_to_all_members_view(request):
             send_email(email=email)
             return HttpResponseRedirect('/')  # Redirect after POST
     else:
-        form = MembersContactForm()  # An unbound form
+        form = MembersContactValidationForm()  # An unbound form
         email = form.fields["your_email"]
         email.initial = request.user.email
         email.widget.attrs['readonly'] = True
@@ -64,4 +81,4 @@ def send_mail_to_all_members_view(request):
         recipient.widget.attrs['readonly'] = True
 
     return render(request, "repanier/send_mail_to_all_members.html",
-                           {'form': form, 'coordinator': is_coordinator})
+                  {'form': form, 'coordinator': is_coordinator})

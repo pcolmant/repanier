@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-12-07 17:28+0100\n"
-"PO-Revision-Date: 2016-12-07 17:29+0100\n"
+"PO-Revision-Date: 2016-12-14 20:08+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -3488,10 +3488,10 @@ msgid ""
 "email. You have the choice to specify if your phone and/or mail are visible "
 "to others members."
 msgstr ""
-"Toutes les informations ci-dessous sont visibles de tous les membres excepté "
-"votre adresse, vos ✆ et ✉.<br/>Les autres membres voient votre localité qui "
-"est encodée séparément de votre adresse.<br/>Vous avez le choix de spécifier "
-"si vos ✆ et ✉ sont visibles des autres membres."
+"Toutes les informations ci-dessous sont visibles de tous les membres.<br/"
+">Les autres membres voient votre localité qui est encodée séparément de "
+"votre adresse.<br/>Vous avez le choix de spécifier si vos ✆ et ✉ sont "
+"visibles des autres membres."
 
 #: templates/repanier/me_form.html:12
 msgid "Your membership fee is valid until"
@@ -4168,7 +4168,7 @@ msgstr "Destinataire(s)"
 
 #: views/forms.py:199
 msgid "Your name"
-msgstr "Mon nom (par exemple <b>John Smith</b>)"
+msgstr "Je m'appelle"
 
 #: views/forms.py:200
 msgid "My phones numbers are visible to all members"
@@ -4188,11 +4188,11 @@ msgstr "Mes ✉ mail sont visibles à l'ensemble des membres"
 
 #: views/forms.py:205
 msgid "Your main email, used for password recovery and login"
-msgstr "Mon ✉ mail principal pour me connecter au site"
+msgstr "Mon ✉ mail pour me connecter au site"
 
 #: views/forms.py:206
 msgid "Your secondary email"
-msgstr "Mon ✉ mail secondaire"
+msgstr "Mon ✉ mail secondaire (ne permet pas de se connecter au site)"
 
 #: views/forms.py:207
 msgid "Your city"

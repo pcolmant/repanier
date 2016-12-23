@@ -1,19 +1,16 @@
 {% extends 'cms_subpage.html' %}
-{% load cms_tags sekizai_tags i18n l10n %}
-
-{% addtoblock "jshead" %}
-    <script type="text/javascript">if (typeof CMS === 'undefined') {
-        CMS.$ = $
-    }</script>{% endaddtoblock %}
+{% load static cms_tags sekizai_tags i18n l10n %}
 {% block sub_content %}
-        {% if update == "Ok" %}<p class="bg-success" style="color: #cec7c7"><strong>{% trans "Update done." %}</strong></p>{% endif %}
-        {% if update == "Nok" %}<div class="has-error"><span class="help-block"><strong>{% trans "Update not done." %}</strong></span></div>{% endif %}
-        <p>{% trans "All informations bellow are visible to all members except your phone and email. You have the choice to specify if your phone and/or mail are visible to others members." %}</p>
-        <p>{% if membership_fee_valid_until %}<i>{% trans "Your membership fee is valid until" %} : <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
-<form method="post" action="." validate>
-    {% csrf_token %}
-    {{ form.as_div }}
-    <div class="form-group"><label class="control-label">&nbsp;</label></div>
-    <div class="form-group"><button type="submit" class="btn btn-primary">{% trans "Update" %}</button></div>
-</form>
+    {% if update == "Ok" %}<p class="bg-success" style="color: #cec7c7"><strong>{% trans "Update done." %}</strong></p>{% endif %}
+    {% if update == "Nok" %}<div class="has-error"><span class="help-block"><strong>{% trans "Update not done." %}</strong></span></div>{% endif %}
+    <p>{% trans "All informations bellow are visible to all members except your phone and email. You have the choice to specify if your phone and/or mail are visible to others members." %}</p>
+    <p>{% if membership_fee_valid_until %}<i>{% trans "Your membership fee is valid until" %} : <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
+    <form name="{{ form.form_name }}" method="post" action="." validate>
+        {% csrf_token %}
+        {{ form.as_div }}
+        <div class="form-group"><label class="control-label">&nbsp;</label></div>
+        <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-primary">{% trans "Update" %}</button></div>
+    </form>
+    {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
+    {% addtoblock "jshead" %}{{ form.media.js }}{% endaddtoblock %}
 {% endblock %}

@@ -3,15 +3,68 @@ from __future__ import unicode_literals
 
 from os import sep as os_sep
 
+from django import forms
 from django.contrib.auth import (get_user_model)
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+from djangocms_text_ckeditor.widgets import TextEditorWidget
+from djng.forms import NgFormValidationMixin
 
-from repanier.const import DECIMAL_ZERO
-from forms import CustomerForm
+from repanier.const import DECIMAL_ZERO, EMPTY_STRING
+from repanier.picture.const import SIZE_S
+from repanier.picture.widgets import AjaxPictureWidget
+from repanier.views.forms import RepanierForm
+from repanier.widget.checkbox import CheckboxWidget
+
+
+class CustomerForm(RepanierForm):
+    long_basket_name = forms.CharField(label=_("Your name"), max_length=100)
+
+    email1 = forms.EmailField(label=_('Your main email, used for password recovery and login'))
+    email2 = forms.EmailField(label=_('Your secondary email'), required=False)
+    accept_mails_from_members = forms.BooleanField(
+        label=EMPTY_STRING, required=False
+    )
+
+    phone1 = forms.CharField(label=_('Your main phone'), max_length=25)
+    phone2 = forms.CharField(label=_('Your secondary phone'), max_length=25, required=False)
+
+    accept_phone_call_from_members = forms.BooleanField(
+        label=EMPTY_STRING, required=False
+    )
+    city = forms.CharField(label=_('Your city'), max_length=50, required=False)
+    address = forms.CharField(label=_('address'), widget=forms.Textarea(attrs={'cols': '40', 'rows': '3'}),
+                              required=False)
+    picture = forms.CharField(
+        label=_("picture"),
+        widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
+        required=False)
+
+    about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
+
+    def clean_email1(self):
+        email1 = self.cleaned_data['email1']
+        user_model = get_user_model()
+        user = user_model.objects.filter(email=email1).order_by('?').first()
+        if user is not None and user.id != self.request.user.id:
+            self.add_error('email1', _('The given email is used by another user'))
+        return email1
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(CustomerForm, self).__init__(*args, **kwargs)
+        self.fields["accept_mails_from_members"].widget = CheckboxWidget(
+            label=_('My emails are visible to all members'))
+        self.fields["accept_phone_call_from_members"].widget = CheckboxWidget(
+            label=_('My phones numbers are visible to all members'))
+
+
+class CustomerValidationForm(NgFormValidationMixin, CustomerForm):
+    pass
 
 
 @login_required()
@@ -28,7 +81,7 @@ def me_view(request):
         else:
             membership_fee_valid_until = None
         if request.method == 'POST':  # If the form has been submitted...
-            form = CustomerForm(request.POST, request=request)  # A form bound to the POST data
+            form = CustomerValidationForm(request.POST, request=request)  # A form bound to the POST data
             if form.is_valid():  # All validation rules pass
                 # Process the data in form.cleaned_data
                 # ...
@@ -56,11 +109,13 @@ def me_view(request):
                     data = form.data.copy()
                     data["email1"] = customer.user.email
                     data["email2"] = customer.email2
-                    form = CustomerForm(data, request=request)
-                return render(request, "repanier/me_form.html", {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Ok'})
-            return render(request, "repanier/me_form.html", {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Nok'})
+                    form = CustomerValidationForm(data, request=request)
+                return render(request, "repanier/me_form.html",
+                              {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Ok'})
+            return render(request, "repanier/me_form.html",
+                          {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Nok'})
         else:
-            form = CustomerForm()  # An unbound form
+            form = CustomerValidationForm()  # An unbound form
             field = form.fields["long_basket_name"]
             field.initial = customer.long_basket_name
             field = form.fields["phone1"]
@@ -86,4 +141,5 @@ def me_view(request):
             field = form.fields["about_me"]
             field.initial = customer.about_me
 
-        return render(request, "repanier/me_form.html", {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': None})
+        return render(request, "repanier/me_form.html",
+                      {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': None})
