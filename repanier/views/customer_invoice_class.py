@@ -92,8 +92,8 @@ class CustomerInvoiceView(DetailView):
     def get_queryset(self):
         pk = self.kwargs.get('pk', None)
         if self.request.user.is_staff:
-            customer_id = self.request.GET.get('customer', None)
             if (pk is None) or (pk == '0'):
+                customer_id = self.request.GET.get('customer', None)
                 last_customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=customer_id, invoice_sort_order__isnull=False
                 ).only("id").order_by('-invoice_sort_order').first()
