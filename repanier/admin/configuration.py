@@ -50,7 +50,8 @@ class ConfigurationAdmin(TranslatableAdmin):
         fieldsets = [
             (None, {
                 'fields':
-                    (('test_mode', 'group_name', 'name'),
+                    (('group_name', 'name'),
+                     'test_mode',
                      'display_anonymous_order_form',
                      'display_producer_on_order_form',
                      'customers_must_confirm_orders',
