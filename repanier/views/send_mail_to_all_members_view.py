@@ -67,7 +67,15 @@ def send_mail_to_all_members_view(request):
                 bcc=to_email_customer
             )
             send_email(email=email)
-            # return HttpResponseRedirect('/')  # Redirect after POST
+            email = form.fields["your_email"]
+            email.initial = request.user.email
+            email.widget.attrs['readonly'] = True
+            recipient = form.fields["recipient"]
+            if is_coordinator:
+                recipient.initial = _("All members as coordinator")
+            else:
+                recipient.initial = _("All members accepting to show they mail address")
+            recipient.widget.attrs['readonly'] = True
             return render(request, "repanier/send_mail_to_all_members.html",
                           {'form': form, 'update': '2'})
     else:

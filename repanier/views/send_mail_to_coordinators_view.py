@@ -93,7 +93,6 @@ def send_mail_to_coordinators_view(request):
         raise Http404
     if request.method == 'POST':
         form = CoordinatorsContactValidationForm(request.POST)
-        # request.POST = form.data
         if form.is_valid():
             to_email_staff = []
             selected_staff_members = form.cleaned_data.get('staff')
@@ -111,6 +110,9 @@ def send_mail_to_coordinators_view(request):
                 )
                 send_email(email=email)
                 # return HttpResponseRedirect('/')
+                email = form.fields["your_email"]
+                email.initial = request.user.email
+                email.widget.attrs['readonly'] = True
                 return render(request, "repanier/send_mail_to_coordinators.html",
                               {'form': form, 'update': '2'})
             else:
