@@ -1,19 +1,22 @@
 {% extends 'cms_subpage.html' %}
 {% load cms_tags sekizai_tags i18n l10n %}
 {% block sub_content %}
-    {% if coordinator %}
-        <div class="bg-danger">
-        <blockquote><small>
-        {% trans "This message will be send to all members as coordinator." %}
-        </small></blockquote>
-        </div>
-    {% else %}
-        {% trans "This message will be send only to members who accept to show they email." %}
-    {% endif %}
+    {% if update == '2' %}<p class="bg-success">{% trans "The mail has been send" %}</p>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
+        {% if update != '2' %}
+        <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-primary pull-right">{% trans "Send e-mail" %}</button></div>
+        {% endif %}
+        {% if coordinator %}
+            <div class="bg-danger">
+            <blockquote><small>
+            {% trans "This message will be send to all members as coordinator." %}
+            </small></blockquote>
+            </div>
+        {% else %}
+            {% trans "This message will be send only to members who accept to show they email." %}
+        {% endif %}
         {{ form.as_div }}
-         <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-primary">{% trans "Send e-mail" %}</button></div>
     </form>
     {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
     {% addtoblock "jshead" %}{{ form.media.js }}{% endaddtoblock %}

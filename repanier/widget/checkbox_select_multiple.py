@@ -1,12 +1,13 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+import json
 from django.utils.encoding import force_text
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from djng.forms.widgets import (
     ChoiceFieldRenderer as DjngChoiceFieldRenderer, CheckboxChoiceInput as DjngCheckboxChoiceInput,
-    CheckboxFieldRendererMixin, CheckboxSelectMultiple as DjngCheckboxSelectMultiple)
+    CheckboxSelectMultiple as DjngCheckboxSelectMultiple)
 
 
 class ChoiceFieldRenderer(DjngChoiceFieldRenderer):
@@ -20,6 +21,16 @@ class ChoiceFieldRenderer(DjngChoiceFieldRenderer):
             output.append(force_text(widget))
         output.append('</div>')
         return mark_safe('\n'.join(output))
+
+
+class CheckboxFieldRendererMixin(object):
+    def __init__(self, name, value, attrs, choices):
+        attrs.pop('djng-error', None)
+        self.field_attrs = [format_html('ng-form="{0}"', name)]
+        if attrs.pop('multiple_checkbox_required', False):
+            field_names = [format_html('{0}.{1}', name, choice) for choice, dummy in choices]
+            self.field_attrs.append(format_html('validate-multiple-fields="{0}"', json.dumps(field_names)))
+        super(CheckboxFieldRendererMixin, self).__init__(name, value, attrs, choices)
 
 
 class CheckboxInlineChoiceInput(DjngCheckboxChoiceInput):
@@ -43,12 +54,20 @@ class CheckboxInlineChoiceInput(DjngCheckboxChoiceInput):
         )
         return mark_safe(output)
 
+
 class CheckboxInlineFieldRenderer(CheckboxFieldRendererMixin, ChoiceFieldRenderer):
     choice_input_class = CheckboxInlineChoiceInput
 
 
 class CheckboxSelectMultipleWidget(DjngCheckboxSelectMultiple):
     renderer = CheckboxInlineFieldRenderer
+
+    def value_from_datadict(self, data, files, name):
+        """
+        Given a dictionary of data and this widget's name, returns the value
+        of this widget. Returns None if it's not provided.
+        """
+        return dict(data.iterlists())[name]
 
     class Media:
         css = {

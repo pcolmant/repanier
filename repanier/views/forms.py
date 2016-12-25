@@ -11,7 +11,6 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q, F
-from django.forms import Textarea
 from django.template import loader
 from django.utils import timezone
 from django.utils import translation
@@ -152,6 +151,7 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
 
 
 class RepanierForm(Bootstrap3Form):
+    form_name = 'repanier_form'
     required_css_class = 'djng-field-required'
 
     class Media:

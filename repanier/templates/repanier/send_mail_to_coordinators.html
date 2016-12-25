@@ -1,12 +1,15 @@
 {% extends 'cms_subpage.html' %}
 {% load cms_tags sekizai_tags i18n l10n %}
 {% block sub_content %}
-    {% if update %}<p class="bg-danger">{% trans "Which coordinator(s) have you selected ?" %}</p>{% endif %}
-    <p><b>{% trans "This message will be send only to coordinators you have selected." %}</b></p>
+    {% if update == '1' %}<p class="bg-danger">{% trans "Which coordinator(s) have you selected ?" %}</p>{% endif %}
+    {% if update == '2' %}<p class="bg-success">{% trans "The mail has been send" %}</p>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
+        {% if update != '2' %}
+        <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-primary pull-right">{% trans "Send e-mail" %}</button></div>
+        {% endif %}
+        <b>{% trans "This message will be send only to coordinators you have selected." %}</b><p></p>
         {{ form.as_div }}
-        <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-primary">{% trans "Send e-mail" %}</button></div>
     </form>
     {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
     {% addtoblock "jshead" %}{{ form.media.js }}{% endaddtoblock %}

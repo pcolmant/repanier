@@ -8,7 +8,9 @@ from django.core.mail import EmailMessage
 from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.utils import translation
 from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -23,7 +25,7 @@ from repanier.models import Staff
 from repanier.tools import send_email
 from repanier.views.forms import RepanierForm
 from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidget
-from repanier.widget.checkbox import CheckboxWidget
+# from repanier.widget.checkbox import CheckboxWidget
 
 
 class DjngBooleanField(BooleanFieldMixin, forms.BooleanField):
@@ -43,37 +45,40 @@ class DjngMultipleChoiceField(MultipleChoiceFieldMixin, forms.MultipleChoiceFiel
 
 
 class CoordinatorsContactForm(RepanierForm):
-    # team1 = forms.MultipleChoiceField(
-    #     label=_("Management team"),
-    #     choices=(('1', 'un'), ('2', 'deux'), ('3', 'trois')),
-    #     widget=CheckboxSelectMultiple()
-    # )
+    staff = DjngMultipleChoiceField(
+        label=EMPTY_STRING,
+        choices=[],
+        widget=CheckboxSelectMultipleWidget()
+    )
+    your_email = DjngEmailField(label=_('Your Email'))
+    subject = DjngCharField(label=_('Subject'), max_length=100)
+    message = DjngCharField(label=_('Message'), widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
         choices = []
-        for staff in Staff.objects.filter(is_active=True, is_contributor=False):
+        for staff in Staff.objects.filter(
+            is_active=True, is_contributor=False,
+            translations__language_code=translation.get_language()
+        ).order_by(
+            'translations__long_name',
+            'customer_responsible__long_basket_name'
+        ):
             r = staff.customer_responsible
             if r is not None:
                 try:
                     sender_function = staff.long_name
                 except TranslationDoesNotExist:
                     sender_function = EMPTY_STRING
-                if r.long_basket_name is not None:
-                    signature = "%s : %s" % (sender_function, r.long_basket_name)
-                else:
-                    signature = "%s :%s" % (sender_function, r.short_basket_name)
-                self.fields["staff_%d" % staff.id] = DjngBooleanField(label=EMPTY_STRING, required=False)
-                self.fields["staff_%d" % staff.id].widget = CheckboxWidget(label=signature)
-                # choices.append(("staff_%d" % staff.id, signature))
-        # self.fields["staff"] = DjngMultipleChoiceField(
-        #     label=_("This message will be send only to coordinators you have selected."),
-        #     choices=choices,
-        #     widget=CheckboxSelectMultipleWidget()
-        # )
-        self.fields["your_email"] = DjngEmailField(label=_('Your Email'))
-        self.fields["subject"] = DjngCharField(label=_('Subject'), max_length=100)
-        self.fields["message"] = DjngCharField(label=_('Message'), widget=forms.Textarea)
+                phone = " (%s)" % r.phone1 if r.phone1 else EMPTY_STRING
+                name = r.long_basket_name if r.long_basket_name else r.short_basket_name
+                signature = "<b>%s</b> : %s%s" % (sender_function, name, phone)
+                choices.append(("%d" % staff.id, mark_safe(signature)))
+        self.fields["staff"] = DjngMultipleChoiceField(
+            label=EMPTY_STRING,
+            choices=choices,
+            widget=CheckboxSelectMultipleWidget()
+        )
 
 
 class CoordinatorsContactValidationForm(NgFormValidationMixin, CoordinatorsContactForm):
@@ -87,17 +92,14 @@ def send_mail_to_coordinators_view(request):
     if request.user.is_staff:
         raise Http404
     if request.method == 'POST':
-        print('---------------')
-        print(request.POST)
         form = CoordinatorsContactValidationForm(request.POST)
+        # request.POST = form.data
         if form.is_valid():
-            print('valide')
             to_email_staff = []
-            for staff in Staff.objects.filter(is_active=True, is_contributor=False).order_by('?'):
-                if form.cleaned_data.get('staff_%d' % staff.id):
-                    to_email_staff.append(staff.user.email)
+            selected_staff_members = form.cleaned_data.get('staff')
+            for staff in Staff.objects.filter(is_active=True, is_contributor=False, id__in=selected_staff_members).order_by('?'):
+                to_email_staff.append(staff.user.email)
 
-            print(to_email_staff)
             if len(to_email_staff) > 0:
                 to_email_customer = [request.user.email]
                 email = EmailMessage(
@@ -107,8 +109,10 @@ def send_mail_to_coordinators_view(request):
                     to=to_email_customer,
                     cc=to_email_staff
                 )
-                # send_email(email=email)
-                return HttpResponseRedirect('/')
+                send_email(email=email)
+                # return HttpResponseRedirect('/')
+                return render(request, "repanier/send_mail_to_coordinators.html",
+                              {'form': form, 'update': '2'})
             else:
                 return render(request, "repanier/send_mail_to_coordinators.html",
                               {'form': form, 'update': '1'})

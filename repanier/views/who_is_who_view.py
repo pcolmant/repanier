@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render
+from django.utils import translation
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
@@ -19,8 +20,13 @@ def who_is_who_view(request):
         "long_basket_name")
     if q is not None:
         customer_list = customer_list.filter(Q(long_basket_name__icontains=q) | Q(city__icontains=q))
-    staff_list = Staff.objects.filter(is_active=True, is_contributor=False).order_by(
-        "customer_responsible__long_basket_name")
+    staff_list = Staff.objects.filter(
+        is_active=True, is_contributor=False,
+        translations__language_code=translation.get_language()
+    ).order_by(
+        'translations__long_name',
+        'customer_responsible__long_basket_name'
+    )
     is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
         customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
     ).order_by('?').first() is not None

@@ -67,7 +67,9 @@ def send_mail_to_all_members_view(request):
                 bcc=to_email_customer
             )
             send_email(email=email)
-            return HttpResponseRedirect('/')  # Redirect after POST
+            # return HttpResponseRedirect('/')  # Redirect after POST
+            return render(request, "repanier/send_mail_to_all_members.html",
+                          {'form': form, 'update': '2'})
     else:
         form = MembersContactValidationForm()  # An unbound form
         email = form.fields["your_email"]
