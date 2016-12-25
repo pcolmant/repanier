@@ -207,6 +207,7 @@ INSTALLED_APPS = (
     'import_export',
     'rest_framework',
     'easy_select2',
+    'djng',
 )
 
 # https://docs.djangoproject.com/fr/1.9/ref/middleware/
@@ -692,7 +693,8 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin',
+            'TextLinkPlugin',
+            # 'FilerLinkPlugin',
             'FilerImagePlugin',
             'FilerFilePlugin',
             'FilerVideoPlugin'
@@ -719,7 +721,8 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin',
+            'TextLinkPlugin',
+            # 'FilerLinkPlugin',
             'FilerImagePlugin',
             'FilerFilePlugin',
             'FilerVideoPlugin'
@@ -750,7 +753,8 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin',
+            'TextLinkPlugin',
+            # 'FilerLinkPlugin',
             'FilerImagePlugin',
             'FilerFilePlugin',
             'FilerVideoPlugin'
@@ -781,7 +785,8 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'FilerLinkPlugin',
+            'TextLinkPlugin',
+            # 'FilerLinkPlugin',
             'FilerImagePlugin',
             'FilerFilePlugin',
             'FilerVideoPlugin'
@@ -813,7 +818,7 @@ CMS_PLACEHOLDER_CONF = {
         ],
         'text_only_plugins': [
             'TextLinkPlugin',
-            'FilerLinkPlugin',
+            # 'FilerLinkPlugin',
             'FilerImagePlugin',
             'FilerFilePlugin',
             'FilerVideoPlugin'
