@@ -64,10 +64,13 @@ def send_pre_open_order(permanence_id):
                 )
             })
             html_content = template.render(context)
+            to_email_producer = []
+            if producer.email:
+                to_email_producer.append(producer.email)
             if producer.email2:
-                to_email_producer = [producer.email, producer.email2]
-            else:
-                to_email_producer = [producer.email]
+                to_email_producer.append(producer.email2)
+            if producer.email3:
+                to_email_producer.append(producer.email3)
             email = EmailMultiAlternatives(
                 offer_producer_mail_subject,
                 strip_tags(html_content),
