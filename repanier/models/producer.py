@@ -36,6 +36,8 @@ class Producer(models.Model):
         _("email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
         _("secondary email"), null=True, blank=True, default=EMPTY_STRING)
+    email3 = models.EmailField(
+        _("secondary email"), null=True, blank=True, default=EMPTY_STRING)
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
@@ -297,10 +299,12 @@ def producer_pre_save(sender, **kwargs):
     if producer.represent_this_buyinggroup:
         # The buying group may not be de activated
         producer.is_active = True
-    if producer.email is not None:
+    if producer.email:
         producer.email = producer.email.lower()
-    if producer.email2 is not None:
+    if producer.email2:
         producer.email2 = producer.email2.lower()
+    if producer.email3:
+        producer.email3 = producer.email3.lower()
     if producer.producer_pre_opening:
         # Important to make difference between the stock of the group and the stock of the producer
         producer.manage_replenishment = False
