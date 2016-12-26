@@ -8,7 +8,7 @@ class ForeignKeyCacheMixin(object):
     """
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        formfield = super(ForeignKeyCacheMixin, self).formfield_for_foreignkey(db_field, **kwargs)
+        formfield = super(ForeignKeyCacheMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
         cache = getattr(request, 'db_field_cache', {})
         if cache.get(db_field.name):
             formfield.choices = cache[db_field.name]
