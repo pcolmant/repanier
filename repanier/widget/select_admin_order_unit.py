@@ -132,7 +132,7 @@ class SelectAdminOrderUnitWidget(forms.Select):
         """.format(
             final_attrs=flatatt(final_attrs),
             name=name,
-            options=self.render_options(choices, [value]),
+            options=self.render_options(choices),
             value=value,
             PIECE_WEIGHT_IN_KG=_("Piece weight in kg"),
             PIECE_CONTENT_IN_L=_("Piece content in l"),

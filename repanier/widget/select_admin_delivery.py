@@ -62,7 +62,7 @@ class SelectAdminDeliveryWidget(forms.Select):
         """.format(
             final_attrs=flatatt(final_attrs),
             name=name,
-            options=self.render_options(choices, [value]),
+            options=self.render_options(choices),
             value=value,
             case_show_show=case_show_show,
             case_show_hide=case_show_hide,
