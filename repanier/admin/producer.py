@@ -71,7 +71,7 @@ class ProducerResource(resources.ModelResource):
         model = Producer
         fields = (
             'id', 'short_profile_name', 'long_profile_name',
-            'email', 'email2', 'language', 'phone1', 'phone2',
+            'email', 'email2', 'email3', 'language', 'phone1', 'phone2',
             'fax', 'address', 'invoice_by_basket', 'manage_replenishment', 'manage_production',
             'sort_products_by_reference',
             'producer_pre_opening', 'producer_price_are_wo_vat',
@@ -263,8 +263,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_fieldsets(self, request, producer=None):
         fields_basic = [
             ('short_profile_name', 'long_profile_name', 'language'),
-            ('email', 'email2', 'fax'),
-            ('phone1', 'phone2',),
+            ('email', 'email2', 'email3'),
+            ('phone1', 'phone2', 'fax'),
         ]
         if producer is not None:
             fields_basic += [
