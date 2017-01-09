@@ -32,7 +32,7 @@ from repanier.tools import get_full_status_display
 @python_2_unicode_compatible
 class Permanence(TranslatableModel):
     translations = TranslatedFields(
-        short_name=models.CharField(_("precision"), max_length=50, blank=True),
+        short_name=models.CharField(_("offer name"), max_length=50, blank=True),
         offer_description=HTMLField(_("offer_description"),
                                     help_text=_(
                                         "This message is send by mail to all customers when opening the order or on top "),
@@ -51,7 +51,7 @@ class Permanence(TranslatableModel):
         default=PERMANENCE_PLANNED,
         verbose_name=_("permanence_status"),
         help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
-    permanence_date = models.DateField(_("permanence_date"), db_index=True)
+    permanence_date = models.DateField(_("date"), db_index=True)
     payment_date = models.DateField(_("payment_date"), blank=True, null=True, db_index=True)
     producers = models.ManyToManyField(
         'Producer',

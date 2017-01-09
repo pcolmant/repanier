@@ -40,7 +40,7 @@ class Configuration(TranslatableModel):
         max_length=3,
         choices=LUT_PERMANENCE_NAME,
         default=PERMANENCE_NAME_PERMANENCE,
-        verbose_name=_("order name"))
+        verbose_name=_("offers name"))
     currency = models.CharField(
         max_length=3,
         choices=LUT_CURRENCY,
