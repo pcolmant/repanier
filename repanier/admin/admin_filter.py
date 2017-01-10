@@ -4,12 +4,13 @@ from __future__ import unicode_literals
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
+from django.conf import settings
 from repanier.const import *
 # Filters in the right sidebar of the change list page of the admin
 from django.contrib.admin import SimpleListFilter
 
 from repanier.models import Producer, Product, LUT_DepartmentForCustomer, Customer, CustomerInvoice, ProducerInvoice, \
-    Permanence
+    Permanence, LUT_ProductionMode
 from repanier.tools import sint
 
 
@@ -73,6 +74,57 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(department_for_customer_id=self.value())
+        else:
+            return queryset
+
+
+class ProductFilterByProductioMode(SimpleListFilter):
+    title = _("production modes")
+    parameter_name = 'production_mode'
+    template = 'admin/production_mode_filter.html'
+
+    def lookups(self, request, model_admin):
+        return [(p.id, p.short_name) for p in
+                LUT_ProductionMode.objects.filter(is_active=True)
+                ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(production_mode=self.value())
+        else:
+            return queryset
+
+
+class ProductFilterByPlacement(SimpleListFilter):
+    title = _("product_placement")
+    parameter_name = 'placement'
+    template = 'admin/placement_filter.html'
+
+    def lookups(self, request, model_admin):
+        return [(p[0], p[1]) for p in
+                LUT_PRODUCT_PLACEMENT
+                ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(placement=self.value())
+        else:
+            return queryset
+
+
+class ProductFilterByVatLevel(SimpleListFilter):
+    title = _("vat_level")
+    parameter_name = 'vat_level'
+    template = 'admin/vat_level_filter.html'
+
+    def lookups(self, request, model_admin):
+        return [(p[0], p[1]) for p in
+                settings.LUT_VAT
+                ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(vat_level=self.value())
         else:
             return queryset
 

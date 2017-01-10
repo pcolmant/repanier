@@ -20,7 +20,8 @@ from import_export.widgets import ForeignKeyWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from repanier.admin.admin_filter import ProductFilterByDepartmentForThisProducer, ProductFilterByProducer
+from repanier.admin.admin_filter import ProductFilterByDepartmentForThisProducer, ProductFilterByProducer, \
+    ProductFilterByProductioMode, ProductFilterByPlacement, ProductFilterByVatLevel
 from repanier.const import *
 from repanier.models import Product, \
     LUT_ProductionMode, LUT_DepartmentForCustomer, Producer
@@ -291,10 +292,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                    'wrapped',
                    ProductFilterByProducer,
                    ProductFilterByDepartmentForThisProducer,
-                   'production_mode',
-                   'placement',
+                   ProductFilterByProductioMode,
+                   ProductFilterByPlacement,
                    'limit_order_quantity_to_stock',
-                   'vat_level')
+                   ProductFilterByVatLevel)
     actions = [
         'flip_flop_select_for_offer_status',
         'duplicate_product'
