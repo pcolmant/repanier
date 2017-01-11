@@ -81,16 +81,17 @@ def send_email(email=None, track_customer_on_error=False):
         send_email_with_error_log(email)
     elif settings.DEBUG:
         print('############################ debug, send_email')
-        print("to : %s" % email.to)
-        print("cc : %s" % email.cc)
-        print("bcc : %s" % email.bcc)
-        print("subject : %s" % slugify(email.subject))
         if apps.REPANIER_SETTINGS_TEST_MODE:
             email.to = [v for k, v in settings.ADMINS]
             email.cc = []
             email.bcc = []
             print('the mail is send to : %s' % email.to)
             send_email_with_error_log(email)
+        else:
+            print("to : %s" % email.to)
+            print("cc : %s" % email.cc)
+            print("bcc : %s" % email.bcc)
+            print("subject : %s" % slugify(email.subject))
     elif apps.REPANIER_SETTINGS_TEST_MODE:
         coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by("id").first()
         if coordinator is not None:
