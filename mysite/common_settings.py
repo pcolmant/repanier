@@ -202,7 +202,7 @@ INSTALLED_APPS = (
     'mptt',
     'django_mptt_admin',
     'reversion',
-    'aldryn_reversion',
+    # 'aldryn_reversion',
     'parler',
     'import_export',
     'rest_framework',
