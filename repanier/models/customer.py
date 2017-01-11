@@ -196,7 +196,7 @@ class Customer(models.Model):
             last_membership_fee = purchase.Purchase.objects.filter(
                 customer_id=self.id,
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION
-            ).only("selling_price").order_by("-id")
+            ).order_by("-id")
             if last_membership_fee.exists():
                 return last_membership_fee.first().selling_price
         return REPANIER_MONEY_ZERO

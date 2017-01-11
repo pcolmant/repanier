@@ -917,7 +917,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
                     customer_id=customer.id,
                     offer_item_id=offer_item.id,
                     is_box_content=False
-                ).only('quantity_ordered').order_by('?').first()
+                ).order_by('?').first()
                 if purchase is not None:
                     delta_value_id = value_id - purchase.quantity_ordered
                 else:
@@ -940,7 +940,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
                                 customer_id=customer.id,
                                 offer_item_id=box_offer_item.id,
                                 is_box_content=True
-                            ).only('quantity_ordered').order_by('?').first()
+                            ).order_by('?').first()
                             if purchase is not None:
                                 quantity_ordered = purchase.quantity_ordered + delta_value_id * content.content_quantity
                             else:
@@ -967,7 +967,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
                                     customer_id=customer.id,
                                     offer_item_id=box_offer_item.id,
                                     is_box_content=False
-                                ).only("quantity_ordered").order_by('?').first()
+                                ).order_by('?').first()
                                 option_dict = display_selected_value(
                                     box_offer_item,
                                     purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO
@@ -977,7 +977,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
                                     customer_id=customer.id,
                                     offer_item_id=box_offer_item.id,
                                     is_box_content=True
-                                ).only("quantity_ordered").order_by('?').first()
+                                ).order_by('?').first()
                                 option_dict = display_selected_box_value(customer, box_offer_item, box_purchase)
                                 to_json.append(option_dict)
                         transaction.savepoint_commit(sid)
