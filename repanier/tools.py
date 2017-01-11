@@ -805,7 +805,7 @@ def recalculate_order_amount(permanence_id,
         purchase.save()
 
 
-def display_selected_value(customer, offer_item, quantity_ordered):
+def display_selected_value(offer_item, quantity_ordered):
     if offer_item.may_order:
         if quantity_ordered <= DECIMAL_ZERO:
             q_min = offer_item.customer_minimum_order_quantity
@@ -860,19 +860,12 @@ def display_selected_value(customer, offer_item, quantity_ordered):
     return option_dict
 
 
-def display_selected_box_value(customer, offer_item):
+def display_selected_box_value(customer, offer_item, box_purchase):
     if offer_item.is_box_content:
         # box_name = _not_lazy("Composition")
         box_name = BOX_UNICODE
         # Select one purchase
-        box_purchase = models.Purchase.objects.filter(
-            customer_id=customer.id,
-            offer_item_id=offer_item.id,
-            # counter=0,
-            is_box_content=True
-        ).only("quantity_ordered").order_by('?')
-        if box_purchase.exists():
-            box_purchase = box_purchase.first()
+        if box_purchase is not None:
             if box_purchase.quantity_ordered > DECIMAL_ZERO:
                 qty_display = get_display(
                     qty=box_purchase.quantity_ordered,
@@ -974,12 +967,18 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
                                     offer_item_id=box_offer_item.id,
                                     is_box_content=False
                                 ).only("quantity_ordered").order_by('?').first()
-                                option_dict = display_selected_value(customer, box_offer_item,
-                                                                     purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO)
+                                option_dict = display_selected_value(
+                                    box_offer_item,
+                                    purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO
+                                )
                                 to_json.append(option_dict)
-
-                            option_dict = display_selected_box_value(customer, box_offer_item)
-                            to_json.append(option_dict)
+                                box_purchase = models.Purchase.objects.filter(
+                                    customer_id=customer.id,
+                                    offer_item_id=box_offer_item.id,
+                                    is_box_content=True
+                                ).only("quantity_ordered").order_by('?').first()
+                                option_dict = display_selected_box_value(customer, box_offer_item, box_purchase)
+                                to_json.append(option_dict)
                         transaction.savepoint_commit(sid)
                     else:
                         transaction.savepoint_rollback(sid)
@@ -1021,12 +1020,12 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
                             'html': '<option value="0" selected>%s</option>' % sold_out
                         }
                     else:
-                        option_dict = display_selected_value(customer, offer_item, DECIMAL_ZERO)
+                        option_dict = display_selected_value(offer_item, DECIMAL_ZERO)
                     to_json.append(option_dict)
                 else:
                     offer_item = models.OfferItem.objects.filter(id=offer_item_id).order_by('?').first()
                     if offer_item is not None:
-                        option_dict = display_selected_value(customer, offer_item, purchase.quantity_ordered)
+                        option_dict = display_selected_value(offer_item, purchase.quantity_ordered)
                         to_json.append(option_dict)
 
                 customer_invoice = models.CustomerInvoice.objects.filter(
@@ -1070,7 +1069,6 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
 
 def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                           basket_message=EMPTY_STRING, to_json=None):
-
     if permanence.with_delivery_point:
         if customer_invoice.delivery is not None:
             label = customer_invoice.delivery.get_delivery_customer_display()
@@ -1197,9 +1195,10 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
             msg_confirmation = EMPTY_STRING
             if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
                 if is_basket:
-                    if permanence.with_delivery_point and customer_invoice.delivery is None:
-                        btn_disabled = "disabled"
-                    msg_confirmation = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _("Confirm this order and receive an email containing its summary.")
+                    if customer_invoice.status == PERMANENCE_OPENED:
+                        if permanence.with_delivery_point and customer_invoice.delivery is None:
+                            btn_disabled = "disabled"
+                        msg_confirmation = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _("Confirm this order and receive an email containing its summary.")
                 else:
                     href = urlresolvers.reverse(
                         'basket_view', args=(permanence.id,)
@@ -1231,18 +1230,31 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                 else:
                     msg_html = EMPTY_STRING
             if msg_html is None:
-                msg_html = """
-                <div class="row">
-                <div class="panel panel-default">
-                <div class="panel-heading">
-                %s
-                <button id="btn_confirm_order" class="btn btn-info" %s onclick="btn_receive_order_email();">%s</button>
-                <div class="clearfix"></div>
-                %s
-                </div>
-                </div>
-                </div>
-                 """ % (msg_delivery, btn_disabled, msg_confirmation, basket_message)
+                if msg_confirmation == EMPTY_STRING:
+                    msg_html = """
+                    <div class="row">
+                    <div class="panel panel-default">
+                    <div class="panel-heading">
+                    %s
+                    <div class="clearfix"></div>
+                    %s
+                    </div>
+                    </div>
+                    </div>
+                     """ % (msg_delivery, basket_message)
+                else:
+                    msg_html = """
+                    <div class="row">
+                    <div class="panel panel-default">
+                    <div class="panel-heading">
+                    %s
+                    <button id="btn_confirm_order" class="btn btn-info" %s onclick="btn_receive_order_email();">%s</button>
+                    <div class="clearfix"></div>
+                    %s
+                    </div>
+                    </div>
+                    </div>
+                     """ % (msg_delivery, btn_disabled, msg_confirmation, basket_message)
     if to_json is not None:
         option_dict = {'id': "#span_btn_confirm_order", 'html': msg_html}
         to_json.append(option_dict)
@@ -1250,7 +1262,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
 
 
 def my_order_confirmation_email_send_to(customer):
-    if customer is not None and customer.email2 is not None and len(customer.email2) > 0:
+    if customer is not None and customer.email2:
         to_email = (customer.user.email, customer.email2)
     else:
         to_email = (customer.user.email,)

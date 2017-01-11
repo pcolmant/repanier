@@ -407,9 +407,9 @@ def offer_item_pre_save(sender, **kwargs):
     offer_item = kwargs["instance"]
     if offer_item.manage_replenishment:
         if (offer_item.previous_add_2_stock != offer_item.add_2_stock or
-                    offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
-                    offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
-            ):
+            offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
+            offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
+        ):
             if offer_item.producer_invoice is None:
                 producer_invoice = invoice.ProducerInvoice.objects.filter(
                     permanence_id=offer_item.permanence_id,

@@ -16,7 +16,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_DONE, PERMANENCE_OPENED, DECIMAL_ONE, \
-    PERMANENCE_CLOSED, REPANIER_MONEY_ZERO
+    PERMANENCE_CLOSED, REPANIER_MONEY_ZERO, EMPTY_STRING
 from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, OfferItem, \
     ProducerInvoice, Purchase
 from repanier.tools import sboolean, sint, display_selected_value, \
@@ -49,8 +49,6 @@ def order_init_ajax(request):
                 customer_invoice = CustomerInvoice.objects.filter(
                     permanence_id=permanence.id,
                     customer_id=customer.id
-                ).only(
-                    'is_order_confirm_send', 'delivery_id', 'total_price_with_tax'
                 ).order_by('?').first()
                 if customer_invoice is None:
                     customer_invoice = CustomerInvoice.objects.create(
@@ -80,12 +78,15 @@ def order_init_ajax(request):
                     REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
                 if basket or (REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
                               and customer_invoice.is_order_confirm_send):
-                    if customer_invoice.status <= PERMANENCE_CLOSED:
+                    if customer_invoice.status <= PERMANENCE_OPENED:
                         basket_message = calc_basket_message(customer, permanence, customer_invoice.status)
                     else:
-                        basket_message = "%s" % (
-                            _('The orders are closed.'),
-                        )
+                        if customer_invoice.delivery is not None:
+                            basket_message = EMPTY_STRING
+                        else:
+                            basket_message = "%s" % (
+                                _('The orders are closed.'),
+                            )
                     my_order_confirmation(
                         permanence=permanence,
                         customer_invoice=customer_invoice,
@@ -164,11 +165,7 @@ def order_init_ajax(request):
                     to_json.append(option_dict)
         else:
             customer = None
-            # my_name = _not_lazy('Anonymous')
             my_basket(False, REPANIER_MONEY_ZERO, to_json)
-        # option_dict = {'id': "#my_name", 'html': my_name}
-        # to_json.append(option_dict)
-
         request_offer_items = request.GET.getlist('oi')
         for request_offer_item in request_offer_items:
             offer_item_id = sint(request_offer_item)
@@ -179,45 +176,37 @@ def order_init_ajax(request):
                     customer_id=customer.id,
                     offer_item_id=offer_item_id,
                     is_box_content=False
-                ).only(
-                    "quantity_ordered", "offer_item",
                 ).select_related(
-                    "offer_item",
+                    "offer_item"
                 ).order_by('?').first()
                 if purchase is not None:
                     offer_item = purchase.offer_item
-                    option_dict = display_selected_value(
-                        customer, offer_item,
-                        purchase.quantity_ordered)
-                    to_json.append(option_dict)
+                    if offer_item is not None:
+                        option_dict = display_selected_value(
+                            offer_item,
+                            purchase.quantity_ordered)
+                        to_json.append(option_dict)
                 else:
                     offer_item = OfferItem.objects.filter(
                         id=offer_item_id
-                    ).only(
-                        "may_order", "customer_minimum_order_quantity",
-                        "limit_order_quantity_to_stock",
-                        "stock",
-                        "quantity_invoiced",
-                        "customer_alert_order_quantity",
-                        "product"
-                    ).select_related("product").order_by('?').first()
-                    option_dict = display_selected_value(
-                        customer, offer_item,
-                        DECIMAL_ZERO)
-                    to_json.append(option_dict)
-                purchase = Purchase.objects.filter(
+                    ).order_by('?').first()
+                    if offer_item is not None:
+                        option_dict = display_selected_value(
+                            offer_item,
+                            DECIMAL_ZERO)
+                        to_json.append(option_dict)
+                box_purchase = Purchase.objects.filter(
                     customer_id=customer.id,
                     offer_item_id=offer_item_id,
                     is_box_content=True
-                ).only(
-                    "quantity_ordered", "offer_item",
                 ).select_related(
-                    "offer_item",
+                    "offer_item"
                 ).order_by('?').first()
-                if purchase is not None:
-                    offer_item = purchase.offer_item
-                    option_dict = display_selected_box_value(customer, offer_item)
-                    to_json.append(option_dict)
+                if box_purchase is not None:
+                    offer_item = box_purchase.offer_item
+                    if offer_item is not None:
+                        option_dict = display_selected_box_value(customer, offer_item, box_purchase)
+                        to_json.append(option_dict)
                 option_dict = {'id': ".btn_like%s" % offer_item_id, 'html': offer_item.get_like(user)}
                 to_json.append(option_dict)
             else:

@@ -37,7 +37,7 @@ def order_select_ajax(request):
                     customer_id=customer.id,
                     offer_item_id=offer_item_id,
                     is_box_content=False
-                ).only("quantity_ordered").order_by('?').first()
+                ).order_by('?').first()
                 if purchase is not None:
                     q_previous_order = purchase.quantity_ordered
                 else:
@@ -149,7 +149,7 @@ def order_select_ajax(request):
                         option_dict = {'value': '0', 'selected': 'selected', 'label': '%s' % closed}
                         to_json.append(option_dict)
                     else:
-                        option_dict = display_selected_value(customer, offer_item, purchase.quantity_ordered)
+                        option_dict = display_selected_value(offer_item, purchase.quantity_ordered)
                         to_json.append(option_dict)
             else:
                 option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}

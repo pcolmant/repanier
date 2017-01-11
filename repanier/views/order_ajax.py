@@ -57,30 +57,23 @@ def order_ajax(request):
             customer_id=customer.id,
             offer_item_id=offer_item_id,
             is_box_content=False
-        ).only(
-            "quantity_ordered", "offer_item",
         ).select_related(
-            "offer_item",
+            "offer_item"
         ).order_by('?').first()
         to_json = []
         if purchase is not None:
             option_dict = display_selected_value(
-                customer, purchase.offer_item,
+                purchase.offer_item,
                 purchase.quantity_ordered)
             to_json.append(option_dict)
         else:
             offer_item = OfferItem.objects.filter(
                 id=offer_item_id
-            ).only(
-                "may_order", "customer_minimum_order_quantity",
-                "limit_order_quantity_to_stock",
-                "stock",
-                "quantity_invoiced",
-                "customer_alert_order_quantity",
+            ).select_related(
                 "product"
-            ).select_related("product").order_by('?').first()
+            ).order_by('?').first()
             option_dict = display_selected_value(
-                customer, offer_item,
+                offer_item,
                 DECIMAL_ZERO)
             to_json.append(option_dict)
         result = json.dumps(to_json, cls=DjangoJSONEncoder)
