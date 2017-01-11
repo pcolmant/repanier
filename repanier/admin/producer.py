@@ -290,8 +290,11 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             'memo',
             'reference_site',
             'web_services_activated',
-            'represent_this_buyinggroup',
         ]
+        if producer is not None and producer.represent_this_buyinggroup:
+            fields_advanced += [
+                'represent_this_buyinggroup'
+            ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced options'), {'classes': ('collapse',), 'fields': fields_advanced})
@@ -300,10 +303,14 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, producer=None):
         if producer is not None:
-            return ['web_services_activated', 'represent_this_buyinggroup', 'get_admin_date_balance',
-                    'get_admin_balance']
+            if producer.represent_this_buyinggroup:
+                return ['web_services_activated', 'represent_this_buyinggroup', 'get_admin_date_balance',
+                        'get_admin_balance']
+            else:
+                return ['web_services_activated', 'get_admin_date_balance',
+                        'get_admin_balance']
         else:
-            return ['web_services_activated', 'represent_this_buyinggroup']
+            return ['web_services_activated']
 
     def save_model(self, request, producer, form, change):
         producer.web_services_activated, drop1, drop2 = producer_web_services_activated(producer.reference_site)

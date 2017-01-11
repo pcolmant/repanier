@@ -311,7 +311,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             else:
                 fields_basic += [
                     ('get_admin_balance', 'price_list_multiplier', 'get_admin_date_balance'),
-                    ('may_order', 'is_active', 'represent_this_buyinggroup'),
+                    ('may_order', 'is_active'),
                 ]
         else:
             fields_basic += [
@@ -336,12 +336,20 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, customer=None):
         if customer is not None:
-            return [
-                'get_admin_date_balance', 'get_admin_balance',
-                'represent_this_buyinggroup', 'get_last_login',
-                'get_date_joined', 'get_participation', 'get_purchase',
-                'get_last_membership_fee', 'get_last_membership_fee_date'
-            ]
+            if customer.represent_this_buyinggroup:
+                return [
+                    'get_admin_date_balance', 'get_admin_balance',
+                    'represent_this_buyinggroup', 'get_last_login',
+                    'get_date_joined', 'get_participation', 'get_purchase',
+                    'get_last_membership_fee', 'get_last_membership_fee_date'
+                ]
+            else:
+                return [
+                    'get_admin_date_balance', 'get_admin_balance',
+                    'get_last_login',
+                    'get_date_joined', 'get_participation', 'get_purchase',
+                    'get_last_membership_fee', 'get_last_membership_fee_date'
+                ]
         else:
             return [
                 'represent_this_buyinggroup', 'get_last_login',
