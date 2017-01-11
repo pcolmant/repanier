@@ -28,9 +28,7 @@
 {#  vvvvvvvvv django cms admin style 1.2.6  #}
 label.translatable-field:before {color:red;content:"\2691\a0";}
 div.parler-language-tabs span.current:before {color:red;content:"\2691\a0";}
-.calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {
-    width: initial !important;
-}
+.calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {width: initial !important;}
 .change-list #changelist table thead th {padding:0;white-space:normal;vertical-align:middle;}
 .change-list #changelist table tbody td {vertical-align:middle !important;white-space:nowrap;}
 .change-list #changelist table tbody th {vertical-align:middle !important;white-space: normal;}
@@ -61,7 +59,6 @@ form label.aligned.btn, form label.btn{color: black !important;}
 
 <!-- Container -->
 <div id="container">
-
     {% if not is_popup %}
     <div class="breadcrumbs" style="border-bottom: 0; margin-top: 19px;">
 {% if opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2>{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
