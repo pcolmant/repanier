@@ -1323,11 +1323,11 @@ def admin_customer_export(permanence, deliveries_id=None):
         )
         wb = export_preparation(permanence=permanence, deliveries_id=deliveries_id, wb=wb)
         if wb is not None:
-            ws_preparation_title = cap("%s" % (_("Preparation")), 31)
+            ws_preparation_title = cap(slugify("%s" % _("Preparation")), 31)
             wb = export_customer(
                 permanence=permanence, deliveries_id=deliveries_id, wb=wb, ws_preparation_title=ws_preparation_title
             )
-            ws_customer_title = cap("%s" % (_('Customer check')), 31)
+            ws_customer_title = cap(slugify("%s" % _('Customer check')), 31)
             wb = export_customer(permanence=permanence, deliveries_id=deliveries_id, deposit=True, wb=wb)
         else:
             ws_customer_title = None

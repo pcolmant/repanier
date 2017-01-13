@@ -720,14 +720,14 @@ def handle_uploaded_file(request, permanences, file_to_import):
         permanence = permanences.first()
         if permanence is not None:
             if permanence.status == PERMANENCE_SEND:
-                ws = wb.get_sheet_by_name(cap("%s" % (permanence), 31))
+                ws = wb.get_sheet_by_name(cap(slugify("%s" % (permanence)), 31))
                 error, error_msg = import_purchase_sheet(
                     ws, permanence=permanence,
                     customer_2_id_dict=customer_2_id_dict,
                     producer_2_id_dict=producer_2_id_dict
                 )
                 if error:
-                    error_msg = cap("%s" % (permanence), 31) + " > " + error_msg
+                    error_msg = cap(slugify("%s" % (permanence)), 31) + " > " + error_msg
             else:
                 error = True
                 error_msg = _("The permanence has already been invoiced.")

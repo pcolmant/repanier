@@ -73,7 +73,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             deliveries_ws.append(ws_sc_name)
                             break
             else:
-                ws_sc_name = cap(ws_customer_title, 31)
+                ws_sc_name = cap(slugify(ws_customer_title), 31)
                 for sheet in wb.worksheets:
                     if ws_sc_name == sheet.title:
                         deliveries_ws.append(ws_sc_name)
@@ -470,7 +470,7 @@ def handle_uploaded_file(request, producers, file_to_import):
     error_msg = None
     wb = load_workbook(file_to_import)
     if wb is not None:
-        ws = wb.get_sheet_by_name(cap("%s" % _('Current stock'), 31))
+        ws = wb.get_sheet_by_name(cap(slugify("%s" % _('Current stock')), 31))
         if ws is not None:
             error, error_msg = import_producer_stock(
                 ws,

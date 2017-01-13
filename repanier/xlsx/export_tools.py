@@ -98,7 +98,7 @@ def worksheet_set_header(worksheet, header):
 def get_validation_formula(wb=None, valid_values=None):
     if valid_values:
 
-        ws_dv_name = cap("%s" % (_("data validation")), 31)
+        ws_dv_name = cap(slugify("%s" % (_("data validation"))), 31)
         ws_dv = wb.get_sheet_by_name(ws_dv_name)
         if ws_dv is None:
             ws_dv = wb.create_sheet(index=0)
