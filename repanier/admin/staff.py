@@ -45,13 +45,13 @@ class UserDataForm(TranslatableModelForm):
             email = self.cleaned_data["email"]
             is_reply_to_order_email = self.cleaned_data["is_reply_to_order_email"]
             is_reply_to_invoice_email = self.cleaned_data["is_reply_to_invoice_email"]
-            if is_reply_to_order_email or is_reply_to_invoice_email:
-                if not email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-                    self.add_error(
-                        'email',
-                        _('The given email must end with %(allowed_extension)s') %
-                        {'allowed_extension': settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION}
-                    )
+            # if is_reply_to_order_email or is_reply_to_invoice_email:
+            #     if not email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+            #         self.add_error(
+            #             'email',
+            #             _('The given email must end with %(allowed_extension)s') %
+            #             {'allowed_extension': settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION}
+            #         )
             if is_reply_to_order_email:
                 if self.instance.id is None:
                     exists = Staff.objects.filter(is_reply_to_order_email=True)
