@@ -307,6 +307,12 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             return True
         return False
 
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_product.flip_flop_is_into_offer(queryset)
 
