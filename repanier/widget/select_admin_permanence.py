@@ -69,7 +69,7 @@ class SelectAdminPermanenceWidget(forms.Select):
         """.format(
             final_attrs=flatatt(final_attrs),
             name=name,
-            options=self.render_options(choices),
+            options=self.render_options([value]),
             value=value,
             case_show_show=case_show_show,
             case_show_hide=case_show_hide,
