@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags menu_tags compress i18n l10n crispy_forms_tags %}
+{% load cms_tags menu_tags compress i18n l10n %}
 {% block content %}
     <link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="{{ STATIC_URL}}css/custom.css">
@@ -135,7 +135,7 @@
                                     language: 'fr',
                                     forcePasteAsPlainText: true,
                                     toolbar: [
-                                        ['Preview', 'Source']
+                                        ['Preview', 'Image', 'Source']
                                     ],
                                     contentsCss: "{{ STATIC_URL}}bootstrap/css/bootstrap.css",
                                     width: '100%',
@@ -174,7 +174,7 @@
                                     language: 'fr',
                                     forcePasteAsPlainText: true,
                                     toolbar: [
-                                        ['Preview', 'Source']
+                                        ['Preview', 'Image', 'Source']
                                     ],
                                     contentsCss: "{{ STATIC_URL}}bootstrap/css/bootstrap.css",
                                     width: '100%',
@@ -213,7 +213,7 @@
                                     language: 'fr',
                                     forcePasteAsPlainText: true,
                                     toolbar: [
-                                        ['Preview', 'Source']
+                                        ['Preview', 'Image', 'Source']
                                     ],
                                     contentsCss: "{{ STATIC_URL}}bootstrap/css/bootstrap.css",
                                     width: '100%',
