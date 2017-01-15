@@ -4,14 +4,13 @@ from __future__ import unicode_literals
 from django.http import Http404
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_GET
 from parler.models import TranslationDoesNotExist
 
 from repanier.const import EMPTY_STRING, PERMANENCE_OPENED, PERMANENCE_SEND
-from repanier.models import OfferItem, BoxContent
-from repanier.tools import permanence_ok_or_404, sint, get_display, html_box_content
+from repanier.models import OfferItem
+from repanier.tools import permanence_ok_or_404, sint, html_box_content
 
 
 @require_GET
