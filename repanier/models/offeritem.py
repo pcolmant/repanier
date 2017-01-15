@@ -29,9 +29,9 @@ class OfferItem(TranslatableModel):
     translations = TranslatedFields(
         long_name=models.CharField(_("long_name"), max_length=100,
                                    default=EMPTY_STRING, blank=True, null=True),
-        cache_part_a=HTMLField(default=EMPTY_STRING, blank=True),
-        cache_part_b=HTMLField(default=EMPTY_STRING, blank=True),
-        cache_part_e=HTMLField(default=EMPTY_STRING, blank=True),
+        cache_part_a=HTMLField(configuration='CKEDITOR_SETTINGS_MODEL2', default=EMPTY_STRING, blank=True),
+        cache_part_b=HTMLField(configuration='CKEDITOR_SETTINGS_MODEL2', default=EMPTY_STRING, blank=True),
+        cache_part_e=HTMLField(configuration='CKEDITOR_SETTINGS_MODEL2', default=EMPTY_STRING, blank=True),
         order_sort_order=models.IntegerField(
             _("customer sort order for optimization"),
             default=0, db_index=True),

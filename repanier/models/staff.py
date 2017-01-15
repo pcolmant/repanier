@@ -28,7 +28,8 @@ class Staff(TranslatableModel):
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     translations = TranslatedFields(
         long_name=models.CharField(_("long_name"), max_length=100, db_index=True, null=True, default=EMPTY_STRING),
-        function_description=HTMLField(_("function_description"), blank=True, default=EMPTY_STRING),
+        function_description=HTMLField(_("function_description"), configuration='CKEDITOR_SETTINGS_MODEL2',
+                                       blank=True, default=EMPTY_STRING),
     )
     is_reply_to_order_email = models.BooleanField(_("is_reply_to_order_email"),
                                                   default=False)

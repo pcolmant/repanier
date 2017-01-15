@@ -32,7 +32,7 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
@@ -63,7 +63,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     is_active = models.BooleanField(_("is_active"), default=True)
     customer_responsible = models.ForeignKey(
@@ -111,7 +111,7 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     is_active = models.BooleanField(_("is_active"), default=True)
     objects = LUT_ProductionModeManager()
@@ -137,7 +137,7 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
 
     is_counted_as_participation = models.BooleanField(_("is_counted_as_participation"), default=True)

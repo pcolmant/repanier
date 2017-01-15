@@ -34,15 +34,17 @@ class Permanence(TranslatableModel):
     translations = TranslatedFields(
         short_name=models.CharField(_("offer name"), max_length=50, blank=True),
         offer_description=HTMLField(_("offer_description"),
+                                    configuration='CKEDITOR_SETTINGS_MODEL2',
                                     help_text=_(
                                         "This message is send by mail to all customers when opening the order or on top "),
                                     blank=True, default=EMPTY_STRING),
         invoice_description=HTMLField(
             _("invoice_description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2',
             help_text=_(
                 'This message is send by mail to all customers having bought something when closing the permanence.'),
             blank=True, default=EMPTY_STRING),
-        cache_part_d=HTMLField(blank=True, default=EMPTY_STRING)
+        cache_part_d=HTMLField(configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING)
     )
 
     status = models.CharField(
