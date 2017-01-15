@@ -36,7 +36,7 @@ os.sys.path.insert(0, PROJECT_PATH)
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
 MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
-STATIC_URL = "%s%s%s" % (os.sep, "static_001", os.sep)
+
 # STATICFILES_DIRS = (
 #     os.path.join(PROJECT_PATH, "repanier", "static"),
 # )
@@ -73,6 +73,7 @@ try:
     DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE')
     DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION')
     DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY')
+    DJANGO_STATIC = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STATIC')
     DJANGO_SETTINGS_ALLOWED_HOSTS = []
     for name in config.options('ALLOWED_HOSTS'):
         allowed_host = config.get('ALLOWED_HOSTS', name)
@@ -90,6 +91,8 @@ except IOError:
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
+# If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
+STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
 
 ###################### DEBUG
 # if DJANGO_SETTINGS_DEMO:
@@ -213,7 +216,7 @@ INSTALLED_APPS = (
 # https://docs.djangoproject.com/fr/1.9/ref/middleware/
 # http://docs.django-cms.org/en/develop/how_to/caching.html
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'cms.middleware.utils.ApphookReloadMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -339,10 +342,12 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'language': '{{ language }}',
     'toolbar_HTMLField': [
         ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
-        ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
+        ['Preview', 'Cut', 'Copy', 'PasteText', 'Image', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
         # ['Maximize', '']
     ],
+    # 'extraPlugins': 'base64image',
+    'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
     'skin': 'moono',
     'format_tags': 'p;h4;h5',
@@ -350,13 +355,12 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities': False,
     'entities': False,
-    'enterMode' : 2,
+    'enterMode': 2,
     'removePlugins': 'elementspath',
 }
 
-TEXT_SAVE_IMAGE_FUNCTION = 'cmsplugin_filer_image.integrations.ckeditor.create_image_plugin'
+# Drag & Drop Images
 # TEXT_SAVE_IMAGE_FUNCTION = 'djangocms_text_ckeditor.picture_save.create_picture_plugin'
-# TEXT_SAVE_IMAGE_FUNCTION = None
 
 # djangocms-text-ckeditor uses html5lib to sanitize HTML
 # to avoid security issues and to check for correct HTML code.
@@ -404,15 +408,15 @@ LOGIN_URL = "/repanier/go_repanier/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/repanier/leave_repanier/"
 
-################# Django_crispy_forms
-INSTALLED_APPS += (
-    'crispy_forms',
-    # 'crispy_forms_foundation',
-)
-
-CRISPY_TEMPLATE_PACK = "bootstrap3"
-# # CRISPY_TEMPLATE_PACK = "foundation"
-# JSON_MODULE = 'ujson'
+# ################# Django_crispy_forms
+# INSTALLED_APPS += (
+#     'crispy_forms',
+#     # 'crispy_forms_foundation',
+# )
+#
+# CRISPY_TEMPLATE_PACK = "bootstrap3"
+# # # CRISPY_TEMPLATE_PACK = "foundation"
+# # JSON_MODULE = 'ujson'
 
 ################# Django_compressor
 INSTALLED_APPS += (
