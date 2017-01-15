@@ -126,12 +126,16 @@ def send_email_with_error_log(email, customer=None):
     with mail.get_connection() as connection:
         email.connection = connection
         message = EMPTY_STRING
+        email.reply_to = [email.from_email]
+        email.from_email = settings.DEFAULT_FROM_EMAIL
         try:
             print("################################## send_email")
+            reply_to = "reply_to : %s" % email.reply_to
             to = "to : %s" % email.to
             cc = "cc : %s" % email.cc
             bcc = "bcc : %s" % email.bcc
             subject = "subject : %s" % slugify(email.subject)
+            print(reply_to)
             print(to)
             print(cc)
             print(bcc)
