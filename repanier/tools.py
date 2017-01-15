@@ -497,7 +497,7 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         else:
             unit = EMPTY_STRING
     if unit_price_amount is not None:
-        price_display = " = %s" % (RepanierMoney(unit_price_amount * qty),)
+        price_display = " = %s" % RepanierMoney(unit_price_amount * qty)
     else:
         price_display = EMPTY_STRING
     if magnitude is not None:
@@ -510,22 +510,22 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
     elif qty * 100 == int(qty * 100):
         decimal = 2
     if for_customer or for_order_select:
-        if display_qty and len(unit) > 0:
-            qty_display = "%s (%s)" % (number_format(qty, decimal), unit)
-        else:
-            if not for_order_select:
-                qty_display = "%s" % number_format(qty, decimal)
+        if unit:
+            if display_qty:
+                qty_display = "%s (%s)" % (number_format(qty, decimal), unit)
             else:
-                qty_display = EMPTY_STRING
+                qty_display = "%s" % unit
+        else:
+            qty_display = "%s" % number_format(qty, decimal)
     else:
-        if len(unit) > 0:
-            qty_display = "(%s)" % (unit,)
+        if unit:
+            qty_display = "(%s)" % unit
         else:
             qty_display = EMPTY_STRING
     if without_price_display:
         return qty_display
     else:
-        display = "%s%s" % (qty_display, price_display,)
+        display = "%s%s" % (qty_display, price_display)
         return display
 
 
