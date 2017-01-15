@@ -251,6 +251,12 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             return True
         return False
 
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
     def get_email(self, customer):
         if customer.user is not None:
             return customer.user.email

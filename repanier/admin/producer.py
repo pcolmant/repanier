@@ -227,6 +227,12 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             return True
         return False
 
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
     def get_urls(self):
         urls = super(ProducerAdmin, self).get_urls()
         my_urls = [
