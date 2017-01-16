@@ -22,9 +22,9 @@ def order_ajax(request):
     user = request.user
     if not user.is_authenticated():
         raise Http404
-    customer = Customer.objects.filter(user_id=user.id, is_active=True, may_order=True) \
-        .only("id", "vat_id") \
-        .order_by('?').first()
+    customer = Customer.objects.filter(
+        user_id=user.id, is_active=True, may_order=True
+    ).order_by('?').first()
     if customer is None:
         raise Http404
     offer_item_id = sint(request.GET.get('offer_item', 0))
