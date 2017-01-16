@@ -155,11 +155,11 @@ class OrderView(ListView):
                 offer_item = OfferItem.objects.filter(
                     id=self.box_id,
                     permanence_id=self.permanence.id, is_active=True,
-                ).order_by('?').only("product").first()
+                ).order_by('?').first()
                 if offer_item is not None:
-                    box_id = offer_item.product
+                    box_id = offer_item.product_id
                 else:
-                    # Gogglebot is back
+                    # A bot is back
                     raise Http404
                 product_ids = BoxContent.objects.filter(
                     box_id=box_id
