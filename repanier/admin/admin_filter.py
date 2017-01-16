@@ -138,8 +138,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
         permanence_id = request.GET.get('permanence', None)
         list_filter = []
         for c in Customer.objects.filter(may_order=True):
-            ci = CustomerInvoice.objects.filter(permanence=permanence_id, customer_id=c.id).order_by('?').only(
-                'total_price_with_tax', 'is_order_confirm_send').first()
+            ci = CustomerInvoice.objects.filter(permanence=permanence_id, customer_id=c.id).order_by('?').first()
             if ci is not None:
                 if ci.is_order_confirm_send:
                     list_filter.append(
@@ -167,8 +166,7 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
         if permanence_id is not None:
             list_filter = []
             for p in Producer.objects.filter(permanence=permanence_id):
-                pi = ProducerInvoice.objects.filter(permanence=permanence_id, producer_id=p.id).order_by('?').only(
-                    'total_price_with_tax').first()
+                pi = ProducerInvoice.objects.filter(permanence=permanence_id, producer_id=p.id).order_by('?').first()
                 if pi is not None:
                     list_filter.append((p.id, "%s (%s)" % (p.short_profile_name, pi.total_price_with_tax,)))
                 else:
