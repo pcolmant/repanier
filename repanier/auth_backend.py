@@ -15,6 +15,7 @@ from models import Customer, Staff, Configuration
 
 ACTION_RE = re.compile(r"(?<=\.)(.*?)(?=\_)")
 
+
 class RepanierCustomBackend(ModelBackend):
     user = None
 
@@ -136,5 +137,5 @@ class RepanierCustomBackend(ModelBackend):
                 perm_splitted = codename.split('_', 1)
                 codename = '%s_bootstrapcontainerpluginmodel' % perm_splitted[0]
             perm = 'cmsplugin_cascade.%s' % codename
-            return super(RepanierCustomBackend, self).has_perm(user_obj, perm, obj)
+        return super(RepanierCustomBackend, self).has_perm(user_obj, perm, obj)
 
