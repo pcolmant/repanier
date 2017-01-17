@@ -20,7 +20,7 @@ from repanier.tools import on_hold_movement_message
 def basket_message_form_ajax(request, customer_id):
     if request.is_ajax():
         user = request.user
-        if user.is_anonymous():
+        if user.is_anonymous:
             return HttpResponse(EMPTY_STRING)
         to_json = []
         if request.user.is_staff:

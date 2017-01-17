@@ -20,7 +20,7 @@ from repanier.tools import sint, sboolean, calc_basket_message, my_order_confirm
 def delivery_ajax(request):
     if request.is_ajax():
         user = request.user
-        if user.is_authenticated():
+        if user.is_authenticated:
             permanence_id = sint(request.GET.get('permanence', 0))
             basket = sboolean(request.GET.get('basket', False))
             permanence = Permanence.objects.filter(id=permanence_id) \

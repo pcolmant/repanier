@@ -18,7 +18,7 @@ class PermanenceMenu(Menu):
     def get_nodes(self, request):
         from apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE
         user = request.user
-        if user.is_anonymous() or user.is_staff:
+        if user.is_anonymous or user.is_staff:
             is_anonymous = True
         else:
             is_anonymous = False

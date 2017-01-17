@@ -35,7 +35,7 @@ def order_init_ajax(request):
             raise Http404
         user = request.user
         to_json = []
-        if user.is_authenticated():
+        if user.is_authenticated:
             permanence = permanence_qs.prefetch_related("producers").first()
             customer = Customer.objects.filter(
                 user_id=user.id, is_active=True
@@ -169,7 +169,7 @@ def order_init_ajax(request):
         request_offer_items = request.GET.getlist('oi')
         for request_offer_item in request_offer_items:
             offer_item_id = sint(request_offer_item)
-            if user.is_authenticated() and customer is not None:
+            if user.is_authenticated and customer is not None:
                 # No need to check customer.may_order.
                 # Select one purchase
                 purchase = Purchase.objects.filter(

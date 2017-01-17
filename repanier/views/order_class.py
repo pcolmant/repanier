@@ -49,7 +49,7 @@ class OrderView(ListView):
             self.like = False
         if self.permanence.with_delivery_point:
             self.delivery_id = sint(kwargs.get('delivery_id', 0))
-        if self.user.is_anonymous() or self.user.is_staff:
+        if self.user.is_anonymous or self.user.is_staff:
             self.is_anonymous = True
             self.may_order = False
             self.q = None

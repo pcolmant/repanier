@@ -13,7 +13,7 @@ from django.views.decorators.http import require_GET
 def customer_name_ajax(request):
     if request.is_ajax():
         user = request.user
-        if user.is_anonymous():
+        if user.is_anonymous:
             result = _('Anonymous')
         else:
             result = user.username

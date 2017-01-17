@@ -26,7 +26,7 @@ def delivery_select_ajax(request):
     # construct a list which will contain all of the data for the response
     user = request.user
     to_json = []
-    if user.is_authenticated():
+    if user.is_authenticated:
         customer = Customer.objects.filter(
             user_id=user.id, is_active=True, may_order=True) \
             .only("id", "language", "delivery_point").order_by('?').first()

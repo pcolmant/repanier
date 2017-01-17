@@ -17,7 +17,7 @@ from repanier.models import CustomerInvoice
 def my_balance_ajax(request):
     if request.is_ajax():
         user = request.user
-        if user.is_anonymous() or user.is_staff or user.is_superuser:
+        if user.is_anonymous or user.is_staff or user.is_superuser:
             return HttpResponse(EMPTY_STRING)
         last_customer_invoice = CustomerInvoice.objects.filter(
             customer__user_id=request.user.id,

@@ -26,7 +26,7 @@ def btn_confirm_order_ajax(request):
         raise Http404
     permanence_id = sint(request.GET.get('permanence', 0))
     user = request.user
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         raise Http404
     customer = Customer.objects.filter(
         user_id=user.id, is_active=True, may_order=True).order_by('?').first()

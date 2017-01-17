@@ -20,7 +20,7 @@ def order_ajax(request):
     if not request.is_ajax():
         raise Http404
     user = request.user
-    if not user.is_authenticated():
+    if not user.is_authenticated:
         raise Http404
     customer = Customer.objects.filter(
         user_id=user.id, is_active=True, may_order=True
