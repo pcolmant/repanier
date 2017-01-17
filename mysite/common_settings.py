@@ -95,9 +95,6 @@ DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
 
 ###################### DEBUG
-# if DJANGO_SETTINGS_DEMO:
-    # No debug available in demo mode
-    # DJANGO_SETTINGS_DEBUG = False
 DEBUG = DJANGO_SETTINGS_DEBUG
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 TEMPLATE_DEBUG = False
@@ -114,14 +111,10 @@ SERVER_EMAIL = "%s%s" % (DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAI
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': DJANGO_SETTINGS_DATABASE_NAME,  # Or path to database file if using sqlite3.
-        # The following settings are not used with sqlite3:
         'USER': DJANGO_SETTINGS_DATABASE_USER,
         'PASSWORD': DJANGO_SETTINGS_DATABASE_PASSWORD,
-        # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'HOST': DJANGO_SETTINGS_DATABASE_HOST,
-        # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
     }
 }
@@ -134,19 +127,15 @@ if EMAIL_USE_TLS:
     EMAIL_USE_SSL = False
 else:
     EMAIL_USE_SSL =DJANGO_SETTINGS_EMAIL_USE_SSL
-# if DEBUG:
-#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ###################### I18N
 
 TIME_ZONE = 'Europe/Brussels'
 USE_TZ = True
-# Before 22/02/2014 - DJANGO-CMS LANGUAGE_CODE = 'fr-BE'
 USE_L10N = True
 USE_THOUSAND_SEPARATOR = True
 THOUSAND_SEPARATOR = '.'
 NUMBER_GROUPING = 3
 DECIMAL_SEPARATOR = ','
-# 'fr-be'
 
 SITE_ID = 1
 ALLOWED_HOSTS = DJANGO_SETTINGS_ALLOWED_HOSTS
@@ -161,7 +150,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_FILE_PATH = DJANGO_SETTINGS_SESSION
-# SOUTH_TESTS_MIGRATE = DEBUG
 
 ##################### Django & Django CMS
 LOCALE_PATHS = (
@@ -263,18 +251,6 @@ TEMPLATES = [
 },
 ]
 
-MIGRATION_MODULES = {
-    # 'cms': 'cms.migrations_django',
-    # 'menus': 'menus.migrations_django',
-    # 'filer': 'filer.migrations_django',
-    # 'djangocms_text_ckeditor': 'djangocms_text_ckeditor.migrations_django',
-    # 'cmsplugin_filer_file': 'cmsplugin_filer_file.migrations_django',
-    # 'cmsplugin_filer_folder': 'cmsplugin_filer_folder.migrations_django',
-    # 'cmsplugin_filer_link': 'cmsplugin_filer_link.migrations_django',
-    # 'cmsplugin_filer_image': 'cmsplugin_filer_image.migrations_django',
-    # 'cmsplugin_filer_video': 'cmsplugin_filer_video.migrations_django',
-}
-
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
 # CMS_PUBLIC_FOR = 'staff'
@@ -308,8 +284,6 @@ CKEDITOR_SETTINGS = {
     'forcePasteAsPlainText': 'true',
     'skin': 'moono',
     # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
-    # 'stylesSet' : [],
-    # 'extraPlugins': 'cmsplugins',
     'format_tags': 'p;h4;h5;blockquote;mutted;success;info;danger;heart;pushpin',
     'format_blockquote': {'element': 'blockquote', 'name': 'Blockquote'},
     'format_heart': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
@@ -326,7 +300,6 @@ CKEDITOR_SETTINGS = {
     'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
     # 'extraAllowedContent' : '*(*)',
     # 'extraAllowedContent' : 'iframe[*]',
-    # 'removeFormatTags': 'big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
@@ -346,7 +319,6 @@ CKEDITOR_SETTINGS_MODEL2 = {
         ['Source']
         # ['Maximize', '']
     ],
-    # 'extraPlugins': 'base64image',
     'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
     'skin': 'moono',
@@ -383,7 +355,6 @@ FILER_DEBUG = False
 THUMBNAIL_PROCESSORS = (
     'easy_thumbnails.processors.colorspace',
     'easy_thumbnails.processors.autocrop',
-    #'easy_thumbnails.processors.scale_and_crop',
     'filer.thumbnail_processors.scale_and_crop_with_subject_location',
     'easy_thumbnails.processors.filters',
     'easy_thumbnails.processors.background',
@@ -407,16 +378,6 @@ AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
 LOGIN_URL = "/repanier/go_repanier/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/repanier/leave_repanier/"
-
-# ################# Django_crispy_forms
-# INSTALLED_APPS += (
-#     'crispy_forms',
-#     # 'crispy_forms_foundation',
-# )
-#
-# CRISPY_TEMPLATE_PACK = "bootstrap3"
-# # # CRISPY_TEMPLATE_PACK = "foundation"
-# # JSON_MODULE = 'ujson'
 
 ################# Django_compressor
 INSTALLED_APPS += (
@@ -671,8 +632,6 @@ CMSPLUGIN_CASCADE = {
             'extra_fields:Margins': ['margin-top', 'margin-bottom'],
             'extra_units:Margins': 'px,em'}),
         'BootstrapJumbotronPlugin': PluginExtraFieldsConfig(inline_styles={
-            # 'extra_fields:Margins': ['margin-top', 'margin-bottom'],
-            # 'extra_units:Margins': 'px,em',
             'extra_fields:Margins': ['padding-top', 'padding-bottom', 'margin-bottom'],
             'extra_units:Margins': 'px,em'}),
     },
