@@ -18,6 +18,14 @@ def repanier_home(*args, **kwargs):
 
 
 @register.simple_tag(takes_context=False)
+def repanier_display_languages(*args, **kwargs):
+    from django.conf import settings
+    if len(settings.LANGUAGES) > 1:
+        return "yes"
+    return None
+
+
+@register.simple_tag(takes_context=False)
 def repanier_display_task(*args, **kwargs):
     result = EMPTY_STRING
     p_permanence_board_id = sint(kwargs.get('permanence_board_id', 0))
