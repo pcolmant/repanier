@@ -832,7 +832,7 @@ CMS_PLACEHOLDER_CONF = {
 
     'footer': {
         'name': gettext('Footer'),
-        'plugins': ['TextPlugin', ],
+        'plugins': ['TextPlugin',  'FilerImagePlugin'],
         'text_only_plugins': ['TextLinkPlugin'],
         'limits': {
             'TextPlugin': 1,
