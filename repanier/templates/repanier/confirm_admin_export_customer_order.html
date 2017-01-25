@@ -87,7 +87,6 @@
           return source.checked
         }
         function toggle(source, elementName) {
-          source.checked = ! source.checked;
           all_checked = true;
           none_checked = true;
           checkboxes = document.getElementsByName(elementName);
@@ -97,7 +96,7 @@
           }
           all_checkboxes = document.getElementsByName("all-" + elementName);
           all_checkboxes[0].checked = all_checked;
-          return [none_checked, all_checked]
+          return source.checked
         }
         function toggle_all_deliveries(source) {
             toggle_all(source, 'deliveries');
