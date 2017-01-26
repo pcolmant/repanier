@@ -131,7 +131,8 @@ class RepanierCustomBackend(ModelBackend):
         return user_or_none
 
     def has_perm(self, user_obj, perm, obj=None):
-        if perm.startswith('dummy_cmsplugin_cascade'):
+        # if perm.startswith('dummy_cmsplugin_cascade'):
+        if perm.startswith('cascade_dummy'):
             codename = perm.split('.', 1)[1]
             if not Permission.objects.filter(codename=codename).exists():
                 perm_splitted = codename.split('_', 1)
