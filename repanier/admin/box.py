@@ -168,23 +168,17 @@ class BoxAdmin(TranslatableAdmin):
         'duplicate_box'
     ]
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, request, box=None):
         if request.user.groups.filter(
                 name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
             return True
         return False
 
     def has_add_permission(self, request):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+    def has_change_permission(self, request, box=None):
+        return self.has_delete_permission(request, box)
 
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_box.flip_flop_is_into_offer(queryset)

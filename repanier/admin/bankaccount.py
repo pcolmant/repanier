@@ -276,9 +276,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, bank_account=None):
-        if request.user.groups.filter(name__in=[COORDINATION_GROUP, INVOICE_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_add_permission(request)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [

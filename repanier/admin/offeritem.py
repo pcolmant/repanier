@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanence, \
     ProductFilterByDepartmentForThisProducer, OfferItemFilter
-from repanier.const import PERMANENCE_CLOSED, PERMANENCE_OPENED
+from repanier.const import PERMANENCE_CLOSED, PERMANENCE_OPENED, ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP
 from repanier.models import Permanence, Product, LUT_DepartmentForCustomer, Producer
 from repanier.tools import sint, update_offer_item
 
@@ -142,7 +142,10 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return True
+        if request.user.groups.filter(
+                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+            return True
+        return False
 
     def get_actions(self, request):
         actions = super(OfferItemClosedAdmin, self).get_actions(request)

@@ -308,10 +308,14 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return False
 
     def has_add_permission(self, request):
-        return True
+        if request.user.groups.filter(
+                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP,
+                          CONTRIBUTOR_GROUP]).exists() or request.user.is_superuser:
+            return True
+        return False
 
     def has_change_permission(self, request, obj=None):
-        return True
+        return self.has_add_permission(request)
 
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_product.flip_flop_is_into_offer(queryset)

@@ -115,7 +115,6 @@ class OfferItemSendDataForm(forms.ModelForm):
     previous_unit_deposit = FormMoneyField(
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
 
-
     def __init__(self, *args, **kwargs):
         getcontext().rounding = ROUND_HALF_UP
         super(OfferItemSendDataForm, self).__init__(*args, **kwargs)
@@ -272,7 +271,10 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return True
+        if request.user.groups.filter(
+                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+            return True
+        return False
 
     def get_actions(self, request):
         actions = super(OfferItemSendAdmin, self).get_actions(request)

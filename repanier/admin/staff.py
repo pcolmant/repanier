@@ -134,10 +134,7 @@ class StaffWithUserDataAdmin(TranslatableAdmin):
         return False
 
     def has_change_permission(self, request, staff=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_add_permission(request)
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StaffWithUserDataAdmin, self).get_form(request, obj, **kwargs)

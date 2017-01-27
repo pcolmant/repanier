@@ -164,10 +164,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_delete_permission(request, obj)
 
     def get_fields(self, request, permanence=None):
         fields = [

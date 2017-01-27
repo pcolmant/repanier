@@ -252,10 +252,13 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
-        return True
+        if request.user.groups.filter(
+                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+            return True
+        return False
 
     def has_change_permission(self, request, obj=None):
-        return True
+        return self.has_add_permission(request)
 
     def get_email(self, customer):
         if customer.user is not None:

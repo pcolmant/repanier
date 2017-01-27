@@ -153,7 +153,10 @@ class CustomerSendAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return True
+        if request.user.groups.filter(
+                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+            return True
+        return False
 
     def get_actions(self, request):
         actions = super(CustomerSendAdmin, self).get_actions(request)
