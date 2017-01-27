@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-01-08 21:52+0100\n"
-"PO-Revision-Date: 2017-01-09 08:46+0100\n"
+"PO-Revision-Date: 2017-01-27 19:07+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -2776,13 +2776,13 @@ msgstr "Description"
 #: models/staff.py:33
 msgid "is_reply_to_order_email"
 msgstr ""
-"Responsable des commande; cet ✉ est utilisé pour envoyer les offres et les "
+"Responsable des commande; ce contact est utilisé pour les offres et les "
 "commandes"
 
 #: models/staff.py:35
 msgid "is_reply_to_invoice_email"
 msgstr ""
-"Responsable de la comptabilité; cet ✉ est utilisé pour envoyer les factures"
+"Responsable de la comptabilité; ce contact est utilisé pour les factures"
 
 #: models/staff.py:37
 msgid "is_contributor"
