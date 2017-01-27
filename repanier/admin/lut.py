@@ -18,7 +18,7 @@ from repanier.models import PermanenceBoard, Customer, Permanence, LUT_DeliveryP
 
 
 class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
-    list_display = ( 'short_name', 'is_active')
+    list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     mptt_level_indent = 20
     mptt_indent_field = "short_name"
@@ -43,7 +43,7 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
 
 
 class LUTProductionModeAdmin(LUTAdmin):
-    exclude = ('picture',)
+    exclude = ('picture', 'description')
 
 
 class LUTDeliveryPointDataForm(TranslatableModelForm):
@@ -109,6 +109,7 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
     class Meta:
         model = LUT_DeliveryPoint
         fields = "__all__"
+        exclude = ('description',)
         widgets = {
             'customer_responsible': apply_select2(forms.Select),
         }
@@ -119,12 +120,12 @@ class LUTDeliveryPointAdmin(LUTAdmin):
 
     def get_fields(self, request, obj=None):
         if obj is None:
-            return [('parent',), 'is_active', 'short_name', 'description', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
-        return [('parent',), 'is_active', 'short_name', 'description', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
+            return [('parent',), 'is_active', 'short_name', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
+        return [('parent',), 'is_active', 'short_name', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):
-    pass
+    exclude = ('description',)
 
 
 class PermanenceBoardInlineForm(forms.ModelForm):
