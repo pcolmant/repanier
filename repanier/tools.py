@@ -9,7 +9,6 @@ import urllib2
 from smtplib import SMTPRecipientsRefused
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core import mail
 from django.core import urlresolvers
 from django.core.cache import cache
@@ -79,47 +78,49 @@ def send_email(email=None, track_customer_on_error=False):
         email.cc = []
         email.bcc = []
         send_email_with_error_log(email)
-    elif settings.DEBUG:
-        print('############################ debug, send_email')
-        if apps.REPANIER_SETTINGS_TEST_MODE:
-            email.to = [v for k, v in settings.ADMINS]
+    else:
+        from repanier.apps import REPANIER_SETTINGS_TEST_MODE
+        if settings.DEBUG:
+            print('############################ debug, send_email')
+            if REPANIER_SETTINGS_TEST_MODE:
+                email.to = [v for k, v in settings.ADMINS]
+                email.cc = []
+                email.bcc = []
+                print('the mail is send to : %s' % email.to)
+                send_email_with_error_log(email)
+            else:
+                print("to : %s" % email.to)
+                print("cc : %s" % email.cc)
+                print("bcc : %s" % email.bcc)
+                print("subject : %s" % slugify(email.subject))
+        elif REPANIER_SETTINGS_TEST_MODE:
+            coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by("id").first()
+            if coordinator is not None:
+                email.to = [coordinator.user.email]
+            else:
+                email.to = [v for k, v in settings.ADMINS]
             email.cc = []
             email.bcc = []
-            print('the mail is send to : %s' % email.to)
             send_email_with_error_log(email)
         else:
-            print("to : %s" % email.to)
-            print("cc : %s" % email.cc)
-            print("bcc : %s" % email.bcc)
-            print("subject : %s" % slugify(email.subject))
-    elif apps.REPANIER_SETTINGS_TEST_MODE:
-        coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by("id").first()
-        if coordinator is not None:
-            email.to = [coordinator.user.email]
-        else:
-            email.to = [v for k, v in settings.ADMINS]
-        email.cc = []
-        email.bcc = []
-        send_email_with_error_log(email)
-    else:
-        # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
-        # for chunk in chunks:
-        if len(email.bcc) > 1:
-            # Remove duplicate
-            email_bcc = list(set(email.bcc))
-            customer = None
-            for bcc in email_bcc:
-                email.bcc = [bcc]
-                if track_customer_on_error:
-                    # If the email is conained both in user__email and customer__email2
-                    # select the customer based on user__email
-                    customer = models.Customer.objects.filter(user__email=bcc).order_by('?').first()
-                    if customer is None:
-                        customer = models.Customer.objects.filter(email2=bcc).order_by('?').first()
-                time.sleep(2)
-                send_email_with_error_log(email, customer)
-        else:
-            send_email_with_error_log(email)
+            # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
+            # for chunk in chunks:
+            if len(email.bcc) > 1:
+                # Remove duplicate
+                email_bcc = list(set(email.bcc))
+                customer = None
+                for bcc in email_bcc:
+                    email.bcc = [bcc]
+                    if track_customer_on_error:
+                        # If the email is conained both in user__email and customer__email2
+                        # select the customer based on user__email
+                        customer = models.Customer.objects.filter(user__email=bcc).order_by('?').first()
+                        if customer is None:
+                            customer = models.Customer.objects.filter(email2=bcc).order_by('?').first()
+                    send_email_with_error_log(email, customer)
+                    time.sleep(2)
+            else:
+                send_email_with_error_log(email)
 
 
 def send_email_with_error_log(email, customer=None):
@@ -127,7 +128,7 @@ def send_email_with_error_log(email, customer=None):
         email.connection = connection
         message = EMPTY_STRING
         email.reply_to = [email.from_email]
-        email.from_email = settings.DEFAULT_FROM_EMAIL
+        email.from_email = "%s <%s>" % (apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
         try:
             print("################################## send_email")
             reply_to = "reply_to : %s" % email.reply_to
