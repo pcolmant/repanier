@@ -423,7 +423,7 @@ def admin_export(request, queryset):
     ).order_by("short_profile_name"), wb=None)
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
+        response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
             slugify(_("Current stock"))
         )
         wb.save(response)
