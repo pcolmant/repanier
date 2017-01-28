@@ -72,6 +72,14 @@ def next_row(query_iterator):
         return None
 
 
+def emails_of_testers():
+    tester_qs = models.Staff.objects.filter(is_tester=True, is_active=True).order_by("id")
+    testers = []
+    for tester in tester_qs:
+        testers.append(tester.user.email)
+    return testers
+
+
 def send_email(email=None, track_customer_on_error=False):
     if settings.DJANGO_SETTINGS_DEMO:
         email.to = [DEMO_EMAIL]
@@ -80,47 +88,40 @@ def send_email(email=None, track_customer_on_error=False):
         send_email_with_error_log(email)
     else:
         from repanier.apps import REPANIER_SETTINGS_TEST_MODE
-        if settings.DEBUG:
-            print('############################ debug, send_email')
-            if REPANIER_SETTINGS_TEST_MODE:
-                email.to = [v for k, v in settings.ADMINS]
+        if REPANIER_SETTINGS_TEST_MODE:
+            email.to = emails_of_testers()
+            if len(email.to) > 0:
+                # Send the mail only if there is at least one tester
                 email.cc = []
                 email.bcc = []
-                print('the mail is send to : %s' % email.to)
                 send_email_with_error_log(email)
             else:
+                print('############################ test mode, without tester...')
+        else:
+            if settings.DEBUG:
                 print("to : %s" % email.to)
                 print("cc : %s" % email.cc)
                 print("bcc : %s" % email.bcc)
                 print("subject : %s" % slugify(email.subject))
-        elif REPANIER_SETTINGS_TEST_MODE:
-            coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by("id").first()
-            if coordinator is not None:
-                email.to = [coordinator.user.email]
             else:
-                email.to = [v for k, v in settings.ADMINS]
-            email.cc = []
-            email.bcc = []
-            send_email_with_error_log(email)
-        else:
-            # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
-            # for chunk in chunks:
-            if len(email.bcc) > 1:
-                # Remove duplicate
-                email_bcc = list(set(email.bcc))
-                customer = None
-                for bcc in email_bcc:
-                    email.bcc = [bcc]
-                    if track_customer_on_error:
-                        # If the email is conained both in user__email and customer__email2
-                        # select the customer based on user__email
-                        customer = models.Customer.objects.filter(user__email=bcc).order_by('?').first()
-                        if customer is None:
-                            customer = models.Customer.objects.filter(email2=bcc).order_by('?').first()
-                    send_email_with_error_log(email, customer)
-                    time.sleep(2)
-            else:
-                send_email_with_error_log(email)
+                # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
+                # for chunk in chunks:
+                if len(email.bcc) > 1:
+                    # Remove duplicate
+                    email_bcc = list(set(email.bcc))
+                    customer = None
+                    for bcc in email_bcc:
+                        email.bcc = [bcc]
+                        if track_customer_on_error:
+                            # If the email is conained both in user__email and customer__email2
+                            # select the customer based on user__email
+                            customer = models.Customer.objects.filter(user__email=bcc).order_by('?').first()
+                            if customer is None:
+                                customer = models.Customer.objects.filter(email2=bcc).order_by('?').first()
+                        send_email_with_error_log(email, customer)
+                        time.sleep(2)
+                else:
+                    send_email_with_error_log(email)
 
 
 def send_email_with_error_log(email, customer=None):
@@ -171,38 +172,26 @@ def send_email_with_error_log(email, customer=None):
 def send_email_to_who(is_email_send, board=False):
     if not is_email_send:
         if board:
-            if settings.DEBUG:
-                if apps.REPANIER_SETTINGS_TEST_MODE:
-                    return True, _("This email will be sent to %s.") % ' ,'.join(v for k, v in settings.ADMINS)
-                else:
-                    return False, _("No email will be sent.")
-            elif apps.REPANIER_SETTINGS_TEST_MODE:
-                coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by('?').first()
-                if coordinator is not None:
-                    return True, _("This email will be sent to %s.") % coordinator.user.email
-                else:
-                    return True, _("This email will be sent to %s.") % ' ,'.join(v for k, v in settings.ADMINS)
+            if apps.REPANIER_SETTINGS_TEST_MODE:
+                return True, _("This email will be sent to %s.") % ', '.join(emails_of_testers())
             else:
-                return True, _("This email will be sent to the staff.")
+                if settings.DEBUG:
+                    return False, _("No email will be sent.")
+                else:
+                    return True, _("This email will be sent to the staff.")
         else:
             return False, _("No email will be sent.")
     else:
-        if settings.DEBUG:
-            if apps.REPANIER_SETTINGS_TEST_MODE:
-                return True, _("This email will be sent to %s.") % ' ,'.join(v for k, v in settings.ADMINS)
-            else:
-                return False, _("No email will be sent.")
-        elif apps.REPANIER_SETTINGS_TEST_MODE:
-            coordinator = models.Staff.objects.filter(is_coordinator=True, is_active=True).order_by('?').first()
-            if coordinator is not None:
-                return True, _("This email will be sent to %s.") % coordinator.user.email
-            else:
-                return True, _("This email will be sent to %s.") % ' ,'.join(v for k, v in settings.ADMINS)
+        if apps.REPANIER_SETTINGS_TEST_MODE:
+            return True, _("This email will be sent to %s.") % ', '.join(emails_of_testers())
         else:
-            if board:
-                return True, _("This email will be sent to the preparation team and the staff.")
+            if settings.DEBUG:
+                return False, _("No email will be sent.")
             else:
-                return True, _("This email will be sent to customers or producers depending of the case.")
+                if board:
+                    return True, _("This email will be sent to the preparation team and the staff.")
+                else:
+                    return True, _("This email will be sent to customers or producers depending of the case.")
 
 
 def send_sms(sms_nr=None, sms_msg=None):

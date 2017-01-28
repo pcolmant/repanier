@@ -41,6 +41,8 @@ class Staff(TranslatableModel):
                                        default=False)
     is_coordinator = models.BooleanField(_("is_coordinator"),
                                          default=False)
+    is_tester = models.BooleanField(_("is_tester"),
+                                         default=False)
     password_reset_on = models.DateTimeField(
         _("password_reset_on"), null=True, blank=True, default=None)
     is_active = models.BooleanField(_("is_active"), default=True)

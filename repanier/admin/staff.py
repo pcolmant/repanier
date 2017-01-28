@@ -116,6 +116,7 @@ class StaffWithUserDataAdmin(TranslatableAdmin):
               'customer_responsible',
               'is_reply_to_order_email', 'is_reply_to_invoice_email',
               'is_coordinator', 'is_contributor', 'is_webmaster',
+              'is_tester',
               'is_active']
     list_display = ('user', 'language_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
     list_filter = ('is_active',)
