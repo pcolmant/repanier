@@ -315,7 +315,8 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'language': '{{ language }}',
     'toolbar_HTMLField': [
         ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
-        ['Preview', 'Cut', 'Copy', 'PasteText', 'Image', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
+        # ['Preview', 'Cut', 'Copy', 'PasteText', 'Image', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
+        ['Preview', 'Cut', 'Copy', 'PasteText', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
         # ['Maximize', '']
     ],
