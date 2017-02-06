@@ -78,9 +78,13 @@ class DeliveryBoard(TranslatableModel):
                 comment = EMPTY_STRING
         except TranslationDoesNotExist:
             comment = EMPTY_STRING
+        try:
+            short_name = "%s" % self.delivery_point.short_name
+        except TranslationDoesNotExist:
+            short_name = EMPTY_STRING
         if self.delivery_date is not None:
             label = "%s %s%s" % (
-            self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), comment, self.delivery_point.short_name)
+            self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), comment, short_name)
         else:
             label = "%s%s" % (comment, self.delivery_point.short_name)
         return label
