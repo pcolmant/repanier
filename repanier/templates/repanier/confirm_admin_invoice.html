@@ -131,7 +131,6 @@
             {% endfor %}
         }
         function toggle_producer(source) {
-            source.checked = !source.checked;
             all_checked = true;
             {% for f_form in producer_invoiced_formset %}
                 checkbox = document.getElementsByName("form-{{ forloop.counter0 }}-selected");
