@@ -128,8 +128,11 @@ def send_email_with_error_log(email, customer=None):
     with mail.get_connection() as connection:
         email.connection = connection
         message = EMPTY_STRING
-        email.reply_to = [email.from_email]
-        email.from_email = "%s <%s>" % (apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
+        if not email.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+            email.reply_to = [email.from_email]
+            email.from_email = "%s <%s>" % (apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
+        else:
+            email.from_email = "%s <%s>" % (apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
         try:
             print("################################## send_email")
             reply_to = "reply_to : %s" % email.reply_to
