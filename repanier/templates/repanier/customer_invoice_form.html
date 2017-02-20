@@ -263,7 +263,6 @@
     </script>
 {% endaddtoblock %}
 {% addtoblock "lastjs" %}
-    {% if not next_customer_invoice_id %}
     <script type="text/javascript">
         $(document).ready(function () {
             setTimeout(function () {$(".cms-sideframe").hide();}, 500);
@@ -271,6 +270,13 @@
             setTimeout(function () {$(".cms-sideframe").hide();}, 1500);
             setTimeout(function () {$(".cms-sideframe").hide();}, 2000);
             setTimeout(function () {$(".cms-sideframe").hide();}, 3000);
+        });
+    </script>
+{% endaddtoblock %}
+{% addtoblock "lastjs" %}
+    {% if not next_customer_invoice_id %}
+    <script type="text/javascript">
+        $(document).ready(function () {
             var lien = '{% url 'basket_message_form_ajax' customer.id %}';
             $.ajax({
                 url: lien,
@@ -286,7 +292,6 @@
                     $("#basket_message").html("{% trans "Retry" %}");
                 }
             });
-
         });
     </script>
     {% endif %}

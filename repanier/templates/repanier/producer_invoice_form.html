@@ -139,7 +139,24 @@
     <div class="hidden-xs">
         <br/>
     </div>
-
+{% addtoblock "lastjs" %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            lien = '{% url 'my_balance' %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: false,
+                success: function (result) {
+                    $("#my_balance").html(result);
+                },
+                error: function (result) {
+                    $("#my_balance").html("{% trans "Retry7" %}");
+                }
+            });
+        });
+    </script>
+{% endaddtoblock %}
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
         $(document).ready(function () {
@@ -148,6 +165,12 @@
             setTimeout(function () {$(".cms-sideframe").hide();}, 1500);
             setTimeout(function () {$(".cms-sideframe").hide();}, 2000);
             setTimeout(function () {$(".cms-sideframe").hide();}, 3000);
+        });
+    </script>
+{% endaddtoblock %}
+{% addtoblock "lastjs" %}
+    <script type="text/javascript">
+        $(document).ready(function () {
             lien = '{% url 'order_name' %}';
             $.ajax({
                 url: lien,
@@ -162,18 +185,6 @@
                 },
                 error: function (result) {
                     $("#my_name").html("{% trans "Retry5" %}");
-                }
-            });
-            lien = '{% url 'my_balance' %}';
-            $.ajax({
-                url: lien,
-                cache: false,
-                async: false,
-                success: function (result) {
-                    $("#my_balance").html(result);
-                },
-                error: function (result) {
-                    $("#my_balance").html("{% trans "Retry7" %}");
                 }
             });
         });
