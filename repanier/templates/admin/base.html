@@ -61,8 +61,11 @@ form label.aligned.btn, form label.btn{color: black !important;}
 <div id="container">
     {% if not is_popup %}
     <div class="breadcrumbs" style="border-bottom: 0; margin-top: 19px;">
-{% if opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2>{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+{% if opts.verbose_name %}<h2>{{ opts.verbose_name_plural|capfirst }}
 &rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% else %}<h2 style="font-size: 130%; line-height: 1.75em; margin-top: 0; margin-bottom: 0;">&nbsp;</h2>{% endif %}
+{#{% if opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2>{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}#}
+{#&rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% else %}<h2 style="font-size: 130%; line-height: 1.75em; margin-top: 0; margin-bottom: 0;">&nbsp;</h2>{% endif %}#}
+
     </div>
     {% endif %}
 
