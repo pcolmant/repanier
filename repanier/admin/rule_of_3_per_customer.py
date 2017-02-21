@@ -93,6 +93,8 @@ class CustomerPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
 class CustomerSendForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
         label=_("producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+    offer_selling_price = FormMoneyField(
+        label=_("customer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
         label=_("apply rule of three"), required=False, initial=False)
 
@@ -100,13 +102,18 @@ class CustomerSendForm(forms.ModelForm):
         super(CustomerSendForm, self).__init__(*args, **kwargs)
         customer_producer_invoice = self.instance
         self.fields["offer_purchase_price"].initial = customer_producer_invoice.total_purchase_with_tax
+        self.fields["offer_selling_price"].initial = customer_producer_invoice.total_selling_with_tax
+        if customer_producer_invoice.producer.price_list_multiplier == DECIMAL_ONE:
+            self.fields["offer_selling_price"].widget = forms.HiddenInput()
+        else:
+            self.fields["offer_purchase_price"].widget = forms.HiddenInput()
 
 
 class CustomerSendAdmin(admin.ModelAdmin):
     form = CustomerSendForm
     fields = (
         ('permanence', 'customer', 'producer',),
-        ('offer_purchase_price', 'rule_of_3',)
+        ('offer_purchase_price', 'offer_selling_price', 'rule_of_3',)
     )
     list_per_page = 16
     list_max_show_all = 16
@@ -242,7 +249,11 @@ class CustomerSendAdmin(admin.ModelAdmin):
                         purchase.quantity_invoiced = DECIMAL_ZERO
         rule_of_3 = form.cleaned_data['rule_of_3']
         if rule_of_3:
-            rule_of_3_target = form.cleaned_data['offer_purchase_price'].amount.quantize(TWO_DECIMALS)
+            if customer_producer_invoice.producer.price_list_multiplier == DECIMAL_ONE:
+                rule_of_3_target = form.cleaned_data['offer_purchase_price'].amount.quantize(TWO_DECIMALS)
+            else:
+                rule_of_3_target = form.cleaned_data['offer_selling_price'].amount.quantize(
+                    TWO_DECIMALS) / customer_producer_invoice.producer.price_list_multiplier
             rule_of_3_source = DECIMAL_ZERO
             max_purchase_counter = 0
             for purchase_form in formset:
