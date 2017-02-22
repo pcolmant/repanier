@@ -103,7 +103,7 @@ class CustomerSendForm(forms.ModelForm):
         customer_producer_invoice = self.instance
         self.fields["offer_purchase_price"].initial = customer_producer_invoice.total_purchase_with_tax
         self.fields["offer_selling_price"].initial = customer_producer_invoice.total_selling_with_tax
-        if customer_producer_invoice.producer.price_list_multiplier == DECIMAL_ONE:
+        if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:
             self.fields["offer_selling_price"].widget = forms.HiddenInput()
         else:
             self.fields["offer_purchase_price"].widget = forms.HiddenInput()
@@ -249,20 +249,25 @@ class CustomerSendAdmin(admin.ModelAdmin):
                         purchase.quantity_invoiced = DECIMAL_ZERO
         rule_of_3 = form.cleaned_data['rule_of_3']
         if rule_of_3:
-            if customer_producer_invoice.producer.price_list_multiplier == DECIMAL_ONE:
+            if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:
                 rule_of_3_target = form.cleaned_data['offer_purchase_price'].amount.quantize(TWO_DECIMALS)
+                selling_price = False
             else:
                 rule_of_3_target = form.cleaned_data['offer_selling_price'].amount.quantize(
-                    TWO_DECIMALS) / customer_producer_invoice.producer.price_list_multiplier
+                    TWO_DECIMALS)
+                selling_price = True
             rule_of_3_source = DECIMAL_ZERO
             max_purchase_counter = 0
             for purchase_form in formset:
                 if purchase_form.repanier_is_valid:
-                    rule_of_3_source += purchase_form.instance.purchase_price.amount
+                    if selling_price:
+                        rule_of_3_source += purchase_form.instance.selling_price.amount
+                    else:
+                        rule_of_3_source += purchase_form.instance.purchase_price.amount
                     max_purchase_counter += 1
             if rule_of_3_target is not None and rule_of_3_target != rule_of_3_source:
                 if rule_of_3_source != DECIMAL_ZERO:
-                    ratio = rule_of_3_target / rule_of_3_source
+                    ratio = (rule_of_3_target / rule_of_3_source).quantize(FOUR_DECIMALS)
                 else:
                     if rule_of_3_target == DECIMAL_ZERO:
                         ratio = DECIMAL_ZERO
@@ -276,20 +281,26 @@ class CustomerSendAdmin(admin.ModelAdmin):
                             i += 1
                             purchase = purchase_form.instance
                             if i == max_purchase_counter:
-                                delta = (rule_of_3_target - adjusted_invoice).quantize(TWO_DECIMALS)
                                 if purchase.get_producer_unit_price() != DECIMAL_ZERO:
-                                    purchase.quantity_invoiced = (
-                                        delta / purchase.get_producer_unit_price()).quantize(FOUR_DECIMALS)
+                                    delta = rule_of_3_target - adjusted_invoice
+                                    if selling_price:
+                                        purchase.quantity_invoiced = (
+                                            delta / purchase.get_customer_unit_price()).quantize(FOUR_DECIMALS)
+                                    else:
+                                        purchase.quantity_invoiced = (
+                                            delta / purchase.get_producer_unit_price()).quantize(FOUR_DECIMALS)
                                 else:
                                     purchase.quantity_invoiced = DECIMAL_ZERO
                             else:
                                 purchase.quantity_invoiced = (purchase.quantity_invoiced * ratio).quantize(
                                     FOUR_DECIMALS)
-                                adjusted_invoice += (
-                                    purchase.quantity_invoiced * purchase.get_producer_unit_price()).quantize(
-                                    TWO_DECIMALS)
+
                             purchase.save()
                             purchase.save_box()
+                            if selling_price:
+                                adjusted_invoice += purchase.selling_price.amount
+                            else:
+                                adjusted_invoice += purchase.purchase_price.amount
         for purchase_form in formset:
             if purchase_form.has_changed() and purchase_form.repanier_is_valid:
                 purchase_form.instance.save()
