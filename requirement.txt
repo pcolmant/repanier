@@ -1,44 +1,34 @@
-Django==1.9.12
-Django-Select2==5.8.9
-Pillow==3.4.2
-Unidecode==0.04.19
-aldryn-reversion==1.0.9
-argparse==1.2.1
+Django==1.10.5
+Django-Select2==5.8.10
+Pillow==4.0.0
+Unidecode==0.04.20
+argparse==1.4.0
 cmsplugin-filer==1.1.3
 diff-match-patch==20121119
+django-angular==0.8.4
 django-appconf==1.0.2
 django-classy-tags==0.8.0
-django-cms==3.4.1
+django-cms==3.4.2
+# https://github.com/divio/django-cms/archive/release/3.4.x.zip
 django-compressor==2.1
-django-crispy-forms==1.6.1
 django-easy-select2==1.3.3
-django-filer==1.2.5
-django-formtools==1.0
+django-filer==1.2.6
+django-formtools==2.0
 django-import-export==0.5.1
-django-mptt==0.8.6
-django-mptt-admin==0.4.1
-django-parler==1.6.5
+django-mptt==0.8.7
+django-mptt-admin==0.4.4
+django-parler==1.7
 django-polymorphic==1.0.2
-django-reversion==1.10.2
+django-reversion==2.0.8
 django-sekizai==0.10.0
 django-treebeard==4.1.0
-# djangocms-admin-style==0.2.8
 djangocms-admin-style==1.2.6.2
 djangocms-attributes-field==0.1.2
-# djangocms-cascade==0.11.0
-https://github.com/jrief/djangocms-cascade/archive/master.zip
-django-angular==0.8.4
-djangocms-text-ckeditor==3.3.1
-djangorestframework==3.4.7
+# djangocms-cascade==0.12
+https://github.com/jrief/djangocms-cascade/archive/releases/0.12.x.zip
+djangocms-text-ckeditor==3.4.0
+djangorestframework==3.5.4
 easy-thumbnails==2.3
-html5lib==0.9999999
-jsonfield==1.0.3
 openpyxl==1.8.6
 psycopg2==2.6.2
-rcssmin==1.0.6
-rjsmin==1.0.12
-six==1.10.0
-tablib==0.11.2
-# tzlocal==1.3
-uWSGI==2.0.14
-wsgiref==0.1.2
+uwsgi
