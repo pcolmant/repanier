@@ -162,7 +162,7 @@ class Permanence(TranslatableModel):
                             pi.get_to_be_paid_display()
                         )
                         link.append(
-                            '<a href="%s?producer=%d" %s>%s</a>'
+                            '<a href="%s?producer=%d" target="_blank" %s>%s</a>'
                             % (
                                 urlresolvers.reverse('producer_invoice_view', args=(pi.id,)),
                                 pi.producer_id,
@@ -217,7 +217,7 @@ class Permanence(TranslatableModel):
                             ci.customer.short_basket_name, ci.total_price_with_tax,
                             ci.get_is_order_confirm_send_display())
                     link.append(
-                        '<a href="%s?permanence=%d&customer=%d">%s</a>'
+                        '<a href="%s?permanence=%d&customer=%d" target="_blank">%s</a>'
                         % (changelist_url, self.id, ci.customer_id, label.replace(' ', '&nbsp;')))
                 customers = ", ".join(link)
             elif self.status == PERMANENCE_DONE:
@@ -230,7 +230,7 @@ class Permanence(TranslatableModel):
                         ci.get_is_order_confirm_send_display()
                     )
                     link.append(
-                        '<a href="%s?customer=%d">%s</a>'
+                        '<a href="%s?customer=%d" target="_blank">%s</a>'
                         % (
                             urlresolvers.reverse('customer_invoice_view', args=(ci.id,)),
                             ci.customer_id,
@@ -283,7 +283,7 @@ class Permanence(TranslatableModel):
                             args=(r.id,)
                         )
                         r_link = '<a href="' + r_url + \
-                                 '">' + r.short_name.replace(' ', '&nbsp;') + '</a>'
+                                 '" target="_blank">' + r.short_name.replace(' ', '&nbsp;') + '</a>'
                     c_link = EMPTY_STRING
                     c = permanenceboard_row.customer
                     if c:
@@ -292,7 +292,7 @@ class Permanence(TranslatableModel):
                             args=(c.id,)
                         )
                         c_link = '&nbsp;->&nbsp;<a href="' + c_url + \
-                                 '" >' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
+                                 '" > target="_blank"' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
                     if not first_board:
                         board += '<br/>'
                     board += r_link + c_link

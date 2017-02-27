@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_wo_cms_toolbar.html' %}
 {% load cms_tags sekizai_tags i18n l10n repanier_tags cache %}
 {% block base_content %}
     <div class="container-repanier">
@@ -259,17 +259,6 @@
                     $("#my_balance").html("{% trans "Retry7" %}");
                 }
             });
-        });
-    </script>
-{% endaddtoblock %}
-{% addtoblock "lastjs" %}
-    <script type="text/javascript">
-        $(document).ready(function () {
-            setTimeout(function () {$(".cms-sideframe").hide();}, 500);
-            setTimeout(function () {$(".cms-sideframe").hide();}, 1000);
-            setTimeout(function () {$(".cms-sideframe").hide();}, 1500);
-            setTimeout(function () {$(".cms-sideframe").hide();}, 2000);
-            setTimeout(function () {$(".cms-sideframe").hide();}, 3000);
         });
     </script>
 {% endaddtoblock %}

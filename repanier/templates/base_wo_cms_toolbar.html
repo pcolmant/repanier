@@ -1,0 +1,139 @@
+{#{% load cms_tags sekizai_tags menu_tags compress i18n l10n repanier_tags sass_tags %}{% spaceless %}#}
+{% load cms_tags sekizai_tags menu_tags compress i18n l10n repanier_tags %}{% spaceless %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}bootstrap/css/bootstrap.css">{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{{ STATIC_URL}}css/custom.css">{% endaddtoblock %}
+{#{% addtoblock "css" %}<link href="{% sass_src '_bootstrap.scss' %}" rel="stylesheet" type="text/css" />{% endaddtoblock %}#}
+{% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
+{% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{{ STATIC_URL}}fluidvids/fluidvids.js"></script>{% endaddtoblock %}
+{% addtoblock "lastjs" %}{% spaceless %}
+    <script>
+    fluidvids.init({
+      selector: ['iframe'],
+      players: ['www.youtube.com', 'player.vimeo.com']
+    });
+    </script>
+{% endspaceless %}{% endaddtoblock %}
+{% addtoblock "css" %}
+    <!-- django CMS toolbar adjustment -->
+    {% if request.toolbar %}
+    <style>
+    .cms-toolbar-expanded .navbar-custom {
+        margin-top: 45px;
+    }
+    </style>
+    {% endif %}
+{% endaddtoblock %}
+{% endspaceless %}
+{%get_current_language as LANGUAGE_CODE%}
+<!DOCTYPE html>
+<html lang="{{LANGUAGE_CODE}}" ng-app="repanier">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{#    <meta name="description" content="{% page_attribute 'meta_description' %}">#}
+    <title>{% page_attribute "title" %}</title>
+    {% render_block "css"  %}
+    {% render_block "jshead" %}
+    <script type="text/javascript">
+      // ensuring django namespace is set correctly
+      window.django = window.django || undefined;
+      // ensuring jQuery namespace is set correctly
+      window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
+      // ensuring Class namespace is set correctly
+      window.Class = window.Class || undefined;
+      // ensuring CMS namespace is set correctly
+      var CMS = {
+        '$': (typeof jQuery === 'function') ? jQuery : undefined,
+        'Class': (typeof Class === 'function') ? Class : undefined,
+        'API': {}
+      };
+      var my_app  = undefined;
+      if( typeof angular != "undefined") {
+        my_app  = angular.module('repanier', ['djng.forms']);
+      }
+    </script>
+   </head>
+  <body>
+    <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
+{#    {% cms_toolbar %}#}
+    {% spaceless %}
+    {# <!-- Header and Nav --> #}
+    <div class="navbar navbar-default navbar-fixed-top navbar-custom" role="navigation">
+      <div class="container-menu">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">{% trans "Toggle navigation" %}</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="collapse navbar-collapse">
+          {# <!-- Left Nav Section --> #}
+          <ul class="nav navbar-nav navbar-left">
+            <li>
+              <a href="{% repanier_home %}"><span class="glyphicon glyphicon glyphicon-home"></span></a>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav">
+            {% show_menu 0 1 1 1 %}
+          </ul>
+          {# <!-- Right Nav Section --> #}
+          <ul class="nav navbar-nav navbar-right">
+            {% if user.is_authenticated %}
+            <li id="li_my_name" class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Welkom" %} {% if user %}{{ user.username }}{% else %}<span id="my_name"></span>{% endif %}
+                <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% url "logout_form" %}">{% trans "Logout" %}</a></li>
+                </ul>
+            </li>
+              {% if permanence %}
+                <li id="li_my_basket" style="display:none;" class="dropdown">
+                {% if delivery_id %}
+                    <a href="{% url "basket_view" permanence.id delivery_id %}" class="btn btn-info"><span id="my_basket"></span></a>
+                {% else %}
+                    <a href="{% url "basket_view" permanence.id %}" class="btn btn-info"><span id="my_basket"></span></a>
+                {% endif %}
+                </li>
+              {% endif %}
+            {% else %}
+            <li class="dropdown">
+              <a href="{% url "login_form" %}">{% trans "Login" %}</a>
+            </li>
+            {% endif %}
+            {% repanier_display_languages as display_languages %}
+            {% if display_languages %}
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                {% language_chooser "native" %}
+              </ul>
+            </li>
+            {% else %}
+              &nbsp;{{ repanier_display_languages }}&nbsp;
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <a name="content"></a><section>
+    {% block base_content%}{% endblock %}
+    </section>
+    <div class="footer">
+      <div class="container">
+        <p class="text-muted">
+          {% block footer %}
+            {% static_placeholder 'footer' or %}{% trans "Contact" %} : coordi@repanier.be<span  class="hidden-xs"> | {% trans "Participer" %} : <a href="https://github.com/pcolmant/repanier">github</a></span>{% endstatic_placeholder %}
+          {% endblock %}
+        </p>
+      </div>
+    </div>
+    {% endspaceless %}
+    {% render_block "jsuncompressed" %}
+    {% render_block "js" %}
+    {% render_block "lastjs"  %}
+  </body>
+</html>
