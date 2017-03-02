@@ -365,7 +365,7 @@ class ProducerInvoice(models.Model):
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     calculated_invoiced_balance = ModelMoneyField(
         _("calculated balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_CONFIRM, default=False)
+    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_BANK_NOTE, default=False)
     to_be_invoiced_balance = ModelMoneyField(
         _("balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     invoice_reference = models.CharField(

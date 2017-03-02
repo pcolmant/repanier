@@ -76,7 +76,7 @@ class Producer(models.Model):
     producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
     producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
     sort_products_by_reference = models.BooleanField(_("sort products by reference"), default=False)
-    to_be_paid = models.BooleanField(_("to be paid"), default=False)
+    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_BANK_NOTE, default=False)
 
     price_list_multiplier = models.DecimalField(
         _("price_list_multiplier"),

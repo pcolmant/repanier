@@ -238,6 +238,7 @@ BOX_VALUE_INT = -1
 BOX_UNICODE = "📦"  # http://unicode-table.com/fr/1F6CD/
 LOCK_UNICODE = "🔐"
 VALID_UNICODE = "✔"
+BANK_NOTE_UNICODE = "💶"
 
 LUT_CONFIRM = (
     (True, LOCK_UNICODE), (False, EMPTY_STRING)
@@ -245,6 +246,10 @@ LUT_CONFIRM = (
 
 LUT_VALID = (
     (True, VALID_UNICODE), (False, EMPTY_STRING)
+)
+
+LUT_BANK_NOTE = (
+    (True, BANK_NOTE_UNICODE), (False, EMPTY_STRING)
 )
 
 CURRENCY_EUR = '100'

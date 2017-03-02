@@ -156,17 +156,15 @@ class Permanence(TranslatableModel):
                     link = []
                     for pi in invoice.ProducerInvoice.objects.filter(permanence_id=self.id).select_related(
                             "producer").order_by('producer'):
-                        label = "%s (%s) %s" % (
+                        label = "%s (%s)" % (
                             pi.producer.short_profile_name,
-                            pi.get_total_price_with_tax(),
-                            pi.get_to_be_paid_display()
+                            pi.get_total_price_with_tax()
                         )
                         link.append(
-                            '<a href="%s?producer=%d" target="_blank" %s>%s</a>'
+                            '<a href="%s?producer=%d" target="_blank">%s</a>'
                             % (
                                 urlresolvers.reverse('producer_invoice_view', args=(pi.id,)),
                                 pi.producer_id,
-                                EMPTY_STRING if not pi.to_be_paid else '',
                                 label.replace(' ', '&nbsp;')))
                     producers = ", ".join(link)
                     msg_html = """
@@ -292,7 +290,7 @@ class Permanence(TranslatableModel):
                             args=(c.id,)
                         )
                         c_link = '&nbsp;->&nbsp;<a href="' + c_url + \
-                                 '" > target="_blank"' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
+                                 '" target="_blank">' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
                     if not first_board:
                         board += '<br/>'
                     board += r_link + c_link
