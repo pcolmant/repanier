@@ -139,6 +139,7 @@ class Permanence(TranslatableModel):
                             changelist_url = send_offeritem_changelist_url
                         pi = invoice.ProducerInvoice.objects.filter(producer_id=p.id, permanence_id=self.id) \
                             .order_by('?').first()
+                        # Important : no target="_blank"
                         if pi is not None:
                             label = '%s (%s) %s' % (p.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)
                             link.append(
@@ -160,6 +161,8 @@ class Permanence(TranslatableModel):
                             pi.producer.short_profile_name,
                             pi.get_total_price_with_tax()
                         )
+                        # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
+                        # Such that they can be accessed by the producer and by the staff
                         link.append(
                             '<a href="%s?producer=%d" target="_blank">%s</a>'
                             % (
@@ -214,8 +217,9 @@ class Permanence(TranslatableModel):
                         label = '%s (%s) %s' % (
                             ci.customer.short_basket_name, ci.total_price_with_tax,
                             ci.get_is_order_confirm_send_display())
+                    # Important : no target="_blank"
                     link.append(
-                        '<a href="%s?permanence=%d&customer=%d" target="_blank">%s</a>'
+                        '<a href="%s?permanence=%d&customer=%d">%s</a>'
                         % (changelist_url, self.id, ci.customer_id, label.replace(' ', '&nbsp;')))
                 customers = ", ".join(link)
             elif self.status == PERMANENCE_DONE:
@@ -227,6 +231,8 @@ class Permanence(TranslatableModel):
                         ci.get_total_price_with_tax(customer_who_pays=True),
                         ci.get_is_order_confirm_send_display()
                     )
+                    # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
+                    # Such that they can be accessed by the customer and by the staff
                     link.append(
                         '<a href="%s?customer=%d" target="_blank">%s</a>'
                         % (
