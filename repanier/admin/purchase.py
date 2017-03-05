@@ -232,23 +232,27 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                         customer_id=customer_id,
                         permanence_id=permanence_id,
                 ).order_by('?').first()
-                if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
-                    filename = "{0}-{1}.xlsx".format(
-                        slugify(_("Order")),
-                        slugify(permanence)
-                    )
-                    sender_email, sender_function, signature, cc_email_staff = get_signature(
-                        is_reply_to_order_email=True)
-                    export_order_2_1_customer(
-                        customer, filename, permanence, sender_email,
-                        sender_function, signature)
-                    user_message_level = messages.INFO
-                    user_message = my_order_confirmation_email_send_to(customer)
+                if customer_invoice is not None:
+                    if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
+                        filename = "{0}-{1}.xlsx".format(
+                            slugify(_("Order")),
+                            slugify(permanence)
+                        )
+                        sender_email, sender_function, signature, cc_email_staff = get_signature(
+                            is_reply_to_order_email=True)
+                        export_order_2_1_customer(
+                            customer, filename, permanence, sender_email,
+                            sender_function, signature)
+                        user_message_level = messages.INFO
+                        user_message = my_order_confirmation_email_send_to(customer)
+                    else:
+                        user_message_level = messages.INFO
+                        user_message = _('Order confirmed')
+                    customer_invoice.confirm_order()
+                    customer_invoice.save()
                 else:
                     user_message_level = messages.INFO
-                    user_message = _('Order confirmed')
-                customer_invoice.confirm_order()
-                customer_invoice.save()
+                    user_message = _('Nothing to confirm')
 
             redirect_to = "%s?permanence=%s&customer=%s" % (
                 urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
