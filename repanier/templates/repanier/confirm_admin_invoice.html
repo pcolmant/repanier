@@ -1,8 +1,8 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags menu_tags i18n l10n %}
+{% load cms_tags menu_tags compress i18n l10n static %}
 {% block content %}
-    <link rel="stylesheet" href="{{STATIC_URL}}bootstrap/css/bootstrap.css">
-    <link rel="stylesheet" href="{{STATIC_URL}}css/custom.css">
+    <link rel="stylesheet" href={% static "bootstrap/css/bootstrap.css" %}>
+    <link rel="stylesheet" href={% static "css/custom.css" %}>
 {#<script type="text/javascript" src="/fr/coordi/jsi18n/"></script>#}
 {#<script type="text/javascript" src="/static_001/admin/js/core.js"></script>#}
 {#<script type="text/javascript" src="/static_001/admin/js/vendor/jquery/jquery.js"></script>#}

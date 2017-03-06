@@ -30,12 +30,13 @@ def get_allowed_mail_extension():
     return allowed_mail_extension
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-PROJECT_PATH = os.path.split(os.path.realpath(os.path.dirname(__file__)))[0]
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
+PROJECT_PATH = os.path.split(PROJECT_DIR)[0]
 os.sys.path.insert(0, PROJECT_PATH)
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
 MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # STATICFILES_DIRS = (
 #     os.path.join(PROJECT_PATH, "repanier", "static"),
@@ -188,7 +189,6 @@ INSTALLED_APPS = (
     'filer',
     'easy_thumbnails',
     'easy_thumbnails.optimize',
-    # 'sass_processor',
     'sekizai',
     'mptt',
     'django_mptt_admin',
@@ -380,15 +380,33 @@ LOGIN_URL = "/repanier/go_repanier/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/repanier/leave_repanier/"
 
-################# Django_compressor
-INSTALLED_APPS += (
-    'compressor',
-)
 ##### From : django/conf/global_settings.py
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+)
+
+################# Django_sass_compressor
+
+# INSTALLED_APPS += (
+#     'sass_processor',
+# )
+
+# STATICFILES_FINDERS += (
+#     'sass_processor.finders.CssFinder',
+# )
+
+# SASS_PROCESSOR_AUTO_INCLUDE = False
+# SASS_PRECISION = 8
+# SASS_PROCESSOR_INCLUDE_DIRS = [
+#     os.path.join(PROJECT_PATH, "bootstrap-sass-3.3.7", "assets", "stylesheets"),
+# ]
+
+
+################# Django_compressor
+
+INSTALLED_APPS += (
+    'compressor',
 )
 
 STATICFILES_FINDERS += (
@@ -400,6 +418,10 @@ COMPRESS_OUTPUT_DIR = "compressor"
 COMPRESS_STORAGE = 'compressor.storage.GzipCompressorFileStorage'
 COMPRESS_PARSER = "compressor.parser.HtmlParser"
 COMPRESS_OFFLINE = False
+
+# COMPRESS_PRECOMPILERS = (
+#     ('text/x-scss', 'django_libsass.SassCompiler'),
+# )
 
 ###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
 
