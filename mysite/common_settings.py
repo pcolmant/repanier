@@ -36,11 +36,6 @@ os.sys.path.insert(0, PROJECT_PATH)
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
 MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-
-# STATICFILES_DIRS = (
-#     os.path.join(PROJECT_PATH, "repanier", "static"),
-# )
 
 DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
 config = ConfigParser.RawConfigParser(allow_no_value=True)
@@ -94,6 +89,15 @@ DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
 # If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
 STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
+# if DJANGO_SETTINGS_DEBUG:
+#     # Activate ManifestStaticFilesStorage also when in debug mode
+#     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
+# else:
+#     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+# STATICFILES_DIRS = (
+#     os.path.join(PROJECT_PATH, "repanier", "static"),
+# )
+
 
 ###################### DEBUG
 DEBUG = DJANGO_SETTINGS_DEBUG
