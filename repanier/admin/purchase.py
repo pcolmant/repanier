@@ -13,6 +13,7 @@ from django.http import HttpResponseRedirect
 from django.utils import translation
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
 from import_export import resources, fields
 from import_export.admin import ExportMixin
@@ -156,6 +157,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     list_display_links = ('offer_item',)
     search_fields = ('offer_item__translations__long_name',)
     actions = []
+    change_list_template = 'admin/purchase_change_list.html'
 
     def __init__(self, model, admin_site):
         super(PurchaseAdmin, self).__init__(model, admin_site)
@@ -217,6 +219,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         my_urls = [
             url(r'^is_order_confirm_send/$', self.is_order_confirm_send),
             url(r'^is_order_confirm_not_send/$', self.is_order_confirm_not_send),
+            # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), {'packages': ('repanier',)}, name='javascript-catalog'),
+            # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
         ]
         return my_urls + urls
 
