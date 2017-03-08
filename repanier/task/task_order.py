@@ -67,8 +67,8 @@ def common_to_pre_open_and_open(permanence_id):
         is_active=False, may_order=False, is_box=False, is_box_content=False
     )
     # 2 - Delete unused purchases
-    Purchase.objects.filter(permanence_id=permanence_id, quantity_ordered=0,
-                            quantity_invoiced=0).order_by('?').delete()
+    # Purchase.objects.filter(permanence_id=permanence_id, quantity_ordered=0,
+    #                         quantity_invoiced=0).order_by('?').delete()
     # 3 - Activate offer items which can be purchased depending on selection in the admin
     producers_in_this_permanence = Producer.objects.filter(
         permanence=permanence_id, is_active=True).order_by('?').only("id")
@@ -325,10 +325,8 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
     getcontext().rounding = ROUND_HALF_UP
     # 0 - Delete unused purchases
     # No need to select : customer_invoice__delivery = delivery
-    Purchase.objects.filter(
-        permanence_id=permanence.id,
-        quantity_ordered=0
-    ).order_by('?').delete()
+    # Purchase.objects.filter(permanence_id=permanence.id, quantity_ordered=0,
+    #                         quantity_invoiced=0).order_by('?').delete()
     if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
         purchase_qs = Purchase.objects.filter(
             permanence_id=permanence.id,
@@ -453,15 +451,13 @@ def close_order(permanence, all_producers, producers_id=None):
                 value_id=DECIMAL_ZERO,
                 batch_job=True
             )
-    else:
+    # else:
         # 0 - Delete unused purchases
-        purchase_qs = Purchase.objects.filter(
-            permanence_id=permanence.id,
-            quantity_ordered=0
-        ).order_by('?')
-        if not all_producers:
-            purchase_qs = purchase_qs.filter(producer_id__in=producers_id)
-        purchase_qs.delete()
+        # purchase_qs = Purchase.objects.filter(permanence_id=permanence.id, quantity_ordered=0,
+        #                     quantity_invoiced=0).order_by('?').delete()
+        # if not all_producers:
+        #     purchase_qs = purchase_qs.filter(producer_id__in=producers_id)
+        # purchase_qs.delete()
     # 1 - Round to multiple producer_order_by_quantity
     offer_item_qs = OfferItem.objects.filter(
         permanence_id=permanence.id,
@@ -593,13 +589,13 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
             # Those orders are created in tools.my_order_confirmation when a customer want to place an order
             # but there is no more available delivery point for him
             # or when the customer has not selected any delivery point
-            qs = CustomerInvoice.objects.filter(
-                permanence_id=permanence.id, status__lte=PERMANENCE_CLOSED, delivery__isnull=True
-            ).order_by('?')
-            Purchase.objects.filter(
-                customer_invoice__in=qs
-            ).order_by('?').delete()
-            qs.delete()
+            # qs = CustomerInvoice.objects.filter(
+            #     permanence_id=permanence.id, status=PERMANENCE_CLOSED, delivery__isnull=True
+            # ).order_by('?')
+            # Purchase.objects.filter(
+            #     customer_invoice__in=qs
+            # ).order_by('?').delete()
+            # qs.delete()
             qs = DeliveryBoard.objects.filter(
                 permanence_id=permanence.id,
                 status=PERMANENCE_OPENED,
