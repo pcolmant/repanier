@@ -1,8 +1,8 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags compress i18n l10n static %}
 {% block content %}
-    <link rel="stylesheet" href={% static "bootstrap/css/bootstrap.css" %}>
-    <link rel="stylesheet" href={% static "css/custom.css" %}>
+    <link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">
+    <link rel="stylesheet" href="{% static "css/custom.css" %}">
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
@@ -27,7 +27,7 @@
                             <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
                                       name="template_invoice_customer_mail">{{ form.template_invoice_customer_mail.value }}</textarea>
                             <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
-                            <script src={% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}></script>
+                            <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
                             <script>
                                 CKEDITOR.replace("{{ id_for_label }}", {
                                     language: 'fr',
@@ -35,7 +35,7 @@
                                     toolbar: [
                                         ['Preview', 'Image', 'Source']
                                     ],
-                                    contentsCss: {% static "bootstrap/css/bootstrap.css" %},
+                                    contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
                                     width: '100%',
                                     height: '24em',
                                     removePlugins: 'elementspath',
@@ -65,7 +65,7 @@
                             <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
                                       name="template_invoice_producer_mail">{{ form.template_invoice_producer_mail.value }}</textarea>
                             <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
-                            <script src={% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}></script>
+                            <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
                             <script>
                                 CKEDITOR.replace("{{ id_for_label }}", {
                                     language: 'fr',
@@ -73,7 +73,7 @@
                                     toolbar: [
                                         ['Preview', 'Image', 'Source']
                                     ],
-                                    contentsCss: {% static "bootstrap/css/bootstrap.css" %},
+                                    contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
                                     width: '100%',
                                     height: '24em',
                                     removePlugins: 'elementspath',

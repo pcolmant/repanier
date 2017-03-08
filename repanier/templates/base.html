@@ -1,9 +1,9 @@
 {% load cms_tags sekizai_tags menu_tags compress i18n l10n static repanier_tags %}{% spaceless %}
-{% addtoblock "css" %}<link rel="stylesheet" href={% static "bootstrap/css/bootstrap.css" %}>{% endaddtoblock %}
-{% addtoblock "css" %}<link rel="stylesheet" href={% static "css/custom.css" %}>{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{% static "css/custom.css" %}">{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
-{% addtoblock "js" %}<script src={% static "fluidvids/fluidvids.js" %}></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{% static "fluidvids/fluidvids.js" %}"></script>{% endaddtoblock %}
 {% addtoblock "lastjs" %}{% spaceless %}
     <script>
     fluidvids.init({
