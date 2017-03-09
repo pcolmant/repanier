@@ -1,16 +1,16 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n static %}
+{% load cms_tags menu_tags compress i18n l10n static %}
 {% block content %}
-    {% addtoblock "jshead" %}<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>{% endaddtoblock %}
-    {% addtoblock "css" %}<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">{% endaddtoblock %}
-    {% addtoblock "css" %}<link rel="stylesheet" href="{% static "css/custom.css" %}">{% endaddtoblock %}
+    <link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">
+    <link rel="stylesheet" href="{% static "css/custom.css" %}">
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
         <fieldset class="module aligned ">
-        <div class="field-box">
-            <h6>{% trans "The importation concern :" %} {% for object in queryset.all  %}{{ object }}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>{% if not forloop.last %}, {% endif %}{% endfor %}</h6>
-            <label for="id_file_to_import"><h6>{% trans "File to import :"%}</h6></label><input id="id_file_to_import" name="file_to_import" type="file" />
+        <div class="form-group">
+            <b>{% trans "The importation concern :" %}</b> {% for object in queryset.all  %}{{ object }}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>{% if not forloop.last %}, {% endif %}{% endfor %}
+            <br/>
+            <label for="id_file_to_import"><b>{% trans "File to import :"%}</b></label><input id="id_file_to_import" name="file_to_import" type="file" />
         </div>
         </fieldset>
         <div class="submit-row">
