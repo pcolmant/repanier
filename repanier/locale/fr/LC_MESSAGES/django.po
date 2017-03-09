@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-08 01:54+0100\n"
-"PO-Revision-Date: 2017-03-08 19:55+0100\n"
+"POT-Creation-Date: 2017-03-09 11:35+0100\n"
+"PO-Revision-Date: 2017-03-09 20:26+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -227,7 +227,7 @@ msgstr "Action annulée par l'utilisateur."
 #: admin/permanence_in_preparation.py:755
 #: admin/permanence_in_preparation.py:783
 #: admin/permanence_in_preparation.py:803 admin/product.py:334
-#: admin/purchase.py:227 admin/purchase.py:272 task/task_order.py:241
+#: admin/purchase.py:231 admin/purchase.py:276 task/task_order.py:241
 msgid "Action canceled by the system."
 msgstr "Action annulée par Repanier."
 
@@ -244,7 +244,7 @@ msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
 #: admin/box.py:234 admin/configuration.py:98 admin/customer.py:342
-#: admin/producer.py:310 admin/product.py:475
+#: admin/producer.py:311 admin/product.py:475
 msgid "Advanced options"
 msgstr "Paramètres avancés"
 
@@ -672,7 +672,7 @@ msgstr ""
 "Veuillez verser %(payment)s sur le compte bancaire %(name)s %(number)s avec "
 "comme communication \"%(communication)s\"."
 
-#: admin/permanence_in_preparation.py:591 admin/purchase.py:93
+#: admin/permanence_in_preparation.py:591 admin/purchase.py:94
 #: models/customer.py:108 models/deliveryboard.py:26 models/lut.py:97
 #: models/purchase.py:179 xlsx/xlsx_order.py:38
 msgid "delivery point"
@@ -821,16 +821,16 @@ msgstr ""
 msgid "This bank account already belongs to another producer."
 msgstr "Ce compte en banque appartient déjà à un autre producteur."
 
-#: admin/producer.py:252
+#: admin/producer.py:253
 msgid ""
 "Export products of selected producer(s) as XSLX file at customer's prices"
 msgstr "Exporter le tarif consommateur"
 
-#: admin/producer.py:257
+#: admin/producer.py:258
 msgid "Export stock to a xlsx file"
 msgstr "Exporter le stock"
 
-#: admin/producer.py:262
+#: admin/producer.py:263
 msgid "Import stock from a xlsx file"
 msgstr "Importer, mettre à jour le stock"
 
@@ -901,7 +901,7 @@ msgstr ""
 "Cette quantité d'alerte n'est pas accessible. %(q_max)s est le meilleur "
 "choix inférieur le plus proche."
 
-#: admin/product.py:257 admin/product.py:511 admin/purchase.py:101
+#: admin/product.py:257 admin/product.py:511 admin/purchase.py:102
 msgid "Please select first a producer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un producteur via les filtres dans l'écran "
@@ -928,53 +928,53 @@ msgstr ""
 msgid "duplicate product"
 msgstr "Créer un duplicata"
 
-#: admin/purchase.py:92 models/box.py:70 models/offeritem.py:50
+#: admin/purchase.py:93 models/box.py:70 models/offeritem.py:50
 #: models/product.py:244 xlsx/xlsx_order.py:303 xlsx/xlsx_purchase.py:44
 msgid "product"
 msgstr "Produit"
 
-#: admin/purchase.py:106 admin/purchase.py:457
+#: admin/purchase.py:107 admin/purchase.py:461
 msgid "No more product to add. Please update a product of previous screen"
 msgstr ""
 "Pas d'autres produits à ajouter pour ce consommateur chez ce producteur."
 
-#: admin/purchase.py:120 admin/purchase.py:123
+#: admin/purchase.py:121 admin/purchase.py:124
 msgid "The quantity must be different than zero."
 msgstr "La quantité doit être différente de zéro."
 
-#: admin/purchase.py:167 models/offeritem.py:60 models/product.py:46
+#: admin/purchase.py:169 models/offeritem.py:60 models/product.py:46
 #: xlsx/xlsx_order.py:302 xlsx/xlsx_product.py:42
 msgid "department_for_customer"
 msgstr "Rayon"
 
-#: admin/purchase.py:239 const.py:229 email/email_order.py:31
+#: admin/purchase.py:243 const.py:229 email/email_order.py:31
 #: models/configuration.py:298 views/btn_confirm_order_ajax.py:48
 msgid "Order"
 msgstr "Commande"
 
-#: admin/purchase.py:251
+#: admin/purchase.py:255
 msgid "Order confirmed"
 msgstr "Commande confirmée"
 
-#: admin/purchase.py:256
+#: admin/purchase.py:260
 msgid "Nothing to confirm"
 msgstr "Rien à confirmer."
 
-#: admin/purchase.py:285
+#: admin/purchase.py:289
 msgid "Order not confirmed"
 msgstr "Commande non confirmée"
 
-#: admin/purchase.py:290
+#: admin/purchase.py:294
 msgid "Nothing to unconfirm"
 msgstr "Rien à ne pas confirmer."
 
-#: admin/purchase.py:400
+#: admin/purchase.py:404
 msgid "Please select first a permanence in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner une permanence via les filtres dans l'écran "
 "précédent..."
 
-#: admin/purchase.py:461
+#: admin/purchase.py:465
 msgid "Please select first a customer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un consommateur via les filtres dans l'écran "
@@ -2936,6 +2936,10 @@ msgstr "Page non trouvée."
 msgid "Add"
 msgstr "Ajouter"
 
+#: templates/admin/base.html:100
+msgid "Help"
+msgstr "Aide ❓"
+
 #: templates/admin/customer_filter.html:9
 #: templates/admin/department_filter.html:10
 #: templates/admin/dropdown_filter.html:3
@@ -3357,7 +3361,7 @@ msgstr "Veuillez réessayer (7)"
 msgid "Retry"
 msgstr "Veuillez réessayer"
 
-#: templates/repanier/import_xlsx.html:12
+#: templates/repanier/import_xlsx.html:11
 msgid "The importation concern :"
 msgstr "L'importation concerne :"
 
