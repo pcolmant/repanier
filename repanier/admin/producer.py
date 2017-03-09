@@ -216,6 +216,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     actions = [
         'export_xlsx_customer_prices',
     ]
+    change_list_template = 'admin/producer_change_list.html'
 
     def has_delete_permission(self, request, producer=None):
         if request.user.groups.filter(

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-08 02:19+0100\n"
-"PO-Revision-Date: 2017-03-08 20:19+0100\n"
+"POT-Creation-Date: 2017-03-09 08:58+0100\n"
+"PO-Revision-Date: 2017-03-09 17:48+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -17,6 +17,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 1.7.1\n"
+
+#: static/js/export_import_stock.js:4
+msgid "Export stock"
+msgstr "Exporter le stock"
+
+#: static/js/export_import_stock.js:5
+msgid "Import stock"
+msgstr "Importer le stock"
 
 #: static/js/is_order_confirm_send.js:4
 msgid "✗🔓"
