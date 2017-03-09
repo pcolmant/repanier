@@ -1742,20 +1742,24 @@ def get_full_status_display(permanence):
         status = None
         status_counter = 0
         for delivery in models.DeliveryBoard.objects.filter(permanence_id=permanence.id).order_by("status", "id"):
+            need_to_refresh_status |= delivery.status in [
+                PERMANENCE_WAIT_FOR_PRE_OPEN,
+                PERMANENCE_WAIT_FOR_OPEN,
+                PERMANENCE_WAIT_FOR_CLOSED,
+                PERMANENCE_WAIT_FOR_SEND,
+                PERMANENCE_WAIT_FOR_DONE
+            ]
             if status != delivery.status:
-                need_to_refresh_status |= delivery.status in [
-                    PERMANENCE_WAIT_FOR_PRE_OPEN,
-                    PERMANENCE_WAIT_FOR_OPEN,
-                    PERMANENCE_WAIT_FOR_CLOSED,
-                    PERMANENCE_WAIT_FOR_SEND,
-                    PERMANENCE_WAIT_FOR_DONE
-                ]
                 status = delivery.status
                 status_counter += 1
                 status_list.append("<b>%s</b>" % delivery.get_status_display())
             status_list.append("- %s" % delivery)
         if status_counter > 1:
-            return '<div class="wrap-text">%s</div>' % "<br/>".join(status_list)
+            message = "<br/>".join(status_list)
+        else:
+            message = permanence.get_status_display()
+    else:
+        message = permanence.get_status_display()
     if need_to_refresh_status:
         url = urlresolvers.reverse(
                             'display_status',
@@ -1777,8 +1781,8 @@ def get_full_status_display(permanence):
             </script>
             %s</div>
         """ % (
-            permanence.id, url, permanence.id, permanence.get_status_display()
+            permanence.id, url, permanence.id, message
         )
         return mark_safe(msg_html)
     else:
-        return mark_safe('<div class="wrap-text">%s</div>' % permanence.get_status_display())
+        return mark_safe('<div class="wrap-text">%s</div>' % message)
