@@ -159,7 +159,7 @@ class Producer(models.Model):
     get_admin_balance.allow_tags = False
 
     def get_calculated_invoiced_balance(self, permanence_id):
-
+        # print('------------------ get_calculated_invoiced_balance')
         result_set = bankaccount.BankAccount.objects.filter(
             producer_id=self.id, producer_invoice__isnull=True, permanence__isnull=True
         ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
@@ -167,12 +167,14 @@ class Producer(models.Model):
             bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
         else:
             bank_in = REPANIER_MONEY_ZERO
+        # print("bank_in %f" % bank_in)
         if result_set["bank_amount_out__sum"] is not None:
             bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
         else:
             bank_out = REPANIER_MONEY_ZERO
+        # print("bank_out %f" % bank_out)
         bank_not_invoiced = bank_out - bank_in
-
+        # print("bank_not_invoiced %f" % bank_not_invoiced)
         # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
         result_set = offeritem.OfferItem.objects.filter(
@@ -188,7 +190,7 @@ class Producer(models.Model):
             payment_needed = result_set["total_selling_with_tax__sum"]
         else:
             payment_needed = DECIMAL_ZERO
-
+        # print("payment_needed (1) %f" % payment_needed)
         result_set = offeritem.OfferItem.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
@@ -200,8 +202,9 @@ class Producer(models.Model):
         )
         if result_set["total_purchase_with_tax__sum"] is not None:
             payment_needed += result_set["total_purchase_with_tax__sum"]
-
+        # print("payment_needed (2) %f" % payment_needed)
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
+        # print("calculated_invoiced_balance %f" % calculated_invoiced_balance)
         if self.manage_replenishment:
             for offer_item in offeritem.OfferItem.objects.filter(
                     is_active=True,
