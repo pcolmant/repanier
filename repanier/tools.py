@@ -1167,14 +1167,15 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
         )
     else:
         msg_delivery = EMPTY_STRING
+    msg_confirmation1 = EMPTY_STRING
     if not is_basket and not apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
         # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
         # If apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS is True,
         # then permanence.with_delivery_point is also True
-        msg_confirmation = msg_html = EMPTY_STRING
+        msg_confirmation2 = msg_html = EMPTY_STRING
     else:
         if customer_invoice.is_order_confirm_send:
-            msg_confirmation = my_order_confirmation_email_send_to(customer_invoice.customer)
+            msg_confirmation2 = my_order_confirmation_email_send_to(customer_invoice.customer)
             msg_html = """
             <div class="row">
             <div class="panel panel-default">
@@ -1186,35 +1187,38 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
             </div>
             </div>
             </div>
-             """ % (msg_delivery, msg_confirmation, basket_message)
+             """ % (msg_delivery, msg_confirmation2, basket_message)
         else:
             msg_html = None
             btn_disabled = EMPTY_STRING
-            msg_confirmation = EMPTY_STRING
+            msg_confirmation2 = EMPTY_STRING
             if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
                 if is_basket:
                     if customer_invoice.status == PERMANENCE_OPENED:
-                        if permanence.with_delivery_point and customer_invoice.delivery is None:
+                        if customer_invoice.delivery is None:
                             btn_disabled = "disabled"
-                        msg_confirmation = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _("Confirm this order and receive an email containing its summary.")
-                else:
+                        msg_confirmation1 = '<font color="red">%s</font><br/>' % _("An unconfirmed order will be canceled.")
+                        msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _("Confirm this order and receive an email containing its summary.")
+                elif permanence.with_delivery_point:
                     href = urlresolvers.reverse(
                         'basket_view', args=(permanence.id,)
                     )
-                    msg_confirmation = _("Verify my order content before validating it.")
+                    msg_confirmation1 = '<font color="red">%s</font><br/>' % _("An unconfirmed order will be canceled.")
+                    msg_confirmation2 = _("Verify my order content before validating it.")
                     msg_html = """
                         <div class="row">
                         <div class="panel panel-default">
                         <div class="panel-heading">
                         %s
+                        %s
                         <a href="%s" class="btn btn-info" %s>%s</a>
                         </div>
                         </div>
                         </div>
-                         """ % (msg_delivery, href, btn_disabled, msg_confirmation)
+                         """ % (msg_delivery, msg_confirmation1, href, btn_disabled, msg_confirmation2)
             else:
                 if is_basket:
-                    msg_confirmation = _("Receive an email containing this order summary.")
+                    msg_confirmation2 = _("Receive an email containing this order summary.")
                 elif permanence.with_delivery_point:
                     msg_html = """
                         <div class="row">
@@ -1228,7 +1232,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                 else:
                     msg_html = EMPTY_STRING
             if msg_html is None:
-                if msg_confirmation == EMPTY_STRING:
+                if msg_confirmation2 == EMPTY_STRING:
                     msg_html = """
                     <div class="row">
                     <div class="panel panel-default">
@@ -1246,17 +1250,17 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                     <div class="panel panel-default">
                     <div class="panel-heading">
                     %s
+                    %s
                     <button id="btn_confirm_order" class="btn btn-info" %s onclick="btn_receive_order_email();">%s</button>
                     <div class="clearfix"></div>
                     %s
                     </div>
                     </div>
                     </div>
-                     """ % (msg_delivery, btn_disabled, msg_confirmation, basket_message)
+                     """ % (msg_delivery, msg_confirmation1, btn_disabled, msg_confirmation2, basket_message)
     if to_json is not None:
         option_dict = {'id': "#span_btn_confirm_order", 'html': msg_html}
         to_json.append(option_dict)
-    return msg_confirmation
 
 
 def my_order_confirmation_email_send_to(customer):
@@ -1336,10 +1340,18 @@ def create_or_update_one_purchase(customer, offer_item, value_id, value, close_o
                 q_alert = offer_item.customer_alert_order_quantity
         if q_order <= q_alert:
             if purchase is not None:
-                if close_orders and value_id == DECIMAL_ZERO:
-                    purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
-                purchase.quantity_ordered = q_order
-                purchase.save()
+                if close_orders:
+                    if value_id == DECIMAL_ZERO:
+                        purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
+                    else:
+                        purchase.quantity_ordered = q_order
+                        purchase.save()
+                else:
+                    if purchase.quantity_confirmed < q_order:
+                        purchase.quantity_ordered = q_order
+                        purchase.save()
+                    else:
+                        return purchase, False
             else:
                 permanence = models.Permanence.objects.filter(id=offer_item.permanence_id) \
                     .only("permanence_date") \

@@ -34,9 +34,9 @@ def order_ajax(request):
         permanence__offeritem=offer_item_id,
         customer_id=customer.id,
         status=PERMANENCE_OPENED).order_by('?')
-    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-        qs = qs.filter(is_order_confirm_send=False)
+    # from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+    # if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+    #     qs = qs.filter(is_order_confirm_send=False)
     result = None
     if qs.exists():
         qs = ProducerInvoice.objects.filter(

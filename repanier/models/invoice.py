@@ -6,9 +6,11 @@ import datetime
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
+from django.db.models import F
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
+import purchase
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 import producer
 from repanier.const import *
@@ -187,6 +189,9 @@ class CustomerInvoice(models.Model):
 
     @transaction.atomic
     def confirm_order(self):
+        purchase.Purchase.objects.filter(
+            customer_invoice__id=self.id
+        ).update(quantity_confirmed=F('quantity_ordered'))
         getcontext().rounding = ROUND_HALF_UP
         producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
             producer__represent_this_buyinggroup=True,

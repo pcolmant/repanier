@@ -59,6 +59,9 @@ class Purchase(models.Model):
     quantity_ordered = models.DecimalField(
         _("quantity ordered"),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+    quantity_confirmed = models.DecimalField(
+        _("quantity confirmed"),
+        max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
     # 0 if this is not a KG product -> the preparation list for this product will be produced by family
     # qty if not -> the preparation list for this product will be produced by qty then by family
     quantity_for_preparation_sort_order = models.DecimalField(
