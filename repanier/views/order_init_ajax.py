@@ -160,9 +160,6 @@ def order_init_ajax(request):
                                 {'permanence_boards': permanence_boards, 'count_activity': count_activity})
                             option_dict = {'id': "#communication", 'html': html}
                             to_json.append(option_dict)
-                else:
-                    option_dict = {'id': "#may_not_order", 'html': '1'}
-                    to_json.append(option_dict)
         else:
             customer = None
             my_basket(False, REPANIER_MONEY_ZERO, to_json)

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags %}
 {% block base_content %}
-    <div class="container-repanier">
-    <div class="container">
+<div class="container-repanier">
+<div class="container">
     {% if is_anonymous %}
     <div class="row">
     <div class="panel panel-danger">
@@ -12,8 +12,7 @@
         </div>
     </div>
     </div>
-    {% else %} {# is_anonymous#}
-    <span id="may_not_order" class="display_none">
+    {% elif not may_order%}
     <div class="row">
     <div class="panel panel-danger">
         <div class="panel-heading">
@@ -21,7 +20,7 @@
         </div>
     </div>
     </div>
-    </span>
+    {% else %} {# not is_anonymous and may_order#}
     <div class="row">
     <div class="panel panel-default">
         {% if permanence.offer_description and permanence.offer_description.strip %}
@@ -62,12 +61,13 @@
             <span id="span_btn_confirm_order"></span>
         {% endif %}
     {% endif %}
-    {% endif %} {# is_anonymous#}
+    {% endif %} {# not is_anonymous and may_order#}
+{%  if not is_anonymous or display_anonymous_order_form %}
     <div class="row">
     <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
         <div class="fixed">
             <form id="search_form" class="form-horizontal navbar-form" role="search" method="get">
-{#                {% csrf_token %}#}
+                {% csrf_token %}
                 <div class="input-group">
                     {% if q != None %}
                         <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
@@ -281,8 +281,9 @@
 {#        Other qty modal ends#}
     </div>
 </div>
-    </div>
-    </div>
+{% endif %} {# not is_anonymous or display_anonymous_order_form #}
+</div>
+</div>
 {% endblock %}
 {% block footer %}
     <div class="visible-xs">
@@ -473,9 +474,7 @@
                     async: true,
                     success: function (result) {
                         $.each(result, function (key, val) {
-                            if(val.id == '#may_not_order') {
-                                $("#may_not_order").show();
-                            } else if(val.id == '#communication') {
+                            if(val.id == '#communication') {
                                 $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
                                 $('#communicationDetails').html(val.html);
                                 $('#communicationModal').modal('show')
