@@ -89,11 +89,13 @@ DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
 # If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
 STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
-# if DJANGO_SETTINGS_DEBUG:
-#     # Activate ManifestStaticFilesStorage also when in debug mode
-#     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
-# else:
-#     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+if DJANGO_SETTINGS_DEBUG:
+    # Activate ManifestStaticFilesStorage also when in debug mode
+    STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
+else:
+    # Be carefull to install the patch vvvv before using ManifestStaticFilesStorage with django CMS 3.4.2
+    # https://github.com/divio/django-cms/pull/5860
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 # STATICFILES_DIRS = (
 #     os.path.join(PROJECT_PATH, "repanier", "static"),
 # )
