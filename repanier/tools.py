@@ -1054,7 +1054,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, value_id=None, 
 
 def my_basket(is_order_confirm_send, order_amount, to_json):
     if not is_order_confirm_send and apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span></a>' % (
+        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-alert"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span></a>' % (
         order_amount,)
     else:
         msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-floppy-saved"></span></a>' % (
