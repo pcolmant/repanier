@@ -104,6 +104,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                         'group_label',
                         'page_break_on_customer_check',
                         'close_wo_sending',
+                        'display_who_is_who',
                         'sms_gateway_mail',
                         'invoice',
                         ('currency', 'vat_id'),

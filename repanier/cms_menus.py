@@ -16,7 +16,7 @@ from models import PermanenceBoard
 
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
-        from apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE
+        from apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE, REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
         user = request.user
         if user.is_anonymous or user.is_staff:
             is_anonymous = True
@@ -124,22 +124,23 @@ class PermanenceMenu(Menu):
         )
         nodes.append(node)
         submenu_id += 1
-        node = NavigationNode(
-            _('Send mail to all members'),
-            reverse('send_mail_to_all_members_view'),
-            id=submenu_id, parent_id=master_id,
-            visible=True
-        )
-        nodes.append(node)
-        submenu_id += 1
-        node = NavigationNode(
-            _('Who is who'),
-            reverse('who_is_who_view'),
-            id=submenu_id, parent_id=master_id,
-            visible=True
-        )
-        nodes.append(node)
-        submenu_id += 1
+        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+            node = NavigationNode(
+                _('Send mail to all members'),
+                reverse('send_mail_to_all_members_view'),
+                id=submenu_id, parent_id=master_id,
+                visible=True
+            )
+            nodes.append(node)
+            submenu_id += 1
+            node = NavigationNode(
+                _('Who is who'),
+                reverse('who_is_who_view'),
+                id=submenu_id, parent_id=master_id,
+                visible=True
+            )
+            nodes.append(node)
+            submenu_id += 1
         node = NavigationNode(
             _('Me'),
             reverse('me_view'),

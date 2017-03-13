@@ -66,6 +66,7 @@ class Configuration(TranslatableModel):
     close_wo_sending = models.BooleanField(_("close wo sending"), default=False)
     display_anonymous_order_form = models.BooleanField(_("display anonymous order form"), default=True)
     display_producer_on_order_form = models.BooleanField(_("display producers on order form"), default=True)
+    display_who_is_who = models.BooleanField(_("display who is who"), default=True)
     bank_account = models.CharField(_("bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
         _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
@@ -320,6 +321,7 @@ def configuration_post_save(sender, **kwargs):
         repanier.apps.REPANIER_SETTINGS_CLOSE_WO_SENDING = config.close_wo_sending
         repanier.apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
         repanier.apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM = config.display_producer_on_order_form
+        repanier.apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
         if config.bank_account is not None and len(config.bank_account.strip()) == 0:
             repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT = None
         else:
