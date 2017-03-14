@@ -389,7 +389,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                         delivery_field.initial = customer_invoice.first().delivery_id
                     elif delivery_id is not None:
                         delivery_field.initial = delivery_id
-                    delivery_field.choices = [(o.id, o.get_delivery_display()) for o in DeliveryBoard.objects.filter(
+                    delivery_field.choices = [(o.id, o.get_delivery_status_display()) for o in DeliveryBoard.objects.filter(
                         permanence_id=permanence_id
                     ).order_by("id")]
                 else:

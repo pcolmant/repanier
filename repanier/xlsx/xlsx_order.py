@@ -59,7 +59,7 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                         preparation_order += 1
 
                         row = [
-                            "%d - %s" % (delivery_ref, delivery.get_delivery_display()),
+                            "%d - %s" % (delivery_ref, delivery.get_delivery_status_display()),
                             "  %d - %s" % (customer.preparation_order, customer.long_basket_name),
                             customer.phone1,
                             customer.phone2,
@@ -334,7 +334,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
         if delivery_id is not None:
             c = ws.cell(row=row_num, column=5)
             c.style.font.bold = True
-            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
+            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_status_display()
             row_num += 1
         producer_counter = 0
         hide_column_placement = True
@@ -1158,7 +1158,7 @@ def export_customer_for_a_delivery(
         if delivery_id is not None:
             c = ws.cell(row=row_num, column=4)
             c.style.font.bold = True
-            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
+            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_status_display()
             row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
             ref_preparation_sheet = ws_preparation_title if delivery_id is None else "%d-%s" % (

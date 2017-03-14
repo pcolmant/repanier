@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
@@ -70,26 +71,33 @@ class DeliveryBoard(TranslatableModel):
                 status=new_status
             )
 
-    def __str__(self):
-        try:
-            if self.delivery_comment != EMPTY_STRING:
-                comment = "%s " % self.delivery_comment
-            else:
-                comment = EMPTY_STRING
-        except TranslationDoesNotExist:
-            comment = EMPTY_STRING
+    def get_delivery_display(self, admin=False):
         try:
             short_name = "%s" % self.delivery_point.short_name
         except TranslationDoesNotExist:
             short_name = EMPTY_STRING
-        if self.delivery_date is not None:
-            label = "%s %s%s" % (
-            self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), comment, short_name)
+        if admin:
+            if self.delivery_date is not None:
+                label = mark_safe('%s <font color="green">%s</font>' % (
+                    self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), short_name))
+            else:
+                label = mark_safe('<font color="green">%s</font>' % short_name)
         else:
-            label = "%s%s" % (comment, self.delivery_point.short_name)
+            try:
+                if self.delivery_comment != EMPTY_STRING:
+                    comment = "%s " % self.delivery_comment
+                else:
+                    comment = EMPTY_STRING
+            except TranslationDoesNotExist:
+                comment = EMPTY_STRING
+            if self.delivery_date is not None:
+                label = mark_safe('%s %s%s' % (
+                    self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), comment, short_name))
+            else:
+                label = mark_safe('%s%s' % (comment, short_name))
         return label
 
-    def get_delivery_display(self):
+    def get_delivery_status_display(self):
         return "%s - %s" % (self, self.get_status_display())
 
     def get_delivery_customer_display(self):
@@ -97,6 +105,9 @@ class DeliveryBoard(TranslatableModel):
             return "%s - %s" % (self, self.get_status_display())
         else:
             return "%s - %s" % (self, _('orders closed'))
+
+    def __str__(self):
+        return self.get_delivery_display()
 
     class Meta:
         verbose_name = _("delivery board")
