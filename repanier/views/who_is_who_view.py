@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import render
 from django.utils import translation
 from django.views.decorators.cache import never_cache
@@ -15,6 +16,9 @@ from repanier.models import Customer, Staff
 @csrf_protect
 @never_cache
 def who_is_who_view(request):
+    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+    if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+        raise Http404
     q = request.POST.get('q', None)
     customer_list = Customer.objects.filter(may_order=True, represent_this_buyinggroup=False).order_by(
         "long_basket_name")

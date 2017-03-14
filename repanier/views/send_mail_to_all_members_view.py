@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import EmailMessage
 from django.forms import Textarea
 from django.http import Http404
-from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
@@ -39,6 +38,9 @@ class MembersContactValidationForm(NgFormValidationMixin, MembersContactForm):
 @csrf_protect
 @never_cache
 def send_mail_to_all_members_view(request):
+    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+    if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+        raise Http404
     if request.user.is_staff:
         raise Http404
     is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
