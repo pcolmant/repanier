@@ -23,13 +23,16 @@ def delivery_ajax(request):
         if user.is_authenticated:
             permanence_id = sint(request.GET.get('permanence', 0))
             basket = sboolean(request.GET.get('basket', False))
-            permanence = Permanence.objects.filter(id=permanence_id) \
-                .only("id", "status").order_by('?').first()
+            permanence = Permanence.objects.filter(
+                id=permanence_id
+            ).only("id", "status").order_by('?').first()
             if permanence is None:
                 raise Http404
-            customer = Customer.objects.filter(user_id=user.id, is_active=True, may_order=True) \
-                .only("id", "delivery_point") \
-                .order_by('?').first()
+            customer = Customer.objects.filter(
+                user_id=user.id, is_active=True, may_order=True
+            ).only(
+                "id", "delivery_point", "balance"
+            ).order_by('?').first()
             if customer is None:
                 raise Http404
             customer_invoice = CustomerInvoice.objects.filter(
@@ -73,9 +76,9 @@ def delivery_ajax(request):
                     # IMPORTANT : Set the status of the may be already existing purchase to "Open" so that
                     # the total_price_with_tax will be correctly calculated on the customer order screen.
                     Purchase.objects.filter(customer_invoice=customer_invoice).order_by('?').update(status=PERMANENCE_OPENED)
-                basket_message = calc_basket_message(customer,
-                                                     permanence,
-                                                     PERMANENCE_OPENED)
+                basket_message = calc_basket_message(
+                    customer, permanence, PERMANENCE_OPENED
+                )
                 my_order_confirmation(
                     permanence=permanence,
                     customer_invoice=customer_invoice,

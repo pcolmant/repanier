@@ -78,8 +78,12 @@ def order_init_ajax(request):
                     REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
                 if basket or (REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
                               and customer_invoice.is_order_confirm_send):
-                    if customer_invoice.status <= PERMANENCE_OPENED:
-                        basket_message = calc_basket_message(customer, permanence, customer_invoice.status)
+                    if customer_invoice.delivery is not None:
+                        status = customer_invoice.delivery.status
+                    else:
+                        status = customer_invoice.status
+                    if status <= PERMANENCE_OPENED:
+                        basket_message = calc_basket_message(customer, permanence, status)
                     else:
                         if customer_invoice.delivery is not None:
                             basket_message = EMPTY_STRING
