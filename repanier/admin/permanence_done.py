@@ -143,7 +143,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             permanence_date__gte=permanence.permanence_date) \
             .exclude(id=permanence.id).order_by("permanence_date").first()
         if next_permanence_not_invoiced is not None:
-            max_payment_date = next_permanence_not_invoiced.permanence_date - datetime.timedelta(days=1)
+            max_payment_date = next_permanence_not_invoiced.permanence_date # - datetime.timedelta(days=1)
         else:
             max_payment_date = timezone.now().date()
         bank_account = BankAccount.objects.filter(
