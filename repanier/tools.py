@@ -1208,8 +1208,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
             <div class="panel panel-default">
             <div class="panel-heading">
             %s
-            <button id="btn_confirm_order" class="btn" disabled>%s</button>
-            <div class="clearfix"></div>
+            <p><font color="green">%s</font><p/>
             %s
             </div>
             </div>
