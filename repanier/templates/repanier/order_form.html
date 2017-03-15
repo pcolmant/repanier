@@ -100,15 +100,9 @@
            {% if producer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
         <ul class="nav nav-stacked">
     {% for producer in producer_set.all %}
-        {% if producer.minimum_order_value > 0 %}
         <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
                {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span><span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
         </li>
-        {%  else %}
-        <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
-               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}<span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
-        </li>
-        {%  endif %}
     {% endfor %}
         </ul>
     </li>
