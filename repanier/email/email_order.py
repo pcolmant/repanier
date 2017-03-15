@@ -254,12 +254,12 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     to_email_customer.append(customer.email2)
                 if customer_invoice.delivery is not None:
                     delivery_point = customer_invoice.delivery
-                    if delivery_point.delivery_point.customer_responsible is not None:
-                        customer_responsible = delivery_point.delivery_point.customer_responsible
-                        if customer_responsible.id != customer.id:
-                            to_email_customer.append(customer_responsible.user.email)
-                            if customer_responsible.email2:
-                                to_email_customer.append(customer_responsible.email2)
+                    # if delivery_point.delivery_point.customer_responsible is not None:
+                    #     customer_responsible = delivery_point.delivery_point.customer_responsible
+                    #     if customer_responsible.id != customer.id:
+                    #         to_email_customer.append(customer_responsible.user.email)
+                    #         if customer_responsible.email2:
+                    #             to_email_customer.append(customer_responsible.email2)
                 else:
                     delivery_point = EMPTY_STRING
                 customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
