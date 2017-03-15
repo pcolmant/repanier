@@ -65,7 +65,7 @@ class UserDataForm(forms.ModelForm):
             if user is not None:
                 if initial_username != user.username:
                     self.add_error(username_field_name, user_error2)
-        if self.instance.id is not None:
+        if self.instance.id is not None and "price_list_multiplier" in self.cleaned_data:
             if self.instance.delivery_point is not None \
                     and self.instance.delivery_point.customer_responsible is not None \
                     and self.cleaned_data["price_list_multiplier"] != DECIMAL_ONE:
