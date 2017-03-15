@@ -1062,7 +1062,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                     customer_invoice.save()
                     my_basket(customer_invoice.is_order_confirm_send, order_amount, to_json)
                     if basket:
-                        basket_message = calc_basket_message(customer, permanence, customer_invoice.status)
+                        basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
                     else:
                         basket_message = EMPTY_STRING
                     my_order_confirmation(

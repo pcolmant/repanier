@@ -62,10 +62,14 @@ def btn_confirm_order_ajax(request):
     customer_invoice.save()
     to_json = []
     my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
+    if customer_invoice.delivery is not None:
+        status = customer_invoice.delivery.status
+    else:
+        status = customer_invoice.status
     basket_message = calc_basket_message(
         customer,
         permanence,
-        PERMANENCE_CLOSED
+        status
     )
     my_order_confirmation(
         permanence=permanence,

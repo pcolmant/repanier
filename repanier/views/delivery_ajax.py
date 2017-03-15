@@ -76,14 +76,14 @@ def delivery_ajax(request):
                     # IMPORTANT : Set the status of the may be already existing purchase to "Open" so that
                     # the total_price_with_tax will be correctly calculated on the customer order screen.
                     Purchase.objects.filter(customer_invoice=customer_invoice).order_by('?').update(status=PERMANENCE_OPENED)
-                basket_message = calc_basket_message(
-                    customer, permanence, PERMANENCE_OPENED
-                )
+                # basket_message = calc_basket_message(
+                #     customer, permanence, PERMANENCE_OPENED
+                # )
                 my_order_confirmation(
                     permanence=permanence,
                     customer_invoice=customer_invoice,
                     is_basket=basket,
-                    basket_message=basket_message,
+                    # basket_message=basket_message,
                     to_json=to_json
                 )
                 return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
