@@ -68,21 +68,22 @@ form label.aligned.btn, form label.btn{color: black !important;}
 
     </div>
     {% endif %}
-
     {% block messages %}
         {% if messages %}
         <ul class="messagelist">{% for message in messages %}
           <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
         {% endfor %}</ul>
+            <br/>
         {% endif %}
     {% endblock messages %}
-
     <!-- Content -->
     <div id="content" class="{% block coltype %}colM{% endblock %}">
         {% block pretitle %}{% endblock %}
 {#        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}#}
+
         {% block content %}
         {% block object-tools %}<li><a href="https://repanier.be/fr/documentation/">' + gettext('Help')+ '</a></li>{% endblock %}
+
         {{ content }}
         {% endblock %}
         {% block sidebar %}{% endblock %}
