@@ -138,14 +138,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return None
 
-        next_permanence_not_invoiced = Permanence.objects.filter(
-            status=PERMANENCE_SEND,
-            permanence_date__gte=permanence.permanence_date) \
-            .exclude(id=permanence.id).order_by("permanence_date").first()
-        if next_permanence_not_invoiced is not None:
-            max_payment_date = next_permanence_not_invoiced.permanence_date # - datetime.timedelta(days=1)
-        else:
-            max_payment_date = timezone.now().date()
+        max_payment_date = timezone.now().date()
         bank_account = BankAccount.objects.filter(
             operation_status=BANK_LATEST_TOTAL) \
             .only("operation_date").order_by("-id").first()
