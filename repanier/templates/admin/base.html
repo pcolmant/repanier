@@ -46,14 +46,12 @@ body.cms-admin-sideframe form textarea {font-size: 14px;width: 80em !important;m
 #field-searchbar{width: 100% !important;}
 form label.aligned.btn, form label.btn{color: black !important;}
 /* filter*/
-#changelist-filter {position: fixed !important;margin-top: 100px !important;}
-.change-list #changelist.filtered .paginator {width: initial !important;position: static !important;}
+#changelist-filter {position: relative !important; overflow-y: inherit !important;}
+.change-list #changelist.filtered .paginator {position: static !important;}
 {#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}
 </style>
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
 </head>
-{% load i18n %}
-
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
   data-admin-utc-offset="{% now "Z" %}">
 
@@ -65,7 +63,6 @@ form label.aligned.btn, form label.btn{color: black !important;}
 &rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% else %}<h2 style="font-size: 130%; line-height: 1.75em; margin-top: 0; margin-bottom: 0;">&nbsp;</h2>{% endif %}
 {#{% if opts.verbose_name %}{% url opts|admin_urlname:'changelist' as the_url %}<h2>{% if the_url %}<a href="{{ the_url }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}#}
 {#&rsaquo; {% if add %}{% trans 'Add' %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</h2>{% else %}<h2 style="font-size: 130%; line-height: 1.75em; margin-top: 0; margin-bottom: 0;">&nbsp;</h2>{% endif %}#}
-
     </div>
     {% endif %}
     {% block messages %}
@@ -73,9 +70,10 @@ form label.aligned.btn, form label.btn{color: black !important;}
         <ul class="messagelist">{% for message in messages %}
           <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
         {% endfor %}</ul>
-            <br/>
+        <br/><br/>
         {% endif %}
     {% endblock messages %}
+
     <!-- Content -->
     <div id="content" class="{% block coltype %}colM{% endblock %}">
         {% block pretitle %}{% endblock %}
