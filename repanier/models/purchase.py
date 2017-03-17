@@ -175,9 +175,9 @@ class Purchase(models.Model):
     get_permanence_display.allow_tags = False
 
     def get_delivery_display(self):
-        if self.customer_invoice is not None:
+        if self.customer_invoice is not None and self.customer_invoice.delivery is not None:
             return self.customer_invoice.delivery.get_delivery_display(admin=True)
-        return None
+        return EMPTY_STRING
 
     get_delivery_display.short_description = (_("delivery point"))
     get_delivery_display.allow_tags = False
