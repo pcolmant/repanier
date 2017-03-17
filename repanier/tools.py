@@ -1199,7 +1199,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
         # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
         # If apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS is True,
         # then permanence.with_delivery_point is also True
-        msg_confirmation2 = msg_html = EMPTY_STRING
+        msg_html = EMPTY_STRING
     else:
         if customer_invoice.is_order_confirm_send:
             msg_confirmation2 = my_order_confirmation_email_send_to(customer_invoice.customer)
@@ -1225,7 +1225,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                             btn_disabled = "disabled"
                         msg_confirmation1 = '<font color="red">%s</font><br/>' % _("An unconfirmed order will be canceled.")
                         msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _("Confirm this order and receive an email containing its summary.")
-                elif permanence.with_delivery_point:
+                else:
                     href = urlresolvers.reverse(
                         'basket_view', args=(permanence.id,)
                     )
