@@ -265,9 +265,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     producer_invoice.save(update_fields=[
                         'calculated_invoiced_balance'
                     ])
-
-            permanence_form = PermanenceInvoicedForm(payment_date=max_payment_date)
-
+            if permanence.payment_date is not None:
+                # In this case we have also, permanence.status > PERMANENCE_SEND
+                permanence_form = PermanenceInvoicedForm(payment_date=permanence.payment_date)
+            else:
+                permanence_form = PermanenceInvoicedForm(payment_date=max_payment_date)
             qs = ProducerInvoice.objects.filter(
                 producer__to_be_paid=True,
                 permanence_id=permanence.id
