@@ -74,7 +74,7 @@ class DeliveryBoard(TranslatableModel):
     def get_delivery_display(self, admin=False):
         try:
             short_name = "%s" % self.delivery_point.short_name
-        except TranslationDoesNotExist:
+        except (TranslationDoesNotExist, AttributeError):
             short_name = EMPTY_STRING
         if admin:
             if self.delivery_date is not None:
