@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django import forms
+# from django.apps import apps
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.db.models import Q
@@ -13,15 +14,40 @@ from parler.forms import TranslatableModelForm
 
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import PERMANENCE_CLOSED, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, DECIMAL_ONE
+    COORDINATION_GROUP, DECIMAL_ONE, ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
 from repanier.models import PermanenceBoard, Customer, Permanence, LUT_DeliveryPoint
 
 
+class LUTDataForm(TranslatableModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(LUTDataForm, self).__init__(*args, **kwargs)
+
+    # def clean(self):
+    #     if any(self.errors):
+    #         # Don't bother validating the formset unless each form is valid on its own
+    #         return
+    #
+    #     parent = self.cleaned_data["parent"]
+    #     if parent is not None:
+    #         # Get model name
+    #         # str(type(self.instance)) = "<class 'repanier.models.lut.LUT_DepartmentForCustomer'>"
+    #         # .rsplit('.', 1)[1][:-2] --> "LUT_DepartmentForCustomer"
+    #         admin_model_name = str(type(self.instance)).rsplit('.', 1)[1][:-2]
+    #         admin_model = apps.get_model("repanier", admin_model_name)
+    #         if admin_model.objects.filter(**{"translations__short_name": parent, "level__gt": 0}).order_by('?').exists():
+    #             self.add_error(
+    #                 'parent',
+    #                 _('Only two levels are allowed.'))
+
+
 class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
+    form = LUTDataForm
     list_display = ('short_name', 'is_active')
     list_display_links = ('short_name',)
     mptt_level_indent = 20
     mptt_indent_field = "short_name"
+    mptt_level_limit = None
 
     def has_delete_permission(self, request, obj=None):
         if request.user.groups.filter(
@@ -40,6 +66,27 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
                 name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
             return True
         return False
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Overrides parent class formfield_for_foreignkey method."""
+        # If mptt_level_limit is set filter levels depending on the limit.
+        if db_field.name == "parent" and self.mptt_level_limit is not None:
+            kwargs["queryset"] = self.model.objects.filter(level__lt=self.mptt_level_limit)
+        return super(LUTAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def do_move(self, instance, position, target_instance):
+        """
+        Overwritting parent do_move method to disallow users to exceed the self.mptt_level_limit value when drag and
+        dropping items.
+        """
+        if self.mptt_level_limit is not None:
+            if position == "inside":
+                if target_instance.level >= self.mptt_level_limit:
+                    raise Exception(_(u'The maximum level for this model is %d' % self.mptt_level_limit))
+            else:
+                if target_instance.level > self.mptt_level_limit:
+                    raise Exception(_(u'The maximum level for this model is %d' % self.mptt_level_limit))
+        super(LUTAdmin, self).do_move(instance, position, target_instance)
 
 
 class LUTProductionModeAdmin(LUTAdmin):
@@ -116,15 +163,17 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
 
 
 class LUTDeliveryPointAdmin(LUTAdmin):
+    mptt_level_limit = ONE_LEVEL_DEPTH
     form = LUTDeliveryPointDataForm
 
     def get_fields(self, request, obj=None):
         if obj is None:
-            return [('parent',), 'is_active', 'short_name', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
-        return [('parent',), 'is_active', 'short_name', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
+            return ['short_name', 'is_active', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
+        return ['short_name', 'is_active', 'customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):
+    mptt_level_limit = TWO_LEVEL_DEPTH
     exclude = ('description',)
 
 
@@ -137,6 +186,7 @@ class PermanenceBoardInlineForm(forms.ModelForm):
 
 
 class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
+    mptt_level_limit = ONE_LEVEL_DEPTH
     form = PermanenceBoardInlineForm
 
     model = PermanenceBoard
@@ -156,12 +206,12 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
 
 
 class LUTPermanenceRoleAdmin(LUTAdmin):
+    mptt_level_limit = ONE_LEVEL_DEPTH
     inlines = [PermanenceBoardInline]
 
     def get_fields(self, request, obj=None):
         return [
-            ('parent',),
+            'short_name',
             ('is_active', 'customers_may_register', 'is_counted_as_participation'),
-            ('short_name',),
-            ('description',)
+            'description',
         ]
