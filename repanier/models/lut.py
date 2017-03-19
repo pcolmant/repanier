@@ -26,6 +26,11 @@ class LUT_ProductionModeQuerySet(TranslatableQuerySet):
 class LUT_ProductionModeManager(TreeManager, TranslatableManager):
     queryset_class = LUT_ProductionModeQuerySet
 
+    def get_queryset(self):
+        # This is the safest way to combine both get_queryset() calls
+        # supporting all Django versions and MPTT 0.7.x versions
+        return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
+
 
 @python_2_unicode_compatible
 class LUT_ProductionMode(MPTTModel, TranslatableModel):
@@ -43,7 +48,8 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        return self.short_name
+        # return self.short_name
+        return self.safe_translation_getter('short_name', any_language=True)
 
     class Meta:
         verbose_name = _("production mode")
@@ -56,6 +62,11 @@ class LUT_DeliveryPointQuerySet(TranslatableQuerySet):
 
 class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
     queryset_class = LUT_DeliveryPointQuerySet
+
+    def get_queryset(self):
+        # This is the safest way to combine both get_queryset() calls
+        # supporting all Django versions and MPTT 0.7.x versions
+        return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
 @python_2_unicode_compatible
@@ -91,7 +102,8 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     objects = LUT_DeliveryPointManager()
 
     def __str__(self):
-        return self.short_name
+        # return self.short_name
+        return self.safe_translation_getter('short_name', any_language=True)
 
     class Meta:
         verbose_name = _("delivery point")
@@ -105,19 +117,25 @@ class LUT_DepartmentForCustomerQuerySet(TranslatableQuerySet):
 class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
     queryset_class = LUT_DepartmentForCustomerQuerySet
 
+    def get_queryset(self):
+        # This is the safest way to combine both get_queryset() calls
+        # supporting all Django versions and MPTT 0.7.x versions
+        return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
+
 
 @python_2_unicode_compatible
 class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    is_active = models.BooleanField(_("is_active"), default=True)
     translations = TranslatedFields(
         short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
-    is_active = models.BooleanField(_("is_active"), default=True)
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        return self.short_name
+        # return self.short_name
+        return self.safe_translation_getter('short_name', any_language=True)
 
     class Meta:
         verbose_name = _("department for customer")
@@ -130,6 +148,11 @@ class LUT_PermanenceRoleQuerySet(TranslatableQuerySet):
 
 class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
     queryset_class = LUT_PermanenceRoleQuerySet
+
+    def get_queryset(self):
+        # This is the safest way to combine both get_queryset() calls
+        # supporting all Django versions and MPTT 0.7.x versions
+        return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
 @python_2_unicode_compatible
@@ -146,7 +169,8 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        return self.short_name
+        # return self.short_name
+        return self.safe_translation_getter('short_name', any_language=True)
 
     class Meta:
         verbose_name = _("permanence role")
