@@ -186,7 +186,7 @@ class Permanence(TranslatableModel):
                     )
                     return msg_html
                 else:
-                    return ", ".join([p.short_profile_name
+                    return '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name
                                            for p in
                                            producer.Producer.objects.filter(
                                                producerinvoice__permanence_id=self.id).only(
