@@ -1315,6 +1315,21 @@ def create_or_update_one_purchase(customer, offer_item, q_order=None, batch_job=
         is_box_content=is_box_content
     ).order_by('?').first()
     if batch_job:
+        if purchase is None:
+            permanence = models.Permanence.objects.filter(id=offer_item.permanence_id) \
+                .only("permanence_date") \
+                .order_by('?').first()
+            purchase = models.Purchase.objects.create(
+                permanence_id=offer_item.permanence_id,
+                permanence_date=permanence.permanence_date,
+                offer_item_id=offer_item.id,
+                producer_id=offer_item.producer_id,
+                customer_id=customer.id,
+                quantity_ordered=q_order,
+                quantity_invoiced=DECIMAL_ZERO,
+                is_box_content=is_box_content,
+                status=PERMANENCE_OPENED
+            )
         if q_order == DECIMAL_ZERO:
             purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
         purchase.quantity_ordered = q_order
