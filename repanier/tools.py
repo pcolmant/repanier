@@ -77,15 +77,15 @@ def emails_of_testers():
     testers = []
     for tester in tester_qs:
         testers.append(tester.user.email)
-    return testers
+    return list(set(testers))
 
 
-def send_email(email=None, track_customer_on_error=False):
+def send_email(email=None, from_name=EMPTY_STRING, track_customer_on_error=False):
     if settings.DJANGO_SETTINGS_DEMO:
         email.to = [DEMO_EMAIL]
         email.cc = []
         email.bcc = []
-        send_email_with_error_log(email)
+        send_email_with_error_log(email, from_name)
     else:
         from repanier.apps import REPANIER_SETTINGS_TEST_MODE
         if REPANIER_SETTINGS_TEST_MODE:
@@ -94,7 +94,7 @@ def send_email(email=None, track_customer_on_error=False):
                 # Send the mail only if there is at least one tester
                 email.cc = []
                 email.bcc = []
-                send_email_with_error_log(email)
+                send_email_with_error_log(email, from_name)
             else:
                 print('############################ test mode, without tester...')
         else:
@@ -106,33 +106,33 @@ def send_email(email=None, track_customer_on_error=False):
             else:
                 # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
                 # for chunk in chunks:
-                if len(email.bcc) > 1:
-                    # Remove duplicate
-                    email_bcc = list(set(email.bcc))
+                # Remove duplicates
+                send_email_to = list(set(email.to + email.cc + email.bcc))
+                email.cc = []
+                email.bcc = []
+                if len(send_email_to) >= 1:
                     customer = None
-                    for bcc in email_bcc:
-                        email.bcc = [bcc]
+                    for email_to in send_email_to:
+                        email.to = [email_to]
                         if track_customer_on_error:
                             # If the email is conained both in user__email and customer__email2
                             # select the customer based on user__email
-                            customer = models.Customer.objects.filter(user__email=bcc).order_by('?').first()
+                            customer = models.Customer.objects.filter(user__email=email_to).order_by('?').first()
                             if customer is None:
-                                customer = models.Customer.objects.filter(email2=bcc).order_by('?').first()
-                        send_email_with_error_log(email, customer)
-                        time.sleep(2)
-                else:
-                    send_email_with_error_log(email)
+                                customer = models.Customer.objects.filter(email2=email_to).order_by('?').first()
+                        send_email_with_error_log(email, from_name, customer)
+                        time.sleep(1)
 
 
-def send_email_with_error_log(email, customer=None):
+def send_email_with_error_log(email, from_name=EMPTY_STRING, customer=None):
     with mail.get_connection() as connection:
         email.connection = connection
         message = EMPTY_STRING
         if not email.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
             email.reply_to = [email.from_email]
-            email.from_email = "%s <%s>" % (apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
+            email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
         else:
-            email.from_email = "%s <%s>" % (apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
+            email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
         try:
             print("################################## send_email")
             reply_to = "reply_to : %s" % email.reply_to

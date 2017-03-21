@@ -48,7 +48,11 @@ def send_mail_to_all_members_view(request):
     ).order_by('?').first() is not None
     if request.method == 'POST':
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
+        customer = Customer.objects.filter(
+            customer_id = request.user.customer.id,
+            is_active = True
+        ).order_by('?').first()
+        if form.is_valid() and customer:  # All validation rules pass
             to_email_customer = []
             if is_coordinator:
                 qs = Customer.objects.filter(is_active=True, represent_this_buyinggroup=False, may_order=True)
@@ -58,17 +62,16 @@ def send_mail_to_all_members_view(request):
             for customer in qs:
                 if customer.user_id != request.user.id:
                     to_email_customer.append(customer.user.email)
-                if customer.email2 is not None and customer.email2 != EMPTY_STRING:
-                    to_email_customer.append(customer.email2)
-            to = (request.user.email,)
+                # if customer.email2 is not None and customer.email2 != EMPTY_STRING:
+                #     to_email_customer.append(customer.email2)
+            to_email_customer.append(request.user.email)
             email = EmailMessage(
                 strip_tags(form.cleaned_data.get('subject')),
                 strip_tags(form.cleaned_data.get('message')),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=to,
-                bcc=to_email_customer
+                from_email=request.user.email,
+                cc=to_email_customer
             )
-            send_email(email=email)
+            send_email(email=email, from_name=customer.long_basket_name)
             email = form.fields["your_email"]
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True
