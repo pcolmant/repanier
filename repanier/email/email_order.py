@@ -158,10 +158,10 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 ).only("total_price_with_tax").order_by('?').first()
                 if producer_invoice is not None \
                         and producer_invoice.total_price_with_tax < producer.minimum_order_value:
-                    to = cc_email_staff
+                    to_email_producer = cc_email_staff
                     html_content = \
                         order_producer_mail_subject + '<br/><br/>' + html_content
-                    cc = []
+                    cc_email_staff = []
                     order_producer_mail_subject = _(
                         '/!\ Mail not send to our producer %s because the minimum order value has not been reached.') % long_profile_name
                 else:
@@ -172,13 +172,12 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                         to_email_producer.append(producer.email2)
                     if producer.email3:
                         to_email_producer.append(producer.email3)
-                    cc = cc_email_staff
                 email = EmailMultiAlternatives(
                     order_producer_mail_subject,
                     strip_tags(html_content),
                     from_email=sender_email,
                     to=to_email_producer,
-                    cc=cc
+                    cc=cc_email_staff
                 )
                 if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER and wb is not None:
                     if REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER:
