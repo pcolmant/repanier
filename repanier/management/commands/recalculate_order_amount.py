@@ -49,6 +49,7 @@ class Command(BaseCommand):
                 # if customer_invoice.is_order_confirm_send:
                 #     confirm_customer_invoice(permanence.id, customer_invoice.customer_id)
         for permanence in Permanence.objects.filter(
+            status__gte=PERMANENCE_CLOSED,
             status__lt=PERMANENCE_DONE
         ).order_by('permanence_date'):
             print ("%s %s" % (permanence.permanence_date, permanence.get_status_display()))
