@@ -142,6 +142,7 @@ class CustomerResource(resources.ModelResource):
     date_balance = fields.Field(attribute='get_admin_date_balance', widget=DateWidgetExcel(), readonly=True)
     balance = fields.Field(attribute='get_admin_balance', widget=TwoMoneysWidget(), readonly=True)
     may_order = fields.Field(attribute='may_order', default=False, widget=DecimalBooleanWidget(), readonly=False)
+    is_group = fields.Field(attribute='is_group', default=False, widget=DecimalBooleanWidget(), readonly=False)
     represent_this_buyinggroup = fields.Field(attribute='represent_this_buyinggroup', widget=DecimalBooleanWidget(),
                                               readonly=True)
     is_active = fields.Field(attribute='is_active', widget=DecimalBooleanWidget(), readonly=True)
@@ -202,7 +203,8 @@ class CustomerResource(resources.ModelResource):
             'bank_account1', 'bank_account2',
             'date_balance', 'balance', 'price_list_multiplier',
             'membership_fee_valid_until', 'last_membership_fee', 'last_membership_fee_date',
-            'participation', 'purchase', 'represent_this_buyinggroup', 'is_active', 'delivery_point', 'valid_email'
+            'participation', 'purchase', 'represent_this_buyinggroup', 'is_group', 'is_active', 'delivery_point',
+            'valid_email'
         )
         export_order = fields
         import_id_fields = ('id',)
@@ -239,7 +241,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     search_fields = ('short_basket_name', 'long_basket_name', 'user__email', 'email2')
     list_per_page = 16
     list_max_show_all = 16
-    list_filter = ('is_active', 'may_order', 'valid_email')
+    list_filter = ('is_active', 'may_order', 'is_group', 'valid_email')
 
     def has_delete_permission(self, request, customer=None):
         if request.user.groups.filter(
@@ -320,7 +322,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             else:
                 fields_basic += [
                     ('get_admin_balance', 'price_list_multiplier', 'get_admin_date_balance'),
-                    ('may_order', 'is_active'),
+                    ('may_order', 'is_group', 'is_active'),
                 ]
         else:
             fields_basic += [

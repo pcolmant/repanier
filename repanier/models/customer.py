@@ -108,6 +108,7 @@ class Customer(models.Model):
         verbose_name=_("delivery point"),
         blank=True, null=True, default=None)
     is_active = models.BooleanField(_("is_active"), default=True)
+    is_group = models.BooleanField(_("is_group"), default=False)
     may_order = models.BooleanField(_("may_order"), default=True)
     valid_email = models.NullBooleanField(_("valid_email"), default=None)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
@@ -279,6 +280,7 @@ def customer_pre_save(sender, **kwargs):
     if customer.represent_this_buyinggroup:
         # The buying group may not be de activated
         customer.is_active = True
+        customer.is_group = False
     if customer.email2 is not None:
         customer.email2 = customer.email2.lower()
     if customer.vat_id is not None and len(customer.vat_id.strip()) == 0:
@@ -307,6 +309,9 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = None
     if not customer.is_active:
         customer.may_order = False
+    if customer.is_group:
+        customer.may_order = False
+        customer.delivery_point = None
     if customer.price_list_multiplier <= DECIMAL_ZERO:
         customer.price_list_multiplier = DECIMAL_ONE
     if customer.delivery_point is not None and customer.delivery_point.customer_responsible is not None:

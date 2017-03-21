@@ -209,14 +209,21 @@ class Permanence(TranslatableModel):
                 link = []
                 for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
                     "customer").order_by('customer'):
+                    ci_customer = ci.customer
                     if ci.is_order_confirm_send:
-                        label = '%s (%s) %s' % (
+                        label = '%s%s (%s) %s%s' % (
+                            "<b><i>" if ci_customer.is_group else EMPTY_STRING,
                             ci.customer.short_basket_name, ci.get_total_price_with_tax(customer_who_pays=True),
-                            ci.get_is_order_confirm_send_display())
+                            ci.get_is_order_confirm_send_display(),
+                            "</i></b>" if ci_customer.is_group else EMPTY_STRING,
+                        )
                     else:
-                        label = '%s (%s) %s' % (
+                        label = '%s%s (%s) %s%s' % (
+                            "<b><i>" if ci_customer.is_group else EMPTY_STRING,
                             ci.customer.short_basket_name, ci.total_price_with_tax,
-                            ci.get_is_order_confirm_send_display())
+                            ci.get_is_order_confirm_send_display(),
+                            "</i></b>" if ci_customer.is_group else EMPTY_STRING,
+                        )
                     # Important : no target="_blank"
                     link.append(
                         '<a href="%s?permanence=%d&customer=%d">%s</a>'
@@ -226,10 +233,13 @@ class Permanence(TranslatableModel):
                 link = []
                 for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
                     "customer").order_by('customer'):
-                    label = "%s (%s) %s" % (
-                        ci.customer.short_basket_name,
+                    ci_customer = ci.customer
+                    label = "%s%s (%s) %s%s" % (
+                        "<b><i>" if ci_customer.is_group else EMPTY_STRING,
+                        ci_customer.short_basket_name,
                         ci.get_total_price_with_tax(customer_who_pays=True),
-                        ci.get_is_order_confirm_send_display()
+                        ci.get_is_order_confirm_send_display(),
+                        "</i></b>" if ci_customer.is_group else EMPTY_STRING,
                     )
                     # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                     # Such that they can be accessed by the customer and by the staff

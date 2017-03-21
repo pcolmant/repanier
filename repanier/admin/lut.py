@@ -103,10 +103,7 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
         required=False
     )
     customer_responsible = forms.ModelChoiceField(
-        Customer.objects.filter(
-            may_order=False, is_active=True, delivery_point__isnull=True,
-            represent_this_buyinggroup=False
-        ),
+        Customer.objects.filter(is_group=True, is_active=True),
         label=_("customer_responsible"),
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
         required=False)
