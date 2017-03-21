@@ -1010,20 +1010,15 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                     producer_invoice = models.ProducerInvoice.objects.filter(
                         producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
                     ).only("total_price_with_tax").order_by('?').first()
-                    if producer_invoice is None:
-                        ratio = 0
-                    else:
-                        if offer_item.producer.minimum_order_value.amount == DECIMAL_ZERO:
-                            ratio = 100
-                        else:
-                            ratio = producer_invoice.total_price_with_tax.amount / offer_item.producer.minimum_order_value.amount
+                    if producer_invoice is not None and offer_item.producer.minimum_order_value.amount > DECIMAL_ZERO:
+                        ratio = producer_invoice.total_price_with_tax.amount / offer_item.producer.minimum_order_value.amount
                         if ratio >= DECIMAL_ONE:
                             ratio = 100
                         else:
                             ratio *= 100
-                    option_dict = {'id'  : "#order_procent" + str(offer_item.producer_id),
-                                   'html': "%s%%" % number_format(ratio, 0)}
-                    to_json.append(option_dict)
+                        option_dict = {'id'  : "#order_procent" + str(offer_item.producer_id),
+                                       'html': "%s%%" % number_format(ratio, 0)}
+                        to_json.append(option_dict)
             elif not batch_job:
                 # Select one purchase
                 purchase = models.Purchase.objects.filter(
