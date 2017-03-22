@@ -48,11 +48,11 @@ def send_mail_to_all_members_view(request):
     ).order_by('?').first() is not None
     if request.method == 'POST':
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
-        customer = Customer.objects.filter(
-            customer_id = request.user.customer.id,
-            is_active = True
+        user_customer = Customer.objects.filter(
+            id=request.user.customer.id,
+            is_active=True
         ).order_by('?').first()
-        if form.is_valid() and customer:  # All validation rules pass
+        if form.is_valid() and user_customer is not None:  # All validation rules pass
             to_email_customer = []
             if is_coordinator:
                 qs = Customer.objects.filter(is_active=True, represent_this_buyinggroup=False, may_order=True)
@@ -71,7 +71,7 @@ def send_mail_to_all_members_view(request):
                 from_email=request.user.email,
                 cc=to_email_customer
             )
-            send_email(email=email, from_name=customer.long_basket_name)
+            send_email(email=email, from_name=user_customer.long_basket_name)
             email = form.fields["your_email"]
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True
