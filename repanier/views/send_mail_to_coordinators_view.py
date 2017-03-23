@@ -60,9 +60,6 @@ class CoordinatorsContactForm(RepanierForm):
         for staff in Staff.objects.filter(
             is_active=True, is_contributor=False,
             translations__language_code=translation.get_language()
-        ).order_by(
-            'translations__long_name',
-            'customer_responsible__long_basket_name'
         ):
             r = staff.customer_responsible
             if r is not None:

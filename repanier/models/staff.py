@@ -11,13 +11,31 @@ from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
+from mptt.fields import TreeForeignKey
+from mptt.managers import TreeManager
+from mptt.models import MPTTModel
+from parler.managers import TranslatableQuerySet, TranslatableManager
 from parler.models import TranslatableModel, TranslatedFields
 
 from repanier.const import *
 
 
+class StaffQuerySet(TranslatableQuerySet):
+    pass
+
+
+class StaffManager(TreeManager, TranslatableManager):
+    queryset_class = StaffQuerySet
+
+    def get_queryset(self):
+        # This is the safest way to combine both get_queryset() calls
+        # supporting all Django versions and MPTT 0.7.x versions
+        return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
+
+
 @python_2_unicode_compatible
-class Staff(TranslatableModel):
+class Staff(MPTTModel, TranslatableModel):
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, verbose_name=_("login"))
     customer_responsible = models.ForeignKey(
@@ -55,6 +73,12 @@ class Staff(TranslatableModel):
 
     get_customer_phone1.short_description = (_("phone1"))
     get_customer_phone1.allow_tags = False
+
+    @property
+    def title_for_admin(self):
+        return '%s : %s (%s)' % (self.long_name, self.customer_responsible.long_basket_name, self.customer_responsible.phone1)
+
+    objects = StaffManager()
 
     def __str__(self):
         return self.long_name

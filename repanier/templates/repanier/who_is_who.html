@@ -18,35 +18,7 @@
     <br/>
 {% endblock %}
 {% block sub_content %}
-{% addtoblock "css" %}
-<style type="text/css">
-.panel-heading.accordion-toggle:after {
-    /* symbol for "opening" panels */
-    font-family:'Glyphicons Halflings';
-    /* essential for enabling glyphicon */
-    content:"\e114";
-    /* adjust as needed, taken from bootstrap.css */
-    float: right;
-    position: relative;
-    bottom: 23px;
-    font-size: 15pt;
-    color: grey;
-}
-.panel-heading.accordion-toggle.collapsed:after {
-    /* symbol for "collapsed" panels */
-    content:"\e080";
-}
-
-.panel-heading:hover {
-    cursor: pointer;
-}
-
-.panel-heading:hover h4 {
-    text-decoration: underline;
-}</style>
-{% endaddtoblock %}
-
-    <div class="col-md-12">
+<div class="col-md-12">
 {% for staff in staff_list %}
     <b>{{ staff.long_name }}</b> :
     {% if staff.customer_responsible.long_basket_name %}

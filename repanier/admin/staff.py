@@ -6,13 +6,12 @@ import uuid
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 from easy_select2 import apply_select2
-from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
+from lut import LUTAdmin
 from repanier.const import EMPTY_STRING, \
-    COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP
+    COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP, ONE_LEVEL_DEPTH
 from repanier.models import Customer, Staff
 
 
@@ -108,7 +107,9 @@ class StaffWithUserDataForm(UserDataForm):
         }
 
 
-class StaffWithUserDataAdmin(TranslatableAdmin):
+class StaffWithUserDataAdmin(LUTAdmin):
+    mptt_level_limit = ONE_LEVEL_DEPTH
+    item_label_field_name = 'title_for_admin'
     form = StaffWithUserDataForm
     fields = ['username',
               'email',
@@ -119,7 +120,8 @@ class StaffWithUserDataAdmin(TranslatableAdmin):
               'is_tester',
               'is_active']
     list_display = ('user', 'language_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
-    list_filter = ('is_active',)
+    list_display_links = ('user',)
+    # list_filter = ('is_active',)
     list_select_related = ('customer_responsible',)
     list_per_page = 16
     list_max_show_all = 16

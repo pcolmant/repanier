@@ -65,7 +65,7 @@ class RepanierSettings(AppConfig):
                 db_started = connection.cursor() is not None
             except:
                 time.sleep(1)
-        from models import Configuration, LUT_DepartmentForCustomer
+        from models import Configuration, LUT_DepartmentForCustomer, Staff
         from const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, EMPTY_STRING, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
         try:
@@ -217,3 +217,4 @@ class RepanierSettings(AppConfig):
             print(error_str)
             print("##################################")
             other = _("Other qty")
+        Staff.objects.rebuild()
