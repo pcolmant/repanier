@@ -184,7 +184,7 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
         c = ws.cell(row=row_num, column=2)
         c.value = "-------"
         row_num += 1
-        for staff in Staff.objects.filter(is_active=True).order_by('?'):
+        for staff in Staff.objects.filter(is_active=True):
             c = staff.customer_responsible
             if c is not None:
                 try:
