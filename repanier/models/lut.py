@@ -81,7 +81,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         'Customer', verbose_name=_("customer_responsible"),
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
-    # with_entitled_customer = models.BooleanField(_("with entitled customer"), default=False)
+    inform_customer_responsible = models.BooleanField(_("inform_customer_responsible"), default=False)
     closed_group = models.BooleanField(_("with entitled customer"), default=False)
     price_list_multiplier = models.DecimalField(
         _("Delivery point price list multiplier"),

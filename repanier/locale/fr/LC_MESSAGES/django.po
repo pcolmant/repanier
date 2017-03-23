@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-21 19:36+0100\n"
-"PO-Revision-Date: 2017-03-21 19:58+0100\n"
+"POT-Creation-Date: 2017-03-23 09:40+0100\n"
+"PO-Revision-Date: 2017-03-23 13:59+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -59,7 +59,7 @@ msgid "producer"
 msgstr "Fournisseur"
 
 #: admin/admin_filter.py:186 admin/admin_filter.py:207
-#: models/permanence.py:472 models/purchase.py:174
+#: models/permanence.py:479 models/purchase.py:174
 msgid "permanence"
 msgstr "permanence"
 
@@ -1416,7 +1416,7 @@ msgstr "Commandes ouvertes"
 msgid "wait for close"
 msgstr "En cours de clôture"
 
-#: const.py:73 models/deliveryboard.py:107 models/permanence.py:465
+#: const.py:73 models/deliveryboard.py:107 models/permanence.py:472
 msgid "orders closed"
 msgstr "Commandes clôturées"
 
@@ -1636,7 +1636,7 @@ msgstr ""
 "⚠ Mail non transmis au producteur %s car le minimum de commande n'a pas été "
 "atteint."
 
-#: email/email_order.py:274
+#: email/email_order.py:273
 msgid "/!\\ Order cancelled"
 msgstr "⚠ Commande annulée"
 
@@ -2077,7 +2077,7 @@ msgstr "Commentaire"
 msgid "delivery date"
 msgstr "Date de livraison"
 
-#: models/deliveryboard.py:37 models/permanence.py:54 models/permanence.py:419
+#: models/deliveryboard.py:37 models/permanence.py:54 models/permanence.py:426
 msgid "permanence_status"
 msgstr "Statut"
 
@@ -2272,6 +2272,11 @@ msgstr "Description"
 #: models/lut.py:55 models/product.py:34 views/forms.py:177
 msgid "production mode"
 msgstr "Label"
+
+#: models/lut.py:84
+msgid "inform_customer_responsible"
+msgstr ""
+"Informer le consommateur responsable des commandes passées par ses membres"
 
 #: models/lut.py:85
 msgid "with entitled customer"
@@ -2565,11 +2570,11 @@ msgstr "avec point de livraison"
 msgid "automatically_closed"
 msgstr "Clôturer ET transmettre automatiquement les commandes"
 
-#: models/permanence.py:185 models/permanence.py:266 models/permanence.py:321
+#: models/permanence.py:185 models/permanence.py:273 models/permanence.py:328
 msgid "Show"
 msgstr "Montrer"
 
-#: models/permanence.py:185 models/permanence.py:266 models/permanence.py:321
+#: models/permanence.py:185 models/permanence.py:273 models/permanence.py:328
 msgid "Hide"
 msgstr "Masquer"
 
@@ -2581,39 +2586,39 @@ msgstr "Pas d'offre"
 msgid "producers in this permanence"
 msgstr "Offres de"
 
-#: models/permanence.py:270
+#: models/permanence.py:277
 msgid "No purchase"
 msgstr "Pas d'achat"
 
-#: models/permanence.py:273
+#: models/permanence.py:280
 msgid "customers in this permanence"
 msgstr "Achats par"
 
-#: models/permanence.py:325
+#: models/permanence.py:332
 msgid "Empty board"
 msgstr "Tableau vide"
 
-#: models/permanence.py:328 models/permanenceboard.py:28
+#: models/permanence.py:335 models/permanenceboard.py:28
 msgid "permanence board"
 msgstr "Tableau des tâches"
 
-#: models/permanence.py:473
+#: models/permanence.py:480
 msgid "permanences"
 msgstr "permanences"
 
-#: models/permanence.py:483
+#: models/permanence.py:490
 msgid "X in preparation"
 msgstr "en préparation"
 
-#: models/permanence.py:484
+#: models/permanence.py:491
 msgid "Xs in preparation"
 msgstr "en préparation"
 
-#: models/permanence.py:490
+#: models/permanence.py:497
 msgid "X done"
 msgstr "en facturation"
 
-#: models/permanence.py:491
+#: models/permanence.py:498
 msgid "Xs done"
 msgstr "en facturation"
 
@@ -3260,7 +3265,7 @@ msgid "Purchase(s) :"
 msgstr "Achat(s) :"
 
 #: templates/repanier/customer_invoice_form.html:16
-#: templates/repanier/customer_invoice_form.html:35 tools.py:1189
+#: templates/repanier/customer_invoice_form.html:35 tools.py:1184
 msgid "Delivery point"
 msgstr "Point de livraison"
 
@@ -3946,21 +3951,21 @@ msgstr "Le solde de votre compte est suffisant"
 msgid "Closed"
 msgstr "Clôturé"
 
-#: tools.py:833 tools.py:1038 views/order_select_ajax.py:85
+#: tools.py:833 tools.py:1033 views/order_select_ajax.py:85
 msgid "Sold out"
 msgstr "Épuisé"
 
-#: tools.py:1122 views/delivery_select_ajax.py:74
+#: tools.py:1117 views/delivery_select_ajax.py:74
 msgid "Please, select a delivery point"
 msgstr "Veuillez sélectionner un point de livraison"
 
-#: tools.py:1128 views/delivery_select_ajax.py:72
+#: tools.py:1123 views/delivery_select_ajax.py:72
 msgid "No delivery point is open for you. You can not place order."
 msgstr ""
 "Vous ne pouvez pas passer commande car aucun point de livraison n'est ouvert "
 "pour vous."
 
-#: tools.py:1148
+#: tools.py:1143
 #, python-format
 msgid ""
 "The shipping costs for this delivery point amount to %(transport)s for "
@@ -3969,14 +3974,14 @@ msgstr ""
 "Pour ce point de livraison, %(transport)s de frais sont ajoutés aux "
 "commandes de moins de %(min_transport)s."
 
-#: tools.py:1155
+#: tools.py:1150
 #, python-format
 msgid "The shipping costs for this delivery point amount to %(transport)s."
 msgstr ""
 "Pour ce point de livraison, %(transport)s de frais seront ajoutés à votre "
 "commande."
 
-#: tools.py:1165
+#: tools.py:1160
 #, python-format
 msgid ""
 "A price increase of %(increase)s %% of the total invoiced is due for this "
@@ -3985,7 +3990,7 @@ msgstr ""
 "De plus une surcharge de %(increase)s %%  est appliqué au total facturé. "
 "Celle-ci ne s'applique ni aux consignes, ni aux frais."
 
-#: tools.py:1171
+#: tools.py:1166
 #, python-format
 msgid ""
 "A price decrease of %(decrease)s %% of the total invoiced is given for this "
@@ -3994,7 +3999,7 @@ msgstr ""
 "De plus une réduction de %(decrease)s %%  est appliqué au total facturé. "
 "Celle-ci ne s'applique ni aux consignes, ni aux frais."
 
-#: tools.py:1178
+#: tools.py:1173
 #, python-format
 msgid ""
 "A price increase of %(increase)s %% of the total invoiced is due for this "
@@ -4003,7 +4008,7 @@ msgstr ""
 "Pour ce point de livraison, une surcharge de %(increase)s %%  est appliqué "
 "au total facturé (hors consigne)."
 
-#: tools.py:1184
+#: tools.py:1179
 #, python-format
 msgid ""
 "A price decrease of %(decrease)s %% of the total invoiced is given for this "
@@ -4012,40 +4017,40 @@ msgstr ""
 "Pour ce point de livraison, une réduction de %(decrease)s %%  est appliqué "
 "au total facturé (hors consigne)."
 
-#: tools.py:1227 tools.py:1233
+#: tools.py:1222 tools.py:1228
 msgid "An unconfirmed order will be canceled."
 msgstr "⚠ Les commandes non confirmées sont annulées."
 
-#: tools.py:1228
+#: tools.py:1223
 msgid "Confirm this order and receive an email containing its summary."
 msgstr " ➜ Confirmer ma commande et recevoir un ✉ récapitulatif."
 
-#: tools.py:1234
+#: tools.py:1229
 msgid "Verify my order content before validating it."
 msgstr "➜ Passer à l'étape de confirmation de ma commande."
 
-#: tools.py:1248
+#: tools.py:1243
 msgid "Receive an email containing this order summary."
 msgstr "Recevoir un ✉ récapitulatif de ma commande."
 
-#: tools.py:1301
+#: tools.py:1296
 #, python-format
 msgid ""
 "Your order is confirmed. An email containing this order summary has been "
 "sent to %s."
 msgstr "Commande confirmée : un ✉ récapitulatif de celle-ci a été envoyé à %s"
 
-#: tools.py:1303
+#: tools.py:1298
 #, python-format
 msgid "An email containing this order summary has been sent to %s."
 msgstr "Un ✉ récapitulatif de la commande a été envoyé à %s."
 
-#: tools.py:1334
+#: tools.py:1329
 #, python-format
 msgid "Cancelled qty : %s"
 msgstr "Qté non confirmée : %s"
 
-#: tools.py:1647
+#: tools.py:1642
 msgid ""
 "You can increase the order quantities as long as the orders are open for "
 "your delivery point."
@@ -4053,13 +4058,13 @@ msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
 "longtemps que les commandes sont ouvertes pour votre point de livraison."
 
-#: tools.py:1651
+#: tools.py:1646
 msgid "You can increase the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
 "longtemps que les commandes sont ouvertes."
 
-#: tools.py:1656
+#: tools.py:1651
 msgid ""
 "You can change the order quantities as long as the orders are open for your "
 "delivery point."
@@ -4067,17 +4072,17 @@ msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes pour votre point de livraison."
 
-#: tools.py:1660
+#: tools.py:1655
 msgid "You can change the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes."
 
-#: tools.py:1665
+#: tools.py:1660
 msgid "The orders are closed for your delivery point."
 msgstr "Les commandes sont clôturées pour votre point de livraison."
 
-#: tools.py:1669 views/order_init_ajax.py:92
+#: tools.py:1664 views/order_init_ajax.py:92
 msgid "The orders are closed."
 msgstr "Les commandes sont clôturées."
 
