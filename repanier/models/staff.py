@@ -76,7 +76,10 @@ class Staff(MPTTModel, TranslatableModel):
 
     @property
     def title_for_admin(self):
-        return '%s : %s (%s)' % (self.long_name, self.customer_responsible.long_basket_name, self.customer_responsible.phone1)
+        if self.customer_responsible is not None:
+            return '%s : %s (%s)' % (self.long_name, self.customer_responsible.long_basket_name, self.customer_responsible.phone1)
+        else:
+            return '%s' % self.long_name
 
     objects = StaffManager()
 
