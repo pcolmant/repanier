@@ -88,6 +88,7 @@ class RepanierSettings(AppConfig):
                     currency=CURRENCY_EUR
                 )
             config.save()
+            Staff.objects.rebuild()
             # Create groups with correct rights
             order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()
             if order_group is None:
@@ -217,4 +218,3 @@ class RepanierSettings(AppConfig):
             print(error_str)
             print("##################################")
             other = _("Other qty")
-        Staff.objects.rebuild()
