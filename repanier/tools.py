@@ -1211,7 +1211,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
              """ % (msg_delivery, msg_confirmation2, basket_message)
         else:
             msg_html = None
-            btn_disabled = EMPTY_STRING
+            btn_disabled = EMPTY_STRING if permanence.status == PERMANENCE_OPENED else "disabled"
             msg_confirmation2 = EMPTY_STRING
             if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
                 if is_basket:
