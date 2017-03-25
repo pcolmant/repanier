@@ -1,12 +1,10 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-import datetime
-
 from django.conf import settings
 from django.contrib import admin
 from django.core.checks import messages
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F
 from django.shortcuts import render
 from django.utils import timezone
 from django.http import HttpResponseRedirect
@@ -101,14 +99,18 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     import_xlsx.short_description = _("Import orders prepared from a XLSX file")
 
-    def preview_invoices(self, request, queryset):
-        permanence = queryset.order_by('?').first()
-        if permanence is None or permanence.status not in [PERMANENCE_DONE, PERMANENCE_ARCHIVED]:
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return None
-        return xlsx_invoice.admin_export(request, queryset)
+    def preview_invoices(self, request, permanence_qs):
+        valid_permanence_qs = permanence_qs.filter(
+            status__in=[PERMANENCE_DONE, PERMANENCE_ARCHIVED]
+        )
+        if valid_permanence_qs.exists():
+            xlsx = xlsx_invoice.admin_export_permanences_invoices_report(request, valid_permanence_qs)
+            if xlsx is not None:
+                return xlsx
+        user_message = _("No invoice available for %(permanence)s.") % {'permanence': ', '.join("%s" % p for p in permanence_qs.all())}
+        user_message_level = messages.WARNING
+        self.message_user(request, user_message, user_message_level)
+        return None
 
     preview_invoices.short_description = _("Preview invoices before sending them by email")
 

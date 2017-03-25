@@ -24,7 +24,7 @@ from import_export.widgets import CharWidget
 from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models import Customer, LUT_DeliveryPoint
-from repanier.xlsx import xlsx_purchase
+from repanier.xlsx import xlsx_invoice
 from repanier.xlsx.widget import IdWidget, OneToOneWidget, \
     DecimalBooleanWidget, ZeroDecimalsWidget, TwoMoneysWidget, TranslatedForeignKeyWidget, DateWidgetExcel
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
@@ -214,9 +214,9 @@ class CustomerResource(resources.ModelResource):
 
 
 def create__customer_action(year):
-    def action(modeladmin, request, queryset):
-        queryset = queryset.order_by('?')
-        return xlsx_purchase.admin_export_year_by_customer(year, queryset)
+    def action(modeladmin, request, customer_qs):
+        # return xlsx_purchase.admin_export_year_by_customer(year, customer_qs)
+        return xlsx_invoice.admin_export_customer_invoices_report(request, customer_qs, year)
 
     name = "export_producer_%d" % (year,)
     return (name, (action, name, _("Export purchases of %s") % (year,)))

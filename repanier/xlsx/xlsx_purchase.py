@@ -520,34 +520,6 @@ def admin_export_permanence_by_producer(request, permanence):
         return None
 
 
-def admin_export_year_by_producer(year, queryset):
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-        slugify(_("Invoices")),
-        str(year)
-    )
-    wb = None
-    for producer in queryset.order_by('short_profile_name'):
-        wb = export_purchase(producer=producer, year=year, wb=wb)
-    if wb is not None:
-        wb.save(response)
-    return response
-
-
-def admin_export_year_by_customer(year, queryset):
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-        slugify(_("Invoices")),
-        str(year)
-    )
-    wb = None
-    for customer in queryset:
-        wb = export_purchase(customer=customer, year=year, wb=wb)
-    if wb is not None:
-        wb.save(response)
-    return response
-
-
 @transaction.atomic
 def import_purchase_sheet(worksheet, permanence=None,
                           customer_2_id_dict=None,

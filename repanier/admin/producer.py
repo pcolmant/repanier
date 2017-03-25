@@ -21,7 +21,7 @@ from repanier.models import Permanence, Product, \
     Producer
 from repanier.tools import producer_web_services_activated, \
     update_offer_item
-from repanier.xlsx import xlsx_stock, xlsx_purchase, xlsx_product
+from repanier.xlsx import xlsx_stock, xlsx_invoice, xlsx_product
 from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
     DecimalBooleanWidget, TwoMoneysWidget, DateWidgetExcel
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
@@ -88,9 +88,9 @@ class ProducerResource(resources.ModelResource):
 
 
 def create__producer_action(year):
-    def action(modeladmin, request, queryset):
-        queryset = queryset.order_by('?')
-        return xlsx_purchase.admin_export_year_by_producer(year, queryset)
+    def action(modeladmin, request, producer_qs):
+        # return xlsx_purchase.admin_export_year_by_producer(year, queryset)
+        return xlsx_invoice.admin_export_producer_invoices_report(request, producer_qs, year)
 
     name = "export_producer_%d" % (year,)
     return (name, (action, name, _("Export purchases of %s") % (year,)))
