@@ -319,6 +319,7 @@ def customer_pre_save(sender, **kwargs):
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = ("%s" % customer.city).upper()
     customer.login_attempt_counter = DECIMAL_ZERO
+    customer.valid_email = None
 
 
 @receiver(post_delete, sender=Customer)
