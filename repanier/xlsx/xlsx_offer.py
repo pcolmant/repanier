@@ -25,7 +25,7 @@ def export_offer(permanence, wb=None):
             is_box=False,
             translations__language_code=translation.get_language()).order_by(
             "producer__short_profile_name",
-            "department_for_customer__tree_id",
+            "department_for_customer",
             "translations__long_name",
             "order_average_weight"):
             row_num = export_offer_row(product, row_num, ws)
@@ -41,11 +41,13 @@ def export_offer(permanence, wb=None):
 
     elif permanence.status == PERMANENCE_OPENED:
         for offer_item in OfferItem.objects.prefetch_related(
-                "producer", "department_for_customer").filter(permanence_id=permanence.id, is_active=True,
-                                                              product__translations__language_code=translation.get_language()).order_by(
-            'producer__short_profile_name',
-            'department_for_customer',
-            'product__translations__long_name'):
+                "producer", "department_for_customer"
+        ).filter(
+            permanence_id=permanence.id,
+            is_active=True,
+            product__translations__language_code=translation.get_language()).order_by(
+            'translations__order_sort_order',
+        ):
             row_num = export_offer_row(offer_item, row_num, ws)
 
     return wb

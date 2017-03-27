@@ -246,8 +246,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         ]
         return my_urls + urls
 
-    def export_xlsx_customer_prices(self, request, queryset):
-        return xlsx_product.admin_export(request, queryset, producer_prices=False)
+    def export_xlsx_customer_prices(self, request, producer_qs):
+        return xlsx_product.admin_export_customer_prices(producer_qs, producer_prices=False)
 
     export_xlsx_customer_prices.short_description = _(
         "Export products of selected producer(s) as XSLX file at customer's prices")
