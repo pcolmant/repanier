@@ -14,7 +14,7 @@ from repanier.models import Product
 from repanier.tools import next_row
 
 
-def export(producer_qs, wb=None, producer_prices=True):
+def export_customer_prices(producer_qs, wb=None, producer_prices=True):
     now = timezone.now()
     if producer_prices:
         wb, ws = new_landscape_a4_sheet(wb, "%s" % _("Producer prices list"),
@@ -25,10 +25,11 @@ def export(producer_qs, wb=None, producer_prices=True):
     row_num = 0
     products = Product.objects.filter(
         is_active=True,
+        is_into_offer=True,
         translations__language_code=translation.get_language(),
         producer__in=producer_qs
     ).order_by(
-        "department_for_customer__tree_id",
+        "department_for_customer",
         "translations__long_name",
         "order_average_weight",
     ).select_related(
@@ -42,8 +43,8 @@ def export(producer_qs, wb=None, producer_prices=True):
             (_("department_for_customer"), 15,
              product.department_for_customer.short_name if product.department_for_customer is not None else " ",
              NumberFormat.FORMAT_TEXT, False),
-            (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else _("No"),
-             NumberFormat.FORMAT_TEXT, False),
+            # (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else _("No"),
+            #  NumberFormat.FORMAT_TEXT, False),
             (_("wrapped"), 7, _("Yes") if product.wrapped else _("No"),
              NumberFormat.FORMAT_TEXT, False),
             (_("producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
@@ -71,8 +72,8 @@ def export(producer_qs, wb=None, producer_prices=True):
     return wb
 
 
-def admin_export(request, queryset, producer_prices=True):
-    wb = export(producer_qs=queryset, wb=None, producer_prices=producer_prices)
+def admin_export_customer_prices(producer_qs, producer_prices=True):
+    wb = export_customer_prices(producer_qs=producer_qs, wb=None, producer_prices=producer_prices)
     if wb is not None:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
