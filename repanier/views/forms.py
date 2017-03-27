@@ -23,6 +23,7 @@ from repanier.picture.const import SIZE_M
 from repanier.picture.widgets import AjaxPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
+from repanier.tools import send_email_with_error_log
 
 
 class AuthRepanierLoginForm(AuthenticationForm):
@@ -71,7 +72,8 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
             html_email = loader.render_to_string(html_email_template_name, context)
             email_message.attach_alternative(html_email, 'text/html')
 
-        email_message.send()
+        # email_message.send()
+        send_email_with_error_log(email_message, track_customer_on_error=True)
 
     # From Django 1.8, this let the user enter name or email to recover
     def get_users(self, email):

@@ -114,62 +114,69 @@ def send_email(email=None, from_name=EMPTY_STRING, track_customer_on_error=False
                     customer = None
                     for email_to in send_email_to:
                         email.to = [email_to]
-                        if track_customer_on_error:
-                            # If the email is conained both in user__email and customer__email2
-                            # select the customer based on user__email
-                            customer = models.Customer.objects.filter(user__email=email_to).order_by('?').first()
-                            if customer is None:
-                                customer = models.Customer.objects.filter(email2=email_to).order_by('?').first()
-                        send_email_with_error_log(email, from_name, customer)
+                        send_email_with_error_log(email, from_name, track_customer_on_error)
                         time.sleep(1)
 
 
-def send_email_with_error_log(email, from_name=EMPTY_STRING, customer=None):
-    with mail.get_connection() as connection:
-        email.connection = connection
-        message = EMPTY_STRING
-        if not email.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-            email.reply_to = [email.from_email]
-            email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
-        else:
-            email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
-        try:
-            print("################################## send_email")
-            reply_to = "reply_to : %s" % email.reply_to
-            to = "to : %s" % email.to
-            cc = "cc : %s" % email.cc
-            bcc = "bcc : %s" % email.bcc
-            subject = "subject : %s" % slugify(email.subject)
-            print(reply_to)
-            print(to)
-            print(cc)
-            print(bcc)
-            print(subject)
-            message = "%s\n%s\n%s\n%s" % (to, cc, bcc, subject)
-            email.send()
-            valid_email = True
-        except SMTPRecipientsRefused as error_str:
-            valid_email = False
-            print("################################## send_email error")
-            print(error_str)
-            time.sleep(2)
-            connection = mail.get_connection()
-            connection.open()
-            mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
-            connection.close()
-        except Exception as error_str:
-            valid_email = None
-            print("################################## send_email error")
-            print(error_str)
-            time.sleep(2)
-            connection = mail.get_connection()
-            connection.open()
-            mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
-            connection.close()
-        if customer is not None:
-            customer.valid_email = valid_email
-            customer.save(update_fields=['valid_email'])
-        print("##################################")
+def send_email_with_error_log(email, from_name=None, track_customer_on_error=False):
+    send_mail = True
+    if track_customer_on_error:
+        # select the customer based on user__email or customer__email2
+        email_to = email.to[0]
+        customer = models.Customer.objects.filter(user__email=email_to).order_by('?').first()
+        if customer is None:
+            customer = models.Customer.objects.filter(email2=email_to).order_by('?').first()
+        if customer is None or customer.valid_email is False:
+            send_mail = False
+            print("################################## send_email customer.valid_email == False")
+    else:
+        customer = None
+    if send_mail:
+        with mail.get_connection() as connection:
+            email.connection = connection
+            message = EMPTY_STRING
+            if not email.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+                email.reply_to = [email.from_email]
+                email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
+            else:
+                email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
+            try:
+                print("################################## send_email")
+                reply_to = "reply_to : %s" % email.reply_to
+                to = "to : %s" % email.to
+                cc = "cc : %s" % email.cc
+                bcc = "bcc : %s" % email.bcc
+                subject = "subject : %s" % slugify(email.subject)
+                print(reply_to)
+                print(to)
+                print(cc)
+                print(bcc)
+                print(subject)
+                message = "%s\n%s\n%s\n%s" % (to, cc, bcc, subject)
+                email.send()
+                valid_email = True
+            except SMTPRecipientsRefused as error_str:
+                valid_email = False
+                print("################################## send_email error")
+                print(error_str)
+                time.sleep(1)
+                connection = mail.get_connection()
+                connection.open()
+                mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
+                connection.close()
+            except Exception as error_str:
+                valid_email = None
+                print("################################## send_email error")
+                print(error_str)
+                time.sleep(1)
+                connection = mail.get_connection()
+                connection.open()
+                mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
+                connection.close()
+            print("##################################")
+            if customer is not None:
+                customer.valid_email = valid_email
+                customer.save(update_fields=['valid_email'])
 
 
 def send_email_to_who(is_email_send, board=False):
@@ -1493,8 +1500,7 @@ def reorder_offer_items(permanence_id):
             is_box=False,
             translations__language_code=language_code
         ).order_by(
-            "department_for_customer__tree_id",
-            "department_for_customer__lft",
+            "department_for_customer",
             "translations__long_name",
             "order_average_weight",
             "producer__short_profile_name"
@@ -1511,8 +1517,7 @@ def reorder_offer_items(permanence_id):
             producer__sort_products_by_reference=True,
             translations__language_code=language_code
         ).order_by(
-            "department_for_customer__tree_id",
-            "department_for_customer__lft",
+            "department_for_customer",
             "reference"
         )
         for offer_item in reorder_queryset:
@@ -1526,7 +1531,7 @@ def reorder_offer_items(permanence_id):
             is_box=False,
             translations__language_code=language_code
         ).order_by(
-            "department_for_customer__tree_id",
+            "department_for_customer",
             # "department_for_customer__lft",
             "translations__long_name",
             "order_average_weight",
