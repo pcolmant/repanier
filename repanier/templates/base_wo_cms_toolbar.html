@@ -93,7 +93,7 @@
               {% if permanence %}
                 <li id="li_my_basket" style="display:none;" class="dropdown">
                 {% if delivery_id %}
-                    <a href="{% url "basket_view" permanence.id delivery_id %}" class="btn btn-info"><span id="my_basket"></span></a>
+                    <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-info"><span id="my_basket"></span></a>
                 {% else %}
                     <a href="{% url "basket_view" permanence.id %}" class="btn btn-info"><span id="my_basket"></span></a>
                 {% endif %}

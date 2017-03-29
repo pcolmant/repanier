@@ -605,7 +605,7 @@ def payment_message(customer, permanence):
             # other_order_not_invoiced = REPANIER_MONEY_ZERO
 
         if customer_invoice.customer_id != customer_invoice.customer_who_pays_id:
-            customer_payment_needed = '<font color="green">%s</font>' % (
+            customer_payment_needed = '<font color="#51a351">%s</font>' % (
                 _('Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
                     'name': customer_invoice.customer_who_pays.long_basket_name
                 }
@@ -646,7 +646,7 @@ def payment_message(customer, permanence):
 
                 else:
                     if customer.balance.amount != DECIMAL_ZERO:
-                        customer_payment_needed = '<br/><font color="green">%s.</font>' % (_('Your account balance is sufficient'))
+                        customer_payment_needed = '<br/><font color="#51a351">%s.</font>' % (_('Your account balance is sufficient'))
                     else:
                         customer_payment_needed = EMPTY_STRING
             else:
@@ -1060,7 +1060,12 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                 ).only("id", "with_delivery_point", "status").order_by('?').first()
                 if customer_invoice is not None and permanence is not None:
                     order_amount = customer_invoice.get_total_price_with_tax()
-                    customer_invoice.cancel_confirm_order()
+                    status_changed = customer_invoice.cancel_confirm_order()
+                    if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
+                        html = render_to_string(
+                            'repanier/communication_confirm_order.html')
+                        option_dict = {'id': "#communication", 'html': html}
+                        to_json.append(option_dict)
                     customer_invoice.save()
                     my_basket(customer_invoice.is_order_confirm_send, order_amount, to_json)
                     if basket:
@@ -1082,7 +1087,7 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
         msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span></a>' % (
             order_amount,)
     else:
-        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-floppy-saved"></span></a>' % (
+        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<font color="#32CD32"><span class="glyphicon glyphicon-floppy-saved"></span></font></a>' % (
         order_amount,)
     option_dict = {'id': "#my_basket", 'html': msg_html}
     to_json.append(option_dict)
@@ -1206,7 +1211,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
             <div class="panel panel-default">
             <div class="panel-heading">
             %s
-            <p><font color="green">%s</font><p/>
+            <p><font color="#51a351">%s</font><p/>
             %s
             </div>
             </div>

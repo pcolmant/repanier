@@ -160,7 +160,7 @@ def order_init_ajax(request):
                             else:
                                 count_activity = None
                             html = render_to_string(
-                                'repanier/communication.html',
+                                'repanier/communication_permanence_board.html',
                                 {'permanence_boards': permanence_boards, 'count_activity': count_activity})
                             option_dict = {'id': "#communication", 'html': html}
                             to_json.append(option_dict)

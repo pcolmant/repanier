@@ -245,7 +245,7 @@ class Producer(models.Model):
             elif balance.amount > 30:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#FF0000">%s</span>' % (balance,)) + '</a>'
+                           '<span style="color:red">%s</span>' % (balance,)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" target="_blank" >' + (
@@ -256,7 +256,7 @@ class Producer(models.Model):
             elif balance.amount == 0:
                 return '<span style="color:#32CD32">%s</span>' % (balance,)
             elif balance.amount > 30:
-                return '<span style="color:#FF0000">%s</span>' % (balance,)
+                return '<span style="color:red">%s</span>' % (balance,)
             else:
                 return '<span style="color:#696969">%s</span>' % (balance,)
 
@@ -274,7 +274,7 @@ class Producer(models.Model):
                 return '<span style="color:#32CD32">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax > 30:
-                return '<span style="color:#FF0000">%s</span>' % (
+                return '<span style="color:red">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             else:
                 return '<span style="color:#696969">%s</span>' % (

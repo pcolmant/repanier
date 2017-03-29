@@ -254,29 +254,40 @@ class CustomerInvoice(models.Model):
             self.delta_transport.amount = DECIMAL_ZERO
 
     def cancel_confirm_order(self):
-        self.is_order_confirm_send = False
 
-        producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
-            producer__represent_this_buyinggroup=True,
-            permanence_id=self.permanence_id,
-        ).order_by('?').first()
-        if producer_invoice_buyinggroup is None:
-            producer_buyinggroup = producer.Producer.objects.filter(
-                represent_this_buyinggroup=True
-            ).order_by('?').first()
-            producer_invoice_buyinggroup = ProducerInvoice.objects.create(
-                producer_id=producer_buyinggroup.id,
+        if self.delta_price_with_tax.amount != DECIMAL_ZERO \
+                or self.delta_vat.amount != DECIMAL_ZERO\
+                or self.delta_transport.amount != DECIMAL_ZERO:
+
+            producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
+                producer__represent_this_buyinggroup=True,
                 permanence_id=self.permanence_id,
-                status=self.permanence.status
-            )
-        producer_invoice_buyinggroup.delta_price_with_tax.amount -= self.delta_price_with_tax.amount
-        producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
-        producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
-        producer_invoice_buyinggroup.save()
+            ).order_by('?').first()
+            if producer_invoice_buyinggroup is None:
+                producer_buyinggroup = producer.Producer.objects.filter(
+                    represent_this_buyinggroup=True
+                ).order_by('?').first()
+                producer_invoice_buyinggroup = ProducerInvoice.objects.create(
+                    producer_id=producer_buyinggroup.id,
+                    permanence_id=self.permanence_id,
+                    status=self.permanence.status
+                )
+            producer_invoice_buyinggroup.delta_price_with_tax.amount -= self.delta_price_with_tax.amount
+            producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
+            producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
+            producer_invoice_buyinggroup.save()
 
-        self.delta_price_with_tax.amount = DECIMAL_ZERO
-        self.delta_vat.amount = DECIMAL_ZERO
-        self.delta_transport = DECIMAL_ZERO
+            self.delta_price_with_tax.amount = DECIMAL_ZERO
+            self.delta_vat.amount = DECIMAL_ZERO
+            self.delta_transport = DECIMAL_ZERO
+
+        if self.is_order_confirm_send:
+            # Change of confirmation status
+            self.is_order_confirm_send = False
+            return True
+        else:
+            # No change of confirmation status
+            return False
 
     def __str__(self):
         return '%s, %s' % (self.customer, self.permanence)

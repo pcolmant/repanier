@@ -179,14 +179,14 @@ class Customer(models.Model):
             else:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" target="_blank" >' + (
-                           '<span style="color:#FF0000">%s</span>' % (balance,)) + '</a>'
+                           '<span style="color:red">%s</span>' % (balance,)) + '</a>'
         else:
             if balance.amount >= 30:
                 return '<span style="color:#32CD32">%s</span>' % (balance,)
             elif balance.amount >= -10:
                 return '<span style="color:#696969">%s</span>' % (balance,)
             else:
-                return '<span style="color:#FF0000">%s</span>' % (balance,)
+                return '<span style="color:red">%s</span>' % (balance,)
 
     get_balance.short_description = _("balance")
     get_balance.allow_tags = True

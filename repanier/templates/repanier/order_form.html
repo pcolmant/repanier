@@ -8,7 +8,7 @@
     <div class="panel panel-danger">
         <div class="panel-heading">
             {% trans "You need to log in" %}<br/><br/>
-            <a href="{% url "login_form" %}?next={% url 'order_view' permanence.id delivery_id %}" class="btn btn-primary">{% trans "Login me" %}</a>
+            <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-primary">{% trans "Login me" %}</a>
         </div>
     </div>
     </div>
@@ -90,17 +90,17 @@
 </li>
 {% if box_set %}
     {% for box in box_set.all %}
-        <li><a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
+        <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
                {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} 📦{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
     {% endfor %}
 {% endif %}
 {% if producer_set %}
     <li>
-        <a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
+        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
            {% if producer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
         <ul class="nav nav-stacked">
     {% for producer in producer_set.all %}
-        <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
+        <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
                {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span><span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
         </li>
     {% endfor %}
@@ -108,30 +108,30 @@
     </li>
 {% else %}{% if not departementforcustomer_set %}{% if like or basket or box or q %}
     <li>
-        <a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all">{% trans "All products" %}</a>
+        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all">{% trans "All products" %}</a>
     </li>
 {% endif %}{% endif %}{% endif %}
 {% if departementforcustomer_set %}
     <li>
-        <a href="{% url "order_view" permanence.id delivery_id %}"
+        <a href="{% url "order_delivery_view" permanence.id delivery_id %}"
            {% if departementforcustomer_id == "all" and not basket and not like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
         <ul class="nav nav-stacked">
             {% for departementforcustomer in departementforcustomer_set.all %}
                 {% if departementforcustomer.level > 0 %}
                     {% ifchanged departementforcustomer.parent_id %}
                     {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                    <li><a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}"
+                    <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}"
                            {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
                     </li>
                     {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                     {% endifchanged %}
                     <li>
-                        <a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
+                        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                     </li>
                 {% else %}
                         </ul><li>
-                        <a href="{% url "order_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
+                        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                         </li><ul class="nav nav-stacked">
                 {% endif %}
@@ -291,7 +291,7 @@
                     </button>
                     <ul class="dropdown-menu">
                         {% for box in box_set.all %}
-                            <li><a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
+                            <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
                                    {% if box %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} {# <span class="glyphicon glyphicon-gift"></span> #}📦</a>
                             </li>
                         {% endfor %}
@@ -300,14 +300,17 @@
             {% endif %}
             {% if display_all_product_button %}
                 <div class="btn-group">
-                <a href="{% url "order_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-primary">{% trans "All" %}</a>
+                <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-primary">{% trans "All" %}</a>
                 </div>
             {% endif %}
             <div class="btn-group">
-            <a href="{% url "basket_view" permanence.id delivery_id %}" class="btn btn-primary">
+            <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-primary">
                 <span id="prepared_amount_visible_xs"></span></a>
             </div>
         </div>
+    {% if offeritem_list %}
+            <span id="span_btn_confirm_order"></span>
+        {% endif %}
     {% if is_paginated %}
         <div class="btn-group">
             <div class="btn-group">
@@ -342,7 +345,7 @@
                 var offer_item = $("#offer_item" + offer_item_id);
                 var offer_item_val = $("option:selected", offer_item).val();
 
-                if (offer_item_val == 'other_qty') {
+                if (offer_item_val === 'other_qty') {
                     var getProductFromRow = offer_item.closest('div').data('product');
                     $('#otherQtyModalLabel').html(getProductFromRow);
                     $('#otherQtyModal').modal('show');
@@ -354,10 +357,16 @@
                         async: true,
                         success: function (result) {
                             $.each(result, function (key, val) {
-                                if(val.id == '#error') {
-                                    offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                if(val.id === '#communication') {
+                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
+                                    $('#communicationDetails').html(val.html);
+                                    $('#communicationModal').modal('show')
                                 } else {
-                                    $(val.id).html(val.html);
+                                    if(val.id === '#error') {
+                                        offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                    } else {
+                                        $(val.id).html(val.html);
+                                    }
                                 }
                             });
                         },
@@ -370,7 +379,7 @@
             function delivery_select_ajax() {
                 var delivery = $("#delivery");
                 var delivery_val = $("option:selected", delivery).val();
-                if(saved_delivery_val == 0){
+                if(saved_delivery_val === 0){
                     saved_delivery_val=1;
                     var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
                     $.ajax({
@@ -382,7 +391,7 @@
                             var selectOption = '';
                             var selectVal = 0;
                             $.each(result, function (key, val) {
-                                if (val.selected == "selected") {
+                                if (val.selected === 'selected') {
                                     selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
                                     selectVal = val.value
                                 } else {
@@ -410,7 +419,7 @@
                     async: true,
                     success: function (result) {
                         $.each(result, function (key, val) {
-                            if(val.id == '#error') {
+                            if(val.id === '#error') {
                                 delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
                             } else {
                                 $(val.id).html(val.html);
@@ -468,7 +477,7 @@
                     async: true,
                     success: function (result) {
                         $.each(result, function (key, val) {
-                            if(val.id == '#communication') {
+                            if(val.id === '#communication') {
                                 $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
                                 $('#communicationDetails').html(val.html);
                                 $('#communicationModal').modal('show')
@@ -491,7 +500,7 @@
                 $("select").mouseover(function (event) {
                     var object = $(this);
                     var object_id = object.closest('div').data('id');
-                    if(saved_offer_item_id != object_id) {
+                    if(saved_offer_item_id !== object_id) {
                         saved_offer_item_id = object_id;
                         saved_delivery_val=0;
                         var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + object_id;
@@ -507,7 +516,7 @@
                                     if (val.html) {
                                         selectOption += val.html
                                     } else {
-                                        if (val.selected == "selected") {
+                                        if (val.selected === 'selected') {
                                             selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
                                             selectVal = val.value
                                         } else {
