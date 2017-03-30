@@ -27,7 +27,7 @@ def next_purchase(purchases):
     return purchase
 
 
-def export_abstract(permanence, deliveries_id=None, wb=None):
+def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
     if permanence is not None:
         row_num = 1
         # Customer info
@@ -59,7 +59,7 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
                         preparation_order += 1
 
                         row = [
-                            "%d - %s" % (delivery_ref, delivery.get_delivery_status_display()),
+                            "%d - %s" % (delivery_ref, delivery.get_delivery_display()),
                             "  %d - %s" % (customer.preparation_order, customer.long_basket_name),
                             customer.phone1,
                             customer.phone2,
@@ -208,40 +208,42 @@ def export_abstract(permanence, deliveries_id=None, wb=None):
             c = ws.cell(row=row_num-1, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
 
-        c = ws.cell(row=row_num, column=0)
-        c.value = "-------"
-        c = ws.cell(row=row_num, column=1)
-        c.value = "%s" % (_('producers'))
-        c.style.alignment.wrap_text = False
-        c.style.font.bold = True
-        c = ws.cell(row=row_num, column=2)
-        c.value = "-------"
-        row_num += 1
-        # Producer info
-        for producer in Producer.objects.filter(permanence=permanence).order_by("short_profile_name"):
-            invoice = ProducerInvoice.objects.filter(
-                permanence=permanence, producer=producer
-            ).order_by('?').first()
-            if invoice is None:
-                total_price_with_tax = REPANIER_MONEY_ZERO
-            else:
-                total_price_with_tax = invoice.total_price_with_tax
-            row = [
-                producer.short_profile_name,
-                producer.long_profile_name,
-                producer.phone1,
-                producer.phone2,
-                total_price_with_tax.amount,
-            ]
-            for col_num in range(len(row)):
-                c = ws.cell(row=row_num, column=col_num)
-                c.value = row[col_num]
-                if col_num == 4:
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                else:
-                    c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                    c.style.alignment.wrap_text = False
+        if not group:
+            # This is a private information which doesn't need to be give to customer's groups
+            c = ws.cell(row=row_num, column=0)
+            c.value = "-------"
+            c = ws.cell(row=row_num, column=1)
+            c.value = "%s" % (_('producers'))
+            c.style.alignment.wrap_text = False
+            c.style.font.bold = True
+            c = ws.cell(row=row_num, column=2)
+            c.value = "-------"
             row_num += 1
+            # Producer info
+            for producer in Producer.objects.filter(permanence=permanence).order_by("short_profile_name"):
+                invoice = ProducerInvoice.objects.filter(
+                    permanence=permanence, producer=producer
+                ).order_by('?').first()
+                if invoice is None:
+                    total_price_with_tax = REPANIER_MONEY_ZERO
+                else:
+                    total_price_with_tax = invoice.total_price_with_tax
+                row = [
+                    producer.short_profile_name,
+                    producer.long_profile_name,
+                    producer.phone1,
+                    producer.phone2,
+                    total_price_with_tax.amount,
+                ]
+                for col_num in range(len(row)):
+                    c = ws.cell(row=row_num, column=col_num)
+                    c.value = row[col_num]
+                    if col_num == 4:
+                        c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    else:
+                        c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                        c.style.alignment.wrap_text = False
+                row_num += 1
 
         return wb
 
@@ -334,7 +336,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
         if delivery_id is not None:
             c = ws.cell(row=row_num, column=5)
             c.style.font.bold = True
-            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_status_display()
+            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
             row_num += 1
         producer_counter = 0
         hide_column_placement = True
@@ -1158,7 +1160,7 @@ def export_customer_for_a_delivery(
         if delivery_id is not None:
             c = ws.cell(row=row_num, column=4)
             c.style.font.bold = True
-            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_status_display()
+            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
             row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
             ref_preparation_sheet = ws_preparation_title if delivery_id is None else "%d-%s" % (
