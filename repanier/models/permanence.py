@@ -349,20 +349,12 @@ class Permanence(TranslatableModel):
                 else:
                     self.payment_date = payment_date
                 self.save(
-                    update_fields=['status', 'is_updated_on', 'highest_status', 'with_delivery_point', 'payment_date'])
+                    update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
             else:
-                self.save(update_fields=['status', 'is_updated_on', 'with_delivery_point', 'highest_status'])
+                self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
             menu_pool.clear()
             cache.clear()
             if new_status == PERMANENCE_WAIT_FOR_OPEN:
-                self.with_delivery_point = deliveryboard.DeliveryBoard.objects.filter(
-                    permanence_id=self.id
-                ).order_by('?').exists()
-                if self.with_delivery_point and not repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-                    config = configuration.Configuration.objects.filter(id=DECIMAL_ONE).first()
-                    # Important : Customer must confirm order if deliveries points are used
-                    config.customers_must_confirm_orders = True
-                    config.save()
                 for a_producer in producer.Producer.objects.filter(
                         permanence=self.id
                 ).only('id').order_by('?'):
@@ -375,6 +367,10 @@ class Permanence(TranslatableModel):
                             permanence_id=self.id,
                             producer_id=a_producer.id
                         )
+
+            self.with_delivery_point = deliveryboard.DeliveryBoard.objects.filter(
+                permanence_id=self.id
+            ).order_by('?').exists()
             if self.with_delivery_point:
                 qs = deliveryboard.DeliveryBoard.objects.filter(
                     permanence_id=self.id
@@ -410,7 +406,7 @@ class Permanence(TranslatableModel):
                 self.save(
                     update_fields=['status', 'is_updated_on', 'highest_status', 'with_delivery_point', 'payment_date'])
             else:
-                self.save(update_fields=['status', 'is_updated_on', 'with_delivery_point', 'highest_status'])
+                self.save(update_fields=['status', 'is_updated_on', 'highest_status', 'with_delivery_point'])
             menu_pool.clear()
             cache.clear()
         else:
