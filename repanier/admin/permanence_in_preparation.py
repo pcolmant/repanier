@@ -184,6 +184,18 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 return ['status', 'producers', 'get_boxes']
         return ['status', 'get_boxes']
 
+    def get_formsets_with_inlines(self, request, obj=None):
+        for inline in self.get_inline_instances(request, obj):
+            # hide DeliveryBoardInline if no delivery point
+            if isinstance(inline, DeliveryBoardInline) \
+                    and not LUT_DeliveryPoint.objects.filter(is_active=True).exists():
+                continue
+            # hide DeliveryBoardInline if no permanence role
+            if isinstance(inline, PermanenceBoardInline) \
+                    and not LUT_PermanenceRole.objects.filter(is_active=True).exists():
+                continue
+            yield inline.get_formset(request, obj), inline
+
     def get_boxes(self, permanence=None):
         if permanence is None or permanence.status == PERMANENCE_PLANNED:
             qs = Box.objects.filter(
