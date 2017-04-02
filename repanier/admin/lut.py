@@ -203,7 +203,7 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
 
 
 class LUTPermanenceRoleAdmin(LUTAdmin):
-    mptt_level_limit = ONE_LEVEL_DEPTH
+    mptt_level_limit = TWO_LEVEL_DEPTH
     inlines = [PermanenceBoardInline]
 
     def get_fields(self, request, obj=None):
