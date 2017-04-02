@@ -83,8 +83,6 @@ class RepanierSettings(AppConfig):
                     group_name=group_name,
                     name=PERMANENCE_NAME_PERMANENCE,
                     bank_account="BE99 9999 9999 9999",
-                    vat_id=EMPTY_STRING,
-                    sms_gateway_mail=EMPTY_STRING,
                     currency=CURRENCY_EUR
                 )
             config.save()

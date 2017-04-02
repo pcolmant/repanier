@@ -434,7 +434,6 @@ def close_order(permanence, all_producers, producers_id=None):
             if customer_invoice_id_save != purchase.customer_invoice_id:
                 customer_invoice_id_save = purchase.customer_invoice_id
                 # This order has been cancelled
-                # filename = force_filename("%s - %s.xlsx" % (_("Canceled order"), permanence))
                 filename = "{0}-{1}.xlsx".format(
                     slugify(_("Canceled order")),
                     slugify(permanence)

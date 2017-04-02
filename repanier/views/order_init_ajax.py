@@ -29,8 +29,9 @@ def order_init_ajax(request):
     if request.is_ajax():
         # construct a list which will contain all of the data for the response
         permanence_id = sint(request.GET.get('pe', 0))
-        permanence_qs = Permanence.objects.filter(id=permanence_id) \
-            .only("id", "status", "with_delivery_point").order_by('?')
+        permanence_qs = Permanence.objects.filter(id=permanence_id).only(
+            "id", "status", "with_delivery_point"
+        ).order_by('?')
         if not permanence_qs.exists():
             raise Http404
         user = request.user

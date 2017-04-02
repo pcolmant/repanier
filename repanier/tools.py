@@ -1057,7 +1057,9 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                 ).order_by('?').first()
                 permanence = models.Permanence.objects.filter(
                     id=permanence_id
-                ).only("id", "with_delivery_point", "status").order_by('?').first()
+                ).only(
+                    "id", "with_delivery_point", "status"
+                ).order_by('?').first()
                 if customer_invoice is not None and permanence is not None:
                     order_amount = customer_invoice.get_total_price_with_tax()
                     status_changed = customer_invoice.cancel_confirm_order()

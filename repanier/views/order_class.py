@@ -37,8 +37,9 @@ class OrderView(ListView):
 
     def dispatch(self, request, *args, **kwargs):
         permanence_id = sint(kwargs.get('permanence_id', 0))
-        self.permanence = Permanence.objects.filter(id=permanence_id).only("id", "status", "permanence_date",
-                                                                           "with_delivery_point").order_by('?').first()
+        self.permanence = Permanence.objects.filter(id=permanence_id).only(
+            "id", "status", "permanence_date", "with_delivery_point"
+        ).order_by('?').first()
         permanence_ok_or_404(self.permanence)
         self.user = request.user
         self.basket = kwargs.get('basket', False)
