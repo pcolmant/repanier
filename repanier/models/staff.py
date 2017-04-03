@@ -78,7 +78,12 @@ class Staff(MPTTModel, TranslatableModel):
     def title_for_admin(self):
         if self.customer_responsible is not None:
             tester = _(" who is also tester ") if self.is_tester else EMPTY_STRING
-            return '%s : %s%s (%s)' % (self.safe_translation_getter('long_name', any_language=True), self.customer_responsible.long_basket_name, tester, self.customer_responsible.phone1)
+            return '%s : %s%s (%s)' % (
+                self.safe_translation_getter('long_name', any_language=True),
+                self.customer_responsible.long_basket_name,
+                tester,
+                self.customer_responsible.phone1
+            )
         else:
             return '%s' % self.safe_translation_getter('long_name', any_language=True)
 
