@@ -9,7 +9,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
-from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
+from parler.models import TranslatableModel, TranslatedFields
 
 import invoice
 import purchase
@@ -25,7 +25,7 @@ class DeliveryBoard(TranslatableModel):
 
     delivery_point = models.ForeignKey(
         'LUT_DeliveryPoint', verbose_name=_("delivery point"),
-        null=True, blank=True, db_index=True, on_delete=models.PROTECT)
+        db_index=True, on_delete=models.PROTECT)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME)
     delivery_date = models.DateField(_("delivery date"), blank=True, null=True, db_index=True)
@@ -72,30 +72,29 @@ class DeliveryBoard(TranslatableModel):
             )
 
     def get_delivery_display(self, admin=False):
-        try:
-            short_name = "%s" % self.delivery_point.short_name
-        except (TranslationDoesNotExist, AttributeError):
-            short_name = EMPTY_STRING
+        short_name = "%s" % self.delivery_point.safe_translation_getter(
+            'short_name', any_language=True, default=EMPTY_STRING
+        )
         if admin:
             if self.delivery_date is not None:
-                label = mark_safe('%s <font color="green">%s</font>' % (
-                    self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), short_name))
+                label = '%s <font color="green">%s</font>' % (
+                    self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), short_name
+                )
             else:
-                label = mark_safe('<font color="green">%s</font>' % short_name)
+                label = '<font color="green">%s</font>' % short_name
         else:
-            try:
-                if self.delivery_comment != EMPTY_STRING:
-                    comment = "%s " % self.delivery_comment
-                else:
-                    comment = EMPTY_STRING
-            except TranslationDoesNotExist:
-                comment = EMPTY_STRING
+            comment = self.safe_translation_getter(
+                'delivery_comment', any_language=True, default=EMPTY_STRING
+            )
             if self.delivery_date is not None:
-                label = mark_safe('%s %s%s' % (
-                    self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE), comment, short_name))
+                label = '%s %s%s' % (
+                    self.delivery_date.strftime(settings.DJANGO_SETTINGS_DATE),
+                    "%s " % comment if comment else EMPTY_STRING,
+                    short_name
+                )
             else:
-                label = mark_safe('%s%s' % (comment, short_name))
-        return label
+                label = '%s%s' % (comment, short_name)
+        return mark_safe(label)
 
     def get_delivery_status_display(self):
         return "%s - %s" % (self, self.get_status_display())

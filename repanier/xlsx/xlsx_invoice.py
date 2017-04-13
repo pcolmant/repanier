@@ -48,7 +48,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
             balance_before = customer_invoice.previous_balance.amount
             bank_amount_in = customer_invoice.bank_amount_in.amount
             bank_amount_out = customer_invoice.bank_amount_out.amount
-            if customer_invoice.customer_id == customer_invoice.customer_who_pays_id:
+            if customer_invoice.customer_id == customer_invoice.customer_charged_id:
                 prepared = customer_invoice.get_total_price_with_tax().amount
             balance_after = customer_invoice.balance.amount
         else:
@@ -90,7 +90,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
     producer_set = Producer.objects.filter(producerinvoice__isnull=False).distinct()
     for producer in producer_set:
-        bank_amount_in = bank_amount_out = payment = DECIMAL_ZERO
+        bank_amount_in = bank_amount_out = DECIMAL_ZERO
         prepared = DECIMAL_ZERO
         producer_invoice = ProducerInvoice.objects.filter(
             producer_id=producer.id,
@@ -335,58 +335,3 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                             c.value = group_label
                             c.style.font.bold = True
     return wb
-
-
-def admin_export_permanences_invoices_report(request, permanence_qs):
-    wb = None
-    first = True
-    for permanence in permanence_qs:
-        if first:
-            wb = export_bank(permanence=permanence, wb=wb, sheet_name=slugify(permanence))
-        wb = export_invoice(permanence=permanence, wb=wb, sheet_name=slugify(permanence))
-        if first:
-            wb = export_permanence_stock(permanence=permanence, wb=wb, ws_customer_title=None)
-            first = False
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            slugify(_("Accounting report")),
-            repanier.apps.REPANIER_SETTINGS_GROUP_NAME
-        )
-        wb.save(response)
-        return response
-    return None
-
-
-def admin_export_customer_invoices_report(request, customer_qs, year):
-    # To the customer we speak of "invoice".
-    # This is the detail of the invoice, i.e. sold products
-    wb = None
-    for customer in customer_qs:
-        wb = export_invoice(year=year, customer=customer, wb=wb, sheet_name=slugify(customer))
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            "%s %s" % (_('Invoice'), year),
-            repanier.apps.REPANIER_SETTINGS_GROUP_NAME
-        )
-        wb.save(response)
-        return response
-    return None
-
-
-def admin_export_producer_invoices_report(request, producer_qs, year):
-    # To the producer we speak of "payment".
-    # This is the detail of the payment to the producer, i.e. received products
-    wb = None
-    for producer in producer_qs:
-        wb = export_invoice(year=year, producer=producer, wb=wb, sheet_name=slugify(producer))
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            "%s %s" % (_('Payment'), year),
-            repanier.apps.REPANIER_SETTINGS_GROUP_NAME
-        )
-        wb.save(response)
-        return response
-    return None

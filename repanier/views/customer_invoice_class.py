@@ -41,7 +41,7 @@ class CustomerInvoiceView(DetailView):
             context['customer'] = customer
         else:
             customer_invoice = self.get_object()
-            bank_account_set = BankAccount.objects.filter(customer_invoice=customer_invoice)
+            bank_account_set = BankAccount.objects.filter(customer_invoice=customer_invoice).order_by("operation_date")
             context['bank_account_set'] = bank_account_set
             if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                 context['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = True
@@ -58,7 +58,7 @@ class CustomerInvoiceView(DetailView):
                 ).order_by("offer_item__translations__order_sort_order")
             context['purchase_set'] = purchase_set
             purchase_by_other_set = Purchase.objects.filter(
-                customer_who_pays_id=customer_invoice.customer_id,
+                customer_charged_id=customer_invoice.customer_id,
                 permanence_id=customer_invoice.permanence_id,
                 offer_item__translations__language_code=translation.get_language()
             ).exclude(

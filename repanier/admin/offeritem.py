@@ -163,6 +163,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
     def save_model(self, request, offer_item, form, change):
         super(OfferItemClosedAdmin, self).save_model(
             request, offer_item, form, change)
-        offer_item.product.stock = offer_item.stock
-        offer_item.product.save(update_fields=['stock'])
-        update_offer_item(product_id=offer_item.product_id)
+        if offer_item.product_id is not None:
+            offer_item.product.stock = offer_item.stock
+            offer_item.product.save(update_fields=['stock'])
+            update_offer_item(product_id=offer_item.product_id)

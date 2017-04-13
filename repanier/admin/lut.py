@@ -145,7 +145,7 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
                 # also responsible for collecting the payments.
                 # The LUT_DeliveryPoint.price_list_multiplier will be used when invoicing the consumer responsible
                 # The link between the customer invoice and this customer responsible is made with
-                # CustomerInvoice.customer_who_pays
+                # CustomerInvoice.customer_charged
                 Customer.objects.filter(delivery_point=self.instance.id).update(price_list_multiplier=DECIMAL_ONE)
 
         return instance

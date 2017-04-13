@@ -34,7 +34,7 @@ class PermanenceMenu(Menu):
         submenu_id = master_id
 
         separator = False
-        permanence_board_set = PermanenceBoard.objects.filter(permanence__status__lte=PERMANENCE_WAIT_FOR_DONE).only(
+        permanence_board_set = PermanenceBoard.objects.filter(permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED).only(
             "id").order_by('?')
         if permanence_board_set.exists():
             submenu_id += 1
@@ -76,7 +76,7 @@ class PermanenceMenu(Menu):
                 break
         if displayed_permanence_counter < 4:
             max_counter = 4 - displayed_permanence_counter
-            for permanence in Permanence.objects.filter(status__in=[PERMANENCE_DONE, PERMANENCE_ARCHIVED]) \
+            for permanence in Permanence.objects.filter(status__in=[PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]) \
                     .only("id", "permanence_date") \
                     .order_by('-permanence_date'):
                 if permanence.permanence_date >= (

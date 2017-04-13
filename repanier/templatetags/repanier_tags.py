@@ -22,7 +22,7 @@ def repanier_display_languages(*args, **kwargs):
     from django.conf import settings
     if len(settings.LANGUAGES) > 1:
         return "yes"
-    return None
+    return
 
 
 @register.simple_tag(takes_context=False)

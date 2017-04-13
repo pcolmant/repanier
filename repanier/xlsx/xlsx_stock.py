@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponse
 from django.utils import translation
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
 from openpyxl.style import Fill
@@ -17,7 +15,6 @@ from repanier.const import *
 from repanier.models import OfferItem, Product
 from repanier.tools import update_offer_item, next_row
 from repanier.xlsx.import_tools import get_row, get_header
-from repanier.xlsx.views import import_xslx_view
 
 
 def export_permanence_stock(permanence, deliveries_id=None, customer_price=False, wb=None, ws_customer_title=None):
@@ -104,7 +101,11 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                     while offer_item is not None and producer_save.id == offer_item.producer_id \
                             and department_for_customer_save__id == offer_item.department_for_customer_id:
                         if len(offer_item.reference) < 36:
-                            offer_item_reference = offer_item.reference
+                            if offer_item.reference.isdigit():
+                                # Avoid display of exponent by Excel
+                                offer_item_reference = '[%s]' % offer_item.reference
+                            else:
+                                offer_item_reference = offer_item.reference
                             show_column_reference = True
                         else:
                             offer_item_reference = EMPTY_STRING
@@ -354,7 +355,11 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 c = ws.cell(row=row_num, column=1)
                 c.value = "%s" % product.producer
                 if len(product.reference) < 36:
-                    product_reference = product.reference
+                    if product.reference.isdigit():
+                        # Avoid display of exponent by Excel
+                        product_reference = '[%s]' % product.reference
+                    else:
+                        product_reference = product.reference
                     show_column_reference = True
                 else:
                     product_reference = EMPTY_STRING
@@ -417,21 +422,6 @@ def export_producer_stock(producers, customer_price=False, wb=None):
     return wb
 
 
-def admin_export(request, queryset):
-    wb = export_producer_stock(producers=queryset.filter(
-        Q(manage_replenishment=True) | Q(manage_production=True)
-    ).order_by("short_profile_name"), wb=None)
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
-            slugify(_("Current stock"))
-        )
-        wb.save(response)
-        return response
-    else:
-        return None
-
-
 @transaction.atomic
 def import_producer_stock(worksheet, producers=None):
     error = False
@@ -455,17 +445,17 @@ def import_producer_stock(worksheet, producers=None):
                 update_offer_item(product_id=product_id)
                 row_num += 1
                 row = get_row(worksheet, header, row_num)
-            except KeyError, e:
+            except KeyError as e:
                 # Missing field
                 error = True
                 error_msg = _("Row %(row_num)d : A required column is missing.") % {'row_num': row_num + 1}
-            except Exception, e:
+            except Exception as e:
                 error = True
                 error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
     return error, error_msg
 
 
-def handle_uploaded_file(request, producers, file_to_import):
+def handle_uploaded_stock(request, producers, file_to_import):
     error = False
     error_msg = None
     wb = load_workbook(file_to_import)
@@ -479,7 +469,3 @@ def handle_uploaded_file(request, producers, file_to_import):
             if error:
                 error_msg = cap("%s" % _('Current stock'), 31) + " > " + error_msg
     return error, error_msg
-
-
-def admin_import(admin_ui, admin, request, queryset, action):
-    return import_xslx_view(admin_ui, admin, request, queryset, _("Import stock"), handle_uploaded_file, action=action)

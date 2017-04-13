@@ -96,7 +96,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                 else:
                     if customer is None:
                         purchases = Purchase.objects.filter(
-                            permanence__status__gte=PERMANENCE_DONE,
+                            permanence__status__gte=PERMANENCE_INVOICED,
                             permanence_date__year=year,
                             producer_id=producer.id,
                             offer_item__translations__language_code=translation.get_language()
@@ -108,7 +108,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         ).iterator()
                     else:
                         purchases = Purchase.objects.filter(
-                            permanence__status__gte=PERMANENCE_DONE,
+                            permanence__status__gte=PERMANENCE_INVOICED,
                             permanence_date__year=year,
                             customer_id=customer.id,
                             producer_id=producer.id,
@@ -283,7 +283,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                 else:
                     if customer is None:
                         purchases = Purchase.objects.filter(
-                            permanence__status__gte=PERMANENCE_DONE,
+                            permanence__status__gte=PERMANENCE_INVOICED,
                             permanence_date__year=year,
                             producer_id=producer.id,
                             offer_item__translations__language_code=translation.get_language()
@@ -296,7 +296,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         ).iterator()
                     else:
                         purchases = Purchase.objects.filter(
-                            permanence__status__gte=PERMANENCE_DONE,
+                            permanence__status__gte=PERMANENCE_INVOICED,
                             permanence_date__year=year,
                             customer_id=customer.id,
                             producer_id=producer.id,
@@ -506,20 +506,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
     return wb
 
 
-def admin_export_permanence_by_producer(request, permanence):
-    wb = export_purchase(permanence=permanence, wb=None)
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            slugify(_("Invoices")),
-            slugify(permanence)
-        )
-        wb.save(response)
-        return response
-    else:
-        return None
-
-
 @transaction.atomic
 def import_purchase_sheet(worksheet, permanence=None,
                           customer_2_id_dict=None,
@@ -610,8 +596,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                                 offer_item.save()
                                 recalculate_order_amount(
                                     permanence_id=offer_item.permanence_id,
-                                    offer_item_queryset=OfferItem.objects.filter(id=offer_item.id).order_by('?'),
-                                    send_to_producer=False
+                                    offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?'),
                                 )
                     purchase.comment = comment
                     purchase.save()
@@ -659,12 +644,12 @@ def import_purchase_sheet(worksheet, permanence=None,
                 row_num += 1
                 row = get_row(worksheet, header, row_num)
 
-            except KeyError, e:
+            except KeyError as e:
                 # Missing field
                 error = True
                 error_msg = _("Row %(row_num)d : A required column is missing %(error_msg)s.") % {
                     'row_num': row_num + 1, 'error_msg': str(e)}
-            except Exception, e:
+            except Exception as e:
                 error = True
                 error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
     if import_counter == 0:
@@ -673,7 +658,7 @@ def import_purchase_sheet(worksheet, permanence=None,
     return error, error_msg
 
 
-def handle_uploaded_file(request, permanences, file_to_import):
+def handle_uploaded_purchase(request, permanences, file_to_import):
     error = False
     error_msg = None
     wb = load_workbook(file_to_import)
@@ -707,8 +692,3 @@ def handle_uploaded_file(request, permanences, file_to_import):
             error = True
             error_msg = _("The permanence doesn't exists.")
     return error, error_msg
-
-
-def admin_import(admin_ui, admin, request, queryset, action):
-    return import_xslx_view(admin_ui, admin, request, queryset[:1], _("Import orders prepared"), handle_uploaded_file,
-                            action=action)

@@ -32,7 +32,7 @@ class AjaxPictureField(Field):
         """Returns field's value prepared for saving into a database."""
         # Need to convert File objects provided via a form to unicode for database insertion
         if value is None:
-            return None
+            return
         return str(value)
 
     def get_internal_type(self):

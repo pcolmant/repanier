@@ -76,7 +76,6 @@ class Producer(models.Model):
     producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
     producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
     sort_products_by_reference = models.BooleanField(_("sort products by reference"), default=False)
-    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_BANK_NOTE, default=False)
 
     price_list_multiplier = models.DecimalField(
         _("price_list_multiplier"),
@@ -101,15 +100,16 @@ class Producer(models.Model):
         _("represent_this_buyinggroup"), default=False)
     is_active = models.BooleanField(_("is_active"), default=True)
 
+    def get_negative_balance(self):
+        return - self.balance
+
     def get_products(self):
-        link = EMPTY_STRING
-        if self.id:
-            # This producer may have product's list
-            changeproductslist_url = urlresolvers.reverse(
-                'admin:repanier_product_changelist',
-            )
-            link = '<a href="%s?is_active__exact=1&producer=%s" class="addlink">&nbsp;%s</a>' \
-                   % (changeproductslist_url, str(self.id), _("his_products"))
+        # This producer may have product's list
+        changeproductslist_url = urlresolvers.reverse(
+            'admin:repanier_product_changelist',
+        )
+        link = '<a href="%s?is_active__exact=1&producer=%s" class="btn addlink">&nbsp;%s</a>' \
+               % (changeproductslist_url, str(self.id), _("his_products"))
         return link
 
     get_products.short_description = (_("link to his products"))
@@ -131,50 +131,46 @@ class Producer(models.Model):
 
     def get_admin_balance(self):
         if self.id is not None:
-            result_set = bankaccount.BankAccount.objects.filter(
-                producer_id=self.id, producer_invoice__isnull=True
-            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
-            if result_set["bank_amount_in__sum"] is not None:
-                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
-            else:
-                bank_in = REPANIER_MONEY_ZERO
-            if result_set["bank_amount_out__sum"] is not None:
-                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-            else:
-                bank_out = REPANIER_MONEY_ZERO
-            bank_not_invoiced = bank_out - bank_in
-            result_set = invoice.ProducerInvoice.objects.filter(
-                producer_id=self.id,
-                status=PERMANENCE_SEND
-            ).order_by('?').aggregate(Sum('total_price_with_tax'))
-            if result_set["total_price_with_tax__sum"] is not None:
-                payment_needed = RepanierMoney(result_set["total_price_with_tax__sum"])
-            else:
-                payment_needed = REPANIER_MONEY_ZERO
-            return self.balance - bank_not_invoiced + payment_needed
+            return self.balance - self.get_bank_not_invoiced() + self.get_order_not_invoiced()
         else:
             return REPANIER_MONEY_ZERO
 
     get_admin_balance.short_description = (_("balance"))
     get_admin_balance.allow_tags = False
 
-    def get_calculated_invoiced_balance(self, permanence_id):
-        # print('------------------ get_calculated_invoiced_balance')
+    def get_order_not_invoiced(self):
+        result_set = invoice.ProducerInvoice.objects.filter(
+            producer_id=self.id,
+            status__gte=PERMANENCE_OPENED,
+            status__lte=PERMANENCE_SEND
+        ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
+        if result_set["total_price_with_tax__sum"] is not None:
+            order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+        else:
+            order_not_invoiced = REPANIER_MONEY_ZERO
+        if result_set["delta_price_with_tax__sum"] is not None:
+            order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
+        if result_set["delta_transport__sum"] is not None:
+            order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
+        return order_not_invoiced
+
+    def get_bank_not_invoiced(self):
         result_set = bankaccount.BankAccount.objects.filter(
-            producer_id=self.id, producer_invoice__isnull=True, permanence__isnull=True
+            producer_id=self.id, producer_invoice__isnull=True
         ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
         if result_set["bank_amount_in__sum"] is not None:
             bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
         else:
             bank_in = REPANIER_MONEY_ZERO
-        # print("bank_in %f" % bank_in)
         if result_set["bank_amount_out__sum"] is not None:
             bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
         else:
             bank_out = REPANIER_MONEY_ZERO
-        # print("bank_out %f" % bank_out)
-        bank_not_invoiced = bank_out - bank_in
-        # print("bank_not_invoiced %f" % bank_not_invoiced)
+        bank_not_invoiced = bank_in - bank_out
+        return bank_not_invoiced
+
+    def get_calculated_invoiced_balance(self, permanence_id):
+        bank_not_invoiced = self.get_bank_not_invoiced()
         # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
         result_set = offeritem.OfferItem.objects.filter(
@@ -232,33 +228,35 @@ class Producer(models.Model):
         last_producer_invoice_set = invoice.ProducerInvoice.objects.filter(
             producer_id=self.id, invoice_sort_order__isnull=False
         ).order_by('?')
+
+        # label = "%s, %s, %s, %s" % (self.balance, self.get_bank_not_invoiced(), self.get_order_not_invoiced(), self.get_admin_balance())
         balance = self.get_admin_balance()
         if last_producer_invoice_set.exists():
             if balance.amount < 0:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
-                           '<span style="color:#298A08">%s</span>' % (balance,)) + '</a>'
+                    self.id) + '" class="btn" target="_blank" >' + (
+                           '<span style="color:#298A08">%s</span>' % (-balance,)) + '</a>'
             elif balance.amount == 0:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
-                           '<span style="color:#32CD32">%s</span>' % (balance,)) + '</a>'
+                    self.id) + '" class="btn" target="_blank" >' + (
+                           '<span style="color:#32CD32">%s</span>' % (-balance,)) + '</a>'
             elif balance.amount > 30:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
-                           '<span style="color:red">%s</span>' % (balance,)) + '</a>'
+                    self.id) + '" class="btn" target="_blank" >' + (
+                           '<span style="color:red">%s</span>' % (-balance,)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" target="_blank" >' + (
-                           '<span style="color:#696969">%s</span>' % (balance,)) + '</a>'
+                    self.id) + '" class="btn" target="_blank" >' + (
+                           '<span style="color:#696969">%s</span>' % (-balance,)) + '</a>'
         else:
             if balance.amount < 0:
-                return '<span style="color:#298A08">%s</span>' % (balance,)
+                return '<span style="color:#298A08">%s</span>' % (-balance,)
             elif balance.amount == 0:
-                return '<span style="color:#32CD32">%s</span>' % (balance,)
+                return '<span style="color:#32CD32">%s</span>' % (-balance,)
             elif balance.amount > 30:
-                return '<span style="color:red">%s</span>' % (balance,)
+                return '<span style="color:red">%s</span>' % (-balance,)
             else:
-                return '<span style="color:#696969">%s</span>' % (balance,)
+                return '<span style="color:#696969">%s</span>' % (-balance,)
 
     get_balance.short_description = _("balance")
     get_balance.allow_tags = True

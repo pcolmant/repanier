@@ -25,17 +25,14 @@ def send_pre_open_order(permanence_id):
         permanence = Permanence.objects.get(id=permanence_id)
         config = Configuration.objects.get(id=DECIMAL_ONE)
 
-        try:
-            offer_producer_mail = config.offer_producer_mail
-        except TranslationDoesNotExist:
-            offer_producer_mail = EMPTY_STRING
+        offer_producer_mail = config.safe_translation_getter(
+            'offer_producer_mail', any_language=True, default=EMPTY_STRING
+        )
 
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
-        try:
-            offer_description = permanence.offer_description
-        except TranslationDoesNotExist:
-            offer_description = EMPTY_STRING
-        # offer_producer_mail_subject = "%s - %s - %s" % (_("Pre-opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME)
+        offer_description = permanence.safe_translation_getter(
+            'offer_description', any_language=True, default=EMPTY_STRING
+        )
         offer_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
         template = Template(offer_producer_mail)
@@ -108,15 +105,12 @@ def send_open_order(permanence_id):
                 to_email_customer.append(customer.user.email)
                 if customer.email2 is not None and len(customer.email2.strip()) > 0:
                     to_email_customer.append(customer.email2)
-            try:
-                offer_description = permanence.offer_description
-            except TranslationDoesNotExist:
-                offer_description = EMPTY_STRING
-            try:
-                offer_customer_mail = config.offer_customer_mail
-            except TranslationDoesNotExist:
-                offer_customer_mail = EMPTY_STRING
-            # offer_customer_mail_subject = "%s - %s - %s" % (_("Opening of orders"), permanence, REPANIER_SETTINGS_GROUP_NAME)
+            offer_description = permanence.safe_translation_getter(
+                'offer_description', any_language=True, default=EMPTY_STRING
+            )
+            offer_customer_mail = config.safe_translation_getter(
+                'offer_customer_mail', any_language=True, default=EMPTY_STRING
+            )
             offer_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
             offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
             qs = OfferItem.objects.filter(

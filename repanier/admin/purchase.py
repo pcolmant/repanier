@@ -157,7 +157,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     list_display_links = ('offer_item',)
     search_fields = ('offer_item__translations__long_name',)
     actions = []
-    change_list_template = 'admin/purchase_change_list.html'
+    # change_list_template = 'admin/purchase_change_list.html'
 
     def __init__(self, model, admin_site):
         super(PurchaseAdmin, self).__init__(model, admin_site)

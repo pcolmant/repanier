@@ -1,27 +1,43 @@
+from django.http import Http404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 from rest_framework import serializers
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-from repanier.const import PERMANENCE_PRE_OPEN, PERMANENCE_SEND
+from repanier.const import PERMANENCE_OPENED
 from repanier.models import Permanence, OfferItem
 from repanier.rest.view import JSONResponse
 
 
-class PermanenceSerializer(serializers.ModelSerializer):
-    producers_name = serializers.StringRelatedField(source='producers', read_only=True, many=True)
+class PermanenceSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    name = serializers.ReadOnlyField()
+    status_code = serializers.ReadOnlyField()
+    status = serializers.ReadOnlyField()
+    producers = serializers.RelatedField(read_only=True)
 
-    class Meta:
-        model = Permanence
-        fields = (
-            'id',
-            '__str__',
-            'status',
-            'get_status_display',
-            'producers_name'
-        )
+    def to_representation(self, obj):
+        return {
+            'id'         : obj.id,
+            'name'       : str(obj),
+            'status_code': obj.status,
+            'status'     : obj.get_status_display(),
+            'producers'  : list(obj.producers.values_list('short_profile_name', flat=True))
+        }
 
 
-class OfferItemSerializer(serializers.ModelSerializer):
+@csrf_exempt
+@require_GET
+def permanences_rest(request):
+    permanences = Permanence.objects.filter(status=PERMANENCE_OPENED)
+    serializer = PermanenceSerializer(permanences, many=True)
+    return JSONResponse(serializer.data)
+
+
+class OfferItemSerializer(serializers.Serializer):
+
     class Meta:
         model = OfferItem
         fields = (
@@ -35,47 +51,29 @@ class OfferItemSerializer(serializers.ModelSerializer):
 
 
 @csrf_exempt
-def permanences_rest(request):
-    """
-    List all code snippets, or create a new snippet.
-    """
-    if request.method == 'GET':
-        permanences = Permanence.objects.filter(status__gte=PERMANENCE_PRE_OPEN, status__lte=PERMANENCE_SEND)
-        serializer = PermanenceSerializer(permanences, many=True)
+@require_GET
+def permanence_producer_rest(request, permanence_id, producer_name):
+    offer_item = OfferItem.objects.filter(
+        permanence_id=permanence_id,
+        producer__short_profile_name=producer_name.decode('unicode-escape'),
+        status=PERMANENCE_OPENED
+    ).order_by('?')
+    if offer_item.exists():
+        serializer = OfferItemSerializer(offer_item, many=True)
         return JSONResponse(serializer.data)
-    return HttpResponse(status=400)
 
 
 @csrf_exempt
-def permanence_producer_rest(request, permanence_id, short_profile_name):
+def permanence_producer_product_rest(request, permanence_id, producer_name, reference):
     """
     Retrieve, update or delete a code snippet.
     """
     if request.method == 'GET':
         offer_item = OfferItem.objects.filter(
             permanence_id=permanence_id,
-            producer__short_profile_name=short_profile_name.decode('unicode-escape'),
-            permanence__status__gte=PERMANENCE_PRE_OPEN,
-            permanence__status__lte=PERMANENCE_SEND
-        ).order_by('?')
-        if offer_item.exists():
-            serializer = OfferItemSerializer(offer_item, many=True)
-            return JSONResponse(serializer.data)
-    return HttpResponse(status=404)
-
-
-@csrf_exempt
-def permanence_producer_product_rest(request, permanence_id, short_profile_name, reference):
-    """
-    Retrieve, update or delete a code snippet.
-    """
-    if request.method == 'GET':
-        offer_item = OfferItem.objects.filter(
-            permanence_id=permanence_id,
-            producer__short_profile_name=short_profile_name.decode('unicode-escape'),
+            producer__short_profile_name=producer_name.decode('unicode-escape'),
             reference=reference.decode('unicode-escape'),
-            permanence__status__gte=PERMANENCE_PRE_OPEN,
-            permanence__status__lte=PERMANENCE_SEND
+            status=PERMANENCE_OPENED
         ).order_by('?')
         if offer_item.exists():
             serializer = OfferItemSerializer(offer_item)

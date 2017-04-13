@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_DONE, PERMANENCE_OPENED, DECIMAL_ONE, \
+from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_OPENED, DECIMAL_ONE, \
     PERMANENCE_CLOSED, REPANIER_MONEY_ZERO, EMPTY_STRING
 from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, OfferItem, \
     ProducerInvoice, Purchase
@@ -56,7 +56,7 @@ def order_init_ajax(request):
                         permanence_id=permanence.id,
                         customer_id=customer.id,
                         status=permanence.status,
-                        customer_who_pays_id=customer.id,
+                        customer_charged_id=customer.id,
                     )
                     customer_invoice.set_delivery(delivery=None)
                     customer_invoice.save()
@@ -144,7 +144,7 @@ def order_init_ajax(request):
                         now = timezone.now()
                         permanence_boards = PermanenceBoard.objects.filter(
                             customer_id=customer.id, permanence_date__gte=now,
-                            permanence__status__lte=PERMANENCE_WAIT_FOR_DONE
+                            permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
                         ).order_by("permanence_date")[:2]
                         is_staff = Staff.objects.filter(
                             customer_responsible_id=customer.id

@@ -14,20 +14,23 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.forms import Textarea
+from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLS
 from import_export.widgets import CharWidget
 
+import repanier.apps
 from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models import Customer, LUT_DeliveryPoint
-from repanier.xlsx import xlsx_invoice
 from repanier.xlsx.widget import IdWidget, OneToOneWidget, \
     DecimalBooleanWidget, ZeroDecimalsWidget, TwoMoneysWidget, TranslatedForeignKeyWidget, DateWidgetExcel
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
+from repanier.xlsx.xlsx_invoice import export_invoice
 
 
 class UserDataForm(forms.ModelForm):
@@ -215,8 +218,20 @@ class CustomerResource(resources.ModelResource):
 
 def create__customer_action(year):
     def action(modeladmin, request, customer_qs):
-        # return xlsx_purchase.admin_export_year_by_customer(year, customer_qs)
-        return xlsx_invoice.admin_export_customer_invoices_report(request, customer_qs, year)
+        # To the customer we speak of "invoice".
+        # This is the detail of the invoice, i.e. sold products
+        wb = None
+        for customer in customer_qs:
+            wb = export_invoice(year=year, customer=customer, wb=wb, sheet_name=slugify(customer))
+        if wb is not None:
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
+                "%s %s" % (_('Invoice'), year),
+                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+            )
+            wb.save(response)
+            return response
+        return
 
     name = "export_producer_%d" % (year,)
     return (name, (action, name, _("Export purchases of %s") % (year,)))
@@ -293,6 +308,14 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         this_year = timezone.now().year
         actions.update(OrderedDict(create__customer_action(y) for y in [this_year, this_year - 1, this_year - 2]))
         return actions
+
+    def get_list_display(self, request):
+        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+            return ('short_basket_name', 'get_balance', 'may_order', 'long_basket_name', 'phone1', 'get_email',
+                    'get_last_login', 'valid_email')
+        else:
+            return ('short_basket_name', 'may_order', 'long_basket_name', 'phone1', 'get_email',
+                    'get_last_login', 'valid_email')
 
     def get_fieldsets(self, request, customer=None):
         fields_basic = [

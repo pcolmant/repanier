@@ -60,9 +60,6 @@ class OfferItem(TranslatableModel):
         verbose_name=_("department_for_customer"), blank=True, null=True, on_delete=models.PROTECT)
     producer = models.ForeignKey(
         'Producer', verbose_name=_("producer"), on_delete=models.PROTECT)
-    producer_invoice = models.ForeignKey(
-        'ProducerInvoice', verbose_name=_("producer_invoice"),
-        blank=True, null=True, on_delete=models.PROTECT, db_index=True)
 
     order_unit = models.CharField(
         max_length=3,
@@ -236,15 +233,23 @@ class OfferItem(TranslatableModel):
         invoiced_qty, taken_from_stock, customer_qty = self.get_producer_qty_stock_invoiced()
         return invoiced_qty
 
-    def get_producer_price_invoiced(self):
-        if self.manage_replenishment:
-            invoiced_qty, taken_from_stock, customer_qty = self.get_producer_qty_stock_invoiced()
-            if self.price_list_multiplier < DECIMAL_ONE:
-                return RepanierMoney((self.customer_unit_price.amount + self.unit_deposit.amount) * invoiced_qty, 2)
-            else:
-                return RepanierMoney((self.producer_unit_price.amount + self.unit_deposit.amount) * invoiced_qty, 2)
+    def get_producer_unit_price_invoiced(self):
+        if self.producer_unit_price.amount > self.customer_unit_price.amount:
+            return self.customer_unit_price
         else:
-            return self.total_selling_with_tax
+            return self.producer_unit_price
+
+    def get_producer_row_price_invoiced(self):
+        if self.manage_replenishment:
+            if self.producer_unit_price.amount > self.customer_unit_price.amount:
+                return RepanierMoney((self.customer_unit_price.amount + self.unit_deposit.amount) * self.get_producer_qty_invoiced(), 2)
+            else:
+                return RepanierMoney((self.producer_unit_price.amount + self.unit_deposit.amount) * self.get_producer_qty_invoiced(), 2)
+        else:
+            if self.producer_unit_price.amount > self.customer_unit_price.amount:
+                return self.total_selling_with_tax
+            else:
+                return self.total_purchase_with_tax
 
     def get_html_producer_price_purchased(self):
         if self.manage_replenishment:
@@ -410,25 +415,16 @@ def offer_item_pre_save(sender, **kwargs):
             offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
             offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
         ):
-            if offer_item.producer_invoice is None:
-                producer_invoice = invoice.ProducerInvoice.objects.filter(
-                    permanence_id=offer_item.permanence_id,
-                    producer_id=offer_item.producer_id).only("id").order_by('?').first()
-                if producer_invoice is not None:
-                    offer_item.producer_invoice = producer_invoice
-                else:
-                    offer_item.producer_invoice = invoice.ProducerInvoice.objects.create(
-                        permanence_id=offer_item.permanence_id,
-                        producer_id=offer_item.producer_id,
-                        status=offer_item.permanence.status
-                    )
             previous_producer_price = ((offer_item.previous_producer_unit_price +
                                         offer_item.previous_unit_deposit) * offer_item.previous_add_2_stock)
             producer_price = ((offer_item.producer_unit_price.amount +
                                offer_item.unit_deposit.amount) * offer_item.add_2_stock)
             delta_add_2_stock_invoiced = offer_item.add_2_stock - offer_item.previous_add_2_stock
             delta_producer_price = producer_price - previous_producer_price
-            invoice.ProducerInvoice.objects.filter(id=offer_item.producer_invoice_id).update(
+            invoice.ProducerInvoice.objects.filter(
+                producer_id=offer_item.producer_id,
+                permanence_id=offer_item.permanence_id
+            ).update(
                 total_price_with_tax=F('total_price_with_tax') +
                                      delta_producer_price
             )

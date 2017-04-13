@@ -16,7 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         translation.activate(settings.LANGUAGE_CODE)
         for permanence in Permanence.objects.filter(
-            id__in=[1, 2],
+            id__in=[1, 2, 3],
             # status__lte=PERMANENCE_SEND
             # id__gte=11,
             # id__lte=16

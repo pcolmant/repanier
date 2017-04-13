@@ -35,9 +35,8 @@ class CloseAndSendOrderForm(forms.Form):
 
 
 class GeneratePermanenceForm(forms.Form):
-    repeat_counter = forms.DecimalField(label=_("Number of permanence(s)"), min_value=0, max_value=54, decimal_places=0)
-    repeat_step = forms.DecimalField(label=_("Number of week(s) between two permanences"), min_value=0, max_value=12,
-                                     decimal_places=0)
+    repeat_counter = forms.IntegerField(label=_("Number of permanence(s)"), min_value=0, max_value=54)
+    repeat_step = forms.IntegerField(label=_("Number of week(s) between two permanences"), min_value=0, max_value=12)
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)

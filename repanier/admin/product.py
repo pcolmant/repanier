@@ -276,7 +276,7 @@ class ProductDataForm(TranslatableModelForm):
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     form = ProductDataForm
     resource_class = ProductResource
-    list_display = ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'producer_unit_price',
+    list_display = ('producer', 'department_for_customer', 'get_long_name', 'get_is_into_offer', 'producer_unit_price',
                     'get_customer_alert_order_quantity', 'stock')
     list_display_links = ('get_long_name',)
     readonly_fields = ('is_updated_on',)
@@ -297,7 +297,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                    'limit_order_quantity_to_stock',
                    ProductFilterByVatLevel)
     actions = [
-        'flip_flop_select_for_offer_status',
+        # 'flip_flop_select_for_offer_status',
         'duplicate_product'
     ]
 
@@ -328,13 +328,13 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return None
-        product = queryset.order_by('?').first()
+            return
+        product = queryset.first()
         if product is None or product.is_box:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         if 'apply' in request.POST:
             if "producers" in request.POST:
                 producers = request.POST.getlist("producers")
@@ -343,11 +343,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     if producer is not None:
                         user_message, user_message_level = task_product.admin_duplicate(queryset, producer)
                         self.message_user(request, user_message, user_message_level)
-                    return None
+                    return
             user_message = _("You must select one and only one producer.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         return render(
             request,
             'repanier/confirm_admin_duplicate_product.html', {
@@ -367,27 +367,51 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             producer = producer_queryset.first()
         else:
             producer = None
-        if producer is not None:
-            if producer.producer_pre_opening:
+
+        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
+            if producer is not None:
+                if producer.producer_pre_opening:
+                    self.list_editable = ('producer_unit_price', 'stock')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
+                            'producer_unit_price',
+                            'stock')
+                elif producer.manage_replenishment or producer.manage_production:
+                    self.list_editable = ('producer_unit_price', 'stock')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity', 'stock')
+                else:
+                    self.list_editable = ('producer_unit_price',)
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity')
+            else:
                 self.list_editable = ('producer_unit_price', 'stock')
-                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
-                        'producer_unit_price',
-                        'stock')
-            elif producer.manage_replenishment or producer.manage_production:
-                self.list_editable = ('producer_unit_price', 'stock')
-                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
+                return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
                         'producer_unit_price',
                         'get_customer_alert_order_quantity', 'stock')
-            else:
-                self.list_editable = ('producer_unit_price',)
-                return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
-                        'producer_unit_price',
-                        'get_customer_alert_order_quantity')
         else:
-            self.list_editable = ('producer_unit_price', 'stock')
-            return ('is_into_offer', 'producer', 'department_for_customer', 'get_long_name', 'language_column',
-                    'producer_unit_price',
-                    'get_customer_alert_order_quantity', 'stock')
+            if producer is not None:
+                if producer.producer_pre_opening:
+                    self.list_editable = ('producer_unit_price', 'stock')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
+                            'producer_unit_price',
+                            'stock')
+                elif producer.manage_replenishment or producer.manage_production:
+                    self.list_editable = ('producer_unit_price', 'stock')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity', 'stock')
+                else:
+                    self.list_editable = ('producer_unit_price',)
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity')
+            else:
+                self.list_editable = ('producer_unit_price', 'stock')
+                return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
+                        'producer_unit_price',
+                        'get_customer_alert_order_quantity', 'stock')
 
     def get_form(self, request, product=None, **kwargs):
         department_for_customer_id = None

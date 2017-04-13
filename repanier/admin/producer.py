@@ -7,7 +7,10 @@ from django import forms
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
+from django.db.models import Q
+from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
@@ -21,10 +24,13 @@ from repanier.models import Permanence, Product, \
     Producer
 from repanier.tools import producer_web_services_activated, \
     update_offer_item
-from repanier.xlsx import xlsx_stock, xlsx_invoice, xlsx_product
 from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
     DecimalBooleanWidget, TwoMoneysWidget, DateWidgetExcel
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
+from repanier.xlsx.views import import_xslx_view
+from repanier.xlsx.xlsx_invoice import export_invoice
+from repanier.xlsx.xlsx_product import export_customer_prices
+from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stock
 
 try:
     from urllib.parse import parse_qsl
@@ -89,8 +95,20 @@ class ProducerResource(resources.ModelResource):
 
 def create__producer_action(year):
     def action(modeladmin, request, producer_qs):
-        # return xlsx_purchase.admin_export_year_by_producer(year, queryset)
-        return xlsx_invoice.admin_export_producer_invoices_report(request, producer_qs, year)
+        # To the producer we speak of "payment".
+        # This is the detail of the payment to the producer, i.e. received products
+        wb = None
+        for producer in producer_qs:
+            wb = export_invoice(year=year, producer=producer, wb=wb, sheet_name=slugify(producer))
+        if wb is not None:
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
+                "%s %s" % (_('Payment'), year),
+                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+            )
+            wb.save(response)
+            return response
+        return
 
     name = "export_producer_%d" % (year,)
     return (name, (action, name, _("Export purchases of %s") % (year,)))
@@ -216,7 +234,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     actions = [
         'export_xlsx_customer_prices',
     ]
-    change_list_template = 'admin/producer_change_list.html'
+    # change_list_template = 'admin/producer_change_list.html'
 
     def has_delete_permission(self, request, producer=None):
         if request.user.groups.filter(
@@ -247,18 +265,40 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return my_urls + urls
 
     def export_xlsx_customer_prices(self, request, producer_qs):
-        return xlsx_product.admin_export_customer_prices(producer_qs, producer_prices=False)
+        wb = export_customer_prices(producer_qs=producer_qs, wb=None, producer_prices=False)
+        if wb is not None:
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
+                slugify(_("Products"))
+            )
+            wb.save(response)
+            return response
+        else:
+            return
 
     export_xlsx_customer_prices.short_description = _(
         "Export products of selected producer(s) as XSLX file at customer's prices")
 
     def export_xlsx_stock(self, request):
-        return xlsx_stock.admin_export(self, Producer.objects.all())
+        # return xlsx_stock.admin_export(self, Producer.objects.all())
+        wb = export_producer_stock(producers=Producer.objects.filter(
+            Q(manage_replenishment=True) | Q(manage_production=True)
+        ).order_by("short_profile_name"), wb=None)
+        if wb is not None:
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
+                slugify(_("Current stock"))
+            )
+            wb.save(response)
+            return response
+        else:
+            return
 
     export_xlsx_stock.short_description = _("Export stock to a xlsx file")
 
     def import_xlsx_stock(self, request):
-        return xlsx_stock.admin_import(self, admin, request, Producer.objects.all(), action='import_xlsx_stock')
+        return import_xslx_view(self, admin, request, Producer.objects.all(), _("Import stock"), handle_uploaded_stock, action='import_xlsx_stock')
+        # return xlsx_stock.admin_import(self, admin, request, Producer.objects.all(), action='import_xlsx_stock')
 
     import_xlsx_stock.short_description = _("Import stock from a xlsx file")
 
@@ -269,7 +309,10 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return actions
 
     def get_list_display(self, request):
-        return ('__str__', 'get_products', 'get_balance', 'phone1', 'email')
+        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+            return ('__str__', 'get_products', 'get_balance', 'phone1', 'email')
+        else:
+            return ('__str__', 'get_products', 'phone1', 'email')
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [

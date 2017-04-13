@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from os import sep as os_sep
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin import TabularInline
@@ -180,6 +181,12 @@ class BoxAdmin(TranslatableAdmin):
     def has_change_permission(self, request, box=None):
         return self.has_delete_permission(request, box)
 
+    def get_list_display(self, request):
+        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
+            return ('is_into_offer', 'get_long_name', 'language_column')
+        else:
+            return ('is_into_offer', 'get_long_name')
+
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_box.flip_flop_is_into_offer(queryset)
 
@@ -191,17 +198,17 @@ class BoxAdmin(TranslatableAdmin):
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return None
-        box = queryset.order_by('?').first()
+            return
+        box = queryset.first()
         if box is None:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         if 'apply' in request.POST:
             user_message, user_message_level = task_box.admin_duplicate(queryset)
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         return render(
             request,
             'repanier/confirm_admin_duplicate_box.html', {

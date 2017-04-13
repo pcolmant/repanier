@@ -11,7 +11,7 @@ from repanier.rest.permanence import permanences_rest, permanence_producer_produ
 from repanier.rest.producer import producers_list, producer_detail
 from repanier.rest.product import products_rest, product_rest
 from repanier.rest.version import version_rest
-from repanier.views.basket_message_form_ajax import basket_message_form_ajax
+from repanier.views.basket_message_form_ajax import customer_basket_message_form_ajax, producer_basket_message_form_ajax
 from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
 from repanier.views.customer_invoice_class import CustomerInvoiceView
 from repanier.views.customer_name_ajax import customer_name_ajax
@@ -39,6 +39,7 @@ from repanier.views.send_mail_to_all_members_view import send_mail_to_all_member
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
 from repanier.views.who_is_who_view import who_is_who_view
 from repanier.views.display_status_ajax import display_status
+from repanier.views.is_into_offer_ajax import is_into_offer
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -94,7 +95,8 @@ urlpatterns = [
     url(r'^ajax/order-select/$', order_select_ajax, name='order_select_ajax'),
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),
     url(r'^ajax/permanence/$', permanence_form_ajax, name='permanence_form_ajax'),
-    url(r'^ajax/basket-message/(?P<customer_id>\d+)/$', basket_message_form_ajax, name='basket_message_form_ajax'),
+    url(r'^ajax/customer-basket-message/(?P<pk>\d+)/$', customer_basket_message_form_ajax, name='customer_basket_message_form_ajax'),
+    url(r'^ajax/producer-basket-message/(?P<pk>\d+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', producer_basket_message_form_ajax, name='producer_basket_message_form_ajax'),
     url(r'^ajax/customer-product-description/$', customer_product_description_ajax,
         name='customer_product_description_ajax'),
     url(
@@ -110,7 +112,7 @@ urlpatterns = [
     url(r'^ajax/btn-confirm-order/$', btn_confirm_order_ajax, name='btn_confirm_order_ajax'),
     url(r'^ajax/display-status/(?P<permanence_id>\d+)/$', display_status, name='display_status'),
     url(r'^ajax/like/$', like_ajax, name='like_ajax'),
-
+    url(r'^ajax/is-into-offer/(?P<product_id>\d+)/$', is_into_offer, name='is_into_offer'),
     url(r'^permanence/$', login_required(never_cache(PermanenceView.as_view())), name='permanence_view'),
     url(r'^customer-invoice/(?P<pk>[0-9]+)/$', login_required(CustomerInvoiceView.as_view()),
         name='customer_invoice_view'),

@@ -6,15 +6,22 @@ import datetime
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Sum
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 import purchase
-from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
+from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
 import producer
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
+
+
+def permanence_verbose_name():
+    if DJANGO_IS_MIGRATION_RUNNING:
+        return EMPTY_STRING
+    from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
+    return lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
 
 
 @python_2_unicode_compatible
@@ -22,12 +29,8 @@ class CustomerInvoice(models.Model):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("customer"),
         on_delete=models.PROTECT)
-    customer_who_pays = models.ForeignKey(
-        'Customer', verbose_name=_("customer"), related_name='invoices_paid', blank=True, null=True,
-        on_delete=models.PROTECT, db_index=True)
-
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        'Permanence', verbose_name=permanence_verbose_name(),
         on_delete=models.PROTECT, db_index=True)
     delivery = models.ForeignKey(
         'DeliveryBoard', verbose_name=_("delivery board"),
@@ -106,6 +109,15 @@ class CustomerInvoice(models.Model):
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
+    customer_charged = models.ForeignKey(
+        'Customer', verbose_name=_("customer"),
+        related_name='invoices_paid',
+        on_delete=models.PROTECT, db_index=True)
+    master_permanence = models.ForeignKey(
+        'Permanence', verbose_name=_("master permanence"),
+        related_name='child_customer_invoice',
+        blank=True, null=True, default=None,
+        on_delete=models.PROTECT, db_index=True)
 
     def get_delta_price_with_tax(self):
         return self.delta_price_with_tax.amount
@@ -116,14 +128,14 @@ class CustomerInvoice(models.Model):
     def get_abs_delta_vat(self):
         return abs(self.delta_vat)
 
-    def get_total_price_with_tax(self, customer_who_pays=False):
-        if self.customer_id == self.customer_who_pays_id:
+    def get_total_price_with_tax(self, customer_charged=False):
+        if self.customer_id == self.customer_charged_id:
             return self.total_price_with_tax + self.delta_price_with_tax + self.delta_transport
         else:
-            if self.status < PERMANENCE_DONE or not customer_who_pays:
+            if self.status < PERMANENCE_INVOICED or not customer_charged:
                 return self.total_price_with_tax
             else:
-                return self.customer_who_pays if self.total_price_with_tax != DECIMAL_ZERO else DECIMAL_ZERO
+                return self.customer_charged if self.total_price_with_tax != DECIMAL_ZERO else DECIMAL_ZERO
 
     def get_total_price_wo_tax(self):
         return self.get_total_price_with_tax() - self.get_total_tax()
@@ -146,62 +158,54 @@ class CustomerInvoice(models.Model):
             delivery_point = delivery.delivery_point
 
         if delivery_point is None:
-            self.customer_who_pays = self.customer
+            self.customer_charged = self.customer
             self.price_list_multiplier = DECIMAL_ONE
             self.transport = REPANIER_SETTINGS_TRANSPORT
             self.min_transport = REPANIER_SETTINGS_MIN_TRANSPORT
         else:
             customer_responsible = delivery_point.customer_responsible
             if customer_responsible is None:
-                self.customer_who_pays = self.customer
+                self.customer_charged = self.customer
                 self.price_list_multiplier = delivery_point.price_list_multiplier
                 self.transport = delivery_point.transport
                 self.min_transport = delivery_point.min_transport
             else:
-                self.customer_who_pays = customer_responsible
-                self.price_list_multiplier = delivery_point.price_list_multiplier
+                self.customer_charged = customer_responsible
+                self.price_list_multiplier = DECIMAL_ONE
                 self.transport = REPANIER_MONEY_ZERO
                 self.min_transport = REPANIER_MONEY_ZERO
                 if self.customer_id != customer_responsible.id:
-                    customer_invoice_who_pays = CustomerInvoice.objects.filter(
+                    customer_invoice_charged = CustomerInvoice.objects.filter(
                         permanence_id=self.permanence_id,
                         customer_id=customer_responsible.id
-                    ).order_by('?').first()
-                    if customer_invoice_who_pays is None:
+                    ).order_by('?')
+                    if not customer_invoice_charged.exists():
                         CustomerInvoice.objects.create(
                             permanence_id=self.permanence_id,
                             customer_id=customer_responsible.id,
                             status=self.status,
-                            customer_who_pays_id=customer_responsible.id,
+                            customer_charged_id=customer_responsible.id,
                             price_list_multiplier=delivery_point.price_list_multiplier,
                             transport=delivery_point.transport,
                             min_transport=delivery_point.min_transport,
                             is_order_confirm_send=True
                         )
-                    else:
-                        # TODO : May be removed after migration
-                        customer_invoice_who_pays.price_list_multiplier = delivery_point.price_list_multiplier
-                        customer_invoice_who_pays.transport = delivery_point.transport
-                        customer_invoice_who_pays.min_transport = delivery_point.min_transport
-                        customer_invoice_who_pays.is_order_confirm_send = True
-                        customer_invoice_who_pays.save()
-                        # EOF TODO
 
     @transaction.atomic
     def confirm_order(self):
         purchase.Purchase.objects.filter(
             customer_invoice__id=self.id
         ).update(quantity_confirmed=F('quantity_ordered'))
-        getcontext().rounding = ROUND_HALF_UP
+        self.calculate_and_save_delta_buyinggroup()
+        self.is_order_confirm_send = True
+
+    @transaction.atomic
+    def calculate_and_save_delta_buyinggroup(self):
         producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
             producer__represent_this_buyinggroup=True,
             permanence_id=self.permanence_id,
         ).order_by('?').first()
-        if producer_invoice_buyinggroup is not None:
-            producer_invoice_buyinggroup.delta_price_with_tax.amount -= self.delta_price_with_tax.amount
-            producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
-            producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
-        else:
+        if producer_invoice_buyinggroup is None:
             producer_buyinggroup = producer.Producer.objects.filter(
                 represent_this_buyinggroup=True
             ).order_by('?').first()
@@ -210,6 +214,44 @@ class CustomerInvoice(models.Model):
                 permanence_id=self.permanence_id,
                 status=self.permanence.status
             )
+        else:
+            producer_invoice_buyinggroup.delta_price_with_tax.amount -= self.delta_price_with_tax.amount
+            producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
+            producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
+
+        self.calculate_delta_price()
+        self.calculate_delta_transport()
+        self.save()
+
+        producer_invoice_buyinggroup.delta_price_with_tax.amount += self.delta_price_with_tax.amount
+        producer_invoice_buyinggroup.delta_vat.amount += self.delta_vat.amount
+        producer_invoice_buyinggroup.delta_transport.amount += self.delta_transport.amount
+
+        producer_invoice_buyinggroup.save()
+
+    def calculate_delta_price(self):
+        getcontext().rounding = ROUND_HALF_UP
+
+        result_set = purchase.Purchase.objects.filter(
+            permanence_id=self.permanence_id,
+            customer_id=self.customer_id
+        ).order_by('?').aggregate(
+            Sum('customer_vat'),
+            Sum('deposit'),
+            Sum('selling_price')
+        )
+        if result_set["customer_vat__sum"] is not None:
+            self.total_vat.amount = result_set["customer_vat__sum"]
+        else:
+            self.total_vat.amount = DECIMAL_ZERO
+        if result_set["deposit__sum"] is not None:
+            self.total_deposit.amount = result_set["deposit__sum"]
+        else:
+            self.total_deposit.amount = DECIMAL_ZERO
+        if result_set["selling_price__sum"] is not None:
+            self.total_price_with_tax.amount = result_set["selling_price__sum"]
+        else:
+            self.total_price_with_tax.amount = DECIMAL_ZERO
 
         if self.price_list_multiplier != DECIMAL_ONE:
             total_price_with_tax_wo_deposit = self.total_price_with_tax.amount - self.total_deposit.amount
@@ -227,60 +269,41 @@ class CustomerInvoice(models.Model):
             self.delta_price_with_tax.amount = DECIMAL_ZERO
             self.delta_vat.amount = DECIMAL_ZERO
 
-        self.calculate_transport()
+    def calculate_delta_transport(self):
 
-        delta = self.delta_price_with_tax.amount + self.delta_vat.amount + self.delta_transport.amount
-        if delta != DECIMAL_ZERO:
-            producer_invoice_buyinggroup.delta_price_with_tax.amount += self.delta_price_with_tax.amount
-            producer_invoice_buyinggroup.delta_vat.amount += self.delta_vat.amount
-            producer_invoice_buyinggroup.delta_transport.amount += self.delta_transport.amount
+        self.delta_transport.amount = DECIMAL_ZERO
+        if self.master_permanence_id is None and self.transport.amount != DECIMAL_ZERO:
+            # Calculate transport only on master customer invoice
+            # But take into account the children customer invoices
+            result_set = CustomerInvoice.objects.filter(
+                master_permanence=self.permanence
+            ).order_by('?').aggregate(
+                Sum('total_price_with_tax'),
+                Sum('delta_price_with_tax')
+            )
+            if result_set["total_price_with_tax__sum"] is not None:
+                sum_total_price_with_tax = result_set["total_price_with_tax__sum"]
+            else:
+                sum_total_price_with_tax = DECIMAL_ZERO
+            if result_set["delta_price_with_tax__sum"] is not None:
+                sum_delta_price_with_tax = result_set["delta_price_with_tax__sum"]
+            else:
+                sum_delta_price_with_tax = DECIMAL_ZERO
 
-        producer_invoice_buyinggroup.save()
+            sum_total_price_with_tax += self.total_price_with_tax.amount
+            sum_delta_price_with_tax += self.delta_price_with_tax.amount
 
-        self.is_order_confirm_send = True
-
-    def calculate_transport(self):
-        total_price_with_tax = self.total_price_with_tax + self.delta_price_with_tax
-        if self.transport.amount != DECIMAL_ZERO \
-                and total_price_with_tax != DECIMAL_ZERO:
-            if self.min_transport.amount == DECIMAL_ZERO:
-                self.delta_transport.amount = self.transport.amount
-            elif total_price_with_tax < self.min_transport.amount:
-                self.delta_transport.amount = min(
-                    self.min_transport.amount - total_price_with_tax,
-                    self.transport.amount
-                )
-        else:
-            self.delta_transport.amount = DECIMAL_ZERO
+            total_price_with_tax = sum_total_price_with_tax + sum_delta_price_with_tax
+            if total_price_with_tax != DECIMAL_ZERO:
+                if self.min_transport.amount == DECIMAL_ZERO:
+                    self.delta_transport.amount = self.transport.amount
+                elif total_price_with_tax < self.min_transport.amount:
+                    self.delta_transport.amount = min(
+                        self.min_transport.amount - total_price_with_tax,
+                        self.transport.amount
+                    )
 
     def cancel_confirm_order(self):
-
-        if self.delta_price_with_tax.amount != DECIMAL_ZERO \
-                or self.delta_vat.amount != DECIMAL_ZERO\
-                or self.delta_transport.amount != DECIMAL_ZERO:
-
-            producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
-                producer__represent_this_buyinggroup=True,
-                permanence_id=self.permanence_id,
-            ).order_by('?').first()
-            if producer_invoice_buyinggroup is None:
-                producer_buyinggroup = producer.Producer.objects.filter(
-                    represent_this_buyinggroup=True
-                ).order_by('?').first()
-                producer_invoice_buyinggroup = ProducerInvoice.objects.create(
-                    producer_id=producer_buyinggroup.id,
-                    permanence_id=self.permanence_id,
-                    status=self.permanence.status
-                )
-            producer_invoice_buyinggroup.delta_price_with_tax.amount -= self.delta_price_with_tax.amount
-            producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
-            producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
-            producer_invoice_buyinggroup.save()
-
-            self.delta_price_with_tax.amount = DECIMAL_ZERO
-            self.delta_vat.amount = DECIMAL_ZERO
-            self.delta_transport = DECIMAL_ZERO
-
         if self.is_order_confirm_send:
             # Change of confirmation status
             self.is_order_confirm_send = False
@@ -288,6 +311,15 @@ class CustomerInvoice(models.Model):
         else:
             # No change of confirmation status
             return False
+
+    def create_child(self, new_permanence):
+        return CustomerInvoice.objects.create(
+            permanence_id=new_permanence.id,
+            customer_id=self.customer_id,
+            master_permanence_id=self.permanence_id,
+            customer_charged_id=self.customer_id,
+            status=self.status
+        )
 
     def __str__(self):
         return '%s, %s' % (self.customer, self.permanence)
@@ -304,16 +336,13 @@ class ProducerInvoice(models.Model):
         'Producer', verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        'Permanence', verbose_name=permanence_verbose_name(),
         on_delete=models.PROTECT, db_index=True)
     status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
         verbose_name=_("invoice_status"))
-    invoice_sort_order = models.IntegerField(
-        _("invoice sort order"),
-        default=None, blank=True, null=True, db_index=True)
     date_previous_balance = models.DateField(
         _("date_previous_balance"), default=datetime.date.today)
     previous_balance = ModelMoneyField(
@@ -326,14 +355,6 @@ class ProducerInvoice(models.Model):
     total_vat = ModelMoneyField(
         _("Total vat"),
         help_text=_('Vat part of the total purchased'),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    total_profit_with_tax = ModelMoneyField(
-        _("Total profit vat included"),
-        help_text=_('Difference between purchase and selling price'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    total_profit_vat = ModelMoneyField(
-        _("Total profit vat"),
-        help_text=_('Vat part of the profit'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_deposit = ModelMoneyField(
         _("deposit"),
@@ -379,13 +400,23 @@ class ProducerInvoice(models.Model):
         _("deposit"),
         help_text=_('deposit to add'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+
+    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_BANK_NOTE, default=False)
     calculated_invoiced_balance = ModelMoneyField(
         _("calculated balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_BANK_NOTE, default=False)
     to_be_invoiced_balance = ModelMoneyField(
         _("balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+    invoice_sort_order = models.IntegerField(
+        _("invoice sort order"),
+        default=None, blank=True, null=True, db_index=True)
     invoice_reference = models.CharField(
         _("invoice reference"), max_length=100, null=True, blank=True)
+
+    def get_negative_previous_balance(self):
+        return - self.previous_balance
+
+    def get_negative_balance(self):
+        return - self.balance
 
     def get_delta_price_with_tax(self):
         return self.delta_price_with_tax.amount
@@ -420,7 +451,7 @@ class CustomerProducerInvoice(models.Model):
         'Producer', verbose_name=_("producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT,
+        'Permanence', verbose_name=permanence_verbose_name(), on_delete=models.PROTECT,
         db_index=True)
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(

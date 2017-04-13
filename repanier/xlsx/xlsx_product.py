@@ -71,15 +71,3 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
         product = next_row(products)
     return wb
 
-
-def admin_export_customer_prices(producer_qs, producer_prices=True):
-    wb = export_customer_prices(producer_qs=producer_qs, wb=None, producer_prices=producer_prices)
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
-            slugify(_("Products"))
-        )
-        wb.save(response)
-        return response
-    else:
-        return None

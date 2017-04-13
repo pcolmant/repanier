@@ -1,12 +1,8 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-import json
-
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404
 from django.http import HttpResponse
-from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 

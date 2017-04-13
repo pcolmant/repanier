@@ -161,9 +161,7 @@ def common_to_pre_open_and_open(permanence_id):
         .order_by('?').update(is_active=False, may_order=False)
     # 11 - Calculate the Purchase 'sum' for each customer
     recalculate_order_amount(
-        permanence_id=permanence_id,
-        all_producers=True,
-        send_to_producer=False
+        permanence_id=permanence_id
     )
     return permanence
 
@@ -403,13 +401,6 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
                                                     represent_this_buyinggroup=False).order_by('?'):
                 permanence.producers.add(offer_item.producer_id)
                 create_or_update_one_purchase(customer, offer_item, q_order=1, batch_job=True, is_box_content=False)
-    # 6 - Refresh the Purchase 'sum'
-    recalculate_order_amount(
-        permanence_id=permanence.id,
-        all_producers=all_producers,
-        producers_id=producers_id,
-        send_to_producer=False
-    )
     delivery.set_status(PERMANENCE_CLOSED, all_producers, producers_id)
 
 
@@ -545,24 +536,17 @@ def close_order(permanence, all_producers, producers_id=None):
                 permanence.set_status(PERMANENCE_ARCHIVED, update_payment_date=True)
     else:
         permanence.set_status(PERMANENCE_CLOSED, all_producers=all_producers, producers_id=producers_id)
-    # 6 - Refresh the Purchase 'sum' for each customer
-    recalculate_order_amount(
-        permanence_id=permanence.id,
-        all_producers=all_producers,
-        producers_id=producers_id,
-        send_to_producer=False,
-    )
 
 
 @transaction.atomic
 def send_order(permanence, all_producers, producers_id=None, deliveries_id=None):
-    getcontext().rounding = ROUND_HALF_UP
-    recalculate_order_amount(
-        permanence_id=permanence.id,
-        all_producers=all_producers,
-        producers_id=producers_id,
-        send_to_producer=True
-    )
+    # getcontext().rounding = ROUND_HALF_UP
+    # recalculate_order_amount(
+    #     permanence_id=permanence.id,
+    #     all_producers=all_producers,
+    #     producers_id=producers_id,
+    #     send_to_producer=True
+    # )
     try:
         email_order.email_order(permanence.id, all_producers, closed_deliveries_id=deliveries_id, producers_id=producers_id)
     except Exception as error_str:

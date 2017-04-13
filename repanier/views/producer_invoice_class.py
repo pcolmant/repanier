@@ -32,7 +32,7 @@ class ProducerInvoiceView(DetailView):
             raise Http404
         else:
             producer_invoice = self.get_object()
-            bank_account_set = BankAccount.objects.filter(producer_invoice=producer_invoice)
+            bank_account_set = BankAccount.objects.filter(producer_invoice=producer_invoice).order_by("operation_date")
             context['bank_account_set'] = bank_account_set
             offer_item_set = OfferItem.objects.filter(
                 permanence_id=producer_invoice.permanence_id,
@@ -82,7 +82,7 @@ class ProducerInvoiceView(DetailView):
                 except:
                     raise Http404
             else:
-                return ProducerInvoice.objects.none()
+                raise Http404
         pk = self.kwargs.get('pk', None)
         if (pk is None) or (pk == '0'):
             last_producer_invoice = ProducerInvoice.objects.filter(

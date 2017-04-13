@@ -361,9 +361,13 @@ def configuration_post_save(sender, **kwargs):
                 BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
                                            operation_date=timezone.now().date())
             else:
-                BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
-                                           operation_date=bank_account.operation_date + datetime.timedelta(
-                                               days=-1))
+                if bank_account.producer is None and bank_account.customer is None:
+                    bank_account.operation_status = BANK_LATEST_TOTAL
+                    bank_account.save(update_fields=['operation_status'])
+                else:
+                    BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
+                                               operation_date=bank_account.operation_date + datetime.timedelta(
+                                                   days=-1))
 
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:

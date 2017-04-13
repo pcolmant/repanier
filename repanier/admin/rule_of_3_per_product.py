@@ -412,8 +412,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
         recalculate_order_amount(
             permanence_id=offer_item.permanence_id,
-            offer_item_queryset=OfferItem.objects.filter(id=offer_item.id).order_by('?'),
-            send_to_producer=False
+            offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?')
         )
 
         if offer_item.manage_replenishment:

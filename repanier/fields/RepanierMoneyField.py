@@ -189,7 +189,7 @@ class MoneyFieldProxy(object):
     def _money_from_obj(self, obj):
         amount = obj.__dict__[self.field.name]
         if amount is None:
-            return None
+            return
         return RepanierMoney(amount=amount, decimal_places=self.field.decimal_places)
 
     def __get__(self, obj, type=None):

@@ -512,34 +512,34 @@ CMS_TEMPLATES = (
     ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
 )
 
-if DJANGO_SETTINGS_LANGUAGE == 'fr':
+# if DJANGO_SETTINGS_LANGUAGE == 'fr':
 
-    LANGUAGE_CODE = 'fr'
-    LANGUAGES = [
-        ('fr', get_language_info('fr')['name_local']),
-    ]
-    CMS_LANGUAGES = {
-        SITE_ID: [
-            {
-            'code': 'fr',
-            'name': get_language_info('fr')['name'],
-            'public': True,
-            'hide_untranslated': False,
-            },
-        ]
-    }
-    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
-    PARLER_LANGUAGES = {
-        SITE_ID: (
-            {'code': LANGUAGE_CODE,},
-        ),
-        'default': {
-            'fallbacks'        : [LANGUAGE_CODE],
-            'hide_untranslated': False,
+LANGUAGE_CODE = 'fr'
+LANGUAGES = [
+    ('fr', get_language_info('fr')['name_local']),
+]
+CMS_LANGUAGES = {
+    SITE_ID: [
+        {
+        'code': 'fr',
+        'name': get_language_info('fr')['name'],
+        'public': True,
+        'hide_untranslated': False,
         },
-    }
+    ]
+}
+PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+PARLER_LANGUAGES = {
+    SITE_ID: (
+        {'code': LANGUAGE_CODE,},
+    ),
+    'default': {
+        'fallbacks'        : [LANGUAGE_CODE],
+        'hide_untranslated': False,
+    },
+}
 
-elif DJANGO_SETTINGS_LANGUAGE == 'es':
+if DJANGO_SETTINGS_LANGUAGE == 'es':
 
     LANGUAGE_CODE = 'es'
     LANGUAGES = [
@@ -645,6 +645,7 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
         },
     }
 
+DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 ##################### DJANGOCMS-CASCADE
 CMSPLUGIN_CASCADE_PLUGINS = (
     'cmsplugin_cascade.generic',

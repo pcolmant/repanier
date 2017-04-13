@@ -158,7 +158,7 @@ class OrderView(ListView):
                     id=self.box_id,
                     permanence_id=self.permanence.id, is_active=True,
                 ).order_by('?').first()
-                if offer_item is not None:
+                if offer_item is not None and offer_item.product_id is not None:
                     box_id = offer_item.product_id
                 else:
                     # A bot is back

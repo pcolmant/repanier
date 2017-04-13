@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.mail import EmailMessage
 from django.http import Http404
-from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.html import strip_tags
@@ -17,15 +16,12 @@ from django.views.decorators.csrf import csrf_protect
 from djng.forms import NgFormValidationMixin
 from djng.forms.field_mixins import EmailFieldMixin, CharFieldMixin, MultipleChoiceFieldMixin
 from djng.styling.bootstrap3.field_mixins import BooleanFieldMixin
-from djng.styling.bootstrap3.widgets import CheckboxSelectMultiple
-from parler.models import TranslationDoesNotExist
 
 from repanier.const import EMPTY_STRING
 from repanier.models import Staff
 from repanier.tools import send_email
 from repanier.views.forms import RepanierForm
 from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidget
-# from repanier.widget.checkbox import CheckboxWidget
 
 
 class DjngBooleanField(BooleanFieldMixin, forms.BooleanField):
@@ -63,10 +59,9 @@ class CoordinatorsContactForm(RepanierForm):
         ):
             r = staff.customer_responsible
             if r is not None:
-                try:
-                    sender_function = staff.long_name
-                except TranslationDoesNotExist:
-                    sender_function = EMPTY_STRING
+                sender_function = staff.safe_translation_getter(
+                    'long_name', any_language=True, default=EMPTY_STRING
+                )
                 phone = " (%s)" % r.phone1 if r.phone1 else EMPTY_STRING
                 name = r.long_basket_name if r.long_basket_name else r.short_basket_name
                 signature = "<b>%s</b> : %s%s" % (sender_function, name, phone)
@@ -96,7 +91,7 @@ def send_mail_to_coordinators_view(request):
             for staff in Staff.objects.filter(is_active=True, is_contributor=False, id__in=selected_staff_members).order_by('?'):
                 to_email_staff.append(staff.user.email)
 
-            if len(to_email_staff) > 0:
+            if to_email_staff:
                 to_email_customer = [request.user.email]
                 email = EmailMessage(
                     strip_tags(form.cleaned_data.get('subject')),

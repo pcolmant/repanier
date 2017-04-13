@@ -117,7 +117,7 @@ class ConfigurationAdmin(TranslatableAdmin):
         permanence = Permanence.objects.all().order_by('?')
         is_coordinator = request.user.is_superuser or request.user.is_staff
 
-        if is_coordinator or permanence.first() is None:
+        if is_coordinator or not permanence.exists():
             return []
         else:
             return ['bank_account']

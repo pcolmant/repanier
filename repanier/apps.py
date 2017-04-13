@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import time
 
+import sys
 from django.apps import AppConfig
 from django.conf import settings
 from django.db import connection
@@ -12,9 +13,9 @@ from django.utils.translation import ugettext_lazy as _
 REPANIER_SETTINGS_CONFIG = None
 REPANIER_SETTINGS_TEST_MODE = None
 REPANIER_SETTINGS_GROUP_NAME = None
-REPANIER_SETTINGS_PERMANENCE_NAME = None
-REPANIER_SETTINGS_PERMANENCES_NAME = None
-REPANIER_SETTINGS_PERMANENCE_ON_NAME = None
+REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
+REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
+REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence on ")
 REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = None
 REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER = None
 REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER = None
@@ -43,6 +44,7 @@ REPANIER_SETTINGS_CURRENCY_XLSX = None
 REPANIER_SETTINGS_HOME_SITE = None
 REPANIER_SETTINGS_TRANSPORT = None
 REPANIER_SETTINGS_MIN_TRANSPORT = None
+DJANGO_IS_MIGRATION_RUNNING = 'makemigrations' in sys.argv or 'migrate' in sys.argv
 
 
 class RepanierSettings(AppConfig):

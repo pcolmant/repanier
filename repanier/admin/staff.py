@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import uuid
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
@@ -140,6 +141,12 @@ class StaffWithUserDataAdmin(LUTAdmin):
 
     def has_change_permission(self, request, staff=None):
         return self.has_add_permission(request)
+
+    def get_list_display(self, request):
+        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
+            return ('user', 'language_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
+        else:
+            return ('user', 'long_name', 'customer_responsible', 'get_customer_phone1')
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StaffWithUserDataAdmin, self).get_form(request, obj, **kwargs)

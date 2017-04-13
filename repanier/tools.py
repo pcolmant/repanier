@@ -69,7 +69,7 @@ def next_row(query_iterator):
         return next(query_iterator)
     except StopIteration:
         # No rows were found, so do nothing.
-        return None
+        return
 
 
 def emails_of_testers():
@@ -236,10 +236,9 @@ def get_signature(is_reply_to_order_email=False, is_reply_to_invoice_email=False
                 or (is_reply_to_invoice_email and staff.is_reply_to_invoice_email):
             cc_email_staff.append(staff.user.email)
             sender_email = staff.user.email
-            try:
-                sender_function = staff.long_name
-            except TranslationDoesNotExist:
-                sender_function = EMPTY_STRING
+            sender_function = staff.safe_translation_getter(
+                'long_name', any_language=True, default=EMPTY_STRING
+            )
             r = staff.customer_responsible
             if r:
                 if r.long_basket_name:
@@ -318,14 +317,14 @@ def cap(s, l):
         s = s if len(s) <= l else s[0:l - 4] + '...'
         return s
     else:
-        return None
+        return
 
 
 def permanence_ok_or_404(permanence):
     if permanence is None:
         raise Http404
     if permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
-        if permanence.status in [PERMANENCE_DONE, PERMANENCE_ARCHIVED]:
+        if permanence.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             if permanence.permanence_date < (
                         timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)
             ).date():
@@ -533,7 +532,7 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         return display
 
 
-def on_hold_movement_message(customer, bank_not_invoiced=None, order_not_invoiced=None, total_price_with_tax=REPANIER_MONEY_ZERO):
+def customer_on_hold_movement_message(customer, bank_not_invoiced=None, order_not_invoiced=None, total_price_with_tax=REPANIER_MONEY_ZERO):
     # If permanence_id is None, only "customer_on_hold_movement" is calculated
     if customer is None:
         customer_on_hold_movement = EMPTY_STRING
@@ -573,6 +572,45 @@ def on_hold_movement_message(customer, bank_not_invoiced=None, order_not_invoice
     return customer_on_hold_movement
 
 
+def producer_on_hold_movement_message(producer):
+    # If permanence_id is None, only "customer_on_hold_movement" is calculated
+    if producer is None:
+        producer_on_hold_movement = EMPTY_STRING
+    else:
+        if apps.REPANIER_SETTINGS_INVOICE:
+            bank_not_invoiced = producer.get_bank_not_invoiced()
+            order_not_invoiced = producer.get_order_not_invoiced()
+        else:
+            bank_not_invoiced = REPANIER_MONEY_ZERO
+            order_not_invoiced = REPANIER_MONEY_ZERO
+
+        if order_not_invoiced.amount != DECIMAL_ZERO or bank_not_invoiced.amount != DECIMAL_ZERO:
+            if order_not_invoiced.amount != DECIMAL_ZERO:
+                if bank_not_invoiced.amount == DECIMAL_ZERO:
+                    producer_on_hold_movement = \
+                        _('This balance does not take account of any unbilled sales %(other_order)s.') % {
+                            'other_order': order_not_invoiced
+                        }
+                else:
+                    producer_on_hold_movement = \
+                        _(
+                            'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
+                        % {
+                            'bank'       : bank_not_invoiced,
+                            'other_order': order_not_invoiced
+                        }
+            else:
+                producer_on_hold_movement = \
+                    _(
+                        'This balance does not take account of any unrecognized payments %(bank)s.') % {
+                        'bank': bank_not_invoiced
+                    }
+        else:
+            producer_on_hold_movement = EMPTY_STRING
+
+    return producer_on_hold_movement
+
+
 def payment_message(customer, permanence):
     # If permanence_id is None, only "customer_on_hold_movement" is calculated
     customer_last_balance = EMPTY_STRING
@@ -604,15 +642,15 @@ def payment_message(customer, permanence):
             payment_needed = total_price_with_tax
             # other_order_not_invoiced = REPANIER_MONEY_ZERO
 
-        if customer_invoice.customer_id != customer_invoice.customer_who_pays_id:
+        if customer_invoice.customer_id != customer_invoice.customer_charged_id:
             customer_payment_needed = '<font color="#51a351">%s</font>' % (
                 _('Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
-                    'name': customer_invoice.customer_who_pays.long_basket_name
+                    'name': customer_invoice.customer_charged.long_basket_name
                 }
             )
             customer_on_hold_movement = EMPTY_STRING
         else:
-            customer_on_hold_movement = on_hold_movement_message(customer, bank_not_invoiced, order_not_invoiced, total_price_with_tax)
+            customer_on_hold_movement = customer_on_hold_movement_message(customer, bank_not_invoiced, order_not_invoiced, total_price_with_tax)
             if apps.REPANIER_SETTINGS_INVOICE:
                 if customer.balance.amount != DECIMAL_ZERO:
                     if customer.balance.amount < DECIMAL_ZERO:
@@ -658,122 +696,67 @@ def payment_message(customer, permanence):
 
 def recalculate_order_amount(permanence_id,
                              customer_id=None,
-                             offer_item_queryset=None,
-                             all_producers=True,
+                             offer_item_qs=None,
                              producers_id=None,
                              send_to_producer=False,
                              re_init=False):
     if send_to_producer or re_init:
-        if all_producers:
-            models.ProducerInvoice.objects.filter(
-                permanence_id=permanence_id
-            ).update(
-                total_price_with_tax=DECIMAL_ZERO,
-                total_vat=DECIMAL_ZERO,
-                total_deposit=DECIMAL_ZERO,
-                total_profit_with_tax=DECIMAL_ZERO,
-                total_profit_vat=DECIMAL_ZERO
-            )
-            models.CustomerInvoice.objects.filter(
-                permanence_id=permanence_id
-            ).update(
-                total_price_with_tax=DECIMAL_ZERO,
-                total_vat=DECIMAL_ZERO,
-                total_deposit=DECIMAL_ZERO
-            )
-            models.CustomerProducerInvoice.objects.filter(
-                permanence_id=permanence_id
-            ).update(
-                total_purchase_with_tax=DECIMAL_ZERO,
-                total_selling_with_tax=DECIMAL_ZERO
-            )
-            models.OfferItem.objects.filter(
-                permanence_id=permanence_id
-            ).update(
-                quantity_invoiced=DECIMAL_ZERO,
-                total_purchase_with_tax=DECIMAL_ZERO,
-                total_selling_with_tax=DECIMAL_ZERO
-            )
-            for offer_item in models.OfferItem.objects.filter(
-                    permanence_id=permanence_id,
-                    is_active=True,
-                    manage_replenishment=True
-            ).exclude(add_2_stock=DECIMAL_ZERO).order_by('?'):
-                # Recalculate the total_price_with_tax of ProducerInvoice and
-                # the total_purchase_with_tax of OfferItem
-                # taking into account "add_2_stock"
-                offer_item.previous_add_2_stock = DECIMAL_ZERO
-                offer_item.save()
-        else:
-            models.ProducerInvoice.objects.filter(
-                permanence_id=permanence_id, producer_id__in=producers_id
-            ).update(
-                total_price_with_tax=DECIMAL_ZERO,
-                total_vat=DECIMAL_ZERO,
-                total_deposit=DECIMAL_ZERO
-            )
-            for ci in models.CustomerInvoice.objects.filter(
-                    permanence_id=permanence_id):
-                result_set = models.CustomerProducerInvoice.objects.filter(
-                    permanence_id=permanence_id,
-                    customer_id=ci.customer_id,
-                    producer_id__in=producers_id
-                ).order_by('?').aggregate(
-                    Sum('total_selling_with_tax'),
-                )
-                if result_set["total_selling_with_tax__sum"] is not None:
-                    sum_total_selling_with_tax = result_set["total_selling_with_tax__sum"]
-                else:
-                    sum_total_selling_with_tax = DECIMAL_ZERO
-                models.CustomerInvoice.objects.filter(
-                    permanence_id=permanence_id
-                ).update(
-                    total_price_with_tax=F('total_price_with_tax') - sum_total_selling_with_tax
-                )
-            models.CustomerProducerInvoice.objects.filter(
+        models.ProducerInvoice.objects.filter(
+            permanence_id=permanence_id
+        ).update(
+            total_price_with_tax=DECIMAL_ZERO,
+            total_vat=DECIMAL_ZERO,
+            total_deposit=DECIMAL_ZERO,
+        )
+        models.CustomerInvoice.objects.filter(
+            permanence_id=permanence_id
+        ).update(
+            total_price_with_tax=DECIMAL_ZERO,
+            total_vat=DECIMAL_ZERO,
+            total_deposit=DECIMAL_ZERO
+        )
+        models.CustomerProducerInvoice.objects.filter(
+            permanence_id=permanence_id
+        ).update(
+            total_purchase_with_tax=DECIMAL_ZERO,
+            total_selling_with_tax=DECIMAL_ZERO
+        )
+        models.OfferItem.objects.filter(
+            permanence_id=permanence_id
+        ).update(
+            quantity_invoiced=DECIMAL_ZERO,
+            total_purchase_with_tax=DECIMAL_ZERO,
+            total_selling_with_tax=DECIMAL_ZERO
+        )
+        models.Permanence.objects.filter(
+            id=permanence_id
+        ).update(
+            total_profit=DECIMAL_ZERO,
+        )
+        for offer_item in models.OfferItem.objects.filter(
                 permanence_id=permanence_id,
-                producer_id__in=producers_id
-            ).update(
-                total_purchase_with_tax=DECIMAL_ZERO,
-                total_selling_with_tax=DECIMAL_ZERO
-            )
-            models.OfferItem.objects.filter(
-                permanence_id=permanence_id,
-                producer_id__in=producers_id
-            ).update(
-                quantity_invoiced=DECIMAL_ZERO,
-                total_purchase_with_tax=DECIMAL_ZERO,
-                total_selling_with_tax=DECIMAL_ZERO
-            )
-            for offer_item in models.OfferItem.objects.filter(
-                    permanence_id=permanence_id,
-                    producer_id__in=producers_id,
-                    is_active=True,
-                    manage_replenishment=True
-            ).exclude(add_2_stock=DECIMAL_ZERO).order_by('?'):
-                # Recalculate the total_price_with_tax of ProducerInvoice and
-                # the total_purchase_with_tax of OfferItem
-                # taking into account "add_2_stock"
-                offer_item.previous_add_2_stock = DECIMAL_ZERO
-                offer_item.save()
+                is_active=True,
+                manage_replenishment=True
+        ).exclude(add_2_stock=DECIMAL_ZERO).order_by('?'):
+            # Recalculate the total_price_with_tax of ProducerInvoice and
+            # the total_purchase_with_tax of OfferItem
+            # taking into account "add_2_stock"
+            offer_item.previous_add_2_stock = DECIMAL_ZERO
+            offer_item.save()
 
     if customer_id is None:
-        if offer_item_queryset is not None:
+        if offer_item_qs is not None:
             purchase_set = models.Purchase.objects \
-                .filter(permanence_id=permanence_id, offer_item__in=offer_item_queryset) \
+                .filter(permanence_id=permanence_id, offer_item__in=offer_item_qs) \
                 .order_by('?')
         else:
             purchase_set = models.Purchase.objects \
                 .filter(permanence_id=permanence_id) \
                 .order_by('?')
-            if not all_producers:
-                purchase_set = purchase_set.filter(producer_id__in=producers_id)
     else:
         purchase_set = models.Purchase.objects \
             .filter(permanence_id=permanence_id, customer_id=customer_id) \
             .order_by('?')
-        if not all_producers:
-            purchase_set = purchase_set.filter(producer_id__in=producers_id)
 
     for purchase in purchase_set.select_related("offer_item"):
         # Recalcuate the total_price_with_tax of ProducerInvoice,
@@ -1139,7 +1122,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                     customer_id=customer_invoice.customer_id
                 ).order_by('?').update(
                     status=PERMANENCE_CLOSED)
-        if customer_invoice.customer_id != customer_invoice.customer_who_pays_id:
+        if customer_invoice.customer_id != customer_invoice.customer_charged_id:
             msg_price = msg_transport = EMPTY_STRING
         else:
             if customer_invoice.transport.amount <= DECIMAL_ZERO:
@@ -1586,9 +1569,7 @@ def update_offer_item(product_id=None, producer_id=None):
         clean_offer_item(permanence, offer_item_qs)
         recalculate_order_amount(
             permanence_id=permanence.id,
-            offer_item_queryset=offer_item_qs,
-            all_producers=True,
-            send_to_producer=False
+            offer_item_qs=offer_item_qs
         )
     cache.clear()
 
@@ -1763,7 +1744,7 @@ def get_full_status_display(permanence):
         PERMANENCE_WAIT_FOR_OPEN,
         PERMANENCE_WAIT_FOR_CLOSED,
         PERMANENCE_WAIT_FOR_SEND,
-        PERMANENCE_WAIT_FOR_DONE
+        PERMANENCE_WAIT_FOR_INVOICED
     ]
     if permanence.with_delivery_point:
         status_list = []
@@ -1775,7 +1756,7 @@ def get_full_status_display(permanence):
                 PERMANENCE_WAIT_FOR_OPEN,
                 PERMANENCE_WAIT_FOR_CLOSED,
                 PERMANENCE_WAIT_FOR_SEND,
-                PERMANENCE_WAIT_FOR_DONE
+                PERMANENCE_WAIT_FOR_INVOICED
             ]
             if status != delivery.status:
                 status = delivery.status
@@ -1814,3 +1795,4 @@ def get_full_status_display(permanence):
         return mark_safe(msg_html)
     else:
         return mark_safe('<div class="wrap-text">%s</div>' % message)
+

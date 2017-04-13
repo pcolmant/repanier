@@ -5,23 +5,23 @@
     <div class="container">
         <h4>{{ customer.long_basket_name }}</h4>
         {% if object %}
-        {% trans "Previous balance" %} : {{ object.previous_balance }}
-            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br/>
+        <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> {% trans "Previous balance" %} : {{ object.previous_balance }}
+            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br/></h4>
         {%  endif %}
         {% if purchase_set or purchase_by_other_set %}
-            {{ object.permanence }} - {% trans "Purchase(s) :" %} {{ object.get_total_price_with_tax }}
-            {% if object.customer_id != object.customer_who_pays_id %}
+            {% if object.customer_id != object.customer_charged_id %}
+                {% trans "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
                 <br/>
                 {% if object.delivery %}
                     <small>{% trans "Delivery point" %} : {{ object.delivery }}</small><br/>
                 {% endif %}
-                <small>{% trans "Payment centralized by" %} : {{ object.customer_who_pays }}</small><br/>
+                <small>{% trans "Payment centralized by" %} : {{ object.customer_charged }}</small><br/>
             {% else %}
-                {% if object.total_vat != 0 %} = {{ object.get_total_price_wo_tax }} + {{ object.get_total_tax }} {% trans "Vat" %}{% endif %}.
-                <br/>
+                <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% trans "Purchases" %} : {{ object.permanence }} : {{ object.get_total_price_with_tax }}
+                {% if object.total_vat != 0 %} = {{ object.get_total_price_wo_tax }} + {{ object.get_total_tax }} {% trans "Vat" %}{% endif %}
                 {% if object.total_deposit != 0 or object.transport != 0 %}
                     <small>
-                        {% trans "This price include" %}
+                        . {% trans "This price include" %}
                         {% if object.total_deposit != 0 %}
                             {% trans "Deposit" %} : {{ object.total_deposit }}
                         {% endif %}
@@ -29,45 +29,50 @@
                             {% if object.total_deposit != 0 %}; {% endif %}
                             {% trans "Shipping cost" %} : {{ object.delta_transport }}
                         {% endif %}.
-                    </small><br/>
+                    </small>
                 {% endif %}
                 {% if object.delivery %}
-                    <small>{% trans "Delivery point" %} : {{ object.delivery }}</small><br/>
+                    <small>{% trans "Delivery point" %} : {{ object.delivery }}. </small>
                 {% endif %}
                 {% if object.customer.price_list_multiplier != 1 %}
-                    <small>{% trans "Customer price list multiplier" %} : {{ object.customer.price_list_multiplier }}</small><br/>
+                    <small>{% trans "Customer price list multiplier" %} : {{ object.customer.price_list_multiplier }}. </small>
                 {% endif %}
                 {% if object.get_delta_price_with_tax != 0 or object.delta_vat != 0 %}
-                    {% if object.get_delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}
+                    <small>{% if object.get_delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}. </small>
                 {% endif %}
+                <br/>
             {% endif %}
         {% endif %}
         {% for bank_account in bank_account_set %}
             {% if bank_account.bank_amount_in != 0 %}
-                    {% if bank_account.operation_comment %}
-                        {{ bank_account.operation_comment }}
-                    {% else %}
-                        {% trans "Payment" %}
-                    {% endif %} : {{ bank_account.bank_amount_in }}
-                    <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans "Provision" %} :
+                {% if bank_account.operation_comment %}
+                    {{ bank_account.operation_comment }}
+                {% else %}
+                    {% trans "Payment" %}
+                {% endif %} : {{ bank_account.bank_amount_in }}
+                <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small>
+                <br/>
             {% endif %}
             {% if bank_account.bank_amount_out != 0 %}
-                    {% if bank_account.operation_comment %}
-                        {{ bank_account.operation_comment }}
-                    {% else %}
-                        {% trans "Refund" %}
-                    {% endif %} : {{ bank_account.bank_amount_out }}
-                    <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+                <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% trans "Refund" %} :
+                {% if bank_account.operation_comment %}
+                    {{ bank_account.operation_comment }}
+                {% else %}
+                    {% trans "Refund" %}
+                {% endif %} : {{ bank_account.bank_amount_out }}
+                <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small>
+                <br/>
             {% endif %}
         {% endfor %}
         <div class="panel">
 {#            <div class="panel-heading">#}
                 {% if object %}
-                <h4>{% trans "New balance" %} : {{ object.balance }}
+                <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% trans "New balance" %} : {{ object.balance }}
                     <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_customer_invoice_id %} - {% trans "latest invoice" %}{% endif %})</small>
                 </h4>
                 {% else %}
-                <h4>{% trans "New balance" %} : {{ customer.balance }}
+                <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% trans "New balance" %} : {{ customer.balance }}
                     <small>({{ customer.date_balance | date:"DATE_FORMAT" }}{% if not next_customer_invoice_id %} - {% trans "latest invoice" %}{% endif %})</small>
                 </h4>
                 {% endif %}
@@ -266,7 +271,7 @@
     {% if not next_customer_invoice_id %}
     <script type="text/javascript">
         $(document).ready(function () {
-            var lien = '{% url 'basket_message_form_ajax' customer.id %}';
+            var lien = '{% url 'customer_basket_message_form_ajax' customer.id %}';
             $.ajax({
                 url: lien,
                 cache: false,

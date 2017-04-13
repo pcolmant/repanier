@@ -118,17 +118,3 @@ def export_offer_row(product, row_num, ws):
             q_valid = q_valid + q_step
     row_num += 1
     return row_num
-
-
-def admin_export(request, permanence):
-    wb = export_offer(permanence=permanence, wb=None)
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            slugify(_("Preview report")),
-            slugify(permanence)
-        )
-        wb.save(response)
-        return response
-    else:
-        return None

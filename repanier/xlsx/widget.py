@@ -21,7 +21,7 @@ class DecimalBooleanWidget(BooleanWidget):
 
     def clean(self, value, row=None, *args, **kwargs):
         if value == EMPTY_STRING:
-            return None
+            return
         return True if value in self.TRUE_VALUES else False
 
     def render(self, value, obj=None):
@@ -37,7 +37,7 @@ class DecimalsWidget(DecimalWidget):
 
     def clean_quantize(self, value, decimals):
         if self.is_empty(value):
-            return None
+            return
         return Decimal(value).quantize(decimals)
 
     def render_quantize(self, value, decimals):
@@ -113,7 +113,7 @@ class MoneysWidget(DecimalWidget):
 
     def clean_quantize(self, value, decimals):
         if self.is_empty(value):
-            return None
+            return
         return Decimal(value).quantize(decimals)
 
     def render_quantize(self, value, decimals):
@@ -142,7 +142,7 @@ class TranslatedForeignKeyWidget(ForeignKeyWidget):
                 target = self.model.objects.create(**{"%s" % self.field: value})
                 return target
         else:
-            return None
+            return
 
 
 class ProducerNameWidget(ForeignKeyWidget):
@@ -154,7 +154,7 @@ class ProducerNameWidget(ForeignKeyWidget):
                 target = self.model.objects.filter(**{"bank_account": value}).order_by('?').first()
             return target
         else:
-            return None
+            return
 
 
 class CustomerNameWidget(ForeignKeyWidget):
@@ -168,7 +168,7 @@ class CustomerNameWidget(ForeignKeyWidget):
                     target = self.model.objects.filter(**{"bank_account2": value}).order_by('?').first()
             return target
         else:
-            return None
+            return
 
 
 class TranslatedManyToManyWidget(ManyToManyWidget):
@@ -271,7 +271,7 @@ class DateWidgetExcel(Widget):
 
     def clean(self, value, row=None, *args, **kwargs):
         if not value:
-            return None
+            return
         if isinstance(value, datetime.datetime):
             # Data comes from Excel
             return value.date()

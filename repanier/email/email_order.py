@@ -14,7 +14,7 @@ from repanier.models import Permanence, Configuration, CustomerInvoice
 from repanier.models import PermanenceBoard
 from repanier.models import Producer, ProducerInvoice
 from repanier.tools import *
-from repanier.xlsx import xlsx_order, xlsx_stock
+from repanier.xlsx.xlsx_order import generate_customer_xlsx
 
 
 def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, producers_id=None):
@@ -56,74 +56,53 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                     export_order_2_1_group(config, customer, delivery_point, [delivery_id], filename, permanence,
                                            sender_email, sender_function, signature)
 
-        group_wb = xlsx_order.export_abstract(permanence=permanence, deliveries_id=closed_deliveries_id, wb=None)
-        if group_wb is not None:
-            abstract_ws = group_wb.get_active_sheet()
-        else:
+        if not all_producers:
             abstract_ws = None
-
-        if all_producers and group_wb is not None:
+        else:
             # Orders send to the preparation team
-            # At least one order
+            wb, abstract_ws = generate_customer_xlsx(permanence, deliveries_id=closed_deliveries_id)
+            if wb is not None:
+                # At least one order
+                to_email_board = []
+                for permanence_board in PermanenceBoard.objects.filter(
+                        permanence=permanence.id).order_by('?'):
+                    if permanence_board.customer:
+                        to_email_board.append(permanence_board.customer.user.email)
 
-            group_wb = xlsx_order.export_customer_label(
-                permanence=permanence, deliveries_id=closed_deliveries_id, wb=group_wb
-            )
-            group_wb = xlsx_order.export_preparation(
-                permanence=permanence, deliveries_id=closed_deliveries_id, wb=group_wb
-            )
-            group_wb = xlsx_stock.export_permanence_stock(
-                permanence=permanence, customer_price=True, wb=group_wb
-            )
-            group_wb = xlsx_order.export_customer(
-                permanence=permanence, deliveries_id=closed_deliveries_id, deposit=True, wb=group_wb
-            )
-            group_wb = xlsx_order.export_customer(
-                permanence=permanence, deliveries_id=closed_deliveries_id, wb=group_wb
-            )
+                order_staff_mail = config.safe_translation_getter(
+                    'order_staff_mail', any_language=True, default=EMPTY_STRING
+                )
+                order_staff_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
-            to_email_board = []
-            for permanence_board in PermanenceBoard.objects.filter(
-                    permanence=permanence.id).order_by('?'):
-                if permanence_board.customer:
-                    to_email_board.append(permanence_board.customer.user.email)
+                board_composition, board_composition_and_description = get_board_composition(permanence.id)
 
-            try:
-                order_staff_mail = config.order_staff_mail
-            except TranslationDoesNotExist:
-                order_staff_mail = EMPTY_STRING
-            order_staff_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
-
-            board_composition, board_composition_and_description = get_board_composition(permanence.id)
-
-            template = Template(order_staff_mail)
-            context = TemplateContext({
-                'permanence_link'                  : mark_safe('<a href="http://%s%s">%s</a>' % (
-                    settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                'board_composition'                : mark_safe(board_composition),
-                'board_composition_and_description': mark_safe(board_composition_and_description),
-                'signature'                        : mark_safe(
-                    '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
-            })
-            html_content = template.render(context)
-            email = EmailMultiAlternatives(
-                order_staff_mail_subject,
-                strip_tags(html_content),
-                from_email=sender_email,
-                to=to_email_board,
-                cc=cc_email_staff
-            )
-            if group_wb is not None:
+                template = Template(order_staff_mail)
+                context = TemplateContext({
+                    'permanence_link'                  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                        settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+                    'board_composition'                : mark_safe(board_composition),
+                    'board_composition_and_description': mark_safe(board_composition_and_description),
+                    'signature'                        : mark_safe(
+                        '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                })
+                html_content = template.render(context)
+                email = EmailMultiAlternatives(
+                    order_staff_mail_subject,
+                    strip_tags(html_content),
+                    from_email=sender_email,
+                    to=to_email_board,
+                    cc=cc_email_staff
+                )
                 email.attach(group_filename,
-                             save_virtual_workbook(group_wb),
+                             save_virtual_workbook(wb),
                              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            email.attach_alternative(html_content, "text/html")
+                email.attach_alternative(html_content, "text/html")
 
-            if not REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
-                email.to = cc_email_staff
-                email.cc = []
-                email.bcc = []
-            send_email(email=email)
+                if not REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
+                    email.to = cc_email_staff
+                    email.cc = []
+                    email.bcc = []
+                send_email(email=email)
 
         # Orders send to our producers
         if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER:
@@ -132,35 +111,22 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 language=language_code,
             ).order_by('?')
             if producers_id is not None:
-                # Do not send order twice
-                # all_producers is True if we are sending the order to the last group of selected producers
                 producer_set = producer_set.filter(id__in=producers_id)
             for producer in producer_set:
                 long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name
-                wb = xlsx_order.export_producer_by_product(permanence=permanence, producer=producer, wb=None)
-                if wb is None:
-                    order_empty = True
-                    duplicate = False
-                else:
-                    order_empty = False
-                    if not producer.manage_replenishment:
-                        duplicate = True
-                        wb = xlsx_order.export_producer_by_customer(
-                            permanence=permanence, producer=producer, wb=wb)
-                    else:
-                        duplicate = False
-                try:
-                    order_producer_mail = config.order_producer_mail
-                except TranslationDoesNotExist:
-                    order_producer_mail = EMPTY_STRING
+                wb = xlsx_order.generate_producer_xlsx(permanence=permanence, producer=producer, wb=None)
+
+                order_producer_mail = config.safe_translation_getter(
+                    'order_producer_mail', any_language=True, default=EMPTY_STRING
+                )
                 order_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 template = Template(order_producer_mail)
                 context = TemplateContext({
                     'name'             : long_profile_name,
                     'long_profile_name': long_profile_name,
-                    'order_empty'      : order_empty,
-                    'duplicate'        : duplicate,
+                    'order_empty'      : wb is None,
+                    'duplicate'        : not (wb is None or producer.manage_replenishment),
                     'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'signature'        : mark_safe(
@@ -246,29 +212,12 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
                            sender_function, signature):
     from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
 
-    group_wb = xlsx_order.export_abstract(permanence=permanence, deliveries_id=closed_delivery_id, group=True, wb=None)
+    wb = generate_customer_xlsx(permanence=permanence, deliveries_id=closed_delivery_id, group=True)[0]
+    if wb is not None:
 
-    if group_wb is not None:
-        # At least one order
-
-        group_wb = xlsx_order.export_customer_label(
-            permanence=permanence, deliveries_id=closed_delivery_id, wb=group_wb
+        order_customer_mail = config.safe_translation_getter(
+            'order_customer_mail', any_language=True, default=EMPTY_STRING
         )
-        group_wb = xlsx_order.export_preparation(
-            permanence=permanence, deliveries_id=closed_delivery_id, wb=group_wb
-        )
-        group_wb = xlsx_order.export_customer(
-            permanence=permanence, deliveries_id=closed_delivery_id, deposit=True, wb=group_wb
-        )
-        group_wb = xlsx_order.export_customer(
-            permanence=permanence, deliveries_id=closed_delivery_id, wb=group_wb
-        )
-
-        try:
-            order_customer_mail = config.order_customer_mail
-        except TranslationDoesNotExist:
-            order_customer_mail = EMPTY_STRING
-
         order_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
         to_email_customer = [customer.user.email]
@@ -303,7 +252,7 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
             to=to_email_customer
         )
         email.attach(filename,
-                     save_virtual_workbook(group_wb),
+                     save_virtual_workbook(wb),
                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
         email.attach_alternative(html_content, "text/html")
@@ -322,7 +271,7 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
         customer_invoice = CustomerInvoice.objects.filter(permanence_id=permanence.id,
                                                           customer_id=customer.id).order_by('?').first()
         if customer_invoice is not None:
-            wb = xlsx_order.export_customer(permanence=permanence, customer=customer, xlsx_formula=False, wb=None)
+            wb = generate_customer_xlsx(permanence=permanence, customer=customer)[0]
             if wb is not None:
 
                 to_email_customer = [customer.user.email]
@@ -344,19 +293,15 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     customer, permanence)
                 long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
                 if cancel_order:
-                    try:
-                        order_customer_mail = config.cancel_order_customer_mail
-                    except TranslationDoesNotExist:
-                        order_customer_mail = EMPTY_STRING
+                    order_customer_mail = config.safe_translation_getter(
+                        'cancel_order_customer_mail', any_language=True, default=EMPTY_STRING
+                    )
                     order_customer_mail_subject = "%s - %s - %s" % (
                         _('/!\ Order cancelled'), REPANIER_SETTINGS_GROUP_NAME, permanence)
                 else:
-                    try:
-                        order_customer_mail = config.order_customer_mail
-                    except TranslationDoesNotExist:
-                        order_customer_mail = EMPTY_STRING
-                    # order_customer_mail_subject = "%s - %s - %s" % (
-                    #     _('Order'), REPANIER_SETTINGS_GROUP_NAME, permanence)
+                    order_customer_mail = config.safe_translation_getter(
+                        'order_customer_mail', any_language=True, default=EMPTY_STRING
+                    )
                     order_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 template = Template(order_customer_mail)

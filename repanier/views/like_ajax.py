@@ -22,7 +22,7 @@ def like_ajax(request):
         if user.is_authenticated:
             offer_item_id = sint(request.GET.get('offer_item', 0))
             offer_item = OfferItem.objects.filter(id=offer_item_id).order_by('?').select_related("product").first()
-            if offer_item is not None:
+            if offer_item is not None and offer_item.product_id is not None:
                 product = offer_item.product
                 to_json = []
                 if product.likes.filter(id=user.id).exists():

@@ -189,7 +189,7 @@ class PurchaseFilterByPermanence(SimpleListFilter):
     def lookups(self, request, model_admin):
         permanence_id = request.GET.get('permanence', None)
         if permanence_id is None:
-            return [(p.id, p.get_permanence_display(with_status=False)) for p in
+            return [(p.id, p.get_permanence_display()) for p in
                     Permanence.objects.filter(status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND])
                     ]
         else:
@@ -208,7 +208,7 @@ class OfferItemSendFilterByPermanence(SimpleListFilter):
     parameter_name = 'permanence'
 
     def lookups(self, request, model_admin):
-        return [(p.id, p.get_permanence_display(with_status=False)) for p in
+        return [(p.id, p.get_permanence_display()) for p in
                 Permanence.objects.filter(status=PERMANENCE_SEND)
                 ]
 

@@ -3,11 +3,9 @@ from __future__ import unicode_literals
 
 from django.http import HttpResponse
 from django.utils import translation
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.style import Fill
 from openpyxl.styles import Color
-from parler.models import TranslationDoesNotExist
 
 import repanier.apps
 from export_tools import *
@@ -187,12 +185,11 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
         for staff in Staff.objects.filter(is_active=True):
             c = staff.customer_responsible
             if c is not None:
-                try:
-                    staff_long_name = staff.long_name
-                except TranslationDoesNotExist:
-                    staff_long_name = EMPTY_STRING
+                staff_function = staff.safe_translation_getter(
+                    'long_name', any_language=True, default=EMPTY_STRING
+                )
                 row = [
-                    staff_long_name,
+                    staff_function,
                     c.long_basket_name,
                     c.phone1,
                     c.phone2
@@ -247,7 +244,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
 
         return wb
 
-    return None
+    return
 
 
 def export_customer_label(permanence, deliveries_id=None, wb=None):
@@ -265,29 +262,78 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
     if deliveries_id is not None:
         customer_set = customer_set.filter(customerinvoice__delivery_id__in=deliveries_id)
 
+    dict_placement = dict(LUT_PRODUCT_PLACEMENT)
+    freezer = []
+    fridge = []
+    out_of_basket = []
+
     for customer in customer_set:
-        c = ws.cell(row=row_num, column=0)
-        c.value = "%d - %s" % (customer.preparation_order, customer.short_basket_name)
-        c.style.font.size = 36
-        c.style.alignment.wrap_text = False
-        c.style.borders.top.border_style = Border.BORDER_THIN
-        c.style.borders.bottom.border_style = Border.BORDER_THIN
-        c.style.borders.left.border_style = Border.BORDER_THIN
-        c.style.borders.right.border_style = Border.BORDER_THIN
-        c.style.alignment.vertical = 'center'
-        c.style.alignment.horizontal = 'center'
-        row_num += 1
-        ws.row_dimensions[row_num].height = 60
-        # vvvv c = ... is nedeed for row_dimensions
-        c = ws.cell(row=row_num, column=0)
-        row_num += 1
-        ws.row_dimensions[row_num].height = 5
-        # ^^^^ c = ... is nedeed for row_dimensions
+        customer_identifier = "%d - %s" % (customer.preparation_order, customer.short_basket_name)
+        s = [placement_id for placement_id in Purchase.objects.filter(
+            permanence_id=permanence.id,
+            customer_id=customer.id
+        ).order_by(
+            "offer_item__placement"
+        ).values_list(
+            "offer_item__placement", flat=True
+        ).distinct(
+            "offer_item__placement"
+        )]
+        placements = ", ".join(["%s" % dict_placement[placement_id] for placement_id in s])
+        if PRODUCT_PLACEMENT_FREEZER in s:
+            freezer += [customer_identifier]
+        if PRODUCT_PLACEMENT_FRIDGE in s:
+            fridge += [customer_identifier]
+        if PRODUCT_PLACEMENT_OUT_OF_BASKET in s:
+            out_of_basket += [customer_identifier]
+
+        row_num = customer_label(customer_identifier, placements, row_num, ws)
+
+    placement_label = "[✿ %s ✿]" % dict_placement[PRODUCT_PLACEMENT_FRIDGE]
+    for customer_identifier in fridge:
+        row_num = customer_label(customer_identifier, placement_label, row_num, ws)
+
+    placement_label = "[✿ %s ✿]" % dict_placement[PRODUCT_PLACEMENT_FREEZER]
+    for customer_identifier in freezer:
+        row_num = customer_label(customer_identifier, placement_label, row_num, ws)
+
+    placement_label = "[✿ %s ✿]" % dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET]
+    for customer_identifier in out_of_basket:
+        row_num = customer_label(customer_identifier, placement_label, row_num, ws)
+
     if row_num > 0:
         ws.column_dimensions[get_column_letter(1)].width = 120
         return wb
 
-    return None
+    return
+
+
+def customer_label(customer_identifier, placements, row_num, ws):
+    c = ws.cell(row=row_num, column=0)
+    c.value = customer_identifier
+    c.style.font.size = 36
+    c.style.alignment.wrap_text = False
+    c.style.borders.top.border_style = Border.BORDER_THIN
+    c.style.borders.left.border_style = Border.BORDER_THIN
+    c.style.borders.right.border_style = Border.BORDER_THIN
+    c.style.alignment.vertical = 'center'
+    c.style.alignment.horizontal = 'center'
+    row_num += 1
+    ws.row_dimensions[row_num].height = 60
+    c = ws.cell(row=row_num, column=0)
+    c.value = placements
+    c.style.borders.left.border_style = Border.BORDER_THIN
+    c.style.borders.right.border_style = Border.BORDER_THIN
+    c.style.borders.bottom.border_style = Border.BORDER_THIN
+    c.style.alignment.vertical = 'center'
+    c.style.alignment.horizontal = 'center'
+    row_num += 1
+    # vvvv c = ... is nedeed for row_dimensions
+    c = ws.cell(row=row_num, column=0)
+    row_num += 1
+    ws.row_dimensions[row_num].height = 5
+    # ^^^^ c = ... is nedeed for row_dimensions
+    return row_num
 
 
 def export_preparation(permanence, deliveries_id=None, wb=None):
@@ -297,7 +343,7 @@ def export_preparation(permanence, deliveries_id=None, wb=None):
     yellowFill.fill_type = Fill.FILL_SOLID
 
     header = [
-        (_("Id"), 10),
+        (_("Purchase"), 10),
         (_("OfferItem"), 5),
         (_("Placement"), 7),
         (_("producer"), 15),
@@ -595,6 +641,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                     c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
                 row_num += 1
             producer = next_row(producers)
+        ws.column_dimensions[get_column_letter(1)].visible = False
         ws.column_dimensions[get_column_letter(2)].visible = False
         if hide_column_placement:
             ws.column_dimensions[get_column_letter(3)].visible = False
@@ -705,7 +752,13 @@ def export_producer_by_product(permanence, producer, wb=None):
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=3)
-                            c.value = offer_item.reference if len(offer_item.reference) < 36 else EMPTY_STRING
+                            reference = offer_item.reference if len(
+                                offer_item.reference) < 36 else EMPTY_STRING
+                            if not reference.isdigit():
+                                # Avoid display of exponent by Excel
+                                c.value = '[%s]' % reference
+                            else:
+                                c.value = reference
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=4)
@@ -785,7 +838,13 @@ def export_producer_by_product(permanence, producer, wb=None):
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=3)
-                        c.value = offer_item.reference if len(offer_item.reference) < 36 else EMPTY_STRING
+                        reference = offer_item.reference if len(
+                            offer_item.reference) < 36 else EMPTY_STRING
+                        if not reference.isdigit():
+                            # Avoid display of exponent by Excel
+                            c.value = '[%s]' % reference
+                        else:
+                            c.value = reference
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=4)
@@ -946,7 +1005,12 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=2)
-                    c.value = offer_item_save.reference if len(offer_item_save.reference) < 36 else EMPTY_STRING
+                    reference = offer_item_save.reference if len(offer_item_save.reference) < 36 else EMPTY_STRING
+                    if not reference.isdigit():
+                        # Avoid display of exponent by Excel
+                        c.value = '[%s]' % reference
+                    else:
+                        c.value = reference
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=3)
@@ -1025,6 +1089,7 @@ def export_customer(
         deposit=False,
         xlsx_formula=True,
         wb=None, ws_preparation_title=None):
+
     yellowFill = Fill()
     yellowFill.start_color.index = 'FFEEEE11'
     yellowFill.end_color.index = 'FFEEEE11'
@@ -1120,21 +1185,12 @@ def export_customer_for_a_delivery(
         config = Configuration.objects.get(id=DECIMAL_ONE)
         group_label = config.group_label
         if deposit:
-            if repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
-                # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
-                wb, ws = new_portrait_a4_sheet(
-                    wb,
-                    _("Deposits") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Deposits")),
-                    permanence,
-                    header
-                )
-            else:
-                wb, ws = new_landscape_a4_sheet(
-                    wb,
-                    _("Deposits") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Deposits")),
-                    permanence,
-                    header
-                )
+            wb, ws = new_portrait_a4_sheet(
+                wb,
+                _("Deposits") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Deposits")),
+                permanence,
+                header
+            )
         else:
             if repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
                 # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
@@ -1183,7 +1239,7 @@ def export_customer_for_a_delivery(
                     if producer_save != offer_item_save.producer:
                         hide_column_producer = False
                     qty = purchase.get_quantity()
-                    if qty != DECIMAL_ZERO:
+                    if deposit or qty != DECIMAL_ZERO:
                         base_unit = get_base_unit(
                             qty,
                             offer_item_save.order_unit,
@@ -1282,6 +1338,10 @@ def export_customer_for_a_delivery(
                         row_num += 1
                     purchase = next_purchase(purchases)
                     offer_item_save = purchase.offer_item if purchase is not None else None
+                # if not deposit and repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
+                #     # Need Openpyxl 2.x
+                #     page_break = Break(id=row_number)  # create Break obj
+                #     ws.page_breaks.append(page_break)
             row_num += 1
             c = ws.cell(row=row_num, column=4)
             c.value = group_label
@@ -1316,54 +1376,50 @@ def export_customer_for_a_delivery(
     return wb
 
 
-def admin_customer_export(permanence, deliveries_id=None):
-    response = None
-    wb = export_abstract(permanence=permanence, deliveries_id=deliveries_id, wb=None)
-    if wb is not None:
-        wb = export_customer_label(
-            permanence=permanence, deliveries_id=deliveries_id, wb=wb
+def generate_customer_xlsx(permanence, deliveries_id=None, customer=None, group=False):
+    if customer is not None:
+        wb = export_customer(
+            permanence=permanence, customer=customer, xlsx_formula=False, wb=None
         )
-        wb = export_preparation(permanence=permanence, deliveries_id=deliveries_id, wb=wb)
+        return wb, None
+    else:
+        wb = export_abstract(
+            permanence=permanence, deliveries_id=deliveries_id, group=group, wb=None
+        )
         if wb is not None:
+            # At least one order
+            abstract_ws = wb.get_active_sheet()
             ws_preparation_title = cap(slugify("%s" % _("Preparation")), 31)
-            wb = export_customer(
-                permanence=permanence, deliveries_id=deliveries_id, wb=wb, ws_preparation_title=ws_preparation_title
-            )
             ws_customer_title = cap(slugify("%s" % _('Customer check')), 31)
-            wb = export_customer(permanence=permanence, deliveries_id=deliveries_id, deposit=True, wb=wb)
+            wb = export_customer_label(
+                permanence=permanence, deliveries_id=deliveries_id, wb=wb
+            )
+            wb = export_preparation(
+                permanence=permanence, deliveries_id=deliveries_id, wb=wb
+            )
+            wb = export_customer(
+                permanence=permanence, deliveries_id=deliveries_id, deposit=True, wb=wb
+            )
+            wb = export_customer(
+                permanence=permanence, deliveries_id=deliveries_id, deposit=False, wb=wb,
+                ws_preparation_title=ws_preparation_title
+            )
+            wb = export_permanence_stock(
+                permanence=permanence, deliveries_id=deliveries_id, customer_price=True, wb=wb,
+                ws_customer_title=ws_customer_title
+            )
+            return wb, abstract_ws
         else:
-            ws_customer_title = None
-        wb = export_permanence_stock(permanence=permanence, deliveries_id=deliveries_id, wb=wb,
-                                     ws_customer_title=ws_customer_title)
-
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            slugify(_("Customers")),
-            slugify(permanence)
-        )
-        wb.save(response)
-    return response
+            return
 
 
-def admin_producer_export(permanence):
-    wb = None
-    producer_set = Producer.objects.filter(permanence=permanence).order_by("short_profile_name")
-    for producer in producer_set:
-        wb = export_producer_by_product(
+def generate_producer_xlsx(permanence, producer=None, wb=None):
+    wb = export_producer_by_product(
+        permanence=permanence, producer=producer, wb=wb
+    )
+    if not (wb is None or producer.manage_replenishment):
+        # At least one order and we don't manage replenishment for this producer
+        wb = export_producer_by_customer(
             permanence=permanence, producer=producer, wb=wb
         )
-        if not producer.manage_replenishment:
-            wb = export_producer_by_customer(
-                permanence=permanence, producer=producer, wb=wb
-            )
-    if wb is not None:
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-            slugify(_("Producers")),
-            slugify(permanence)
-        )
-        wb.save(response)
-        return response
-    else:
-        return None
+    return wb

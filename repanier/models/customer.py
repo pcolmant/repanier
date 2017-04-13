@@ -5,14 +5,10 @@ import datetime
 
 from django.conf import settings
 from django.core import urlresolvers
-# from django.core.validators import MinLengthValidator
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import F
-from django.db.models import Q
-from django.db.models import Sum
-from django.db.models.signals import post_delete
-from django.db.models.signals import pre_save
+from django.db.models import Q, Sum
+from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
@@ -85,7 +81,7 @@ class Customer(models.Model):
     # also responsible for collecting the payments.
     # The LUT_DeliveryPoint.price_list_multiplier will be used when invoicing the consumer responsible
     # At this stage, the link between the customer invoice and this customer responsible is made with
-    # CustomerInvoice.customer_who_pays
+    # CustomerInvoice.customer_charged
     price_list_multiplier = models.DecimalField(
         _("Customer price list multiplier"),
         help_text=_("This multiplier is applied to each product ordered by this customer."),
@@ -121,18 +117,19 @@ class Customer(models.Model):
 
     def get_admin_balance(self):
         if self.id is not None:
-            bank_not_invoiced = self.get_bank_not_invoiced()
-            order_not_invoiced = self.get_order_not_invoiced()
-            return self.balance + bank_not_invoiced - order_not_invoiced
+            return self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
         else:
             return REPANIER_MONEY_ZERO
+
+    get_admin_balance.short_description = (_("balance"))
+    get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
         result_set = invoice.CustomerInvoice.objects.filter(
             customer_id=self.id,
             status__gte=PERMANENCE_OPENED,
             status__lte=PERMANENCE_SEND,
-            customer_who_pays_id=self.id
+            customer_charged_id=self.id
         ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
         if result_set["total_price_with_tax__sum"] is not None:
             order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
@@ -159,9 +156,6 @@ class Customer(models.Model):
         bank_not_invoiced = bank_in - bank_out
         return bank_not_invoiced
 
-    get_admin_balance.short_description = (_("balance"))
-    get_admin_balance.allow_tags = False
-
     def get_balance(self):
         last_customer_invoice = invoice.CustomerInvoice.objects.filter(
             customer_id=self.id, invoice_sort_order__isnull=False
@@ -170,15 +164,15 @@ class Customer(models.Model):
         if last_customer_invoice.exists():
             if balance.amount >= 30:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" class="btn" target="_blank" >' + (
                            '<span style="color:#32CD32">%s</span>' % (balance,)) + '</a>'
             elif balance.amount >= -10:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" class="btn" target="_blank" >' + (
                            '<span style="color:#696969">%s</span>' % (balance,)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" target="_blank" >' + (
+                    self.id) + '" class="btn" target="_blank" >' + (
                            '<span style="color:red">%s</span>' % (balance,)) + '</a>'
         else:
             if balance.amount >= 30:
@@ -213,7 +207,7 @@ class Customer(models.Model):
             ).order_by("-id").prefetch_related("customer_invoice")
             if last_membership_fee.exists():
                 return last_membership_fee.first().customer_invoice.date_balance
-        return None
+        return
 
     last_membership_fee_date.short_description = _("last membership fee date")
     last_membership_fee_date.allow_tags = False
@@ -224,7 +218,7 @@ class Customer(models.Model):
         last_membership_fee_date = self.last_membership_fee_date()
         if last_membership_fee_date is not None:
             return last_membership_fee_date.strftime(settings.DJANGO_SETTINGS_DATE)
-        return None
+        return
 
     get_last_membership_fee_date.short_description = _("last membership fee date")
     get_last_membership_fee_date.allow_tags = False

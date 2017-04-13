@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 # import copy
-
+import django
 from django.conf import settings
+from django.core.mail import EmailMessage
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -15,6 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import invoice
 import offeritem
+import permanence
 import producer
 import repanier.apps
 from repanier.const import *
@@ -35,24 +37,24 @@ class Purchase(models.Model):
         verbose_name=_("invoice_status"))
     permanence_date = models.DateField(_("permanence_date"))
     offer_item = models.ForeignKey(
-        'OfferItem', verbose_name=_("offer_item"), blank=True, null=True, on_delete=models.PROTECT)
+        'OfferItem', verbose_name=_("offer_item"), on_delete=models.PROTECT)
     producer = models.ForeignKey(
-        producer.Producer, verbose_name=_("producer"), blank=True, null=True, on_delete=models.PROTECT)
+        producer.Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
     customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"), blank=True, null=True, on_delete=models.PROTECT, db_index=True)
-    customer_who_pays = models.ForeignKey(
+        'Customer', verbose_name=_("customer"), on_delete=models.PROTECT, db_index=True)
+    customer_charged = models.ForeignKey(
         'Customer', verbose_name=_("customer"), related_name='purchase_paid', blank=True, null=True,
         on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
         'CustomerProducerInvoice', verbose_name=_("customer_producer_invoice"),
         # related_name = 'purchase_invoiced',
-        blank=True, null=True, on_delete=models.PROTECT, db_index=True)
+        on_delete=models.PROTECT, db_index=True)
     producer_invoice = models.ForeignKey(
         'ProducerInvoice', verbose_name=_("producer_invoice"),
-        blank=True, null=True, on_delete=models.PROTECT, db_index=True)
+        on_delete=models.PROTECT, db_index=True)
     customer_invoice = models.ForeignKey(
         'CustomerInvoice', verbose_name=_("customer_invoice"),
-        blank=True, null=True, on_delete=models.PROTECT, db_index=True)
+        on_delete=models.PROTECT, db_index=True)
 
     is_box_content = models.BooleanField(_("is_box"), default=False)
 
@@ -169,7 +171,7 @@ class Purchase(models.Model):
     get_html_unit_deposit.allow_tags = True
 
     def get_permanence_display(self):
-        return self.permanence.get_permanence_display(with_status=False)
+        return self.permanence.get_permanence_display()
 
     get_permanence_display.short_description = (_("permanence"))
     get_permanence_display.allow_tags = False
@@ -211,6 +213,43 @@ class Purchase(models.Model):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
+        if not self.pk:
+            # This code only happens if the objects is not in the database yet.
+            # Otherwise it would have pk
+            customer_invoice = invoice.CustomerInvoice.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id).only("id").order_by('?').first()
+            if customer_invoice is None:
+                customer_invoice = invoice.CustomerInvoice.objects.create(
+                    permanence_id=self.permanence_id,
+                    customer_id=self.customer_id,
+                    customer_charged_id=self.customer_id,
+                    status=self.status
+                )
+                customer_invoice.set_delivery(delivery=None)
+                customer_invoice.save()
+            self.customer_invoice = customer_invoice
+            producer_invoice = invoice.ProducerInvoice.objects.filter(
+                permanence_id=self.permanence_id,
+                producer_id=self.producer_id).only("id").order_by('?').first()
+            if producer_invoice is None:
+                producer_invoice = invoice.ProducerInvoice.objects.create(
+                    permanence_id=self.permanence_id,
+                    producer_id=self.producer_id,
+                    status=self.status
+                )
+            self.producer_invoice = producer_invoice
+            customer_producer_invoice = invoice.CustomerProducerInvoice.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id,
+                producer_id=self.producer_id).only("id").order_by('?').first()
+            if customer_producer_invoice is None:
+                customer_producer_invoice = invoice.CustomerProducerInvoice.objects.create(
+                    permanence_id=self.permanence_id,
+                    customer_id=self.customer_id,
+                    producer_id=self.producer_id,
+                )
+            self.customer_producer_invoice = customer_producer_invoice
         super(Purchase, self).save(*args, **kwargs)
 
     @transaction.atomic
@@ -285,39 +324,6 @@ def purchase_post_init(sender, **kwargs):
 @receiver(pre_save, sender=Purchase)
 def purchase_pre_save(sender, **kwargs):
     purchase = kwargs["instance"]
-    if purchase.customer_invoice is None:
-        purchase.customer_invoice = invoice.CustomerInvoice.objects.filter(
-            permanence_id=purchase.permanence_id,
-            customer_id=purchase.customer_id).only("id").order_by('?').first()
-        if purchase.customer_invoice is None:
-            purchase.customer_invoice = invoice.CustomerInvoice.objects.create(
-                permanence_id=purchase.permanence_id,
-                customer_id=purchase.customer_id,
-                status=purchase.status
-            )
-            purchase.customer_invoice.set_delivery(delivery=None)
-            purchase.customer_invoice.save()
-    if purchase.producer_invoice is None:
-        purchase.producer_invoice = invoice.ProducerInvoice.objects.filter(
-            permanence_id=purchase.permanence_id,
-            producer_id=purchase.producer_id).only("id").order_by('?').first()
-        if purchase.producer_invoice is None:
-            purchase.producer_invoice = invoice.ProducerInvoice.objects.create(
-                permanence_id=purchase.permanence_id,
-                producer_id=purchase.producer_id,
-                status=purchase.status
-            )
-    if purchase.customer_producer_invoice is None:
-        purchase.customer_producer_invoice = invoice.CustomerProducerInvoice.objects.filter(
-            permanence_id=purchase.permanence_id,
-            customer_id=purchase.customer_id,
-            producer_id=purchase.producer_id).only("id").order_by('?').first()
-        if purchase.customer_producer_invoice is None:
-            purchase.customer_producer_invoice = invoice.CustomerProducerInvoice.objects.create(
-                permanence_id=purchase.permanence_id,
-                customer_id=purchase.customer_id,
-                producer_id=purchase.producer_id,
-            )
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
         if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
@@ -384,21 +390,21 @@ def purchase_pre_save(sender, **kwargs):
             if purchase.offer_item.price_list_multiplier <= DECIMAL_ONE and not purchase.offer_item.is_resale_price_fixed:
                 delta_total_price_with_tax = delta_selling_price
                 delta_total_vat = delta_customer_vat
-                delta_total_profit_with_tax = DECIMAL_ZERO
-                delta_total_profit_vat = DECIMAL_ZERO
+                delta_profit = DECIMAL_ZERO
             else:
                 delta_total_price_with_tax = delta_purchase_price
                 delta_total_vat = delta_producer_vat
-                delta_total_profit_with_tax = delta_selling_price - delta_purchase_price
-                delta_total_profit_vat = delta_customer_vat - delta_producer_vat
-                # TODO : Send an alert to the coordinator if we sell at lost ie delta_total_profit < 0
+                delta_profit = delta_selling_price - delta_purchase_price - delta_customer_vat + delta_producer_vat
             invoice.ProducerInvoice.objects.filter(id=purchase.producer_invoice_id).update(
                 total_price_with_tax=F('total_price_with_tax') +
                                      delta_total_price_with_tax,
                 total_vat=F('total_vat') + delta_total_vat,
-                total_profit_with_tax=F('total_profit_with_tax') + delta_total_profit_with_tax,
-                total_profit_vat=F('total_profit_vat') + delta_total_profit_vat,
                 total_deposit=F('total_deposit') + delta_deposit
+            )
+            permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
+                total_price_wo_tax=F('total_price_wo_tax') +
+                                     delta_total_price_with_tax - delta_total_vat,
+                total_profit=F('total_profit') + delta_profit
             )
     # Do not do it twice
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:

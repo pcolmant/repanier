@@ -7,12 +7,12 @@ from django.core.checks import messages
 from django.db.models import Q, F
 from django.shortcuts import render
 from django.utils import timezone
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.template import Context as TemplateContext, Template
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
-from parler.models import TranslationDoesNotExist
 
 import repanier.apps
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
@@ -22,7 +22,10 @@ from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models import Customer, Purchase, Permanence, Producer, PermanenceBoard, LUT_PermanenceRole, BankAccount, ProducerInvoice, Configuration
 from repanier.task import task_invoice
 from repanier.tools import send_email_to_who, get_signature
-from repanier.xlsx import xlsx_invoice, xlsx_purchase
+from repanier.xlsx.views import import_xslx_view
+from repanier.xlsx.xlsx_invoice import export_bank, export_invoice
+from repanier.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchase
+from repanier.xlsx.xlsx_stock import export_permanence_stock
 
 
 class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
@@ -52,16 +55,18 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     list_max_show_all = 10
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
-    list_display = ('__str__', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display')
-    ordering = ('-permanence_date',)
+    list_display = ('get_permanence_admin_display', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display')
+    ordering = ('status', '-permanence_date')
     actions = [
+        'add_delivery',
+        'cancel_delivery',
         'export_xlsx',
         'import_xlsx',
         'generate_invoices',
         'cancel_invoices',
         'preview_invoices',
         'send_invoices',
-        'archive',
+        'generate_archive',
         'cancel_archive',
     ]
 
@@ -77,14 +82,34 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             return True
         return False
 
+    def add_delivery(self, request, permanence_qs):
+        pass
+
+    add_delivery.short_description = _("Add delivery")
+
+    def cancel_delivery(self, request, permanence_qs):
+        pass
+
+    cancel_delivery.short_description = _("Cancel delivery")
+
     def export_xlsx(self, request, queryset):
-        permanence = queryset.order_by('?').first()
+        permanence = queryset.first()
         if permanence is None or permanence.status != PERMANENCE_SEND:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
-        return xlsx_purchase.admin_export_permanence_by_producer(request, permanence)
+            return
+        wb = export_purchase(permanence=permanence, wb=None)
+        if wb is not None:
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
+                slugify(_("Invoices")),
+                slugify(permanence)
+            )
+            wb.save(response)
+            return response
+        else:
+            return
 
     export_xlsx.short_description = _("Export orders prepared as XSLX file")
 
@@ -94,23 +119,40 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
-        return xlsx_purchase.admin_import(self, admin, request, queryset, action ='import_xlsx')
+            return
+        return import_xslx_view(
+            self, admin, request, queryset[:1], _("Import orders prepared"),
+            handle_uploaded_purchase, action='import_xlsx'
+        )
 
     import_xlsx.short_description = _("Import orders prepared from a XLSX file")
 
     def preview_invoices(self, request, permanence_qs):
         valid_permanence_qs = permanence_qs.filter(
-            status__in=[PERMANENCE_DONE, PERMANENCE_ARCHIVED]
+            status__in=[PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]
         )
-        if valid_permanence_qs.exists():
-            xlsx = xlsx_invoice.admin_export_permanences_invoices_report(request, valid_permanence_qs)
-            if xlsx is not None:
-                return xlsx
+        wb = None
+        first = True
+        for permanence in valid_permanence_qs:
+            if first:
+                wb = export_bank(permanence=permanence, wb=wb, sheet_name=slugify(permanence))
+            wb = export_invoice(permanence=permanence, wb=wb, sheet_name=slugify(permanence))
+            if first:
+                wb = export_permanence_stock(permanence=permanence, wb=wb, ws_customer_title=None)
+                first = False
+        if wb is not None:
+            response = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
+                slugify(_("Accounting report")),
+                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+            )
+            wb.save(response)
+            return response
         user_message = _("No invoice available for %(permanence)s.") % {'permanence': ', '.join("%s" % p for p in permanence_qs.all())}
         user_message_level = messages.WARNING
         self.message_user(request, user_message, user_message_level)
-        return None
+        return
 
     preview_invoices.short_description = _("Preview invoices before sending them by email")
 
@@ -119,31 +161,23 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         elif 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return None
-        permanence = queryset.order_by('?').first()
+            return
+        permanence = queryset.first()
         if permanence is None or permanence.status != PERMANENCE_SEND:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
-        previous_permanence_not_invoiced = Permanence.objects.filter(
-            status=PERMANENCE_SEND,
-            permanence_date__lt=permanence.permanence_date).order_by("permanence_date").first()
-        if previous_permanence_not_invoiced is not None:
-            user_message = _("You must first invoice the %(permanence)s.") % {'permanence': previous_permanence_not_invoiced}
-            user_message_level = messages.WARNING
-            self.message_user(request, user_message, user_message_level)
-            return None
+            return
 
         max_payment_date = timezone.now().date()
         bank_account = BankAccount.objects.filter(
-            operation_status=BANK_LATEST_TOTAL) \
-            .only("operation_date").order_by("-id").first()
+            operation_status=BANK_LATEST_TOTAL
+        ).only("operation_date").order_by("-id").first()
         if bank_account is not None:
             if bank_account.operation_date > max_payment_date:
                 max_payment_date = bank_account.operation_date
@@ -169,120 +203,99 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         }
                     )
                 else:
-                    Producer.objects.all().order_by('?').order_by('?').update(to_be_paid=False)
                     for producer_invoiced_form in producer_invoiced_formset:
-                        if producer_invoiced_form.is_valid() and producer_invoiced_form.has_changed():
+                        if producer_invoiced_form.is_valid():
                             selected = producer_invoiced_form.cleaned_data.get('selected')
                             short_profile_name = producer_invoiced_form.cleaned_data.get('short_profile_name')
-                            producer = Producer.objects.filter(short_profile_name=short_profile_name).order_by('?').first()
-                            if selected:
-                                producer.to_be_paid = True
-                                producer.save(update_fields=['to_be_paid'])
                             producer_invoice = ProducerInvoice.objects.filter(
-                                producer=producer.id,
-                                permanence_id=permanence.id
+                                permanence_id=permanence.id,
+                                invoice_sort_order__isnull=True,
+                                producer__short_profile_name=short_profile_name,
                             ).order_by(
                                 '?'
                             ).first()
-                            producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
-                                'to_be_invoiced_balance')
-                            producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
-                                'invoice_reference')
-                            if not producer_invoice.invoice_reference:
+                            if selected:
+                                producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
+                                    'to_be_invoiced_balance')
+                                producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
+                                    'invoice_reference')
+                                if not producer_invoice.invoice_reference:
+                                    producer_invoice.invoice_reference = None
+                                producer_invoice.to_be_paid = True
+                            else:
+                                producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
                                 producer_invoice.invoice_reference = None
-                            producer_invoice.save(update_fields=['to_be_invoiced_balance', 'invoice_reference'])
+                                producer_invoice.to_be_paid = False
+                            producer_invoice.delta_vat=DECIMAL_ZERO
+                            producer_invoice.delta_deposit = DECIMAL_ZERO
+                            producer_invoice.delta_price_with_tax = DECIMAL_ZERO
+                            producer_invoice.save(
+                                update_fields=[
+                                    'to_be_invoiced_balance', 'invoice_reference',
+                                    'delta_vat', 'delta_deposit', 'delta_price_with_tax',
+                                    'to_be_paid'
+                                ]
+                            )
 
-                    user_message, user_message_level = task_invoice.admin_generate(
-                        request,
-                        payment_date=payment_date,
-                        permanence=permanence)
-                    if user_message_level == messages.INFO:
-                        previous_latest_total = BankAccount.objects.filter(
-                            operation_status=BANK_NOT_LATEST_TOTAL,
-                            producer__isnull=True,
-                            customer__isnull=True
-                        ).order_by('-id').first()
-                        previous_latest_total_id = previous_latest_total.id if previous_latest_total is not None else 0
-                        return render(request, 'repanier/confirm_admin_bank_movement.html', {
-                            'sub_title': _("Please make the following payments, whose bank movements have been generated"),
-                            'action': 'generate_invoices',
-                            'permanence': permanence,
-                            'bankaccounts': BankAccount.objects.filter(
-                                id__gt=previous_latest_total_id,
-                                producer__isnull=False,
-                                producer__represent_this_buyinggroup=False,
-                                customer__isnull=True,
-                                operation_status=BANK_CALCULATED_INVOICE
-                            ).order_by(
-                                'producer',
-                                '-operation_date',
-                                '-id'
-                            ),
-                            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                        })
+                    task_invoice.generate_invoice(
+                        permanence=permanence,
+                        payment_date=payment_date)
+                    previous_latest_total = BankAccount.objects.filter(
+                        operation_status=BANK_NOT_LATEST_TOTAL,
+                        producer__isnull=True,
+                        customer__isnull=True
+                    ).order_by('-id').first()
+                    previous_latest_total_id = previous_latest_total.id if previous_latest_total is not None else 0
+                    return render(request, 'repanier/confirm_admin_bank_movement.html', {
+                        'sub_title': _("Please make the following payments, whose bank movements have been generated"),
+                        'action': 'generate_invoices',
+                        'permanence': permanence,
+                        'bankaccounts': BankAccount.objects.filter(
+                            id__gt=previous_latest_total_id,
+                            producer__isnull=False,
+                            producer__represent_this_buyinggroup=False,
+                            customer__isnull=True,
+                            operation_status=BANK_CALCULATED_INVOICE
+                        ).order_by(
+                            'producer',
+                            '-operation_date',
+                            '-id'
+                        ),
+                        'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                    })
         else:
-            Producer.objects.all().order_by('?').update(
-                to_be_paid=False,
-            )
-            ProducerInvoice.objects.filter(
+            producer_invoiced = []
+            for producer_invoice in ProducerInvoice.objects.filter(
                 permanence_id=permanence.id,
-            ).order_by('?').update(
-                delta_vat=DECIMAL_ZERO,
-                delta_deposit=DECIMAL_ZERO,
-                delta_price_with_tax=DECIMAL_ZERO
-            )
-            for producer in Producer.objects.filter(
-                Q(producerinvoice__permanence=permanence.id) |
-                Q(is_active=True, balance__gt=0) |
-                Q(is_active=True, balance__lt=0) |
-                Q(is_active=True, represent_this_buyinggroup=True)
-            ).order_by().distinct():
-                producer_invoice = ProducerInvoice.objects.filter(
-                    permanence_id=permanence.id,
-                    producer_id=producer.id
-                ).order_by('?').first()
-                if producer_invoice is None:
-                    producer_invoice = ProducerInvoice.objects.create(
-                        producer_id=producer.id,
-                        permanence_id=permanence.id,
-                        status=permanence.status
-                    )
+                invoice_sort_order__isnull=True,
+            ).order_by("producer").select_related("producer"):
+                producer = producer_invoice.producer
                 if not producer.manage_production:
-                    producer.to_be_paid = True
-                    producer.save(update_fields=['to_be_paid'])
                     # We have already pay to much (look at the bank movements).
                     # So we do not need to pay anything
                     producer_invoice.calculated_invoiced_balance.amount = \
                         producer.get_calculated_invoiced_balance(permanence.id)
                 else:
                     producer_invoice.calculated_invoiced_balance.amount = producer_invoice.total_price_with_tax.amount
-                if permanence.highest_status == PERMANENCE_SEND:
-                    # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
-                    producer_invoice.to_be_invoiced_balance = producer_invoice.calculated_invoiced_balance
-                    producer_invoice.save(update_fields=[
-                        'calculated_invoiced_balance',
-                        'to_be_invoiced_balance'
-                    ])
-                else:
-                    producer_invoice.save(update_fields=[
-                        'calculated_invoiced_balance'
-                    ])
+                # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
+                producer_invoice.to_be_invoiced_balance = producer_invoice.calculated_invoiced_balance
+                producer_invoice.save(update_fields=[
+                    'calculated_invoiced_balance',
+                    'to_be_invoiced_balance'
+                ])
+                producer_invoiced.append({
+                    'selected'                   : True,
+                    'short_profile_name'         : producer_invoice.producer.short_profile_name,
+                    'calculated_invoiced_balance': producer_invoice.calculated_invoiced_balance,
+                    'to_be_invoiced_balance'     : producer_invoice.to_be_invoiced_balance,
+                    'invoice_reference'          : producer_invoice.invoice_reference
+                })
             if permanence.payment_date is not None:
                 # In this case we have also, permanence.status > PERMANENCE_SEND
                 permanence_form = PermanenceInvoicedForm(payment_date=permanence.payment_date)
             else:
                 permanence_form = PermanenceInvoicedForm(payment_date=max_payment_date)
-            qs = ProducerInvoice.objects.filter(
-                producer__to_be_paid=True,
-                permanence_id=permanence.id
-            ).order_by("producer")
-            producer_invoiced = [{
-                'selected': True,
-                'short_profile_name': pi.producer.short_profile_name,
-                'calculated_invoiced_balance': pi.calculated_invoiced_balance,
-                'to_be_invoiced_balance': pi.to_be_invoiced_balance,
-                'invoice_reference': pi.invoice_reference
-            } for pi in qs]
+
             producer_invoiced_formset = ProducerInvoicedFormSet(initial=producer_invoiced)
 
         return render(request, 'repanier/confirm_admin_invoice.html', {
@@ -296,45 +309,86 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     generate_invoices.short_description = _('generate invoices')
 
-    def archive(self, request, queryset):
-        permanence = queryset.order_by('?').first()
+    def generate_archive(self, request, queryset):
+        permanence = queryset.first()
         if permanence is None or permanence.status not in [
             PERMANENCE_CLOSED, PERMANENCE_SEND
         ]:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         if permanence.status == PERMANENCE_CLOSED:
             permanence.set_status(PERMANENCE_SEND)
-        Producer.objects.all().order_by('?').update(to_be_paid=True)
-        user_message, user_message_level = task_invoice.admin_generate(
-            request,
+
+        ProducerInvoice.objects.filter(
+            permanence_id=permanence.id,
+            invoice_sort_order__isnull=True,
+        ).order_by('?').update(to_be_paid=True)
+
+        task_invoice.generate_invoice(
             permanence=permanence,
             payment_date=timezone.now().date()
         )
+        user_message = _("Action performed.")
+        user_message_level = messages.INFO
         self.message_user(request, user_message, user_message_level)
-        return None
+        return
 
-    archive.short_description = _('archive')
+    generate_archive.short_description = _('archive')
+
+    def cancel_invoices_or_archive(self,request, queryset, action):
+        if 'cancel' in request.POST:
+            user_message = _("Action canceled by the user.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return
+        permanence = queryset.first()
+        if permanence is None or permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+            user_message = _("Action canceled by the system.")
+            user_message_level = messages.ERROR
+            self.message_user(request, user_message, user_message_level)
+            return
+
+        if 'apply' in request.POST:
+            user_message, user_message_level = task_invoice.admin_cancel(permanence)
+            self.message_user(request, user_message, user_message_level)
+            return
+        return render(request, 'repanier/confirm_admin_action.html', {
+            'sub_title'           : _(
+                "Please, confirm the action : cancel the invoices") if permanence.status == PERMANENCE_INVOICED else _(
+                "Please, confirm the action : cancel the archiving"),
+            'action'              : action,
+            'permanence'          : permanence,
+            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+        })
+
+    def cancel_invoices(self, request, queryset):
+        return self.cancel_invoices_or_archive(request, queryset, 'cancel_invoices')
+
+    cancel_invoices.short_description = _('cancel latest invoices')
+
+    def cancel_archive(self, request, queryset):
+        return self.cancel_invoices_or_archive(request, queryset, 'cancel_archive')
+
+    cancel_archive.short_description = _('cancel archiving')
 
     def send_invoices(self, request, queryset):
         if 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return None
-        permanence = queryset.order_by('?').first()
-        if permanence is None or permanence.status != PERMANENCE_DONE:
+            return
+        permanence = queryset.first()
+        if permanence is None or permanence.status != PERMANENCE_INVOICED:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return None
+            return
         template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_customer_mail)
-        try:
-            invoice_description = permanence.invoice_description
-        except TranslationDoesNotExist:
-             invoice_description = EMPTY_STRING
+        invoice_description = permanence.safe_translation_getter(
+            'invoice_description', any_language=True, default=EMPTY_STRING
+        )
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_invoice_email=True)
         # TODO : Align on tools.payment_message
         customer_order_amount = \
@@ -419,51 +473,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     send_invoices.short_description = _('send invoices')
 
-    def cancel_invoices(self, request, queryset):
-        if 'cancel' in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return None
-        permanence = queryset.order_by('?').first()
-        if permanence is None or permanence.status != PERMANENCE_DONE:
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return None
-
-        if 'apply' in request.POST:
-            user_message, user_message_level = task_invoice.admin_cancel(queryset)
-            self.message_user(request, user_message, user_message_level)
-            return None
-        return render(request, 'repanier/confirm_admin_action.html', {
-            'sub_title'           : _("Please, confirm the action : cancel the invoices"),
-            'action'              : 'cancel_invoices',
-            'permanence'          : permanence,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-        })
-
-    cancel_invoices.short_description = _('cancel latest invoices')
-
-    def cancel_archive(self, request, queryset):
-        permanence = queryset.order_by('?').first()
-        if permanence is None or permanence.status != PERMANENCE_ARCHIVED:
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return None
-        user_message, user_message_level = task_invoice.admin_cancel(queryset)
-        self.message_user(request, user_message, user_message_level)
-        return None
-
-    cancel_archive.short_description = _('cancel archiving')
-
     def get_actions(self, request):
         actions = super(PermanenceDoneAdmin, self).get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
         if repanier.apps.REPANIER_SETTINGS_INVOICE:
-            del actions['archive']
+            del actions['generate_archive']
             del actions['cancel_archive']
         else:
             del actions['export_xlsx']
@@ -481,6 +496,14 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             except AttributeError:
                 pass
         return actions
+
+    def changelist_view(self, request, extra_context=None):
+        # Important : Linked to the use of lambda in model verbose_name
+        extra_context = extra_context or {}
+        # extra_context['module_name'] = "%s" % self.model._meta.verbose_name_plural()
+        # Finally I found the use of EMPTY_STRING nicer on the UI
+        extra_context['module_name'] = EMPTY_STRING
+        return super(PermanenceDoneAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def get_queryset(self, request):
         qs = super(PermanenceDoneAdmin, self).get_queryset(request)

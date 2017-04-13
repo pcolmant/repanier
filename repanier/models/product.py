@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import uuid
 
 from django.conf import settings
+from django.core import urlresolvers
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F
@@ -141,6 +142,37 @@ class Product(TranslatableModel):
         :return: Integer: Likes for the product
         """
         return self.likes.count()
+
+    def get_is_into_offer(self):
+        from django.contrib.admin.templatetags.admin_list import _boolean_icon
+        switch_is_into_offer = urlresolvers.reverse(
+            'is_into_offer', args=(self.id,)
+        )
+        javascript = """
+        (function($) {{
+            var lien = '{LINK}';
+            $.ajax({{
+                    url: lien,
+                    cache: false,
+                    async: true,
+                    success: function (result) {{
+                        $('#is_into_offer_{PRODUCT_ID}').html(result)
+                    }}
+                }});
+        }})(django.jQuery);
+        """.format(
+            LINK=switch_is_into_offer,
+            PRODUCT_ID=self.id
+        )
+        link = '<a id="is_into_offer_%d" href="#" onclick="%s" class="btn">%s</a>' % (
+            self.id,
+            javascript,
+            _boolean_icon(self.is_into_offer==True)
+        )
+        return link
+
+    get_is_into_offer.short_description = (_("is into offer"))
+    get_is_into_offer.allow_tags = True
 
     def get_customer_alert_order_quantity(self):
         if self.limit_order_quantity_to_stock:

@@ -38,12 +38,9 @@ def send_invoice(permanence_id):
                 if Purchase.objects.filter(
                     permanence_id=permanence.id, producer_id=producer.id
                 ).order_by('?').exists():
-                    try:
-                        invoice_producer_mail = config.invoice_producer_mail
-                    except TranslationDoesNotExist:
-                        invoice_producer_mail = EMPTY_STRING
-                    # invoice_producer_mail_subject = "%s - %s - %s - %s" % (
-                    #         _('Payment'), permanence, REPANIER_SETTINGS_GROUP_NAME, long_profile_name)
+                    invoice_producer_mail = config.safe_translation_getter(
+                        'invoice_producer_mail', any_language=True, default=EMPTY_STRING
+                    )
                     invoice_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                     template = Template(invoice_producer_mail)
@@ -79,30 +76,26 @@ def send_invoice(permanence_id):
         if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER:
             # To the customer we speak of "invoice".
             # This is the detail of the invoice, i.e. sold products
-            try:
-                invoice_description = permanence.invoice_description
-            except TranslationDoesNotExist:
-                invoice_description = EMPTY_STRING
-
+            invoice_description = permanence.safe_translation_getter(
+                'invoice_description', any_language=True, default=EMPTY_STRING
+            )
             for customer in Customer.objects.filter(
                 customerinvoice__permanence=permanence.id,
-                customerinvoice__customer_who_pays_id=F('customer_id'),
+                customerinvoice__customer_charged_id=F('customer_id'),
                 represent_this_buyinggroup=False,
                 language=language_code
             ).order_by('?'):
                 long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
                 if Purchase.objects.filter(
-                    permanence_id=permanence.id, customer_who_pays_id=customer.id
+                    permanence_id=permanence.id, customer_charged_id=customer.id
                 ).order_by('?').exists():
                     to_email_customer = [customer.user.email]
                     if customer.email2 is not None and len(customer.email2.strip()) > 0:
                         to_email_customer.append(customer.email2)
-                    try:
-                        invoice_customer_mail = config.invoice_customer_mail
-                    except TranslationDoesNotExist:
-                        invoice_customer_mail = EMPTY_STRING
-                    # invoice_customer_mail_subject = "%s - %s - %s - %s" % (_('Invoice'), permanence, REPANIER_SETTINGS_GROUP_NAME,
-                    #                            long_basket_name)
+
+                    invoice_customer_mail = config.safe_translation_getter(
+                        'invoice_customer_mail', any_language=True, default=EMPTY_STRING
+                    )
                     invoice_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
                     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
                         customer, permanence)

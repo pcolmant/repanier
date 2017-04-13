@@ -4,6 +4,8 @@
 <head>
 <title>{% block title %}{% endblock %}</title>
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
+{#<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">#}
+{#<link rel="stylesheet" href="{% static "css/custom.css" %}">#}
 {% block extrastyle %}{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
 {% block extrahead %}{% endblock %}
@@ -48,9 +50,11 @@ form label.aligned.btn, form label.btn{color: black !important;}
 /* filter*/
 #changelist-filter {position: relative !important; overflow-y: inherit !important;}
 .change-list #changelist.filtered .paginator {position: static !important;}
+{#.change-list #changelist.filtered .paginator {width: calc(100% - 233px) !important; position: static !important;}#}
 abbr, address, article, aside, audio, b, blockquote, body, canvas, caption, cite, code, dd, del, details, dfn, div, dl, dt, em, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, html, i, iframe, img, ins, kbd, label, legend, li, mark, menu, nav, object, ol, p, pre, q, samp, section, small, span, strong, sub, summary, sup, table, tbody, td, tfoot, th, thead, time, tr, ul, var, video {
     line-height: inherit !important;
 }
+{#.object-tools { position: inherit !important;}#}
 {#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}
 </style>
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
