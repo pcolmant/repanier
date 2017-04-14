@@ -19,7 +19,7 @@ class ProductFilterByProducer(SimpleListFilter):
     # right admin sidebar.
     title = _("producers")
     # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'producer'
+    parameter_name = 'producer_id'
     template = 'admin/producer_filter.html'
 
     def lookups(self, request, model_admin):

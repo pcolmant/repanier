@@ -105,12 +105,14 @@ class Producer(models.Model):
 
     def get_products(self):
         # This producer may have product's list
-        changeproductslist_url = urlresolvers.reverse(
-            'admin:repanier_product_changelist',
-        )
-        link = '<a href="%s?is_active__exact=1&producer=%s" class="btn addlink">&nbsp;%s</a>' \
-               % (changeproductslist_url, str(self.id), _("his_products"))
-        return link
+        if self.is_active:
+            changeproductslist_url = urlresolvers.reverse(
+                'admin:repanier_product_changelist',
+            )
+            link = '<a href="%s?is_active__exact=1&producer_id=%s" class="btn addlink">&nbsp;%s</a>' \
+                   % (changeproductslist_url, str(self.id), _("his_products"))
+            return link
+        return EMPTY_STRING
 
     get_products.short_description = (_("link to his products"))
     get_products.allow_tags = True
