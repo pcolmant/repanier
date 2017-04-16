@@ -46,8 +46,9 @@ class OfferItem(TranslatableModel):
         'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT,
         db_index=True
     )
+    # Important : Check select_related
     product = models.ForeignKey(
-        'Product', verbose_name=_("product"), on_delete=models.PROTECT)
+        'Product', verbose_name=_("product"), null=True, blank=True, default=None, on_delete=models.PROTECT)
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,

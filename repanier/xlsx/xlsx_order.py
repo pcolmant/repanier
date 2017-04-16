@@ -347,7 +347,7 @@ def export_preparation(permanence, deliveries_id=None, wb=None):
         (_("OfferItem"), 5),
         (_("Placement"), 7),
         (_("producer"), 15),
-        (_("department_for_customer"), 7),
+        (EMPTY_STRING, 7), # This column isn't any more used
         (_("product"), 60),
         (_("customer"), 15),
         (_("quantity ordered"), 10),
@@ -444,11 +444,6 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                         hide_column_placement = False
                                 c = ws.cell(row=row_num, column=3)
                                 c.value = producer_save.short_profile_name
-                                c = ws.cell(row=row_num, column=4)
-                                c.value = department_for_customer_save__short_name
-                                c.style.font.italic = True
-                                c.style.alignment.horizontal = 'right'
-                                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=5)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "%s - %s" % (

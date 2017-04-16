@@ -29,6 +29,9 @@ class CustomerInvoice(models.Model):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("customer"),
         on_delete=models.PROTECT)
+    customer_charged = models.ForeignKey(
+        'Customer', verbose_name=_("customer"), related_name='invoices_paid', blank=True, null=True,
+        on_delete=models.PROTECT, db_index=True)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=permanence_verbose_name(),
         on_delete=models.PROTECT, db_index=True)
@@ -109,10 +112,10 @@ class CustomerInvoice(models.Model):
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
-    customer_charged = models.ForeignKey(
-        'Customer', verbose_name=_("customer"),
-        related_name='invoices_paid',
-        on_delete=models.PROTECT, db_index=True)
+    # customer_charged = models.ForeignKey(
+    #     'Customer', verbose_name=_("customer"),
+    #     related_name='invoices_paid',
+    #     on_delete=models.PROTECT, db_index=True)
     master_permanence = models.ForeignKey(
         'Permanence', verbose_name=_("master permanence"),
         related_name='child_customer_invoice',

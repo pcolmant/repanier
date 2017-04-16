@@ -1,9 +1,9 @@
 from django import forms
-from django.contrib.admin.widgets import AdminDateWidget
 from django.forms.formsets import formset_factory
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
 
+from repanier.models import Producer
 from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormMoneyField
 
@@ -65,6 +65,21 @@ class PermanenceInvoicedForm(forms.Form):
 
         self.fields['payment_date'].initial = self.payment_date
 
+
+class ImportXlsxForm(forms.Form):
+    template = 'repanier/import_xlsx.html'
+    file_to_import = forms.FileField(label=_('File to import'), allow_empty_file=False)
+
+
+class ImportInvoiceForm(ImportXlsxForm):
+    template = 'repanier/import_invoice_xlsx.html'
+    # Important : The length of invoice_reference must be the same as of permanence.short_name
+    invoice_reference = forms.CharField(label=_("invoice reference"), max_length=50, required=False)
+    producer = forms.ModelChoiceField(label=_('producer'), queryset=Producer.objects.filter(is_active=True).all(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(ImportInvoiceForm, self).__init__(*args, **kwargs)
+        self.fields["invoice_reference"].widget.attrs['style'] = "width:450px !important"
 
 
 class ProducerInvoicedForm(forms.Form):

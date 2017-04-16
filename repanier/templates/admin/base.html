@@ -58,6 +58,7 @@ abbr, address, article, aside, audio, b, blockquote, body, canvas, caption, cite
 {#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}
 </style>
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
+<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 </head>
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
   data-admin-utc-offset="{% now "Z" %}">
@@ -87,7 +88,7 @@ abbr, address, article, aside, audio, b, blockquote, body, canvas, caption, cite
 {#        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}#}
 
         {% block content %}
-        {% block object-tools %}<li><a href="https://repanier.be/fr/documentation/">' + gettext('Help')+ '</a></li>{% endblock %}
+        {% block object-tools %}{% endblock %}
 
         {{ content }}
         {% endblock %}

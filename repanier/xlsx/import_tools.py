@@ -50,6 +50,14 @@ def get_customer_2_id_dict():
     return represent_this_buyinggroup, customer_2_id_dict
 
 
+def get_customer_email_2_id_dict():
+    customer_2_id_dict = {}
+    customer_set = Customer.objects.filter(is_active=True).order_by('?')
+    for customer in customer_set:
+        customer_2_id_dict[customer.user.email] = customer.id
+    return customer_2_id_dict
+
+
 def get_producer_2_id_dict():
     producer_2_id_dict = {}
     represent_this_buyinggroup = None

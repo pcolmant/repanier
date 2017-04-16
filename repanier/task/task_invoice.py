@@ -523,7 +523,16 @@ def generate_invoice(permanence, payment_date):
 
 
 @transaction.atomic
-def cancel(permanence):
+def generate_archive(permanence):
+    permanence.set_status(PERMANENCE_ARCHIVED)
+
+
+@transaction.atomic
+def cancel_delivery(permanence):
+    permanence.set_status(PERMANENCE_CANCELLED)
+
+@transaction.atomic
+def cancel_invoice(permanence):
     if permanence.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
         last_bank_account_total = BankAccount.objects.filter(
             operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
@@ -649,16 +658,15 @@ def cancel(permanence):
         permanence.set_status(PERMANENCE_SEND)
 
 
-def admin_send(permanence_id):
-    if repanier.apps.REPANIER_SETTINGS_INVOICE:
-        thread.start_new_thread(email_invoice.send_invoice, (permanence_id,))
-        user_message = _("Emails containing the invoices will be send to the customers and the producers.")
-        user_message_level = messages.INFO
+@transaction.atomic
+def cancel_archive(permanence):
+    if BankAccount.objects.filter(
+        operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
+    ).order_by('?').exists():
+        # old archive
+        cancel_invoice(permanence)
     else:
-        user_message = _("This action is not activated for your group.")
-        user_message_level = messages.ERROR
-
-    return user_message, user_message_level
+        permanence.set_status(PERMANENCE_SEND, allow_downgrade=True)
 
 
 def admin_cancel(permanence):
@@ -672,7 +680,7 @@ def admin_cancel(permanence):
             if last_permanence_invoiced_id is not None:
                 if last_permanence_invoiced_id == permanence.id:
                     # This is well the latest closed permanence. The invoices can be cancelled without damages.
-                    cancel(permanence)
+                    cancel_invoice(permanence)
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
                 else:
@@ -685,12 +693,25 @@ def admin_cancel(permanence):
             user_message = _("The selected invoice has been canceled.")
             user_message_level = messages.INFO
             permanence.set_status(PERMANENCE_SEND)
-    elif permanence.status == PERMANENCE_ARCHIVED:
-            cancel(permanence)
+    elif permanence.status in [PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED]:
+            cancel_archive(permanence)
             user_message = _("The selected invoice has been restored.")
             user_message_level = messages.INFO
     else:
         user_message = _("The status of %(permanence)s prohibit you to cancel invoices.") % {
+            'permanence': permanence}
+        user_message_level = messages.ERROR
+
+    return user_message, user_message_level
+
+
+def admin_send(permanence):
+    if permanence.status == PERMANENCE_INVOICED:
+        thread.start_new_thread(email_invoice.send_invoice, (permanence.id,))
+        user_message = _("Emails containing the invoices will be send to the customers and the producers.")
+        user_message_level = messages.INFO
+    else:
+        user_message = _("The status of %(permanence)s prohibit you to send invoices.") % {
             'permanence': permanence}
         user_message_level = messages.ERROR
 

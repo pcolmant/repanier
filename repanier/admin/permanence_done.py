@@ -2,9 +2,10 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
-from django.db.models import Q, F
+from django.db.models import F
 from django.shortcuts import render
 from django.utils import timezone
 from django.http import HttpResponseRedirect, HttpResponse
@@ -16,14 +17,14 @@ from parler.admin import TranslatableAdmin
 
 import repanier.apps
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
-from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm
+from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm, ImportXlsxForm, ImportInvoiceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.models import Customer, Purchase, Permanence, Producer, PermanenceBoard, LUT_PermanenceRole, BankAccount, ProducerInvoice, Configuration
+from repanier.models import Customer, Purchase, PermanenceBoard, LUT_PermanenceRole, BankAccount, ProducerInvoice
 from repanier.task import task_invoice
 from repanier.tools import send_email_to_who, get_signature
 from repanier.xlsx.views import import_xslx_view
-from repanier.xlsx.xlsx_invoice import export_bank, export_invoice
+from repanier.xlsx.xlsx_invoice import export_bank, export_invoice, handle_uploaded_invoice
 from repanier.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchase
 from repanier.xlsx.xlsx_stock import export_permanence_stock
 
@@ -56,16 +57,15 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = ('get_permanence_admin_display', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display')
-    ordering = ('status', '-permanence_date')
+    ordering = ('-permanence_date', 'status')
     actions = [
-        'add_delivery',
-        'cancel_delivery',
         'export_xlsx',
         'import_xlsx',
         'generate_invoices',
-        'cancel_invoices',
         'preview_invoices',
         'send_invoices',
+        'cancel_delivery',
+        'cancel_invoices',
         'generate_archive',
         'cancel_archive',
     ]
@@ -82,18 +82,52 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             return True
         return False
 
-    def add_delivery(self, request, permanence_qs):
-        pass
+    def get_urls(self):
+        urls = super(PermanenceDoneAdmin, self).get_urls()
+        my_urls = [
+            url(r'^import_invoice/$', self.add_delivery),
+        ]
+        return my_urls + urls
 
-    add_delivery.short_description = _("Add delivery")
+    def add_delivery(self, request):
+        return import_xslx_view(
+            self, admin, request, None, _("Import an invoice"),
+            handle_uploaded_invoice, action='import_xlsx', form_klass=ImportInvoiceForm
+        )
 
     def cancel_delivery(self, request, permanence_qs):
-        pass
+        if 'cancel' in request.POST:
+            user_message = _("Action canceled by the user.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return
+        permanence = permanence_qs.first()
+        if permanence is None or permanence.status not in [
+            PERMANENCE_CLOSED, PERMANENCE_SEND
+        ]:
+            user_message = _("Action canceled by the system.")
+            user_message_level = messages.ERROR
+            self.message_user(request, user_message, user_message_level)
+            return
+        if 'apply' in request.POST:
+            task_invoice.cancel_delivery(
+                permanence=permanence,
+            )
+            user_message = _("Action performed.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return
+        return render(request, 'repanier/confirm_admin_action.html', {
+            'sub_title'           : _("Please, confirm the action : cancel delivery"),
+            'action'              : 'cancel_delivery',
+            'permanence'          : permanence,
+            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+        })
 
     cancel_delivery.short_description = _("Cancel delivery")
 
-    def export_xlsx(self, request, queryset):
-        permanence = queryset.first()
+    def export_xlsx(self, request, permanence_qs):
+        permanence = permanence_qs.first()
         if permanence is None or permanence.status != PERMANENCE_SEND:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
@@ -113,16 +147,16 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     export_xlsx.short_description = _("Export orders prepared as XSLX file")
 
-    def import_xlsx(self, request, queryset):
-        permanence = queryset.first()
+    def import_xlsx(self, request, permanence_qs):
+        permanence = permanence_qs.first()
         if permanence is None or permanence.status != PERMANENCE_SEND:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
         return import_xslx_view(
-            self, admin, request, queryset[:1], _("Import orders prepared"),
-            handle_uploaded_purchase, action='import_xlsx'
+            self, admin, request, permanence_qs[:1], _("Import orders prepared"),
+            handle_uploaded_purchase, action='import_xlsx', form_klass=ImportXlsxForm
         )
 
     import_xlsx.short_description = _("Import orders prepared from a XLSX file")
@@ -156,7 +190,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     preview_invoices.short_description = _("Preview invoices before sending them by email")
 
-    def generate_invoices(self, request, queryset):
+    def generate_invoices(self, request, permanence_qs):
         if 'done' in request.POST:
             user_message = _("Action performed.")
             user_message_level = messages.INFO
@@ -167,7 +201,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        permanence = queryset.first()
+        permanence = permanence_qs.first()
         if permanence is None or permanence.status != PERMANENCE_SEND:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
@@ -309,8 +343,14 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     generate_invoices.short_description = _('generate invoices')
 
-    def generate_archive(self, request, queryset):
-        permanence = queryset.first()
+    def generate_archive(self, request, permanence_qs):
+        if 'cancel' in request.POST:
+            user_message = _("Action canceled by the user.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return
+        permanence = permanence_qs.first()
+
         if permanence is None or permanence.status not in [
             PERMANENCE_CLOSED, PERMANENCE_SEND
         ]:
@@ -318,33 +358,32 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
-        if permanence.status == PERMANENCE_CLOSED:
-            permanence.set_status(PERMANENCE_SEND)
 
-        ProducerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            invoice_sort_order__isnull=True,
-        ).order_by('?').update(to_be_paid=True)
-
-        task_invoice.generate_invoice(
-            permanence=permanence,
-            payment_date=timezone.now().date()
-        )
-        user_message = _("Action performed.")
-        user_message_level = messages.INFO
-        self.message_user(request, user_message, user_message_level)
-        return
+        if 'apply' in request.POST:
+            task_invoice.generate_archive(
+                permanence=permanence,
+            )
+            user_message = _("Action performed.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return
+        return render(request, 'repanier/confirm_admin_action.html', {
+            'sub_title'           : _("Please, confirm the action : generate archive"),
+            'action'              : 'generate_archive',
+            'permanence'          : permanence,
+            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+        })
 
     generate_archive.short_description = _('archive')
 
-    def cancel_invoices_or_archive(self,request, queryset, action):
+    def cancel_invoice_or_archive_or_cancelled(self,request, permanence_qs, action):
         if 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        permanence = queryset.first()
-        if permanence is None or permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+        permanence = permanence_qs.first()
+        if permanence is None or permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED]:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
@@ -357,29 +396,30 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         return render(request, 'repanier/confirm_admin_action.html', {
             'sub_title'           : _(
                 "Please, confirm the action : cancel the invoices") if permanence.status == PERMANENCE_INVOICED else _(
-                "Please, confirm the action : cancel the archiving"),
+                "Please, confirm the action : cancel the archiving") if permanence.status == PERMANENCE_ARCHIVED else _(
+                "Please, confirm the action : restore the delivery"),
             'action'              : action,
             'permanence'          : permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
-    def cancel_invoices(self, request, queryset):
-        return self.cancel_invoices_or_archive(request, queryset, 'cancel_invoices')
+    def cancel_invoices(self, request, permanence_qs):
+        return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_invoices')
 
     cancel_invoices.short_description = _('cancel latest invoices')
 
-    def cancel_archive(self, request, queryset):
-        return self.cancel_invoices_or_archive(request, queryset, 'cancel_archive')
+    def cancel_archive(self, request, permanence_qs):
+        return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_archive')
 
     cancel_archive.short_description = _('cancel archiving')
 
-    def send_invoices(self, request, queryset):
+    def send_invoices(self, request, permanence_qs):
         if 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        permanence = queryset.first()
+        permanence = permanence_qs.first()
         if permanence is None or permanence.status != PERMANENCE_INVOICED:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
@@ -446,7 +486,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             form = InvoiceOrderForm(request.POST)
             if form.is_valid():
                 user_message, user_message_level = task_invoice.admin_send(
-                    permanence.id
+                    permanence
                 )
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
@@ -520,3 +560,6 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 permanence_date=permanence.permanence_date)
         super(PermanenceDoneAdmin, self).save_model(
             request, permanence, form, change)
+
+    class Media:
+        js = ('js/import_invoice.js',)

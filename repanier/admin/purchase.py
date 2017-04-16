@@ -13,7 +13,7 @@ from django.http import HttpResponseRedirect
 from django.utils import translation
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from django.views.i18n import JavaScriptCatalog
+# from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
 from import_export import resources, fields
 from import_export.admin import ExportMixin

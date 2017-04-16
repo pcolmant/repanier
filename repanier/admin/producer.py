@@ -18,6 +18,7 @@ from import_export.formats.base_formats import XLS
 from import_export.widgets import CharWidget
 
 import repanier.apps
+from repanier.admin.forms import ImportXlsxForm
 from repanier.models import BoxContent
 from repanier.const import *
 from repanier.models import Permanence, Product, \
@@ -297,8 +298,9 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     export_xlsx_stock.short_description = _("Export stock to a xlsx file")
 
     def import_xlsx_stock(self, request):
-        return import_xslx_view(self, admin, request, Producer.objects.all(), _("Import stock"), handle_uploaded_stock, action='import_xlsx_stock')
-        # return xlsx_stock.admin_import(self, admin, request, Producer.objects.all(), action='import_xlsx_stock')
+        return import_xslx_view(
+            self, admin, request, Producer.objects.all(), _("Import stock"), handle_uploaded_stock,
+            action='import_xlsx_stock', form_klass=ImportXlsxForm)
 
     import_xlsx_stock.short_description = _("Import stock from a xlsx file")
 

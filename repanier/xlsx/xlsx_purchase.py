@@ -18,7 +18,6 @@ from repanier.models import OfferItem
 from repanier.models import Producer
 from repanier.models import Purchase
 from repanier.tools import cap, next_row, recalculate_prices, recalculate_order_amount
-from views import import_xslx_view
 
 
 def next_purchase(purchases):
@@ -51,14 +50,21 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         (_("rule of 3"), 10),
         (_("comment"), 30),
         (_("vat level"), 10),
+        (_("CustId_01"), 10),
     ]
 
     if producer is None:
         if permanence is not None:
-            producers = Producer.objects.filter(
-                producerinvoice__permanence_id=permanence.id
-            ).distinct().iterator()
-            title1 = "%s" % permanence
+            if customer is not None:
+                producers = Producer.objects.filter(
+                    producerinvoice__permanence_id=permanence.id
+                ).distinct().iterator()
+                title1 = "%s-%s" % (customer.short_basket_name, permanence)
+            else:
+                producers = Producer.objects.filter(
+                    producerinvoice__permanence_id=permanence.id
+                ).distinct().iterator()
+                title1 = "%s" % permanence
         else:
             producers = Producer.objects.filter(
                 producerinvoice__permanence__permanence_date__year=year
@@ -85,14 +91,25 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
             producer_price = DECIMAL_ZERO
             if producer.invoice_by_basket:
                 if year is None:
-                    purchases = Purchase.objects.filter(
-                        permanence_id=permanence.id,
-                        producer_id=producer.id,
-                        offer_item__translations__language_code=translation.get_language()
-                    ).order_by(
-                        "customer__short_basket_name",
-                        "offer_item__translations__preparation_sort_order"
-                    ).iterator()
+                    if customer is None:
+                        purchases = Purchase.objects.filter(
+                            permanence_id=permanence.id,
+                            producer_id=producer.id,
+                            offer_item__translations__language_code=translation.get_language()
+                        ).order_by(
+                            "customer__short_basket_name",
+                            "offer_item__translations__preparation_sort_order"
+                        ).iterator()
+                    else:
+                        purchases = Purchase.objects.filter(
+                            permanence_id=permanence.id,
+                            customer_id=customer.id,
+                            producer_id=producer.id,
+                            offer_item__translations__language_code=translation.get_language()
+                        ).order_by(
+                            "customer__short_basket_name",
+                            "offer_item__translations__preparation_sort_order"
+                        ).iterator()
                 else:
                     if customer is None:
                         purchases = Purchase.objects.filter(
@@ -213,6 +230,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=13)
                                 c.value = purchase.offer_item.get_vat_level_display()
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                                c = ws.cell(row=row_num, column=14)
+                                c.value = purchase.customer.user.email
+                                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 delta = 5
                                 for col_num in range(5):
                                     c = ws.cell(row=row_num, column=delta + col_num)
@@ -271,15 +291,27 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                 if year is None:
                     # Using quantity_for_preparation_sort_order the order is by customer__short_basket_name if the product
                     # is to be distributed by piece, otherwise by lower qty first.
-                    purchases = Purchase.objects.filter(
-                        permanence_id=permanence.id,
-                        producer_id=producer.id,
-                        offer_item__translations__language_code=translation.get_language()
-                    ).order_by(  # "product__placement",
-                        "offer_item__translations__preparation_sort_order",
-                        "quantity_for_preparation_sort_order",
-                        "customer__short_basket_name"
-                    ).iterator()
+                    if customer is None:
+                        purchases = Purchase.objects.filter(
+                            permanence_id=permanence.id,
+                            producer_id=producer.id,
+                            offer_item__translations__language_code=translation.get_language()
+                        ).order_by(  # "product__placement",
+                            "offer_item__translations__preparation_sort_order",
+                            "quantity_for_preparation_sort_order",
+                            "customer__short_basket_name"
+                        ).iterator()
+                    else:
+                        purchases = Purchase.objects.filter(
+                            permanence_id=permanence.id,
+                            customer_id=customer.id,
+                            producer_id=producer.id,
+                            offer_item__translations__language_code=translation.get_language()
+                        ).order_by(  # "product__placement",
+                            "offer_item__translations__preparation_sort_order",
+                            "quantity_for_preparation_sort_order",
+                            "customer__short_basket_name"
+                        ).iterator()
                 else:
                     if customer is None:
                         purchases = Purchase.objects.filter(
@@ -414,7 +446,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=13)
                                 c.value = purchase.offer_item.get_vat_level_display()
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-
+                                c = ws.cell(row=row_num, column=14)
+                                c.value = purchase.customer.user.email
+                                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 delta = 5
                                 for col_num in range(5):
                                     c = ws.cell(row=row_num, column=delta + col_num)
@@ -502,6 +536,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         else:
             ws.column_dimensions[get_column_letter(12)].visible = False
         ws.column_dimensions[get_column_letter(1)].visible = False
+        ws.column_dimensions[get_column_letter(15)].visible = False
 
     return wb
 
@@ -658,7 +693,7 @@ def import_purchase_sheet(worksheet, permanence=None,
     return error, error_msg
 
 
-def handle_uploaded_purchase(request, permanences, file_to_import):
+def handle_uploaded_purchase(request, permanences, file_to_import, *args):
     error = False
     error_msg = None
     wb = load_workbook(file_to_import)

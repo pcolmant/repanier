@@ -892,7 +892,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
     if offer_item_id is not None and (q_order is not None or value_id is not None) and customer is not None:
         offer_item = models.OfferItem.objects.select_for_update(nowait=False) \
             .filter(id=offer_item_id, is_active=True, may_order=True) \
-            .order_by('?').select_related("product", "producer").first()
+            .order_by('?').select_related("producer").first()
         if offer_item is not None:
             if q_order is None:
                 # Transform value_id into a q_order.
@@ -1391,7 +1391,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         # The offer item may not be modified any more
         return
     getcontext().rounding = ROUND_HALF_UP
-    for offer_item in queryset.select_related("product", "producer"):
+    for offer_item in queryset.select_related("producer"):
         product = offer_item.product
         producer = offer_item.producer
         if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
@@ -1445,7 +1445,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         translation.activate(language["code"])
-        for offer_item in queryset.select_related("product", "producer", "department_for_customer"):
+        for offer_item in queryset.select_related("producer", "department_for_customer"):
             offer_item.long_name = offer_item.product.long_name
             offer_item.cache_part_a = render_to_string('repanier/cache_part_a.html',
                                                        {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})

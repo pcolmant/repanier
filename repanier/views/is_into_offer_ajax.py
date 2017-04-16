@@ -24,5 +24,4 @@ def is_into_offer(request, product_id):
                 'is_into_offer').first().is_into_offer)
             Product.objects.filter(id=product_id).update(is_into_offer=is_into_offer)
             return HttpResponse(mark_safe(_boolean_icon(is_into_offer)))
-            # return HttpResponse("Patrick")
     raise Http404

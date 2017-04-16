@@ -1,10 +1,12 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django.db import transaction
 from django.http import HttpResponse
-from django.utils import translation
+from django.utils import translation, timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from openpyxl import load_workbook
 from openpyxl.style import Border
 from openpyxl.style import NumberFormat
 
@@ -12,13 +14,15 @@ import repanier.apps
 from export_tools import *
 from repanier.models import Configuration
 from repanier.const import *
-from repanier.models import BankAccount, Purchase
+from repanier.models import BankAccount, Permanence, Purchase
 from repanier.models import Customer
 from repanier.models import CustomerInvoice
 from repanier.models import Producer
 from repanier.models import ProducerInvoice
 from repanier.tools import get_invoice_unit
 from repanier.xlsx.xlsx_stock import export_permanence_stock
+from repanier.xlsx.import_tools import get_customer_2_id_dict, get_producer_2_id_dict, get_customer_email_2_id_dict, \
+    get_header, get_row
 
 
 def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
@@ -178,7 +182,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     hide_customer_prices = False
     purchase_set = Purchase.objects.all().distinct()
     if customer is not None:
-        purchase_set = purchase_set.filter(customer=customer)
+        purchase_set = purchase_set.filter(customer_charged=customer)
         hide_producer_prices = True
     if producer is not None:
         purchase_set = purchase_set.filter(producer=producer)
@@ -191,7 +195,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     if purchase_set.exists():
 
         wb, ws = new_landscape_a4_sheet(wb, sheet_name, permanence)
-
+        row = []
         row_num = 0
         hide_column_deposit = True
 
@@ -218,9 +222,9 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                  False)]
             if hide_producer_prices:
                 row += [
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
                 ]
             else:
                 row += [
@@ -235,9 +239,9 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
 
             if hide_customer_prices:
                 row += [
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
                 ]
             else:
                 row += [
@@ -251,15 +255,17 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             if hide_producer_prices and hide_customer_prices:
                 row += [
-                    (EMPTY_STRING, 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
                 ]
             else:
                 row += [
-                    (EMPTY_STRING, 10, purchase.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+                    (_("Vat"), 10, purchase.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
                 (_("comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
                  False),
+                (_("invoice_status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
+                (_("CustId_02"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
             ]
 
             if row_num == 0:
@@ -282,7 +288,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
 
             row_num += 1
 
-        if wb is not None and ws is not None:
+        if ws is not None:
             if hide_column_deposit:
                 ws.column_dimensions[get_column_letter(8)].visible = False
             if hide_producer_prices:
@@ -295,7 +301,8 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ws.column_dimensions[get_column_letter(14)].visible = False
             if hide_producer_prices and hide_customer_prices:
                 ws.column_dimensions[get_column_letter(15)].visible = False
-            for col_num in range(15):
+            ws.column_dimensions[get_column_letter(18)].visible = False
+            for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.top.border_style = Border.BORDER_THIN
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -327,7 +334,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 group_label = config.group_label
                 if group_label:
                     row_num += 1
-                    for col_num in range(15):
+                    for col_num in range(len(row)):
                         c = ws.cell(row=row_num, column=col_num)
                         c.style.borders.top.border_style = Border.BORDER_THIN
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -335,3 +342,74 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                             c.value = group_label
                             c.style.font.bold = True
     return wb
+
+
+@transaction.atomic
+def import_invoice_sheet(worksheet, invoice_reference=None,
+                          customer_2_id_dict=None,
+                          producer=None
+                          ):
+    error = False
+    error_msg = None
+    header = get_header(worksheet)
+    if header:
+        now = timezone.now().date()
+        import_counter = 0
+        row_num = 1
+        sid = transaction.savepoint()
+        try:
+
+            permanence = Permanence.objects.create(
+                permanence_date=now,
+                short_name=invoice_reference
+            )
+            permanence.producers.add(producer)
+            row = get_row(worksheet, header, row_num)
+            while row and not error:
+                customer_name = row[_("CustId_02")]
+                if customer_name:
+                    if customer_name in customer_2_id_dict:
+                        customer_id = customer_2_id_dict[customer_name]
+                    else:
+                        error = True
+                        error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
+                        break
+                    import_counter += 1
+                row_num += 1
+                row = get_row(worksheet, header, row_num)
+
+        except KeyError as e:
+            # Missing field
+            error = True
+            error_msg = _("Row %(row_num)d : A required column is missing %(error_msg)s.") % {
+                'row_num': row_num + 1, 'error_msg': str(e)}
+        except Exception as e:
+            error = True
+            error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
+        if not error and import_counter == 0:
+            error = True
+            error_msg = "%s" % _("Nothing to import.")
+        if error:
+            transaction.savepoint_rollback(sid)
+    return error, error_msg
+
+
+def handle_uploaded_invoice(request, permanences, file_to_import, producer, invoice_reference):
+    error = False
+    error_msg = None
+    if producer is None:
+        error = True
+        error_msg = _("A producer must be given.")
+
+    wb = load_workbook(file_to_import)
+    # dict for performance optimisation purpose : read the DB only once
+    customer_2_id_dict = get_customer_email_2_id_dict()
+
+    if not error:
+        ws = wb.worksheets[0]
+        error, error_msg = import_invoice_sheet(
+            ws, invoice_reference=invoice_reference,
+            customer_2_id_dict=customer_2_id_dict,
+            producer=producer
+        )
+    return error, error_msg

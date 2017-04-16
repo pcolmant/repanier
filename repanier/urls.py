@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
+# from django.views.i18n import JavaScriptCatalog
 
 from picture.views import ajax_picture
 from repanier.rest.lut import departments_for_customers_rest, department_for_customer_rest
@@ -40,6 +41,7 @@ from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinat
 from repanier.views.who_is_who_view import who_is_who_view
 from repanier.views.display_status_ajax import display_status
 from repanier.views.is_into_offer_ajax import is_into_offer
+from repanier.views.download_customer_invoice import download_customer_invoice
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -127,6 +129,7 @@ urlpatterns = [
     url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
     url(r'^who/$', who_is_who_view, name='who_is_who_view'),
     url(r'^me/$', me_view, name='me_view'),
+    # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     url(r'^rest/permanences/$', permanences_rest, name='permanences_rest'),
     url(r'^rest/permanence/(?P<permanence_id>\d+)/(?P<producer_name>.*)/(?P<reference>.*)/$',
         permanence_producer_product_rest,
@@ -143,4 +146,5 @@ urlpatterns = [
     url(r'^rest/product/(?P<producer_short_profile_name>.*)/(?P<reference>.*)/$', product_rest,
         name='product_rest'),
     url(r'^rest/version/$', version_rest, name='version_rest'),
+    url(r'^ajax/dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice, name='download_customer_invoice'),
 ]

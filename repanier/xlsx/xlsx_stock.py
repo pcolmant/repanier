@@ -455,7 +455,7 @@ def import_producer_stock(worksheet, producers=None):
     return error, error_msg
 
 
-def handle_uploaded_stock(request, producers, file_to_import):
+def handle_uploaded_stock(request, producers, file_to_import, *args):
     error = False
     error_msg = None
     wb = load_workbook(file_to_import)

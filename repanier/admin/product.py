@@ -268,7 +268,8 @@ class ProductDataForm(TranslatableModelForm):
         model = Product
         fields = "__all__"
         widgets = {
-            'order_unit'             : SelectAdminOrderUnitWidget(),
+            'long_name'              : forms.TextInput(attrs={'style': "width:450px !important"}),
+            'order_unit'             : SelectAdminOrderUnitWidget(attrs={'style': "width:450px !important"}),
             'department_for_customer': apply_select2(forms.Select),
         }
 

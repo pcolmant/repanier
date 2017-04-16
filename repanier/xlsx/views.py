@@ -8,20 +8,15 @@ from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 
 
-class ImportXlsxForm(forms.Form):
-    file_to_import = forms.FileField(
-        label=_('File to import'),
-        allow_empty_file=False
-    )
-
-
-def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploaded_file, action):
+def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploaded_file, action, form_klass):
     if 'apply' in request.POST:
-        form = ImportXlsxForm(request.POST, request.FILES)
+        form = form_klass(request.POST, request.FILES)
         if form.is_valid():
             file_to_import = request.FILES['file_to_import']
             if ('.xlsx' in file_to_import.name) and (file_to_import.size <= 1000000):
-                error, error_msg = handle_uploaded_file(request, queryset, file_to_import)
+                producer = form.cleaned_data.get('producer')
+                invoice_reference = form.cleaned_data.get('invoice_reference')
+                error, error_msg = handle_uploaded_file(request, queryset, file_to_import, producer, invoice_reference)
                 if error:
                     if error_msg is None:
                         admin_ui.message_user(request,
@@ -37,8 +32,8 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
                 else:
                     admin_ui.message_user(request, _("Successfully imported %s.") % (file_to_import.name))
                     split_path = request.get_full_path().split('/')
-                    if split_path[-2] == "import_stock":
-                        return HttpResponseRedirect("/".join(request.get_full_path().split('/')[:-2]))
+                    if len(split_path) == 7:
+                        return HttpResponseRedirect("/".join(split_path[:-2]))
             else:
                 admin_ui.message_user(request,
                                       _(
@@ -51,14 +46,17 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
         return HttpResponseRedirect(request.get_full_path())
     elif 'cancel' in request.POST:
         admin_ui.message_user(request, _("Action canceled by the user."), level=messages.INFO)
+        split_path = request.get_full_path().split('/')
+        if len(split_path) == 7:
+            return HttpResponseRedirect("/".join(split_path[:-2]))
         return HttpResponseRedirect(request.get_full_path())
-    form = ImportXlsxForm(
+    form = form_klass(
         initial={'_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME)}
     )
-    return render(request, 'repanier/import_xlsx.html', {
+    return render(request, form.template, {
         'sub_title'           : sub_title,
         'queryset'            : queryset,
-        'import_xlsx_form'    : form,
+        'form'                : form,
         'action'              : action,
         'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
     })

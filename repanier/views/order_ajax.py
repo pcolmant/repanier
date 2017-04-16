@@ -67,8 +67,8 @@ def order_ajax(request):
         else:
             offer_item = OfferItem.objects.filter(
                 id=offer_item_id
-            ).select_related(
-                "product"
+            # ).select_related(
+            #     "product"
             ).order_by('?').first()
             option_dict = display_selected_value(
                 offer_item,

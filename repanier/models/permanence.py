@@ -408,8 +408,6 @@ class Permanence(TranslatableModel):
                     update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
             else:
                 self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-            menu_pool.clear()
-            cache.clear()
             if new_status == PERMANENCE_WAIT_FOR_OPEN:
                 for a_producer in producer.Producer.objects.filter(
                         permanence=self.id

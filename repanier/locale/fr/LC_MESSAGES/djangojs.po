@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-09 11:31+0100\n"
-"PO-Revision-Date: 2017-03-09 17:48+0100\n"
+"POT-Creation-Date: 2017-04-14 13:41+0200\n"
+"PO-Revision-Date: 2017-04-15 08:56+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -25,6 +25,10 @@ msgstr "Exporter le stock"
 #: static/js/export_import_stock.js:5
 msgid "Import stock"
 msgstr "Importer le stock"
+
+#: static/js/import_invoice.js:4
+msgid "Import an invoice"
+msgstr "Importer une facture"
 
 #: static/js/is_order_confirm_send.js:4
 msgid "✗🔓"
