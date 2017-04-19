@@ -390,6 +390,11 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                             reference=product_reference,
                         )
                     product.long_name = row[_("Product")]
+                    # The producer unit price is the imported customer unit price
+                    # If the group get a reduction, this one must be mentionned into the producer admin screen
+                    # into the "price_list_multiplier" field
+                    product.producer_unit_price = row[_("customer unit price")]
+                    product.unit_deposit = row[_("deposit")]
                     product.order_unit = order_unit
                     product.vat_level = vat_level
                     product.save()
