@@ -51,7 +51,7 @@ class ProductResource(resources.ModelResource):
     producer_unit_price = fields.Field(attribute='producer_unit_price', widget=TwoMoneysWidget())
     customer_unit_price = fields.Field(attribute='customer_unit_price', widget=TwoMoneysWidget())
     unit_deposit = fields.Field(attribute='unit_deposit', widget=TwoMoneysWidget())
-    vat_level = fields.Field(attribute='vat_level', widget=ChoiceWidget(settings.LUT_VAT, settings.LUT_VAT_REVERSE))
+    vat_level = fields.Field(attribute='vat_level', widget=ChoiceWidget(LUT_ALL_VAT, LUT_ALL_VAT_REVERSE))
     customer_minimum_order_quantity = fields.Field(attribute='customer_minimum_order_quantity',
                                                    widget=ThreeDecimalsWidget())
     customer_increment_order_quantity = fields.Field(attribute='customer_increment_order_quantity',
@@ -507,10 +507,13 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         production_mode_field = form.base_fields["production_mode"]
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
+        vat_level_field = form.base_fields["vat_level"]
         producer_field.widget.can_add_related = False
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs['readonly'] = True
         department_for_customer_field.widget.can_delete_related = False
+        # TODO : Make it dependent of the producer country
+        vat_level_field.widget.choices = settings.LUT_VAT
 
         order_unit_choices = LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION
         if producer is not None:

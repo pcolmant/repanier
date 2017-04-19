@@ -1,10 +1,9 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponse
 from django.utils import translation, timezone
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
 from openpyxl.style import Border
@@ -14,14 +13,14 @@ import repanier.apps
 from export_tools import *
 from repanier.models import Configuration
 from repanier.const import *
-from repanier.models import BankAccount, Permanence, Purchase
+from repanier.models import BankAccount, Permanence, Product, Purchase
 from repanier.models import Customer
 from repanier.models import CustomerInvoice
 from repanier.models import Producer
 from repanier.models import ProducerInvoice
-from repanier.tools import get_invoice_unit
-from repanier.xlsx.xlsx_stock import export_permanence_stock
-from repanier.xlsx.import_tools import get_customer_2_id_dict, get_producer_2_id_dict, get_customer_email_2_id_dict, \
+from repanier.tools import get_invoice_unit, get_reverse_invoice_unit, get_or_create_offer_item, \
+    create_or_update_one_purchase
+from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
     get_header, get_row
 
 
@@ -259,13 +258,14 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             else:
                 row += [
-                    (_("Vat"), 10, purchase.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+                    (_("Vat level"), 10, purchase.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
                 (_("comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
                  False),
                 (_("invoice_status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
-                (_("CustId_02"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
+                (_("customer"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
+                (_("reference"), 10, purchase.offer_item.reference, NumberFormat.FORMAT_TEXT, False),
             ]
 
             if row_num == 0:
@@ -302,6 +302,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
             if hide_producer_prices and hide_customer_prices:
                 ws.column_dimensions[get_column_letter(15)].visible = False
             ws.column_dimensions[get_column_letter(18)].visible = False
+            ws.column_dimensions[get_column_letter(19)].visible = False
             for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.top.border_style = Border.BORDER_THIN
@@ -354,6 +355,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
     header = get_header(worksheet)
     if header:
         now = timezone.now().date()
+        lut_reverse_vat = dict(LUT_ALL_VAT_REVERSE)
         import_counter = 0
         row_num = 1
         sid = transaction.savepoint()
@@ -361,12 +363,14 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
 
             permanence = Permanence.objects.create(
                 permanence_date=now,
-                short_name=invoice_reference
+                short_name=invoice_reference,
+                status=PERMANENCE_SEND,
+                highest_status=PERMANENCE_SEND
             )
             permanence.producers.add(producer)
             row = get_row(worksheet, header, row_num)
             while row and not error:
-                customer_name = row[_("CustId_02")]
+                customer_name = row[_("customer")]
                 if customer_name:
                     if customer_name in customer_2_id_dict:
                         customer_id = customer_2_id_dict[customer_name]
@@ -374,7 +378,32 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                         error = True
                         error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                         break
+                    product_reference = row[_("reference")]
+                    unit = row[_("Unit")]
+                    order_unit = get_reverse_invoice_unit(unit)
+                    vat = row[_("Vat level")]
+                    vat_level = lut_reverse_vat[vat]
+                    product = Product.objects.filter(producer_id=producer.id, reference=product_reference).order_by('?').first()
+                    if product is None:
+                        product = Product.objects.create(
+                            producer=producer,
+                            reference=product_reference,
+                        )
+                    product.long_name = row[_("Product")]
+                    product.order_unit = order_unit
+                    product.vat_level = vat_level
+                    product.save()
+                    qty_and_price_display = product.get_qty_and_price_display()
+                    if product.long_name.endswith(qty_and_price_display):
+                        product.long_name = product.long_name[:-len(qty_and_price_display)]
+                        product.save()
+                    offer_item = get_or_create_offer_item(permanence, product.id, producer.id)
+                    create_or_update_one_purchase(customer_id, offer_item, q_order=1,
+                                                  status=PERMANENCE_SEND,
+                                                  permanence_date=permanence.permanence_date,
+                                                  batch_job=True, is_box_content=False)
                     import_counter += 1
+
                 row_num += 1
                 row = get_row(worksheet, header, row_num)
 
@@ -391,6 +420,8 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
             error_msg = "%s" % _("Nothing to import.")
         if error:
             transaction.savepoint_rollback(sid)
+        else:
+            transaction.savepoint_commit(sid)
     return error, error_msg
 
 

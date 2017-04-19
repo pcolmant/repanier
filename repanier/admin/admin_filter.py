@@ -119,7 +119,7 @@ class ProductFilterByVatLevel(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [(p[0], p[1]) for p in
-                settings.LUT_VAT
+                LUT_ALL_VAT  # settings.LUT_VAT
                 ]
 
     def queryset(self, request, queryset):

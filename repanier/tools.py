@@ -346,6 +346,17 @@ def get_invoice_unit(order_unit=PRODUCT_ORDER_UNIT_PC, qty=0):
     return unit
 
 
+def get_reverse_invoice_unit(unit):
+    # reverse of tools get_invoice_unit
+    if unit == _("/ kg"):
+        order_unit = PRODUCT_ORDER_UNIT_KG
+    elif unit == _("/ l"):
+        order_unit = PRODUCT_ORDER_UNIT_LT
+    else:
+        order_unit = PRODUCT_ORDER_UNIT_PC
+    return order_unit
+
+
 def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC):
     # Used when producing the preparation list.
     if order_unit in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT,
@@ -956,7 +967,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                             if quantity_ordered < DECIMAL_ZERO:
                                 quantity_ordered = DECIMAL_ZERO
                             purchase, updated = create_or_update_one_purchase(
-                                customer, box_offer_item, q_order=quantity_ordered, batch_job=batch_job, is_box_content=True
+                                customer.id, box_offer_item, q_order=quantity_ordered, batch_job=batch_job, is_box_content=True
                             )
                         else:
                             updated = False
@@ -993,7 +1004,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                         transaction.savepoint_rollback(sid)
             if not offer_item.is_box or updated:
                 purchase, updated = create_or_update_one_purchase(
-                    customer, offer_item, q_order=q_order, batch_job=batch_job,
+                    customer.id, offer_item, q_order=q_order, batch_job=batch_job,
                     is_box_content=False
                 )
                 if not batch_job and apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
@@ -1292,42 +1303,45 @@ def my_order_confirmation_email_send_to(customer):
     return msg_confirmation
 
 
-def create_or_update_one_purchase(customer, offer_item, q_order=None, batch_job=False, is_box_content=False):
+def create_or_update_one_purchase(customer_id, offer_item, permanence_date=None, status=PERMANENCE_OPENED, q_order=None, batch_job=False, is_box_content=False):
 
     # The batch_job flag is used because we need to forbid
     # customers to add purchases during the close_orders_async or other batch_job process
     # when the status is PERMANENCE_WAIT_FOR_SEND
     purchase = models.Purchase.objects.filter(
-        customer_id=customer.id,
+        customer_id=customer_id,
         offer_item_id=offer_item.id,
         is_box_content=is_box_content
     ).order_by('?').first()
     if batch_job:
         if purchase is None:
-            permanence = models.Permanence.objects.filter(id=offer_item.permanence_id) \
-                .only("permanence_date") \
-                .order_by('?').first()
+            permanence_date = permanence_date or models.Permanence.objects.filter(
+                id=offer_item.permanence_id).only("permanence_date").order_by('?').first().permanence_date
             purchase = models.Purchase.objects.create(
                 permanence_id=offer_item.permanence_id,
-                permanence_date=permanence.permanence_date,
+                permanence_date=permanence_date,
                 offer_item_id=offer_item.id,
                 producer_id=offer_item.producer_id,
-                customer_id=customer.id,
-                quantity_ordered=q_order,
-                quantity_invoiced=DECIMAL_ZERO,
+                customer_id=customer_id,
+                quantity_ordered=q_order if status < PERMANENCE_SEND else DECIMAL_ZERO,
+                quantity_invoiced=q_order if status >= PERMANENCE_SEND else DECIMAL_ZERO,
                 is_box_content=is_box_content,
-                status=PERMANENCE_OPENED
+                status=status
             )
-        if q_order == DECIMAL_ZERO:
-            purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
-        purchase.quantity_ordered = q_order
-        purchase.save()
+        else:
+            if status < PERMANENCE_SEND:
+                if q_order == DECIMAL_ZERO:
+                    purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
+                purchase.quantity_ordered = q_order
+            else:
+                purchase.quantity_invoiced = q_order
+            purchase.save()
         return purchase, True
     else:
         permanence_is_opened = models.CustomerInvoice.objects.filter(
             permanence_id=offer_item.permanence_id,
-            customer_id=customer.id,
-            status=PERMANENCE_OPENED
+            customer_id=customer_id,
+            status=status
         ).order_by('?').exists()
         if permanence_is_opened:
             if offer_item.limit_order_quantity_to_stock:
@@ -1339,7 +1353,7 @@ def create_or_update_one_purchase(customer, offer_item, q_order=None, batch_job=
                 if is_box_content and q_alert < q_order:
                     # Select one purchase
                     non_box_purchase = models.Purchase.objects.filter(
-                        customer_id=customer.id,
+                        customer_id=customer_id,
                         offer_item_id=offer_item.id,
                         is_box_content=False
                     ).order_by('?').first()
@@ -1373,11 +1387,11 @@ def create_or_update_one_purchase(customer, offer_item, q_order=None, batch_job=
                     permanence_date=permanence.permanence_date,
                     offer_item_id=offer_item.id,
                     producer_id=offer_item.producer_id,
-                    customer_id=customer.id,
+                    customer_id=customer_id,
                     quantity_ordered=q_order,
                     quantity_invoiced=DECIMAL_ZERO,
                     is_box_content=is_box_content,
-                    status=PERMANENCE_OPENED
+                    status=status
                 )
             return purchase, True
         else:
@@ -1574,6 +1588,7 @@ def update_offer_item(product_id=None, producer_id=None):
     cache.clear()
 
 
+@transaction.atomic()
 def get_or_create_offer_item(permanence, product_id, producer_id=None):
     offer_item_qs = models.OfferItem.objects.filter(
         permanence_id=permanence.id,

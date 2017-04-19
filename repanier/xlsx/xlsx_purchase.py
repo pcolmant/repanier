@@ -2,9 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import transaction
-from django.http import HttpResponse
 from django.utils import translation
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
 from openpyxl.style import Fill

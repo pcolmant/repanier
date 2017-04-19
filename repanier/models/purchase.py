@@ -96,7 +96,7 @@ class Purchase(models.Model):
 
     vat_level = models.CharField(
         max_length=3,
-        choices=settings.LUT_VAT,
+        choices=LUT_ALL_VAT, # settings.LUT_VAT,
         default=settings.DICT_VAT_DEFAULT,
         verbose_name=_("tax"))
 

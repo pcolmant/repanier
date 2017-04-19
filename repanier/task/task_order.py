@@ -379,14 +379,16 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
             for offer_item in OfferItem.objects.filter(permanence_id=permanence.id,  # is_active=False,
                                                        order_unit=PRODUCT_ORDER_UNIT_DEPOSIT).order_by('?'):
                 permanence.producers.add(offer_item.producer_id)
-                create_or_update_one_purchase(customer, offer_item, q_order=1, batch_job=True, is_box_content=False)
-                create_or_update_one_purchase(customer, offer_item, q_order=0, batch_job=True, is_box_content=False)
+                create_or_update_one_purchase(customer.id, offer_item, q_order=1, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
+                create_or_update_one_purchase(customer.id, offer_item, q_order=0, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
             # 4 - Add Membership fee Subscription
             if repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0:
                 # There is a membership fee
                 if customer.membership_fee_valid_until < today:
                     permanence.producers.add(membership_fee_offer_item.producer_id)
-                    create_or_update_one_purchase(customer, membership_fee_offer_item, q_order=1, batch_job=True,
+                    create_or_update_one_purchase(customer.id, membership_fee_offer_item, q_order=1,
+                                                  permanence_date=permanence.permanence_date,
+                                                  batch_job=True,
                                                   is_box_content=False)
                     customer.membership_fee_valid_until = add_months(
                         customer.membership_fee_valid_until,
@@ -400,7 +402,9 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
             for customer in Customer.objects.filter(is_active=True, may_order=True,
                                                     represent_this_buyinggroup=False).order_by('?'):
                 permanence.producers.add(offer_item.producer_id)
-                create_or_update_one_purchase(customer, offer_item, q_order=1, batch_job=True, is_box_content=False)
+                create_or_update_one_purchase(customer.id, offer_item, q_order=1,
+                                              permanence_date=permanence.permanence_date,
+                                              batch_job=True, is_box_content=False)
     delivery.set_status(PERMANENCE_CLOSED, all_producers, producers_id)
 
 
@@ -471,7 +475,9 @@ def close_order(permanence, all_producers, producers_id=None):
         offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
     for offer_item in offer_item_qs:
         buying_group = Customer.objects.filter(is_active=True, represent_this_buyinggroup=True).order_by('?').first()
-        create_or_update_one_purchase(buying_group, offer_item, q_order=1, batch_job=True, is_box_content=False)
+        create_or_update_one_purchase(buying_group.id, offer_item, q_order=1,
+                                      permanence_date=permanence.permanence_date,
+                                      batch_job=True, is_box_content=False)
     membership_fee_product = Product.objects.filter(is_membership_fee=True, is_active=True).order_by('?').first()
     membership_fee_product.producer_unit_price = repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE
     # Update the prices
@@ -495,14 +501,14 @@ def close_order(permanence, all_producers, producers_id=None):
         if not all_producers:
             offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
         for offer_item in offer_item_qs:
-            create_or_update_one_purchase(customer, offer_item, q_order=1, batch_job=True, is_box_content=False)
-            create_or_update_one_purchase(customer, offer_item, q_order=0, batch_job=True, is_box_content=False)
+            create_or_update_one_purchase(customer.id, offer_item, q_order=1, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
+            create_or_update_one_purchase(customer.id, offer_item, q_order=0, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
         # 4 - Add Add Membership fee Subscription
         if repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0:
             # There is a membership fee
             if customer.membership_fee_valid_until < today:
                 permanence.producers.add(membership_fee_offer_item.producer_id)
-                create_or_update_one_purchase(customer, membership_fee_offer_item, q_order=1, batch_job=True, is_box_content=False)
+                create_or_update_one_purchase(customer.id, membership_fee_offer_item, q_order=1, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
                 while customer.membership_fee_valid_until < today:
                     # Do not pay the membership fee if no order passed during a certain amount of time
                     customer.membership_fee_valid_until = add_months(
@@ -522,7 +528,7 @@ def close_order(permanence, all_producers, producers_id=None):
                     represent_this_buyinggroup=False
             ).order_by('?'):
                 permanence.producers.add(offer_item.producer_id)
-                create_or_update_one_purchase(customer, offer_item, q_order=1, batch_job=True, is_box_content=False)
+                create_or_update_one_purchase(customer.id, offer_item, q_order=1, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
         # Disable subscription for next permanence
         Product.objects.filter(
             order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION, is_into_offer=True, is_membership_fee=False

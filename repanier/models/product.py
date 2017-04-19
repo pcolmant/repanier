@@ -80,7 +80,7 @@ class Product(TranslatableModel):
 
     vat_level = models.CharField(
         max_length=3,
-        choices=settings.LUT_VAT,
+        choices=LUT_ALL_VAT, # settings.LUT_VAT,
         default=settings.DICT_VAT_DEFAULT,
         verbose_name=_("tax"))
     stock = models.DecimalField(
@@ -132,8 +132,8 @@ class Product(TranslatableModel):
     is_active = models.BooleanField(_("is_active"), default=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True, blank=True)
-    external_id_producer = models.BigIntegerField(null=True, blank=True, default=None)
-    external_id_product = models.BigIntegerField(null=True, blank=True, default=None)
+    # external_id_producer = models.BigIntegerField(null=True, blank=True, default=None)
+    # external_id_product = models.BigIntegerField(null=True, blank=True, default=None)
 
     @property
     def total_likes(self):
@@ -233,11 +233,19 @@ class Product(TranslatableModel):
             offer_price = self.get_unit_price()
         return offer_price
 
-    def get_long_name(self, box_unicode=BOX_UNICODE, customer_price=True):
-        if self.id:
-            if self.is_box:
-                # To avoid unicode error when print
-                qty_display = box_unicode
+    def get_qty_display(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
+        if self.is_box:
+            # To avoid unicode error in email_offer.send_open_order
+            qty_display = box_unicode
+        else:
+            if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                qty_display = get_display(
+                    qty=1,
+                    order_average_weight=self.order_average_weight,
+                    order_unit=PRODUCT_ORDER_UNIT_KG,
+                    for_customer=False,
+                    without_price_display=True
+                )
             else:
                 qty_display = get_display(
                     qty=1,
@@ -246,20 +254,27 @@ class Product(TranslatableModel):
                     for_customer=False,
                     without_price_display=True
                 )
-            unit_price = self.get_unit_price(customer_price=customer_price)
-            unit_deposit = self.unit_deposit
-            if len(qty_display) > 0:
-                if unit_deposit.amount > DECIMAL_ZERO:
-                    return '%s %s, %s ♻ %s' % (self.long_name, qty_display, unit_price, unit_deposit)
-                else:
-                    return '%s %s, %s' % (self.long_name, qty_display, unit_price)
+        return qty_display
+
+    def get_qty_and_price_display(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
+        qty_display = self.get_qty_display(is_quantity_invoiced, box_unicode)
+        unit_price = self.get_unit_price(customer_price=customer_price)
+        if len(qty_display) > 0:
+            if self.unit_deposit.amount > DECIMAL_ZERO:
+                return '%s, %s + ♻ %s' % (
+                    qty_display, unit_price, self.unit_deposit)
             else:
-                if unit_deposit.amount > DECIMAL_ZERO:
-                    return '%s, %s ♻ %s' % (self.long_name, unit_price, unit_deposit)
-                else:
-                    return '%s, %s' % (self.long_name, unit_price)
+                return '%s, %s' % (qty_display, unit_price)
         else:
-            raise AttributeError
+            if self.unit_deposit.amount > DECIMAL_ZERO:
+                return '%s + ♻ %s' % (
+                    unit_price, self.unit_deposit)
+            else:
+                return '%s' % unit_price
+
+    def get_long_name(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
+        return '%s %s' % (
+        self.long_name, self.get_qty_and_price_display(is_quantity_invoiced, customer_price, box_unicode))
 
     get_long_name.short_description = (_("long_name"))
     get_long_name.allow_tags = True

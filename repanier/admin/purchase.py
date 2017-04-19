@@ -60,7 +60,7 @@ class PurchaseResource(resources.ModelResource):
     producer_row_price = fields.Field(attribute='purchase_price', widget=TwoMoneysWidget(), readonly=True)
     customer_row_price = fields.Field(attribute='selling_price', widget=TwoMoneysWidget(), readonly=True)
     vat_level = fields.Field(attribute='offer_item__vat_level',
-                             widget=ChoiceWidget(settings.LUT_VAT, settings.LUT_VAT_REVERSE), readonly=True)
+                             widget=ChoiceWidget(LUT_ALL_VAT, LUT_ALL_VAT_REVERSE), readonly=True)
 
     class Meta:
         model = Purchase

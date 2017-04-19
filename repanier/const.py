@@ -186,8 +186,6 @@ DICT_VAT_RATE = 1
 
 DICT_VAT = {
     VAT_100: (_('none'), DECIMAL_ZERO),
-    VAT_200: (_('compensation 2%'), DECIMAL_0_02),
-    VAT_300: (_('compensation 6%'), DECIMAL_0_06),
     VAT_315: (_('vat 2.1%'), DECIMAL_0_021),
     VAT_325: (_('vat 2.5%'), DECIMAL_0_025),
     VAT_350: (_('vat 3.8%'), DECIMAL_0_038),
@@ -200,6 +198,36 @@ DICT_VAT = {
     VAT_590: (_('vat 20%'), DECIMAL_0_20),
     VAT_600: (_('vat 21%'), DECIMAL_0_21),
 }
+
+LUT_ALL_VAT = (
+    (VAT_100, _('none')),
+    (VAT_315, _('vat 2.1%')),
+    (VAT_325, _('vat 2.5%')),
+    (VAT_350, _('vat 3.8%')),
+    (VAT_360, _('vat 4%')),
+    (VAT_375, _('vat 5.5%')),
+    (VAT_400, _('vat 6%')),
+    (VAT_430, _('vat 8%')),
+    (VAT_460, _('vat 10%')),
+    (VAT_500, _('vat 12%')),
+    (VAT_590, _('vat 20%')),
+    (VAT_600, _('vat 21%')),
+)
+
+LUT_ALL_VAT_REVERSE = (
+    (_('none'), VAT_100),
+    (_('vat 2.1%'), VAT_315),
+    (_('vat 2.5%'), VAT_325),
+    (_('vat 3.8%'), VAT_350),
+    (_('vat 4%'), VAT_360),
+    (_('vat 5.5%'), VAT_375),
+    (_('vat 6%'), VAT_400),
+    (_('vat 8%'), VAT_430),
+    (_('vat 10%'), VAT_460),
+    (_('vat 12%'), VAT_500),
+    (_('vat 20%'), VAT_590),
+    (_('vat 21%'), VAT_600),
+)
 
 BANK_NOT_LATEST_TOTAL = '100'
 BANK_SUBSCRIPTION = '150'

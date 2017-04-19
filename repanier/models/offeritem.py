@@ -48,7 +48,7 @@ class OfferItem(TranslatableModel):
     )
     # Important : Check select_related
     product = models.ForeignKey(
-        'Product', verbose_name=_("product"), null=True, blank=True, default=None, on_delete=models.PROTECT)
+        'Product', verbose_name=_("product"), on_delete=models.PROTECT)
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,
@@ -102,7 +102,7 @@ class OfferItem(TranslatableModel):
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     vat_level = models.CharField(
         max_length=3,
-        choices=settings.LUT_VAT,
+        choices=LUT_ALL_VAT, # settings.LUT_VAT,
         default=settings.DICT_VAT_DEFAULT,
         verbose_name=_("tax"))
 
@@ -322,7 +322,7 @@ class OfferItem(TranslatableModel):
         return '<span class="glyphicon glyphicon-heart%s" onclick="like_ajax(%d);return false;"></span>' % (
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
 
-    def get_order_name(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
+    def get_qty_display(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
         if self.is_box:
             # To avoid unicode error in email_offer.send_open_order
             qty_display = box_unicode
@@ -343,7 +343,27 @@ class OfferItem(TranslatableModel):
                     for_customer=False,
                     without_price_display=True
                 )
-        return '%s %s' % (self.long_name, qty_display)
+        return qty_display
+
+    def get_qty_and_price_display(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
+        qty_display = self.get_qty_display(is_quantity_invoiced, box_unicode)
+        unit_price = self.get_unit_price(customer_price=customer_price)
+        if len(qty_display) > 0:
+            if self.unit_deposit.amount > DECIMAL_ZERO:
+                return '%s, %s + ♻ %s' % (
+                    qty_display, unit_price, self.unit_deposit)
+            else:
+                return '%s, %s' % (qty_display, unit_price)
+        else:
+            if self.unit_deposit.amount > DECIMAL_ZERO:
+                return '%s + ♻ %s' % (
+                    unit_price, self.unit_deposit)
+            else:
+                return '%s' % unit_price
+
+    def get_order_name(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
+
+        return '%s %s' % (self.long_name, self.get_qty_display(is_quantity_invoiced, box_unicode))
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)
@@ -352,31 +372,7 @@ class OfferItem(TranslatableModel):
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 
     def get_long_name(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
-        if self.is_box:
-            # To avoid unicode error in email_offer.send_open_order
-            qty_display = box_unicode
-        else:
-            if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                qty_display = get_display(
-                    qty=1,
-                    order_average_weight=self.order_average_weight,
-                    order_unit=PRODUCT_ORDER_UNIT_KG,
-                    for_customer=False,
-                    without_price_display=True
-                )
-            else:
-                qty_display = get_display(
-                    qty=1,
-                    order_average_weight=self.order_average_weight,
-                    order_unit=self.order_unit,
-                    for_customer=False,
-                    without_price_display=True
-                )
-        unit_price = self.get_unit_price(customer_price=customer_price)
-        if self.unit_deposit.amount > DECIMAL_ZERO:
-            return '%s %s, %s + ♻ %s' % (self.long_name, qty_display, unit_price, self.unit_deposit)
-        else:
-            return '%s %s, %s' % (self.long_name, qty_display, unit_price)
+        return '%s %s' % (self.long_name, self.get_qty_and_price_display(is_quantity_invoiced, customer_price, box_unicode))
 
     get_long_name.short_description = (_("long_name"))
     get_long_name.allow_tags = False
@@ -390,7 +386,6 @@ class OfferItem(TranslatableModel):
         verbose_name_plural = _("offer's items")
         unique_together = ("permanence", "product",)
         index_together = [
-            # ["permanence", "product"],
             ["id", "order_unit"]
         ]
 
