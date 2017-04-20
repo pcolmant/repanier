@@ -63,18 +63,18 @@
                     //store old value of "select" to restore it when Ajax calls fails
                     $(this).data('oldValue', $(this).val());
                 });
-                lien = '{% url 'my_balance' %}';
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    async: false,
-                    success: function (result) {
-                        $("#my_balance").html(result);
-                    },
-                    error: function (result) {
-                        $("#my_balance").html("{% trans "Retry7" %}");
-                    }
-                });
+{#                lien = '{% url 'my_balance' %}';#}
+{#                $.ajax({#}
+{#                    url: lien,#}
+{#                    cache: false,#}
+{#                    async: false,#}
+{#                    success: function (result) {#}
+{#                        $("#my_balance").html(result);#}
+{#                    },#}
+{#                    error: function (result) {#}
+{#                        $("#my_balance").html("{% trans "Retry7" %}");#}
+{#                    }#}
+{#                });#}
             });
         </script>
     {% endaddtoblock %}

@@ -82,28 +82,7 @@
           </ul>
           {# <!-- Right Nav Section --> #}
           <ul class="nav navbar-nav navbar-right">
-            {% if user.is_authenticated %}
-            <li id="li_my_name" class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Welkom" %} {% if user %}{{ user.username }}{% else %}<span id="my_name"></span>{% endif %}
-                <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                  <li><a href="{% url "logout_form" %}">{% trans "Logout" %}</a></li>
-                </ul>
-            </li>
-              {% if permanence %}
-                <li id="li_my_basket" style="display:none;" class="dropdown">
-                {% if delivery_id %}
-                    <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-info"><span id="my_basket"></span></a>
-                {% else %}
-                    <a href="{% url "basket_view" permanence.id %}" class="btn btn-info"><span id="my_basket"></span></a>
-                {% endif %}
-                </li>
-              {% endif %}
-            {% else %}
-            <li class="dropdown">
-              <a href="{% url "login_form" %}">{% trans "Login" %}</a>
-            </li>
-            {% endif %}
+            {% repanier_user permanence_id=permanence.id delivery_id=delivery.id %}
             {% repanier_display_languages as display_languages %}
             {% if display_languages %}
             <li class="dropdown">
@@ -112,8 +91,6 @@
                 {% language_chooser "native" %}
               </ul>
             </li>
-            {% else %}
-              &nbsp;{{ repanier_display_languages }}&nbsp;
             {% endif %}
           </ul>
         </div>

@@ -128,7 +128,7 @@ urlpatterns = [
     url(r'^coordinators/$', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
     url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
     url(r'^who/$', who_is_who_view, name='who_is_who_view'),
-    url(r'^me/$', me_view, name='me_view'),
+    url(r'^me/$', me_view, name='my_profile_view'),
     # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     url(r'^rest/permanences/$', permanences_rest, name='permanences_rest'),
     url(r'^rest/permanence/(?P<permanence_id>\d+)/(?P<producer_name>.*)/(?P<reference>.*)/$',

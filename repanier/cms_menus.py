@@ -90,64 +90,64 @@ class PermanenceMenu(Menu):
                 if max_counter <= 0:
                     break
 
-        if REPANIER_SETTINGS_INVOICE and not request.user.is_staff:
-            if separator:
-                submenu_id = self.append_separator(nodes, master_id, submenu_id)
-            submenu_id += 1
-            node = NavigationNode(
-                '<span id="my_balance">%s</span>' % _('My balance'),
-                reverse('customer_invoice_view', args=(0,)),
-                id=submenu_id, parent_id=master_id,
-                visible=True
-            )
-            nodes.append(node)
+        # if REPANIER_SETTINGS_INVOICE and not request.user.is_staff:
+        #     if separator:
+        #         submenu_id = self.append_separator(nodes, master_id, submenu_id)
+        #     submenu_id += 1
+        #     node = NavigationNode(
+        #         '<span id="my_balance">%s</span>' % _('My balance'),
+        #         reverse('customer_invoice_view', args=(0,)),
+        #         id=submenu_id, parent_id=master_id,
+        #         visible=True
+        #     )
+        #     nodes.append(node)
 
             # for node in nodes:
             #     logging.debug('Node before : %s' % node.get_menu_title())
             #     for attr in (x for x in dir(node) if not x.startswith('__')):
             #         logging.debug('%s => %s' % (attr, getattr(node, attr)))
 
-        master_id = 3
-        node = NavigationNode(
-            "%s" % _('Group'),
-            "/",
-            id=master_id,
-            visible=True
-        )
-        nodes.append(node)
-        submenu_id = master_id + 1
-        node = NavigationNode(
-            _('Send mail to coordinators'),
-            reverse('send_mail_to_coordinators_view'),
-            id=submenu_id, parent_id=master_id,
-            visible=True
-        )
-        nodes.append(node)
-        submenu_id += 1
-        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-            node = NavigationNode(
-                _('Send mail to all members'),
-                reverse('send_mail_to_all_members_view'),
-                id=submenu_id, parent_id=master_id,
-                visible=True
-            )
-            nodes.append(node)
-            submenu_id += 1
-            node = NavigationNode(
-                _('Who is who'),
-                reverse('who_is_who_view'),
-                id=submenu_id, parent_id=master_id,
-                visible=True
-            )
-            nodes.append(node)
-            submenu_id += 1
-        node = NavigationNode(
-            _('Me'),
-            reverse('me_view'),
-            id=submenu_id, parent_id=master_id,
-            visible=True
-        )
-        nodes.append(node)
+        # master_id = 3
+        # node = NavigationNode(
+        #     "%s" % _('Group'),
+        #     "/",
+        #     id=master_id,
+        #     visible=True
+        # )
+        # nodes.append(node)
+        # submenu_id = master_id + 1
+        # node = NavigationNode(
+        #     _('Send mail to coordinators'),
+        #     reverse('send_mail_to_coordinators_view'),
+        #     id=submenu_id, parent_id=master_id,
+        #     visible=True
+        # )
+        # nodes.append(node)
+        # submenu_id += 1
+        # if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+        #     node = NavigationNode(
+        #         _('Send mail to all members'),
+        #         reverse('send_mail_to_all_members_view'),
+        #         id=submenu_id, parent_id=master_id,
+        #         visible=True
+        #     )
+        #     nodes.append(node)
+        #     submenu_id += 1
+        #     node = NavigationNode(
+        #         _('Who is who'),
+        #         reverse('who_is_who_view'),
+        #         id=submenu_id, parent_id=master_id,
+        #         visible=True
+        #     )
+        #     nodes.append(node)
+        #     submenu_id += 1
+        # node = NavigationNode(
+        #     _('Me'),
+        #     reverse('me_view'),
+        #     id=submenu_id, parent_id=master_id,
+        #     visible=True
+        # )
+        # nodes.append(node)
 
         return nodes
 

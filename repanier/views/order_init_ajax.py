@@ -63,16 +63,16 @@ def order_init_ajax(request):
                 if customer_invoice is None:
                     raise Http404
                 my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
-                if customer.balance.amount < 0:
-                    my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
-                        'balance': customer.balance,
-                        'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
-                else:
-                    my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
-                        'balance': customer.balance,
-                        'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
-                option_dict = {'id': "#my_balance", 'html': my_balance}
-                to_json.append(option_dict)
+                # if customer.balance.amount < 0:
+                #     my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
+                #         'balance': customer.balance,
+                #         'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                # else:
+                #     my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
+                #         'balance': customer.balance,
+                #         'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                # option_dict = {'id': "#my_balance", 'html': my_balance}
+                # to_json.append(option_dict)
                 basket = sboolean(request.GET.get('ba', False))
                 from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
                     REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \

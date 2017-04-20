@@ -307,24 +307,24 @@
         </div>
     {% endif %}
 </div>
-{% addtoblock "lastjs" %}
-    <script type="text/javascript">
-        $(document).ready(function () {
-            lien = '{% url 'my_balance' %}';
-            $.ajax({
-                url: lien,
-                cache: false,
-                async: false,
-                success: function (result) {
-                    $("#my_balance").html(result);
-                },
-                error: function (result) {
-                    $("#my_balance").html("{% trans "Retry7" %}");
-                }
-            });
-        });
-    </script>
-{% endaddtoblock %}
+{#{% addtoblock "lastjs" %}#}
+{#    <script type="text/javascript">#}
+{#        $(document).ready(function () {#}
+{#            lien = '{% url 'my_balance' %}';#}
+{#            $.ajax({#}
+{#                url: lien,#}
+{#                cache: false,#}
+{#                async: false,#}
+{#                success: function (result) {#}
+{#                    $("#my_balance").html(result);#}
+{#                },#}
+{#                error: function (result) {#}
+{#                    $("#my_balance").html("{% trans "Retry7" %}");#}
+{#                }#}
+{#            });#}
+{#        });#}
+{#    </script>#}
+{#{% endaddtoblock %}#}
 {% addtoblock "lastjs" %}
     {% if not next_customer_invoice_id %}
     <script type="text/javascript">

@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'cms_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags %}
-{% block base_content %}
-<div class="container-repanier">
-<div class="container">
+{% block sub_content %}
+{#<div class="container-repanier">#}
+{#<div class="container">#}
     {% if is_anonymous %}
     <div class="row">
     <div class="panel panel-danger">
@@ -276,8 +276,8 @@
     </div>
 </div>
 {% endif %} {# not is_anonymous or display_anonymous_order_form #}
-</div>
-</div>
+{#</div>#}
+{#</div>#}
 {% endblock %}
 {% block footer %}
     <div class="visible-xs">
