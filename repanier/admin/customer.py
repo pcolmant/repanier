@@ -142,7 +142,7 @@ class CustomerResource(resources.ModelResource):
     email = fields.Field(attribute='user', default="ask.it@to.me", widget=OneToOneWidget(User, 'email'), readonly=False)
     phone1 = fields.Field(attribute='phone1', default="1234", widget=CharWidget(), readonly=False)
     phone2 = fields.Field(attribute='phone2', widget=CharWidget(), readonly=False)
-    date_balance = fields.Field(attribute='get_admin_date_balance', widget=DateWidgetExcel(), readonly=True)
+    date_balance = fields.Field(attribute='get_admin_date_balance', widget=CharWidget(), readonly=True)
     balance = fields.Field(attribute='get_admin_balance', widget=TwoMoneysWidget(), readonly=True)
     may_order = fields.Field(attribute='may_order', default=False, widget=DecimalBooleanWidget(), readonly=False)
     is_group = fields.Field(attribute='is_group', default=False, widget=DecimalBooleanWidget(), readonly=False)
@@ -163,6 +163,7 @@ class CustomerResource(resources.ModelResource):
     delivery_point = fields.Field(attribute='delivery_point',
                                   widget=TranslatedForeignKeyWidget(LUT_DeliveryPoint, field='short_name'))
     valid_email = fields.Field(attribute='valid_email', widget=DecimalBooleanWidget(), readonly=True)
+    date_joined = fields.Field(attribute='get_admin_date_joined', widget=CharWidget(), readonly=True)
 
     def before_save_instance(self, instance, using_transactions, dry_run):
         """
@@ -286,14 +287,6 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     get_email.short_description = _("email")
     get_email.admin_order_field = 'user__email'
 
-    def get_date_joined(self, customer):
-        if customer.user is not None:
-            return customer.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
-        else:
-            return EMPTY_STRING
-
-    get_date_joined.short_description = _("date joined")
-
     def get_last_login(self, customer):
         if customer.user is not None and customer.user.last_login is not None:
             return customer.user.last_login.strftime(settings.DJANGO_SETTINGS_DATE)
@@ -356,7 +349,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             'bank_account1',
             'bank_account2',
             'get_last_login',
-            'get_date_joined',
+            'get_admin_date_joined',
             'get_last_membership_fee',
             'get_last_membership_fee_date',
             'get_participation',
@@ -374,20 +367,20 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 return [
                     'get_admin_date_balance', 'get_admin_balance',
                     'represent_this_buyinggroup', 'get_last_login',
-                    'get_date_joined', 'get_participation', 'get_purchase',
+                    'get_admin_date_joined', 'get_participation', 'get_purchase',
                     'get_last_membership_fee', 'get_last_membership_fee_date'
                 ]
             else:
                 return [
                     'get_admin_date_balance', 'get_admin_balance',
                     'get_last_login',
-                    'get_date_joined', 'get_participation', 'get_purchase',
+                    'get_admin_date_joined', 'get_participation', 'get_purchase',
                     'get_last_membership_fee', 'get_last_membership_fee_date'
                 ]
         else:
             return [
                 'represent_this_buyinggroup', 'get_last_login',
-                'get_date_joined', 'get_participation', 'get_purchase',
+                'get_admin_date_joined', 'get_participation', 'get_purchase',
                 'get_last_membership_fee', 'get_last_membership_fee_date'
             ]
 

@@ -404,6 +404,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 context = TemplateContext({
                     'offer_description': mark_safe(offer_description),
                     'offer_detail'     : offer_detail,
+                    'offer_recent_detail': offer_detail,
                     'offer_producer'   : offer_producer,
                     'permanence_link'  : mark_safe('<a href="#">%s</a>' % permanence),
                     'signature'        : mark_safe(

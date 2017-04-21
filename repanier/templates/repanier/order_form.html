@@ -7,7 +7,6 @@
     <div class="row">
     <div class="panel panel-danger">
         <div class="panel-heading">
-            {% trans "You need to log in" %}<br/><br/>
             <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-primary">{% trans "Login me" %}</a>
         </div>
     </div>
@@ -298,11 +297,9 @@
                     </ul>
                 </div>
             {% endif %}
-            {% if display_all_product_button %}
-                <div class="btn-group">
-                <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-primary">{% trans "All" %}</a>
-                </div>
-            {% endif %}
+            <div class="btn-group">
+            <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-primary">{% trans "All" %}</a>
+            </div>
             <div class="btn-group">
             <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-primary">
                 <span id="prepared_amount_visible_xs"></span></a>

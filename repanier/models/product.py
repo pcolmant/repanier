@@ -128,7 +128,7 @@ class Product(TranslatableModel):
 
     is_box = models.BooleanField(_("is_box"), default=False)
     # is_mandatory = models.BooleanField(_("is_mandatory"), default=False)
-    is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
+    # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     is_active = models.BooleanField(_("is_active"), default=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True, blank=True)
@@ -308,7 +308,11 @@ def product_pre_save(sender, **kwargs):
     elif product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG,
                                     PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
         product.order_average_weight = DECIMAL_ZERO
-    if product.order_unit in [PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_SUBSCRIPTION]:
+    if product.order_unit in [
+        PRODUCT_ORDER_UNIT_DEPOSIT,
+        PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+        PRODUCT_ORDER_UNIT_SUBSCRIPTION
+    ]:
         # No VAT on those products
         product.vat_level = VAT_100
 
@@ -327,7 +331,8 @@ def product_pre_save(sender, **kwargs):
         product.limit_order_quantity_to_stock = False
     if product.limit_order_quantity_to_stock:
         product.customer_alert_order_quantity = min(999, product.stock)
-
+    elif product.order_unit == PRODUCT_ORDER_UNIT_SUBSCRIPTION:
+        product.customer_alert_order_quantity = LIMIT_ORDER_QTY_ITEM
     if product.customer_increment_order_quantity <= DECIMAL_ZERO:
         product.customer_increment_order_quantity = DECIMAL_ONE
     if product.customer_minimum_order_quantity <= DECIMAL_ZERO:

@@ -108,8 +108,9 @@ PRODUCT_ORDER_UNIT_KG = '120'
 PRODUCT_ORDER_UNIT_PC_KG = '140'
 PRODUCT_ORDER_UNIT_LT = '150'
 PRODUCT_ORDER_UNIT_DEPOSIT = '300'
-PRODUCT_ORDER_UNIT_SUBSCRIPTION = '400'
+PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE = '400'
 PRODUCT_ORDER_UNIT_TRANSPORTATION = '500'
+PRODUCT_ORDER_UNIT_SUBSCRIPTION = '600'
 
 LUT_PRODUCT_ORDER_UNIT = (
     (PRODUCT_ORDER_UNIT_PC, _("bought per piece")),
@@ -122,7 +123,7 @@ LUT_PRODUCT_ORDER_UNIT = (
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
-        'As a subscription, common expense : add the minimal order quantity of this product to each customer of the group')),
+        'Subscription')),
     (PRODUCT_ORDER_UNIT_TRANSPORTATION, _(
         'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.')),
 )
@@ -138,7 +139,7 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
     (_('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.'),
      PRODUCT_ORDER_UNIT_DEPOSIT),
     (_(
-        'As a subscription, common expense : add the minimal order quantity of this product to each customer of the group'),
+        'Subscription'),
      PRODUCT_ORDER_UNIT_SUBSCRIPTION),
     (_(
         'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.'),
@@ -157,6 +158,20 @@ LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
      _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
     (PRODUCT_ORDER_UNIT_TRANSPORTATION, _(
         'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.')),
+)
+
+LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION = (
+    (PRODUCT_ORDER_UNIT_PC, _("bought per piece")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("bought per piece (price /kg)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("bought per piece (price /l)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("bought per piece (price /pc)")),
+    (PRODUCT_ORDER_UNIT_KG, _("bought per kg")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("bought per piece, invoiced following the weight")),
+    (PRODUCT_ORDER_UNIT_LT, _("bought per l")),
+    (PRODUCT_ORDER_UNIT_DEPOSIT,
+     _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
+    (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
+        'Subscription')),
 )
 
 LUT_PRODUCER_PRODUCT_ORDER_UNIT = (
@@ -230,7 +245,7 @@ LUT_ALL_VAT_REVERSE = (
 )
 
 BANK_NOT_LATEST_TOTAL = '100'
-BANK_SUBSCRIPTION = '150'
+BANK_MEMBERSHIP_FEE = '150'
 BANK_COMPENSATION = '200' # BANK_COMPENSATION may occurs in previous release of Repanier
 BANK_PROFIT = '210'
 BANK_TAX = '220'
@@ -240,7 +255,7 @@ BANK_LATEST_TOTAL = '400'
 
 LUT_BANK_TOTAL = (
     (BANK_NOT_LATEST_TOTAL, _('This is not the latest total')),
-    (BANK_SUBSCRIPTION, BANK_SUBSCRIPTION),
+    (BANK_MEMBERSHIP_FEE, BANK_MEMBERSHIP_FEE),
     (BANK_PROFIT, BANK_PROFIT),
     (BANK_TAX, BANK_TAX),
     (BANK_CALCULATED_INVOICE, BANK_CALCULATED_INVOICE),

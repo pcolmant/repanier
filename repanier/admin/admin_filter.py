@@ -241,7 +241,12 @@ class BankAccountFilterByStatus(SimpleListFilter):
     parameter_name = 'is_filled_exact'
 
     def lookups(self, request, model_admin):
-        return [(1, _('not invoiced')), (2, _('balance')), (3, _('subscriptions')), (4, _('losts and profits')), (5, _('taxes'))]
+        return [
+            (1, _('not invoiced')),
+            (2, _('balance')),
+            (3, _('membership fees')),
+            (4, _('losts and profits')),
+            (5, _('taxes'))]
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -254,7 +259,7 @@ class BankAccountFilterByStatus(SimpleListFilter):
             elif value == "2":
                 return queryset.filter(permanence_id__isnull=False, customer_id__isnull=True, producer_id__isnull=True)
             elif value == "3":
-                return queryset.filter(operation_status=BANK_SUBSCRIPTION)
+                return queryset.filter(operation_status=BANK_MEMBERSHIP_FEE)
             elif value == "4":
                 return queryset.filter(operation_status=BANK_PROFIT)
             else:

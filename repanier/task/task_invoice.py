@@ -322,29 +322,26 @@ def generate_invoice(permanence, payment_date):
             producer_invoice=None
         )
 
-    result_set = Purchase.objects.filter(
+    for membership_fee in Purchase.objects.filter(
         permanence_id=permanence.id,
         producer_id=producer_buyinggroup.id,
-        offer_item__order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION
-    ).order_by('?').aggregate(Sum('selling_price'))
-    if result_set["selling_price__sum"] is not None:
-        subscriptions = result_set["selling_price__sum"]
-        if subscriptions != DECIMAL_ZERO:
-            # --> This bank movement is not a real entry
-            # making this, it will not be counted into the customer_buyinggroup movements twice
-            # because Repanier will see it has already been counted into the customer_buyinggroup movements
-            BankAccount.objects.create(
-                permanence_id=permanence.id,
-                producer=None,
-                customer_id=customer_buyinggroup.id,
-                operation_date=payment_date,
-                operation_status=BANK_SUBSCRIPTION,
-                operation_comment=_("Subscriptions"),
-                bank_amount_in=subscriptions,
-                bank_amount_out=DECIMAL_ZERO,
-                customer_invoice_id=customer_invoice_buyinggroup.id,
-                producer_invoice=None
-            )
+        offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
+    ).order_by('?').aggregate(Sum('selling_price')):
+        # --> This bank movement is not a real entry
+        # making this, it will not be counted into the customer_buyinggroup movements twice
+        # because Repanier will see it has already been counted into the customer_buyinggroup movements
+        BankAccount.objects.create(
+            permanence_id=permanence.id,
+            producer=None,
+            customer_id=customer_buyinggroup.id,
+            operation_date=payment_date,
+            operation_status=BANK_MEMBERSHIP_FEE,
+            operation_comment="%s : %s" % (_("Membership fee"), membership_fee.customer),
+            bank_amount_in=membership_fee,
+            bank_amount_out=DECIMAL_ZERO,
+            customer_invoice_id=customer_invoice_buyinggroup.id,
+            producer_invoice=None
+        )
 
     for customer_invoice in CustomerInvoice.objects.filter(
         permanence_id=permanence.id,
@@ -362,7 +359,7 @@ def generate_invoice(permanence, payment_date):
                 producer=None,
                 customer_id=customer_buyinggroup.id,
                 operation_date=payment_date,
-                operation_status=BANK_SUBSCRIPTION,
+                operation_status=BANK_PROFIT,
                 operation_comment="%s : %s" % (_("Transport"), customer_invoice.customer.short_basket_name),
                 bank_amount_in=customer_invoice.delta_transport,
                 bank_amount_out=DECIMAL_ZERO,
@@ -648,7 +645,7 @@ def cancel_invoice(permanence):
                     BANK_CALCULATED_INVOICE,
                     BANK_PROFIT,
                     BANK_TAX,
-                    BANK_SUBSCRIPTION,
+                    BANK_MEMBERSHIP_FEE,
                     BANK_COMPENSATION # BANK_COMPENSATION may occurs in previous release of Repanier
                 ]
             ).order_by('?').delete()

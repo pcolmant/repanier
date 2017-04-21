@@ -114,6 +114,7 @@ class Configuration(TranslatableModel):
                                       <br />
                                       Les produits suivants sont en offre :<br />
                                       {{ offer_detail }}<br />
+                                      {{ offer_recent_detail }}<br />
                                       <br />
                                       {{ signature }}
                                       """,
@@ -377,13 +378,14 @@ def configuration_post_save(sender, **kwargs):
                 represent_this_buyinggroup=True
             )
         if producer_buyinggroup is not None:
-            membership_fee_product = product.Product.objects.filter(is_membership_fee=True, is_active=True).order_by(
-                '?').first()
+            membership_fee_product = product.Product.objects.filter(
+                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+                is_active=True
+            ).order_by('?').first()
             if membership_fee_product is None:
                 membership_fee_product = product.Product.objects.create(
                     producer_id=producer_buyinggroup.id,
-                    is_membership_fee=True,
-                    order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION,
+                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                     vat_level=VAT_100
                 )
             cur_language = translation.get_language()

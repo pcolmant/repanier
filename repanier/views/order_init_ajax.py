@@ -63,50 +63,40 @@ def order_init_ajax(request):
                 if customer_invoice is None:
                     raise Http404
                 my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
-                # if customer.balance.amount < 0:
-                #     my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
-                #         'balance': customer.balance,
-                #         'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
-                # else:
-                #     my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
-                #         'balance': customer.balance,
-                #         'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
-                # option_dict = {'id': "#my_balance", 'html': my_balance}
-                # to_json.append(option_dict)
                 basket = sboolean(request.GET.get('ba', False))
                 from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
                     REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
                     REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
-                if basket or (REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-                              and customer_invoice.is_order_confirm_send):
-                    if customer_invoice.delivery is not None:
-                        status = customer_invoice.delivery.status
-                    else:
-                        status = customer_invoice.status
-                    if status <= PERMANENCE_OPENED:
-                        basket_message = calc_basket_message(customer, permanence, status)
-                    else:
-                        if customer_invoice.delivery is not None:
-                            basket_message = EMPTY_STRING
-                        else:
-                            basket_message = "%s" % (
-                                _('The orders are closed.'),
-                            )
-                    my_order_confirmation(
-                        permanence=permanence,
-                        customer_invoice=customer_invoice,
-                        is_basket=basket,
-                        basket_message=basket_message,
-                        to_json=to_json
-                    )
+                # if basket or (REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+                #               and customer_invoice.is_order_confirm_send):
+                if customer_invoice.delivery is not None:
+                    status = customer_invoice.delivery.status
                 else:
-                    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-                        my_order_confirmation(
-                            permanence=permanence,
-                            customer_invoice=customer_invoice,
-                            is_basket=basket,
-                            to_json=to_json
+                    status = customer_invoice.status
+                if status <= PERMANENCE_OPENED:
+                    basket_message = calc_basket_message(customer, permanence, status)
+                else:
+                    if customer_invoice.delivery is not None:
+                        basket_message = EMPTY_STRING
+                    else:
+                        basket_message = "%s" % (
+                            _('The orders are closed.'),
                         )
+                my_order_confirmation(
+                    permanence=permanence,
+                    customer_invoice=customer_invoice,
+                    is_basket=basket,
+                    basket_message=basket_message,
+                    to_json=to_json
+                )
+                # else:
+                #     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                #         my_order_confirmation(
+                #             permanence=permanence,
+                #             customer_invoice=customer_invoice,
+                #             is_basket=basket,
+                #             to_json=to_json
+                #         )
                 if customer.may_order:
                     if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                         for producer in permanence.producers.all():

@@ -1229,19 +1229,20 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                     href = urlresolvers.reverse(
                         'basket_view', args=(permanence.id,)
                     )
-                    msg_confirmation1 = '<font color="red">%s</font><br/>' % _("An unconfirmed order will be canceled.")
-                    msg_confirmation2 = _("Verify my order content before validating it.")
-                    msg_html = """
-                        <div class="row">
-                        <div class="panel panel-default">
-                        <div class="panel-heading">
-                        %s
-                        %s
-                        <a href="%s" class="btn btn-info" %s>%s</a>
-                        </div>
-                        </div>
-                        </div>
-                         """ % (msg_delivery, msg_confirmation1, href, btn_disabled, msg_confirmation2)
+                    if customer_invoice.status == PERMANENCE_OPENED:
+                        msg_confirmation1 = '<font color="red">%s</font><br/>' % _("An unconfirmed order will be canceled.")
+                        msg_confirmation2 = _("Verify my order content before validating it.")
+                        msg_html = """
+                            <div class="row">
+                            <div class="panel panel-default">
+                            <div class="panel-heading">
+                            %s
+                            %s
+                            <a href="%s" class="btn btn-info" %s>%s</a>
+                            </div>
+                            </div>
+                            </div>
+                             """ % (msg_delivery, msg_confirmation1, href, btn_disabled, msg_confirmation2)
             else:
                 if is_basket:
                     msg_confirmation2 = _("Receive an email containing this order summary.")
@@ -1405,11 +1406,9 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         # The offer item may not be modified any more
         return
     getcontext().rounding = ROUND_HALF_UP
-    for offer_item in queryset.select_related("producer"):
+    for offer_item in queryset.select_related("producer", "product"):
         product = offer_item.product
         producer = offer_item.producer
-        if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-            offer_item.is_active = product.is_into_offer
         offer_item.picture2 = product.picture2
         offer_item.reference = product.reference
         offer_item.department_for_customer_id = product.department_for_customer_id
@@ -1452,7 +1451,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         offer_item.customer_alert_order_quantity = product.customer_alert_order_quantity
         offer_item.producer_order_by_quantity = product.producer_order_by_quantity
         offer_item.is_box = product.is_box
-        offer_item.is_membership_fee = product.is_membership_fee
+        # offer_item.is_membership_fee = product.is_membership_fee
         offer_item.save()
 
     # Now got everything to calculate the sort order of the order display screen
@@ -1471,7 +1470,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
 
         departementforcustomer_set = models.LUT_DepartmentForCustomer.objects.filter(
             offeritem__permanence_id=permanence.id,
-            offeritem__order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT) \
+            offeritem__may_order=True) \
             .order_by("tree_id", "lft") \
             .distinct("id", "tree_id", "lft")
         if departementforcustomer_set:

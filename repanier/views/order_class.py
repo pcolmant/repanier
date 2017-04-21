@@ -87,8 +87,6 @@ class OrderView(ListView):
     def get_context_data(self, **kwargs):
         context = super(OrderView, self).get_context_data(**kwargs)
         context['permanence'] = self.permanence
-        if self.permanence.status == PERMANENCE_OPENED:
-            context['display_all_product_button'] = "Ok"
         context['delivery_id'] = self.delivery_id
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
         if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:

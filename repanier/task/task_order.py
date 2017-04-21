@@ -60,42 +60,47 @@ def automatically_open():
 
 def common_to_pre_open_and_open(permanence_id):
     getcontext().rounding = ROUND_HALF_UP
-    # 1- Deactivate all offer item of this permanence
-    OfferItem.objects.filter(
-        permanence_id=permanence_id
-    ).order_by('?').update(
-        is_active=False, may_order=False, is_box=False, is_box_content=False
-    )
-    # 2 - Delete unused purchases
-    # Purchase.objects.filter(permanence_id=permanence_id, quantity_ordered=0,
-    #                         quantity_invoiced=0).order_by('?').delete()
-    # 3 - Activate offer items which can be purchased depending on selection in the admin
+    # Create offer items which can be purchased depending on selection in the admin
     producers_in_this_permanence = Producer.objects.filter(
         permanence=permanence_id, is_active=True).order_by('?').only("id")
     product_queryset = Product.objects.filter(
-        producer__in=producers_in_this_permanence, is_into_offer=True
+        producer__in=producers_in_this_permanence,
+        is_box=False,
+        is_into_offer=True
     ).order_by('?').only("id", "producer_id")
-
-    OfferItem.objects.filter(product__in=product_queryset, permanence_id=permanence_id) \
-        .order_by('?').update(is_active=True, may_order=True)
     for product in product_queryset:
-        if not OfferItem.objects.filter(product_id=product.id, permanence_id=permanence_id) \
-                .order_by('?').exists():
+        if not OfferItem.objects.filter(
+            product_id=product.id,
+            permanence_id=permanence_id
+        ).order_by('?').exists():
             OfferItem.objects.create(
                 permanence_id=permanence_id,
                 product_id=product.id,
                 producer_id=product.producer_id,
-                is_box=False,
-                is_box_content=False,
-                is_active=True,
-                may_order=True
             )
-    # 4 - Add composition products
+    # Deactivate all offer item of this permanence
+    OfferItem.objects.filter(
+        permanence_id=permanence_id
+    ).order_by('?').update(
+        is_active=False, may_order=False,
+        is_box=False, is_box_content=False
+    )
+    # Activate all offer item of this permanence
+    OfferItem.objects.filter(
+        product__in=product_queryset,
+        permanence_id=permanence_id
+    ).exclude(
+        order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
+    ).order_by('?').update(is_active=True, may_order=True)
+    OfferItem.objects.filter(
+        product__in=product_queryset,
+        permanence_id=permanence_id,
+        order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
+    ).order_by('?').update(is_active=True, may_order=False)
+    # Create box offer items which can be purchased depending on selection in the admin
     product_queryset = Product.objects.filter(
         is_box=True, is_into_offer=True
     ).order_by('?').only("id", "producer_id")
-    OfferItem.objects.filter(product__in=product_queryset, permanence_id=permanence_id) \
-        .order_by('?').update(is_active=True, may_order=True)
     for product in product_queryset:
         offer_item = OfferItem.objects.filter(product_id=product.id, permanence_id=permanence_id).order_by('?').first()
         if offer_item is None:
@@ -110,12 +115,19 @@ def common_to_pre_open_and_open(permanence_id):
             )
         else:
             offer_item.is_box = True
+            offer_item.is_box_content = False
             offer_item.is_active = True
-            offer_item.save(update_fields=["is_active", "is_box"])
-        for box_content in BoxContent.objects.filter(box=product.id).select_related("product__producer").order_by(
-                '?'):
-            box_offer_item = OfferItem.objects.filter(product_id=box_content.product_id,
-                                                      permanence_id=permanence_id).order_by('?').first()
+            offer_item.may_order = True
+            offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
+        for box_content in BoxContent.objects.filter(
+                box=product.id
+        ).select_related(
+            "product__producer"
+        ).order_by('?'):
+            box_offer_item = OfferItem.objects.filter(
+                product_id=box_content.product_id,
+                permanence_id=permanence_id
+            ).order_by('?').first()
             if box_offer_item is None:
                 OfferItem.objects.create(
                     permanence_id=permanence_id,
@@ -127,42 +139,24 @@ def common_to_pre_open_and_open(permanence_id):
                     may_order=False
                 )
             else:
+                box_offer_item.is_box = False
                 box_offer_item.is_box_content = True
                 box_offer_item.is_active = True
-                box_offer_item.save(update_fields=["is_active", "is_box_content"])
-    # 6 - Add subscriptions even if the producer is not selected
-    product_queryset = Product.objects.filter(
-        order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION, is_into_offer=True,
-        producer__represent_this_buyinggroup=True
-    ).order_by('?').only("id", "producer_id")
-    for product in product_queryset:
-        if not OfferItem.objects.filter(product_id=product.id, permanence_id=permanence_id) \
-                .order_by('?').exists():
-            OfferItem.objects.create(
-                permanence_id=permanence_id,
-                product_id=product.id,
-                producer_id=product.producer_id,
-                is_box=False,
-                is_box_content=False,
-            )
-    # 7 - Activate purchased products even if not in selected in the admin
+                box_offer_item.may_order = False
+                box_offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
+    # Activate purchased products even if not in selected in the admin
     OfferItem.objects.filter(
         purchase__permanence_id=permanence_id, is_active=False,
         order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT
     ).order_by('?').update(is_active=True)
-    # 8 - Create cache
+    # Create cache
     permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
     offer_item_qs = OfferItem.objects.filter(permanence_id=permanence_id).order_by('?')
     clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=True)
-    # 9 - calculate the sort order of the order display screen
+    # Calculate the sort order of the order display screen
     reorder_offer_items(permanence_id)
-    # 10 - Deactivate technical offer items
-    OfferItem.objects.filter(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT, permanence_id=permanence_id) \
-        .order_by('?').update(is_active=False, may_order=False)
-    # 11 - Calculate the Purchase 'sum' for each customer
-    recalculate_order_amount(
-        permanence_id=permanence_id
-    )
+    # Calculate the Purchase 'sum' for each customer
+    recalculate_order_amount(permanence_id=permanence_id)
     return permanence
 
 
@@ -190,22 +184,25 @@ def open_order(permanence_id):
     permanence = common_to_pre_open_and_open(permanence_id)
     # 1 - Disallow access to the producer to his/her products no more into "pre order" status
     for producer in Producer.objects.filter(
-            permanence=permanence_id, producer_pre_opening=True).only('offer_uuid', 'offer_filled').order_by('?'):
-        producer.offer_uuid = EMPTY_STRING
+            permanence=permanence_id,
+            producer_pre_opening=True
+    ).only('offer_uuid', 'offer_filled').order_by('?'):
+        producer.offer_uuid = uuid.uuid4()
         producer.save(update_fields=['offer_uuid', ])
         if not producer.offer_filled:
             # Deactivate offer item if the producer as not reacted to the pre opening
             OfferItem.objects.filter(
-                permanence_id=permanence_id, is_active=True,
+                permanence_id=permanence_id,
+                is_active=True,
                 producer_id=producer.id
             ).update(is_active=False)
     # 3 - Keep only producer with active non technical offer items
     permanence.producers.clear()
     for offer_item in OfferItem.objects.filter(
             permanence_id=permanence.id,
-            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
+            # order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
             is_active=True
-    ).order_by('?'):
+    ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
 
     try:
@@ -222,11 +219,8 @@ def admin_back_to_planned(request, permanence):
     permanence.producers.clear()
     for offer_item in OfferItem.objects.filter(
             permanence_id=permanence.id,
-            is_active=True,
             may_order=True
-    ).exclude(
-        order_unit__in=[PRODUCT_ORDER_UNIT_SUBSCRIPTION, PRODUCT_ORDER_UNIT_DEPOSIT]
-    ).order_by('?'):
+    ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
     OfferItem.objects.filter(permanence_id=permanence.id).update(is_active=False)
     permanence.set_status(PERMANENCE_PLANNED)
@@ -244,9 +238,7 @@ def admin_undo_back_to_planned(request, permanence):
         permanence.producers.clear()
         for offer_item in OfferItem.objects.filter(
                 permanence_id=permanence.id
-        ).exclude(
-            order_unit__in=[PRODUCT_ORDER_UNIT_SUBSCRIPTION, PRODUCT_ORDER_UNIT_DEPOSIT]
-        ).order_by('?'):
+        ).order_by().distinct("producer_id"):
             permanence.producers.add(offer_item.producer_id)
         if permanence.highest_status == PERMANENCE_PRE_OPEN:
             permanence.set_status(PERMANENCE_PRE_OPEN)
@@ -321,10 +313,6 @@ def automatically_closed():
 def close_order_delivery(permanence, delivery, all_producers, producers_id=None):
     today = timezone.now().date()
     getcontext().rounding = ROUND_HALF_UP
-    # 0 - Delete unused purchases
-    # No need to select : customer_invoice__delivery = delivery
-    # Purchase.objects.filter(permanence_id=permanence.id, quantity_ordered=0,
-    #                         quantity_invoiced=0).order_by('?').delete()
     if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
         purchase_qs = Purchase.objects.filter(
             permanence_id=permanence.id,
@@ -362,7 +350,10 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
     if all_producers:
         # 1 - Do not round to multiple producer_order_by_quantity
         # 2 - Do not add Transport
-        membership_fee_product = Product.objects.filter(is_membership_fee=True, is_active=True).order_by('?').first()
+        membership_fee_product = Product.objects.filter(
+            order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+            is_active=True
+        ).order_by('?').first()
         membership_fee_product.producer_unit_price = repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE
         # Update the prices
         membership_fee_product.save()
@@ -395,16 +386,6 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
                         repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
                     )
                     customer.save(update_fields=['membership_fee_valid_until', ])
-        # 5 - Add Common participation Subscription
-        for offer_item in OfferItem.objects.filter(
-                permanence_id=permanence.id, is_membership_fee=False,
-                order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION).order_by('?'):
-            for customer in Customer.objects.filter(is_active=True, may_order=True,
-                                                    represent_this_buyinggroup=False).order_by('?'):
-                permanence.producers.add(offer_item.producer_id)
-                create_or_update_one_purchase(customer.id, offer_item, q_order=1,
-                                              permanence_date=permanence.permanence_date,
-                                              batch_job=True, is_box_content=False)
     delivery.set_status(PERMANENCE_CLOSED, all_producers, producers_id)
 
 
@@ -478,7 +459,10 @@ def close_order(permanence, all_producers, producers_id=None):
         create_or_update_one_purchase(buying_group.id, offer_item, q_order=1,
                                       permanence_date=permanence.permanence_date,
                                       batch_job=True, is_box_content=False)
-    membership_fee_product = Product.objects.filter(is_membership_fee=True, is_active=True).order_by('?').first()
+    membership_fee_product = Product.objects.filter(
+            order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+            is_active=True
+        ).order_by('?').first()
     membership_fee_product.producer_unit_price = repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE
     # Update the prices
     membership_fee_product.save()
@@ -519,21 +503,6 @@ def close_order(permanence, all_producers, producers_id=None):
 
     # 5 - Add Common participation Subscription
     if all_producers:
-        for offer_item in OfferItem.objects.filter(
-                permanence_id=permanence.id, is_membership_fee=False,
-                order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION
-        ).order_by('?'):
-            for customer in Customer.objects.filter(
-                    is_active=True, may_order=True,
-                    represent_this_buyinggroup=False
-            ).order_by('?'):
-                permanence.producers.add(offer_item.producer_id)
-                create_or_update_one_purchase(customer.id, offer_item, q_order=1, permanence_date=permanence.permanence_date, batch_job=True, is_box_content=False)
-        # Disable subscription for next permanence
-        Product.objects.filter(
-            order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION, is_into_offer=True, is_membership_fee=False
-        ).order_by('?').update(is_into_offer=False)
-
         permanence.set_status(PERMANENCE_CLOSED, allow_downgrade=False)
         if not repanier.apps.REPANIER_SETTINGS_INVOICE and repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT is None:
             # No Invoice and no bank_account --> auto archive
@@ -546,13 +515,6 @@ def close_order(permanence, all_producers, producers_id=None):
 
 @transaction.atomic
 def send_order(permanence, all_producers, producers_id=None, deliveries_id=None):
-    # getcontext().rounding = ROUND_HALF_UP
-    # recalculate_order_amount(
-    #     permanence_id=permanence.id,
-    #     all_producers=all_producers,
-    #     producers_id=producers_id,
-    #     send_to_producer=True
-    # )
     try:
         email_order.email_order(permanence.id, all_producers, closed_deliveries_id=deliveries_id, producers_id=producers_id)
     except Exception as error_str:
@@ -571,13 +533,6 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
             # Those orders are created in tools.my_order_confirmation when a customer want to place an order
             # but there is no more available delivery point for him
             # or when the customer has not selected any delivery point
-            # qs = CustomerInvoice.objects.filter(
-            #     permanence_id=permanence.id, status=PERMANENCE_CLOSED, delivery__isnull=True
-            # ).order_by('?')
-            # Purchase.objects.filter(
-            #     customer_invoice__in=qs
-            # ).order_by('?').delete()
-            # qs.delete()
             qs = DeliveryBoard.objects.filter(
                 permanence_id=permanence.id,
                 status=PERMANENCE_OPENED,

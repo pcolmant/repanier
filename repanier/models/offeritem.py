@@ -128,7 +128,7 @@ class OfferItem(TranslatableModel):
 
     is_box = models.BooleanField(_("is_box"), default=False)
     is_box_content = models.BooleanField(_("is_box_content"), default=False)
-    is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
+    # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     may_order = models.BooleanField(_("may_order"), default=True)
     is_active = models.BooleanField(_("is_active"), default=True)
     limit_order_quantity_to_stock = models.BooleanField(_("limit maximum order qty of the group to stock qty"),

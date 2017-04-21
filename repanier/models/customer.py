@@ -110,10 +110,19 @@ class Customer(models.Model):
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     def get_admin_date_balance(self):
-        return timezone.now().date()
+        return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)
 
     get_admin_date_balance.short_description = (_("date_balance"))
     get_admin_date_balance.allow_tags = False
+
+    def get_admin_date_joined(self):
+        if self.user is not None:
+            return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
+        else:
+            return EMPTY_STRING
+
+    get_admin_date_joined.short_description = _("date joined")
+    get_admin_date_joined.allow_tags = False
 
     def get_admin_balance(self):
         if self.id is not None:
@@ -190,7 +199,7 @@ class Customer(models.Model):
         if self.id is not None:
             last_membership_fee = purchase.Purchase.objects.filter(
                 customer_id=self.id,
-                offer_item__order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION
+                offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
             ).order_by("-id")
             if last_membership_fee.exists():
                 return last_membership_fee.first().selling_price
@@ -203,7 +212,7 @@ class Customer(models.Model):
         if self.id is not None:
             last_membership_fee = purchase.Purchase.objects.filter(
                 customer_id=self.id,
-                offer_item__order_unit=PRODUCT_ORDER_UNIT_SUBSCRIPTION
+                offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
             ).order_by("-id").prefetch_related("customer_invoice")
             if last_membership_fee.exists():
                 return last_membership_fee.first().customer_invoice.date_balance

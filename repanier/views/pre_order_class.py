@@ -53,9 +53,9 @@ class PreOrderView(DetailView):
             offer_item_set = OfferItem.objects.filter(
                 Q(
                     producer_id=self.producer,
-                ) |
-                Q(
-                    stock__gt=DECIMAL_ZERO,
+                # ) |
+                # Q(
+                #     stock__gt=DECIMAL_ZERO,
                 ),
                 permanence_id=permanence_pre_opened.id,
                 translations__language_code=translation.get_language(),

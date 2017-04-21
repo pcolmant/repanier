@@ -2,7 +2,10 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.conf.urls import url
 from django.contrib import admin
+from django.core import urlresolvers
+from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
@@ -278,12 +281,23 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_change_permission(self, request, bank_account=None):
         return self.has_add_permission(request)
 
+    # def get_urls(self):
+    #     urls = super(BankAccountAdmin, self).get_urls()
+    #     my_urls = [
+    #         url(r'^expenses_to_be_apportioned/$', self.expenses_to_be_apportioned),
+    #     ]
+    #     return my_urls + urls
+
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
             'is_updated_on',
             'customer_invoice', 'producer_invoice'
         ]
         return readonly_fields
+
+    # def expenses_to_be_apportioned(self, request):
+    #     redirect_to = urlresolvers.reverse('admin:repanier_bankaccount_changelist', )
+    #     return HttpResponseRedirect(redirect_to)
 
     def get_actions(self, request):
         actions = super(BankAccountAdmin, self).get_actions(request)
@@ -303,4 +317,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         Returns available import formats.
         """
         return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+
+    # class Media:
+    #     js = ('js/expenses_to_be_apportioned.js',)
 

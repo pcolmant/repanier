@@ -521,7 +521,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             if hasattr(picture_field.widget, 'upload_to'):
                 picture_field.widget.upload_to = "%s%s%d" % ("product", os_sep, producer.id)
             if producer.represent_this_buyinggroup:
-                order_unit_choices = LUT_PRODUCT_ORDER_UNIT
+                order_unit_choices = LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION
         order_unit_field.choices = order_unit_choices
 
         if product is not None:
@@ -570,9 +570,12 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def get_queryset(self, request):
         queryset = super(ProductAdmin, self).get_queryset(request)
-        return queryset.filter(is_box=False, is_membership_fee=False,
-                               producer__is_active=True,
-                               translations__language_code=translation.get_language())
+        return queryset.filter(
+            is_box=False,
+            # is_membership_fee=False,
+            producer__is_active=True,
+            translations__language_code=translation.get_language()
+        ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
 
     def get_import_formats(self):
         """
