@@ -179,18 +179,17 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     # Detail of what has been prepared
     hide_producer_prices = False
     hide_customer_prices = False
-    purchase_set = Purchase.objects.all().distinct()
-    if customer is not None:
-        purchase_set = purchase_set.filter(customer_charged=customer)
-        hide_producer_prices = True
+    purchase_set = Purchase.objects.all()
     if producer is not None:
-        purchase_set = purchase_set.filter(producer=producer)
+        purchase_set = purchase_set.filter(producer_id=producer.id)
         hide_customer_prices = True
     if permanence is not None:
         purchase_set = purchase_set.filter(permanence_id=permanence.id)
     if year is not None:
         purchase_set = purchase_set.filter(permanence_date__year=year)
-
+    if customer is not None:
+        purchase_set = purchase_set.filter(customer_charged_id=customer.id)
+        hide_producer_prices = True
     if purchase_set.exists():
 
         wb, ws = new_landscape_a4_sheet(wb, sheet_name, permanence)
@@ -199,6 +198,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
         hide_column_deposit = True
 
         for purchase in purchase_set:
+            print(slugify(purchase))
 
             qty = purchase.quantity_invoiced
 

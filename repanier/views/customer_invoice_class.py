@@ -39,6 +39,7 @@ class CustomerInvoiceView(DetailView):
             else:
                 customer = self.request.user.customer
             context['customer'] = customer
+            context['download_invoice'] = False
         else:
             customer_invoice = self.get_object()
             bank_account_set = BankAccount.objects.filter(customer_invoice=customer_invoice).order_by("operation_date")
@@ -87,6 +88,10 @@ class CustomerInvoiceView(DetailView):
             if next_customer_invoice is not None:
                 context['next_customer_invoice_id'] = next_customer_invoice.id
             context['customer'] = customer_invoice.customer
+            context['download_invoice'] = Purchase.objects.filter(
+                customer_charged_id=customer_invoice.customer_id,
+                permanence_id=customer_invoice.permanence_id,
+            ).order_by('?').exists()
         return context
 
     def get_queryset(self):

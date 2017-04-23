@@ -7,6 +7,7 @@ import sys
 from django.apps import AppConfig
 from django.conf import settings
 from django.db import connection
+from django.db.models import F
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
@@ -67,8 +68,8 @@ class RepanierSettings(AppConfig):
                 db_started = connection.cursor() is not None
             except:
                 time.sleep(1)
-        from models import Configuration, LUT_DepartmentForCustomer, Staff
-        from const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, EMPTY_STRING, CURRENCY_EUR, ORDER_GROUP, \
+        from models import Configuration, LUT_DepartmentForCustomer, Staff, Purchase
+        from const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
@@ -88,6 +89,13 @@ class RepanierSettings(AppConfig):
                     currency=CURRENCY_EUR
                 )
             config.save()
+            # Purchase.objects.filter(customer_charged__isnull=True).update(
+            #     customer_charged=F('customer_invoice__customer_charged')
+            # )
+            for purchase in Purchase.objects.filter(
+                    customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
+                purchase.customer_charged = purchase.customer_invoice.customer_charged
+                purchase.save(update_fields=["customer_charged",])
             Staff.objects.rebuild()
             # Create groups with correct rights
             order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()

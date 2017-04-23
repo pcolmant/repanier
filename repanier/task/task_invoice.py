@@ -326,7 +326,7 @@ def generate_invoice(permanence, payment_date):
         permanence_id=permanence.id,
         producer_id=producer_buyinggroup.id,
         offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
-    ).order_by('?').aggregate(Sum('selling_price')):
+    ).order_by('?'):
         # --> This bank movement is not a real entry
         # making this, it will not be counted into the customer_buyinggroup movements twice
         # because Repanier will see it has already been counted into the customer_buyinggroup movements
@@ -337,7 +337,7 @@ def generate_invoice(permanence, payment_date):
             operation_date=payment_date,
             operation_status=BANK_MEMBERSHIP_FEE,
             operation_comment="%s : %s" % (_("Membership fee"), membership_fee.customer),
-            bank_amount_in=membership_fee,
+            bank_amount_in=membership_fee.selling_price,
             bank_amount_out=DECIMAL_ZERO,
             customer_invoice_id=customer_invoice_buyinggroup.id,
             producer_invoice=None
@@ -650,7 +650,7 @@ def cancel_invoice(permanence):
                 ]
             ).order_by('?').delete()
         Permanence.objects.filter(
-            permanence_id=permanence.id
+            id=permanence.id
         ).update(invoice_sort_order=None)
         permanence.set_status(PERMANENCE_SEND)
 

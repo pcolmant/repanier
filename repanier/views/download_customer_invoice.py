@@ -43,6 +43,7 @@ def download_customer_invoice(request, customer_invoice_id):
                 slugify(_("Accounting report")),
                 REPANIER_SETTINGS_GROUP_NAME
             )
-            wb.save(response)
-            return response
+            if wb is not None:
+                wb.save(response)
+                return response
     raise Http404

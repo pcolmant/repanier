@@ -146,5 +146,5 @@ urlpatterns = [
     url(r'^rest/product/(?P<producer_short_profile_name>.*)/(?P<reference>.*)/$', product_rest,
         name='product_rest'),
     url(r'^rest/version/$', version_rest, name='version_rest'),
-    url(r'^ajax/dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice, name='download_customer_invoice'),
+    url(r'^dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice, name='download_customer_invoice'),
 ]

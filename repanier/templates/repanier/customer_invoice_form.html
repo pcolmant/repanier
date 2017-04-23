@@ -132,8 +132,10 @@
                             <span class="glyphicon glyphicon-arrow-left"></span>
                         </a>
                     {% endif %}
+                {% if download_invoice %}
                     <a href="{% url 'download_customer_invoice' object.id %}"
                        class="btn btn-disabled"> {% trans "Download" %} <span class="glyphicon glyphicon glyphicon-save"></span> </a>
+                {% endif %}
                     {% if next_customer_invoice_id %}
                         <a href="{% url 'customer_invoice_view' next_customer_invoice_id %}"
                            class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
