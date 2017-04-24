@@ -101,6 +101,14 @@ class Configuration(TranslatableModel):
                                     max_length=100,
                                     default=EMPTY_STRING,
                                      blank=True),
+        how_to_register=HTMLField(_("how to register"),
+                                  help_text=EMPTY_STRING,
+                                  configuration='CKEDITOR_SETTINGS_MODEL2',
+                                  default=
+                                  """
+                                  Pour créer un compte et passer commande, veuillez contacter ....
+                                  """,
+                                  blank=False),
         offer_customer_mail=HTMLField(_("offer customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',

@@ -1,17 +1,27 @@
 {% extends 'cms_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags %}
 {% block sub_content %}
-{#<div class="container-repanier">#}
-{#<div class="container">#}
-    {% if is_anonymous %}
+{% if is_anonymous %}
     <div class="row">
-    <div class="panel panel-danger">
-        <div class="panel-heading">
-            <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-primary">{% trans "Login me" %}</a>
+        <div class="panel-group">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <div class="col-xs-3">
+                        <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-primary">{% trans "Login me" %}</a>
+                    </div>
+                    <div class="col-xs-9">
+                            <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
+                                <span class="btn btn-primary">{% trans "Create an account" %}</span>
+                            </div>
+                            <div id="collapse" class="panel-collapse collapse">
+                                    {{ how_to_register }}
+                            </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    </div>
-    {% elif not may_order%}
+{% elif not may_order%}
     <div class="row">
     <div class="panel panel-danger">
         <div class="panel-heading">
@@ -19,7 +29,7 @@
         </div>
     </div>
     </div>
-    {% else %} {# not is_anonymous and may_order#}
+{% else %} {# not is_anonymous and may_order#}
     <div class="row">
     <div class="panel panel-default">
         {% if permanence.offer_description and permanence.offer_description.strip %}
@@ -60,7 +70,7 @@
             <span id="span_btn_confirm_order"></span>
         {% endif %}
     {% endif %}
-    {% endif %} {# not is_anonymous and may_order#}
+{% endif %} {# not is_anonymous and may_order#}
 {%  if not is_anonymous or display_anonymous_order_form %}
     <div class="row">
     <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
@@ -154,7 +164,7 @@
                 {{ offer.cache_part_a | safe }}
             </div>
             <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
-                {% if offer.may_order %}<select name="offer_item{{ offer.id|unlocalize }}" id="offer_item{{ offer.id|unlocalize }}" onchange="order_ajax({{ offer.id|unlocalize }})" class="form-control"></select>{% endif %}
+                {% if offer.may_order %}<select name="offer_item{{ offer.id|unlocalize }}" id="offer_item{{ offer.id|unlocalize }}" {% if is_anonymous %}disabled{% else %}onchange="order_ajax({{ offer.id|unlocalize }})"{% endif %} class="form-control"></select>{% endif %}
                 <span id="box_offer_item{{ offer.id|unlocalize }}"></span>
                 {{ offer.cache_part_b | safe }}
                 {% if not offer.is_box %}<br/><span class="btn_like{{ offer.id|unlocalize }}" style="cursor: pointer;"></span>{% endif %}
@@ -275,8 +285,6 @@
     </div>
 </div>
 {% endif %} {# not is_anonymous or display_anonymous_order_form #}
-{#</div>#}
-{#</div>#}
 {% endblock %}
 {% block footer %}
     <div class="visible-xs">
@@ -466,6 +474,7 @@
                 });
             }
             $(document).ready(function () {
+                {% if not is_anonymous %}
                 var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}oi={{ offer.id|unlocalize }}&{% endfor %}pe={{ permanence.id|unlocalize }}{% if delivery_id > 0 %}&de={{ delivery_id|unlocalize }}{% endif %}{% if communication %}&co={{ communication }}{% endif %}{% if basket %}&ba={{ basket }}{%  endif %}';
                 $.ajax({
                     url: lien,
@@ -529,6 +538,7 @@
                         });
                     }
                 });
+                {% endif %}
                 $('#orderModal').modal({
                     keyboard: true,
                     backdrop: false,

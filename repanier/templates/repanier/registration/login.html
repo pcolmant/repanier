@@ -7,43 +7,59 @@
       <div class="modal-header">
         <h4 class="modal-title" id="loginModalLabel">{% trans "Login" %}</h4>
       </div>
-      <div class="modal-body">
+{#      <div class="modal-body">#}
 
 <form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8" id="login-form">{% csrf_token %}
+<div class="modal-body">
+{#<div class="row">#}
     <div class="form-group">
-    {% if form.non_field_errors %}
-        <p class="bg-danger">
-        {% for error in form.non_field_errors %}
-                {{ error }}
-        {% endfor %}
-        </p>
-    {% endif %}
-    <label for="id_username">{% trans "Username" %}</label>
-    {% if form.username.errors %}
-      <p class="bg-danger">
-      {% for error in form.username.errors %}
-        {{ error }}
-      {% endfor %}
-      </p>
-    {% endif %}
-    <input type="text" class="form-control" id="id_username" placeholder="{% trans "Username" %}" name="username">
-    <br/>
-    <label for="id_password">{% trans "Password" %}</label>
-    {% if form.password.errors %}
-      <p class="bg-danger">
-      {% for error in form.password.errors %}
-        {{ error }}
-      {% endfor %}
-      </p>
-    {% endif %}
-    <input type="password" class="form-control" id="id_password" placeholder="{% trans "Password" %}" name="password">
-    <input type="hidden" name="this_is_the_login_form" value="1" />
-    <input type="hidden" name="next" value="{{ next }}" />
+        {% if form.non_field_errors %}
+            <p class="bg-danger">
+            {% for error in form.non_field_errors %}
+                    {{ error }}
+            {% endfor %}
+            </p>
+        {% endif %}
+        <label for="id_username">{% trans "Username" %}</label>
+        {% if form.username.errors %}
+          <p class="bg-danger">
+          {% for error in form.username.errors %}
+            {{ error }}
+          {% endfor %}
+          </p>
+        {% endif %}
+        <input type="text" class="form-control" id="id_username" placeholder="{% trans "Username" %}" name="username">
+        <br/>
+        <label for="id_password">{% trans "Password" %}</label>
+        {% if form.password.errors %}
+          <p class="bg-danger">
+          {% for error in form.password.errors %}
+            {{ error }}
+          {% endfor %}
+          </p>
+        {% endif %}
+        <input type="password" class="form-control" id="id_password" placeholder="{% trans "Password" %}" name="password">
+        <input type="hidden" name="this_is_the_login_form" value="1" />
+        <input type="hidden" name="next" value="{{ next }}" />
     </div>
-    <button class="btn btn-primary" type="submit">{% trans "Login" %}</button>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" style="color : inherit;">{% trans "Password reset" %}</a>
+<p></p>
+    <div class="form-group">
+        <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
+            <span class="btn btn-primary">{% trans "Create an account" %}</span>
+        </div>
+        <div id="collapse" class="panel-collapse collapse">
+            {{ how_to_register }}
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <div class="form-group">
+        <button class="btn btn-primary" type="submit">{% trans "Login" %}</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" class="btn btn-primary">{% trans "Password reset" %}</a>
+    </div>
+</div>
 </form>
-      </div><!-- /form -->
+{#      </div><!-- /form -->#}
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 <script type="text/javascript">

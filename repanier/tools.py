@@ -1083,7 +1083,7 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
         msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span></a>' % (
             order_amount,)
     else:
-        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<font color="#32CD32"><span class="glyphicon glyphicon-floppy-saved"></span></font></a>' % (
+        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-ok"></span></a>' % (
         order_amount,)
     option_dict = {'id': "#my_basket", 'html': msg_html}
     to_json.append(option_dict)

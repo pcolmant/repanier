@@ -23,7 +23,7 @@ from repanier.views.forms import AuthRepanierSetPasswordForm, AuthRepanierPasswo
 from repanier.views.like_ajax import like_ajax
 from repanier.views.login_view import login_view
 from repanier.views.logout_view import logout_view
-from repanier.views.me_view import me_view
+from repanier.views.my_profile_view import my_profile_view
 from repanier.views.my_balance_ajax import my_balance_ajax
 from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
@@ -128,7 +128,7 @@ urlpatterns = [
     url(r'^coordinators/$', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
     url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
     url(r'^who/$', who_is_who_view, name='who_is_who_view'),
-    url(r'^me/$', me_view, name='my_profile_view'),
+    url(r'^me/$', my_profile_view, name='my_profile_view'),
     # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     url(r'^rest/permanences/$', permanences_rest, name='permanences_rest'),
     url(r'^rest/permanence/(?P<permanence_id>\d+)/(?P<producer_name>.*)/(?P<reference>.*)/$',

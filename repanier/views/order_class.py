@@ -88,7 +88,8 @@ class OrderView(ListView):
         context = super(OrderView, self).get_context_data(**kwargs)
         context['permanence'] = self.permanence
         context['delivery_id'] = self.delivery_id
-        from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
+        from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
+            REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM, REPANIER_SETTINGS_CONFIG
         if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
             producer_set = Producer.objects.filter(permanence=self.permanence.id).only("id", "short_profile_name")
         else:
@@ -141,6 +142,10 @@ class OrderView(ListView):
         context['communication'] = self.communication
         context['q'] = self.q
         context['is_anonymous'] = self.is_anonymous
+        if self.is_anonymous:
+            context['how_to_register'] = REPANIER_SETTINGS_CONFIG.how_to_register
+        else:
+            context['how_to_register'] = EMPTY_STRING
         context['may_order'] = self.may_order
         context['display_anonymous_order_form'] = REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
         return context

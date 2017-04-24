@@ -70,7 +70,7 @@ class CustomerValidationForm(NgFormValidationMixin, CustomerForm):
 @login_required()
 @csrf_protect
 @never_cache
-def me_view(request):
+def my_profile_view(request):
     if request.user.is_staff or request.user.is_superuser:
         raise Http404
     else:
@@ -110,9 +110,9 @@ def me_view(request):
                     data["email1"] = customer.user.email
                     data["email2"] = customer.email2
                     form = CustomerValidationForm(data, request=request)
-                return render(request, "repanier/me_form.html",
+                return render(request, "repanier/my_profile_form.html",
                               {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Ok'})
-            return render(request, "repanier/me_form.html",
+            return render(request, "repanier/my_profile_form.html",
                           {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Nok'})
         else:
             form = CustomerValidationForm()  # An unbound form
@@ -141,5 +141,5 @@ def me_view(request):
             field = form.fields["about_me"]
             field.initial = customer.about_me
 
-        return render(request, "repanier/me_form.html",
+        return render(request, "repanier/my_profile_form.html",
                       {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': None})

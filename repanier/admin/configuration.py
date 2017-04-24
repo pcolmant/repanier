@@ -56,7 +56,8 @@ class ConfigurationAdmin(TranslatableAdmin):
                      'display_producer_on_order_form',
                      'customers_must_confirm_orders',
                      ('bank_account', 'max_week_wo_participation'),
-                     ('membership_fee', 'membership_fee_duration')),
+                     ('membership_fee', 'membership_fee_duration'),
+                     'how_to_register'),
             }),
         ]
         if Producer.objects.filter(producer_pre_opening=True).order_by('?').only('id').exists():

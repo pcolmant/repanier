@@ -116,19 +116,13 @@ class Customer(models.Model):
     get_admin_date_balance.allow_tags = False
 
     def get_admin_date_joined(self):
-        if self.user is not None:
-            return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
-        else:
-            return EMPTY_STRING
+        return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
 
     get_admin_date_joined.short_description = _("date joined")
     get_admin_date_joined.allow_tags = False
 
     def get_admin_balance(self):
-        if self.id is not None:
-            return self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
-        else:
-            return REPANIER_MONEY_ZERO
+        return self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
 
     get_admin_balance.short_description = (_("balance"))
     get_admin_balance.allow_tags = False
@@ -196,27 +190,23 @@ class Customer(models.Model):
     get_balance.admin_order_field = 'balance'
 
     def get_last_membership_fee(self):
-        if self.id is not None:
-            last_membership_fee = purchase.Purchase.objects.filter(
-                customer_id=self.id,
-                offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
-            ).order_by("-id")
-            if last_membership_fee.exists():
-                return last_membership_fee.first().selling_price
-        return REPANIER_MONEY_ZERO
+        last_membership_fee = purchase.Purchase.objects.filter(
+            customer_id=self.id,
+            offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
+        ).order_by("-id")
+        if last_membership_fee.exists():
+            return last_membership_fee.first().selling_price
 
     get_last_membership_fee.short_description = _("last membership fee")
     get_last_membership_fee.allow_tags = False
 
     def last_membership_fee_date(self):
-        if self.id is not None:
-            last_membership_fee = purchase.Purchase.objects.filter(
-                customer_id=self.id,
-                offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
-            ).order_by("-id").prefetch_related("customer_invoice")
-            if last_membership_fee.exists():
-                return last_membership_fee.first().customer_invoice.date_balance
-        return
+        last_membership_fee = purchase.Purchase.objects.filter(
+            customer_id=self.id,
+            offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
+        ).order_by("-id").prefetch_related("customer_invoice")
+        if last_membership_fee.exists():
+            return last_membership_fee.first().customer_invoice.date_balance
 
     last_membership_fee_date.short_description = _("last membership fee date")
     last_membership_fee_date.allow_tags = False
@@ -227,35 +217,31 @@ class Customer(models.Model):
         last_membership_fee_date = self.last_membership_fee_date()
         if last_membership_fee_date is not None:
             return last_membership_fee_date.strftime(settings.DJANGO_SETTINGS_DATE)
-        return
+        return EMPTY_STRING
 
     get_last_membership_fee_date.short_description = _("last membership fee date")
     get_last_membership_fee_date.allow_tags = False
 
     def get_participation(self):
-        if self.id is not None:
-            now = timezone.now()
-            return permanenceboard.PermanenceBoard.objects.filter(
-                customer_id=self.id,
-                permanence_date__gte=now - datetime.timedelta(
-                    days=365),
-                permanence_date__lt=now,
-                permanence_role__is_counted_as_participation=True
-            ).order_by('?').count()
-        return DECIMAL_ZERO
+        now = timezone.now()
+        return permanenceboard.PermanenceBoard.objects.filter(
+            customer_id=self.id,
+            permanence_date__gte=now - datetime.timedelta(
+                days=365),
+            permanence_date__lt=now,
+            permanence_role__is_counted_as_participation=True
+        ).order_by('?').count()
 
     get_participation.short_description = _("participation")
     get_participation.allow_tags = False
 
     def get_purchase(self):
-        if self.id is not None:
-            now = timezone.now()
-            return invoice.CustomerInvoice.objects.filter(
-                customer_id=self.id,
-                total_price_with_tax__gt=DECIMAL_ZERO,
-                date_balance__gte=now - datetime.timedelta(365)
-            ).count()
-        return DECIMAL_ZERO
+        now = timezone.now()
+        return invoice.CustomerInvoice.objects.filter(
+            customer_id=self.id,
+            total_price_with_tax__gt=DECIMAL_ZERO,
+            date_balance__gte=now - datetime.timedelta(365)
+        ).count()
 
     get_purchase.short_description = _("purchase")
     get_purchase.allow_tags = False

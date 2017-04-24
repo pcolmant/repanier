@@ -26,6 +26,7 @@ def login_view(request, template_name='repanier/registration/login.html',
     """
     Displays the login form and handles the login action.
     """
+    from repanier.apps import REPANIER_SETTINGS_CONFIG
     redirect_to = request.POST.get(redirect_field_name,
                                    request.GET.get(redirect_field_name, EMPTY_STRING))
 
@@ -51,6 +52,7 @@ def login_view(request, template_name='repanier/registration/login.html',
         redirect_field_name: redirect_to,
         'site'             : current_site,
         'site_name'        : current_site.name,
+        'how_to_register'  : REPANIER_SETTINGS_CONFIG.how_to_register
     }
     if extra_context is not None:
         context.update(extra_context)
