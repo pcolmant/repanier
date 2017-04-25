@@ -20,8 +20,13 @@ def is_into_offer(request, product_id):
     if request.is_ajax():
         user = request.user
         if user.is_staff or user.is_superuser:
-            is_into_offer = not(Product.objects.filter(id=product_id).order_by('?').only(
-                'is_into_offer').first().is_into_offer)
-            Product.objects.filter(id=product_id).update(is_into_offer=is_into_offer)
-            return HttpResponse(mark_safe(_boolean_icon(is_into_offer)))
+            product = Product.objects.filter(id=product_id).order_by('?').only(
+                'is_into_offer', 'limit_order_quantity_to_stock').first()
+            if product is not None:
+                if product.limit_order_quantity_to_stock:
+                    new_is_into_offer = product.is_into_offer
+                else:
+                    new_is_into_offer = not product.is_into_offer
+                Product.objects.filter(id=product_id).update(is_into_offer=new_is_into_offer)
+                return HttpResponse(mark_safe(_boolean_icon(new_is_into_offer)))
     raise Http404

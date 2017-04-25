@@ -10,7 +10,7 @@ from repanier.tools import cap
 
 def flip_flop_is_into_offer(queryset):
     for product in queryset.order_by('?'):
-        if product.is_active:
+        if product.is_active and not product.limit_order_quantity_to_stock:
             product.is_into_offer = not product.is_into_offer
             product.save(update_fields=['is_into_offer'])
 
