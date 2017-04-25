@@ -163,10 +163,10 @@
                 async: false,
                 success: function (result) {
                     $("#my_name").html(result);
-                    if(result === '{% trans "Anonymous" %}') {
-                        $("#connected").show();
-                        $("#not_connected").hide();
-                    }
+{#                    if(result === '{% trans "Anonymous" %}') {#}
+{#                        $("#connected").show();#}
+{#                        $("#not_connected").hide();#}
+{#                    }#}
                 },
                 error: function (result) {
                     $("#my_name").html("{% trans "Retry5" %}");

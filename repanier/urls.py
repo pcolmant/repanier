@@ -42,6 +42,7 @@ from repanier.views.who_is_who_view import who_is_who_view
 from repanier.views.display_status_ajax import display_status
 from repanier.views.is_into_offer_ajax import is_into_offer
 from repanier.views.download_customer_invoice import download_customer_invoice
+from repanier.views.home_info_ajax import home_info_ajax
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -91,6 +92,7 @@ urlpatterns = [
     url(r'^ajax/delivery/$', delivery_ajax, name='delivery_ajax'),
     url(r'^ajax/my-balance/$', my_balance_ajax, name='my_balance'),
     url(r'^ajax/order-name/$', customer_name_ajax, name='order_name'),
+    url(r'^ajax/home-info/$', home_info_ajax, name='home_info'),
     url(r'^ajax/pre-order-name/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         producer_name_ajax, name='pre_order_name_ajax'),
     url(r'^ajax/order-init/$', order_init_ajax, name='order_init_ajax'),
@@ -98,7 +100,8 @@ urlpatterns = [
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),
     url(r'^ajax/permanence/$', permanence_form_ajax, name='permanence_form_ajax'),
     url(r'^ajax/customer-basket-message/(?P<pk>\d+)/$', customer_basket_message_form_ajax, name='customer_basket_message_form_ajax'),
-    url(r'^ajax/producer-basket-message/(?P<pk>\d+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', producer_basket_message_form_ajax, name='producer_basket_message_form_ajax'),
+    url(r'^ajax/producer-basket-message/(?P<pk>\d+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
+        producer_basket_message_form_ajax, name='producer_basket_message_form_ajax'),
     url(r'^ajax/customer-product-description/$', customer_product_description_ajax,
         name='customer_product_description_ajax'),
     url(

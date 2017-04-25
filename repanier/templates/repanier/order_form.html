@@ -34,7 +34,7 @@
     <div class="panel panel-default">
         {% if permanence.offer_description and permanence.offer_description.strip %}
         <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse-offer-description">
-            <h4 class="panel-title">{{ permanence.get_permanence_order_display }}</h4>
+            <h4 class="panel-title">{{ permanence.get_permanence_customer_display }}</h4>
         </div>
         <div id="collapse-offer-description" class="panel-collapse collapse">
             <div class="panel-body bg-primary">
@@ -45,7 +45,7 @@
         </div>
         {% else %}
         <div class="panel-heading">
-             <h4 class="panel-title">{{ permanence.get_permanence_order_display }}</h4>
+             <h4 class="panel-title">{{ permanence.get_permanence_customer_display }}</h4>
         </div>
         {% endif %}
     </div>

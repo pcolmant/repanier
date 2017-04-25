@@ -162,10 +162,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def get_fields(self, request, permanence=None):
         fields = [
-            'permanence_date',
+            ('permanence_date', 'picture'),
             'automatically_closed',
             'short_name',
             'offer_description',
+            'offer_description_on_home_page',
             'producers'
         ]
         if self.get_boxes():

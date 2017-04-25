@@ -1,7 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from const import SIZE_XS, SIZE_M, SIZE_S
+from const import SIZE_XS, SIZE_S, SIZE_M, SIZE_L
 from repanier.tools import sint
 
 try:
@@ -28,7 +28,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
     form = form_class(request.POST, request.FILES)
     if form.is_valid():
         size = sint(size)
-        if size not in [SIZE_XS, SIZE_S, SIZE_M]:
+        if size not in [SIZE_XS, SIZE_S, SIZE_M, SIZE_L]:
             data = json.dumps({'error': _not_lazy('Wrong size.')})
             return HttpResponse(data, content_type="application/json", status=403)
 

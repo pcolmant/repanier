@@ -23,49 +23,51 @@ import permanenceboard
 import producer
 import purchase
 import repanier.apps
+from repanier.picture.const import SIZE_L
+from repanier.picture.fields import AjaxPictureField
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.const import *
 from repanier.tools import get_full_status_display, cap
 
 
-def verbose_name():
-    if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    return lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME
-
-
-def verbose_name_plural():
-    if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    return lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
-
-
-def verbose_name_in_preparation():
-    if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    return lambda: _("%(name)s in preparation list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-
-
-def verbose_name_plural_in_preparation():
-    if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    return lambda: _("%(name)s in preparation list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-
-
-def verbose_name_done():
-    if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    return lambda: _("%(name)s done list") % {
-        'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME} if repanier.apps.REPANIER_SETTINGS_INVOICE else "%s" % _(
-        "%(name)s archived list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-
-
-def verbose_name_plural_done():
-    if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    return lambda: _("%(name)s done list") % {
-        'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME} if repanier.apps.REPANIER_SETTINGS_INVOICE else "%s" % _(
-        "%(name)s archived list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
+# def verbose_name():
+#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
+#         return EMPTY_STRING
+#     return lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME
+#
+#
+# def verbose_name_plural():
+#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
+#         return EMPTY_STRING
+#     return lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
+#
+#
+# def verbose_name_in_preparation():
+#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
+#         return EMPTY_STRING
+#     return lambda: _("%(name)s in preparation list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
+#
+#
+# def verbose_name_plural_in_preparation():
+#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
+#         return EMPTY_STRING
+#     return lambda: _("%(name)s in preparation list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
+#
+#
+# def verbose_name_done():
+#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
+#         return EMPTY_STRING
+#     return lambda: _("%(name)s done list") % {
+#         'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME} if repanier.apps.REPANIER_SETTINGS_INVOICE else "%s" % _(
+#         "%(name)s archived list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
+#
+#
+# def verbose_name_plural_done():
+#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
+#         return EMPTY_STRING
+#     return lambda: _("%(name)s done list") % {
+#         'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME} if repanier.apps.REPANIER_SETTINGS_INVOICE else "%s" % _(
+#         "%(name)s archived list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
 
 
 @python_2_unicode_compatible
@@ -128,6 +130,12 @@ class Permanence(TranslatableModel):
     invoice_sort_order = models.IntegerField(
         _("invoice sort order"),
         default=None, blank=True, null=True)
+    offer_description_on_home_page = models.BooleanField(
+        _("Publish the offer description on the home page when the permanence is open"), default=True)
+    picture = AjaxPictureField(
+        verbose_name=_("picture"),
+        null=True, blank=True,
+        upload_to="permanence", size=SIZE_L)
 
     def get_producers(self):
         if self.status == PERMANENCE_PLANNED:
@@ -603,21 +611,21 @@ class Permanence(TranslatableModel):
     get_permanence_admin_display.short_description = lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
     get_permanence_admin_display.allow_tags = True
 
-    def get_permanence_order_display(self):
-        if self.with_delivery_point:
-            if self.status == PERMANENCE_OPENED:
-                deliveries_count = 0
-            else:
-                deliveries_qs = deliveryboard.DeliveryBoard.objects.filter(
-                    permanence_id=self.id,
-                    status=PERMANENCE_OPENED
-                ).order_by('?')
-                deliveries_count = deliveries_qs.count()
-        else:
-            deliveries_count = 0
-        if deliveries_count == 0:
-            return "%s - %s" % (self.get_permanence_display(), self.get_status_display())
-        return self.get_permanence_display()
+    # def get_permanence_order_display(self):
+    #     if self.with_delivery_point:
+    #         if self.status == PERMANENCE_OPENED:
+    #             deliveries_count = 0
+    #         else:
+    #             deliveries_qs = deliveryboard.DeliveryBoard.objects.filter(
+    #                 permanence_id=self.id,
+    #                 status=PERMANENCE_OPENED
+    #             ).order_by('?')
+    #             deliveries_count = deliveries_qs.count()
+    #     else:
+    #         deliveries_count = 0
+    #     if deliveries_count == 0:
+    #         return "%s - %s" % (self.get_permanence_display(), self.get_status_display())
+    #     return self.get_permanence_display()
 
     def get_permanence_customer_display(self, with_status=True):
         if with_status:
@@ -643,8 +651,8 @@ class Permanence(TranslatableModel):
         return self.get_permanence_display()
 
     class Meta:
-        verbose_name = verbose_name()
-        verbose_name_plural = verbose_name_plural()
+        verbose_name = _('order')
+        verbose_name_plural = _('orders')
 
         index_together = [
             ["permanence_date"],
@@ -654,13 +662,13 @@ class Permanence(TranslatableModel):
 class PermanenceInPreparation(Permanence):
     class Meta:
         proxy = True
-        verbose_name = verbose_name_in_preparation()
-        verbose_name_plural = verbose_name_plural_in_preparation()
+        verbose_name = _('In preparation')
+        verbose_name_plural = _('In preparation')
 
 
 class PermanenceDone(Permanence):
     class Meta:
         proxy = True
-        verbose_name = verbose_name_done()
-        verbose_name_plural = verbose_name_plural_done()
+        verbose_name = _('In billing')
+        verbose_name_plural = _('In billing')
 

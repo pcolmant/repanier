@@ -138,7 +138,7 @@
                 {% endif %}
                     {% if next_customer_invoice_id %}
                         <a href="{% url 'customer_invoice_view' next_customer_invoice_id %}"
-                           class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                           class="btn btn-success btn-disabled"><span class="glyphicon glyphicon-arrow-right"></span></a>
                         <a href="{% url 'customer_invoice_view' 0 %}?customer={{ object.customer.id }}"
                            class="btn btn-success btn-disabled"> <span class="glyphicon glyphicon-arrow-right"></span>
                             <span class="glyphicon glyphicon-arrow-right"></span> </a>

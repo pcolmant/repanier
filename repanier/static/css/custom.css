@@ -113,7 +113,11 @@ a.skip_link{
     margin-top: 65px;
 }
 .container-repanier {
-    margin: 75px 15px 0;
+    margin: 75px 0 0;
+    padding: 15px 15px 0;
+}
+.container-info {
+    margin: 75px 0 -75px 0;
     padding: 15px 15px 0;
 }
 .container-menu {
