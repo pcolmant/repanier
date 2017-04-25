@@ -34,7 +34,7 @@ def home_info_ajax(request):
                 if permanence.picture:
                     result.append(
                         format_html(
-                            '<div class="panel-body"><div class="col-xs-12"><img class="img-rounded" style="float: left; margin: 5px;" alt="{} title="{}" src="{}{}"/>{}</div></div>',
+                            '<div class="panel-body"><div class="col-xs-12"><img class="img-rounded" style="float: left; margin: 5px;" alt="{}" title="{}" src="{}{}"/>{}</div></div>',
                             permanence.get_permanence_customer_display(),
                             permanence.get_permanence_customer_display(),
                             settings.MEDIA_URL,
