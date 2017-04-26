@@ -5,7 +5,7 @@
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
         {% if update != '2' %}
-        <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-primary pull-right">{% trans "Send e-mail" %}</button></div>
+        <div class="form-group"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-default pull-right">{% trans "Send e-mail" %}</button></div>
         {% endif %}
         {% if coordinator %}
             <div class="bg-danger">

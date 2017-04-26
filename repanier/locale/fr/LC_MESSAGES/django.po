@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-25 17:46+0200\n"
-"PO-Revision-Date: 2017-04-25 17:47+0100\n"
+"POT-Creation-Date: 2017-04-25 21:14+0200\n"
+"PO-Revision-Date: 2017-04-26 09:01+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -18,7 +18,7 @@ msgstr ""
 "X-Generator: Poedit 1.7.1\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: admin/admin_filter.py:20 models/offeritem.py:179 models/permanence.py:99
+#: admin/admin_filter.py:20 models/offeritem.py:179 models/permanence.py:101
 #: models/producer.py:295 xlsx/xlsx_order.py:213
 msgid "producers"
 msgstr "Producteurs"
@@ -64,7 +64,7 @@ msgstr "Fournisseur"
 msgid "permanence"
 msgstr "permanence"
 
-#: admin/admin_filter.py:226 models/offeritem.py:185 models/product.py:292
+#: admin/admin_filter.py:226 models/offeritem.py:185 models/product.py:295
 msgid "products"
 msgstr "Produits"
 
@@ -175,7 +175,7 @@ msgid "is_into_offer"
 msgstr "En commande"
 
 #: admin/box.py:63 admin/box.py:122 admin/producer.py:291
-#: models/offeritem.py:149 models/product.py:87 models/product.py:179
+#: models/offeritem.py:149 models/product.py:87 models/product.py:182
 #: xlsx/xlsx_stock.py:326 xlsx/xlsx_stock.py:333 xlsx/xlsx_stock.py:334
 #: xlsx/xlsx_stock.py:438 xlsx/xlsx_stock.py:439 xlsx/xlsx_stock.py:463
 #: xlsx/xlsx_stock.py:470
@@ -1004,7 +1004,7 @@ msgid "duplicate product"
 msgstr "Créer un duplicata"
 
 #: admin/purchase.py:93 models/box.py:70 models/offeritem.py:51
-#: models/product.py:291 xlsx/xlsx_order.py:351 xlsx/xlsx_purchase.py:41
+#: models/product.py:294 xlsx/xlsx_order.py:351 xlsx/xlsx_purchase.py:41
 msgid "product"
 msgstr "Produit"
 
@@ -1474,7 +1474,7 @@ msgstr "Commandes ouvertes"
 msgid "wait for close"
 msgstr "En cours de clôture"
 
-#: const.py:74 models/deliveryboard.py:106 models/permanence.py:641
+#: const.py:74 models/deliveryboard.py:106 models/permanence.py:647
 msgid "orders closed"
 msgstr "Commandes clôturées"
 
@@ -1714,7 +1714,7 @@ msgid "customer_invoice"
 msgstr "Facture d'un consommateur"
 
 #: models/bankaccount.py:51 models/deliveryboard.py:39
-#: models/permanence.py:116 models/product.py:134 models/purchase.py:111
+#: models/permanence.py:118 models/product.py:134 models/purchase.py:111
 msgid "is_updated_on"
 msgstr "Enregistrement mis à jour le"
 
@@ -2005,7 +2005,8 @@ msgid "language"
 msgstr "Langue"
 
 #: models/customer.py:48 models/lut.py:43 models/offeritem.py:53
-#: models/product.py:38 views/forms.py:204 views/my_profile_view.py:43
+#: models/permanence.py:136 models/product.py:38 views/forms.py:204
+#: views/my_profile_view.py:43
 msgid "picture"
 msgstr "Photo"
 
@@ -2127,15 +2128,15 @@ msgstr "Commentaire"
 msgid "delivery date"
 msgstr "Date de livraison"
 
-#: models/deliveryboard.py:37 models/permanence.py:93 models/permanence.py:573
+#: models/deliveryboard.py:37 models/permanence.py:95 models/permanence.py:579
 msgid "permanence_status"
 msgstr "Statut"
 
-#: models/deliveryboard.py:44 models/permanence.py:121
+#: models/deliveryboard.py:44 models/permanence.py:123
 msgid "highest permanence_status"
 msgstr "Statut le plus élevé de la permanence"
 
-#: models/deliveryboard.py:45 models/permanence.py:94 models/permanence.py:122
+#: models/deliveryboard.py:45 models/permanence.py:96 models/permanence.py:124
 msgid ""
 "status of the permanence from planned, orders opened, orders closed, send, "
 "done"
@@ -2158,7 +2159,7 @@ msgstr "Statut"
 msgid "is_order_confirm_send"
 msgstr "confirmation de la commande envoyée"
 
-#: models/invoice.py:57 models/invoice.py:413 models/permanence.py:129
+#: models/invoice.py:57 models/invoice.py:413 models/permanence.py:131
 msgid "invoice sort order"
 msgstr "Ordre de tri des factures"
 
@@ -2171,7 +2172,7 @@ msgid "previous_balance"
 msgstr "Solde précédent facturé"
 
 #: models/invoice.py:65 models/invoice.py:77 models/invoice.py:355
-#: models/invoice.py:378 models/permanence.py:103
+#: models/invoice.py:378 models/permanence.py:105
 msgid "Total amount"
 msgstr "Total avec TVA"
 
@@ -2242,7 +2243,7 @@ msgstr ""
 "cas où le groupe possède un consommateur responsable. Sinon il est ajouté au "
 "total de chaque facture individuelle."
 
-#: models/invoice.py:120 models/permanence.py:124
+#: models/invoice.py:120 models/permanence.py:126
 msgid "master permanence"
 msgstr "Permanence maître"
 
@@ -2355,7 +2356,7 @@ msgid "permanences roles"
 msgstr "Tâches"
 
 #: models/offeritem.py:30 models/offeritem.py:370 models/offeritem.py:377
-#: models/product.py:279 models/product.py:362 models/staff.py:48
+#: models/product.py:282 models/product.py:365 models/staff.py:48
 #: views/forms.py:167 views/pre_order_create_product_ajax.py:37
 #: views/pre_order_create_product_ajax.py:95 xlsx/xlsx_product.py:51
 msgid "long_name"
@@ -2502,7 +2503,7 @@ msgstr "Ensuite quantité de"
 msgid "increment order qty (eg : 0,05 Kg [i.e. 50max 1 piece, 3 Kg)"
 msgstr "0,05 = 50 grammes ou 50 cℓ, 1 = 1 Kg ou 1 pièce ou 1 ℓ."
 
-#: models/offeritem.py:168 models/product.py:104 models/product.py:182
+#: models/offeritem.py:168 models/product.py:104 models/product.py:185
 msgid "customer_alert_order_quantity"
 msgstr "Quantité d'alerte"
 
@@ -2535,21 +2536,21 @@ msgstr "<b>%(qty)s</b>"
 msgid "<b>%(qty)s</b> + stock %(stock)s"
 msgstr "<b>%(qty)s</b> + stock %(stock)s"
 
-#: models/offeritem.py:284 models/offeritem.py:303 models/product.py:191
-#: models/product.py:214 tools.py:338 tools.py:351
+#: models/offeritem.py:284 models/offeritem.py:303 models/product.py:194
+#: models/product.py:217 tools.py:338 tools.py:351
 msgid "/ kg"
 msgstr "/ kg"
 
-#: models/offeritem.py:286 models/offeritem.py:305 models/product.py:193
-#: models/product.py:216 tools.py:340 tools.py:353
+#: models/offeritem.py:286 models/offeritem.py:305 models/product.py:196
+#: models/product.py:219 tools.py:340 tools.py:353
 msgid "/ l"
 msgstr "/ ℓ"
 
-#: models/offeritem.py:289 models/product.py:196 tools.py:343
+#: models/offeritem.py:289 models/product.py:199 tools.py:343
 msgid "/ piece"
 msgstr "/ pièce"
 
-#: models/offeritem.py:307 models/product.py:218
+#: models/offeritem.py:307 models/product.py:221
 msgid "/ pc"
 msgstr "/ pc"
 
@@ -2561,15 +2562,15 @@ msgstr "Produit proposé"
 msgid "offer's items"
 msgstr "Produits proposés"
 
-#: models/permanence.py:74
+#: models/permanence.py:76
 msgid "offer name"
 msgstr "dénomination de l'offre"
 
-#: models/permanence.py:75 models/product.py:363 views/forms.py:207
+#: models/permanence.py:77 models/product.py:366 views/forms.py:207
 msgid "offer_description"
 msgstr "Message accompagnant l'offre"
 
-#: models/permanence.py:78
+#: models/permanence.py:80
 msgid ""
 "This message is send by mail to all customers when opening the order or on "
 "top "
@@ -2578,11 +2579,11 @@ msgstr ""
 "groupe autorisé à passer commande. Il est aussi affiché en haut de l'écran "
 "des commandes."
 
-#: models/permanence.py:81
+#: models/permanence.py:83
 msgid "invoice_description"
 msgstr "Message accompagnant la facture"
 
-#: models/permanence.py:84
+#: models/permanence.py:86
 msgid ""
 "This message is send by mail to all customers having bought something when "
 "closing the permanence."
@@ -2590,70 +2591,70 @@ msgstr ""
 "Ce message est envoyé par mail avec le détail de sa facture à chaque "
 "consommateur du groupe."
 
-#: models/permanence.py:95
+#: models/permanence.py:97
 msgid "date"
 msgstr "date"
 
-#: models/permanence.py:96
+#: models/permanence.py:98
 msgid "payment_date"
 msgstr "Date du paiement"
 
-#: models/permanence.py:104
+#: models/permanence.py:106
 msgid "Total purchase amount vat excluded"
 msgstr "Total des achats, HTVA"
 
-#: models/permanence.py:107 models/permanence.py:108
+#: models/permanence.py:109 models/permanence.py:110
 msgid "Total profit"
 msgstr "Bénéfice"
 
-#: models/permanence.py:112
+#: models/permanence.py:114
 msgid "with_delivery_point"
 msgstr "avec point de livraison"
 
-#: models/permanence.py:114
+#: models/permanence.py:116
 msgid "automatically_closed"
 msgstr "Clôturer ET transmettre automatiquement les commandes"
 
-#: models/permanence.py:132
+#: models/permanence.py:134
 msgid ""
 "Publish the offer description on the home page when the permanence is open"
 msgstr ""
 "Lorsque les commandes sont ouvertes, publier le message accompagnant l'offre "
 "sur la page d'accueil, y compris auprès des visiteurs anonymes"
 
-#: models/permanence.py:147
+#: models/permanence.py:153
 msgid "No offer"
 msgstr "Pas d'offre"
 
-#: models/permanence.py:250 models/permanence.py:334 models/permanence.py:387
+#: models/permanence.py:256 models/permanence.py:340 models/permanence.py:393
 msgid "Show"
 msgstr "Montrer"
 
-#: models/permanence.py:250 models/permanence.py:334 models/permanence.py:387
+#: models/permanence.py:256 models/permanence.py:340 models/permanence.py:393
 msgid "Hide"
 msgstr "Masquer"
 
-#: models/permanence.py:260
+#: models/permanence.py:266
 msgid "producers in this permanence"
 msgstr "Offres de"
 
-#: models/permanence.py:338
+#: models/permanence.py:344
 msgid "No purchase"
 msgstr "Pas d'achat"
 
-#: models/permanence.py:340
+#: models/permanence.py:346
 msgid "customers in this permanence"
 msgstr "Achats par"
 
-#: models/permanence.py:391
+#: models/permanence.py:397
 msgid "Empty board"
 msgstr "Tableau vide"
 
-#: models/permanence.py:393 models/permanenceboard.py:28
+#: models/permanence.py:399 models/permanenceboard.py:28
 msgid "permanence board"
 msgstr "Tableau des tâches"
 
-#: models/permanence.py:593 models/permanence.py:598 models/permanence.py:601
+#: models/permanence.py:599 models/permanence.py:604 models/permanence.py:607
 #: models/producer.py:290 templates/repanier/confirm_admin_invoice.html:110
 #: templates/repanier/pre_order_create_product_form.html:115
 #: templates/repanier/pre_order_form.html:38
@@ -2663,19 +2664,19 @@ msgstr "Tableau des tâches"
 msgid "wo tax"
 msgstr "HTVA"
 
-#: models/permanence.py:648
+#: models/permanence.py:654
 msgid "order"
 msgstr "Commande"
 
-#: models/permanence.py:649
+#: models/permanence.py:655
 msgid "orders"
 msgstr "Commandes"
 
-#: models/permanence.py:659 models/permanence.py:660
+#: models/permanence.py:665 models/permanence.py:666
 msgid "In preparation"
 msgstr "En préparation"
 
-#: models/permanence.py:666 models/permanence.py:667
+#: models/permanence.py:672 models/permanence.py:673
 msgid "In billing"
 msgstr "En facturation"
 
@@ -2745,11 +2746,11 @@ msgstr "Produits"
 msgid "last invoice"
 msgstr "dernière facture"
 
-#: models/product.py:174
+#: models/product.py:177
 msgid "is into offer"
 msgstr "En offre"
 
-#: models/product.py:367
+#: models/product.py:370
 msgid "Product translation"
 msgstr "Produits"
 
@@ -3149,7 +3150,7 @@ msgid " P "
 msgstr " P "
 
 #: templates/repanier/cache_part_d.html:9
-#: templates/repanier/order_form.html:109
+#: templates/repanier/order_form.html:110
 msgid "All producers"
 msgstr "Tous les producteurs"
 
@@ -3158,7 +3159,7 @@ msgid " D "
 msgstr " R "
 
 #: templates/repanier/cache_part_d.html:23
-#: templates/repanier/order_form.html:126
+#: templates/repanier/order_form.html:127
 msgid "All departments"
 msgstr "Tous les rayons"
 
@@ -3499,76 +3500,76 @@ msgstr ""
 "vous souhaitez commander, veuillez vous adresser aux responsables de votre "
 "groupe."
 
-#: templates/repanier/order_form.html:57
+#: templates/repanier/order_form.html:58
 msgid "Details of your order"
 msgstr "Détail de votre commande"
 
-#: templates/repanier/order_form.html:84 templates/repanier/who_is_who.html:10
+#: templates/repanier/order_form.html:85 templates/repanier/who_is_who.html:10
 msgid "Search"
 msgstr "Rechercher"
 
-#: templates/repanier/order_form.html:98
+#: templates/repanier/order_form.html:99
 msgid "My likes"
 msgstr "Mes "
 
-#: templates/repanier/order_form.html:120
+#: templates/repanier/order_form.html:121
 msgid "All products"
 msgstr "Tous les produits"
 
-#: templates/repanier/order_form.html:201
-#: templates/repanier/order_form.html:330 templates/repanier/task_form.html:96
+#: templates/repanier/order_form.html:202
+#: templates/repanier/order_form.html:331 templates/repanier/task_form.html:96
 msgid "Page "
 msgstr "Écran "
 
-#: templates/repanier/order_form.html:201
-#: templates/repanier/order_form.html:330 templates/repanier/task_form.html:96
+#: templates/repanier/order_form.html:202
+#: templates/repanier/order_form.html:331 templates/repanier/task_form.html:96
 msgid "of"
 msgstr "/"
 
-#: templates/repanier/order_form.html:216
+#: templates/repanier/order_form.html:217
 msgid "No offer found"
 msgstr "Pas de produit trouvé"
 
-#: templates/repanier/order_form.html:234
-#: templates/repanier/order_form.html:254
-#: templates/repanier/order_form.html:279
+#: templates/repanier/order_form.html:235
+#: templates/repanier/order_form.html:255
+#: templates/repanier/order_form.html:280
 #: templates/repanier/pre_order_closed_form.html:11
 #: templates/repanier/pre_order_form.html:104
 #: templates/repanier/pre_order_update_product_form.html:237
 msgid "Close"
 msgstr "Fermer"
 
-#: templates/repanier/order_form.html:271
+#: templates/repanier/order_form.html:272
 msgid "To order a bigger quantity, please contact your "
 msgstr "Pour commander une quantité plus grande, veuillez contacter votre "
 
-#: templates/repanier/order_form.html:309
+#: templates/repanier/order_form.html:310
 msgid "All"
 msgstr "Tous"
 
-#: templates/repanier/order_form.html:366
-#: templates/repanier/order_form.html:487
+#: templates/repanier/order_form.html:367
+#: templates/repanier/order_form.html:488
 msgid "Personnal communication"
 msgstr "Communication personnelle"
 
-#: templates/repanier/order_form.html:371
-#: templates/repanier/order_form.html:409
-#: templates/repanier/order_form.html:428
-#: templates/repanier/order_form.html:436
-#: templates/repanier/order_form.html:497
-#: templates/repanier/order_form.html:536
+#: templates/repanier/order_form.html:372
+#: templates/repanier/order_form.html:410
+#: templates/repanier/order_form.html:429
+#: templates/repanier/order_form.html:437
+#: templates/repanier/order_form.html:498
+#: templates/repanier/order_form.html:537
 msgid "retry"
 msgstr "Veuillez réessayer"
 
-#: templates/repanier/order_form.html:379
+#: templates/repanier/order_form.html:380
 msgid "You may not order"
 msgstr "Commande impossible"
 
-#: templates/repanier/order_form.html:561
+#: templates/repanier/order_form.html:562
 msgid "Communication error"
 msgstr "Erreur de connexion"
 
-#: templates/repanier/order_form.html:562
+#: templates/repanier/order_form.html:563
 #: templates/repanier/pre_order_form.html:156
 msgid "Please close this window and retry."
 msgstr "Veuillez fermer cette fenêtre et ressayer l\\'opération."
@@ -3660,13 +3661,13 @@ msgstr "Déconnexion"
 #: templates/repanier/registration/logged_out.html:11
 msgid ""
 "You are now disconnected. You can go right now on the\n"
-"              <a href=\"/repanier/go_repanier/\" class=\"btn btn-primary"
+"              <a href=\"/repanier/go_repanier/\" class=\"btn btn-default"
 "\">login page</a> or on the\n"
-"              <a href=\"/\" class=\"btn btn-primary\">home page</a>."
+"              <a href=\"/\" class=\"btn btn-default\">home page</a>."
 msgstr ""
 "Vous êtes maintenant déconnecté. Vous pouvez vous <a href=\"/repanier/"
-"go_repanier/\" class=\"btn btn-primary\">re connecter</a> ou vous rendre à "
-"la <a href=\"/\" class=\"btn btn-primary\">page d'accueil</a>."
+"go_repanier/\" class=\"btn btn-default\">re connecter</a> ou vous rendre à "
+"la <a href=\"/\" class=\"btn btn-default\">page d'accueil</a>."
 
 #: templates/repanier/registration/login.html:8
 #: templates/repanier/registration/login.html:57

@@ -45,7 +45,7 @@
 <p></p>
     <div class="form-group">
         <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
-            <span class="btn btn-primary">{% trans "Create an account" %}</span>
+            <span class="btn btn-info">{% trans "Create an account" %}</span>
         </div>
         <div id="collapse" class="panel-collapse collapse">
             {{ how_to_register }}
@@ -54,8 +54,8 @@
 </div>
 <div class="modal-footer">
     <div class="form-group">
-        <button class="btn btn-primary" type="submit">{% trans "Login" %}</button>
-        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" class="btn btn-primary">{% trans "Password reset" %}</a>
+        <button class="btn btn-default" type="submit">{% trans "Login" %}</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" class="btn btn-default">{% trans "Password reset" %}</a>
     </div>
 </div>
 </form>
