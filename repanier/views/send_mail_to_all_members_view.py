@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+import thread
 from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -71,7 +72,8 @@ def send_mail_to_all_members_view(request):
                 from_email=request.user.email,
                 cc=to_email_customer
             )
-            send_email(email=email, from_name=user_customer.long_basket_name)
+            # send_email(email=email, from_name=user_customer.long_basket_name)
+            thread.start_new_thread(send_email,(email, user_customer.long_basket_name, True))
             email = form.fields["your_email"]
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True
