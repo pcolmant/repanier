@@ -31,7 +31,7 @@ def repanier_user(context, *args, **kwargs):
         p_delivery_id = sint(kwargs.get('delivery_id', -1))
         nodes = ["""
             <li id="li_my_name" class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">%s %s<b class="caret"></b></a>
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> %s %s<b class="caret"></b></a>
             <ul class="dropdown-menu">
             """ % (
             _('Welkom'),
