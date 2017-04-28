@@ -1409,6 +1409,8 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
     for offer_item in queryset.select_related("producer", "product"):
         product = offer_item.product
         producer = offer_item.producer
+        if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+            offer_item.is_active = product.is_into_offer
         offer_item.picture2 = product.picture2
         offer_item.reference = product.reference
         offer_item.department_for_customer_id = product.department_for_customer_id
