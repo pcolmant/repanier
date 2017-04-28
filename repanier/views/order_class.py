@@ -187,7 +187,7 @@ class OrderView(ListView):
                 if self.basket:
                     qs = OfferItem.objects.filter(
                         permanence_id=self.permanence.id,
-                        order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                        may_order=True,  # Don't display technical products.
                         purchase__customer__user=self.user,
                         purchase__quantity_ordered__gt=0,
                         is_box=False,
@@ -205,10 +205,10 @@ class OrderView(ListView):
                         Q(
                             permanence_id=self.permanence.id, is_active=True,
                             is_box=False,  # Don't display boxes -> Added from customers reactions.
-                            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT  # Don't display technical products.
+                            may_order=True  # Don't display technical products.
                         ) | Q(
                             permanence_id=self.permanence.id, is_box_content=True,
-                            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT  # Don't display technical products.
+                            may_order=True  # Don't display technical products.
                         )
                     )
                     if self.producer_id != 'all':
