@@ -105,6 +105,8 @@ class Purchase(models.Model):
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])
+    is_resale_price_fixed = models.BooleanField(_("the resale price is set by the producer"),
+                                                default=False)
     comment = models.CharField(
         _("comment"), max_length=100, default=EMPTY_STRING, blank=True, null=True)
     is_updated_on = models.DateTimeField(
@@ -332,12 +334,14 @@ def purchase_pre_save(sender, **kwargs):
         quantity = purchase.quantity_invoiced
     delta_quantity = quantity - purchase.previous_quantity
     if purchase.is_box_content:
+        purchase.is_resale_price_fixed = True
         if delta_quantity != DECIMAL_ZERO:
             offeritem.OfferItem.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F('quantity_invoiced') + delta_quantity,
             )
     else:
-        if purchase.offer_item.is_resale_price_fixed \
+        purchase.is_resale_price_fixed = purchase.offer_item.is_resale_price_fixed
+        if purchase.is_resale_price_fixed \
                 or purchase.offer_item.price_list_multiplier < DECIMAL_ONE:
             purchase.price_list_multiplier = DECIMAL_ONE
         else:

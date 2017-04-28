@@ -237,7 +237,7 @@ class CustomerInvoice(models.Model):
 
         result_set = purchase.Purchase.objects.filter(
             permanence_id=self.permanence_id,
-            customer_id=self.customer_id
+            customer_id=self.customer_id,
         ).order_by('?').aggregate(
             Sum('customer_vat'),
             Sum('deposit'),
@@ -257,15 +257,38 @@ class CustomerInvoice(models.Model):
             self.total_price_with_tax.amount = DECIMAL_ZERO
 
         if self.price_list_multiplier != DECIMAL_ONE:
-            total_price_with_tax_wo_deposit = self.total_price_with_tax.amount - self.total_deposit.amount
+
+            result_set = purchase.Purchase.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id,
+                is_resale_price_fixed=True
+            ).order_by('?').aggregate(
+                Sum('customer_vat'),
+                Sum('deposit'),
+                Sum('selling_price')
+            )
+            if result_set["customer_vat__sum"] is not None:
+                total_vat = result_set["customer_vat__sum"]
+            else:
+                total_vat = DECIMAL_ZERO
+            if result_set["deposit__sum"] is not None:
+                total_deposit = result_set["deposit__sum"]
+            else:
+                total_deposit = DECIMAL_ZERO
+            if result_set["selling_price__sum"] is not None:
+                total_price_with_tax = result_set["selling_price__sum"]
+            else:
+                total_price_with_tax = DECIMAL_ZERO
+
+            total_price_with_tax_wo_deposit = total_price_with_tax - total_deposit
             self.delta_price_with_tax.amount = -(
                 total_price_with_tax_wo_deposit - (
                     total_price_with_tax_wo_deposit * self.price_list_multiplier
                 ).quantize(TWO_DECIMALS)
             )
             self.delta_vat.amount = -(
-                self.total_vat - (
-                    self.total_vat.amount * self.price_list_multiplier
+                total_vat - (
+                    total_vat * self.price_list_multiplier
                 ).quantize(FOUR_DECIMALS)
             )
         else:

@@ -1443,7 +1443,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         offer_item.manage_production = producer.manage_production
         # Important : or product.is_box -> impact into Purchase.get_customer_unit_price
         # The boxes prices are not subjects to price modifications
-        offer_item.is_resale_price_fixed = producer.is_resale_price_fixed or product.is_box
+        offer_item.is_resale_price_fixed = producer.is_resale_price_fixed or product.is_box or product.order_unit >= PRODUCT_ORDER_UNIT_DEPOSIT
         offer_item.price_list_multiplier = DECIMAL_ONE if offer_item.is_resale_price_fixed else producer.price_list_multiplier
         offer_item.stock = product.stock
         if reset_add_2_stock:
