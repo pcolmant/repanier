@@ -8,21 +8,18 @@ from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
 from django.utils import translation
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
 from repanier.const import *
 from repanier.email import email_offer
 from repanier.email import email_order
-from repanier.email.email_order import export_order_2_1_customer
 from repanier.models import Customer, BoxContent, DeliveryBoard, CustomerInvoice
 from repanier.models import OfferItem
 from repanier.models import Permanence
-from repanier.models import Producer, ProducerInvoice
+from repanier.models import Producer
 from repanier.models import Product
-from repanier.models import Purchase
-from repanier.tools import clean_offer_item, update_or_create_purchase, get_signature
+from repanier.tools import clean_offer_item
 from repanier.tools import recalculate_order_amount, create_or_update_one_purchase, get_or_create_offer_item, \
     add_months, \
     reorder_offer_items
@@ -311,42 +308,19 @@ def automatically_closed():
 
 @transaction.atomic
 def close_order_delivery(permanence, delivery, all_producers, producers_id=None):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     today = timezone.now().date()
     getcontext().rounding = ROUND_HALF_UP
-    if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-        purchase_qs = Purchase.objects.filter(
+    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        # Cancel unconfirmed purchases whichever the producer is
+        customer_invoice_qs = CustomerInvoice.objects.filter(
             permanence_id=permanence.id,
-            customer_invoice__delivery=delivery,
-            customer_invoice__is_order_confirm_send=False,
-            is_box_content=False
-        ).exclude(
-            quantity_ordered=DECIMAL_ZERO
-        ).order_by('customer_invoice')
-        if not all_producers:
-            # This may never be the but, but...
-            purchase_qs = purchase_qs.filter(producer_id__in=producers_id)
-        customer_invoice_id_save = -1
-        for purchase in purchase_qs.select_related("customer", "offer_item"):
-            if customer_invoice_id_save != purchase.customer_invoice_id:
-                customer_invoice_id_save =purchase.customer_invoice_id
-                # This order has been cancelled
-                # filename = force_filename("%s - %s.xlsx" % (_("Canceled order"), permanence))
-                filename = "{0}-{1}.xlsx".format(
-                    slugify(_("Canceled order")),
-                    slugify(permanence)
-                )
-                sender_email, sender_function, signature, cc_email_staff = get_signature(
-                    is_reply_to_order_email=True)
-                export_order_2_1_customer(
-                    purchase.customer, filename, permanence, sender_email,
-                    sender_function, signature,
-                    cancel_order=True)
-            update_or_create_purchase(
-                customer=purchase.customer,
-                offer_item_id=purchase.offer_item.id,
-                q_order=DECIMAL_ZERO,
-                batch_job=True
-            )
+            delivery=delivery,
+            is_order_confirm_send=False,
+            total_price_with_tax__gt=DECIMAL_ZERO,
+        )
+        for customer_invoice in customer_invoice_qs:
+            customer_invoice.delete_if_unconfirmed(permanence)
     if all_producers:
         # 1 - Do not round to multiple producer_order_by_quantity
         # 2 - Do not add Transport
@@ -391,41 +365,19 @@ def close_order_delivery(permanence, delivery, all_producers, producers_id=None)
 
 @transaction.atomic
 def close_order(permanence, all_producers, producers_id=None):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     getcontext().rounding = ROUND_HALF_UP
     today = timezone.now().date()
 
-    if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-        # 0 - Cancel unconfirmed purchases
-        purchase_qs = Purchase.objects.filter(
+    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        # Cancel unconfirmed purchases whichever the producer is
+        customer_invoice_qs = CustomerInvoice.objects.filter(
             permanence_id=permanence.id,
-            customer_invoice__is_order_confirm_send=False,
-            is_box_content=False
-        ).exclude(
-            quantity_ordered=DECIMAL_ZERO
-        ).order_by('customer_invoice')
-        if not all_producers:
-            purchase_qs = purchase_qs.filter(producer_id__in=producers_id)
-        customer_invoice_id_save = -1
-        for purchase in purchase_qs.select_related("customer", "offer_item"):
-            if customer_invoice_id_save != purchase.customer_invoice_id:
-                customer_invoice_id_save = purchase.customer_invoice_id
-                # This order has been cancelled
-                filename = "{0}-{1}.xlsx".format(
-                    slugify(_("Canceled order")),
-                    slugify(permanence)
-                )
-                sender_email, sender_function, signature, cc_email_staff = get_signature(
-                    is_reply_to_order_email=True)
-                export_order_2_1_customer(
-                    purchase.customer, filename, permanence, sender_email,
-                    sender_function, signature,
-                    cancel_order=True)
-            update_or_create_purchase(
-                customer=purchase.customer,
-                offer_item_id=purchase.offer_item.id,
-                q_order=DECIMAL_ZERO,
-                batch_job=True
-            )
+            is_order_confirm_send=False,
+            total_price_with_tax__gt=DECIMAL_ZERO,
+        )
+        for customer_invoice in customer_invoice_qs:
+            customer_invoice.delete_if_unconfirmed(permanence)
     # 1 - Round to multiple producer_order_by_quantity
     offer_item_qs = OfferItem.objects.filter(
         permanence_id=permanence.id,

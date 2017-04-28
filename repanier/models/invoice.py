@@ -8,13 +8,15 @@ from django.db import models
 from django.db import transaction
 from django.db.models import F, Sum
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
+import producer
 import purchase
 from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
-import producer
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.tools import update_or_create_purchase, get_signature
 
 
 def permanence_verbose_name():
@@ -346,6 +348,33 @@ class CustomerInvoice(models.Model):
             customer_charged_id=self.customer_id,
             status=self.status
         )
+
+    def delete_if_unconfirmed(self, permanence):
+        if not self.is_order_confirm_send:
+            from repanier.email.email_order import export_order_2_1_customer
+
+            filename = "{0}-{1}.xlsx".format(
+                slugify(_("Canceled order")),
+                slugify(permanence)
+            )
+            sender_email, sender_function, signature, cc_email_staff = get_signature(
+                is_reply_to_order_email=True)
+            export_order_2_1_customer(
+                self.customer, filename, permanence, sender_email,
+                sender_function, signature,
+                cancel_order=True
+            )
+            purchase_qs = purchase.Purchase.objects.filter(
+                customer_invoice_id=self.id,
+                is_box_content=False,
+            ).order_by('?')
+            for a_purchase in purchase_qs.select_related("customer"):
+                update_or_create_purchase(
+                    customer=a_purchase.customer,
+                    offer_item_id=a_purchase.offer_item_id,
+                    q_order=DECIMAL_ZERO,
+                    batch_job=True
+                )
 
     def __str__(self):
         return '%s, %s' % (self.customer, self.permanence)

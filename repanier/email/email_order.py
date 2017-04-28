@@ -14,7 +14,7 @@ from repanier.models import Permanence, Configuration, CustomerInvoice
 from repanier.models import PermanenceBoard
 from repanier.models import Producer, ProducerInvoice
 from repanier.tools import *
-from repanier.xlsx.xlsx_order import generate_customer_xlsx
+from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 
 def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, producers_id=None):
@@ -114,7 +114,7 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 producer_set = producer_set.filter(id__in=producers_id)
             for producer in producer_set:
                 long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name
-                wb = xlsx_order.generate_producer_xlsx(permanence=permanence, producer=producer, wb=None)
+                wb = generate_producer_xlsx(permanence=permanence, producer=producer, wb=None)
 
                 order_producer_mail = config.safe_translation_getter(
                     'order_producer_mail', any_language=True, default=EMPTY_STRING

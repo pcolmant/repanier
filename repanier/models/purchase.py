@@ -1,10 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-# import copy
-import django
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction

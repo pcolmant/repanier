@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib import admin
-from django.shortcuts import render
-from django.utils import timezone
 from django.core.checks import messages
 from django.db.models import F, Q
 from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
+from django.utils import timezone
 from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify

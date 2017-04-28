@@ -1,7 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.http import HttpResponse
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.style import Fill
@@ -27,6 +26,7 @@ def next_purchase(purchases):
 
 def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
     if permanence is not None:
+        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
         row_num = 1
         # Customer info
         Customer.objects.all().update(preparation_order=0)
@@ -54,9 +54,13 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     customer.preparation_order = preparation_order
                     customer.save(update_fields=['preparation_order'])
                     preparation_order += 1
+                    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
+                        confirmed = _(" /!\ Unconfirmed")
+                    else:
+                        confirmed = EMPTY_STRING
                     row = [
                         "N/A",
-                        "  %d - %s" % (customer.preparation_order, customer.long_basket_name),
+                        "  %d - %s%s" % (customer.preparation_order, customer.long_basket_name, confirmed),
                         customer.phone1,
                         customer.phone2,
                         invoice.total_price_with_tax.amount,
@@ -92,10 +96,13 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         customer.preparation_order = preparation_order
                         customer.save(update_fields=['preparation_order'])
                         preparation_order += 1
-
+                        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
+                            confirmed = _(" /!\ Unconfirmed")
+                        else:
+                            confirmed = EMPTY_STRING
                         row = [
                             "%d - %s" % (delivery_ref, delivery.get_delivery_display()),
-                            "  %d - %s" % (customer.preparation_order, customer.long_basket_name),
+                            "  %d - %s%s" % (customer.preparation_order, customer.long_basket_name, confirmed),
                             customer.phone1,
                             customer.phone2,
                             invoice.total_price_with_tax.amount,
@@ -139,9 +146,12 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     customer.preparation_order = preparation_order
                     customer.save(update_fields=['preparation_order'])
                     preparation_order += 1
-
+                    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
+                        confirmed = _(" /!\ Unconfirmed")
+                    else:
+                        confirmed = EMPTY_STRING
                     row = [
-                        "%d - %s" % (customer.preparation_order, customer.short_basket_name),
+                        "%d - %s%s" % (customer.preparation_order, customer.long_basket_name, confirmed),
                         customer.long_basket_name,
                         customer.phone1,
                         customer.phone2,

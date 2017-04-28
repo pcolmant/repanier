@@ -42,28 +42,8 @@ class Command(BaseCommand):
                     id__in=recently_updated_customer_invoice_qs
                 )
                 for customer_invoice in customer_invoice_qs:
-                    # TODO : Send Mail
-                    filename = "{0}-{1}.xlsx".format(
-                        slugify(_("Canceled order")),
-                        slugify(permanence)
-                    )
-                    sender_email, sender_function, signature, cc_email_staff = get_signature(
-                        is_reply_to_order_email=True)
-                    export_order_2_1_customer(
-                        customer_invoice.customer, filename, permanence, sender_email,
-                        sender_function, signature,
-                        cancel_order=True
-                    )
-                    purchase_qs = Purchase.objects.filter(
-                        customer_invoice_id=customer_invoice.id,
-                        is_box_content=False
-                    ).order_by('?')
-                    for purchase in purchase_qs.select_related("customer"):
-                        update_or_create_purchase(
-                            customer=purchase.customer,
-                            offer_item_id=purchase.offer_item_id,
-                            q_order=DECIMAL_ZERO,
-                            batch_job=True
-                        )
+                    customer_invoice.delete_if_unconfirmed(permanence)
+
+
 
 

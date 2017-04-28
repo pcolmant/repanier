@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import datetime
 import json
 
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404
 from django.http import HttpResponse
@@ -16,7 +15,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_OPENED, DECIMAL_ONE, \
-    PERMANENCE_CLOSED, REPANIER_MONEY_ZERO, EMPTY_STRING
+    REPANIER_MONEY_ZERO, EMPTY_STRING
 from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, OfferItem, \
     ProducerInvoice, Purchase
 from repanier.tools import sboolean, sint, display_selected_value, \
@@ -64,11 +63,8 @@ def order_init_ajax(request):
                     raise Http404
                 my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
                 basket = sboolean(request.GET.get('ba', False))
-                from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
-                    REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
+                from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
                     REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
-                # if basket or (REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-                #               and customer_invoice.is_order_confirm_send):
                 if customer_invoice.delivery is not None:
                     status = customer_invoice.delivery.status
                 else:
@@ -89,14 +85,6 @@ def order_init_ajax(request):
                     basket_message=basket_message,
                     to_json=to_json
                 )
-                # else:
-                #     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-                #         my_order_confirmation(
-                #             permanence=permanence,
-                #             customer_invoice=customer_invoice,
-                #             is_basket=basket,
-                #             to_json=to_json
-                #         )
                 if customer.may_order:
                     if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                         for producer in permanence.producers.all():

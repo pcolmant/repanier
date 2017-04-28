@@ -1,8 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-import copy
-
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
