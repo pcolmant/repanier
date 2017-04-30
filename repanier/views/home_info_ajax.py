@@ -10,7 +10,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED
+from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
 from repanier.models import Permanence
 
 
@@ -18,12 +18,14 @@ from repanier.models import Permanence
 @require_GET
 def home_info_ajax(request):
     if request.is_ajax():
-        result = []
+        from repanier.apps import REPANIER_SETTINGS_CONFIG
+        permanences = []
+        home_info = EMPTY_STRING
         for permanence in Permanence.objects.filter(
                 status=PERMANENCE_OPENED) \
                 .only("id", "permanence_date", "with_delivery_point") \
-                .order_by('permanence_date'):
-            result.append(
+                .order_by('-permanence_date', '-id'):
+            permanences.append(
                 format_html(
                     '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
                     reverse('order_view', args=(permanence.id,)),
@@ -32,7 +34,7 @@ def home_info_ajax(request):
             )
             if permanence.offer_description_on_home_page and permanence.offer_description:
                 if permanence.picture:
-                    result.append(
+                    permanences.append(
                         format_html(
                             '<div class="panel-body"><div class="col-xs-12"><img class="img-rounded" style="float: left; margin: 5px;" alt="{}" title="{}" src="{}{}"/>{}</div></div>',
                             permanence.get_permanence_customer_display(),
@@ -43,12 +45,51 @@ def home_info_ajax(request):
                         )
                     )
                 else:
-                    result.append(
+                    permanences.append(
                         format_html(
                             '<div class="panel-body"><div class="col-xs-12">{}</div></div>',
                             mark_safe(permanence.offer_description)
                         )
                     )
-        if len(result) > 0:
-            return HttpResponse("".join(result))
+        if len(permanences) > 0:
+            home_info = """
+            <div class="container">
+                <div class="row">
+                    <div class="panel-group">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="col-md-12">
+                                {permanences}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """.format(
+                permanences="".join(permanences)
+            )
+        if REPANIER_SETTINGS_CONFIG.notification:
+            if REPANIER_SETTINGS_CONFIG.notification_is_public or request.user.is_authenticated:
+                home_info = """
+                <div class="container">
+                    <div class="row">
+                        <div class="panel-group">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <div class="col-md-12">
+                                    {notification}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {home_info}
+                """.format(
+                    notification=REPANIER_SETTINGS_CONFIG.notification,
+                    home_info=home_info
+                )
+
+        return HttpResponse(home_info)
     raise Http404

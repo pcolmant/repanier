@@ -42,6 +42,7 @@
         <input type="hidden" name="this_is_the_login_form" value="1" />
         <input type="hidden" name="next" value="{{ next }}" />
     </div>
+{% if how_to_register %}
 <p></p>
     <div class="form-group">
         <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
@@ -52,6 +53,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 <div class="modal-footer">
     <div class="form-group">
         <button class="btn btn-default" type="submit">{% trans "Login" %}</button>

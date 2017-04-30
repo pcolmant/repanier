@@ -19,7 +19,7 @@ import repanier.apps
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.box import BoxContent
-from repanier.tools import get_or_create_offer_item
+from repanier.tools import get_or_create_offer_item, cap
 
 
 @python_2_unicode_compatible
@@ -209,6 +209,13 @@ class Purchase(models.Model):
                 )
         else:
             raise AttributeError
+
+    def set_comment(self, comment):
+        if comment:
+            if self.comment:
+                self.comment = cap("%s, %s" % (self.comment, comment), 100)
+            else:
+                self.comment = cap(comment, 100)
 
     @transaction.atomic
     def save(self, *args, **kwargs):

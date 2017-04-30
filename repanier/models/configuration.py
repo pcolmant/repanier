@@ -96,6 +96,7 @@ class Configuration(TranslatableModel):
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
+    notification_is_public = models.BooleanField(_("the notification is public"), default=False)
     translations = TranslatedFields(
         group_label=models.CharField(_("group label"),
                                     max_length=100,
@@ -104,11 +105,13 @@ class Configuration(TranslatableModel):
         how_to_register=HTMLField(_("how to register"),
                                   help_text=EMPTY_STRING,
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
-                                  default=
-                                  """
-                                  Pour créer un compte et passer commande, veuillez contacter ....
-                                  """,
-                                  blank=False),
+                                  default=EMPTY_STRING,
+                                  blank=True),
+        notification=HTMLField(_("notification"),
+                                  help_text=EMPTY_STRING,
+                                  configuration='CKEDITOR_SETTINGS_MODEL2',
+                                  default=EMPTY_STRING,
+                                  blank=True),
         offer_customer_mail=HTMLField(_("offer customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',

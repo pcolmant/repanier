@@ -234,24 +234,24 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 delta = 5
                                 for col_num in range(5):
                                     c = ws.cell(row=row_num, column=delta + col_num)
-                                    c.style.borders.bottom.border_style = Border.BORDER_THIN
+                                    c.style.borders.top.border_style = Border.BORDER_THIN
                                 row_num += 1
                                 purchase = next_purchase(purchases)
 
                         count_permanence_purchase += count_purchase
                         if year is None and count_purchase > 1:
-                            c = ws.cell(row=row_num, column=11)
+                            c = ws.cell(row=row_num -1, column=11)
                             c.value = '=SUM(J%s:J%s)' % (row_start_purchase, row_num)
                             c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.font.color = Color(Color.BLUE)
                             ws.conditional_formatting.addCellIs(
-                                get_column_letter(12) + str(row_num + 1), 'notEqual',
+                                get_column_letter(12) + str(row_num), 'notEqual',
                                 [str(purchases_price)], True, wb,
                                 None, None, yellowFill
                             )
-                            c = ws.cell(row=row_num, column=0)
+                            c = ws.cell(row=row_num -1, column=0)
                             c.value = "C"
-                            row_num += 1
+                            # row_num += 1
 
                         producer_price += purchases_price
                     if count_permanence_purchase > 0:
@@ -283,7 +283,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         row_num += 1
                         for col_num in range(14):
                             c = ws.cell(row=row_num, column=col_num)
-                            c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
+                            c.style.borders.top.border_style = Border.BORDER_MEDIUMDASHED
                         row_num += 1
             else:
                 if year is None:
@@ -357,7 +357,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             offer_items_price = DECIMAL_ZERO
                             for col_num in range(14):
                                 c = ws.cell(row=row_num, column=col_num)
-                                c.style.borders.bottom.border_style = Border.BORDER_THIN
+                                c.style.borders.top.border_style = Border.BORDER_THIN
                             row_start_offer_item = 0
                             while purchase is not None and offer_item_save == purchase.offer_item:
                                 c = ws.cell(row=row_num, column=1)
@@ -450,7 +450,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 delta = 5
                                 for col_num in range(5):
                                     c = ws.cell(row=row_num, column=delta + col_num)
-                                    c.style.borders.bottom.border_style = Border.BORDER_THIN
+                                    c.style.borders.top.border_style = Border.BORDER_THIN
 
                                 purchase = next_purchase(purchases)
                                 row_num += 1
@@ -462,17 +462,18 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
                                     PRODUCT_ORDER_UNIT_LT
                                 ]:
-                                    c = ws.cell(row=row_num, column=11)
+                                    c = ws.cell(row=row_num - 1, column=11)
                                     c.value = '=SUM(J%s:J%s)' % (row_start_offer_item, row_num)
                                     c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                     c.style.font.color = Color(Color.BLUE)
                                     ws.conditional_formatting.addCellIs(
-                                        get_column_letter(12) + str(row_num + 1), 'notEqual',
+                                        get_column_letter(12) + str(row_num), 'notEqual',
                                         [str(offer_items_price)], True, wb,
                                         None, None, yellowFill
                                     )
-                                    c = ws.cell(row=row_num, column=0)
+                                    c = ws.cell(row=row_num - 1, column=0)
                                     c.value = "D"
+                                    # row_num += 1
 
                             producer_price += offer_items_price
 
@@ -505,7 +506,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         row_num += 1
                         for col_num in range(14):
                             c = ws.cell(row=row_num, column=col_num)
-                            c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
+                            c.style.borders.top.border_style = Border.BORDER_MEDIUMDASHED
                         row_num += 1
             producer = next_row(producers)
 
@@ -526,7 +527,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
             row_num += 1
             for col_num in range(14):
                 c = ws.cell(row=row_num, column=col_num)
-                c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
+                c.style.borders.top.border_style = Border.BORDER_MEDIUMDASHED
 
         if year is None:
             ws.column_dimensions[get_column_letter(3)].visible = False
@@ -553,10 +554,11 @@ def import_purchase_sheet(worksheet, permanence=None,
         array_purchase = []
         rule_of_3_source = DECIMAL_ZERO
         row = get_row(worksheet, header, row_num)
+        getcontext().rounding = ROUND_HALF_UP
         while row and not error:
             try:
                 row_format = row[_('Format')]
-                if row_format in ["A", "B"]:
+                if row_format in ["A", "B", "C", "D"]:
                     import_counter += 1
                     if row[_('Id')] is None:
                         error = True
@@ -635,10 +637,11 @@ def import_purchase_sheet(worksheet, permanence=None,
                     purchase.save()
                     rule_of_3_source += purchase.purchase_price.amount
                     array_purchase.append(purchase)
-                elif row_format in ["C", "D"]:
+                if row_format in ["C", "D"]:
                     rule_of_3_target = row[_('rule of 3')]
                     if rule_of_3_target is not None:
                         rule_of_3_target = Decimal(rule_of_3_target).quantize(TWO_DECIMALS)
+                        print(rule_of_3_target)
                         if rule_of_3_target != rule_of_3_source:
                             max_purchase_counter = len(array_purchase)
                             if max_purchase_counter <= 1:
@@ -658,9 +661,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                                 if ratio != DECIMAL_ONE:
                                     adjusted_invoice = DECIMAL_ZERO
                                     for i, purchase in enumerate(array_purchase, start=1):
-                                        producer_unit_price = (purchase.offer_item.producer_unit_price.amount +
-                                                               purchase.offer_item.unit_deposit.amount
-                                                               ).quantize(TWO_DECIMALS)
+                                        producer_unit_price = purchase.offer_item.producer_unit_price.amount
                                         if i == max_purchase_counter:
                                             delta = rule_of_3_target - adjusted_invoice
                                             if producer_unit_price != DECIMAL_ZERO:
@@ -671,7 +672,8 @@ def import_purchase_sheet(worksheet, permanence=None,
                                         else:
                                             purchase.quantity_invoiced = (purchase.quantity_invoiced * ratio).quantize(
                                                 FOUR_DECIMALS)
-                                            adjusted_invoice += purchase.quantity_invoiced * producer_unit_price
+                                            adjusted_invoice += (
+                                                purchase.quantity_invoiced * producer_unit_price).quantize(TWO_DECIMALS)
                                         purchase.save()
 
                 row_num += 1

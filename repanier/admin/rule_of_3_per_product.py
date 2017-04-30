@@ -291,6 +291,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
+        getcontext().rounding = ROUND_HALF_UP
         for formset in formsets:
             # option.py -> construct_change_message doesn't test the presence of those array not created at form initialisation...
             if not hasattr(formset, 'new_objects'): formset.new_objects = []
@@ -380,6 +381,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                             ratio = DECIMAL_ZERO
                         else:
                             ratio = DECIMAL_ONE
+                    # Rule of 3
                     if ratio != DECIMAL_ONE:
                         adjusted_invoice = DECIMAL_ZERO
                         i = 0

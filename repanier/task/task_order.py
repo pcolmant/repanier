@@ -177,7 +177,7 @@ def pre_open_order(permanence_id):
 
 
 @transaction.atomic
-def open_order(permanence_id):
+def open_order(permanence_id, do_not_send_any_mail=False):
     permanence = common_to_pre_open_and_open(permanence_id)
     # 1 - Disallow access to the producer to his/her products no more into "pre order" status
     for producer in Producer.objects.filter(
@@ -203,7 +203,7 @@ def open_order(permanence_id):
         permanence.producers.add(offer_item.producer_id)
 
     try:
-        if repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER:
+        if repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER and not do_not_send_any_mail:
             email_offer.send_open_order(permanence_id)
         permanence.set_status(PERMANENCE_OPENED)
     except Exception as error_str:
@@ -247,7 +247,7 @@ def admin_undo_back_to_planned(request, permanence):
     return user_message, user_message_level
 
 
-def admin_open_and_send(request, permanence):
+def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
     producer_pre_opening = Producer.objects.filter(
         permanence__id=permanence.id, is_active=True, producer_pre_opening=True
     ).order_by('?')
@@ -267,7 +267,7 @@ def admin_open_and_send(request, permanence):
     else:
         permanence.set_status(PERMANENCE_WAIT_FOR_OPEN)
         # open_order(permanence.id)
-        thread.start_new_thread(open_order, (permanence.id,))
+        thread.start_new_thread(open_order, (permanence.id, do_not_send_any_mail))
         user_message = _("The offers are being generated.")
         user_message_level = messages.INFO
     return user_message, user_message_level

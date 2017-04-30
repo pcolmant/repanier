@@ -1,9 +1,8 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.db import transaction
-from django.utils import translation, timezone
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
 from openpyxl.style import Border
@@ -19,7 +18,7 @@ from repanier.models import CustomerInvoice
 from repanier.models import Producer
 from repanier.models import ProducerInvoice
 from repanier.tools import get_invoice_unit, get_reverse_invoice_unit, get_or_create_offer_item, \
-    create_or_update_one_purchase
+    create_or_update_one_purchase, reorder_offer_items, reorder_purchases
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
     get_header, get_row
 
@@ -266,6 +265,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 (_("invoice_status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
                 (_("customer"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
                 (_("reference"), 10, purchase.offer_item.reference, NumberFormat.FORMAT_TEXT, False),
+                (_("wrapped"), 10, purchase.offer_item.wrapped, NumberFormat.FORMAT_TEXT, False),
             ]
 
             if row_num == 0:
@@ -303,6 +303,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ws.column_dimensions[get_column_letter(15)].visible = False
             ws.column_dimensions[get_column_letter(18)].visible = False
             ws.column_dimensions[get_column_letter(19)].visible = False
+            ws.column_dimensions[get_column_letter(20)].visible = False
             for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.top.border_style = Border.BORDER_THIN
@@ -397,20 +398,28 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                     product.unit_deposit = row[_("deposit")]
                     product.order_unit = order_unit
                     product.vat_level = vat_level
+                    product.wrapped = row[_("wrapped")]
                     product.save()
-                    qty_and_price_display = product.get_qty_and_price_display()
+                    qty_and_price_display = product.get_qty_and_price_display(customer_price=False)
                     if product.long_name.endswith(qty_and_price_display):
                         product.long_name = product.long_name[:-len(qty_and_price_display)]
                         product.save()
                     offer_item = get_or_create_offer_item(permanence, product.id, producer.id)
-                    create_or_update_one_purchase(customer_id, offer_item, q_order=1,
-                                                  status=PERMANENCE_SEND,
-                                                  permanence_date=permanence.permanence_date,
-                                                  batch_job=True, is_box_content=False)
+                    create_or_update_one_purchase(
+                        customer_id,
+                        offer_item,
+                        q_order=Decimal(row[_("Quantity")]),
+                        status=PERMANENCE_SEND,
+                        permanence_date=permanence.permanence_date,
+                        batch_job=True, is_box_content=False,
+                        comment=row[_("comment")]
+                    )
                     import_counter += 1
 
                 row_num += 1
                 row = get_row(worksheet, header, row_num)
+            reorder_offer_items(permanence.id)
+            reorder_purchases(permanence.id)
 
         except KeyError as e:
             # Missing field
@@ -431,17 +440,13 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
 
 
 def handle_uploaded_invoice(request, permanences, file_to_import, producer, invoice_reference):
-    error = False
-    error_msg = None
     if producer is None:
         error = True
         error_msg = _("A producer must be given.")
-
-    wb = load_workbook(file_to_import)
-    # dict for performance optimisation purpose : read the DB only once
-    customer_2_id_dict = get_customer_email_2_id_dict()
-
-    if not error:
+    else:
+        wb = load_workbook(file_to_import)
+        # dict for performance optimisation purpose : read the DB only once
+        customer_2_id_dict = get_customer_email_2_id_dict()
         ws = wb.worksheets[0]
         error, error_msg = import_invoice_sheet(
             ws, invoice_reference=invoice_reference,

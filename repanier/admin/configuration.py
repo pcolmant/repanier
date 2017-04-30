@@ -57,7 +57,8 @@ class ConfigurationAdmin(TranslatableAdmin):
                      'customers_must_confirm_orders',
                      ('bank_account', 'max_week_wo_participation'),
                      ('membership_fee', 'membership_fee_duration'),
-                     'how_to_register'),
+                     'notification_is_public',
+                     'notification'),
             }),
         ]
         if Producer.objects.filter(producer_pre_opening=True).order_by('?').only('id').exists():
@@ -109,6 +110,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                         'sms_gateway_mail',
                         'invoice',
                         ('currency', 'vat_id'),
+                        'how_to_register'
                     ),
             }),
         ]

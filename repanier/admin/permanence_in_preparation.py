@@ -431,11 +431,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             email_will_be_sent, email_will_be_sent_to = send_email_to_who(
                 repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER
             )
-        if 'apply' in request.POST:
+        if 'apply' in request.POST or 'apply-wo-mail' in request.POST:
             form = OpenAndSendOfferForm(request.POST)
             if form.is_valid():
                 user_message, user_message_level = task_order.admin_open_and_send(
-                    request, permanence
+                    request, permanence, 'apply-wo-mail' in request.POST
                 )
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())

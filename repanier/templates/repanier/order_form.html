@@ -1,6 +1,22 @@
 {% extends 'cms_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags %}
 {% block sub_content %}
+    <div id="containerInfo" style="display: none"></div>
+{% addtoblock "lastjs" %}{% spaceless %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            lien = '{% url 'order_info' %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: false,
+                success: function (result) {
+                    $("#containerInfo").html(result).show();
+                }
+            });
+        });
+    </script>
+{% endspaceless %}{% endaddtoblock %}
 {% if is_anonymous %}
     <div class="row">
         <div class="panel-group">
@@ -9,6 +25,7 @@
                     <div class="col-xs-3">
                         <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-default">{% trans "Login me" %}</a>
                     </div>
+                    {% if how_to_register %}
                     <div class="col-xs-9">
                             <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
                                 <span class="btn btn-info">{% trans "Create an account" %}</span>
@@ -17,6 +34,7 @@
                                     {{ how_to_register }}
                             </div>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

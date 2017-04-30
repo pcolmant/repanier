@@ -8,6 +8,7 @@ from django.db import models
 from django.db import transaction
 from django.db.models import F, Sum
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.formats import number_format
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
@@ -373,7 +374,8 @@ class CustomerInvoice(models.Model):
                     customer=a_purchase.customer,
                     offer_item_id=a_purchase.offer_item_id,
                     q_order=DECIMAL_ZERO,
-                    batch_job=True
+                    batch_job=True,
+                    comment=_("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
                 )
 
     def __str__(self):

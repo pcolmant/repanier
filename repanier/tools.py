@@ -26,6 +26,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslationDoesNotExist
+from six import string_types
 
 import models
 from const import *
@@ -312,7 +313,7 @@ def cap_to_bytes_length(unicode_text, byte_limit):
 
 def cap(s, l):
     if s is not None:
-        if not isinstance(s, basestring):
+        if not isinstance(s, string_types):
             s = str(s)
         s = s if len(s) <= l else s[0:l - 4] + '...'
         return s
@@ -787,20 +788,12 @@ def recalculate_order_amount(permanence_id,
                 if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                     purchase.quantity_invoiced = (purchase.quantity_ordered * offer_item.order_average_weight) \
                         .quantize(FOUR_DECIMALS)
-                    if offer_item.wrapped:
-                        purchase.quantity_for_preparation_sort_order = DECIMAL_ZERO
-                    else:
-                        purchase.quantity_for_preparation_sort_order = purchase.quantity_ordered
-                elif offer_item.order_unit == PRODUCT_ORDER_UNIT_KG:
-                    purchase.quantity_invoiced = purchase.quantity_ordered
-                    if offer_item.wrapped:
-                        purchase.quantity_for_preparation_sort_order = DECIMAL_ZERO
-                    else:
-                        purchase.quantity_for_preparation_sort_order = purchase.quantity_ordered
                 else:
                     purchase.quantity_invoiced = purchase.quantity_ordered
-                    purchase.quantity_for_preparation_sort_order = DECIMAL_ZERO
         purchase.save()
+
+    if send_to_producer:
+        reorder_purchases(permanence_id)
 
 
 def display_selected_value(offer_item, quantity_ordered):
@@ -967,7 +960,8 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                             if quantity_ordered < DECIMAL_ZERO:
                                 quantity_ordered = DECIMAL_ZERO
                             purchase, updated = create_or_update_one_purchase(
-                                customer.id, box_offer_item, q_order=quantity_ordered, batch_job=batch_job, is_box_content=True
+                                customer.id, box_offer_item, q_order=quantity_ordered,
+                                batch_job=batch_job, is_box_content=True
                             )
                         else:
                             updated = False
@@ -1304,7 +1298,10 @@ def my_order_confirmation_email_send_to(customer):
     return msg_confirmation
 
 
-def create_or_update_one_purchase(customer_id, offer_item, permanence_date=None, status=PERMANENCE_OPENED, q_order=None, batch_job=False, is_box_content=False):
+def create_or_update_one_purchase(
+        customer_id, offer_item,
+        permanence_date=None, status=PERMANENCE_OPENED, q_order=None,
+        batch_job=False, is_box_content=False, comment=EMPTY_STRING):
 
     # The batch_job flag is used because we need to forbid
     # customers to add purchases during the close_orders_async or other batch_job process
@@ -1327,12 +1324,14 @@ def create_or_update_one_purchase(customer_id, offer_item, permanence_date=None,
                 quantity_ordered=q_order if status < PERMANENCE_SEND else DECIMAL_ZERO,
                 quantity_invoiced=q_order if status >= PERMANENCE_SEND else DECIMAL_ZERO,
                 is_box_content=is_box_content,
-                status=status
+                status=status,
+                comment=comment
             )
         else:
+            purchase.set_comment(comment)
             if status < PERMANENCE_SEND:
-                if q_order == DECIMAL_ZERO:
-                    purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
+                # if q_order == DECIMAL_ZERO:
+                #     purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
                 purchase.quantity_ordered = q_order
             else:
                 purchase.quantity_invoiced = q_order
@@ -1370,6 +1369,7 @@ def create_or_update_one_purchase(customer_id, offer_item, permanence_date=None,
                 else:
                     q_alert = offer_item.customer_alert_order_quantity
             if purchase is not None:
+                purchase.set_comment(comment)
                 if q_order <= q_alert:
                     if purchase.quantity_confirmed <= q_order:
                         purchase.quantity_ordered = q_order
@@ -1392,12 +1392,12 @@ def create_or_update_one_purchase(customer_id, offer_item, permanence_date=None,
                     quantity_ordered=q_order,
                     quantity_invoiced=DECIMAL_ZERO,
                     is_box_content=is_box_content,
-                    status=status
+                    status=status,
+                    comment=comment
                 )
             return purchase, True
         else:
             return purchase, False
-
 
 
 def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
@@ -1486,6 +1486,22 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
                                                     'departementforcustomer_set': departementforcustomer_set})
         permanence.save_translations()
     translation.activate(cur_language)
+
+
+def reorder_purchases(permanence_id):
+    # Order the purchases such that lower quantity are before larger quantity
+    models.Purchase.objects.filter(
+        permanence_id=permanence_id
+    ).update(
+        quantity_for_preparation_sort_order=DECIMAL_ZERO
+    )
+    models.Purchase.objects.filter(
+        permanence_id=permanence_id,
+        offer_item__wrapped=False,
+        offer_item__order_unit__in=[PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]
+    ).update(
+        quantity_for_preparation_sort_order=F('quantity_invoiced')
+    )
 
 
 def reorder_offer_items(permanence_id):
