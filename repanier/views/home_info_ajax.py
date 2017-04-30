@@ -57,11 +57,7 @@ def home_info_ajax(request):
                 <div class="row">
                     <div class="panel-group">
                         <div class="panel panel-default">
-                            <div class="panel-body">
-                                <div class="col-md-12">
-                                {permanences}
-                                </div>
-                            </div>
+                            {permanences}
                         </div>
                     </div>
                 </div>
@@ -77,9 +73,7 @@ def home_info_ajax(request):
                         <div class="panel-group">
                             <div class="panel panel-default">
                                 <div class="panel-body">
-                                    <div class="col-md-12">
                                     {notification}
-                                    </div>
                                 </div>
                             </div>
                         </div>
