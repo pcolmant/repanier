@@ -37,22 +37,37 @@ def generate_invoice(permanence, payment_date):
         to_be_paid=False
     ).order_by('?').exists()
     if permanence_partially_invoiced:
-
-        # The values_list method returns a ValuesListQuerySet.
-        # This means it has the advantages of a queryset. For example it is lazy, so you only fetch the first 25 elements from the database when you slice it.
-        # To convert it to a list for e.g. because you reuse it, use list()
-        producers_to_invoice = list(ProducerInvoice.objects.filter(
+        # Move the producers not invoiced into a new permanence
+        producers_to_move = list(ProducerInvoice.objects.filter(
             permanence_id=permanence.id,
             invoice_sort_order__isnull=True,
-            to_be_paid=True
+            to_be_paid=False
         ).values_list('producer_id', flat=True).order_by("producer_id"))
 
-        new_permanence = permanence.create_child()
-        # It's not needed to set new_permanence.status = PERMANENCE_WAIT_FOR_INVOICED because we are in @transaction
+        new_permanence = permanence.create_child(PERMANENCE_SEND)
+
+        ProducerInvoice.objects.filter(
+            permanence_id=permanence.id,
+            producer_id__in=producers_to_move
+        ).order_by('?').update(
+            permanence_id=new_permanence.id
+        )
+        CustomerProducerInvoice.objects.filter(
+            permanence_id=permanence.id,
+            producer_id__in=producers_to_move
+        ).order_by('?').update(
+            permanence_id=new_permanence.id
+        )
+        OfferItem.objects.filter(
+            permanence_id=permanence.id,
+            producer_id__in=producers_to_move
+        ).order_by('?').update(
+            permanence_id=new_permanence.id
+        )
 
         for purchase in Purchase.objects.filter(
             permanence_id=permanence.id,
-            producer_id__in=producers_to_invoice
+            producer_id__in=producers_to_move
         ).order_by().distinct('customer_invoice'):
             customer_invoice = CustomerInvoice.objects.filter(
                 id=purchase.customer_invoice_id
@@ -61,47 +76,25 @@ def generate_invoice(permanence, payment_date):
             new_customer_invoice.set_delivery(customer_invoice.delivery)
             Purchase.objects.filter(
                 customer_invoice_id=customer_invoice.id,
-                producer_id__in=producers_to_invoice
+                producer_id__in=producers_to_move
             ).order_by('?').update(
                 permanence_id=new_permanence.id,
                 customer_invoice_id=new_customer_invoice.id,
                 customer_charged_id=new_customer_invoice.customer_charged_id
             )
             new_customer_invoice.calculate_and_save_delta_buyinggroup()
-            customer_invoice.calculate_and_save_delta_buyinggroup()
 
-        ProducerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            producer_id__in=producers_to_invoice
+    for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=permanence.id).order_by('?'):
+        # In case of changed delivery conditions
+        customer_invoice.set_delivery(customer_invoice.delivery)
+        # Need to calculate delta_price_with_tax, delta_vat and delta_transport
+        customer_invoice.calculate_and_save_delta_buyinggroup()
+        Purchase.objects.filter(
+            customer_invoice_id=customer_invoice.id
         ).order_by('?').update(
-            permanence_id=new_permanence.id
+            customer_charged_id=customer_invoice.customer_charged_id
         )
-        CustomerProducerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            producer_id__in=producers_to_invoice
-        ).order_by('?').update(
-            permanence_id=new_permanence.id
-        )
-        OfferItem.objects.filter(
-            permanence_id=permanence.id,
-            producer_id__in=producers_to_invoice
-        ).order_by('?').update(
-            permanence_id=new_permanence.id
-        )
-        permanence = new_permanence
-
-    else:
-        for customer_invoice in CustomerInvoice.objects.filter(
-                permanence_id=permanence.id).order_by('?'):
-            # In case of changed delivery conditions
-            customer_invoice.set_delivery(customer_invoice.delivery)
-            # Need to calculate delta_price_with_tax, delta_vat and delta_transport
-            customer_invoice.calculate_and_save_delta_buyinggroup()
-            Purchase.objects.filter(
-                customer_invoice_id=customer_invoice.id
-            ).order_by('?').update(
-                customer_charged_id=customer_invoice.customer_charged_id
-            )
 
 
     # Important : linked to task_invoice.cancel

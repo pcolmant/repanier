@@ -563,10 +563,11 @@ class Permanence(TranslatableModel):
         translation.activate(cur_language)
         return new_permanence
 
-    def create_child(self):
+    def create_child(self, status):
         child_permanence = Permanence.objects.create(
             permanence_date=self.permanence_date,
-            master_permanence_id=self.id
+            master_permanence_id=self.id,
+            status=status
         )
         return self.duplicate_short_name(
             child_permanence,
