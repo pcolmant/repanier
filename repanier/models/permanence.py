@@ -225,9 +225,10 @@ class Permanence(TranslatableModel):
                                 pi.to_be_invoiced_balance
                             )
                         else:
-                            label = "%s" % (
-                                pi.producer.short_profile_name
-                            )
+                            # label = "%s" % (
+                            #     pi.producer.short_profile_name
+                            # )
+                            continue
                     # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                     # Such that they can be accessed by the producer and by the staff
                     link.append(
