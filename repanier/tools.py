@@ -127,9 +127,12 @@ def send_email_with_error_log(email, from_name=None, track_customer_on_error=Fal
         customer = models.Customer.objects.filter(user__email=email_to).order_by('?').first()
         if customer is None:
             customer = models.Customer.objects.filter(email2=email_to).order_by('?').first()
-        if customer is None or customer.valid_email is False:
+        if customer is None or customer.valid_email is False or customer.subscribe_to_email is False:
             send_mail = False
             print("################################## send_email customer.valid_email == False")
+        if send_email:
+            # Append "unsubscribe" at the end of the email.
+            pass
     else:
         customer = None
     if send_mail:

@@ -107,6 +107,7 @@ class Customer(models.Model):
     is_group = models.BooleanField(_("is_group"), default=False)
     may_order = models.BooleanField(_("may_order"), default=True)
     valid_email = models.NullBooleanField(_("valid_email"), default=None)
+    subscribe_to_email = models.BooleanField(_("subscribe to email"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     def get_admin_date_balance(self):

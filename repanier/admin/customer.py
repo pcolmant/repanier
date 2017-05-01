@@ -338,7 +338,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             else:
                 fields_basic += [
                     ('get_admin_balance', 'price_list_multiplier', 'get_admin_date_balance'),
-                    ('may_order', 'is_group', 'is_active'),
+                    ('may_order', 'is_group', 'is_active', 'subscribe_to_email'),
                 ]
         else:
             fields_basic += [

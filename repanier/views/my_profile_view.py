@@ -29,6 +29,9 @@ class CustomerForm(RepanierForm):
     accept_mails_from_members = forms.BooleanField(
         label=EMPTY_STRING, required=False
     )
+    subscribe_to_email  = forms.BooleanField(
+        label=EMPTY_STRING, required=False
+    )
 
     phone1 = forms.CharField(label=_('Your main phone'), max_length=25)
     phone2 = forms.CharField(label=_('Your secondary phone'), max_length=25, required=False)
@@ -61,6 +64,8 @@ class CustomerForm(RepanierForm):
             label=_('My emails are visible to all members'))
         self.fields["accept_phone_call_from_members"].widget = CheckboxWidget(
             label=_('My phones numbers are visible to all members'))
+        self.fields["subscribe_to_email"].widget = CheckboxWidget(
+            label=_('I subscribe to emails send by repanier'))
 
 
 class CustomerValidationForm(NgFormValidationMixin, CustomerForm):
@@ -92,6 +97,7 @@ def my_profile_view(request):
                     customer.accept_phone_call_from_members = form.cleaned_data.get('accept_phone_call_from_members')
                     customer.email2 = form.cleaned_data.get('email2').lower()
                     customer.accept_mails_from_members = form.cleaned_data.get('accept_mails_from_members')
+                    customer.subscribe_to_email = form.cleaned_data.get('subscribe_to_email')
                     customer.city = form.cleaned_data.get('city')
                     customer.address = form.cleaned_data.get('address')
                     customer.picture = form.cleaned_data.get('picture')
@@ -130,6 +136,8 @@ def my_profile_view(request):
             field.initial = customer.email2
             field = form.fields["accept_mails_from_members"]
             field.initial = customer.accept_mails_from_members
+            field = form.fields["subscribe_to_email"]
+            field.initial = customer.subscribe_to_email
             field = form.fields["city"]
             field.initial = customer.city
             field = form.fields["address"]
