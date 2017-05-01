@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-30 04:23+0200\n"
-"PO-Revision-Date: 2017-04-30 12:32+0100\n"
+"POT-Creation-Date: 2017-05-01 10:05+0200\n"
+"PO-Revision-Date: 2017-05-01 10:06+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -88,14 +88,10 @@ msgid "balance"
 msgstr "Solde"
 
 #: admin/admin_filter.py:247
-msgid "membership fees"
-msgstr "Cotisations"
-
-#: admin/admin_filter.py:248
-msgid "losts and profits"
+msgid "loses and profits"
 msgstr "Pertes et profits"
 
-#: admin/admin_filter.py:249
+#: admin/admin_filter.py:248
 msgid "taxes"
 msgstr "Taxes dues"
 
@@ -1474,7 +1470,7 @@ msgstr "Commandes ouvertes"
 msgid "wait for close"
 msgstr "En cours de clôture"
 
-#: const.py:74 models/deliveryboard.py:106 models/permanence.py:647
+#: const.py:74 models/deliveryboard.py:106 models/permanence.py:649
 msgid "orders closed"
 msgstr "Commandes clôturées"
 
@@ -1996,7 +1992,7 @@ msgstr "Distributions"
 msgid "Distribution on "
 msgstr "Distribution du "
 
-#: models/configuration.py:407 task/task_invoice.py:339
+#: models/configuration.py:407
 msgid "Membership fee"
 msgstr "Cotisation"
 
@@ -2132,7 +2128,7 @@ msgstr "Commentaire"
 msgid "delivery date"
 msgstr "Date de livraison"
 
-#: models/deliveryboard.py:37 models/permanence.py:95 models/permanence.py:579
+#: models/deliveryboard.py:37 models/permanence.py:95 models/permanence.py:581
 msgid "permanence_status"
 msgstr "Statut"
 
@@ -2639,35 +2635,35 @@ msgstr ""
 msgid "No offer"
 msgstr "Pas d'offre"
 
-#: models/permanence.py:256 models/permanence.py:340 models/permanence.py:393
+#: models/permanence.py:257 models/permanence.py:341 models/permanence.py:394
 msgid "Show"
 msgstr "Montrer"
 
-#: models/permanence.py:256 models/permanence.py:340 models/permanence.py:393
+#: models/permanence.py:257 models/permanence.py:341 models/permanence.py:394
 msgid "Hide"
 msgstr "Masquer"
 
-#: models/permanence.py:266
+#: models/permanence.py:267
 msgid "producers in this permanence"
 msgstr "Offres de"
 
-#: models/permanence.py:344
+#: models/permanence.py:345
 msgid "No purchase"
 msgstr "Pas d'achat"
 
-#: models/permanence.py:346
+#: models/permanence.py:347
 msgid "customers in this permanence"
 msgstr "Achats par"
 
-#: models/permanence.py:397
+#: models/permanence.py:398
 msgid "Empty board"
 msgstr "Tableau vide"
 
-#: models/permanence.py:399 models/permanenceboard.py:28
+#: models/permanence.py:400 models/permanenceboard.py:28
 msgid "permanence board"
 msgstr "Tableau des tâches"
 
-#: models/permanence.py:599 models/permanence.py:604 models/permanence.py:607
+#: models/permanence.py:601 models/permanence.py:606 models/permanence.py:609
 #: models/producer.py:290 templates/repanier/confirm_admin_invoice.html:110
 #: templates/repanier/pre_order_create_product_form.html:115
 #: templates/repanier/pre_order_form.html:38
@@ -2677,19 +2673,19 @@ msgstr "Tableau des tâches"
 msgid "wo tax"
 msgstr "HTVA"
 
-#: models/permanence.py:654
+#: models/permanence.py:656
 msgid "order"
 msgstr "Commande"
 
-#: models/permanence.py:655
+#: models/permanence.py:657
 msgid "orders"
 msgstr "Commandes"
 
-#: models/permanence.py:665 models/permanence.py:666
+#: models/permanence.py:667 models/permanence.py:668
 msgid "In preparation"
 msgstr "En préparation"
 
-#: models/permanence.py:672 models/permanence.py:673
+#: models/permanence.py:674 models/permanence.py:675
 msgid "In billing"
 msgstr "En facturation"
 
@@ -2901,48 +2897,48 @@ msgstr " (COPIE)"
 msgid "The boxes are duplicated."
 msgstr "Les compositions sont dupliquées."
 
-#: task/task_invoice.py:304
+#: task/task_invoice.py:329
 msgid "Profit"
 msgstr "Profit"
 
-#: task/task_invoice.py:304
+#: task/task_invoice.py:329
 msgid "Lost"
 msgstr "Perte"
 
-#: task/task_invoice.py:317
+#: task/task_invoice.py:342
 msgid "VAT to pay to the tax authorities"
 msgstr "TVA à payer aux contributions"
 
-#: task/task_invoice.py:318
+#: task/task_invoice.py:343
 msgid "VAT to receive from the tax authorities"
 msgstr "TVA à recevoir des contributions"
 
-#: task/task_invoice.py:363
+#: task/task_invoice.py:367
 msgid "Transport"
 msgstr "Transport"
 
-#: task/task_invoice.py:681 task/task_invoice.py:690
+#: task/task_invoice.py:682 task/task_invoice.py:691
 msgid "The selected invoice has been canceled."
 msgstr "La facture a été annulée."
 
-#: task/task_invoice.py:684 task/task_invoice.py:687
+#: task/task_invoice.py:685 task/task_invoice.py:688
 msgid "The selected invoice is not the latest invoice."
 msgstr ""
 "La permanence sélectionnée n'étant pas la dernière permanence facturée, "
 "l'annulation de ses factures ne peut avoir lieu."
 
-#: task/task_invoice.py:695
+#: task/task_invoice.py:696
 msgid "The selected invoice has been restored."
 msgstr "L'archivage a été annulé."
 
-#: task/task_invoice.py:698
+#: task/task_invoice.py:699
 #, python-format
 msgid "The status of %(permanence)s prohibit you to cancel invoices."
 msgstr ""
 "Le status de la %(permanence)s n'est pas compatible avec l'action de "
 "suppression des factures."
 
-#: task/task_invoice.py:708
+#: task/task_invoice.py:709
 msgid ""
 "Emails containing the invoices will be send to the customers and the "
 "producers."
@@ -2950,7 +2946,7 @@ msgstr ""
 "Des ✉ reprenant le détail facturé en pièce jointe sont en train d'être "
 "envoyés vers les consommateurs et les producteurs."
 
-#: task/task_invoice.py:711
+#: task/task_invoice.py:712
 #, python-format
 msgid "The status of %(permanence)s prohibit you to send invoices."
 msgstr ""
@@ -2979,11 +2975,11 @@ msgstr ""
 msgid "The offers are being generated."
 msgstr "Les commandes sont en train d'être ouvertes."
 
-#: task/task_order.py:544
+#: task/task_order.py:495
 msgid "The orders are being closed."
 msgstr "Les commandes sont en train d'être clôturées."
 
-#: task/task_order.py:552
+#: task/task_order.py:503
 msgid "The orders are being send."
 msgstr "Les commandes sont en train d'être envoyées."
 
@@ -3006,7 +3002,7 @@ msgid ""
 msgstr ""
 "Livraisons %(current_site)s - jusqu'au %(payment_date)s (inclut). Merci!"
 
-#: task/task_producer.py:88
+#: task/task_producer.py:89
 #, python-format
 msgid "Correction %(producer)s"
 msgstr "Correction %(producer)s"
@@ -4707,6 +4703,9 @@ msgstr "Contrôle du stock"
 #, python-format
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
+
+#~ msgid "membership fees"
+#~ msgstr "Cotisations"
 
 #~ msgid "New user"
 #~ msgstr "Nouvel utilisateur ?"

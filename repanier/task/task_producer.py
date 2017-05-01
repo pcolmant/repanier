@@ -85,42 +85,23 @@ def admin_generate_bank_account_movement(
 
         delta = (producer.balance.amount - producer_invoice.to_be_invoiced_balance.amount).quantize(TWO_DECIMALS)
         if delta != DECIMAL_ZERO:
+            # Profit or loss for the group
             operation_comment = _("Correction %(producer)s") \
                                 % {
                                     'producer': producer.short_profile_name
                                 }
-            if delta > DECIMAL_ZERO:
-                # Profit for the group : the producer ask less than what is sold
-                # --> This bank movement is not a real entry
-                # operation_status=BANK_PROFIT
-                # making this, it will not be removed from the new calculated bank account total
-                BankAccount.objects.create(
-                    permanence_id=permanence.id,
-                    producer=None,
-                    customer_id=customer_buyinggroup.id,
-                    operation_date=payment_date,
-                    operation_status=BANK_PROFIT,
-                    operation_comment=cap(operation_comment, 100),
-                    bank_amount_in=delta,
-                    customer_invoice_id=None,
-                    producer_invoice=None
-                )
-            elif delta < DECIMAL_ZERO:
-                # Loss for the group : the producer ask more than what is sold
-                # --> This bank movement is not a real entry
-                # operation_status=BANK_PROFIT
-                # making this, it will not be removed from the new calculated bank account total
-                BankAccount.objects.create(
-                    permanence_id=permanence.id,
-                    producer=None,
-                    customer_id=customer_buyinggroup.id,
-                    operation_date=payment_date,
-                    operation_status=BANK_PROFIT,
-                    operation_comment=cap(operation_comment, 100),
-                    bank_amount_out=-delta,
-                    customer_invoice_id=None,
-                    producer_invoice=None
-                    )
+            BankAccount.objects.create(
+                permanence_id=permanence.id,
+                producer=None,
+                customer_id=customer_buyinggroup.id,
+                operation_date=payment_date,
+                operation_status=BANK_PROFIT,
+                operation_comment=cap(operation_comment, 100),
+                bank_amount_in=delta if delta > DECIMAL_ZERO else DECIMAL_ZERO,
+                bank_amount_out=-delta if delta < DECIMAL_ZERO else DECIMAL_ZERO,
+                customer_invoice_id=None,
+                producer_invoice=None
+            )
         producer_invoice.balance.amount -= delta
         producer_invoice.save(update_fields=['balance'])
         producer.balance.amount -= delta

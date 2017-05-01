@@ -23,7 +23,8 @@ from repanier.tools import *
 
 @transaction.atomic
 def generate_invoice(permanence, payment_date):
-    initial_permanence = permanence
+    from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+    today = timezone.now().date()
     bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
     producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
     customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
@@ -84,8 +85,16 @@ def generate_invoice(permanence, payment_date):
             )
             new_customer_invoice.calculate_and_save_delta_buyinggroup()
 
+    membership_fee_product = Product.objects.filter(
+        order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+        is_active=True
+    ).order_by('?').first()
+    membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
+    # Update the prices
+    membership_fee_product.save()
+
     for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=permanence.id).order_by('?'):
+            permanence_id=permanence.id).select_related("customer").order_by('?'):
         # In case of changed delivery conditions
         customer_invoice.set_delivery(customer_invoice.delivery)
         # Need to calculate delta_price_with_tax, delta_vat and delta_transport
@@ -95,7 +104,30 @@ def generate_invoice(permanence, payment_date):
         ).order_by('?').update(
             customer_charged_id=customer_invoice.customer_charged_id
         )
-
+        # 4 - Add Membership fee Subscription
+        customer = customer_invoice.customer
+        if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0 and not customer.represent_this_buyinggroup:
+            # There is a membership fee
+            if customer.membership_fee_valid_until < today:
+                membership_fee_offer_item = get_or_create_offer_item(
+                    permanence,
+                    membership_fee_product.id,
+                    membership_fee_product.producer_id
+                )
+                permanence.producers.add(membership_fee_offer_item.producer_id)
+                create_or_update_one_purchase(
+                    customer.id,
+                    membership_fee_offer_item,
+                    q_order=1,
+                    permanence_date=permanence.permanence_date,
+                    batch_job=True,
+                    is_box_content=False
+                )
+                customer.membership_fee_valid_until = add_months(
+                    customer.membership_fee_valid_until,
+                    REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+                )
+                customer.save(update_fields=['membership_fee_valid_until', ])
 
     # Important : linked to task_invoice.cancel
     for delivery in DeliveryBoard.objects.filter(
@@ -315,27 +347,6 @@ def generate_invoice(permanence, payment_date):
             producer_invoice=None
         )
 
-    for membership_fee in Purchase.objects.filter(
-        permanence_id=permanence.id,
-        producer_id=producer_buyinggroup.id,
-        offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
-    ).order_by('?'):
-        # --> This bank movement is not a real entry
-        # making this, it will not be counted into the customer_buyinggroup movements twice
-        # because Repanier will see it has already been counted into the customer_buyinggroup movements
-        BankAccount.objects.create(
-            permanence_id=permanence.id,
-            producer=None,
-            customer_id=customer_buyinggroup.id,
-            operation_date=payment_date,
-            operation_status=BANK_MEMBERSHIP_FEE,
-            operation_comment="%s : %s" % (_("Membership fee"), membership_fee.customer),
-            bank_amount_in=membership_fee.selling_price,
-            bank_amount_out=DECIMAL_ZERO,
-            customer_invoice_id=customer_invoice_buyinggroup.id,
-            producer_invoice=None
-        )
-
     for customer_invoice in CustomerInvoice.objects.filter(
         permanence_id=permanence.id,
     ).exclude(
@@ -494,9 +505,6 @@ def generate_invoice(permanence, payment_date):
         customer_invoice=None,
         producer_invoice=None
     )
-
-    if permanence_partially_invoiced:
-        initial_permanence.set_status(PERMANENCE_SEND)
 
     new_status = PERMANENCE_INVOICED if repanier.apps.REPANIER_SETTINGS_INVOICE else PERMANENCE_ARCHIVED
     permanence.set_status(new_status, update_payment_date=True, payment_date=payment_date)
