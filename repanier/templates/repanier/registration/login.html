@@ -56,8 +56,7 @@
 {% endif %}
 <div class="modal-footer">
     <div class="form-group">
-        <button class="btn btn-default" type="submit">{% trans "Login" %}</button>
-        &nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url "admin_password_reset" %}" class="btn btn-default">{% trans "Password reset" %}</a>
+        <button class="btn btn-default" type="submit">{% trans "Login" %}</button><a href="{% url "admin_password_reset" %}" class="btn btn-default">{% trans "Password reset" %}</a>
     </div>
 </div>
 </form>

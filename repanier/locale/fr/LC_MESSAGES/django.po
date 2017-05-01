@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-05-01 10:05+0200\n"
-"PO-Revision-Date: 2017-05-01 10:06+0100\n"
+"PO-Revision-Date: 2017-05-01 18:15+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -3726,7 +3726,7 @@ msgstr "Mot de passe"
 #: templates/repanier/registration/password_reset_form.html:2
 #: templates/repanier/registration/password_reset_form.html:9
 msgid "Password reset"
-msgstr "Réinitialisation du mot de passe"
+msgstr "Nouveau mot de passe"
 
 #: templates/repanier/registration/password_change_done.html:3
 #: templates/repanier/registration/password_change_form.html:4

@@ -22,11 +22,11 @@
         <div class="panel-group">
             <div class="panel panel-primary">
                 <div class="panel-body">
-                    <div class="col-xs-3">
+                    <div class="col-sm-3">
                         <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-default">{% trans "Login me" %}</a>
                     </div>
                     {% if how_to_register %}
-                    <div class="col-xs-9">
+                    <div class="col-sm-9">
                             <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
                                 <span class="btn btn-info">{% trans "Create an account" %}</span>
                             </div>
@@ -327,10 +327,12 @@
             <div class="btn-group">
             <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-default">{% trans "All" %}</a>
             </div>
-            <div class="btn-group">
-            <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-default">
-                <span id="prepared_amount_visible_xs"></span></a>
-            </div>
+            {% if not is_anonymous %}
+                <div class="btn-group">
+                <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-default">
+                    <span id="prepared_amount_visible_xs"></span></a>
+                </div>
+            {% endif %}
         </div>
     {% if offeritem_list %}
             <span id="span_btn_confirm_order"></span>
