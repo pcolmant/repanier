@@ -94,7 +94,9 @@ def generate_invoice(permanence, payment_date):
     membership_fee_product.save()
 
     for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=permanence.id).select_related("customer").order_by('?'):
+        permanence_id=permanence.id,
+        customer_charged_id=F('customer_id')
+    ).select_related("customer").order_by('?'):
         # In case of changed delivery conditions
         customer_invoice.set_delivery(customer_invoice.delivery)
         # Need to calculate delta_price_with_tax, delta_vat and delta_transport
