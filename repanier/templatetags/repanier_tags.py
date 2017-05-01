@@ -20,6 +20,12 @@ def repanier_home(*args, **kwargs):
     return REPANIER_SETTINGS_HOME_SITE
 
 
+@register.simple_tag(takes_context=False)
+def repanier_group_name(*args, **kwargs):
+    from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+    return REPANIER_SETTINGS_GROUP_NAME
+
+
 @register.simple_tag(takes_context=True)
 def repanier_user(context, *args, **kwargs):
     from repanier.apps import REPANIER_SETTINGS_INVOICE, REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO

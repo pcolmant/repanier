@@ -48,7 +48,7 @@
         'API': {}
       };
       var my_app  = undefined;
-      if( typeof angular != "undefined") {
+      if( typeof angular !== "undefined") {
         my_app  = angular.module('repanier', ['djng.forms']);
       }
     </script>
@@ -61,6 +61,7 @@
     <div class="navbar navbar-default navbar-fixed-top navbar-custom" role="navigation">
       <div class="container-menu">
         <div class="navbar-header">
+          <p class="navbar-text visible-xs-inline-block">{% repanier_group_name %}</p>
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">{% trans "Toggle navigation" %}</span>
             <span class="icon-bar"></span>
