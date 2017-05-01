@@ -57,7 +57,7 @@
         <div id="collapse-offer-description" class="panel-collapse collapse">
             <div class="panel-body">
                 <div class="col-xs-12">
-                    {% if permanence.picture %}<img class="img-rounded" style="float: left; margin: 5px;" alt="{{ permanence.get_permanence_customer_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/>{%  endif %}
+                    {% if permanence.picture %}<img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{{ permanence.get_permanence_customer_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/><div class="clearfix visible-xs-block visible-sm-block"></div>{%  endif %}
                     {{ permanence.offer_description | safe }}
                 </div>
             </div>
