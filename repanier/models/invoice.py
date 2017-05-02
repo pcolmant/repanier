@@ -141,7 +141,7 @@ class CustomerInvoice(models.Model):
             if self.status < PERMANENCE_INVOICED or not customer_charged:
                 return self.total_price_with_tax
             else:
-                return self.customer_charged if self.total_price_with_tax != DECIMAL_ZERO else DECIMAL_ZERO
+                return self.customer_charged # if self.total_price_with_tax != DECIMAL_ZERO else RepanierMoney()
 
     def get_total_price_wo_tax(self):
         return self.get_total_price_with_tax() - self.get_total_tax()
@@ -375,7 +375,7 @@ class CustomerInvoice(models.Model):
                     offer_item_id=a_purchase.offer_item_id,
                     q_order=DECIMAL_ZERO,
                     batch_job=True,
-                    comment=_("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
+                    comment=_("Cancelled qty : %s") % number_format(a_purchase.quantity_ordered, 4)
                 )
 
     def __str__(self):
