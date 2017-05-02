@@ -894,7 +894,8 @@ def display_selected_box_value(customer, offer_item, box_purchase):
 
 
 @transaction.atomic
-def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, value_id=None, basket=False, batch_job=False):
+def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, value_id=None,
+                              basket=False, batch_job=False, comment=EMPTY_STRING):
     to_json = []
     if offer_item_id is not None and (q_order is not None or value_id is not None) and customer is not None:
         offer_item = models.OfferItem.objects.select_for_update(nowait=False) \
@@ -1002,7 +1003,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
             if not offer_item.is_box or updated:
                 purchase, updated = create_or_update_one_purchase(
                     customer.id, offer_item, q_order=q_order, batch_job=batch_job,
-                    is_box_content=False
+                    is_box_content=False, comment=comment
                 )
                 if not batch_job and apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                     producer_invoice = models.ProducerInvoice.objects.filter(
