@@ -23,6 +23,7 @@ from repanier.tools import *
 
 @transaction.atomic
 def generate_invoice(permanence, payment_date):
+    getcontext().rounding = ROUND_HALF_UP
     from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
     today = timezone.now().date()
     bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
@@ -30,7 +31,23 @@ def generate_invoice(permanence, payment_date):
     customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
     if bank_account is None or producer_buyinggroup is None or customer_buyinggroup is None:
         return
-    getcontext().rounding = ROUND_HALF_UP
+    customer_invoice_buyinggroup = CustomerInvoice.objects.filter(
+        customer_id=customer_buyinggroup.id,
+        permanence_id=permanence.id,
+    ).order_by('?').first()
+    if customer_invoice_buyinggroup is None:
+        customer_invoice_buyinggroup = CustomerInvoice.objects.create(
+            customer_id=customer_buyinggroup.id,
+            permanence_id=permanence.id,
+            date_previous_balance=customer_buyinggroup.date_balance,
+            previous_balance=customer_buyinggroup.balance,
+            date_balance=payment_date,
+            balance=customer_buyinggroup.balance,
+            customer_charged_id=customer_buyinggroup.id,
+            transport=repanier.apps.REPANIER_SETTINGS_TRANSPORT,
+            min_transport=repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT,
+            price_list_multiplier=DECIMAL_ONE
+        )
     old_bank_latest_total = bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
     permanence_partially_invoiced = ProducerInvoice.objects.filter(
         permanence_id=permanence.id,
@@ -74,7 +91,10 @@ def generate_invoice(permanence, payment_date):
                 id=purchase.customer_invoice_id
             ).order_by('?').first()
             new_customer_invoice = customer_invoice.create_child(new_permanence=new_permanence)
+            # Important : The customer_charged is null. This is required for calculate_and_save_delta_buyinggroup
+            new_customer_invoice.calculate_and_save_delta_buyinggroup()
             new_customer_invoice.set_delivery(customer_invoice.delivery)
+            new_customer_invoice.save()
             Purchase.objects.filter(
                 customer_invoice_id=customer_invoice.id,
                 producer_id__in=producers_to_move
@@ -83,121 +103,67 @@ def generate_invoice(permanence, payment_date):
                 customer_invoice_id=new_customer_invoice.id,
                 customer_charged_id=new_customer_invoice.customer_charged_id
             )
-            new_customer_invoice.calculate_and_save_delta_buyinggroup()
 
-    membership_fee_product = Product.objects.filter(
-        order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-        is_active=True
-    ).order_by('?').first()
-    membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
-    # Update the prices
-    membership_fee_product.save()
-
+    # Important : linked to task_invoice.cancel
+    # First pass, set customer_charged
     for customer_invoice in CustomerInvoice.objects.filter(
-        permanence_id=permanence.id,
-        customer_charged_id=F('customer_id')
-    ).select_related("customer").order_by('?'):
+        permanence_id=permanence.id
+    ).order_by('?'):
         # In case of changed delivery conditions
         customer_invoice.set_delivery(customer_invoice.delivery)
-        # Need to calculate delta_price_with_tax, delta_vat and delta_transport
-        customer_invoice.calculate_and_save_delta_buyinggroup()
+        customer_invoice.save()
         Purchase.objects.filter(
             customer_invoice_id=customer_invoice.id
         ).order_by('?').update(
             customer_charged_id=customer_invoice.customer_charged_id
         )
-        # 4 - Add Membership fee Subscription
-        customer = customer_invoice.customer
-        if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0 and not customer.represent_this_buyinggroup:
-            # There is a membership fee
-            if customer.membership_fee_valid_until < today:
-                membership_fee_offer_item = get_or_create_offer_item(
-                    permanence,
-                    membership_fee_product.id,
-                    membership_fee_product.producer_id
-                )
-                permanence.producers.add(membership_fee_offer_item.producer_id)
-                create_or_update_one_purchase(
-                    customer.id,
-                    membership_fee_offer_item,
-                    q_order=1,
-                    permanence_date=permanence.permanence_date,
-                    batch_job=True,
-                    is_box_content=False
-                )
-                customer.membership_fee_valid_until = add_months(
-                    customer.membership_fee_valid_until,
-                    REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
-                )
-                customer.save(update_fields=['membership_fee_valid_until', ])
+    # Second pass, calculate invoices of charged customers
+    for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=permanence.id
+    ).order_by('?'):
+        # Need to calculate delta_price_with_tax, delta_vat and delta_transport
+        customer_invoice.calculate_and_save_delta_buyinggroup()
+        customer_invoice.save()
 
-    # Important : linked to task_invoice.cancel
-    for delivery in DeliveryBoard.objects.filter(
-            permanence_id=permanence.id,
-            delivery_point__customer_responsible__isnull=False
-    ):
-        result_set = CustomerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            customer_charged_id=delivery.delivery_point.customer_responsible_id
-        ).exclude(
-            customer_id=delivery.delivery_point.customer_responsible_id
-        ).order_by('?').aggregate(
-            Sum('total_price_with_tax'),
-            Sum('total_vat'),
-            Sum('delta_price_with_tax'),
-            Sum('delta_vat'),
-        )
-        if result_set["total_price_with_tax__sum"] is not None:
-            sum_total_price_with_tax = result_set["total_price_with_tax__sum"]
-        else:
-            sum_total_price_with_tax = DECIMAL_ZERO
-        if result_set["total_vat__sum"] is not None:
-            sum_total_vat = result_set["total_vat__sum"]
-        else:
-            sum_total_vat = DECIMAL_ZERO
-        if result_set["delta_price_with_tax__sum"] is not None:
-            sum_delta_price_with_tax = result_set["delta_price_with_tax__sum"]
-        else:
-            sum_delta_price_with_tax = DECIMAL_ZERO
-        if result_set["delta_vat__sum"] is not None:
-            sum_delta_vat = result_set["delta_vat__sum"]
-        else:
-            sum_delta_vat = DECIMAL_ZERO
-
-        CustomerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            customer_id=delivery.delivery_point.customer_responsible_id
-        ).update(
-            is_order_confirm_send=True,
-            total_price_with_tax=sum_total_price_with_tax,
-            total_vat=sum_total_vat,
-            delta_price_with_tax=sum_delta_price_with_tax,
-            delta_vat=sum_delta_vat,
-            delta_transport=DECIMAL_ZERO,
-        )
-        customer_invoice_charged = CustomerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            customer_id=delivery.delivery_point.customer_responsible_id
+    if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0:
+        membership_fee_product = Product.objects.filter(
+            order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+            is_active=True
         ).order_by('?').first()
-        customer_invoice_charged.calculate_and_save_delta_buyinggroup()
+        membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
+        # Update the prices
+        membership_fee_product.save()
 
-    customer_invoice_buyinggroup = CustomerInvoice.objects.filter(
-        customer_id=customer_buyinggroup.id,
-        permanence_id=permanence.id,
-    ).order_by('?').first()
-    if customer_invoice_buyinggroup is None:
-        customer_invoice_buyinggroup = CustomerInvoice.objects.create(
-            customer_id=customer_buyinggroup.id,
+        for customer_invoice in CustomerInvoice.objects.filter(
             permanence_id=permanence.id,
-            date_previous_balance=customer_buyinggroup.date_balance,
-            previous_balance=customer_buyinggroup.balance,
-            date_balance=payment_date,
-            balance=customer_buyinggroup.balance,
-            customer_charged_id=customer_buyinggroup.id,
-            transport=repanier.apps.REPANIER_SETTINGS_TRANSPORT,
-            min_transport=repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT,
-            price_list_multiplier=DECIMAL_ONE
-        )
+            customer_charged_id=F('customer_id')
+        ).select_related("customer").order_by('?'):
+            # 4 - Add Membership fee Subscription
+            customer = customer_invoice.customer
+            if not customer.represent_this_buyinggroup:
+                # There is a membership fee
+                if customer.membership_fee_valid_until < today:
+                    membership_fee_offer_item = get_or_create_offer_item(
+                        permanence,
+                        membership_fee_product.id,
+                        membership_fee_product.producer_id
+                    )
+                    permanence.producers.add(membership_fee_offer_item.producer_id)
+                    create_or_update_one_purchase(
+                        customer.id,
+                        membership_fee_offer_item,
+                        q_order=1,
+                        permanence_date=permanence.permanence_date,
+                        batch_job=True,
+                        is_box_content=False
+                    )
+                    customer.membership_fee_valid_until = add_months(
+                        customer.membership_fee_valid_until,
+                        REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+                    )
+                    customer.save(update_fields=['membership_fee_valid_until', ])
+
+
 
     for customer_invoice in CustomerInvoice.objects.filter(
         permanence_id=permanence.id
@@ -559,21 +525,18 @@ def cancel_invoice(permanence):
                 date_balance=F('date_previous_balance'),
                 invoice_sort_order=None
             )
-            # Important : linked to task_invoice.generate
-            for delivery in DeliveryBoard.objects.filter(
-                    permanence_id=permanence.id,
-                    delivery_point__customer_responsible__isnull=False
-            ):
-                CustomerInvoice.objects.filter(
-                    permanence_id=permanence.id,
-                    customer_id=delivery.delivery_point.customer_responsible_id
-                ).update(
-                    total_price_with_tax=DECIMAL_ZERO,
-                    total_vat=DECIMAL_ZERO,
-                    delta_price_with_tax=DECIMAL_ZERO,
-                    delta_vat=DECIMAL_ZERO,
-                    delta_transport=DECIMAL_ZERO
-                )
+            # # Important : linked to task_invoice.generate
+            # First pass, set customer_charged
+            CustomerInvoice.objects.filter(
+                    permanence_id=permanence.id
+            ).order_by('?').update(customer_charged=None)
+            # Second pass, calculate invoices of charged customers
+            for customer_invoice in CustomerInvoice.objects.filter(
+                    permanence_id=permanence.id
+            ).order_by('?'):
+                # Need to calculate delta_price_with_tax, delta_vat and delta_transport
+                customer_invoice.calculate_and_save_delta_buyinggroup()
+                customer_invoice.save()
 
             for customer_invoice in CustomerInvoice.objects.filter(
                     permanence_id=permanence.id).order_by():

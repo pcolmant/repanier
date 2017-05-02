@@ -227,7 +227,6 @@ class CustomerInvoice(models.Model):
 
         self.calculate_delta_price()
         self.calculate_delta_transport()
-        self.save()
 
         producer_invoice_buyinggroup.delta_price_with_tax.amount += self.delta_price_with_tax.amount
         producer_invoice_buyinggroup.delta_vat.amount += self.delta_vat.amount
@@ -238,14 +237,24 @@ class CustomerInvoice(models.Model):
     def calculate_delta_price(self):
         getcontext().rounding = ROUND_HALF_UP
 
-        result_set = purchase.Purchase.objects.filter(
-            permanence_id=self.permanence_id,
-            customer_id=self.customer_id,
-        ).order_by('?').aggregate(
-            Sum('customer_vat'),
-            Sum('deposit'),
-            Sum('selling_price')
-        )
+        if self.customer_charged is None:
+            result_set = purchase.Purchase.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_id,
+            ).order_by('?').aggregate(
+                Sum('customer_vat'),
+                Sum('deposit'),
+                Sum('selling_price')
+            )
+        else:
+            result_set = purchase.Purchase.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_charged_id=self.customer_id,
+            ).order_by('?').aggregate(
+                Sum('customer_vat'),
+                Sum('deposit'),
+                Sum('selling_price')
+            )
         if result_set["customer_vat__sum"] is not None:
             self.total_vat.amount = result_set["customer_vat__sum"]
         else:
@@ -297,6 +306,7 @@ class CustomerInvoice(models.Model):
         else:
             self.delta_price_with_tax.amount = DECIMAL_ZERO
             self.delta_vat.amount = DECIMAL_ZERO
+
 
     def calculate_delta_transport(self):
 
