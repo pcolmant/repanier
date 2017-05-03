@@ -753,6 +753,7 @@ def recalculate_order_amount(permanence_id,
             id=permanence_id
         ).update(
             total_profit=DECIMAL_ZERO,
+            total_price_wo_tax=DECIMAL_ZERO
         )
         for offer_item in models.OfferItem.objects.filter(
                 permanence_id=permanence_id,

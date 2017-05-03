@@ -2,10 +2,10 @@
 import threading
 
 from django.contrib import messages
+from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
-from repanier.models import DeliveryBoard
 from repanier.email import email_invoice
 from repanier.models import BankAccount
 from repanier.models import Customer
