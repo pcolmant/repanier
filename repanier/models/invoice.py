@@ -202,11 +202,11 @@ class CustomerInvoice(models.Model):
         purchase.Purchase.objects.filter(
             customer_invoice__id=self.id
         ).update(quantity_confirmed=F('quantity_ordered'))
-        self.calculate_and_save_delta_buyinggroup()
+        self.calculate_and_save_delta_buyinggroup(confirm_order=True)
         self.is_order_confirm_send = True
 
     @transaction.atomic
-    def calculate_and_save_delta_buyinggroup(self):
+    def calculate_and_save_delta_buyinggroup(self, confirm_order=False):
         producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
             producer__represent_this_buyinggroup=True,
             permanence_id=self.permanence_id,
@@ -225,7 +225,7 @@ class CustomerInvoice(models.Model):
             producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
             producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
 
-        self.calculate_delta_price()
+        self.calculate_delta_price(confirm_order)
         self.calculate_delta_transport()
 
         producer_invoice_buyinggroup.delta_price_with_tax.amount += self.delta_price_with_tax.amount
@@ -234,10 +234,11 @@ class CustomerInvoice(models.Model):
 
         producer_invoice_buyinggroup.save()
 
-    def calculate_delta_price(self):
+    def calculate_delta_price(self, confirm_order=False):
         getcontext().rounding = ROUND_HALF_UP
 
-        if self.customer_charged is None:
+        if self.customer_charged is None or confirm_order:
+            # confirm_order : the customer confirm his/her order
             result_set = purchase.Purchase.objects.filter(
                 permanence_id=self.permanence_id,
                 customer_id=self.customer_id,
@@ -306,7 +307,6 @@ class CustomerInvoice(models.Model):
         else:
             self.delta_price_with_tax.amount = DECIMAL_ZERO
             self.delta_vat.amount = DECIMAL_ZERO
-
 
     def calculate_delta_transport(self):
 

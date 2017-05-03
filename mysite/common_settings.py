@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import ConfigParser
+try:
+    import configparser
+except:
+    from six.moves import configparser
+
 import codecs
 import logging
 
@@ -38,7 +42,7 @@ MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 
 DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
-config = ConfigParser.RawConfigParser(allow_no_value=True)
+config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = '%s%s%s.ini' % (
             PROJECT_DIR,
             os.sep,

@@ -348,10 +348,10 @@ class OfferItem(TranslatableModel):
         unit_price = self.get_unit_price(customer_price=customer_price)
         if len(qty_display) > 0:
             if self.unit_deposit.amount > DECIMAL_ZERO:
-                return '%s, %s + ♻ %s' % (
+                return '%s; %s + ♻ %s' % (
                     qty_display, unit_price, self.unit_deposit)
             else:
-                return '%s, %s' % (qty_display, unit_price)
+                return '%s; %s' % (qty_display, unit_price)
         else:
             if self.unit_deposit.amount > DECIMAL_ZERO:
                 return '%s + ♻ %s' % (
@@ -361,7 +361,10 @@ class OfferItem(TranslatableModel):
 
     def get_order_name(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
 
-        return '%s %s' % (self.long_name, self.get_qty_display(is_quantity_invoiced, box_unicode))
+        qty_display = self.get_qty_display(is_quantity_invoiced, box_unicode)
+        if qty_display:
+            return '%s %s' % (self.long_name, qty_display)
+        return '%s' % self.long_name
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)
@@ -370,7 +373,11 @@ class OfferItem(TranslatableModel):
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 
     def get_long_name(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
-        return '%s %s' % (self.long_name, self.get_qty_and_price_display(is_quantity_invoiced, customer_price, box_unicode))
+
+        qty_and_price_display = self.get_qty_and_price_display(is_quantity_invoiced, customer_price, box_unicode)
+        if qty_and_price_display:
+            return '%s %s' % (self.long_name, qty_and_price_display)
+        return '%s' % self.long_name
 
     get_long_name.short_description = (_("long_name"))
     get_long_name.allow_tags = False

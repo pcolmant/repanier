@@ -1,7 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-import thread
+import threading
 from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -102,7 +102,9 @@ def send_mail_to_coordinators_view(request):
                     cc=to_email_staff
                 )
                 # send_email(email=email)
-                thread.start_new_thread(send_email, (email,))
+                # thread.start_new_thread(send_email, (email,))
+                t = threading.Thread(target=send_email, args=(email,))
+                t.start()
                 # return HttpResponseRedirect('/')
                 email = form.fields["your_email"]
                 email.initial = request.user.email

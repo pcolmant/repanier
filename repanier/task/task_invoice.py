@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import thread
+import threading
 
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
@@ -670,7 +670,9 @@ def admin_cancel(permanence):
 
 def admin_send(permanence):
     if permanence.status == PERMANENCE_INVOICED:
-        thread.start_new_thread(email_invoice.send_invoice, (permanence.id,))
+        # thread.start_new_thread(email_invoice.send_invoice, (permanence.id,))
+        t = threading.Thread(target=email_invoice.send_invoice, args=(permanence.id,))
+        t.start()
         user_message = _("Emails containing the invoices will be send to the customers and the producers.")
         user_message_level = messages.INFO
     else:

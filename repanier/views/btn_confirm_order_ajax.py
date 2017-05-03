@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import json
 
+from django.contrib.auth.decorators import login_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404
 from django.http import HttpResponse
@@ -12,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_CLOSED, DECIMAL_ZERO
+from repanier.const import DECIMAL_ZERO
 from repanier.email.email_order import export_order_2_1_customer
 from repanier.models import Customer, CustomerInvoice, Permanence
 from repanier.tools import sint, get_signature, my_basket, my_order_confirmation, calc_basket_message
@@ -20,14 +21,12 @@ from repanier.tools import sint, get_signature, my_basket, my_order_confirmation
 
 @never_cache
 @require_GET
-# @login_required
+@login_required
 def btn_confirm_order_ajax(request):
     if not request.is_ajax():
         raise Http404
     permanence_id = sint(request.GET.get('permanence', 0))
     user = request.user
-    if not user.is_authenticated:
-        raise Http404
     customer = Customer.objects.filter(
         user_id=user.id, is_active=True, may_order=True).order_by('?').first()
     if customer is None:

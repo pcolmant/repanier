@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
-import thread
+import threading
 import uuid
 
 from django.conf import settings
@@ -19,10 +19,8 @@ from repanier.models import OfferItem
 from repanier.models import Permanence
 from repanier.models import Producer
 from repanier.models import Product
-from repanier.tools import clean_offer_item
-from repanier.tools import recalculate_order_amount, create_or_update_one_purchase, get_or_create_offer_item, \
-    add_months, \
-    reorder_offer_items
+from repanier.tools import clean_offer_item, reorder_purchases
+from repanier.tools import recalculate_order_amount, create_or_update_one_purchase, reorder_offer_items
 
 
 @transaction.atomic
@@ -261,13 +259,17 @@ def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
         else:
             permanence.set_status(PERMANENCE_WAIT_FOR_PRE_OPEN)
             # pre_open_order(permanence.id)
-            thread.start_new_thread(pre_open_order, (permanence.id,))
+            # thread.start_new_thread(pre_open_order, (permanence.id,))
+            t = threading.Thread(target=pre_open_order, args=(permanence.id,))
+            t.start()
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
     else:
         permanence.set_status(PERMANENCE_WAIT_FOR_OPEN)
         # open_order(permanence.id)
-        thread.start_new_thread(open_order, (permanence.id, do_not_send_any_mail))
+        # thread.start_new_thread(open_order, (permanence.id, do_not_send_any_mail))
+        t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
+        t.start()
         user_message = _("The offers are being generated.")
         user_message_level = messages.INFO
     return user_message, user_message_level
@@ -417,9 +419,14 @@ def close_order(permanence, all_producers, producers_id=None):
 
 
 @transaction.atomic
-def send_order(permanence, all_producers, producers_id=None, deliveries_id=None):
+def send_order(permanence, all_producers=True, producers_id=None, deliveries_id=None):
+    recalculate_order_amount(
+        permanence_id=permanence.id,
+        send_to_producer=True
+    )
+    reorder_purchases(permanence.id)
     try:
-        email_order.email_order(permanence.id, all_producers, closed_deliveries_id=deliveries_id, producers_id=producers_id)
+        email_order.email_order(permanence.id, all_producers, producers_id=producers_id, closed_deliveries_id=deliveries_id)
     except Exception as error_str:
         print("################################## send_order")
         print(error_str)
@@ -491,7 +498,10 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
 
 def admin_close(permanence_id, all_producers=False, deliveries_id=None, producers_id=None):
     # close_send_order(permanence_id, deliveries_id, False, False)
-    thread.start_new_thread(close_send_order, (permanence_id, all_producers, producers_id, deliveries_id, False))
+    # thread.start_new_thread(close_send_order, (permanence_id, all_producers, producers_id, deliveries_id, False))
+    t = threading.Thread(target=close_send_order,
+                         args=(permanence_id, all_producers, producers_id, deliveries_id, False))
+    t.start()
     user_message = _("The orders are being closed.")
     user_message_level = messages.INFO
     return user_message, user_message_level
@@ -499,7 +509,10 @@ def admin_close(permanence_id, all_producers=False, deliveries_id=None, producer
 
 def admin_send(permanence_id, all_producers=False, deliveries_id=None, producers_id=None):
     # close_send_order(permanence_id, deliveries_id, True)
-    thread.start_new_thread(close_send_order, (permanence_id, all_producers, producers_id, deliveries_id, True))
+    # thread.start_new_thread(close_send_order, (permanence_id, all_producers, producers_id, deliveries_id, True))
+    t = threading.Thread(target=close_send_order,
+                         args=(permanence_id, all_producers, producers_id, deliveries_id, True))
+    t.start()
     user_message = _("The orders are being send.")
     user_message_level = messages.INFO
     return user_message, user_message_level

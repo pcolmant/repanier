@@ -8,8 +8,8 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.writer.excel import save_virtual_workbook
 
-from repanier.models import DeliveryBoard
 from repanier.models import Customer
+from repanier.models import DeliveryBoard
 from repanier.models import Permanence, Configuration, CustomerInvoice
 from repanier.models import PermanenceBoard
 from repanier.models import Producer, ProducerInvoice
@@ -17,7 +17,7 @@ from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 
-def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, producers_id=None):
+def email_order(permanence_id, all_producers=True, producers_id=None, closed_deliveries_id=None):
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, \
         REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER, \
@@ -42,6 +42,7 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
         if closed_deliveries_id:
             # closed_deliveries_id is not empty list and not "None"
             # all_producers is True
+            all_producers = True
             for delivery_id in closed_deliveries_id:
                 delivery_board = DeliveryBoard.objects.filter(
                     id=delivery_id
@@ -110,7 +111,7 @@ def email_order(permanence_id, all_producers=True, closed_deliveries_id=None, pr
                 permanence=permanence.id,
                 language=language_code,
             ).order_by('?')
-            if producers_id is not None:
+            if producers_id:
                 producer_set = producer_set.filter(id__in=producers_id)
             for producer in producer_set:
                 long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name

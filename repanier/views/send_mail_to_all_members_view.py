@@ -1,9 +1,8 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-import thread
+import threading
 from django import forms
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.mail import EmailMessage
 from django.forms import Textarea
@@ -15,7 +14,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from djng.forms import NgFormValidationMixin
 
-from repanier.const import EMPTY_STRING
 from repanier.models import Customer, Staff
 from repanier.tools import send_email
 from repanier.views.forms import RepanierForm
@@ -73,7 +71,9 @@ def send_mail_to_all_members_view(request):
                 cc=to_email_customer
             )
             # send_email(email=email, from_name=user_customer.long_basket_name)
-            thread.start_new_thread(send_email,(email, user_customer.long_basket_name, True))
+            # thread.start_new_thread(send_email,(email, user_customer.long_basket_name, True))
+            t = threading.Thread(target=send_email, args=(email, user_customer.long_basket_name, True))
+            t.start()
             email = form.fields["your_email"]
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True

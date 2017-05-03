@@ -184,7 +184,7 @@ class Purchase(models.Model):
     get_delivery_display.allow_tags = False
 
     def get_quantity(self):
-        if self.status < PERMANENCE_SEND:
+        if self.status < PERMANENCE_WAIT_FOR_SEND:
             return self.quantity_ordered
         else:
             return self.quantity_invoiced
@@ -192,19 +192,29 @@ class Purchase(models.Model):
     get_quantity.short_description = (_("quantity invoiced"))
     get_quantity.allow_tags = False
 
+    def get_producer_quantity(self):
+        if self.status < PERMANENCE_WAIT_FOR_SEND:
+            return self.quantity_ordered
+        else:
+            offer_item = self.offer_item
+            if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                if offer_item.order_average_weight != 0:
+                    return (self.quantity_invoiced / offer_item.order_average_weight).quantize(FOUR_DECIMALS)
+            return self.quantity_invoiced
+
     def get_long_name(self, customer_price=True):
         if self.offer_item is not None:
             if self.is_box_content:
                 return "%s %s" % (
                     self.offer_item.get_long_name(
-                        is_quantity_invoiced=self.status >= PERMANENCE_SEND,
+                        # is_quantity_invoiced=self.status >= PERMANENCE_WAIT_FOR_SEND,
                         customer_price=customer_price
                     ),
                     BOX_UNICODE
                 )
             else:
                 return self.offer_item.get_long_name(
-                    is_quantity_invoiced=self.status >= PERMANENCE_SEND,
+                    # is_quantity_invoiced=self.status >= PERMANENCE_WAIT_FOR_SEND,
                     customer_price=customer_price
                 )
         else:
@@ -307,10 +317,8 @@ class Purchase(models.Model):
 def purchase_post_init(sender, **kwargs):
     purchase = kwargs["instance"]
     if purchase.id is not None:
-        if purchase.status < PERMANENCE_WAIT_FOR_SEND:
-            purchase.previous_quantity = purchase.quantity_ordered
-        else:
-            purchase.previous_quantity = purchase.quantity_invoiced
+        purchase.previous_quantity_ordered = purchase.quantity_ordered
+        purchase.previous_quantity_invoiced = purchase.quantity_invoiced
         purchase.previous_purchase_price = purchase.purchase_price.amount
         purchase.previous_selling_price = purchase.selling_price.amount
         purchase.previous_producer_vat = purchase.producer_vat.amount
@@ -318,6 +326,8 @@ def purchase_post_init(sender, **kwargs):
         purchase.previous_deposit = purchase.deposit.amount
         purchase.previous_comment = purchase.comment
     else:
+        purchase.previous_quantity_ordered = DECIMAL_ZERO
+        purchase.previous_quantity_invoiced = DECIMAL_ZERO
         purchase.previous_quantity = DECIMAL_ZERO
         purchase.previous_purchase_price = DECIMAL_ZERO
         purchase.previous_selling_price = DECIMAL_ZERO
@@ -332,11 +342,17 @@ def purchase_pre_save(sender, **kwargs):
     purchase = kwargs["instance"]
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
+        delta_quantity = quantity - purchase.previous_quantity_ordered
         if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+            # This quantity is used to calculate the price
+            # The unit price is for 1 kg.
+            # 1 = 1 piece of order_average_weight
+            # 2 = 2 pices of order_average_weight
             quantity *= purchase.offer_item.order_average_weight
+
     else:
         quantity = purchase.quantity_invoiced
-    delta_quantity = quantity - purchase.previous_quantity
+        delta_quantity = quantity - purchase.previous_quantity_invoiced
     if purchase.is_box_content:
         purchase.is_resale_price_fixed = True
         if delta_quantity != DECIMAL_ZERO:
@@ -415,10 +431,8 @@ def purchase_pre_save(sender, **kwargs):
                 total_profit=F('total_profit') + delta_profit
             )
     # Do not do it twice
-    if purchase.status < PERMANENCE_WAIT_FOR_SEND:
-        purchase.previous_quantity = purchase.quantity_ordered
-    else:
-        purchase.previous_quantity = purchase.quantity_invoiced
+    purchase.previous_quantity_ordered = purchase.quantity_ordered
+    purchase.previous_quantity_invoiced = purchase.quantity_invoiced
     purchase.previous_purchase_price = purchase.purchase_price.amount
     purchase.previous_selling_price = purchase.selling_price.amount
 

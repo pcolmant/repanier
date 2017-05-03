@@ -272,7 +272,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     self.message_user(request, user_message, user_message_level)
                     return
                 # Also display order without delivery point -> The customer has not selected it yet
-                deliveries_to_be_exported.append(None)
+                # deliveries_to_be_exported.append(None)
             else:
                 deliveries_to_be_exported = None
             response = None

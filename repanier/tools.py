@@ -5,7 +5,14 @@ import calendar
 import datetime
 import json
 import time
-import urllib2
+
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
+
 from smtplib import SMTPRecipientsRefused
 
 from django.conf import settings
@@ -16,7 +23,7 @@ from django.core.mail import EmailMessage, mail_admins
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import F
-from django.db.models import Q, Sum
+from django.db.models import Q
 from django.http import Http404
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -25,7 +32,6 @@ from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from parler.models import TranslationDoesNotExist
 from six import string_types
 
 import models
@@ -375,8 +381,10 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC):
     return unit
 
 
-def get_base_unit(qty=0, order_unit=PRODUCT_ORDER_UNIT_PC, status=None):
-    if order_unit == PRODUCT_ORDER_UNIT_KG or (status >= PERMANENCE_SEND and order_unit == PRODUCT_ORDER_UNIT_PC_KG):
+def get_base_unit(qty=0, order_unit=PRODUCT_ORDER_UNIT_PC, status=None, producer=False):
+    if order_unit == PRODUCT_ORDER_UNIT_KG or (
+                        status >= PERMANENCE_SEND and order_unit == PRODUCT_ORDER_UNIT_PC_KG and not producer
+    ):
         if qty == DECIMAL_ZERO:
             base_unit = EMPTY_STRING
         else:
@@ -710,11 +718,9 @@ def payment_message(customer, permanence):
 
 
 def recalculate_order_amount(permanence_id,
-                             customer_id=None,
                              offer_item_qs=None,
-                             producers_id=None,
-                             send_to_producer=False,
-                             re_init=False):
+                             re_init=False,
+                             send_to_producer=False):
     if send_to_producer or re_init:
         models.ProducerInvoice.objects.filter(
             permanence_id=permanence_id
@@ -759,44 +765,37 @@ def recalculate_order_amount(permanence_id,
             offer_item.previous_add_2_stock = DECIMAL_ZERO
             offer_item.save()
 
-    if customer_id is None:
-        if offer_item_qs is not None:
-            purchase_set = models.Purchase.objects \
-                .filter(permanence_id=permanence_id, offer_item__in=offer_item_qs) \
-                .order_by('?')
-        else:
-            purchase_set = models.Purchase.objects \
-                .filter(permanence_id=permanence_id) \
-                .order_by('?')
+    if offer_item_qs is not None:
+        purchase_set = models.Purchase.objects \
+            .filter(permanence_id=permanence_id, offer_item__in=offer_item_qs) \
+            .order_by('?')
     else:
         purchase_set = models.Purchase.objects \
-            .filter(permanence_id=permanence_id, customer_id=customer_id) \
+            .filter(permanence_id=permanence_id) \
             .order_by('?')
 
     for purchase in purchase_set.select_related("offer_item"):
-        # Recalcuate the total_price_with_tax of ProducerInvoice,
+        # Recalculate the total_price_with_tax of ProducerInvoice,
         # the total_price_with_tax of CustomerInvoice,
         # the total_purchase_with_tax + total_selling_with_tax of CustomerProducerInvoice,
         # and quantity_invoiced + total_purchase_with_tax + total_selling_with_tax of OfferItem
-        offer_item = purchase.offer_item
         if send_to_producer or re_init:
             # purchase.admin_update = True
-            purchase.previous_quantity = DECIMAL_ZERO
+            purchase.previous_quantity_ordered = DECIMAL_ZERO
+            purchase.previous_quantity_invoiced = DECIMAL_ZERO
             purchase.previous_purchase_price = DECIMAL_ZERO
             purchase.previous_selling_price = DECIMAL_ZERO
             purchase.previous_producer_vat = DECIMAL_ZERO
             purchase.previous_customer_vat = DECIMAL_ZERO
             purchase.previous_deposit = DECIMAL_ZERO
             if send_to_producer:
+                offer_item = purchase.offer_item
                 if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                     purchase.quantity_invoiced = (purchase.quantity_ordered * offer_item.order_average_weight) \
                         .quantize(FOUR_DECIMALS)
                 else:
                     purchase.quantity_invoiced = purchase.quantity_ordered
         purchase.save()
-
-    if send_to_producer:
-        reorder_purchases(permanence_id)
 
 
 def display_selected_value(offer_item, quantity_ordered):
@@ -896,6 +895,7 @@ def display_selected_box_value(customer, offer_item, box_purchase):
 @transaction.atomic
 def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, value_id=None,
                               basket=False, batch_job=False, comment=EMPTY_STRING):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     to_json = []
     if offer_item_id is not None and (q_order is not None or value_id is not None) and customer is not None:
         offer_item = models.OfferItem.objects.select_for_update(nowait=False) \
@@ -1055,7 +1055,7 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
                 if customer_invoice is not None and permanence is not None:
                     order_amount = customer_invoice.get_total_price_with_tax()
                     status_changed = customer_invoice.cancel_confirm_order()
-                    if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
+                    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
                         html = render_to_string(
                             'repanier/communication_confirm_order.html')
                         option_dict = {'id': "#communication", 'html': html}
@@ -1077,7 +1077,9 @@ def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, v
 
 
 def my_basket(is_order_confirm_send, order_amount, to_json):
-    if not is_order_confirm_send and apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+
+    if not is_order_confirm_send and REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
         msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span></a>' % (
             order_amount,)
     else:
@@ -1091,6 +1093,8 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
 
 def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                           basket_message=EMPTY_STRING, to_json=None):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+
     if permanence.with_delivery_point:
         if customer_invoice.delivery is not None:
             label = customer_invoice.delivery.get_delivery_customer_display()
@@ -1192,7 +1196,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
     else:
         msg_delivery = EMPTY_STRING
     msg_confirmation1 = EMPTY_STRING
-    if not is_basket and not apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+    if not is_basket and not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
         # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
         # If apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS is True,
         # then permanence.with_delivery_point is also True
@@ -1215,7 +1219,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
             msg_html = None
             btn_disabled = EMPTY_STRING if permanence.status == PERMANENCE_OPENED else "disabled"
             msg_confirmation2 = EMPTY_STRING
-            if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+            if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
                 if is_basket:
                     if customer_invoice.status == PERMANENCE_OPENED:
                         if (permanence.with_delivery_point and customer_invoice.delivery is None) \
@@ -1289,12 +1293,14 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
 
 
 def my_order_confirmation_email_send_to(customer):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+
     if customer is not None and customer.email2:
         to_email = (customer.user.email, customer.email2)
     else:
         to_email = (customer.user.email,)
     sent_to = ", ".join(to_email) if to_email is not None else EMPTY_STRING
-    if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
         msg_confirmation = _(
             "Your order is confirmed. An email containing this order summary has been sent to %s.") % sent_to
     else:
@@ -1306,7 +1312,7 @@ def create_or_update_one_purchase(
         customer_id, offer_item,
         permanence_date=None, status=PERMANENCE_OPENED, q_order=None,
         batch_job=False, is_box_content=False, comment=EMPTY_STRING):
-
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     # The batch_job flag is used because we need to forbid
     # customers to add purchases during the close_orders_async or other batch_job process
     # when the status is PERMANENCE_WAIT_FOR_SEND
@@ -1375,7 +1381,7 @@ def create_or_update_one_purchase(
             if purchase is not None:
                 purchase.set_comment(comment)
                 if q_order <= q_alert:
-                    if purchase.quantity_confirmed <= q_order:
+                    if not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS or purchase.quantity_confirmed <= q_order:
                         purchase.quantity_ordered = q_order
                         purchase.save()
                     else:
@@ -1636,7 +1642,7 @@ def producer_web_services_activated(reference_site=None):
     web_service_version = None
     if reference_site is not None and len(reference_site) > 0:
         try:
-            web_services = urllib2.urlopen(
+            web_services = urlopen(
                 '%s%s' % (reference_site, urlresolvers.reverse('version_rest')),
                 timeout=0.5
             )
@@ -1660,8 +1666,9 @@ def add_months(sourcedate, months):
 
 
 def calc_basket_message(customer, permanence, status):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     if status == PERMANENCE_OPENED:
-        if apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             if permanence.with_delivery_point:
                 you_can_change = "<br/>%s" % (
                     _("You can increase the order quantities as long as the orders are open for your delivery point."),
