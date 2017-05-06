@@ -92,7 +92,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def add_delivery(self, request):
         return import_xslx_view(
             self, admin, request, None, _("Import an invoice"),
-            handle_uploaded_invoice, action='import_xlsx', form_klass=ImportInvoiceForm
+            handle_uploaded_invoice, action='add_delivery', form_klass=ImportInvoiceForm
         )
 
     def cancel_delivery(self, request, permanence_qs):

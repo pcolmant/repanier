@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Sum
 from django.utils import timezone, translation
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
@@ -101,11 +101,28 @@ class Permanence(TranslatableModel):
         verbose_name=_("producers"),
         blank=True
     )
-    total_price_wo_tax = ModelMoneyField(
+    # Calculated with Purchase
+    invoiced_with_tax = ModelMoneyField(
         _("Total amount"),
-        help_text=_('Total purchase amount vat excluded'),
+        help_text=_('Total purchase amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    total_profit = ModelMoneyField(
+    vat = ModelMoneyField(
+        _("Total vat"),
+        help_text=_('Vat part of the total purchased'),
+        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
+    deposit = ModelMoneyField(
+        _("deposit"),
+        help_text=_('deposit to add to the original unit price'),
+        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+    transport = ModelMoneyField(
+        _("Delivery point transport"),
+        help_text=_("transport to add"),
+        default=DECIMAL_ZERO, max_digits=5, decimal_places=2)
+    # total_price_wo_tax = ModelMoneyField(
+    #     _("Total amount"),
+    #     help_text=_('Total purchase amount vat excluded'),
+    #     default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+    profit = ModelMoneyField(
         _("Total profit"),
         help_text=_('Total profit'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
@@ -575,6 +592,65 @@ class Permanence(TranslatableModel):
             cur_language=translation.get_language(),
         )
 
+    def recalculate_profit(self):
+        result_set = invoice.CustomerInvoice.objects.filter(
+            permanence_id=self.id
+        ).order_by('?').aggregate(
+            Sum('total_price_with_tax'),
+            Sum('delta_price_with_tax'),
+            Sum('total_vat'),
+            Sum('delta_vat'),
+            Sum('total_deposit'),
+            Sum('delta_transport')
+        )
+        if result_set["total_price_with_tax__sum"] is not None:
+            ci_sum_total_price_with_tax = result_set["total_price_with_tax__sum"]
+        else:
+            ci_sum_total_price_with_tax = DECIMAL_ZERO
+        if result_set["delta_price_with_tax__sum"] is not None:
+            ci_sum_delta_price_with_tax = result_set["delta_price_with_tax__sum"]
+        else:
+            ci_sum_delta_price_with_tax = DECIMAL_ZERO
+        if result_set["total_vat__sum"] is not None:
+            ci_sum_total_vat = result_set["total_vat__sum"]
+        else:
+            ci_sum_total_vat = DECIMAL_ZERO
+        if result_set["delta_vat__sum"] is not None:
+            ci_sum_delta_vat = result_set["delta_vat__sum"]
+        else:
+            ci_sum_delta_vat = DECIMAL_ZERO
+        if result_set["total_deposit__sum"] is not None:
+            ci_sum_total_deposit = result_set["total_deposit__sum"]
+        else:
+            ci_sum_total_deposit = DECIMAL_ZERO
+        if result_set["delta_transport__sum"] is not None:
+            ci_sum_delta_transport = result_set["delta_transport__sum"]
+        else:
+            ci_sum_delta_transport = DECIMAL_ZERO
+        self.invoiced_with_tax.amount = ci_sum_total_price_with_tax + ci_sum_delta_price_with_tax + ci_sum_delta_transport
+        self.vat.amount = ci_sum_total_vat + ci_sum_delta_vat
+        self.deposit.amount = ci_sum_total_deposit
+        result_set = invoice.ProducerInvoice.objects.filter(
+            permanence_id=self.id
+        ).order_by('?').aggregate(
+            Sum('total_price_with_tax'),
+            Sum('total_vat'),
+            Sum('total_deposit')
+        )
+        if result_set["total_price_with_tax__sum"] is not None:
+            pi_sum_total_price_with_tax = result_set["total_price_with_tax__sum"]
+        else:
+            pi_sum_total_price_with_tax = DECIMAL_ZERO
+        if result_set["total_vat__sum"] is not None:
+            pi_sum_total_vat = result_set["total_vat__sum"]
+        else:
+            pi_sum_total_vat = DECIMAL_ZERO
+        if result_set["total_deposit__sum"] is not None:
+            pi_sum_total_deposit = result_set["total_deposit__sum"]
+        else:
+            pi_sum_total_deposit = DECIMAL_ZERO
+        self.profit.amount = self.invoiced_with_tax.amount - pi_sum_total_price_with_tax - self.vat.amount + pi_sum_total_vat
+
     def get_full_status_display(self):
         return get_full_status_display(self)
 
@@ -595,20 +671,18 @@ class Permanence(TranslatableModel):
         return permanence_display
 
     def get_permanence_admin_display(self):
-        if self.total_price_wo_tax != DECIMAL_ZERO:
-            if self.total_profit.amount != DECIMAL_ZERO:
-                return '%s<br/>%s %s<br/>৺ %s<br/>%s%%' % (
-                    self.get_permanence_display(), _('wo tax'), self.total_price_wo_tax, self.total_profit,
-                    number_format((self.total_profit.amount / self.total_price_wo_tax.amount) * 100, 2)
-                )
-            else:
-                return '%s<br/>%s %s' % (
-                    self.get_permanence_display(), _('wo tax'), self.total_price_wo_tax)
+        if self.invoiced_with_tax.amount != DECIMAL_ZERO:
+            if self.profit.amount != DECIMAL_ZERO:
+                invoiced_wo_tax = self.invoiced_with_tax.amount - self.vat.amount
+                if invoiced_wo_tax != DECIMAL_ZERO:
+                    return '%s<br/>%s<br/>৺ %s<br/>%s%%' % (
+                        self.get_permanence_display(), self.invoiced_with_tax, self.profit,
+                        number_format((self.profit.amount / invoiced_wo_tax) * 100, 2)
+                    )
+            return '%s<br/>%s' % (
+                self.get_permanence_display(), self.invoiced_with_tax)
         else:
-            if self.total_profit.amount != DECIMAL_ZERO:
-                return '%s<br/>%s ৺ %s' % (self.get_permanence_display(), _('wo tax'), self.total_profit)
-            else:
-                return self.get_permanence_display()
+            return self.get_permanence_display()
 
     get_permanence_admin_display.short_description = lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
     get_permanence_admin_display.allow_tags = True

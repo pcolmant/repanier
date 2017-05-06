@@ -1067,8 +1067,8 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     if first_purchase:
                         first_purchase = False
                     c = ws.cell(row=row_num, column=4)
-                    producer_unit_price = purchase.get_producer_unit_price(with_price_list_multiplier=False)
-                    customer_unit_price = purchase.get_customer_unit_price(with_price_list_multiplier=False)
+                    producer_unit_price = purchase.get_producer_unit_price()
+                    customer_unit_price = purchase.get_customer_unit_price()
                     if producer_unit_price < customer_unit_price:
                         unit_price = producer_unit_price
                     else:

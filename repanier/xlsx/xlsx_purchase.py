@@ -198,6 +198,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=7)
                                 c.value = purchase.get_producer_unit_price()
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
+                                if year is None:
+                                    c.style.font.color = Color(Color.BLUE)
                                 c = ws.cell(row=row_num, column=8)
                                 c.value = purchase.offer_item.unit_deposit.amount
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
@@ -591,13 +593,15 @@ def import_purchase_sheet(worksheet, permanence=None,
                             error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                             break
                     comment = cap(row[_('comment')], 100)
-                    quantity_invoiced = DECIMAL_ZERO if row[_('quantity invoiced')] is None \
-                        else Decimal(row[_('quantity invoiced')]).quantize(FOUR_DECIMALS)
-                    producer_row_price = row[_('purchase price')]
+
+                    producer_unit_price = purchase.offer_item.producer_unit_price.amount if row[_('producer unit price')] is None \
+                        else Decimal(row[_('producer unit price')]).quantize(TWO_DECIMALS)
+
+                    producer_row_price = DECIMAL_ZERO if row[_('purchase price')] is None \
+                        else Decimal(row[_('purchase price')]).quantize(TWO_DECIMALS)
                     if producer_row_price is not None:
                         producer_row_price = Decimal(producer_row_price).quantize(TWO_DECIMALS)
                         if purchase.purchase_price.amount != producer_row_price:
-                            purchase_price_modified = True
                             if purchase.offer_item.order_unit in [
                                 PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
                                 PRODUCT_ORDER_UNIT_LT
@@ -609,33 +613,32 @@ def import_purchase_sheet(worksheet, permanence=None,
                                                                   producer_unit_price).quantize(FOUR_DECIMALS)
                                 else:
                                     purchase.quantity_invoiced = DECIMAL_ZERO
-                        else:
-                            purchase_price_modified = False
-                    elif purchase.quantity_invoiced != quantity_invoiced:
+
+                    quantity_invoiced = DECIMAL_ZERO if row[_('quantity invoiced')] is None \
+                        else Decimal(row[_('quantity invoiced')]).quantize(FOUR_DECIMALS)
+                    if purchase.quantity_invoiced != quantity_invoiced:
                         purchase.quantity_invoiced = quantity_invoiced
-                        purchase_price_modified = False
-                    else:
-                        purchase_price_modified = False
-                    if row_format == "A":
-                        array_purchase = []
-                        rule_of_3_source = DECIMAL_ZERO
-                        if not purchase_price_modified:
-                            producer_unit_price = Decimal(row[_('producer unit price')]).quantize(TWO_DECIMALS)
-                            previous_producer_unit_price = purchase.get_producer_unit_price()
-                            if producer_unit_price != previous_producer_unit_price:
-                                offer_item = OfferItem.objects.filter(id=purchase.offer_item_id).order_by('?').first()
-                                offer_item.producer_unit_price = producer_unit_price
-                                recalculate_prices(offer_item, offer_item.producer_price_are_wo_vat,
-                                                   offer_item.is_resale_price_fixed,
-                                                   offer_item.price_list_multiplier)
-                                offer_item.save()
-                                recalculate_order_amount(
-                                    permanence_id=offer_item.permanence_id,
-                                    offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?'),
-                                )
+
                     purchase.comment = comment
                     purchase.save()
                     rule_of_3_source += purchase.purchase_price.amount
+
+                    if row_format == "A":
+                        array_purchase = []
+                        rule_of_3_source = DECIMAL_ZERO
+                        previous_producer_unit_price = purchase.get_producer_unit_price()
+                        if producer_unit_price != previous_producer_unit_price:
+                            offer_item = OfferItem.objects.filter(id=purchase.offer_item_id).order_by('?').first()
+                            offer_item.producer_unit_price = producer_unit_price
+                            recalculate_prices(offer_item, offer_item.producer_price_are_wo_vat,
+                                               offer_item.is_resale_price_fixed,
+                                               offer_item.price_list_multiplier)
+                            offer_item.save()
+                            recalculate_order_amount(
+                                permanence_id=offer_item.permanence_id,
+                                offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?'),
+                            )
+
                     array_purchase.append(purchase)
                 if row_format in ["C", "D"]:
                     rule_of_3_target = row[_('rule of 3')]

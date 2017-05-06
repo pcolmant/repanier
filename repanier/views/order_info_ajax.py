@@ -20,7 +20,9 @@ def order_info_ajax(request):
     if request.is_ajax():
         from repanier.apps import REPANIER_SETTINGS_CONFIG
         order_info = EMPTY_STRING
-        if REPANIER_SETTINGS_CONFIG.notification:
+        notification = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+            'notification', any_language=True, default=EMPTY_STRING)
+        if notification:
             if REPANIER_SETTINGS_CONFIG.notification_is_public or request.user.is_authenticated:
                 order_info = """
                 <div class="row">
@@ -35,7 +37,7 @@ def order_info_ajax(request):
                     </div>
                 </div>
                 """.format(
-                    notification=REPANIER_SETTINGS_CONFIG.notification
+                    notification=notification
                 )
 
         return HttpResponse(order_info)

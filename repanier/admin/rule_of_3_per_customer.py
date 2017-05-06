@@ -42,7 +42,11 @@ class CustomerPurchaseSendInlineForm(forms.ModelForm):
         super(CustomerPurchaseSendInlineForm, self).__init__(*args, **kwargs)
         purchase = self.instance
         self.fields["previous_purchase_price"].initial = purchase.purchase_price
-        self.fields["previous_offer_item"].initial = purchase.offer_item
+        try:
+            offer_item = purchase.offer_item
+        except AttributeError:
+            offer_item = None
+        self.fields["previous_offer_item"].initial = offer_item
 
     class Meta:
         widgets = {

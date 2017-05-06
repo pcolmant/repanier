@@ -143,7 +143,8 @@ class OrderView(ListView):
         context['q'] = self.q
         context['is_anonymous'] = self.is_anonymous
         if self.is_anonymous:
-            context['how_to_register'] = REPANIER_SETTINGS_CONFIG.how_to_register
+            context['how_to_register'] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+                'how_to_register', any_language=True, default=EMPTY_STRING)
         else:
             context['how_to_register'] = EMPTY_STRING
         context['may_order'] = self.may_order

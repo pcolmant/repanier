@@ -109,13 +109,13 @@ class Purchase(models.Model):
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True, db_index=True)
 
-    def get_customer_unit_price(self, with_price_list_multiplier=True):
+    def get_customer_unit_price(self):
         offer_item = self.offer_item
-        customer_unit_price = offer_item.customer_unit_price.amount
-        if self.price_list_multiplier == DECIMAL_ONE or not with_price_list_multiplier:
-            return customer_unit_price
+        if self.price_list_multiplier == DECIMAL_ONE:
+            return offer_item.customer_unit_price.amount
         else:
-            return (customer_unit_price * self.price_list_multiplier).quantize(TWO_DECIMALS)
+            getcontext().rounding = ROUND_HALF_UP
+            return (offer_item.customer_unit_price.amount * self.price_list_multiplier).quantize(TWO_DECIMALS)
 
     get_customer_unit_price.short_description = (_("customer unit price"))
     get_customer_unit_price.allow_tags = False
@@ -124,18 +124,18 @@ class Purchase(models.Model):
         return self.offer_item.unit_deposit.amount
 
     def get_customer_unit_vat(self):
+        offer_item = self.offer_item
         if self.price_list_multiplier == DECIMAL_ONE:
-            return self.offer_item.customer_vat.amount
+            return offer_item.customer_vat.amount
         else:
             getcontext().rounding = ROUND_HALF_UP
-            return (self.offer_item.customer_vat.amount * self.price_list_multiplier).quantize(FOUR_DECIMALS)
+            return (offer_item.customer_vat.amount * self.price_list_multiplier).quantize(FOUR_DECIMALS)
 
     def get_producer_unit_vat(self):
-        if self.price_list_multiplier == DECIMAL_ONE:
-            return self.offer_item.producer_vat.amount
-        else:
-            getcontext().rounding = ROUND_HALF_UP
-            return (self.offer_item.producer_vat.amount * self.price_list_multiplier).quantize(FOUR_DECIMALS)
+        offer_item = self.offer_item
+        if offer_item.manage_production:
+            return self.get_customer_unit_vat()
+        return offer_item.producer_vat.amount
 
     def get_selling_price(self):
         # workaround for a display problem with Money field in the admin list_display
@@ -144,10 +144,10 @@ class Purchase(models.Model):
     get_selling_price.short_description = (_("customer row price"))
     get_selling_price.allow_tags = False
 
-    def get_producer_unit_price(self, with_price_list_multiplier=True):
+    def get_producer_unit_price(self):
         offer_item = self.offer_item
         if offer_item.manage_production:
-            return self.get_customer_unit_price(with_price_list_multiplier)
+            return self.get_customer_unit_price()
         return offer_item.producer_unit_price.amount
 
     get_producer_unit_price.short_description = (_("producer unit price"))
@@ -366,14 +366,14 @@ def purchase_pre_save(sender, **kwargs):
             purchase.price_list_multiplier = DECIMAL_ONE
         else:
             purchase.price_list_multiplier = purchase.customer.price_list_multiplier
-        producer_unit_price = purchase.get_producer_unit_price()
-        customer_unit_price = purchase.get_customer_unit_price()
+
         unit_deposit = purchase.get_unit_deposit()
 
         purchase.purchase_price.amount = (
-            (producer_unit_price + unit_deposit) * quantity).quantize(TWO_DECIMALS)
+            (purchase.get_producer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
         purchase.selling_price.amount = (
-            (customer_unit_price + unit_deposit) * quantity).quantize(TWO_DECIMALS)
+            (purchase.get_customer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
+
         delta_purchase_price = purchase.purchase_price.amount - purchase.previous_purchase_price
         delta_selling_price = purchase.selling_price.amount - purchase.previous_selling_price
 
@@ -382,53 +382,46 @@ def purchase_pre_save(sender, **kwargs):
             delta_purchase_price != DECIMAL_ZERO):
 
             purchase.vat_level = purchase.offer_item.vat_level
-            purchase.producer_vat.amount = purchase.get_producer_unit_vat() * quantity
-            purchase.customer_vat.amount = purchase.get_customer_unit_vat() * quantity
+            purchase.producer_vat.amount = (purchase.get_producer_unit_vat() * quantity).quantize(FOUR_DECIMALS)
+            purchase.customer_vat.amount = (purchase.get_customer_unit_vat() * quantity).quantize(FOUR_DECIMALS)
 
             purchase.deposit.amount = unit_deposit * quantity
-            delta_producer_vat = purchase.producer_vat.amount - purchase.previous_producer_vat
-            delta_customer_vat = purchase.customer_vat.amount - purchase.previous_customer_vat
+            delta_purchase_vat = purchase.producer_vat.amount - purchase.previous_producer_vat
+            delta_selling_vat = purchase.customer_vat.amount - purchase.previous_customer_vat
             delta_deposit = purchase.deposit.amount - purchase.previous_deposit
+
             offeritem.OfferItem.objects.filter(id=purchase.offer_item_id).update(
-                quantity_invoiced=F('quantity_invoiced') +
-                                  delta_quantity,
-                total_purchase_with_tax=F('total_purchase_with_tax') +
-                                        delta_purchase_price,
-                total_selling_with_tax=F('total_selling_with_tax') +
-                                       delta_selling_price
+                quantity_invoiced=F('quantity_invoiced') + delta_quantity,
+                total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
+                total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price
             )
             purchase.offer_item = offeritem.OfferItem.objects.filter(
                 id=purchase.offer_item_id).order_by('?').first()
             invoice.CustomerInvoice.objects.filter(id=purchase.customer_invoice.id).update(
-                total_price_with_tax=F('total_price_with_tax') +
-                                     delta_selling_price,
-                total_vat=F('total_vat') + delta_customer_vat,
+                total_price_with_tax=F('total_price_with_tax') + delta_selling_price,
+                total_vat=F('total_vat') + delta_selling_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
             invoice.CustomerProducerInvoice.objects.filter(id=purchase.customer_producer_invoice_id).update(
-                total_purchase_with_tax=F('total_purchase_with_tax') +
-                                        delta_purchase_price,
-                total_selling_with_tax=F('total_selling_with_tax') +
-                                       delta_selling_price
+                total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
+                total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price
             )
+
             if purchase.offer_item.price_list_multiplier <= DECIMAL_ONE and not purchase.offer_item.is_resale_price_fixed:
-                delta_total_price_with_tax = delta_selling_price
-                delta_total_vat = delta_customer_vat
-                delta_profit = DECIMAL_ZERO
-            else:
-                delta_total_price_with_tax = delta_purchase_price
-                delta_total_vat = delta_producer_vat
-                delta_profit = delta_selling_price - delta_purchase_price - delta_customer_vat + delta_producer_vat
+                delta_purchase_price = delta_selling_price
+                delta_purchase_vat = delta_selling_vat
+
             invoice.ProducerInvoice.objects.filter(id=purchase.producer_invoice_id).update(
-                total_price_with_tax=F('total_price_with_tax') +
-                                     delta_total_price_with_tax,
-                total_vat=F('total_vat') + delta_total_vat,
+                total_price_with_tax=F('total_price_with_tax') + delta_purchase_price,
+                total_vat=F('total_vat') + delta_purchase_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
+            delta_profit = delta_selling_price - delta_purchase_price - delta_selling_vat + delta_purchase_vat
             permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
-                total_price_wo_tax=F('total_price_wo_tax') +
-                                     delta_total_price_with_tax - delta_total_vat,
-                total_profit=F('total_profit') + delta_profit
+                invoiced_with_tax=F('invoiced_with_tax') + delta_selling_price,
+                vat=F('vat') + delta_selling_vat,
+                deposit=F('deposit') + delta_deposit,
+                profit=F('profit') + delta_profit
             )
     # Do not do it twice
     purchase.previous_quantity_ordered = purchase.quantity_ordered

@@ -24,7 +24,7 @@ def permanence_verbose_name():
     if DJANGO_IS_MIGRATION_RUNNING:
         return EMPTY_STRING
     from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
-    return lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
+    return _('order') # lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
 
 
 @python_2_unicode_compatible
@@ -115,10 +115,6 @@ class CustomerInvoice(models.Model):
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
-    # customer_charged = models.ForeignKey(
-    #     'Customer', verbose_name=_("customer"),
-    #     related_name='invoices_paid',
-    #     on_delete=models.PROTECT, db_index=True)
     master_permanence = models.ForeignKey(
         'Permanence', verbose_name=_("master permanence"),
         related_name='child_customer_invoice',
@@ -205,34 +201,33 @@ class CustomerInvoice(models.Model):
         self.calculate_and_save_delta_buyinggroup(confirm_order=True)
         self.is_order_confirm_send = True
 
-    @transaction.atomic
     def calculate_and_save_delta_buyinggroup(self, confirm_order=False):
-        producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
-            producer__represent_this_buyinggroup=True,
-            permanence_id=self.permanence_id,
-        ).order_by('?').first()
-        if producer_invoice_buyinggroup is None:
-            producer_buyinggroup = producer.Producer.objects.filter(
-                represent_this_buyinggroup=True
-            ).order_by('?').first()
-            producer_invoice_buyinggroup = ProducerInvoice.objects.create(
-                producer_id=producer_buyinggroup.id,
-                permanence_id=self.permanence_id,
-                status=self.permanence.status
-            )
-        else:
-            producer_invoice_buyinggroup.delta_price_with_tax.amount -= self.delta_price_with_tax.amount
-            producer_invoice_buyinggroup.delta_vat.amount -= self.delta_vat.amount
-            producer_invoice_buyinggroup.delta_transport.amount -= self.delta_transport.amount
+        previous_delta_price_with_tax = self.delta_price_with_tax.amount
+        previous_delta_vat = self.delta_vat.amount
+        previous_delta_transport = self.delta_transport.amount
 
         self.calculate_delta_price(confirm_order)
         self.calculate_delta_transport()
 
-        producer_invoice_buyinggroup.delta_price_with_tax.amount += self.delta_price_with_tax.amount
-        producer_invoice_buyinggroup.delta_vat.amount += self.delta_vat.amount
-        producer_invoice_buyinggroup.delta_transport.amount += self.delta_transport.amount
+        if previous_delta_price_with_tax != self.delta_price_with_tax.amount or previous_delta_vat != self.delta_vat.amount or previous_delta_transport != self.delta_transport.amount:
+            producer_invoice_buyinggroup = ProducerInvoice.objects.filter(
+                producer__represent_this_buyinggroup=True,
+                permanence_id=self.permanence_id,
+            ).order_by('?').first()
+            if producer_invoice_buyinggroup is None:
+                producer_buyinggroup = producer.Producer.objects.filter(
+                    represent_this_buyinggroup=True
+                ).order_by('?').first()
+                producer_invoice_buyinggroup = ProducerInvoice.objects.create(
+                    producer_id=producer_buyinggroup.id,
+                    permanence_id=self.permanence_id,
+                    status=self.permanence.status
+                )
+            producer_invoice_buyinggroup.delta_price_with_tax.amount += self.delta_price_with_tax.amount - previous_delta_price_with_tax
+            producer_invoice_buyinggroup.delta_vat.amount += self.delta_vat.amount - previous_delta_vat
+            producer_invoice_buyinggroup.delta_transport.amount += self.delta_transport.amount - previous_delta_transport
 
-        producer_invoice_buyinggroup.save()
+            producer_invoice_buyinggroup.save()
 
     def calculate_delta_price(self, confirm_order=False):
         getcontext().rounding = ROUND_HALF_UP

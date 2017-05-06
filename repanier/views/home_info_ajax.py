@@ -9,6 +9,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
+from parler.models import TranslationDoesNotExist
 
 from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
 from repanier.models import Permanence
@@ -65,7 +66,10 @@ def home_info_ajax(request):
             """.format(
                 permanences="".join(permanences)
             )
-        if REPANIER_SETTINGS_CONFIG.notification:
+
+        notification = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+            'notification', any_language=True, default=EMPTY_STRING)
+        if notification:
             if REPANIER_SETTINGS_CONFIG.notification_is_public or request.user.is_authenticated:
                 home_info = """
                 <div class="container">
@@ -81,7 +85,7 @@ def home_info_ajax(request):
                 </div>
                 {home_info}
                 """.format(
-                    notification=REPANIER_SETTINGS_CONFIG.notification,
+                    notification=notification,
                     home_info=home_info
                 )
 

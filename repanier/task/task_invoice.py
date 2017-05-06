@@ -103,6 +103,10 @@ def generate_invoice(permanence, payment_date):
                 customer_invoice_id=new_customer_invoice.id,
                 customer_charged_id=new_customer_invoice.customer_charged_id
             )
+        recalculate_order_amount(
+            permanence_id=new_permanence.id,
+            re_init=True
+        )
 
     # Important : linked to task_invoice.cancel
     # First pass, set customer_charged
@@ -163,7 +167,8 @@ def generate_invoice(permanence, payment_date):
                     )
                     customer.save(update_fields=['membership_fee_valid_until', ])
 
-
+    permanence.recalculate_profit()
+    permanence.save()
 
     for customer_invoice in CustomerInvoice.objects.filter(
         permanence_id=permanence.id
