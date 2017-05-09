@@ -104,7 +104,7 @@ class Customer(models.Model):
         verbose_name=_("delivery point"),
         blank=True, null=True, default=None)
     is_active = models.BooleanField(_("is_active"), default=True)
-    is_group = models.BooleanField(_("is_group"), default=False)
+    is_group = models.BooleanField(_("is a group"), default=False)
     may_order = models.BooleanField(_("may_order"), default=True)
     valid_email = models.NullBooleanField(_("valid_email"), default=None)
     subscribe_to_email = models.BooleanField(_("subscribe to email"), default=True)

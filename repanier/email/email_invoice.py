@@ -87,7 +87,8 @@ def send_invoice(permanence_id):
             ).order_by('?'):
                 long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
                 if Purchase.objects.filter(
-                    permanence_id=permanence.id, customer_charged_id=customer.id
+                    permanence_id=permanence.id,
+                    customer_invoice__customer_charged_id=customer.id
                 ).order_by('?').exists():
                     to_email_customer = [customer.user.email]
                     if customer.email2 is not None and len(customer.email2.strip()) > 0:

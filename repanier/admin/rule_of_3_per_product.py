@@ -208,7 +208,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         qs = super(OfferItemSendAdmin, self).get_queryset(request)
         return qs.filter(
             translations__language_code=translation.get_language()
-        )
+        ).distinct()
 
     def get_form(self, request, obj=None, **kwargs):
         if obj.is_resale_price_fixed:

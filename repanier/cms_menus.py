@@ -74,21 +74,21 @@ class PermanenceMenu(Menu):
             submenu_id = self.append_permanence(is_anonymous, permanence, nodes, master_id, submenu_id)
             if displayed_permanence_counter > 4:
                 break
-        if displayed_permanence_counter < 4:
-            max_counter = 4 - displayed_permanence_counter
-            for permanence in Permanence.objects.filter(status__in=[PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]) \
-                    .only("id", "permanence_date") \
-                    .order_by('-permanence_date'):
-                if permanence.permanence_date >= (
-                    timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)).date():
-                    if first_pass and closed_separator:
-                        submenu_id = self.append_separator(nodes, master_id, submenu_id)
-                    first_pass = False
-                    separator = True
-                    submenu_id = self.append_permanence(is_anonymous, permanence, nodes, master_id, submenu_id)
-                max_counter -= 1
-                if max_counter <= 0:
-                    break
+        # if displayed_permanence_counter < 4:
+        #     max_counter = 4 - displayed_permanence_counter
+        #     for permanence in Permanence.objects.filter(status__in=[PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]) \
+        #             .only("id", "permanence_date") \
+        #             .order_by('-permanence_date'):
+        #         if permanence.permanence_date >= (
+        #             timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)).date():
+        #             if first_pass and closed_separator:
+        #                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
+        #             first_pass = False
+        #             separator = True
+        #             submenu_id = self.append_permanence(is_anonymous, permanence, nodes, master_id, submenu_id)
+        #         max_counter -= 1
+        #         if max_counter <= 0:
+        #             break
 
         # if REPANIER_SETTINGS_INVOICE and not request.user.is_staff:
         #     if separator:

@@ -59,7 +59,8 @@ class CustomerInvoiceView(DetailView):
                 ).order_by("offer_item__translations__order_sort_order")
             context['purchase_set'] = purchase_set
             purchase_by_other_set = Purchase.objects.filter(
-                customer_charged_id=customer_invoice.customer_id,
+                customer_invoice__customer_charged_id=customer_invoice.customer_id,
+                # customer_charged_id=customer_invoice.customer_id,
                 permanence_id=customer_invoice.permanence_id,
                 offer_item__translations__language_code=translation.get_language()
             ).exclude(
@@ -89,7 +90,8 @@ class CustomerInvoiceView(DetailView):
                 context['next_customer_invoice_id'] = next_customer_invoice.id
             context['customer'] = customer_invoice.customer
             context['download_invoice'] = Purchase.objects.filter(
-                customer_charged_id=customer_invoice.customer_id,
+                customer_invoice__customer_charged_id=customer_invoice.customer_id,
+                # customer_charged_id=customer_invoice.customer_id,
                 permanence_id=customer_invoice.permanence_id,
             ).order_by('?').exists()
         return context

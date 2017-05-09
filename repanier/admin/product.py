@@ -362,7 +362,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     duplicate_product.short_description = _('duplicate product')
 
     def get_list_display(self, request):
-        producer_id = sint(request.GET.get('producer_id', 0))
+        producer_id = sint(request.GET.get('producer', 0))
         if producer_id != 0:
             producer_queryset = Producer.objects.filter(id=producer_id).order_by('?')
             producer = producer_queryset.first()
@@ -425,8 +425,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             preserved_filters = request.GET.get('_changelist_filters', None)
             if preserved_filters:
                 param = dict(parse_qsl(preserved_filters))
-                if 'producer_id' in param:
-                    producer_id = param['producer_id']
+                if 'producer' in param:
+                    producer_id = param['producer']
                     if producer_id:
                         producer_queryset = Producer.objects.filter(id=producer_id).order_by('?')
                 if 'department_for_customer' in param:

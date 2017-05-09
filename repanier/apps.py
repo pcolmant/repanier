@@ -68,7 +68,7 @@ class RepanierSettings(AppConfig):
                 db_started = connection.cursor() is not None
             except:
                 time.sleep(1)
-        from models import Configuration, LUT_DepartmentForCustomer, Staff, Purchase
+        from models import Configuration, LUT_DepartmentForCustomer, Staff, Purchase, CustomerInvoice
         from const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
         try:
@@ -92,10 +92,14 @@ class RepanierSettings(AppConfig):
             # Purchase.objects.filter(customer_charged__isnull=True).update(
             #     customer_charged=F('customer_invoice__customer_charged')
             # )
-            for purchase in Purchase.objects.filter(
-                    customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
-                purchase.customer_charged = purchase.customer_invoice.customer_charged
-                purchase.save(update_fields=["customer_charged",])
+            # for purchase in Purchase.objects.filter(
+            #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
+            #     purchase.customer_charged = purchase.customer_invoice.customer_charged
+            #     purchase.save(update_fields=["customer_charged",])
+            CustomerInvoice.objects.filter(
+                customer__is_group=True,
+                customer_id=F('customer_charged_id')
+            ).update(is_group=True)
             Staff.objects.rebuild()
             # Create groups with correct rights
             order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()

@@ -19,7 +19,7 @@ class ProductFilterByProducer(SimpleListFilter):
     # right admin sidebar.
     title = _("producers")
     # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'producer_id'
+    parameter_name = 'producer'
     template = 'admin/producer_filter.html'
 
     def lookups(self, request, model_admin):
@@ -157,23 +157,20 @@ class PurchaseFilterByCustomer(SimpleListFilter):
 
 
 class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
-    title = _("producer")
+    title = _("producers")
     parameter_name = 'producer'
     template = 'admin/producer_filter.html'
 
     def lookups(self, request, model_admin):
         permanence_id = request.GET.get('permanence', None)
-        if permanence_id is not None:
-            list_filter = []
-            for p in Producer.objects.filter(permanence=permanence_id):
-                pi = ProducerInvoice.objects.filter(permanence=permanence_id, producer_id=p.id).order_by('?').first()
-                if pi is not None:
-                    list_filter.append((p.id, "%s (%s)" % (p.short_profile_name, pi.total_price_with_tax,)))
-                else:
-                    list_filter.append((p.id, p.short_profile_name))
-            return list_filter
-        else:
-            return []
+        list_filter = []
+        for p in Producer.objects.filter(permanence=permanence_id):
+            pi = ProducerInvoice.objects.filter(permanence=permanence_id, producer_id=p.id).order_by('?').first()
+            if pi is not None:
+                list_filter.append((p.id, "%s (%s)" % (p.short_profile_name, pi.total_price_with_tax,)))
+            else:
+                list_filter.append((p.id, p.short_profile_name))
+        return list_filter
 
     def queryset(self, request, queryset):
         if self.value():

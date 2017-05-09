@@ -49,10 +49,10 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
     ordering = ('translations__long_name',)
 
     def get_queryset(self, request):
-        queryset = super(OfferItemClosedAdmin, self).get_queryset(request).filter(
+        qs = super(OfferItemClosedAdmin, self).get_queryset(request)
+        return qs.filter(
             translations__language_code=translation.get_language()
         ).distinct()
-        return queryset
 
     def get_list_display(self, request):
         producer_id = sint(request.GET.get('producer', 0))

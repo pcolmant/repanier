@@ -10,7 +10,6 @@ from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone, translation
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
@@ -102,30 +101,22 @@ class Permanence(TranslatableModel):
         blank=True
     )
     # Calculated with Purchase
-    invoiced_with_tax = ModelMoneyField(
+    total_purchase_with_tax = ModelMoneyField(
         _("Total amount"),
         help_text=_('Total purchase amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    vat = ModelMoneyField(
+    total_selling_with_tax = ModelMoneyField(
+        _("Total amount"),
+        help_text=_('Total purchase amount vat included'),
+        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+    total_purchase_vat = ModelMoneyField(
         _("Total vat"),
         help_text=_('Vat part of the total purchased'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add to the original unit price'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    transport = ModelMoneyField(
-        _("Delivery point transport"),
-        help_text=_("transport to add"),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=2)
-    # total_price_wo_tax = ModelMoneyField(
-    #     _("Total amount"),
-    #     help_text=_('Total purchase amount vat excluded'),
-    #     default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    profit = ModelMoneyField(
-        _("Total profit"),
-        help_text=_('Total profit'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+    total_selling_vat = ModelMoneyField(
+        _("Total vat"),
+        help_text=_('Vat part of the total purchased'),
+        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
 
     with_delivery_point = models.BooleanField(
         _("with_delivery_point"), default=False)
@@ -294,20 +285,19 @@ class Permanence(TranslatableModel):
             link = []
             for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
                 "customer").order_by('customer'):
-                ci_customer = ci.customer
                 if ci.is_order_confirm_send:
                     label = '%s%s (%s) %s%s' % (
-                        "<b><i>" if ci_customer.is_group else EMPTY_STRING,
-                        ci.customer.short_basket_name, ci.get_total_price_with_tax(customer_charged=True),
+                        "<b><i>" if ci.is_group else EMPTY_STRING,
+                        ci.customer.short_basket_name, "-" if ci.is_group else ci.get_total_price_with_tax(customer_charged=True),
                         ci.get_is_order_confirm_send_display(),
-                        "</i></b>" if ci_customer.is_group else EMPTY_STRING,
+                        "</i></b>" if ci.is_group else EMPTY_STRING,
                     )
                 else:
                     label = '%s%s (%s) %s%s' % (
-                        "<b><i>" if ci_customer.is_group else EMPTY_STRING,
-                        ci.customer.short_basket_name, ci.total_price_with_tax,
+                        "<b><i>" if ci.is_group else EMPTY_STRING,
+                        ci.customer.short_basket_name, "-" if ci.is_group else ci.total_price_with_tax,
                         ci.get_is_order_confirm_send_display(),
-                        "</i></b>" if ci_customer.is_group else EMPTY_STRING,
+                        "</i></b>" if ci.is_group else EMPTY_STRING,
                     )
                 # Important : no target="_blank"
                 link.append(
@@ -318,13 +308,12 @@ class Permanence(TranslatableModel):
             link = []
             for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
                 "customer").order_by('customer'):
-                ci_customer = ci.customer
                 label = "%s%s (%s) %s%s" % (
-                    "<b><i>" if ci_customer.is_group else EMPTY_STRING,
-                    ci_customer.short_basket_name,
+                    "<b><i>" if ci.is_group else EMPTY_STRING,
+                    ci.customer.short_basket_name,
                     ci.get_total_price_with_tax(customer_charged=True),
                     ci.get_is_order_confirm_send_display(),
-                    "</i></b>" if ci_customer.is_group else EMPTY_STRING,
+                    "</i></b>" if ci.is_group else EMPTY_STRING,
                 )
                 # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                 # Such that they can be accessed by the customer and by the staff
@@ -593,63 +582,80 @@ class Permanence(TranslatableModel):
         )
 
     def recalculate_profit(self):
+        getcontext().rounding = ROUND_HALF_UP
+
         result_set = invoice.CustomerInvoice.objects.filter(
-            permanence_id=self.id
+            permanence_id=self.id,
+            is_group=True,
         ).order_by('?').aggregate(
-            Sum('total_price_with_tax'),
             Sum('delta_price_with_tax'),
-            Sum('total_vat'),
             Sum('delta_vat'),
-            Sum('total_deposit'),
             Sum('delta_transport')
         )
-        if result_set["total_price_with_tax__sum"] is not None:
-            ci_sum_total_price_with_tax = result_set["total_price_with_tax__sum"]
-        else:
-            ci_sum_total_price_with_tax = DECIMAL_ZERO
         if result_set["delta_price_with_tax__sum"] is not None:
             ci_sum_delta_price_with_tax = result_set["delta_price_with_tax__sum"]
         else:
             ci_sum_delta_price_with_tax = DECIMAL_ZERO
-        if result_set["total_vat__sum"] is not None:
-            ci_sum_total_vat = result_set["total_vat__sum"]
-        else:
-            ci_sum_total_vat = DECIMAL_ZERO
         if result_set["delta_vat__sum"] is not None:
             ci_sum_delta_vat = result_set["delta_vat__sum"]
         else:
             ci_sum_delta_vat = DECIMAL_ZERO
-        if result_set["total_deposit__sum"] is not None:
-            ci_sum_total_deposit = result_set["total_deposit__sum"]
-        else:
-            ci_sum_total_deposit = DECIMAL_ZERO
         if result_set["delta_transport__sum"] is not None:
             ci_sum_delta_transport = result_set["delta_transport__sum"]
         else:
             ci_sum_delta_transport = DECIMAL_ZERO
-        self.invoiced_with_tax.amount = ci_sum_total_price_with_tax + ci_sum_delta_price_with_tax + ci_sum_delta_transport
-        self.vat.amount = ci_sum_total_vat + ci_sum_delta_vat
-        self.deposit.amount = ci_sum_total_deposit
-        result_set = invoice.ProducerInvoice.objects.filter(
-            permanence_id=self.id
+
+        result_set = purchase.Purchase.objects.filter(
+            permanence_id=self.id,
+            offer_item__price_list_multiplier__gte=DECIMAL_ONE
         ).order_by('?').aggregate(
-            Sum('total_price_with_tax'),
-            Sum('total_vat'),
-            Sum('total_deposit')
+            Sum('purchase_price'),
+            Sum('selling_price'),
+            Sum('producer_vat'),
+            Sum('customer_vat'),
         )
-        if result_set["total_price_with_tax__sum"] is not None:
-            pi_sum_total_price_with_tax = result_set["total_price_with_tax__sum"]
+        if result_set["purchase_price__sum"] is not None:
+            purchase_price = result_set["purchase_price__sum"]
         else:
-            pi_sum_total_price_with_tax = DECIMAL_ZERO
-        if result_set["total_vat__sum"] is not None:
-            pi_sum_total_vat = result_set["total_vat__sum"]
+            purchase_price = DECIMAL_ZERO
+        if result_set["selling_price__sum"] is not None:
+            selling_price = result_set["selling_price__sum"]
         else:
-            pi_sum_total_vat = DECIMAL_ZERO
-        if result_set["total_deposit__sum"] is not None:
-            pi_sum_total_deposit = result_set["total_deposit__sum"]
+            selling_price = DECIMAL_ZERO
+        selling_price += ci_sum_delta_price_with_tax + ci_sum_delta_transport
+        if result_set["producer_vat__sum"] is not None:
+            producer_vat = result_set["producer_vat__sum"]
         else:
-            pi_sum_total_deposit = DECIMAL_ZERO
-        self.profit.amount = self.invoiced_with_tax.amount - pi_sum_total_price_with_tax - self.vat.amount + pi_sum_total_vat
+            producer_vat = DECIMAL_ZERO
+        if result_set["customer_vat__sum"] is not None:
+            customer_vat = result_set["customer_vat__sum"]
+        else:
+            customer_vat = DECIMAL_ZERO
+        customer_vat += ci_sum_delta_vat
+        self.total_purchase_with_tax = purchase_price
+        self.total_selling_with_tax = selling_price
+        self.total_purchase_vat = producer_vat
+        self.total_selling_vat = customer_vat
+
+        result_set = purchase.Purchase.objects.filter(
+            permanence_id=self.id,
+            offer_item__price_list_multiplier__lt=DECIMAL_ONE
+        ).order_by('?').aggregate(
+            Sum('selling_price'),
+            Sum('customer_vat'),
+        )
+        if result_set["selling_price__sum"] is not None:
+            selling_price = result_set["selling_price__sum"]
+        else:
+            selling_price = DECIMAL_ZERO
+        if result_set["customer_vat__sum"] is not None:
+            customer_vat = result_set["customer_vat__sum"]
+        else:
+            customer_vat = DECIMAL_ZERO
+        self.total_purchase_with_tax += selling_price
+        self.total_selling_with_tax += selling_price
+        self.total_purchase_vat += customer_vat
+        self.total_selling_vat += customer_vat
 
     def get_full_status_display(self):
         return get_full_status_display(self)
@@ -671,16 +677,15 @@ class Permanence(TranslatableModel):
         return permanence_display
 
     def get_permanence_admin_display(self):
-        if self.invoiced_with_tax.amount != DECIMAL_ZERO:
-            if self.profit.amount != DECIMAL_ZERO:
-                invoiced_wo_tax = self.invoiced_with_tax.amount - self.vat.amount
-                if invoiced_wo_tax != DECIMAL_ZERO:
-                    return '%s<br/>%s<br/>৺ %s<br/>%s%%' % (
-                        self.get_permanence_display(), self.invoiced_with_tax, self.profit,
-                        number_format((self.profit.amount / invoiced_wo_tax) * 100, 2)
-                    )
+        if self.status == PERMANENCE_INVOICED and self.total_selling_with_tax.amount != DECIMAL_ZERO:
+            profit = self.total_selling_with_tax.amount - self.total_purchase_with_tax.amount
+            # profit = self.total_selling_with_tax.amount - self.total_selling_vat.amount - self.total_purchase_with_tax.amount + self.total_purchase_vat.amount
+            if profit != DECIMAL_ZERO:
+                return '%s<br/>%s<br/>💶&nbsp;%s' % (
+                    self.get_permanence_display(), self.total_selling_with_tax, RepanierMoney(profit)
+                )
             return '%s<br/>%s' % (
-                self.get_permanence_display(), self.invoiced_with_tax)
+                self.get_permanence_display(), self.total_selling_with_tax)
         else:
             return self.get_permanence_display()
 

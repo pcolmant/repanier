@@ -109,7 +109,7 @@ class Producer(models.Model):
             changeproductslist_url = urlresolvers.reverse(
                 'admin:repanier_product_changelist',
             )
-            link = '<a href="%s?is_active__exact=1&producer_id=%s" class="btn addlink">&nbsp;%s</a>' \
+            link = '<a href="%s?is_active__exact=1&producer=%s" class="btn addlink">&nbsp;%s</a>' \
                    % (changeproductslist_url, str(self.id), _("his_products"))
             return link
         return EMPTY_STRING

@@ -39,9 +39,9 @@ class Purchase(models.Model):
         producer.Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
     customer = models.ForeignKey(
         'Customer', verbose_name=_("customer"), on_delete=models.PROTECT, db_index=True)
-    customer_charged = models.ForeignKey(
-        'Customer', verbose_name=_("customer"), related_name='purchase_paid', blank=True, null=True,
-        on_delete=models.PROTECT, db_index=True)
+    # customer_charged = models.ForeignKey(
+    #     'Customer', verbose_name=_("customer"), related_name='purchase_paid', blank=True, null=True,
+    #     on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
         'CustomerProducerInvoice', verbose_name=_("customer_producer_invoice"),
         # related_name = 'purchase_invoiced',
@@ -416,13 +416,20 @@ def purchase_pre_save(sender, **kwargs):
                 total_vat=F('total_vat') + delta_purchase_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
-            delta_profit = delta_selling_price - delta_purchase_price - delta_selling_vat + delta_purchase_vat
-            permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
-                invoiced_with_tax=F('invoiced_with_tax') + delta_selling_price,
-                vat=F('vat') + delta_selling_vat,
-                deposit=F('deposit') + delta_deposit,
-                profit=F('profit') + delta_profit
-            )
+            if purchase.offer_item.price_list_multiplier < DECIMAL_ONE or purchase.price_list_multiplier < DECIMAL_ONE:
+                permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
+                    total_purchase_with_tax=F('total_purchase_with_tax') + delta_selling_price,
+                    total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price,
+                    total_purchase_vat=F('total_purchase_vat') + delta_selling_vat,
+                    total_selling_vat=F('total_selling_vat') + delta_selling_vat,
+                )
+            else:
+                permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
+                    total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
+                    total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price,
+                    total_purchase_vat=F('total_purchase_vat') + delta_purchase_vat,
+                    total_selling_vat=F('total_selling_vat') + delta_selling_vat,
+                )
     # Do not do it twice
     purchase.previous_quantity_ordered = purchase.quantity_ordered
     purchase.previous_quantity_invoiced = purchase.quantity_invoiced

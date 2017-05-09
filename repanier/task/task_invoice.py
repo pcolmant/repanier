@@ -17,6 +17,7 @@ from repanier.models import Producer
 from repanier.models import ProducerInvoice
 from repanier.models import Product
 from repanier.models import Purchase
+from repanier.models import LUT_DeliveryPoint
 from repanier.task import task_producer
 from repanier.tools import *
 
@@ -56,14 +57,18 @@ def generate_invoice(permanence, payment_date):
     ).order_by('?').exists()
     if permanence_partially_invoiced:
         # Move the producers not invoiced into a new permanence
-        producers_to_move = list(ProducerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            invoice_sort_order__isnull=True,
-            to_be_paid=False
-        ).values_list('producer_id', flat=True).order_by("producer_id"))
-
+        producers_to_keep = list(Producer.objects.filter(
+            producer_invoice__permanence_id=permanence.id,
+            producer_invoice__invoice_sort_order__isnull=True,
+            producer_invoice__to_be_paid=True).only('id').order_by('?'))
+        permanence.producers.clear()
+        permanence.producers.add(*producers_to_keep)
+        producers_to_move = list(Producer.objects.filter(
+            producer_invoice__permanence_id=permanence.id,
+            producer_invoice__invoice_sort_order__isnull=True,
+            producer_invoice__to_be_paid=False).only('id').order_by('?'))
         new_permanence = permanence.create_child(PERMANENCE_SEND)
-
+        new_permanence.producers.add(*producers_to_move)
         ProducerInvoice.objects.filter(
             permanence_id=permanence.id,
             producer_id__in=producers_to_move
@@ -91,41 +96,38 @@ def generate_invoice(permanence, payment_date):
                 id=purchase.customer_invoice_id
             ).order_by('?').first()
             new_customer_invoice = customer_invoice.create_child(new_permanence=new_permanence)
-            # Important : The customer_charged is null. This is required for calculate_and_save_delta_buyinggroup
-            new_customer_invoice.calculate_and_save_delta_buyinggroup()
+
             new_customer_invoice.set_delivery(customer_invoice.delivery)
-            new_customer_invoice.save()
+            # Important : The purchase customer charged must be calculated before calculate_and_save_delta_buyinggroup
             Purchase.objects.filter(
                 customer_invoice_id=customer_invoice.id,
                 producer_id__in=producers_to_move
             ).order_by('?').update(
                 permanence_id=new_permanence.id,
                 customer_invoice_id=new_customer_invoice.id,
-                customer_charged_id=new_customer_invoice.customer_charged_id
             )
+            new_customer_invoice.calculate_and_save_delta_buyinggroup()
+            new_customer_invoice.save()
+
         recalculate_order_amount(
             permanence_id=new_permanence.id,
             re_init=True
         )
 
-    # Important : linked to task_invoice.cancel
-    # First pass, set customer_charged
     for customer_invoice in CustomerInvoice.objects.filter(
-        permanence_id=permanence.id
-    ).order_by('?'):
-        # In case of changed delivery conditions
-        customer_invoice.set_delivery(customer_invoice.delivery)
-        customer_invoice.save()
-        Purchase.objects.filter(
-            customer_invoice_id=customer_invoice.id
-        ).order_by('?').update(
-            customer_charged_id=customer_invoice.customer_charged_id
-        )
-    # Second pass, calculate invoices of charged customers
-    for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=permanence.id
+        permanence_id=permanence.id,
+        customer_id=F('customer_charged_id')
     ).order_by('?'):
         # Need to calculate delta_price_with_tax, delta_vat and delta_transport
+        # Important : A customer may only be responsible of one and only one delivery point
+        if customer_invoice.is_group:
+            # Refresh in case of change in the admin
+            delivery_point = LUT_DeliveryPoint.objects.filter(customer_responsible=customer_invoice.customer).order_by('?').first()
+            if delivery_point is not None:
+                customer_invoice.price_list_multiplier = delivery_point.price_list_multiplier
+                customer_invoice.transport = delivery_point.transport
+                customer_invoice.min_transport = delivery_point.min_transport
+
         customer_invoice.calculate_and_save_delta_buyinggroup()
         customer_invoice.save()
 
@@ -530,18 +532,6 @@ def cancel_invoice(permanence):
                 date_balance=F('date_previous_balance'),
                 invoice_sort_order=None
             )
-            # # Important : linked to task_invoice.generate
-            # First pass, set customer_charged
-            CustomerInvoice.objects.filter(
-                    permanence_id=permanence.id
-            ).order_by('?').update(customer_charged=None)
-            # Second pass, calculate invoices of charged customers
-            for customer_invoice in CustomerInvoice.objects.filter(
-                    permanence_id=permanence.id
-            ).order_by('?'):
-                # Need to calculate delta_price_with_tax, delta_vat and delta_transport
-                customer_invoice.calculate_and_save_delta_buyinggroup()
-                customer_invoice.save()
 
             for customer_invoice in CustomerInvoice.objects.filter(
                     permanence_id=permanence.id).order_by():

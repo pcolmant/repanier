@@ -120,6 +120,7 @@ class CustomerInvoice(models.Model):
         related_name='child_customer_invoice',
         blank=True, null=True, default=None,
         on_delete=models.PROTECT, db_index=True)
+    is_group = models.BooleanField(_("is a group"), default=False)
 
     def get_delta_price_with_tax(self):
         return self.delta_price_with_tax.amount
@@ -149,6 +150,14 @@ class CustomerInvoice(models.Model):
     @transaction.atomic
     def set_delivery(self, delivery):
         # May not use delivery_id because it won't reload customer_invoice.delivery
+        # Important
+        # Si c'est une facture du membre d'un groupe :
+        #   self.customer_charged_id != self.customer_id
+        #   self.customer_charged_id == owner of the group
+        #   price_list_multiplier = DECIMAL_ONE
+        # Si c'est une facture lambda ou d'un groupe :
+        #   self.customer_charged_id = self.customer_id
+        #   price_list_multiplier may vary
         from repanier.apps import REPANIER_SETTINGS_TRANSPORT, REPANIER_SETTINGS_MIN_TRANSPORT
         self.delivery = delivery
         if delivery is None:
@@ -190,7 +199,8 @@ class CustomerInvoice(models.Model):
                             price_list_multiplier=delivery_point.price_list_multiplier,
                             transport=delivery_point.transport,
                             min_transport=delivery_point.min_transport,
-                            is_order_confirm_send=True
+                            is_order_confirm_send=True,
+                            is_group=True
                         )
 
     @transaction.atomic
@@ -232,11 +242,58 @@ class CustomerInvoice(models.Model):
     def calculate_delta_price(self, confirm_order=False):
         getcontext().rounding = ROUND_HALF_UP
 
-        if self.customer_charged is None or confirm_order:
-            # confirm_order : the customer confirm his/her order
+        self.delta_price_with_tax.amount = DECIMAL_ZERO
+        self.delta_vat.amount = DECIMAL_ZERO
+
+        # Important
+        # Si c'est une facture du membre d'un groupe :
+        #   self.customer_charged_id == purchase.customer_charged_id != self.customer_id
+        #   self.customer_charged_id == purchase.customer_charged_id == owner of the group
+        #   self.price_list_multiplier = DECIMAL_ONE
+        # Si c'est une facture lambda ou d'un groupe :
+        #   self.customer_charged_id == purchase.customer_charged_id = self.customer_id
+        #   self.price_list_multiplier may vary
+        if self.customer_id == self.customer_charged_id:
+
+            if self.price_list_multiplier != DECIMAL_ONE:
+                result_set = purchase.Purchase.objects.filter(
+                    permanence_id=self.permanence_id,
+                    customer_invoice__customer_charged_id=self.customer_id,
+                    is_resale_price_fixed=False
+                ).order_by('?').aggregate(
+                    Sum('customer_vat'),
+                    Sum('deposit'),
+                    Sum('selling_price')
+                )
+
+                if result_set["customer_vat__sum"] is not None:
+                    total_vat = result_set["customer_vat__sum"]
+                else:
+                    total_vat = DECIMAL_ZERO
+                if result_set["deposit__sum"] is not None:
+                    total_deposit = result_set["deposit__sum"]
+                else:
+                    total_deposit = DECIMAL_ZERO
+                if result_set["selling_price__sum"] is not None:
+                    total_price_with_tax = result_set["selling_price__sum"]
+                else:
+                    total_price_with_tax = DECIMAL_ZERO
+
+                total_price_with_tax_wo_deposit = total_price_with_tax - total_deposit
+                self.delta_price_with_tax.amount = -(
+                    total_price_with_tax_wo_deposit - (
+                        total_price_with_tax_wo_deposit * self.price_list_multiplier
+                    ).quantize(TWO_DECIMALS)
+                )
+                self.delta_vat.amount = -(
+                    total_vat - (
+                        total_vat * self.price_list_multiplier
+                    ).quantize(FOUR_DECIMALS)
+                )
+
             result_set = purchase.Purchase.objects.filter(
                 permanence_id=self.permanence_id,
-                customer_id=self.customer_id,
+                customer_invoice__customer_charged_id=self.customer_id,
             ).order_by('?').aggregate(
                 Sum('customer_vat'),
                 Sum('deposit'),
@@ -245,7 +302,7 @@ class CustomerInvoice(models.Model):
         else:
             result_set = purchase.Purchase.objects.filter(
                 permanence_id=self.permanence_id,
-                customer_charged_id=self.customer_id,
+                customer_id=self.customer_id,
             ).order_by('?').aggregate(
                 Sum('customer_vat'),
                 Sum('deposit'),
@@ -264,45 +321,6 @@ class CustomerInvoice(models.Model):
         else:
             self.total_price_with_tax.amount = DECIMAL_ZERO
 
-        if self.price_list_multiplier != DECIMAL_ONE:
-
-            result_set = purchase.Purchase.objects.filter(
-                permanence_id=self.permanence_id,
-                customer_id=self.customer_id,
-                is_resale_price_fixed=True
-            ).order_by('?').aggregate(
-                Sum('customer_vat'),
-                Sum('deposit'),
-                Sum('selling_price')
-            )
-            if result_set["customer_vat__sum"] is not None:
-                total_vat = result_set["customer_vat__sum"]
-            else:
-                total_vat = DECIMAL_ZERO
-            if result_set["deposit__sum"] is not None:
-                total_deposit = result_set["deposit__sum"]
-            else:
-                total_deposit = DECIMAL_ZERO
-            if result_set["selling_price__sum"] is not None:
-                total_price_with_tax = result_set["selling_price__sum"]
-            else:
-                total_price_with_tax = DECIMAL_ZERO
-
-            total_price_with_tax_wo_deposit = total_price_with_tax - total_deposit
-            self.delta_price_with_tax.amount = -(
-                total_price_with_tax_wo_deposit - (
-                    total_price_with_tax_wo_deposit * self.price_list_multiplier
-                ).quantize(TWO_DECIMALS)
-            )
-            self.delta_vat.amount = -(
-                total_vat - (
-                    total_vat * self.price_list_multiplier
-                ).quantize(FOUR_DECIMALS)
-            )
-        else:
-            self.delta_price_with_tax.amount = DECIMAL_ZERO
-            self.delta_vat.amount = DECIMAL_ZERO
-
     def calculate_delta_transport(self):
 
         self.delta_transport.amount = DECIMAL_ZERO
@@ -310,7 +328,7 @@ class CustomerInvoice(models.Model):
             # Calculate transport only on master customer invoice
             # But take into account the children customer invoices
             result_set = CustomerInvoice.objects.filter(
-                master_permanence=self.permanence
+                master_permanence_id=self.permanence_id
             ).order_by('?').aggregate(
                 Sum('total_price_with_tax'),
                 Sum('delta_price_with_tax')
@@ -347,11 +365,26 @@ class CustomerInvoice(models.Model):
             return False
 
     def create_child(self, new_permanence):
+        if self.customer_id != self.customer_charged_id:
+            # TODO : Créer la customer invoice du groupe
+            customer_invoice = CustomerInvoice.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_id=self.customer_charged_id
+            ).only("id").order_by('?')
+            if not customer_invoice.exists():
+                customer_invoice = CustomerInvoice.objects.create(
+                    permanence_id=self.permanence_id,
+                    customer_id=self.customer_charged_id,
+                    customer_charged_id=self.customer_charged_id,
+                    status=self.status
+                )
+                customer_invoice.set_delivery(delivery=None)
+                customer_invoice.save()
         return CustomerInvoice.objects.create(
             permanence_id=new_permanence.id,
             customer_id=self.customer_id,
             master_permanence_id=self.permanence_id,
-            customer_charged_id=self.customer_id,
+            customer_charged_id=self.customer_charged_id,
             status=self.status
         )
 
@@ -396,6 +429,7 @@ class CustomerInvoice(models.Model):
 class ProducerInvoice(models.Model):
     producer = models.ForeignKey(
         'Producer', verbose_name=_("producer"),
+        related_name='producer_invoice',
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=permanence_verbose_name(),
