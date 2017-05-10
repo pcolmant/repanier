@@ -14,18 +14,17 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.fields import TranslatedField
-from parler.models import TranslatableModel
 from parler.models import TranslatedFieldsModel
 
+from repanier.models.item import Item
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.picture.const import SIZE_M
 from repanier.picture.fields import AjaxPictureField
-from repanier.tools import get_display, recalculate_prices
 
 
 @python_2_unicode_compatible
-class Product(TranslatableModel):
+class Product(Item):
     producer = models.ForeignKey(
         'Producer', verbose_name=_("producer"), on_delete=models.PROTECT)
     long_name = TranslatedField()
@@ -127,13 +126,12 @@ class Product(TranslatableModel):
                                   default=False)
 
     is_box = models.BooleanField(_("is_box"), default=False)
+    is_box_content = models.BooleanField(_("is_box_content"), default=False)
     # is_mandatory = models.BooleanField(_("is_mandatory"), default=False)
     # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     is_active = models.BooleanField(_("is_active"), default=True)
     is_updated_on = models.DateTimeField(
         _("is_updated_on"), auto_now=True, blank=True)
-    # external_id_producer = models.BigIntegerField(null=True, blank=True, default=None)
-    # external_id_product = models.BigIntegerField(null=True, blank=True, default=None)
 
     @property
     def total_likes(self):
@@ -167,7 +165,8 @@ class Product(TranslatableModel):
                 LINK=switch_is_into_offer,
                 PRODUCT_ID=self.id
             )
-            link = '<a id="is_into_offer_%d" href="#" onclick="%s" class="btn">%s</a>' % (
+            # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
+            link = '<a id="is_into_offer_%d" href="#" onclick="%s;return false;" class="btn">%s</a>' % (
                 self.id,
                 javascript,
                 _boolean_icon(self.is_into_offer)
@@ -185,112 +184,13 @@ class Product(TranslatableModel):
     get_customer_alert_order_quantity.short_description = (_("customer_alert_order_quantity"))
     get_customer_alert_order_quantity.allow_tags = False
 
-    def get_unit_price(self, customer_price=True):
-        if customer_price:
-            unit_price = self.customer_unit_price
-        else:
-            unit_price = self.producer_unit_price
-        if self.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
-            return "%s %s" % (unit_price, _("/ kg"))
-        elif self.order_unit == PRODUCT_ORDER_UNIT_LT:
-            return "%s %s" % (unit_price, _("/ l"))
-        elif self.order_unit not in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-                                     PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
-            return "%s %s" % (unit_price, _("/ piece"))
-        else:
-            return "%s" % (unit_price,)
-
-    @property
-    def unit_price_with_vat(self, customer_price=True):
-        return self.get_unit_price(customer_price=customer_price)
-
-    def get_reference_price(self, customer_price=True):
-        if self.order_average_weight > DECIMAL_ZERO and self.order_average_weight != DECIMAL_ONE:
-            if self.order_unit in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-                                   PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
-                if customer_price:
-                    reference_price = self.customer_unit_price.amount / self.order_average_weight
-                else:
-                    reference_price = self.producer_unit_price.amount / self.order_average_weight
-                reference_price = RepanierMoney(reference_price.quantize(TWO_DECIMALS), 2)
-                if self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
-                    reference_unit = _("/ kg")
-                elif self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
-                    reference_unit = _("/ l")
-                else:
-                    reference_unit = _("/ pc")
-                return "%s %s" % (reference_price, reference_unit)
-            else:
-                return EMPTY_STRING
-        else:
-            return EMPTY_STRING
-
-    @property
-    def reference_price_with_vat(self):
-        return self.get_reference_price()
-
-    @property
-    def email_offer_price_with_vat(self):
-        offer_price = self.get_reference_price()
-        if offer_price == EMPTY_STRING:
-            offer_price = self.get_unit_price()
-        return offer_price
-
-    def get_qty_display(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
-        if self.is_box:
-            # To avoid unicode error in email_offer.send_open_order
-            qty_display = box_unicode
-        else:
-            if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                qty_display = get_display(
-                    qty=1,
-                    order_average_weight=self.order_average_weight,
-                    order_unit=PRODUCT_ORDER_UNIT_KG,
-                    for_customer=False,
-                    without_price_display=True
-                )
-            else:
-                qty_display = get_display(
-                    qty=1,
-                    order_average_weight=self.order_average_weight,
-                    order_unit=self.order_unit,
-                    for_customer=False,
-                    without_price_display=True
-                )
-        return qty_display
-
-    def get_qty_and_price_display(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
-        qty_display = self.get_qty_display(is_quantity_invoiced, box_unicode)
-        unit_price = self.get_unit_price(customer_price=customer_price)
-        if len(qty_display) > 0:
-            if self.unit_deposit.amount > DECIMAL_ZERO:
-                return '%s; %s + ♻ %s' % (
-                    qty_display, unit_price, self.unit_deposit)
-            else:
-                return '%s; %s' % (qty_display, unit_price)
-        else:
-            if self.unit_deposit.amount > DECIMAL_ZERO:
-                return '%s + ♻ %s' % (
-                    unit_price, self.unit_deposit)
-            else:
-                return '%s' % unit_price
-
-    def get_long_name(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
-        qty_and_price_display = self.get_qty_and_price_display(is_quantity_invoiced, customer_price, box_unicode)
-        if qty_and_price_display:
-            return '%s %s' % (self.long_name, qty_and_price_display)
-        return "%s" % self.long_name
-
-    get_long_name.short_description = (_("long_name"))
-    get_long_name.allow_tags = True
-    get_long_name.admin_order_field = 'translations__long_name'
-
     def __str__(self):
-        if self.id is not None:
-            return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
-        else:
-            # Nedeed for django import export since django_import_export-0.4.5
-            return 'N/A'
+        return super(Product, self).display()
+        # if self.id is not None:
+        #     return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
+        # else:
+        #     # Nedeed for django import export since django_import_export-0.4.5
+        #     return 'N/A'
 
     class Meta:
         verbose_name = _("product")
@@ -321,7 +221,7 @@ def product_pre_save(sender, **kwargs):
         # No VAT on those products
         product.vat_level = VAT_100
 
-    recalculate_prices(product, producer.producer_price_are_wo_vat, producer.is_resale_price_fixed,
+    product.recalculate_prices(producer.producer_price_are_wo_vat, producer.is_resale_price_fixed,
                        producer.price_list_multiplier)
 
     if producer.producer_pre_opening or producer.manage_production:

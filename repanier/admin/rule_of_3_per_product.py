@@ -18,7 +18,7 @@ from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
 from repanier.models import Customer, Permanence, Product, LUT_DepartmentForCustomer, Purchase, OfferItem
-from repanier.tools import recalculate_prices, recalculate_order_amount
+from repanier.tools import recalculate_order_amount
 
 
 class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
@@ -172,9 +172,6 @@ class OfferItemSendDataForm(forms.ModelForm):
                 offer_item.producer_unit_price = producer_unit_price
                 offer_item.customer_unit_price = customer_unit_price
                 offer_item.unit_deposit = unit_deposit
-                recalculate_prices(offer_item, offer_item.producer_price_are_wo_vat,
-                                   offer_item.is_resale_price_fixed,
-                                   offer_item.price_list_multiplier)
                 # The previous save is called with "commit=False" or we need to update the producer
                 # to recalculate the offer item prices. So a call to self.instance.save() is required
                 offer_item.save()

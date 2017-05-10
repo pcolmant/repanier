@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         recalculate_order_amount(
-            permanence_id=32,
+            permanence_id=229,
             re_init=True
         )
 

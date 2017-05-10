@@ -251,6 +251,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
                             .quantize(FOUR_DECIMALS)
                     else:
                         purchase.quantity_invoiced = DECIMAL_ZERO
+                purchase.save()
         rule_of_3 = form.cleaned_data['rule_of_3']
         if rule_of_3:
             if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:

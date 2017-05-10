@@ -200,7 +200,8 @@ class CustomerInvoice(models.Model):
                             transport=delivery_point.transport,
                             min_transport=delivery_point.min_transport,
                             is_order_confirm_send=True,
-                            is_group=True
+                            is_group=True,
+                            delivery=delivery
                         )
 
     @transaction.atomic
@@ -429,7 +430,7 @@ class CustomerInvoice(models.Model):
 class ProducerInvoice(models.Model):
     producer = models.ForeignKey(
         'Producer', verbose_name=_("producer"),
-        related_name='producer_invoice',
+        # related_name='producer_invoice',
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=permanence_verbose_name(),

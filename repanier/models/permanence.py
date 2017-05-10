@@ -283,19 +283,29 @@ class Permanence(TranslatableModel):
                 'admin:repanier_purchase_changelist',
             )
             link = []
+            delivery_save = None
             for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
-                "customer").order_by('customer'):
+                "customer").order_by('delivery', 'customer'):
+                if delivery_save != ci.delivery:
+                    delivery_save = ci.delivery
+                    if ci.delivery is not None:
+                        link.append("<br/><b>%s</b>" % ci.delivery.get_delivery_display())
+                    else:
+                        link.append("<br/><br/>--")
+                total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
                 if ci.is_order_confirm_send:
                     label = '%s%s (%s) %s%s' % (
                         "<b><i>" if ci.is_group else EMPTY_STRING,
-                        ci.customer.short_basket_name, "-" if ci.is_group else ci.get_total_price_with_tax(customer_charged=True),
+                        ci.customer.short_basket_name,
+                        "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
                         ci.get_is_order_confirm_send_display(),
                         "</i></b>" if ci.is_group else EMPTY_STRING,
                     )
                 else:
                     label = '%s%s (%s) %s%s' % (
                         "<b><i>" if ci.is_group else EMPTY_STRING,
-                        ci.customer.short_basket_name, "-" if ci.is_group else ci.total_price_with_tax,
+                        ci.customer.short_basket_name,
+                        "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
                         ci.get_is_order_confirm_send_display(),
                         "</i></b>" if ci.is_group else EMPTY_STRING,
                     )
@@ -306,12 +316,20 @@ class Permanence(TranslatableModel):
             customers = ", ".join(link)
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             link = []
+            delivery_save = None
             for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
-                "customer").order_by('customer'):
+                "customer").order_by('delivery', 'customer'):
+                if delivery_save != ci.delivery:
+                    delivery_save = ci.delivery
+                    if ci.delivery is not None:
+                        link.append("<br/><b>%s</b>" % ci.delivery.get_delivery_display())
+                    else:
+                        link.append("<br/><br/>--")
+                total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
                 label = "%s%s (%s) %s%s" % (
                     "<b><i>" if ci.is_group else EMPTY_STRING,
                     ci.customer.short_basket_name,
-                    ci.get_total_price_with_tax(customer_charged=True),
+                    "-" if total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
                     ci.get_is_order_confirm_send_display(),
                     "</i></b>" if ci.is_group else EMPTY_STRING,
                 )
@@ -691,22 +709,6 @@ class Permanence(TranslatableModel):
 
     get_permanence_admin_display.short_description = lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
     get_permanence_admin_display.allow_tags = True
-
-    # def get_permanence_order_display(self):
-    #     if self.with_delivery_point:
-    #         if self.status == PERMANENCE_OPENED:
-    #             deliveries_count = 0
-    #         else:
-    #             deliveries_qs = deliveryboard.DeliveryBoard.objects.filter(
-    #                 permanence_id=self.id,
-    #                 status=PERMANENCE_OPENED
-    #             ).order_by('?')
-    #             deliveries_count = deliveries_qs.count()
-    #     else:
-    #         deliveries_count = 0
-    #     if deliveries_count == 0:
-    #         return "%s - %s" % (self.get_permanence_display(), self.get_status_display())
-    #     return self.get_permanence_display()
 
     def get_permanence_customer_display(self, with_status=True):
         if with_status:

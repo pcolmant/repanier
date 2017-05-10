@@ -1721,39 +1721,6 @@ def calc_basket_message(customer, permanence, status):
     return basket_message
 
 
-def recalculate_prices(product, producer_price_are_wo_vat, is_resale_price_fixed, price_list_multiplier):
-    getcontext().rounding = ROUND_HALF_UP
-    vat = DICT_VAT[product.vat_level]
-    vat_rate = vat[DICT_VAT_RATE]
-    if producer_price_are_wo_vat:
-        product.producer_vat.amount = (product.producer_unit_price.amount * vat_rate).quantize(FOUR_DECIMALS)
-        if not is_resale_price_fixed:
-            if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                product.customer_unit_price.amount = (
-                    product.producer_unit_price.amount * price_list_multiplier).quantize(
-                    TWO_DECIMALS)
-            else:
-                product.customer_unit_price = product.producer_unit_price
-        product.customer_vat.amount = (product.customer_unit_price.amount * vat_rate).quantize(FOUR_DECIMALS)
-        if not is_resale_price_fixed:
-            product.customer_unit_price += product.customer_vat
-    else:
-        product.producer_vat.amount = product.producer_unit_price.amount - (
-            product.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)).quantize(
-            FOUR_DECIMALS)
-        if not is_resale_price_fixed:
-            if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                product.customer_unit_price.amount = (
-                    product.producer_unit_price.amount * price_list_multiplier).quantize(
-                    TWO_DECIMALS)
-            else:
-                product.customer_unit_price = product.producer_unit_price
-
-        product.customer_vat.amount = product.customer_unit_price.amount - (
-            product.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)).quantize(
-            FOUR_DECIMALS)
-
-
 def html_box_content(offer_item, user, result=EMPTY_STRING):
     if offer_item.is_box:
         box_id = offer_item.product_id

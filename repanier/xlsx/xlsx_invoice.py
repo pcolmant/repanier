@@ -230,8 +230,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                     (_("purchase price"), 10, purchase.purchase_price.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
                      False),
-                    (_("Vat"), 10,
-                     (purchase.offer_item.producer_vat.amount * purchase.get_quantity()).quantize(FOUR_DECIMALS),
+                    (_("Vat"), 10, purchase.producer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False)
                 ]
 
@@ -247,8 +246,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                     (_("selling price"), 10, purchase.selling_price.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("Vat"), 10,
-                    (purchase.offer_item.customer_vat.amount * purchase.get_quantity()).quantize(FOUR_DECIMALS),
+                    (_("Vat"), 10, purchase.customer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                 ]
             if hide_producer_prices and hide_customer_prices:
@@ -257,7 +255,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             else:
                 row += [
-                    (_("Vat level"), 10, purchase.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+                    (_("Vat level"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
                 (_("comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,

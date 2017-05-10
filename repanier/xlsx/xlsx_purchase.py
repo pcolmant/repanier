@@ -15,7 +15,7 @@ from repanier.const import *
 from repanier.models import OfferItem
 from repanier.models import Producer
 from repanier.models import Purchase
-from repanier.tools import cap, next_row, recalculate_prices, recalculate_order_amount
+from repanier.tools import cap, next_row, recalculate_order_amount
 
 
 def next_purchase(purchases):
@@ -198,8 +198,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=7)
                                 c.value = purchase.get_producer_unit_price()
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
-                                if year is None:
-                                    c.style.font.color = Color(Color.BLUE)
+                                # if year is None:
+                                #     c.style.font.color = Color(Color.BLUE)
                                 c = ws.cell(row=row_num, column=8)
                                 c.value = purchase.offer_item.unit_deposit.amount
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
@@ -210,11 +210,12 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                                       (purchase.get_producer_unit_price() +
                                                        purchase.get_unit_deposit())).quantize(TWO_DECIMALS)
                                     purchases_price += purchase_price
-                                    if offer_item_save.order_unit in [
-                                        PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
-                                        PRODUCT_ORDER_UNIT_LT
-                                    ]:
-                                        c.style.font.color = Color(Color.BLUE)
+                                    # Asked by GAC HAMOIS : sell broken products...
+                                    # if offer_item_save.order_unit in [
+                                    #     PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
+                                    #     PRODUCT_ORDER_UNIT_LT
+                                    # ]:
+                                    c.style.font.color = Color(Color.BLUE)
                                     ws.conditional_formatting.addCellIs(
                                         get_column_letter(10) + str(row_num + 1), 'notEqual',
                                         [str(purchase_price)], True, wb,
@@ -578,6 +579,12 @@ def import_purchase_sheet(worksheet, permanence=None,
                         error_msg = _("Row %(row_num)d : The given permanence doesn't own the given purchase id.") % {
                             'row_num': row_num + 1}
                         break
+                    offer_item = OfferItem.objects.filter(id=purchase.offer_item_id).order_by('?').first()
+                    if offer_item is None:
+                        error = True
+                        error_msg = _("Row %(row_num)d : No offer_item corresponding to the given purchase id.") % {
+                            'row_num': row_num + 1}
+                        break
                     producer_id = None
                     if row[_('producer')] in producer_2_id_dict:
                         producer_id = producer_2_id_dict[row[_('producer')]]
@@ -594,52 +601,47 @@ def import_purchase_sheet(worksheet, permanence=None,
                             break
                     comment = cap(row[_('comment')], 100)
 
-                    producer_unit_price = purchase.offer_item.producer_unit_price.amount if row[_('producer unit price')] is None \
-                        else Decimal(row[_('producer unit price')]).quantize(TWO_DECIMALS)
+                    quantity_has_been_modified = False
 
-                    producer_row_price = DECIMAL_ZERO if row[_('purchase price')] is None \
-                        else Decimal(row[_('purchase price')]).quantize(TWO_DECIMALS)
+                    producer_row_price = row[_('purchase price')]
                     if producer_row_price is not None:
                         producer_row_price = Decimal(producer_row_price).quantize(TWO_DECIMALS)
                         if purchase.purchase_price.amount != producer_row_price:
-                            if purchase.offer_item.order_unit in [
-                                PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
-                                PRODUCT_ORDER_UNIT_LT
-                            ]:
-                                producer_unit_price = (purchase.offer_item.producer_unit_price.amount +
-                                                       purchase.offer_item.unit_deposit.amount).quantize(TWO_DECIMALS)
-                                if producer_unit_price != DECIMAL_ZERO:
-                                    purchase.quantity_invoiced = (producer_row_price /
-                                                                  producer_unit_price).quantize(FOUR_DECIMALS)
-                                else:
-                                    purchase.quantity_invoiced = DECIMAL_ZERO
+                            quantity_has_been_modified = True
+                            # Asked by GAC HAMOIS : sell broken products...
+                            # if purchase.offer_item.order_unit in [
+                            #     PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
+                            #     PRODUCT_ORDER_UNIT_LT
+                            # ]:
+                            producer_unit_price = (purchase.offer_item.producer_unit_price.amount +
+                                                   purchase.offer_item.unit_deposit.amount).quantize(TWO_DECIMALS)
+                            if producer_unit_price != DECIMAL_ZERO:
+                                purchase.quantity_invoiced = (producer_row_price /
+                                                              producer_unit_price).quantize(FOUR_DECIMALS)
+                            else:
+                                purchase.quantity_invoiced = DECIMAL_ZERO
 
-                    quantity_invoiced = DECIMAL_ZERO if row[_('quantity invoiced')] is None \
-                        else Decimal(row[_('quantity invoiced')]).quantize(FOUR_DECIMALS)
-                    if purchase.quantity_invoiced != quantity_invoiced:
-                        purchase.quantity_invoiced = quantity_invoiced
-
-                    purchase.comment = comment
-                    purchase.save()
-                    rule_of_3_source += purchase.purchase_price.amount
+                    if not quantity_has_been_modified:
+                        quantity_invoiced = DECIMAL_ZERO if row[_('quantity invoiced')] is None \
+                            else Decimal(row[_('quantity invoiced')]).quantize(FOUR_DECIMALS)
+                        if purchase.quantity_invoiced != quantity_invoiced:
+                            purchase.quantity_invoiced = quantity_invoiced
 
                     if row_format == "A":
                         array_purchase = []
                         rule_of_3_source = DECIMAL_ZERO
-                        previous_producer_unit_price = purchase.get_producer_unit_price()
-                        if producer_unit_price != previous_producer_unit_price:
-                            offer_item = OfferItem.objects.filter(id=purchase.offer_item_id).order_by('?').first()
-                            offer_item.producer_unit_price = producer_unit_price
-                            recalculate_prices(offer_item, offer_item.producer_price_are_wo_vat,
-                                               offer_item.is_resale_price_fixed,
-                                               offer_item.price_list_multiplier)
-                            offer_item.save()
-                            recalculate_order_amount(
-                                permanence_id=offer_item.permanence_id,
-                                offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?'),
-                            )
+                        producer_unit_price = row[_('producer unit price')]
+                        if producer_unit_price is not None and not purchase.producer.invoice_by_basket:
+                            previous_producer_unit_price = purchase.get_producer_unit_price()
+                            if producer_unit_price != previous_producer_unit_price:
+                                offer_item.producer_unit_price = producer_unit_price
+                                offer_item.save()
 
+                    purchase.comment = comment
+                    purchase.save()
+                    rule_of_3_source += purchase.purchase_price.amount
                     array_purchase.append(purchase)
+
                 if row_format in ["C", "D"]:
                     rule_of_3_target = row[_('rule of 3')]
                     if rule_of_3_target is not None:
@@ -690,9 +692,15 @@ def import_purchase_sheet(worksheet, permanence=None,
             except Exception as e:
                 error = True
                 error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
+
     if import_counter == 0:
         error = True
         error_msg = "%s" % _("Nothing to import.")
+    # if not error:
+    #     recalculate_order_amount(
+    #         permanence_id=permanence.id,
+    #         re_init=True
+    #     )
     return error, error_msg
 
 

@@ -39,12 +39,8 @@ class Purchase(models.Model):
         producer.Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
     customer = models.ForeignKey(
         'Customer', verbose_name=_("customer"), on_delete=models.PROTECT, db_index=True)
-    # customer_charged = models.ForeignKey(
-    #     'Customer', verbose_name=_("customer"), related_name='purchase_paid', blank=True, null=True,
-    #     on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
         'CustomerProducerInvoice', verbose_name=_("customer_producer_invoice"),
-        # related_name = 'purchase_invoiced',
         on_delete=models.PROTECT, db_index=True)
     producer_invoice = models.ForeignKey(
         'ProducerInvoice', verbose_name=_("producer_invoice"),
@@ -53,6 +49,7 @@ class Purchase(models.Model):
         'CustomerInvoice', verbose_name=_("customer_invoice"),
         on_delete=models.PROTECT, db_index=True)
 
+    is_box = models.BooleanField(_("is_box"), default=False)
     is_box_content = models.BooleanField(_("is_box"), default=False)
 
     quantity_ordered = models.DecimalField(
@@ -90,12 +87,6 @@ class Purchase(models.Model):
         help_text=_('deposit to add to the original unit price'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2,
         validators=[MinValueValidator(0)])
-
-    vat_level = models.CharField(
-        max_length=3,
-        choices=LUT_ALL_VAT, # settings.LUT_VAT,
-        default=settings.DICT_VAT_DEFAULT,
-        verbose_name=_("tax"))
 
     price_list_multiplier = models.DecimalField(
         _("Customer price list multiplier"),

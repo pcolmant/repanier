@@ -96,10 +96,6 @@ class RepanierSettings(AppConfig):
             #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
             #     purchase.customer_charged = purchase.customer_invoice.customer_charged
             #     purchase.save(update_fields=["customer_charged",])
-            CustomerInvoice.objects.filter(
-                customer__is_group=True,
-                customer_id=F('customer_charged_id')
-            ).update(is_group=True)
             Staff.objects.rebuild()
             # Create groups with correct rights
             order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()
