@@ -151,8 +151,7 @@ def generate_invoice(permanence, payment_date):
                 if customer.membership_fee_valid_until < today:
                     membership_fee_offer_item = get_or_create_offer_item(
                         permanence,
-                        membership_fee_product.id,
-                        membership_fee_product.producer_id
+                        membership_fee_product
                     )
                     permanence.producers.add(membership_fee_offer_item.producer_id)
                     create_or_update_one_purchase(

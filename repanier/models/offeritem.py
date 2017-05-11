@@ -1,7 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F
@@ -18,8 +17,6 @@ from repanier.models.item import Item
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
-from repanier.picture.const import SIZE_M
-from repanier.picture.fields import AjaxPictureField
 
 
 @python_2_unicode_compatible
@@ -41,68 +38,25 @@ class OfferItem(Item):
             default=0, db_index=True)
     )
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT,
+        'Permanence',
+        verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        on_delete=models.PROTECT,
         db_index=True
     )
-    # Important : Check select_related
     product = models.ForeignKey(
-        'Product', verbose_name=_("product"), on_delete=models.PROTECT)
-    picture2 = AjaxPictureField(
-        verbose_name=_("picture"),
-        null=True, blank=True,
-        upload_to="product", size=SIZE_M)
+        'Product',
+        verbose_name=_("product"),
+        on_delete=models.PROTECT)
 
-    reference = models.CharField(
-        _("reference"), max_length=36, blank=True, null=True)
-    department_for_customer = models.ForeignKey(
-        'LUT_DepartmentForCustomer',
-        verbose_name=_("department_for_customer"), blank=True, null=True, on_delete=models.PROTECT)
-    producer = models.ForeignKey(
-        'Producer', verbose_name=_("producer"), on_delete=models.PROTECT)
-
-    order_unit = models.CharField(
-        max_length=3,
-        choices=LUT_PRODUCT_ORDER_UNIT,
-        default=PRODUCT_ORDER_UNIT_PC,
-        verbose_name=_("order unit"))
-    wrapped = models.BooleanField(_('Individually wrapped by the producer'),
-                                  default=False)
-    order_average_weight = models.DecimalField(
-        _("order_average_weight"),
-        help_text=_('if useful, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
-        default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
-        validators=[MinValueValidator(0)])
-    placement = models.CharField(
-        max_length=3,
-        choices=LUT_PRODUCT_PLACEMENT,
-        default=PRODUCT_PLACEMENT_BASKET,
-        verbose_name=_("product_placement"),
-        help_text=_('used for helping to determine the order of preparation of this product'))
-
-    producer_unit_price = ModelMoneyField(
-        _("producer unit price"),
-        help_text=_('producer unit price (/piece or /kg or /l), including vat, without deposit'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    customer_unit_price = ModelMoneyField(
-        _("customer unit price"),
-        help_text=_('(/piece or /kg or /l), including vat, without deposit'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
-    producer_vat = ModelMoneyField(
-        _("vat"),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
-    customer_vat = ModelMoneyField(
-        _("vat"),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
-    unit_deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add to the unit price'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    vat_level = models.CharField(
-        max_length=3,
-        choices=LUT_ALL_VAT, # settings.LUT_VAT,
-        default=settings.DICT_VAT_DEFAULT,
-        verbose_name=_("tax"))
+    price_list_multiplier = models.DecimalField(
+        _("price_list_multiplier"),
+        help_text=_("This multiplier is applied to each price automatically imported/pushed."),
+        default=DECIMAL_ZERO, max_digits=5, decimal_places=4,
+        validators=[MinValueValidator(0)])
+    is_resale_price_fixed = models.BooleanField(
+        _("the resale price is set by the producer"),
+        default=False)
 
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
@@ -124,52 +78,18 @@ class OfferItem(Item):
         help_text=_('quantity invoiced to our customer'),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
 
-    is_box = models.BooleanField(_("is_box"), default=False)
-    is_box_content = models.BooleanField(_("is_box_content"), default=False)
-    # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     may_order = models.BooleanField(_("may_order"), default=True)
-    is_active = models.BooleanField(_("is_active"), default=True)
-    limit_order_quantity_to_stock = models.BooleanField(_("limit maximum order qty of the group to stock qty"),
-                                                        default=False)
+
     manage_replenishment = models.BooleanField(_("manage stock"), default=False)
     manage_production = models.BooleanField(_("manage production"), default=False)
     producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
 
-    price_list_multiplier = models.DecimalField(
-        _("price_list_multiplier"),
-        help_text=_("This multiplier is applied to each price automatically imported/pushed."),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=4,
-        validators=[MinValueValidator(0)])
-    is_resale_price_fixed = models.BooleanField(_("the resale price is set by the producer"),
-                                                default=False)
-
-    stock = models.DecimalField(
-        _("Current stock"),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=3,
-        validators=[MinValueValidator(0)])
     add_2_stock = models.DecimalField(
         _("Add 2 stock"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     new_stock = models.DecimalField(
         _("Final stock"),
         default=None, max_digits=9, decimal_places=3, null=True)
-
-    customer_minimum_order_quantity = models.DecimalField(
-        _("customer_minimum_order_quantity"),
-        help_text=_('minimum order qty (eg : 0,1 Kg [i.e. 100 gr], 1 piece, 3 Kg)'),
-        default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
-    customer_increment_order_quantity = models.DecimalField(
-        _("customer_increment_order_quantity"),
-        help_text=_('increment order qty (eg : 0,05 Kg [i.e. 50max 1 piece, 3 Kg)'),
-        default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
-    customer_alert_order_quantity = models.DecimalField(
-        _("customer_alert_order_quantity"),
-        help_text=_('maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 pieces, 9 Kg)'),
-        default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
-    producer_order_by_quantity = models.DecimalField(
-        _("Producer order by quantity"),
-        help_text=_('1,5 Kg [i.e. 1500 gr], 1 piece, 3 Kg)'),
-        default=DECIMAL_ZERO, max_digits=6, decimal_places=3)
 
     def get_vat_level(self):
         return self.get_vat_level_display()
@@ -318,7 +238,7 @@ def offer_item_pre_save(sender, **kwargs):
 @python_2_unicode_compatible
 class OfferItemSend(OfferItem):
     def __str__(self):
-        return '%s, %s' % (self.producer.short_profile_name, self.get_long_name(is_quantity_invoiced=True))
+        return self.display(is_quantity_invoiced=True)
 
     class Meta:
         proxy = True
@@ -339,7 +259,7 @@ def offer_item_send_pre_save(sender, **kwargs):
 @python_2_unicode_compatible
 class OfferItemClosed(OfferItem):
     def __str__(self):
-        return '%s, %s' % (self.producer.short_profile_name, self.get_long_name(is_quantity_invoiced=True))
+        return self.display(is_quantity_invoiced=True)
 
     class Meta:
         proxy = True

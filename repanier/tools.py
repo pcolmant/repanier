@@ -1619,19 +1619,16 @@ def update_offer_item(product_id=None, producer_id=None):
 
 
 @transaction.atomic()
-def get_or_create_offer_item(permanence, product_id, producer_id=None):
+def get_or_create_offer_item(permanence, product):
     offer_item_qs = models.OfferItem.objects.filter(
         permanence_id=permanence.id,
-        product_id=product_id,
+        product_id=product.id,
     ).order_by('?')
     if not offer_item_qs.exists():
-        if producer_id is None:
-            producer_id = models.Product.objects.filter(id=product_id).only("producer_id").order_by(
-                '?').first().producer_id
         models.OfferItem.objects.create(
-            permanence_id=permanence.id,
-            product_id=product_id,
-            producer_id=producer_id,
+            permanence=permanence,
+            product=product,
+            producer=product.producer,
             is_active=False,
             may_order=False
         )

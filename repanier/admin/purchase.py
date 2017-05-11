@@ -492,7 +492,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                                                       permanence_id=purchase.permanence_id).order_by('?').first()
             else:
                 # New : product_or_offer_item_id is a product_id
-                offer_item = get_or_create_offer_item(purchase.permanence, product_or_offer_item_id, self.producer_id)
+                product = Product.objects.filter(id=product_or_offer_item_id).order_by('?').first()
+                offer_item = get_or_create_offer_item(purchase.permanence, product)
                 # Select one purchase
                 previous_purchase = Purchase.objects.filter(
                     customer=purchase.customer,

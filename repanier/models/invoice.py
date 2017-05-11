@@ -26,39 +26,16 @@ def permanence_verbose_name():
     from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
     return _('order') # lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
 
-
 @python_2_unicode_compatible
-class CustomerInvoice(models.Model):
-    customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"),
-        on_delete=models.PROTECT)
-    customer_charged = models.ForeignKey(
-        'Customer', verbose_name=_("customer"), related_name='invoices_paid', blank=True, null=True,
-        on_delete=models.PROTECT, db_index=True)
+class Invoice(models.Model):
     permanence = models.ForeignKey(
         'Permanence', verbose_name=permanence_verbose_name(),
         on_delete=models.PROTECT, db_index=True)
-    delivery = models.ForeignKey(
-        'DeliveryBoard', verbose_name=_("delivery board"),
-        null=True, blank=True, default=None,
-        on_delete=models.PROTECT)
     status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
         verbose_name=_("invoice_status"))
-
-    # IMPORTANT: default = True -> for the order form, to display nothing at the begin of the order
-    # is_order_confirm_send and total_price_with_tax = 0 --> display nothing
-    # otherwise display
-    # - send a mail with the order to me
-    # - confirm the order (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and send a mail with the order to me
-    # - mail send to XYZ
-    # - order confirmed (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and mail send to XYZ
-    is_order_confirm_send = models.BooleanField(_("is_order_confirm_send"), choices=LUT_CONFIRM, default=False)
-    invoice_sort_order = models.IntegerField(
-        _("invoice sort order"),
-        default=None, blank=True, null=True, db_index=True)
     date_previous_balance = models.DateField(
         _("date_previous_balance"), default=datetime.date.today)
     previous_balance = ModelMoneyField(
@@ -68,27 +45,27 @@ class CustomerInvoice(models.Model):
         _("Total amount"),
         help_text=_('Total purchase amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    total_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('Vat part of the total purchased'),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    total_deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add to the original unit price'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_price_with_tax = ModelMoneyField(
         _("Total amount"),
         help_text=_('purchase to add amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    delta_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('vat to add'),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_transport = ModelMoneyField(
         _("Delivery point transport"),
         help_text=_("transport to add"),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
+    total_vat = ModelMoneyField(
+        _("Total vat"),
+        help_text=_('Vat part of the total purchased'),
+        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
+    delta_vat = ModelMoneyField(
+        _("Total vat"),
+        help_text=_('vat to add'),
+        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
+    total_deposit = ModelMoneyField(
+        _("deposit"),
+        help_text=_('deposit to add to the original unit price'),
+        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     bank_amount_in = ModelMoneyField(
         _("bank_amount_in"), help_text=_('payment_on_the_account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
@@ -100,6 +77,42 @@ class CustomerInvoice(models.Model):
     balance = ModelMoneyField(
         _("balance"),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+
+    def get_delta_price_with_tax(self):
+        return self.delta_price_with_tax.amount
+
+    def get_abs_delta_price_with_tax(self):
+        return abs(self.delta_price_with_tax.amount)
+
+    def __str__(self):
+        return _("Invoice")
+
+    class Meta:
+        abstract = True
+
+@python_2_unicode_compatible
+class CustomerInvoice(Invoice):
+    customer = models.ForeignKey(
+        'Customer', verbose_name=_("customer"),
+        on_delete=models.PROTECT)
+    customer_charged = models.ForeignKey(
+        'Customer', verbose_name=_("customer"), related_name='invoices_paid', blank=True, null=True,
+        on_delete=models.PROTECT, db_index=True)
+    delivery = models.ForeignKey(
+        'DeliveryBoard', verbose_name=_("delivery board"),
+        null=True, blank=True, default=None,
+        on_delete=models.PROTECT)
+    # IMPORTANT: default = True -> for the order form, to display nothing at the begin of the order
+    # is_order_confirm_send and total_price_with_tax = 0 --> display nothing
+    # otherwise display
+    # - send a mail with the order to me
+    # - confirm the order (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and send a mail with the order to me
+    # - mail send to XYZ
+    # - order confirmed (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and mail send to XYZ
+    is_order_confirm_send = models.BooleanField(_("is_order_confirm_send"), choices=LUT_CONFIRM, default=False)
+    invoice_sort_order = models.IntegerField(
+        _("invoice sort order"),
+        default=None, blank=True, null=True, db_index=True)
     price_list_multiplier = models.DecimalField(
         _("Delivery point price list multiplier"),
         help_text=_("This multiplier is applied once for groups with entitled customer or at each customer invoice for open groups."),
@@ -121,12 +134,6 @@ class CustomerInvoice(models.Model):
         blank=True, null=True, default=None,
         on_delete=models.PROTECT, db_index=True)
     is_group = models.BooleanField(_("is a group"), default=False)
-
-    def get_delta_price_with_tax(self):
-        return self.delta_price_with_tax.amount
-
-    def get_abs_delta_price_with_tax(self):
-        return abs(self.delta_price_with_tax)
 
     def get_abs_delta_vat(self):
         return abs(self.delta_vat)
@@ -427,68 +434,21 @@ class CustomerInvoice(models.Model):
 
 
 @python_2_unicode_compatible
-class ProducerInvoice(models.Model):
+class ProducerInvoice(Invoice):
     producer = models.ForeignKey(
         'Producer', verbose_name=_("producer"),
         # related_name='producer_invoice',
         on_delete=models.PROTECT)
-    permanence = models.ForeignKey(
-        'Permanence', verbose_name=permanence_verbose_name(),
-        on_delete=models.PROTECT, db_index=True)
-    status = models.CharField(
-        max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
-        verbose_name=_("invoice_status"))
-    date_previous_balance = models.DateField(
-        _("date_previous_balance"), default=datetime.date.today)
-    previous_balance = ModelMoneyField(
-        _("previous_balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-    # Calculated with Purchase
-    total_price_with_tax = ModelMoneyField(
-        _("Total amount"),
-        help_text=_('Total purchase amount vat included'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    total_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('Vat part of the total purchased'),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    total_deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add to the original unit price'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    bank_amount_in = ModelMoneyField(
-        _("bank_amount_in"), help_text=_('payment_on_the_account'),
-        max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-    bank_amount_out = ModelMoneyField(
-        _("bank_amount_out"), help_text=_('payment_from_the_account'),
-        max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-    date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today)
-    balance = ModelMoneyField(
-        _("balance"),
-        max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-    delta_price_with_tax = ModelMoneyField(
-        _("Total amount"),
-        help_text=_('purchase to add amount vat included'),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+
     delta_stock_with_tax = ModelMoneyField(
         _("Total stock"),
         help_text=_('stock taken amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    delta_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('vat to add'),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
+
     delta_stock_vat = ModelMoneyField(
         _("Total stock vat"),
         help_text=_('vat to add'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
-    delta_transport = ModelMoneyField(
-        _("Delivery point transport"),
-        help_text=_("transport to add"),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
-        validators=[MinValueValidator(0)])
     delta_deposit = ModelMoneyField(
         _("deposit"),
         help_text=_('deposit to add'),
@@ -514,12 +474,6 @@ class ProducerInvoice(models.Model):
 
     def get_negative_balance(self):
         return - self.balance
-
-    def get_delta_price_with_tax(self):
-        return self.delta_price_with_tax.amount
-
-    def get_abs_delta_price_with_tax(self):
-        return abs(self.delta_price_with_tax)
 
     def get_total_price_with_tax(self):
         return self.total_price_with_tax + self.delta_price_with_tax + self.delta_transport + self.delta_stock_with_tax

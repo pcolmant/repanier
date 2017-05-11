@@ -194,22 +194,7 @@ class Purchase(models.Model):
             return self.quantity_invoiced
 
     def get_long_name(self, customer_price=True):
-        if self.offer_item is not None:
-            if self.is_box_content:
-                return "%s %s" % (
-                    self.offer_item.get_long_name(
-                        # is_quantity_invoiced=self.status >= PERMANENCE_WAIT_FOR_SEND,
-                        customer_price=customer_price
-                    ),
-                    BOX_UNICODE
-                )
-            else:
-                return self.offer_item.get_long_name(
-                    # is_quantity_invoiced=self.status >= PERMANENCE_WAIT_FOR_SEND,
-                    customer_price=customer_price
-                )
-        else:
-            raise AttributeError
+        return self.offer_item.get_long_name(customer_price=customer_price)
 
     def set_comment(self, comment):
         if comment:
@@ -263,8 +248,7 @@ class Purchase(models.Model):
     def save_box(self):
         if self.offer_item.is_box:
             for content in BoxContent.objects.filter(box_id=self.offer_item.product_id).order_by('?'):
-                content_offer_item = get_or_create_offer_item(self.permanence, content.product_id,
-                                                              content.product.producer_id)
+                content_offer_item = get_or_create_offer_item(self.permanence, content.product)
                 # Select one purchase
                 content_purchase = Purchase.objects.filter(
                     customer_id=self.customer_id,
