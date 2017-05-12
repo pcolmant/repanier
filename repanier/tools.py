@@ -130,15 +130,10 @@ def send_email_with_error_log(email, from_name=None, track_customer_on_error=Fal
     if track_customer_on_error:
         # select the customer based on user__email or customer__email2
         email_to = email.to[0]
-        customer = models.Customer.objects.filter(user__email=email_to).order_by('?').first()
+        customer = models.Customer.objects.filter(user__email=email_to, subscribe_to_email=True).exclude(valid_email=False).only('id').order_by('?').first()
         if customer is None:
-            customer = models.Customer.objects.filter(email2=email_to).order_by('?').first()
-        if customer is None or customer.valid_email is False or customer.subscribe_to_email is False:
-            send_mail = False
-            print("################################## send_email customer.valid_email == False")
-        if send_email:
-            # Append "unsubscribe" at the end of the email.
-            pass
+            customer = models.Customer.objects.filter(email2=email_to, subscribe_to_email=True).exclude(valid_email=False).only('id').order_by('?').first()
+        send_mail = customer is not None
     else:
         customer = None
     if send_mail:
@@ -185,8 +180,10 @@ def send_email_with_error_log(email, from_name=None, track_customer_on_error=Fal
                 connection.close()
             print("##################################")
             if customer is not None:
-                customer.valid_email = valid_email
-                customer.save(update_fields=['valid_email'])
+                # customer.valid_email = valid_email
+                # customer.save(update_fields=['valid_email'])
+                # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                models.Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=valid_email)
 
 
 def send_email_to_who(is_email_send, board=False):

@@ -166,7 +166,11 @@ def generate_invoice(permanence, payment_date):
                         customer.membership_fee_valid_until,
                         REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
                     )
-                    customer.save(update_fields=['membership_fee_valid_until', ])
+                    # customer.save(update_fields=['membership_fee_valid_until', ])
+                    # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                    models.Customer.objects.filter(id=customer.id).order_by('?').update(
+                        membership_fee_valid_until=customer.membership_fee_valid_until
+                    )
 
     permanence.recalculate_profit()
     permanence.save()
@@ -534,10 +538,15 @@ def cancel_invoice(permanence):
 
             for customer_invoice in CustomerInvoice.objects.filter(
                     permanence_id=permanence.id).order_by():
-                customer = customer_invoice.customer
-                customer.balance = customer_invoice.previous_balance
-                customer.date_balance = customer_invoice.date_previous_balance
-                customer.save(update_fields=['balance', 'date_balance'])
+                # customer = customer_invoice.customer
+                # customer.balance = customer_invoice.previous_balance
+                # customer.date_balance = customer_invoice.date_previous_balance
+                # customer.save(update_fields=['balance', 'date_balance'])
+                # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                models.Customer.objects.filter(id=customer_invoice.customer_id).order_by('?').update(
+                    balance=customer_invoice.previous_balance,
+                    date_balance=customer_invoice.date_previous_balance
+                )
                 BankAccount.objects.all().filter(
                     customer_invoice_id=customer_invoice.id
                 ).update(

@@ -94,7 +94,11 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     ).order_by('?').first()
                     if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
                         customer.preparation_order = preparation_order
-                        customer.save(update_fields=['preparation_order'])
+                        # customer.save(update_fields=['preparation_order'])
+                        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                        Customer.objects.filter(id=customer.id).order_by('?').update(
+                            preparation_order=preparation_order
+                        )
                         preparation_order += 1
                         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
                             confirmed = _(" /!\ Unconfirmed")
@@ -144,7 +148,11 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                 ).order_by('?').first()
                 if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
                     customer.preparation_order = preparation_order
-                    customer.save(update_fields=['preparation_order'])
+                    # customer.save(update_fields=['preparation_order'])
+                    # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                    Customer.objects.filter(id=customer.id).order_by('?').update(
+                        preparation_order=preparation_order
+                    )
                     preparation_order += 1
                     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
                         confirmed = _(" /!\ Unconfirmed")
