@@ -18,7 +18,6 @@ from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
 from repanier.models import Customer, Permanence, Product, LUT_DepartmentForCustomer, Purchase, OfferItem
-from repanier.tools import recalculate_order_amount
 
 
 class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
@@ -408,9 +407,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 purchase_form.instance.save_box()
 
         # Important : linked with ^^^^^
-
-        recalculate_order_amount(
-            permanence_id=offer_item.permanence_id,
+        offer_item.permanence.recalculate_order_amount(
             offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?')
         )
 

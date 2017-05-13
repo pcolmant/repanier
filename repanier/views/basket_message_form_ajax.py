@@ -6,13 +6,11 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404
 from django.http import HttpResponse
-from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.models import Producer
 from repanier.models import Customer
-from repanier.tools import customer_on_hold_movement_message, producer_on_hold_movement_message
 
 
 @never_cache
@@ -27,9 +25,7 @@ def customer_basket_message_form_ajax(request, pk):
             customer = Customer.objects.filter(id=pk).order_by('?').first()
         else:
             customer = request.user.customer
-        customer_on_hold_movement = customer_on_hold_movement_message(customer)
-        basket_message = mark_safe(customer_on_hold_movement)
-        option_dict = {'id': "#basket_message", 'html': basket_message}
+        option_dict = {'id': "#basket_message", 'html': customer.get_on_hold_movement_html()}
         to_json.append(option_dict)
         return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
     raise Http404
@@ -46,9 +42,6 @@ def producer_basket_message_form_ajax(request, pk, uuid):
         if producer is None:
             raise Http404
         to_json = []
-        producer_on_hold_movement = producer_on_hold_movement_message(producer)
-        basket_message = mark_safe(producer_on_hold_movement)
-        option_dict = {'id': "#basket_message", 'html': basket_message}
-        to_json.append(option_dict)
+        producer.on_hold_movement_json(to_json)
         return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
     raise Http404

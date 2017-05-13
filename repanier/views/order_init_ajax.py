@@ -87,34 +87,12 @@ def order_init_ajax(request):
                 )
                 if customer.may_order:
                     if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
-                        for producer in permanence.producers.all():
-                            producer_invoice = ProducerInvoice.objects.filter(
-                                producer_id=producer.id, permanence_id=permanence.id
+                        for producer_invoice in ProducerInvoice.objects.filter(
+                                permanence_id=permanence.id
                             ).only(
                                 "total_price_with_tax", "status"
-                            ).order_by('?').first()
-                            if producer_invoice is None:
-                                producer_invoice = ProducerInvoice.objects.create(
-                                    permanence_id=permanence.id,
-                                    producer_id=producer.id,
-                                    status=permanence.status
-                                )
-                            if producer.minimum_order_value.amount > DECIMAL_ZERO:
-                                if producer_invoice is None:
-                                    ratio = 0
-                                else:
-                                    ratio = producer_invoice.total_price_with_tax.amount / producer.minimum_order_value.amount
-                                    if ratio >= DECIMAL_ONE:
-                                        ratio = 100
-                                    else:
-                                        ratio *= 100
-                                option_dict = {'id'  : "#order_procent%d" % producer.id,
-                                               'html': "%s%%" % number_format(ratio, 0)}
-                                to_json.append(option_dict)
-                            if producer_invoice.status != PERMANENCE_OPENED:
-                                option_dict = {'id'  : "#order_closed%d" % producer.id,
-                                               'html': '&nbsp;<span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>'}
-                                to_json.append(option_dict)
+                            ).order_by('?'):
+                            producer_invoice.get_order_json(to_json)
                     communication = sboolean(request.GET.get('co', False))
                     if communication \
                             and customer_invoice.total_price_with_tax == DECIMAL_ZERO \
@@ -185,7 +163,7 @@ def order_init_ajax(request):
                 if box_purchase is not None:
                     offer_item = box_purchase.offer_item
                     if offer_item is not None:
-                        option_dict = display_selected_box_value(customer, offer_item, box_purchase)
+                        option_dict = display_selected_box_value(offer_item, box_purchase)
                         to_json.append(option_dict)
                 option_dict = {'id': ".btn_like%s" % offer_item_id, 'html': offer_item.get_like(user)}
                 to_json.append(option_dict)

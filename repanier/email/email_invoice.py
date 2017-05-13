@@ -98,7 +98,7 @@ def send_invoice(permanence_id):
                         'invoice_customer_mail', any_language=True, default=EMPTY_STRING
                     )
                     invoice_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
-                    customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
+                    customer_last_balance, _, customer_payment_needed, customer_order_amount = payment_message(
                         customer, permanence)
                     template = Template(invoice_customer_mail)
                     context = TemplateContext({

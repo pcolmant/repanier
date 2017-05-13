@@ -17,7 +17,7 @@ import purchase
 from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.tools import update_or_create_purchase, get_signature
+from repanier.tools import create_or_update_one_cart_item, get_signature
 
 
 def permanence_verbose_name():
@@ -416,7 +416,7 @@ class CustomerInvoice(Invoice):
                 is_box_content=False,
             ).order_by('?')
             for a_purchase in purchase_qs.select_related("customer"):
-                update_or_create_purchase(
+                create_or_update_one_cart_item(
                     customer=a_purchase.customer,
                     offer_item_id=a_purchase.offer_item_id,
                     q_order=DECIMAL_ZERO,
@@ -483,6 +483,23 @@ class ProducerInvoice(Invoice):
 
     def get_total_deposit(self):
         return self.total_deposit + self.delta_stock_deposit
+
+    def get_order_json(self, to_json):
+        producer = self.producer
+        if producer.minimum_order_value.amount > DECIMAL_ZERO:
+            ratio = self.total_price_with_tax.amount / producer.minimum_order_value.amount
+            if ratio >= DECIMAL_ONE:
+                ratio = 100
+            else:
+                ratio *= 100
+            option_dict = {'id'  : "#order_procent%d" % producer.id,
+                           'html': "%s%%" % number_format(ratio, 0)}
+            to_json.append(option_dict)
+        if self.status != PERMANENCE_OPENED:
+            option_dict = {'id'  : "#order_closed%d" % producer.id,
+                           'html': '&nbsp;<span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>'}
+            to_json.append(option_dict)
+        return
 
     def __str__(self):
         return '%s, %s' % (self.producer, self.permanence)

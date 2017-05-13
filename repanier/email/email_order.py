@@ -317,7 +317,7 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                         settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), customer_last_balance)),
                     'last_balance'     : mark_safe(customer_last_balance),
                     'order_amount'     : mark_safe(customer_order_amount),
-                    'on_hold_movement' : mark_safe(customer_on_hold_movement),
+                    'on_hold_movement' : customer_on_hold_movement,
                     'payment_needed'   : mark_safe(customer_payment_needed),
                     'delivery_point'   : delivery_point,
                     'signature'        : mark_safe(

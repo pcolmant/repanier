@@ -552,250 +552,77 @@ def get_display(qty=0, order_average_weight=0, order_unit=PRODUCT_ORDER_UNIT_PC,
         return display
 
 
-def customer_on_hold_movement_message(customer, bank_not_invoiced=None, order_not_invoiced=None, total_price_with_tax=REPANIER_MONEY_ZERO):
-    # If permanence_id is None, only "customer_on_hold_movement" is calculated
-    if customer is None:
-        customer_on_hold_movement = EMPTY_STRING
-    else:
-        if apps.REPANIER_SETTINGS_INVOICE:
-            bank_not_invoiced = bank_not_invoiced if bank_not_invoiced is not None else customer.get_bank_not_invoiced()
-            order_not_invoiced = order_not_invoiced if order_not_invoiced is not None else customer.get_order_not_invoiced()
-            other_order_not_invoiced = order_not_invoiced - total_price_with_tax
-        else:
-            bank_not_invoiced = REPANIER_MONEY_ZERO
-            other_order_not_invoiced = REPANIER_MONEY_ZERO
-
-        if other_order_not_invoiced.amount != DECIMAL_ZERO or bank_not_invoiced.amount != DECIMAL_ZERO:
-            if other_order_not_invoiced.amount != DECIMAL_ZERO:
-                if bank_not_invoiced.amount == DECIMAL_ZERO:
-                    customer_on_hold_movement = \
-                        _('This balance does not take account of any unbilled sales %(other_order)s.') % {
-                            'other_order': other_order_not_invoiced
-                        }
-                else:
-                    customer_on_hold_movement = \
-                        _(
-                            'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
-                        % {
-                            'bank'       : bank_not_invoiced,
-                            'other_order': other_order_not_invoiced
-                        }
-            else:
-                customer_on_hold_movement = \
-                    _(
-                        'This balance does not take account of any unrecognized payments %(bank)s.') % {
-                        'bank': bank_not_invoiced
-                    }
-        else:
-            customer_on_hold_movement = EMPTY_STRING
-
-    return customer_on_hold_movement
-
-
-def producer_on_hold_movement_message(producer):
-    # If permanence_id is None, only "customer_on_hold_movement" is calculated
-    if producer is None:
-        producer_on_hold_movement = EMPTY_STRING
-    else:
-        if apps.REPANIER_SETTINGS_INVOICE:
-            bank_not_invoiced = producer.get_bank_not_invoiced()
-            order_not_invoiced = producer.get_order_not_invoiced()
-        else:
-            bank_not_invoiced = REPANIER_MONEY_ZERO
-            order_not_invoiced = REPANIER_MONEY_ZERO
-
-        if order_not_invoiced.amount != DECIMAL_ZERO or bank_not_invoiced.amount != DECIMAL_ZERO:
-            if order_not_invoiced.amount != DECIMAL_ZERO:
-                if bank_not_invoiced.amount == DECIMAL_ZERO:
-                    producer_on_hold_movement = \
-                        _('This balance does not take account of any unbilled sales %(other_order)s.') % {
-                            'other_order': order_not_invoiced
-                        }
-                else:
-                    producer_on_hold_movement = \
-                        _(
-                            'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
-                        % {
-                            'bank'       : bank_not_invoiced,
-                            'other_order': order_not_invoiced
-                        }
-            else:
-                producer_on_hold_movement = \
-                    _(
-                        'This balance does not take account of any unrecognized payments %(bank)s.') % {
-                        'bank': bank_not_invoiced
-                    }
-        else:
-            producer_on_hold_movement = EMPTY_STRING
-
-    return producer_on_hold_movement
-
-
 def payment_message(customer, permanence):
-    # If permanence_id is None, only "customer_on_hold_movement" is calculated
-    customer_last_balance = EMPTY_STRING
-    if customer is None or permanence is None:
-        customer_order_amount = EMPTY_STRING
-        customer_payment_needed = EMPTY_STRING
-        customer_on_hold_movement = EMPTY_STRING
-    else:
-        customer_invoice = models.CustomerInvoice.objects.filter(
-            customer_id=customer.id,
-            permanence_id=permanence.id
-        ).order_by('?').first()
-        if customer_invoice is None:
-            total_price_with_tax = REPANIER_MONEY_ZERO
+    from repanier.apps import REPANIER_SETTINGS_INVOICE
+
+    customer_invoice = models.CustomerInvoice.objects.filter(
+        customer_id=customer.id,
+        permanence_id=permanence.id
+    ).order_by('?').first()
+
+    total_price_with_tax = customer_invoice.get_total_price_with_tax()
+    customer_order_amount = \
+        _('The amount of your order is %(amount)s.') % {
+            'amount': total_price_with_tax
+        }
+    if customer.balance.amount != DECIMAL_ZERO:
+        if customer.balance.amount < DECIMAL_ZERO:
+            balance = '<font color="#bd0926">%s</font>' % customer.balance
         else:
-            total_price_with_tax = customer_invoice.get_total_price_with_tax()
-        customer_order_amount = \
-            _('The amount of your order is %(amount)s.') % {
-                'amount': total_price_with_tax
+            balance = '%s' % customer.balance
+        customer_last_balance = \
+            _('The balance of your account as of %(date)s is %(balance)s.') % {
+                'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
+                'balance': balance
             }
-        if apps.REPANIER_SETTINGS_INVOICE:
-            bank_not_invoiced = customer.get_bank_not_invoiced()
-            order_not_invoiced = customer.get_order_not_invoiced()
+    else:
+        customer_last_balance = EMPTY_STRING
+
+    if customer_invoice.customer_id != customer_invoice.customer_charged_id:
+        customer_on_hold_movement = EMPTY_STRING
+        customer_payment_needed = '<font color="#51a351">%s</font>' % (
+            _('Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
+                'name': customer_invoice.customer_charged.long_basket_name
+            }
+        )
+    else:
+        bank_not_invoiced = customer.get_bank_not_invoiced()
+        order_not_invoiced = customer.get_order_not_invoiced()
+
+        customer_on_hold_movement = customer.get_on_hold_movement_html(
+            bank_not_invoiced, order_not_invoiced, total_price_with_tax
+        )
+        if REPANIER_SETTINGS_INVOICE:
             payment_needed = - (customer.balance - order_not_invoiced + bank_not_invoiced)
-            # other_order_not_invoiced = order_not_invoiced - total_price_with_tax
         else:
-            bank_not_invoiced = REPANIER_MONEY_ZERO
-            order_not_invoiced = DECIMAL_ZERO
             payment_needed = total_price_with_tax
-            # other_order_not_invoiced = REPANIER_MONEY_ZERO
 
-        if customer_invoice.customer_id != customer_invoice.customer_charged_id:
-            customer_payment_needed = '<font color="#51a351">%s</font>' % (
-                _('Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
-                    'name': customer_invoice.customer_charged.long_basket_name
-                }
-            )
-            customer_on_hold_movement = EMPTY_STRING
-        else:
-            customer_on_hold_movement = customer_on_hold_movement_message(customer, bank_not_invoiced, order_not_invoiced, total_price_with_tax)
-            if apps.REPANIER_SETTINGS_INVOICE:
-                if customer.balance.amount != DECIMAL_ZERO:
-                    if customer.balance.amount < DECIMAL_ZERO:
-                        balance = '<font color="#bd0926">%s</font>' % customer.balance
-                    else:
-                        balance = '%s' % customer.balance
-                    customer_last_balance = \
-                        _('The balance of your account as of %(date)s is %(balance)s.') % {
-                            'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
-                            'balance': balance
-                        }
+        bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
+        if bank_account_number is not None:
+            if payment_needed.amount > DECIMAL_ZERO:
+                if permanence.short_name:
+                    communication = "%s (%s)" % (customer.short_basket_name, permanence.short_name)
                 else:
-                    customer_last_balance = EMPTY_STRING
+                    communication = customer.short_basket_name
+                group_name = apps.REPANIER_SETTINGS_GROUP_NAME
+                customer_payment_needed = '<br/><font color="#bd0926">%s</font>' % (
+                    _('Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
+                        'payment': payment_needed,
+                        'name': group_name,
+                        'number': bank_account_number,
+                        'communication': communication
+                    }
+                )
 
-            bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
-            if bank_account_number is not None:
-                if payment_needed.amount > DECIMAL_ZERO:
-                    if permanence.short_name:
-                        communication = "%s (%s)" % (customer.short_basket_name, permanence.short_name)
-                    else:
-                        communication = customer.short_basket_name
-                    group_name = apps.REPANIER_SETTINGS_GROUP_NAME
-                    customer_payment_needed = '<br/><font color="#bd0926">%s</font>' % (
-                        _('Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
-                            'payment': payment_needed,
-                            'name': group_name,
-                            'number': bank_account_number,
-                            'communication': communication
-                        }
-                    )
-
-                else:
-                    if customer.balance.amount != DECIMAL_ZERO:
-                        customer_payment_needed = '<br/><font color="#51a351">%s.</font>' % (_('Your account balance is sufficient'))
-                    else:
-                        customer_payment_needed = EMPTY_STRING
             else:
-                customer_payment_needed = EMPTY_STRING
-
+                if customer.balance.amount != DECIMAL_ZERO:
+                    customer_payment_needed = '<br/><font color="#51a351">%s.</font>' % (_('Your account balance is sufficient'))
+                else:
+                    customer_payment_needed = EMPTY_STRING
+        else:
+            customer_payment_needed = EMPTY_STRING
 
     return customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount
-
-
-def recalculate_order_amount(permanence_id,
-                             offer_item_qs=None,
-                             re_init=False,
-                             send_to_producer=False):
-    if send_to_producer or re_init:
-        models.ProducerInvoice.objects.filter(
-            permanence_id=permanence_id
-        ).update(
-            total_price_with_tax=DECIMAL_ZERO,
-            total_vat=DECIMAL_ZERO,
-            total_deposit=DECIMAL_ZERO,
-        )
-        models.CustomerInvoice.objects.filter(
-            permanence_id=permanence_id
-        ).update(
-            total_price_with_tax=DECIMAL_ZERO,
-            total_vat=DECIMAL_ZERO,
-            total_deposit=DECIMAL_ZERO
-        )
-        models.CustomerProducerInvoice.objects.filter(
-            permanence_id=permanence_id
-        ).update(
-            total_purchase_with_tax=DECIMAL_ZERO,
-            total_selling_with_tax=DECIMAL_ZERO
-        )
-        models.OfferItem.objects.filter(
-            permanence_id=permanence_id
-        ).update(
-            quantity_invoiced=DECIMAL_ZERO,
-            total_purchase_with_tax=DECIMAL_ZERO,
-            total_selling_with_tax=DECIMAL_ZERO
-        )
-        models.Permanence.objects.filter(
-            id=permanence_id
-        ).update(
-            total_purchase_with_tax=DECIMAL_ZERO,
-            total_selling_with_tax=DECIMAL_ZERO,
-            total_purchase_vat=DECIMAL_ZERO,
-            total_selling_vat=DECIMAL_ZERO
-        )
-        for offer_item in models.OfferItem.objects.filter(
-                permanence_id=permanence_id,
-                is_active=True,
-                manage_replenishment=True
-        ).exclude(add_2_stock=DECIMAL_ZERO).order_by('?'):
-            # Recalculate the total_price_with_tax of ProducerInvoice and
-            # the total_purchase_with_tax of OfferItem
-            # taking into account "add_2_stock"
-            offer_item.previous_add_2_stock = DECIMAL_ZERO
-            offer_item.save()
-
-    if offer_item_qs is not None:
-        purchase_set = models.Purchase.objects \
-            .filter(permanence_id=permanence_id, offer_item__in=offer_item_qs) \
-            .order_by('?')
-    else:
-        purchase_set = models.Purchase.objects \
-            .filter(permanence_id=permanence_id) \
-            .order_by('?')
-
-    for purchase in purchase_set.select_related("offer_item"):
-        # Recalculate the total_price_with_tax of ProducerInvoice,
-        # the total_price_with_tax of CustomerInvoice,
-        # the total_purchase_with_tax + total_selling_with_tax of CustomerProducerInvoice,
-        # and quantity_invoiced + total_purchase_with_tax + total_selling_with_tax of OfferItem
-        if send_to_producer or re_init:
-            # purchase.admin_update = True
-            purchase.previous_quantity_ordered = DECIMAL_ZERO
-            purchase.previous_quantity_invoiced = DECIMAL_ZERO
-            purchase.previous_purchase_price = DECIMAL_ZERO
-            purchase.previous_selling_price = DECIMAL_ZERO
-            purchase.previous_producer_vat = DECIMAL_ZERO
-            purchase.previous_customer_vat = DECIMAL_ZERO
-            purchase.previous_deposit = DECIMAL_ZERO
-            if send_to_producer:
-                offer_item = purchase.offer_item
-                if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                    purchase.quantity_invoiced = (purchase.quantity_ordered * offer_item.order_average_weight) \
-                        .quantize(FOUR_DECIMALS)
-                else:
-                    purchase.quantity_invoiced = purchase.quantity_ordered
-        purchase.save()
 
 
 def display_selected_value(offer_item, quantity_ordered):
@@ -843,19 +670,18 @@ def display_selected_value(offer_item, quantity_ordered):
             )
             option_dict = {
                 'id'  : "#offer_item%d" % offer_item.id,
-                'html': '<option value="%d" selected>%s</option>' % (quantity_ordered, display,)
+                'html': '<option value="%d" selected>%s</option>' % (quantity_ordered, display)
             }
     else:
         option_dict = {
             'id'  : "#box_offer_item%d" % offer_item.id,
-            'html': ''
+            'html': EMPTY_STRING
         }
     return option_dict
 
 
-def display_selected_box_value(customer, offer_item, box_purchase):
-    if offer_item.is_box_content:
-        # box_name = _not_lazy("Composition")
+def display_selected_box_value(offer_item, box_purchase):
+    if box_purchase.is_box_content:
         box_name = BOX_UNICODE
         # Select one purchase
         if box_purchase is not None:
@@ -892,187 +718,278 @@ def display_selected_box_value(customer, offer_item, box_purchase):
     return option_dict
 
 
-@transaction.atomic
-def update_or_create_purchase(customer=None, offer_item_id=None, q_order=None, value_id=None,
-                              basket=False, batch_job=False, comment=EMPTY_STRING):
+def create_or_update_one_purchase(
+        customer_id, offer_item,
+        permanence_date=None, status=PERMANENCE_OPENED, q_order=None,
+        batch_job=False, is_box_content=False, comment=EMPTY_STRING):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-    to_json = []
-    if offer_item_id is not None and (q_order is not None or value_id is not None) and customer is not None:
-        offer_item = models.OfferItem.objects.select_for_update(nowait=False) \
-            .filter(id=offer_item_id, is_active=True, may_order=True) \
-            .order_by('?').select_related("producer").first()
-        if offer_item is not None:
-            if q_order is None:
-                # Transform value_id into a q_order.
-                # This is done here and not in the order_ajax to avoid to access twice to offer_item
-                q_min = offer_item.customer_minimum_order_quantity
-                q_step = offer_item.customer_increment_order_quantity
-                if value_id <= 0:
-                    q_order = DECIMAL_ZERO
-                elif value_id == 1:
-                    q_order = q_min
-                else:
-                    if q_min < q_step:
-                        # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
-                        # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
-                        if value_id == 2:
-                            q_order = q_step
-                        else:
-                            q_order = q_step * (value_id - 1)
-                    else:
-                        # 1; 2; 3; 4 ... q_min = 1; q_step = 1
-                        # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
-                        q_order = q_min + q_step * (value_id - 1)
-            if q_order < DECIMAL_ZERO:
-                q_order = DECIMAL_ZERO
-            purchase = None
-            permanence_id = offer_item.permanence_id
-            updated = True
-            if offer_item.is_box:
-                # Select one purchase
-                purchase = models.Purchase.objects.filter(
-                    customer_id=customer.id,
-                    offer_item_id=offer_item.id,
-                    is_box_content=False
-                ).order_by('?').first()
+    # The batch_job flag is used because we need to forbid
+    # customers to add purchases during the close_orders_async or other batch_job process
+    # when the status is PERMANENCE_WAIT_FOR_SEND
+    purchase = models.Purchase.objects.filter(
+        customer_id=customer_id,
+        offer_item_id=offer_item.id,
+        is_box_content=is_box_content
+    ).order_by('?').first()
+    if batch_job:
+        if purchase is None:
+            permanence_date = permanence_date or models.Permanence.objects.filter(
+                id=offer_item.permanence_id).only("permanence_date").order_by('?').first().permanence_date
+            purchase = models.Purchase.objects.create(
+                permanence_id=offer_item.permanence_id,
+                permanence_date=permanence_date,
+                offer_item_id=offer_item.id,
+                producer_id=offer_item.producer_id,
+                customer_id=customer_id,
+                quantity_ordered=q_order if status < PERMANENCE_SEND else DECIMAL_ZERO,
+                quantity_invoiced=q_order if status >= PERMANENCE_SEND else DECIMAL_ZERO,
+                is_box_content=is_box_content,
+                status=status,
+                comment=comment
+            )
+        else:
+            purchase.set_comment(comment)
+            if status < PERMANENCE_SEND:
+                purchase.quantity_ordered = q_order
+            else:
+                purchase.quantity_invoiced = q_order
+            purchase.save()
+        return purchase, True
+    else:
+        permanence_is_opened = models.CustomerInvoice.objects.filter(
+            permanence_id=offer_item.permanence_id,
+            customer_id=customer_id,
+            status=status
+        ).order_by('?').exists()
+        if permanence_is_opened:
+            if offer_item.limit_order_quantity_to_stock:
                 if purchase is not None:
-                    delta_q_order = q_order - purchase.quantity_ordered
+                    q_previous_order = purchase.quantity_ordered
                 else:
-                    delta_q_order = q_order
-                with transaction.atomic():
-                    sid = transaction.savepoint()
-                    # This code executes inside a transaction.
-                    for content in models.BoxContent.objects.filter(
-                        box=offer_item.product_id
-                    ).only(
-                        "product_id", "content_quantity"
-                    ).order_by('?'):
-                        box_offer_item = models.OfferItem.objects \
-                            .filter(product_id=content.product_id, permanence_id=offer_item.permanence_id) \
-                            .order_by('?').select_related("producer").first()
+                    q_previous_order = DECIMAL_ZERO
+                q_alert = offer_item.stock - offer_item.quantity_invoiced + q_previous_order
+                if is_box_content and q_alert < q_order:
+                    # Select one purchase
+                    non_box_purchase = models.Purchase.objects.filter(
+                        customer_id=customer_id,
+                        offer_item_id=offer_item.id,
+                        is_box_content=False
+                    ).order_by('?').first()
+                    if non_box_purchase is not None:
+                        tbd_qty = min(q_order - q_alert, non_box_purchase.quantity_ordered)
+                        tbk_qty = non_box_purchase.quantity_ordered - tbd_qty
+                        non_box_purchase.quantity_ordered = tbk_qty
+                        non_box_purchase.save()
+                        q_alert += tbd_qty
+            else:
+                if is_box_content:
+                    q_alert = q_order
+                else:
+                    q_alert = offer_item.customer_alert_order_quantity
+            if purchase is not None:
+                purchase.set_comment(comment)
+                if q_order <= q_alert:
+                    if not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS or purchase.quantity_confirmed <= q_order:
+                        purchase.quantity_ordered = q_order
+                        purchase.save()
+                    else:
+                        purchase.quantity_ordered = purchase.quantity_confirmed
+                        purchase.save()
+                else:
+                    return purchase, False
+            else:
+                permanence = models.Permanence.objects.filter(id=offer_item.permanence_id) \
+                    .only("permanence_date") \
+                    .order_by('?').first()
+                purchase = models.Purchase.objects.create(
+                    permanence_id=offer_item.permanence_id,
+                    permanence_date=permanence.permanence_date,
+                    offer_item_id=offer_item.id,
+                    producer_id=offer_item.producer_id,
+                    customer_id=customer_id,
+                    quantity_ordered=q_order,
+                    quantity_invoiced=DECIMAL_ZERO,
+                    is_box_content=is_box_content,
+                    status=status,
+                    comment=comment
+                )
+            return purchase, True
+        else:
+            return purchase, False
+
+@transaction.atomic
+def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_id=None,
+                                   basket=False, batch_job=False, comment=EMPTY_STRING):
+    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
+    to_json = []
+    offer_item = models.OfferItem.objects.select_for_update(nowait=False) \
+        .filter(id=offer_item_id, is_active=True, may_order=True) \
+        .order_by('?').select_related("producer").first()
+    if offer_item is not None:
+        if q_order is None:
+            # Transform value_id into a q_order.
+            # This is done here and not in the order_ajax to avoid to access twice to offer_item
+            q_min = offer_item.customer_minimum_order_quantity
+            q_step = offer_item.customer_increment_order_quantity
+            if value_id <= 0:
+                q_order = DECIMAL_ZERO
+            elif value_id == 1:
+                q_order = q_min
+            else:
+                if q_min < q_step:
+                    # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
+                    # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
+                    if value_id == 2:
+                        q_order = q_step
+                    else:
+                        q_order = q_step * (value_id - 1)
+                else:
+                    # 1; 2; 3; 4 ... q_min = 1; q_step = 1
+                    # 0,125; 0,175; 0,225 ... q_min = 0,125; q_step = 0,50
+                    q_order = q_min + q_step * (value_id - 1)
+        if q_order < DECIMAL_ZERO:
+            q_order = DECIMAL_ZERO
+        purchase = None
+        permanence_id = offer_item.permanence_id
+        updated = True
+        if offer_item.is_box:
+            # Select one purchase
+            purchase = models.Purchase.objects.filter(
+                customer_id=customer.id,
+                offer_item_id=offer_item.id,
+                is_box_content=False
+            ).order_by('?').first()
+            if purchase is not None:
+                delta_q_order = q_order - purchase.quantity_ordered
+            else:
+                delta_q_order = q_order
+            with transaction.atomic():
+                sid = transaction.savepoint()
+                # This code executes inside a transaction.
+                for content in models.BoxContent.objects.filter(
+                    box=offer_item.product_id
+                ).only(
+                    "product_id", "content_quantity"
+                ).order_by('?'):
+                    box_offer_item = models.OfferItem.objects \
+                        .filter(product_id=content.product_id, permanence_id=offer_item.permanence_id) \
+                        .order_by('?').select_related("producer").first()
+                    if box_offer_item is not None:
+                        # Select one purchase
+                        purchase = models.Purchase.objects.filter(
+                            customer_id=customer.id,
+                            offer_item_id=box_offer_item.id,
+                            is_box_content=True
+                        ).order_by('?').first()
+                        if purchase is not None:
+                            quantity_ordered = purchase.quantity_ordered + delta_q_order * content.content_quantity
+                        else:
+                            quantity_ordered = delta_q_order * content.content_quantity
+                        if quantity_ordered < DECIMAL_ZERO:
+                            quantity_ordered = DECIMAL_ZERO
+                        purchase, updated = create_or_update_one_purchase(
+                            customer.id, box_offer_item, q_order=quantity_ordered,
+                            batch_job=batch_job, is_box_content=True
+                        )
+                    else:
+                        updated = False
+                    if not updated:
+                        break
+                if updated:
+                    for content in models.BoxContent.objects.filter(box=offer_item.product_id).only(
+                            "product_id").order_by('?'):
+                        box_offer_item = models.OfferItem.objects.filter(
+                            product_id=content.product_id,
+                            permanence_id=offer_item.permanence_id
+                        ).order_by('?').first()
                         if box_offer_item is not None:
                             # Select one purchase
                             purchase = models.Purchase.objects.filter(
                                 customer_id=customer.id,
                                 offer_item_id=box_offer_item.id,
+                                is_box_content=False
+                            ).order_by('?').first()
+                            option_dict = display_selected_value(
+                                box_offer_item,
+                                purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO
+                            )
+                            to_json.append(option_dict)
+                            box_purchase = models.Purchase.objects.filter(
+                                customer_id=customer.id,
+                                offer_item_id=box_offer_item.id,
                                 is_box_content=True
                             ).order_by('?').first()
-                            if purchase is not None:
-                                quantity_ordered = purchase.quantity_ordered + delta_q_order * content.content_quantity
-                            else:
-                                quantity_ordered = delta_q_order * content.content_quantity
-                            if quantity_ordered < DECIMAL_ZERO:
-                                quantity_ordered = DECIMAL_ZERO
-                            purchase, updated = create_or_update_one_purchase(
-                                customer.id, box_offer_item, q_order=quantity_ordered,
-                                batch_job=batch_job, is_box_content=True
-                            )
-                        else:
-                            updated = False
-                        if not updated:
-                            break
-                    if updated:
-                        for content in models.BoxContent.objects.filter(box=offer_item.product_id).only(
-                                "product_id").order_by('?'):
-                            box_offer_item = models.OfferItem.objects.filter(
-                                product_id=content.product_id,
-                                permanence_id=offer_item.permanence_id
-                            ).order_by('?').first()
-                            if box_offer_item is not None:
-                                # Select one purchase
-                                purchase = models.Purchase.objects.filter(
-                                    customer_id=customer.id,
-                                    offer_item_id=box_offer_item.id,
-                                    is_box_content=False
-                                ).order_by('?').first()
-                                option_dict = display_selected_value(
-                                    box_offer_item,
-                                    purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO
-                                )
-                                to_json.append(option_dict)
-                                box_purchase = models.Purchase.objects.filter(
-                                    customer_id=customer.id,
-                                    offer_item_id=box_offer_item.id,
-                                    is_box_content=True
-                                ).order_by('?').first()
-                                option_dict = display_selected_box_value(customer, box_offer_item, box_purchase)
-                                to_json.append(option_dict)
-                        transaction.savepoint_commit(sid)
-                    else:
-                        transaction.savepoint_rollback(sid)
-            if not offer_item.is_box or updated:
-                purchase, updated = create_or_update_one_purchase(
-                    customer.id, offer_item, q_order=q_order, batch_job=batch_job,
-                    is_box_content=False, comment=comment
-                )
-                if not batch_job and apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
-                    producer_invoice = models.ProducerInvoice.objects.filter(
-                        producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
-                    ).only("total_price_with_tax").order_by('?').first()
-                    if producer_invoice is not None and offer_item.producer.minimum_order_value.amount > DECIMAL_ZERO:
-                        ratio = producer_invoice.total_price_with_tax.amount / offer_item.producer.minimum_order_value.amount
-                        if ratio >= DECIMAL_ONE:
-                            ratio = 100
-                        else:
-                            ratio *= 100
-                        option_dict = {'id'  : "#order_procent" + str(offer_item.producer_id),
-                                       'html': "%s%%" % number_format(ratio, 0)}
-                        to_json.append(option_dict)
-            elif not batch_job:
-                # Select one purchase
-                purchase = models.Purchase.objects.filter(
-                    customer_id=customer.id,
-                    offer_item_id=offer_item.id,
-                    is_box_content=False
-                ).order_by('?').first()
-
-            if not batch_job:
-                if purchase is None:
-                    if offer_item.is_box:
-                        sold_out = _("Sold out")
-                        option_dict = {
-                            'id'  : "#offer_item%d" % offer_item.id,
-                            'html': '<option value="0" selected>%s</option>' % sold_out
-                        }
-                    else:
-                        option_dict = display_selected_value(offer_item, DECIMAL_ZERO)
-                    to_json.append(option_dict)
+                            option_dict = display_selected_box_value(box_offer_item, box_purchase)
+                            to_json.append(option_dict)
+                    transaction.savepoint_commit(sid)
                 else:
-                    offer_item = models.OfferItem.objects.filter(id=offer_item_id).order_by('?').first()
-                    if offer_item is not None:
-                        option_dict = display_selected_value(offer_item, purchase.quantity_ordered)
-                        to_json.append(option_dict)
+                    transaction.savepoint_rollback(sid)
+        if not offer_item.is_box or updated:
+            purchase, updated = create_or_update_one_purchase(
+                customer.id, offer_item, q_order=q_order, batch_job=batch_job,
+                is_box_content=False, comment=comment
+            )
+        elif not batch_job:
+            # Select one purchase
+            purchase = models.Purchase.objects.filter(
+                customer_id=customer.id,
+                offer_item_id=offer_item.id,
+                is_box_content=False
+            ).order_by('?').first()
 
-                customer_invoice = models.CustomerInvoice.objects.filter(
-                    permanence_id=permanence_id,
-                    customer_id=customer.id
-                ).order_by('?').first()
-                permanence = models.Permanence.objects.filter(
-                    id=permanence_id
-                ).only(
-                    "id", "with_delivery_point", "status"
-                ).order_by('?').first()
-                if customer_invoice is not None and permanence is not None:
-                    order_amount = customer_invoice.get_total_price_with_tax()
-                    status_changed = customer_invoice.cancel_confirm_order()
-                    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
-                        html = render_to_string(
-                            'repanier/communication_confirm_order.html')
-                        option_dict = {'id': "#communication", 'html': html}
-                        to_json.append(option_dict)
-                    customer_invoice.save()
-                    my_basket(customer_invoice.is_order_confirm_send, order_amount, to_json)
-                    if basket:
-                        basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
-                    else:
-                        basket_message = EMPTY_STRING
-                    my_order_confirmation(
-                        permanence=permanence,
-                        customer_invoice=customer_invoice,
-                        is_basket=basket,
-                        basket_message=basket_message,
-                        to_json=to_json
-                    )
+        if not batch_job:
+            if purchase is None:
+                if offer_item.is_box:
+                    sold_out = _("Sold out")
+                    option_dict = {
+                        'id'  : "#offer_item%d" % offer_item.id,
+                        'html': '<option value="0" selected>%s</option>' % sold_out
+                    }
+                else:
+                    option_dict = display_selected_value(offer_item, DECIMAL_ZERO)
+                to_json.append(option_dict)
+            else:
+                offer_item = models.OfferItem.objects.filter(id=offer_item_id).order_by('?').first()
+                if offer_item is not None:
+                    option_dict = display_selected_value(offer_item, purchase.quantity_ordered)
+                    to_json.append(option_dict)
+
+            if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+                producer_invoice = models.ProducerInvoice.objects.filter(
+                    producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
+                ).only("total_price_with_tax").order_by('?').first()
+                producer_invoice.get_order_json(to_json)
+
+            customer_invoice = models.CustomerInvoice.objects.filter(
+                permanence_id=permanence_id,
+                customer_id=customer.id
+            ).order_by('?').first()
+            permanence = models.Permanence.objects.filter(
+                id=permanence_id
+            ).only(
+                "id", "with_delivery_point", "status"
+            ).order_by('?').first()
+            if customer_invoice is not None and permanence is not None:
+                status_changed = customer_invoice.cancel_confirm_order()
+                if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
+                    html = render_to_string(
+                        'repanier/communication_confirm_order.html')
+                    option_dict = {'id': "#communication", 'html': html}
+                    to_json.append(option_dict)
+                customer_invoice.save()
+                my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(),
+                          to_json)
+                if basket:
+                    basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
+                else:
+                    basket_message = EMPTY_STRING
+                my_order_confirmation(
+                    permanence=permanence,
+                    customer_invoice=customer_invoice,
+                    is_basket=basket,
+                    basket_message=basket_message,
+                    to_json=to_json
+                )
     return json.dumps(to_json, cls=DjangoJSONEncoder)
 
 
@@ -1308,108 +1225,6 @@ def my_order_confirmation_email_send_to(customer):
     return msg_confirmation
 
 
-def create_or_update_one_purchase(
-        customer_id, offer_item,
-        permanence_date=None, status=PERMANENCE_OPENED, q_order=None,
-        batch_job=False, is_box_content=False, comment=EMPTY_STRING):
-    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-    # The batch_job flag is used because we need to forbid
-    # customers to add purchases during the close_orders_async or other batch_job process
-    # when the status is PERMANENCE_WAIT_FOR_SEND
-    purchase = models.Purchase.objects.filter(
-        customer_id=customer_id,
-        offer_item_id=offer_item.id,
-        is_box_content=is_box_content
-    ).order_by('?').first()
-    if batch_job:
-        if purchase is None:
-            permanence_date = permanence_date or models.Permanence.objects.filter(
-                id=offer_item.permanence_id).only("permanence_date").order_by('?').first().permanence_date
-            purchase = models.Purchase.objects.create(
-                permanence_id=offer_item.permanence_id,
-                permanence_date=permanence_date,
-                offer_item_id=offer_item.id,
-                producer_id=offer_item.producer_id,
-                customer_id=customer_id,
-                quantity_ordered=q_order if status < PERMANENCE_SEND else DECIMAL_ZERO,
-                quantity_invoiced=q_order if status >= PERMANENCE_SEND else DECIMAL_ZERO,
-                is_box_content=is_box_content,
-                status=status,
-                comment=comment
-            )
-        else:
-            purchase.set_comment(comment)
-            if status < PERMANENCE_SEND:
-                # if q_order == DECIMAL_ZERO:
-                #     purchase.comment = _("Cancelled qty : %s") % number_format(purchase.quantity_ordered, 4)
-                purchase.quantity_ordered = q_order
-            else:
-                purchase.quantity_invoiced = q_order
-            purchase.save()
-        return purchase, True
-    else:
-        permanence_is_opened = models.CustomerInvoice.objects.filter(
-            permanence_id=offer_item.permanence_id,
-            customer_id=customer_id,
-            status=status
-        ).order_by('?').exists()
-        if permanence_is_opened:
-            if offer_item.limit_order_quantity_to_stock:
-                if purchase is not None:
-                    q_previous_order = purchase.quantity_ordered
-                else:
-                    q_previous_order = DECIMAL_ZERO
-                q_alert = offer_item.stock - offer_item.quantity_invoiced + q_previous_order
-                if is_box_content and q_alert < q_order:
-                    # Select one purchase
-                    non_box_purchase = models.Purchase.objects.filter(
-                        customer_id=customer_id,
-                        offer_item_id=offer_item.id,
-                        is_box_content=False
-                    ).order_by('?').first()
-                    if non_box_purchase is not None:
-                        tbd_qty = min(q_order - q_alert, non_box_purchase.quantity_ordered)
-                        tbk_qty = non_box_purchase.quantity_ordered - tbd_qty
-                        non_box_purchase.quantity_ordered = tbk_qty
-                        non_box_purchase.save()
-                        q_alert += tbd_qty
-            else:
-                if is_box_content:
-                    q_alert = q_order
-                else:
-                    q_alert = offer_item.customer_alert_order_quantity
-            if purchase is not None:
-                purchase.set_comment(comment)
-                if q_order <= q_alert:
-                    if not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS or purchase.quantity_confirmed <= q_order:
-                        purchase.quantity_ordered = q_order
-                        purchase.save()
-                    else:
-                        purchase.quantity_ordered = purchase.quantity_confirmed
-                        purchase.save()
-                else:
-                    return purchase, False
-            else:
-                permanence = models.Permanence.objects.filter(id=offer_item.permanence_id) \
-                    .only("permanence_date") \
-                    .order_by('?').first()
-                purchase = models.Purchase.objects.create(
-                    permanence_id=offer_item.permanence_id,
-                    permanence_date=permanence.permanence_date,
-                    offer_item_id=offer_item.id,
-                    producer_id=offer_item.producer_id,
-                    customer_id=customer_id,
-                    quantity_ordered=q_order,
-                    quantity_invoiced=DECIMAL_ZERO,
-                    is_box_content=is_box_content,
-                    status=status,
-                    comment=comment
-                )
-            return purchase, True
-        else:
-            return purchase, False
-
-
 def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
     if permanence.status > PERMANENCE_SEND:
         # The purchases are already invoiced.
@@ -1608,10 +1423,7 @@ def update_offer_item(product_id=None, producer_id=None):
                 producer_id=producer_id,
             ).order_by('?')
         clean_offer_item(permanence, offer_item_qs)
-        recalculate_order_amount(
-            permanence_id=permanence.id,
-            offer_item_qs=offer_item_qs
-        )
+        permanence.recalculate_order_amount(offer_item_qs=offer_item_qs)
     cache.clear()
 
 

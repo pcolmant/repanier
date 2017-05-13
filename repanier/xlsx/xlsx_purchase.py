@@ -15,7 +15,7 @@ from repanier.const import *
 from repanier.models import OfferItem
 from repanier.models import Producer
 from repanier.models import Purchase
-from repanier.tools import cap, next_row, recalculate_order_amount
+from repanier.tools import cap, next_row
 
 
 def next_purchase(purchases):

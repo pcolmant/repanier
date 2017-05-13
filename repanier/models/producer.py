@@ -16,6 +16,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 import bankaccount
@@ -141,34 +142,43 @@ class Producer(models.Model):
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
-        result_set = invoice.ProducerInvoice.objects.filter(
-            producer_id=self.id,
-            status__gte=PERMANENCE_OPENED,
-            status__lte=PERMANENCE_SEND
-        ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
-        if result_set["total_price_with_tax__sum"] is not None:
-            order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
+        if REPANIER_SETTINGS_INVOICE:
+            result_set = invoice.ProducerInvoice.objects.filter(
+                producer_id=self.id,
+                status__gte=PERMANENCE_OPENED,
+                status__lte=PERMANENCE_SEND
+            ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
+            if result_set["total_price_with_tax__sum"] is not None:
+                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+            else:
+                order_not_invoiced = REPANIER_MONEY_ZERO
+            if result_set["delta_price_with_tax__sum"] is not None:
+                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
+            if result_set["delta_transport__sum"] is not None:
+                order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
         else:
             order_not_invoiced = REPANIER_MONEY_ZERO
-        if result_set["delta_price_with_tax__sum"] is not None:
-            order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
-        if result_set["delta_transport__sum"] is not None:
-            order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
         return order_not_invoiced
 
     def get_bank_not_invoiced(self):
-        result_set = bankaccount.BankAccount.objects.filter(
-            producer_id=self.id, producer_invoice__isnull=True
-        ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
-        if result_set["bank_amount_in__sum"] is not None:
-            bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
+        if REPANIER_SETTINGS_INVOICE:
+            result_set = bankaccount.BankAccount.objects.filter(
+                producer_id=self.id, producer_invoice__isnull=True
+            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
+            if result_set["bank_amount_in__sum"] is not None:
+                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
+            else:
+                bank_in = REPANIER_MONEY_ZERO
+            if result_set["bank_amount_out__sum"] is not None:
+                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
+            else:
+                bank_out = REPANIER_MONEY_ZERO
+            bank_not_invoiced = bank_in - bank_out
         else:
-            bank_in = REPANIER_MONEY_ZERO
-        if result_set["bank_amount_out__sum"] is not None:
-            bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-        else:
-            bank_out = REPANIER_MONEY_ZERO
-        bank_not_invoiced = bank_in - bank_out
+            bank_not_invoiced = REPANIER_MONEY_ZERO
+
         return bank_not_invoiced
 
     def get_calculated_invoiced_balance(self, permanence_id):
@@ -265,8 +275,10 @@ class Producer(models.Model):
     get_balance.admin_order_field = 'balance'
 
     def get_last_invoice(self):
-        producer_last_invoice = invoice.ProducerInvoice.objects.filter(producer_id=self.id).order_by("-id").first()
-        if producer_last_invoice:
+        producer_last_invoice = invoice.ProducerInvoice.objects.filter(
+            producer_id=self.id, invoice_sort_order__isnull=False
+        ).order_by("-id").first()
+        if producer_last_invoice is not None:
             if producer_last_invoice.total_price_with_tax < DECIMAL_ZERO:
                 return '<span style="color:#298A08">%s</span>' % (
                     number_format(producer_last_invoice.total_price_with_tax, 2))
@@ -284,6 +296,36 @@ class Producer(models.Model):
 
     get_last_invoice.short_description = _("last invoice")
     get_last_invoice.allow_tags = True
+
+    def get_on_hold_movement_json(self, to_json):
+        bank_not_invoiced = self.get_bank_not_invoiced()
+        order_not_invoiced = self.get_order_not_invoiced()
+
+        if order_not_invoiced.amount != DECIMAL_ZERO or bank_not_invoiced.amount != DECIMAL_ZERO:
+            if order_not_invoiced.amount != DECIMAL_ZERO:
+                if bank_not_invoiced.amount == DECIMAL_ZERO:
+                    producer_on_hold_movement = \
+                        _('This balance does not take account of any unbilled sales %(other_order)s.') % {
+                            'other_order': order_not_invoiced
+                        }
+                else:
+                    producer_on_hold_movement = \
+                        _(
+                            'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
+                        % {
+                            'bank'       : bank_not_invoiced,
+                            'other_order': order_not_invoiced
+                        }
+            else:
+                producer_on_hold_movement = \
+                    _(
+                        'This balance does not take account of any unrecognized payments %(bank)s.') % {
+                        'bank': bank_not_invoiced
+                    }
+            option_dict = {'id': "#basket_message", 'html': mark_safe(producer_on_hold_movement)}
+            to_json.append(option_dict)
+
+        return
 
     def __str__(self):
         if self.producer_price_are_wo_vat:

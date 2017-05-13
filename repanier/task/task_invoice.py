@@ -109,10 +109,7 @@ def generate_invoice(permanence, payment_date):
             new_customer_invoice.calculate_and_save_delta_buyinggroup()
             new_customer_invoice.save()
 
-        recalculate_order_amount(
-            permanence_id=new_permanence.id,
-            re_init=True
-        )
+        new_permanence.recalculate_order_amount(re_init=True)
 
     for customer_invoice in CustomerInvoice.objects.filter(
         permanence_id=permanence.id,

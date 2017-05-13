@@ -2,17 +2,12 @@
 from django.utils import timezone
 
 import datetime
-from django.core.management.base import BaseCommand, CommandError
-from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.core.management.base import BaseCommand
 
 from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO
-from repanier.email.email_order import export_order_2_1_customer
-from repanier.models import Permanence, CustomerInvoice, Purchase
+from repanier.models import Permanence, CustomerInvoice
 from django.conf import settings
 from django.utils import translation
-
-from repanier.tools import update_or_create_purchase, get_signature
 
 
 class Command(BaseCommand):

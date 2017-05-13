@@ -12,6 +12,7 @@ from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 import bankaccount
@@ -129,35 +130,43 @@ class Customer(models.Model):
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
-        result_set = invoice.CustomerInvoice.objects.filter(
-            customer_id=self.id,
-            status__gte=PERMANENCE_OPENED,
-            status__lte=PERMANENCE_SEND,
-            customer_charged_id=self.id
-        ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
-        if result_set["total_price_with_tax__sum"] is not None:
-            order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
+        if REPANIER_SETTINGS_INVOICE:
+            result_set = invoice.CustomerInvoice.objects.filter(
+                customer_id=self.id,
+                status__gte=PERMANENCE_OPENED,
+                status__lte=PERMANENCE_SEND,
+                customer_charged_id=self.id
+            ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
+            if result_set["total_price_with_tax__sum"] is not None:
+                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+            else:
+                order_not_invoiced = REPANIER_MONEY_ZERO
+            if result_set["delta_price_with_tax__sum"] is not None:
+                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
+            if result_set["delta_transport__sum"] is not None:
+                order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
         else:
             order_not_invoiced = REPANIER_MONEY_ZERO
-        if result_set["delta_price_with_tax__sum"] is not None:
-            order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
-        if result_set["delta_transport__sum"] is not None:
-            order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
         return order_not_invoiced
 
     def get_bank_not_invoiced(self):
-        result_set = bankaccount.BankAccount.objects.filter(
-            customer_id=self.id, customer_invoice__isnull=True
-        ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
-        if result_set["bank_amount_in__sum"] is not None:
-            bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
+        if REPANIER_SETTINGS_INVOICE:
+            result_set = bankaccount.BankAccount.objects.filter(
+                customer_id=self.id, customer_invoice__isnull=True
+            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
+            if result_set["bank_amount_in__sum"] is not None:
+                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
+            else:
+                bank_in = REPANIER_MONEY_ZERO
+            if result_set["bank_amount_out__sum"] is not None:
+                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
+            else:
+                bank_out = REPANIER_MONEY_ZERO
+            bank_not_invoiced = bank_in - bank_out
         else:
-            bank_in = REPANIER_MONEY_ZERO
-        if result_set["bank_amount_out__sum"] is not None:
-            bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-        else:
-            bank_out = REPANIER_MONEY_ZERO
-        bank_not_invoiced = bank_in - bank_out
+            bank_not_invoiced = REPANIER_MONEY_ZERO
         return bank_not_invoiced
 
     def get_balance(self):
@@ -189,6 +198,43 @@ class Customer(models.Model):
     get_balance.short_description = _("balance")
     get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
+
+    def get_on_hold_movement_html(self, bank_not_invoiced=None, order_not_invoiced=None, total_price_with_tax=REPANIER_MONEY_ZERO):
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
+        if REPANIER_SETTINGS_INVOICE:
+            bank_not_invoiced = bank_not_invoiced if bank_not_invoiced is not None else self.get_bank_not_invoiced()
+            order_not_invoiced = order_not_invoiced if order_not_invoiced is not None else self.get_order_not_invoiced()
+            other_order_not_invoiced = order_not_invoiced - total_price_with_tax
+        else:
+            bank_not_invoiced = REPANIER_MONEY_ZERO
+            other_order_not_invoiced = REPANIER_MONEY_ZERO
+
+        if other_order_not_invoiced.amount != DECIMAL_ZERO or bank_not_invoiced.amount != DECIMAL_ZERO:
+            if other_order_not_invoiced.amount != DECIMAL_ZERO:
+                if bank_not_invoiced.amount == DECIMAL_ZERO:
+                    customer_on_hold_movement = \
+                        _('This balance does not take account of any unbilled sales %(other_order)s.') % {
+                            'other_order': other_order_not_invoiced
+                        }
+                else:
+                    customer_on_hold_movement = \
+                        _(
+                            'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
+                        % {
+                            'bank'       : bank_not_invoiced,
+                            'other_order': other_order_not_invoiced
+                        }
+            else:
+                customer_on_hold_movement = \
+                    _(
+                        'This balance does not take account of any unrecognized payments %(bank)s.') % {
+                        'bank': bank_not_invoiced
+                    }
+            customer_on_hold_movement = mark_safe(customer_on_hold_movement)
+        else:
+            customer_on_hold_movement = EMPTY_STRING
+
+        return customer_on_hold_movement
 
     def get_last_membership_fee(self):
         last_membership_fee = purchase.Purchase.objects.filter(

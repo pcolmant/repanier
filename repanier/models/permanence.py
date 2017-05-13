@@ -18,6 +18,7 @@ from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNo
 import customer
 import deliveryboard
 import invoice
+import offeritem
 import permanenceboard
 import producer
 import purchase
@@ -598,6 +599,88 @@ class Permanence(TranslatableModel):
             child_permanence,
             cur_language=translation.get_language(),
         )
+
+    def recalculate_order_amount(self,
+                                 offer_item_qs=None,
+                                 re_init=False,
+                                 send_to_producer=False):
+        getcontext().rounding = ROUND_HALF_UP
+
+        if send_to_producer or re_init:
+            assert offer_item_qs is None, 'offer_item_qs must be set to None when send_to_producer or re_init'
+            invoice.ProducerInvoice.objects.filter(
+                permanence_id=self.id
+            ).update(
+                total_price_with_tax=DECIMAL_ZERO,
+                total_vat=DECIMAL_ZERO,
+                total_deposit=DECIMAL_ZERO,
+            )
+            invoice.CustomerInvoice.objects.filter(
+                permanence_id=self.id
+            ).update(
+                total_price_with_tax=DECIMAL_ZERO,
+                total_vat=DECIMAL_ZERO,
+                total_deposit=DECIMAL_ZERO
+            )
+            invoice.CustomerProducerInvoice.objects.filter(
+                permanence_id=self.id
+            ).update(
+                total_purchase_with_tax=DECIMAL_ZERO,
+                total_selling_with_tax=DECIMAL_ZERO
+            )
+            offeritem.OfferItem.objects.filter(
+                permanence_id=self.id
+            ).update(
+                quantity_invoiced=DECIMAL_ZERO,
+                total_purchase_with_tax=DECIMAL_ZERO,
+                total_selling_with_tax=DECIMAL_ZERO
+            )
+            self.total_purchase_with_tax=DECIMAL_ZERO
+            self.total_selling_with_tax=DECIMAL_ZERO
+            self.total_purchase_vat=DECIMAL_ZERO
+            self.total_selling_vat=DECIMAL_ZERO
+            for offer_item in offeritem.OfferItem.objects.filter(
+                    permanence_id=self.id,
+                    is_active=True,
+                    manage_replenishment=True
+            ).exclude(add_2_stock=DECIMAL_ZERO).order_by('?'):
+                # Recalculate the total_price_with_tax of ProducerInvoice and
+                # the total_purchase_with_tax of OfferItem
+                # taking into account "add_2_stock"
+                offer_item.previous_add_2_stock = DECIMAL_ZERO
+                offer_item.save()
+
+        if offer_item_qs is not None:
+            purchase_set = purchase.Purchase.objects \
+                .filter(permanence_id=self.id, offer_item__in=offer_item_qs) \
+                .order_by('?')
+        else:
+            purchase_set = purchase.Purchase.objects \
+                .filter(permanence_id=self.id) \
+                .order_by('?')
+
+        for a_purchase in purchase_set.select_related("offer_item"):
+            # Recalculate the total_price_with_tax of ProducerInvoice,
+            # the total_price_with_tax of CustomerInvoice,
+            # the total_purchase_with_tax + total_selling_with_tax of CustomerProducerInvoice,
+            # and quantity_invoiced + total_purchase_with_tax + total_selling_with_tax of OfferItem
+            if send_to_producer or re_init:
+                a_purchase.previous_quantity_ordered = DECIMAL_ZERO
+                a_purchase.previous_quantity_invoiced = DECIMAL_ZERO
+                a_purchase.previous_purchase_price = DECIMAL_ZERO
+                a_purchase.previous_selling_price = DECIMAL_ZERO
+                a_purchase.previous_producer_vat = DECIMAL_ZERO
+                a_purchase.previous_customer_vat = DECIMAL_ZERO
+                a_purchase.previous_deposit = DECIMAL_ZERO
+                if send_to_producer:
+                    offer_item = a_purchase.offer_item
+                    if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                        a_purchase.quantity_invoiced = (a_purchase.quantity_ordered * offer_item.order_average_weight) \
+                            .quantize(FOUR_DECIMALS)
+                    else:
+                        a_purchase.quantity_invoiced = a_purchase.quantity_ordered
+            a_purchase.save()
+        self.save()
 
     def recalculate_profit(self):
         getcontext().rounding = ROUND_HALF_UP

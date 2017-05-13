@@ -20,7 +20,7 @@ from repanier.models import Permanence
 from repanier.models import Producer
 from repanier.models import Product
 from repanier.tools import clean_offer_item, reorder_purchases
-from repanier.tools import recalculate_order_amount, create_or_update_one_purchase, reorder_offer_items
+from repanier.tools import create_or_update_one_purchase, reorder_offer_items
 
 
 @transaction.atomic
@@ -151,7 +151,7 @@ def common_to_pre_open_and_open(permanence_id):
     # Calculate the sort order of the order display screen
     reorder_offer_items(permanence_id)
     # Calculate the Purchase 'sum' for each customer
-    recalculate_order_amount(permanence_id=permanence_id)
+    permanence.recalculate_order_amount()
     return permanence
 
 
@@ -420,10 +420,7 @@ def close_order(permanence, all_producers, producers_id=None):
 
 @transaction.atomic
 def send_order(permanence, all_producers=True, producers_id=None, deliveries_id=None):
-    recalculate_order_amount(
-        permanence_id=permanence.id,
-        send_to_producer=True
-    )
+    permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
     try:
         email_order.email_order(permanence.id, all_producers, producers_id=producers_id, closed_deliveries_id=deliveries_id)

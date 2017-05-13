@@ -2,7 +2,6 @@
 from django.core.management.base import BaseCommand
 from repanier.const import PERMANENCE_CLOSED
 from repanier.models import Permanence
-from repanier.tools import recalculate_order_amount
 
 
 class Command(BaseCommand):
