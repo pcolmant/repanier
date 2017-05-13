@@ -57,7 +57,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = ('get_permanence_admin_display', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display')
-    ordering = ('-permanence_date', 'status')
+    ordering = ('status', '-permanence_date')
     actions = [
         'export_xlsx',
         'import_xlsx',
