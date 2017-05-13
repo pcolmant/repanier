@@ -42,6 +42,6 @@ def producer_basket_message_form_ajax(request, pk, uuid):
         if producer is None:
             raise Http404
         to_json = []
-        producer.on_hold_movement_json(to_json)
+        producer.get_on_hold_movement_json(to_json)
         return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
     raise Http404
