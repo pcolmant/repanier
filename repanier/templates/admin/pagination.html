@@ -1,6 +1,6 @@
 {% load admin_list %}
 {% load i18n %}
-<div style="position:sticky;bottom:0;">
+<div {% if not is_popup %}style="position:sticky;bottom:0;"{% endif %}>
 <p class="paginator">
 {% if pagination_required %}
 {% for i in page_range %}
