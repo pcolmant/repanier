@@ -96,10 +96,52 @@ body > .container {
 code {
   font-size: 80%;
 }
-@media(min-width:767px) {
+@media only screen and (min-width:768px) {
     /* automatically display menu on mouse over if not xs */
     ul.nav li.dropdown:hover > ul.dropdown-menu {
         display: block;
+    }
+}
+@media only screen and (max-width:767px) {
+    .sidenav {
+        display:none;
+        height: 100%;
+        max-height: 100% !important;
+        width: 90%;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        transition: 0.5s;
+        padding-top: 60px;
+    }
+
+    .sidenav a {
+        padding: 8px 8px 8px 32px;
+        text-decoration: none;
+        color: #818181;
+        display: block;
+        transition: 0.3s;
+        white-space: normal !important;
+    }
+
+    .sidenav a:hover, .offcanvas a:focus{
+        color: #f1f1f1;
+    }
+
+    .sidenav .closebtn {
+        position: absolute;
+        top: 0;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 50px;
+    }
+
+    @media screen and (max-height: 450px) {
+      .navbar-collapse {padding-top: 15px;}
+      .navbar-collapse a {font-size: 18px;}
     }
 }
 
