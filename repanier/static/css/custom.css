@@ -96,9 +96,11 @@ body > .container {
 code {
   font-size: 80%;
 }
-/* automaticaly display menu on mouse over */
-ul.nav li.dropdown:hover > ul.dropdown-menu {
-    display: block;    
+@media(min-width:767px) {
+    /* automatically display menu on mouse over if not xs */
+    ul.nav li.dropdown:hover > ul.dropdown-menu {
+        display: block;
+    }
 }
 
 a.skip_link{
