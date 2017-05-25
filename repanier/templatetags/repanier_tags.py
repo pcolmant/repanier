@@ -33,8 +33,6 @@ def repanier_user(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     if user.is_authenticated:
-        p_permanence_id = sint(kwargs.get('permanence_id', -1))
-        p_delivery_id = sint(kwargs.get('delivery_id', -1))
         nodes = ["""
             <li id="li_my_name" class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> %s %s<b class="caret"></b></a>
@@ -62,7 +60,7 @@ def repanier_user(context, *args, **kwargs):
                 reverse('my_profile_view'),
                 _('My profile')
             ))
-            if REPANIER_SETTINGS_INVOICE and not request.user.is_staff:
+            if REPANIER_SETTINGS_INVOICE:
                 last_customer_invoice = CustomerInvoice.objects.filter(
                     customer__user_id=request.user.id,
                     invoice_sort_order__isnull=False) \
@@ -88,16 +86,12 @@ def repanier_user(context, *args, **kwargs):
             reverse("logout_form"), _("Logout")
         ))
         nodes.append('</ul></li>')
+        p_permanence_id = sint(kwargs.get('permanence_id', 0))
         if p_permanence_id > 0:
             nodes.append('<li id="li_my_basket" style="display:none;" class="dropdown">')
-            if p_delivery_id > 0:
-                nodes.append('<a href="%s" class="btn btn-info"><span id="my_basket"></span></a>' %
-                    reverse("basket_delivery_view", args=(p_permanence_id, p_delivery_id))
-                )
-            else:
-                nodes.append('<a href="%s" class="btn btn-info"><span id="my_basket"></span></a>' %
-                             reverse("basket_view", args=(p_permanence_id,))
-                )
+            nodes.append('<a href="%s?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>' %
+                reverse("order_view", args=(p_permanence_id,))
+            )
             nodes.append('</li>')
     else:
         nodes = ['<li class="dropdown"><a href="%s">%s</a></li>' % (

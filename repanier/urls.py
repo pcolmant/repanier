@@ -44,6 +44,8 @@ from repanier.views.is_into_offer_ajax import is_into_offer
 from repanier.views.download_customer_invoice import download_customer_invoice
 from repanier.views.home_info_ajax import home_info_ajax
 from repanier.views.order_info_ajax import order_info_ajax
+from repanier.views.order_filter_view import order_filter_view
+from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -74,23 +76,21 @@ urlpatterns = [
         },
         name='password_reset_complete'),
 
-    # url(r'^order/(?P<permanence_id>\d+)/(?P<delivery_id>\d+)/$', OrderView.as_view(), name='order_view'),
-    # url(r'^order/(?P<permanence_id>\d+)/$', OrderView.as_view(), {'delivery_id': 0}, name='order_view'),
     url(r'^order/(?P<permanence_id>\d+)/(?P<delivery_id>\d+)/$', never_cache(OrderView.as_view()),
         name='order_delivery_view'),
-    url(r'^order/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()), {'delivery_id': 0},
+    url(r'^order/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()),
         name='order_view'),
-    url(r'^basket/(?P<permanence_id>\d+)/(?P<delivery_id>\d+)/$', never_cache(OrderView.as_view()), {'basket': True},
-        name='basket_delivery_view'),
-    url(r'^basket/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()), {'delivery_id': 0, 'basket': True},
-        name='basket_view'),
-    url(r'^like/(?P<permanence_id>\d+)/(?P<delivery_id>\d+)/$', never_cache(OrderView.as_view()), {'like': True},
+    # url(r'^basket/(?P<permanence_id>\d+)/(?P<delivery_id>\d+)/$', never_cache(OrderView.as_view()), {'basket': True},
+    #     name='basket_view'),
+    # url(r'^basket/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()), {'basket': True},
+    #     name='basket_view'),
+    url(r'^like/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()), {'like': True},
         name='like_view'),
-    url(r'^like/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()), {'delivery_id': 0, 'like': True},
-        name='like_view'),
+    url(r'^order-filter/(?P<permanence_id>\d+)/$', order_filter_view, name='order_filter_view'),
 
     url(r'^ajax/order/$', order_ajax, name='order_ajax'),
     url(r'^ajax/delivery/$', delivery_ajax, name='delivery_ajax'),
+    url(r'^ajax/my-cart_amount/(?P<permanence_id>\d+)/$', my_cart_amount_ajax, name='my_cart_amount_ajax'),
     url(r'^ajax/my-balance/$', my_balance_ajax, name='my_balance'),
     url(r'^ajax/order-name/$', customer_name_ajax, name='order_name'),
     url(r'^ajax/home-info/$', home_info_ajax, name='home_info'),

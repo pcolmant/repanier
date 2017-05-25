@@ -7,6 +7,11 @@ body {
   /* Margin bottom by footer height */
   margin-bottom: 60px;
 }
+@media screen and (min-width:768px) and (max-width: 979px) {
+  body {
+    padding-top: 60px;
+  }
+}
 .footer {
   position: absolute;
   bottom: 0;
@@ -14,6 +19,7 @@ body {
   /* Set the fixed height of the footer here */
   height: 60px;
   /* background-color: #f5f5f5; */
+  text-align: center;
 }
 
 /* sidebar */
@@ -109,13 +115,13 @@ code {
         max-height: 100% !important;
         width: 90%;
         position: fixed;
-        z-index: 1;
+        z-index: 1100;
         top: 0;
         left: 0;
-        background-color: #111;
+        background-color: #4d4d4f;
         overflow-x: hidden;
         transition: 0.5s;
-        padding-top: 60px;
+        padding-top: 15px;
     }
 
     .sidenav a {
@@ -125,6 +131,7 @@ code {
         display: block;
         transition: 0.3s;
         white-space: normal !important;
+        font-size: 18px;
     }
 
     .sidenav a:hover, .offcanvas a:focus{
@@ -134,15 +141,15 @@ code {
     .sidenav .closebtn {
         position: absolute;
         top: 0;
-        right: 25px;
-        font-size: 36px;
-        margin-left: 50px;
+        right: 20px;
+        /*font-size: 36px;*/
+        /*margin-left: 50px;*/
     }
 
-    @media screen and (max-height: 450px) {
-      .navbar-collapse {padding-top: 15px;}
-      .navbar-collapse a {font-size: 18px;}
-    }
+    /*@media screen and (max-height: 450px) {*/
+      /*.sidenav {padding-top: 15px;}*/
+      /*.sidenav a {font-size: 18px;}*/
+    /*}*/
 }
 
 a.skip_link{
@@ -153,19 +160,33 @@ a.skip_link{
 .white, .white a {
     color: #fff;
 }
-.container-bootstrap {
-    margin-top: 65px;
+@media only screen and (min-width:768px) {
+    .container-bootstrap {
+        margin-top: 65px;
+    }
+    .container-repanier {
+        margin: 75px 0 0;
+    }
+    .container-info {
+        margin: 75px 0 -75px 0;
+    }
+    .container-menu {
+        padding: 0 15px 0;
+    }
 }
-.container-repanier {
-    margin: 75px 0 0;
-    padding: 15px 15px 0;
-}
-.container-info {
-    margin: 75px 0 -75px 0;
-    padding: 15px 15px 0;
-}
-.container-menu {
-    padding: 0 15px 0;
+
+@media only screen and (max-width:767px) {
+    .container-bootstrap {
+        margin-top: 36px;
+    }
+    .container-repanier {
+        margin: 46px 0 0;
+    }
+    .container-info {
+        margin: 46px 0 -46px 0;
+    }
+    .container-menu {
+    }
 }
 /* django-angular : style.css */
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
@@ -218,4 +239,122 @@ ul.djng-field-errors li.valid::before {
 .checkbox + ul.djng-field-errors,
 .checkbox + ul.djng-field-errors + ul.djng-field-errors {
     display: none;
+}
+/* https://codepen.io/msaetre/pen/Ekyaz */
+.icon-cart {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  overflow: hidden;
+  /*margin-left: 25px;*/
+  /*margin-bottom: 25px;*/
+  margin-top: -10px;
+}
+
+.icon-cart .cart-line-1 {
+  width: 15%;
+  height: 7%;
+  position: absolute;
+  left: 8%;
+  top: 25%;
+  -webkit-transform: rotate(5deg);
+  -moz-transform: rotate(5deg);
+  -ms-transform: rotate(5deg);
+  transform: rotate(5deg);
+  border-bottom-left-radius: 35%;
+}
+
+.icon-cart .cart-line-2 {
+  width: 35%;
+  height: 7%;
+  position: absolute;
+  left: 6%;
+  top: 40%;
+  -webkit-transform: rotate(80deg);
+  -moz-transform: rotate(80deg);
+  -ms-transform: rotate(80deg);
+  transform: rotate(80deg);
+}
+
+.icon-cart .cart-line-2:before {
+  content: "";
+  width: 120%;
+  height: 100%;
+  position: absolute;
+  left: 45%;
+  top: -280%;
+  -webkit-transform: rotate(-80deg);
+  -moz-transform: rotate(-80deg);
+  -ms-transform: rotate(-80deg);
+  transform: rotate(-80deg);
+  background-color: inherit;
+}
+
+.icon-cart .cart-line-2:after {
+  content: "";
+  width: 70%;
+  height: 100%;
+  position: absolute;
+  left: 59%;
+  top: -670%;
+  background-color: inherit;
+  -webkit-transform: rotate(40deg);
+  -moz-transform: rotate(40deg);
+  -ms-transform: rotate(40deg);
+  transform: rotate(40deg);
+  border-top-left-radius: 50%;
+  border-bottom-left-radius: 25%;
+}
+
+.icon-cart .cart-line-3 {
+  width: 30%;
+  height: 7%;
+  position: absolute;
+  left: 33%;
+  top: 45%;
+}
+
+.icon-cart .cart-line-3:after {
+  content: "";
+  width: 124%;
+  height: 100%;
+  position: absolute;
+  top: -150%;
+  left: -5%;
+  background-color: inherit;
+}
+
+.icon-cart .cart-wheel {
+  width: 12%;
+  height: 12%;
+  border-radius: 100%;
+  position: absolute;
+  left: 28%;
+  bottom: 20%;
+}
+
+.icon-cart .cart-wheel:after {
+  content: "";
+  width: 100%;
+  height: 100%;
+  background-color: inherit;
+  border-radius: 100%;
+  position: absolute;
+  left: 200%;
+  bottom: 0;
+}
+/* Bootstrap : Let's align right the cart button on small devices */
+.navbar-header{
+  width:100%;
+}
+.navbar-group-name {
+    margin-left: 10px;
+    color: #fff;
+}
+/* Bootstrap : Wordwrap button */
+.btn{
+    white-space:normal !important;
+    word-wrap: break-word;
+    word-break: normal;
+    overflow-wrap: break-word;
 }

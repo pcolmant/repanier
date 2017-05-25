@@ -215,12 +215,13 @@ class ProducerDataForm(forms.ModelForm):
             instance.permanence_set = Permanence.objects.filter(producers=instance.pk).exclude(
                 status=PERMANENCE_PLANNED).order_by('?')
             instance.permanence_set.add(*self.cleaned_data['permanences'])
-            # The previous save is called with "commit=False" or we need to update the producer
+            # The previous save is called with "commit=False"
+            # But we need to update the producer
             # to recalculate the products prices. So a call to self.instance.save() is required
-            self.instance.save()
-            for product in Product.objects.filter(producer_id=instance.id).order_by('?'):
-                product.save()
-            update_offer_item(producer_id=instance.id)
+            # self.instance.save()
+            # for product in Product.objects.filter(producer_id=instance.id).order_by('?'):
+            #     product.save()
+            # update_offer_item(producer_id=instance.id)
 
         return instance
 

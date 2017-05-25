@@ -97,7 +97,7 @@ if DJANGO_SETTINGS_DEBUG:
     # Activate ManifestStaticFilesStorage also when in debug mode
     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
 else:
-    # Be carefull from CMS 4.3.2 you must patch ManifestStaticFilesStorage with django
+    # Be carefull from CMS 4.3.2 you must patch ManifestStaticFilesStorage
     # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
 # STATICFILES_DIRS = (

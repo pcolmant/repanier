@@ -115,8 +115,11 @@ def product_pre_save(sender, **kwargs):
         # No VAT on those products
         product.vat_level = VAT_100
 
-    product.recalculate_prices(producer.producer_price_are_wo_vat, producer.is_resale_price_fixed,
-                       producer.price_list_multiplier)
+    product.recalculate_prices(
+        producer.producer_price_are_wo_vat,
+        producer.is_resale_price_fixed,
+        producer.price_list_multiplier
+    )
 
     if producer.producer_pre_opening or producer.manage_production:
         product.producer_order_by_quantity = DECIMAL_ZERO

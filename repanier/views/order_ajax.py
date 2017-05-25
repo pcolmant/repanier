@@ -49,31 +49,4 @@ def order_ajax(request):
                 basket=basket,
                 batch_job=False
             )
-
-            if result is None:
-                # Select one purchase
-                purchase = Purchase.objects.filter(
-                    customer_id=customer.id,
-                    offer_item_id=offer_item_id,
-                    is_box_content=False
-                ).select_related(
-                    "offer_item"
-                ).order_by('?').first()
-                to_json = []
-                if purchase is not None:
-                    option_dict = display_selected_value(
-                        purchase.offer_item,
-                        purchase.quantity_ordered)
-                    to_json.append(option_dict)
-                else:
-                    offer_item = OfferItem.objects.filter(
-                        id=offer_item_id
-                    ).select_related(
-                        "product"
-                    ).order_by('?').first()
-                    option_dict = display_selected_value(
-                        offer_item,
-                        DECIMAL_ZERO)
-                    to_json.append(option_dict)
-                result = json.dumps(to_json, cls=DjangoJSONEncoder)
     return HttpResponse(result, content_type="application/json")

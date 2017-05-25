@@ -996,14 +996,47 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
 def my_basket(is_order_confirm_send, order_amount, to_json):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
 
-    if not is_order_confirm_send and REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span></a>' % (
-            order_amount,)
+    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not is_order_confirm_send:
+        if order_amount.amount <= DECIMAL_ZERO:
+            msg_confirm = EMPTY_STRING
+        else:
+            msg_confirm = '<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span>'
+        msg_html = """
+        {order_amount}&nbsp;&nbsp;&nbsp;
+        {msg_confirm}
+            """.format(
+            order_amount=order_amount,
+            msg_confirm=msg_confirm
+        )
     else:
-        msg_html = '<span class="glyphicon glyphicon-shopping-cart"></span> %s&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-ok"></span></a>' % (
-        order_amount,)
+        if order_amount.amount <= DECIMAL_ZERO:
+            msg_confirm = cart_content = EMPTY_STRING
+        else:
+            msg_confirm = '<span class="glyphicon glyphicon-ok"></span>'
+            cart_content = '<div class="cart-line-3" style="background-color: #E5E9EA"></div>'
+        msg_html = """
+        <div class="icon-cart" style="float: left">
+            <div class="cart-line-1" style="background-color: #fff"></div>
+            <div class="cart-line-2" style="background-color: #fff"></div>
+            {cart_content}
+            <div class="cart-wheel" style="background-color: #fff"></div>
+        </div> {order_amount}&nbsp;&nbsp;&nbsp;
+        {msg_confirm}
+            """.format(
+            cart_content=cart_content,
+            order_amount=order_amount,
+            msg_confirm=msg_confirm
+        )
+
     option_dict = {'id': "#my_basket", 'html': msg_html}
     to_json.append(option_dict)
+    msg_html = """
+{order_amount}&nbsp;&nbsp;&nbsp;
+{msg_confirm}
+        """.format(
+        order_amount=order_amount,
+        msg_confirm=msg_confirm
+    )
     option_dict = {'id': "#prepared_amount_visible_xs", 'html': msg_html}
     to_json.append(option_dict)
 
@@ -1017,7 +1050,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
             label = customer_invoice.delivery.get_delivery_customer_display()
             delivery_id = customer_invoice.delivery_id
         else:
-            delivery_id = -1
+            delivery_id = 0
             if customer_invoice.customer.delivery_point is not None:
                 qs = models.DeliveryBoard.objects.filter(
                     Q(
@@ -1146,7 +1179,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                         msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _("Confirm this order and receive an email containing its summary.")
                 else:
                     href = urlresolvers.reverse(
-                        'basket_view', args=(permanence.id,)
+                        'order_view', args=(permanence.id,)
                     )
                     if customer_invoice.status == PERMANENCE_OPENED:
                         msg_confirmation1 = '<font color="red">%s</font><br/>' % _("An unconfirmed order will be canceled.")
@@ -1157,7 +1190,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                             <div class="panel-heading">
                             %s
                             %s
-                            <a href="%s" class="btn btn-info" %s>%s</a>
+                            <a href="%s?is_basket=yes" class="btn btn-info" %s>%s</a>
                             </div>
                             </div>
                             </div>
@@ -1229,56 +1262,37 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
     if permanence.status > PERMANENCE_SEND:
         # The purchases are already invoiced.
         # The offer item may not be modified any more
-        return
+        raise ValueError("Not offer item may be created when permanece status > PERMANENCE_SEND")
     getcontext().rounding = ROUND_HALF_UP
     for offer_item in queryset.select_related("producer", "product"):
         product = offer_item.product
         producer = offer_item.producer
-        if product.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-            offer_item.is_active = product.is_into_offer
-        offer_item.picture2 = product.picture2
-        offer_item.reference = product.reference
-        offer_item.department_for_customer_id = product.department_for_customer_id
-        offer_item.producer_id = product.producer_id
-        offer_item.order_unit = product.order_unit
-        offer_item.wrapped = product.wrapped
-        offer_item.order_average_weight = product.order_average_weight
-        offer_item.placement = product.placement
-        offer_item.producer_vat = product.producer_vat
-        offer_item.customer_vat = product.customer_vat
-        # Important : the group must pay the VAT, so it's easier to allways have
-        # offer_item with VAT included
-        if producer.producer_price_are_wo_vat:
-            offer_item.producer_unit_price = product.producer_unit_price + offer_item.producer_vat
-            offer_item.producer_price_are_wo_vat = False
-        else:
-            offer_item.producer_unit_price = product.producer_unit_price
-            offer_item.producer_price_are_wo_vat = producer.producer_price_are_wo_vat
-        offer_item.customer_unit_price = product.customer_unit_price
-        # Important : for purchasing : the price is * by order_average_weight
-        # Thus, the unit deposit must be Zero.
-        offer_item.unit_deposit = DECIMAL_ZERO if product.order_unit == PRODUCT_ORDER_UNIT_PC_KG else product.unit_deposit
-        offer_item.vat_level = product.vat_level
-        offer_item.limit_order_quantity_to_stock = product.limit_order_quantity_to_stock
+
+        offer_item.set_from(product)
+
         offer_item.producer_pre_opening = producer.producer_pre_opening
-        if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-            offer_item.manage_replenishment = producer.manage_replenishment
-        else:
-            offer_item.manage_replenishment = False
         offer_item.manage_production = producer.manage_production
-        # Important : or product.is_box -> impact into Purchase.get_customer_unit_price
-        # The boxes prices are not subjects to price modifications
+        # Those offer_items not subjects to price modifications
         offer_item.is_resale_price_fixed = producer.is_resale_price_fixed or product.is_box or product.order_unit >= PRODUCT_ORDER_UNIT_DEPOSIT
         offer_item.price_list_multiplier = DECIMAL_ONE if offer_item.is_resale_price_fixed else producer.price_list_multiplier
-        offer_item.stock = product.stock
+
+        offer_item.may_order = False
+        offer_item.manage_replenishment = False
+        if offer_item.is_active:
+            if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+                offer_item.may_order = product.is_into_offer
+                offer_item.manage_replenishment = producer.manage_replenishment
+
+        # The group must pay the VAT, so it's easier to allways have
+        # offer_item with VAT included
+        if producer.producer_price_are_wo_vat:
+            offer_item.producer_unit_price += offer_item.producer_vat
+        offer_item.producer_price_are_wo_vat = False
+
+
         if reset_add_2_stock:
             offer_item.add_2_stock = DECIMAL_ZERO
-        offer_item.customer_minimum_order_quantity = product.customer_minimum_order_quantity
-        offer_item.customer_increment_order_quantity = product.customer_increment_order_quantity
-        offer_item.customer_alert_order_quantity = product.customer_alert_order_quantity
-        offer_item.producer_order_by_quantity = product.producer_order_by_quantity
-        offer_item.is_box = product.is_box
-        # offer_item.is_membership_fee = product.is_membership_fee
+
         offer_item.save()
 
     # Now got everything to calculate the sort order of the order display screen
@@ -1295,21 +1309,6 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
                                                        {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
             offer_item.save_translations()
 
-        departementforcustomer_set = models.LUT_DepartmentForCustomer.objects.filter(
-            offeritem__permanence_id=permanence.id,
-            offeritem__may_order=True) \
-            .order_by("tree_id", "lft") \
-            .distinct("id", "tree_id", "lft")
-        if departementforcustomer_set:
-            pass
-        if apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
-            producer_set = models.Producer.objects.filter(permanence=permanence.id).only("id", "short_profile_name")
-        else:
-            producer_set = None
-        permanence.cache_part_d = render_to_string('repanier/cache_part_d.html',
-                                                   {'producer_set'              : producer_set,
-                                                    'departementforcustomer_set': departementforcustomer_set})
-        permanence.save_translations()
     translation.activate(cur_language)
 
 
@@ -1407,8 +1406,7 @@ def reorder_offer_items(permanence_id):
 
 
 def update_offer_item(product_id=None, producer_id=None):
-    # Important : If the user want to modify the price of a product PERMANENCE_SEND
-    # Then he can do it via "rule_of_3_per_product"
+    # The user can modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in models.Permanence.objects.filter(
             status__in=[PERMANENCE_PRE_OPEN, PERMANENCE_OPENED, PERMANENCE_CLOSED]
     ):
@@ -1438,8 +1436,6 @@ def get_or_create_offer_item(permanence, product):
             permanence=permanence,
             product=product,
             producer=product.producer,
-            is_active=False,
-            may_order=False
         )
         clean_offer_item(permanence, offer_item_qs)
     offer_item = offer_item_qs.first()
@@ -1449,7 +1445,7 @@ def get_or_create_offer_item(permanence, product):
 def producer_web_services_activated(reference_site=None):
     web_services_activated = False
     web_service_version = None
-    if reference_site is not None and len(reference_site) > 0:
+    if reference_site:
         try:
             web_services = urlopen(
                 '%s%s' % (reference_site, urlresolvers.reverse('version_rest')),
@@ -1530,7 +1526,7 @@ def calc_basket_message(customer, permanence, status):
 def html_box_content(offer_item, user, result=EMPTY_STRING):
     if offer_item.is_box:
         box_id = offer_item.product_id
-        if result is not None and result != EMPTY_STRING:
+        if result:
             result += '<hr/>'
         product_ids = models.BoxContent.objects.filter(
             box_id=box_id

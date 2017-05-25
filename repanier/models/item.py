@@ -135,6 +135,30 @@ class Item(TranslatableModel):
             offer_price = self.get_unit_price()
         return offer_price
 
+    def set_from(self, source):
+        self.is_active = source.is_active
+        self.picture2 = source.picture2
+        self.reference = source.reference
+        self.department_for_customer_id = source.department_for_customer_id
+        self.producer_id = source.producer_id
+        self.order_unit = source.order_unit
+        self.wrapped = source.wrapped
+        self.order_average_weight = source.order_average_weight
+        self.placement = source.placement
+        self.vat_level = source.vat_level
+        self.customer_unit_price = source.customer_unit_price
+        self.customer_vat = source.customer_vat
+        self.producer_unit_price = source.producer_unit_price
+        self.producer_vat = source.producer_vat
+        self.unit_deposit = source.unit_deposit
+        self.limit_order_quantity_to_stock= source.limit_order_quantity_to_stock
+        self.stock = source.stock
+        self.customer_minimum_order_quantity = source.customer_minimum_order_quantity
+        self.customer_increment_order_quantity = source.customer_increment_order_quantity
+        self.customer_alert_order_quantity = source.customer_alert_order_quantity
+        self.producer_order_by_quantity = source.producer_order_by_quantity
+        self.is_box = source.is_box
+
     def recalculate_prices(self, producer_price_are_wo_vat, is_resale_price_fixed, price_list_multiplier):
         getcontext().rounding = ROUND_HALF_UP
         vat = DICT_VAT[self.vat_level]

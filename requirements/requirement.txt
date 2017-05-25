@@ -21,13 +21,13 @@ django-parler==1.7
 django-polymorphic==1.0.2
 django-reversion==2.0.8
 django-sekizai==0.10.0
-django-treebeard==4.1.0
+django-treebeard==4.1.1
 djangocms-admin-style==1.2.7
 djangocms-attributes-field==0.2.0
-djangocms-cascade==0.12.4
+djangocms-cascade==0.12.5
 # https://github.com/jrief/djangocms-cascade/archive/releases/0.12.x.zip
 djangocms-text-ckeditor==3.5.0
-djangorestframework==3.6.2
+djangorestframework==3.6.3
 easy-thumbnails==2.4.1
 openpyxl==1.8.6
 psycopg2==2.7.1

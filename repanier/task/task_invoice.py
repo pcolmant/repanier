@@ -58,15 +58,15 @@ def generate_invoice(permanence, payment_date):
     if permanence_partially_invoiced:
         # Move the producers not invoiced into a new permanence
         producers_to_keep = list(Producer.objects.filter(
-            producer_invoice__permanence_id=permanence.id,
-            producer_invoice__invoice_sort_order__isnull=True,
-            producer_invoice__to_be_paid=True).only('id').order_by('?'))
+            producerinvoice__permanence_id=permanence.id,
+            producerinvoice__invoice_sort_order__isnull=True,
+            producerinvoice__to_be_paid=True).only('id').order_by('?'))
         permanence.producers.clear()
         permanence.producers.add(*producers_to_keep)
         producers_to_move = list(Producer.objects.filter(
-            producer_invoice__permanence_id=permanence.id,
-            producer_invoice__invoice_sort_order__isnull=True,
-            producer_invoice__to_be_paid=False).only('id').order_by('?'))
+            producerinvoice__permanence_id=permanence.id,
+            producerinvoice__invoice_sort_order__isnull=True,
+            producerinvoice__to_be_paid=False).only('id').order_by('?'))
         new_permanence = permanence.create_child(PERMANENCE_SEND)
         new_permanence.producers.add(*producers_to_move)
         ProducerInvoice.objects.filter(

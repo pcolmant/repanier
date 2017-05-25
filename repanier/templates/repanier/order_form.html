@@ -23,7 +23,7 @@
             <div class="panel panel-primary">
                 <div class="panel-body">
                     <div class="col-sm-3">
-                        <a href="{% url "login_form" %}?next={% url 'order_delivery_view' permanence.id delivery_id %}" class="btn btn-default">{% trans "Login me" %}</a>
+                        <a href="{% url "login_form" %}?next={% url 'order_view' permanence.id %}" class="btn btn-default">{% trans "Login me" %}</a>
                     </div>
                     {% if how_to_register %}
                     <div class="col-sm-9">
@@ -69,7 +69,7 @@
         {% endif %}
     </div>
     </div>
-    {% if basket %}
+    {% if is_basket %}
     <div class="row">
     <div class="panel panel-default">
         <div class="panel-heading accordion-toggle" data-toggle="collapse" data-target="#collapse-basket-description" aria-expanded="true">
@@ -92,9 +92,16 @@
 {% endif %} {# not is_anonymous and may_order#}
 {%  if not is_anonymous or display_anonymous_order_form %}
     <div class="row">
-    <nav class="col-xs-12 col-sm-3 hidden-xs bs-docs-sidebar">
+    <nav class="col-xs-11 col-sm-3 bs-docs-sidebar">
         <div class="fixed">
-            <form id="search_form" class="form-horizontal navbar-form" role="search" method="get">
+{#            q : {{ q }}<br/>#}
+{#            producer_id : {{ producer_id }}<br/>#}
+{#            departementforcustomer_id : {{ departementforcustomer_id }}<br/>#}
+{#            box_id : {{ box_id }}<br/>#}
+{#            is_like : {{ is_like }}<br/>#}
+{#            is_basket : {{ is_basket }}<br/>#}
+{#            is_box : {{ is_box }}<br/>#}
+            <form action="{% url "order_view" permanence_id %}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
                 {% csrf_token %}
                 <div class="input-group">
                     {% if q != None %}
@@ -103,63 +110,67 @@
                         <input type="search" autosave="repanier" class="form-control" placeholder="{% trans "Search" %}"
                                name="q">
                     {% endif %}
-                    <input type="hidden" name="producer" value="{{ producer_id }}">
-                    <input type="hidden" name="departementforcustomer" value="{{ departementforcustomer_id }}">
                     <div class="input-group-btn">
                         <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
                     </div>
                 </div>
+                <input type="hidden" name="producer" value="{{ producer_id }}">
+                <input type="hidden" name="departementforcustomer" value="{{ departementforcustomer_id }}">
+                <input type="hidden" name="box" value="{{ box_id }}">
+                <input type="hidden" name="is_like" value="{{ is_like }}">
+                <input type="hidden" name="is_basket" value="{{ is_basket }}">
             </form>
             <br/>
+<div class="hidden-xs">
             <ul class="nav nav-stacked" id="sidebar">
 
-<li><a href="{% url "like_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box=all"
-               {% if like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My likes" %} <span class="glyphicon glyphicon-heart"></span></a>
+<li>
+    <a href="{% url "order_view" permanence.id %}?{% if not is_like %}is_like=yes{% endif %}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My likes" %} <span class="glyphicon glyphicon-heart"></span></a>
 </li>
 {% if box_set %}
     {% for box in box_set.all %}
-        <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
+        <li><a href="{% url "order_view" permanence.id %}?box={{ box.id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
                {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} 📦{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
     {% endfor %}
 {% endif %}
 {% if producer_set %}
     <li>
-        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}"
-           {% if producer_id == "all" and not basket %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
+        <a href="{% url "order_view" permanence.id %}?departementforcustomer={{ departementforcustomer_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+           {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
         <ul class="nav nav-stacked">
     {% for producer in producer_set.all %}
-        <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
+        <li><a href="{% url "order_view" permanence.id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
                {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span><span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
         </li>
     {% endfor %}
         </ul>
     </li>
-{% else %}{% if not departementforcustomer_set %}{% if like or basket or box or q %}
+{% else %}{% if not departementforcustomer_set %}{% if is_like or is_basket or is_box or q %}
     <li>
-        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all">{% trans "All products" %}</a>
+        <a href="{% url "order_view" permanence.id %}">{% trans "All products" %}</a>
     </li>
 {% endif %}{% endif %}{% endif %}
 {% if departementforcustomer_set %}
     <li>
-        <a href="{% url "order_delivery_view" permanence.id delivery_id %}"
-           {% if departementforcustomer_id == "all" and not basket and not like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
+        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+           {% if departementforcustomer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
         <ul class="nav nav-stacked">
             {% for departementforcustomer in departementforcustomer_set.all %}
                 {% if departementforcustomer.level > 0 %}
                     {% ifchanged departementforcustomer.parent_id %}
                     {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                    <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}"
+                    <li><a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
                            {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
                     </li>
                     {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                     {% endifchanged %}
                     <li>
-                        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
+                        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                     </li>
                 {% else %}
                         </ul><li>
-                        <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
+                        <a href="{% url "order_view" permanence.id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
                            {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
                         </li><ul class="nav nav-stacked">
                 {% endif %}
@@ -168,9 +179,10 @@
     </li>
 {% endif %}
             </ul>
+</div> {# hidden-xs #}
         </div>
     </nav>
-    <div class="col-sm-9">
+    <div class="col-xs-12 col-sm-9">
     <div class="row">
     {% if offeritem_list %}
         {% for offer in offeritem_list %}
@@ -195,7 +207,7 @@
                 </div>
             {% endif %}
             {% if not forloop.last %}
-                {% if box %}
+                {% if is_box %}
                     <div class="clearfix {% cycle ' ' 'visible-sm-block visible-md-block' %}"></div>
                     <hr class="visible-sm visible-xs visible-md {% cycle 'visible-lg' ' ' %}" />
                 {% else %}
@@ -204,28 +216,26 @@
                 {%  endif %}
             {% else %}
                 {% if is_paginated %}
-                    <div class="hidden-xs">
-                        <div class="clearfix"></div>
-                        <hr/>
+                    <div class="clearfix"></div>
+                    <hr/>
+                    <div class="btn-group">
                         <div class="btn-group">
-                            <div class="btn-group">
-                                {% if page_obj.has_previous %}
-                                     <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
-                                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                                {% else %}
-                                    <a href="#" class="btn btn-disabled"></a>
-                                {% endif %}
-                                {% if page_obj.has_previous or page_obj.has_next %}
-                                    <a href="#"
-                                       class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
-                                {% endif %}
-                                {% if page_obj.has_next %}
-                                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
-                                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                                {% else %}
-                                    <a href="#" class="btn btn-disabled"></a>
-                                {% endif %}
-                            </div>
+                            {% if page_obj.has_previous %}
+                                 <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
+                                   class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                            {% else %}
+                                <a href="#" class="btn btn-disabled"></a>
+                            {% endif %}
+                            {% if page_obj.has_previous or page_obj.has_next %}
+                                <a href="#"
+                                   class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
+                            {% endif %}
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
+                                   class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                            {% else %}
+                                <a href="#" class="btn btn-disabled"></a>
+                            {% endif %}
                         </div>
                     </div>
                 {% endif %}
@@ -304,203 +314,26 @@
     </div>
 </div>
 {% endif %} {# not is_anonymous or display_anonymous_order_form #}
-{% endblock %}
-{% block footer %}
-    <div class="visible-xs">
-        <div class="btn-group" align="center">
-            {{ permanence.cache_part_d | safe }}
-            {% if box_set %}
-                <div class="btn-group dropup">
-                    <button type="button" class="btn btn-default" data-toggle="dropdown">
-                        &nbsp;&nbsp;&nbsp;&nbsp;📦&nbsp;&nbsp;&nbsp;&nbsp;
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                        {% for box in box_set.all %}
-                            <li><a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer=all&box={{ box.id|unlocalize }}"
-                                   {% if box %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} {# <span class="glyphicon glyphicon-gift"></span> #}📦</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-            <div class="btn-group">
-            <a href="{% url "order_delivery_view" permanence.id delivery_id %}?producer=all&departementforcustomer={{ departementforcustomer_id }}" class="btn btn-default">{% trans "All" %}</a>
-            </div>
-            {% if not is_anonymous %}
-                <div class="btn-group">
-                <a href="{% url "basket_delivery_view" permanence.id delivery_id %}" class="btn btn-default">
-                    <span id="prepared_amount_visible_xs"></span></a>
-                </div>
-            {% endif %}
-        </div>
-    {% if offeritem_list %}
-            <span id="span_btn_confirm_order"></span>
-        {% endif %}
-    {% if is_paginated %}
-        <div class="btn-group">
-            <div class="btn-group">
-                {% if page_obj.has_previous %}
-                     <a href="?page={{ page_obj.previous_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
-                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                {% else %}
-                    <a href="#" class="btn btn-disabled"></a>
-                {% endif %}
-                {% if page_obj.has_previous or page_obj.has_next %}
-                    <a href="#"
-                       class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>
-                {% endif %}
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&amp;producer={{ producer_id }}&amp;departementforcustomer={{ departementforcustomer_id }}"
-                       class="btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                {% else %}
-                    <a href="#" class="btn btn-disabled"></a>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
-        </div>
-    {% addtoblock "lastjs" %}
-        <script type="text/javascript">
+{% addtoblock "lastjs" %}
+    <script type="text/javascript">
 {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
-            var saved_offer_item_id = 0;
+        var saved_offer_item_id = 0;
 {#            saved_delivery_val is a fix for firefox throwings mouseover repeatingly #}
-            var saved_delivery_val = 0;
-            function order_ajax(offer_item_id) {
-                saved_offer_item_id = 0;
-                var offer_item = $("#offer_item" + offer_item_id);
-                var offer_item_val = $("option:selected", offer_item).val();
+        var saved_delivery_val = 0;
+        function order_ajax(offer_item_id) {
+            saved_offer_item_id = 0;
+            var offer_item = $("#offer_item" + offer_item_id);
+            var offer_item_val = $("option:selected", offer_item).val();
 
-                if (offer_item_val === 'other_qty') {
-                    var getProductFromRow = offer_item.closest('div').data('product');
-                    $('#otherQtyModalLabel').html(getProductFromRow);
-                    $('#otherQtyModal').modal('show');
-                } else {
-                    var lien = '{% url 'order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if basket %}&basket={{ basket }}{%  endif %}";
-                    $.ajax({
-                        url: lien,
-                        cache: false,
-                        async: true,
-                        success: function (result) {
-                            $.each(result, function (key, val) {
-                                if(val.id === '#communication') {
-                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
-                                    $('#communicationDetails').html(val.html);
-                                    $('#communicationModal').modal('show')
-                                } else {
-                                    if(val.id === '#error') {
-                                        offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
-                                    } else {
-                                        $(val.id).html(val.html);
-                                    }
-                                }
-                            });
-                        },
-                        error: function (result) {
-                            offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');
-                        }
-                    });
-                }
-            }
-            function delivery_select_ajax() {
-                var delivery = $("#delivery");
-                var delivery_val = $("option:selected", delivery).val();
-                if(saved_delivery_val === 0){
-                    saved_delivery_val=1;
-                    var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
-                    $.ajax({
-                        url: lien2,
-                        cache: false,
-                        dataType: 'json',
-                        async: false,
-                        success: function (result) {
-                            var selectOption = '';
-                            var selectVal = 0;
-                            $.each(result, function (key, val) {
-                                if (val.selected === 'selected') {
-                                    selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                    selectVal = val.value
-                                } else {
-                                    selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
-                                }
-                            });
-                            delivery.html(selectOption);
-                        },
-                        error: function (result) {
-                            delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
-                        }
-                    });
-
-                }
-
-            }
-            function delivery_ajax() {
-                var delivery = $("#delivery");
-                var delivery_val = $("option:selected", delivery).val();
-
-                var lien = '{% url 'delivery_ajax' %}?delivery=' + delivery_val + "&permanence=" + {{ permanence.id|unlocalize }} + "{% if basket %}&basket={{ basket }}{%  endif %}";
+            if (offer_item_val === 'other_qty') {
+                var getProductFromRow = offer_item.closest('div').data('product');
+                $('#otherQtyModalLabel').html(getProductFromRow);
+                $('#otherQtyModal').modal('show');
+            } else {
+                var lien = '{% url 'order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if is_basket %}&is_basket=yes{%  endif %}";
                 $.ajax({
                     url: lien,
                     cache: false,
-                    async: true,
-                    success: function (result) {
-                        $.each(result, function (key, val) {
-                            if(val.id === '#error') {
-                                delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
-                            } else {
-                                $(val.id).html(val.html);
-                            }
-                        });
-                        saved_delivery_val=0;
-                    },
-                    error: function (result) {
-                        delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
-                        saved_delivery_val=0;
-                    }
-                });
-            }
-            function btn_receive_order_email() {
-                var receive_email = $("#btn_confirm_order");
-                receive_email.attr("disabled", true);
-                receive_email.removeClass("btn-info");
-
-                var lien = '{% url 'btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    async: true,
-                    success: function (result) {
-                        $.each(result, function (key, val) {
-                            $(val.id).html(val.html);
-                        });
-                    },
-                    error: function (result) {
-                        receive_email.attr("disabled", false);
-                        receive_email.addClass("btn-info");
-                    }
-                });
-
-            }
-            function like_ajax(offer_item_id) {
-                var lien = '{% url 'like_ajax' %}?offer_item=' + offer_item_id;
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    async: true,
-                    success: function (result) {
-                        $.each(result, function (key, val) {
-                            $(val.id).each(function( index ) { $( this ).html(val.html)});
-                        });
-                    }
-                });
-            }
-            $(document).ready(function () {
-                {% if not is_anonymous %}
-                var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}oi={{ offer.id|unlocalize }}&{% endfor %}pe={{ permanence.id|unlocalize }}{% if delivery_id > 0 %}&de={{ delivery_id|unlocalize }}{% endif %}{% if communication %}&co={{ communication }}{% endif %}{% if basket %}&ba={{ basket }}{%  endif %}';
-                $.ajax({
-                    url: lien,
-                    cache: false,
-                    dataType: 'json',
                     async: true,
                     success: function (result) {
                         $.each(result, function (key, val) {
@@ -509,83 +342,204 @@
                                 $('#communicationDetails').html(val.html);
                                 $('#communicationModal').modal('show')
                             } else {
-                                $(val.id).each(function( index ) { $( this ).html(val.html)});
+                                if(val.id === '#error') {
+                                    offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                } else {
+                                    $(val.id).html(val.html);
+                                }
                             }
                         });
                     },
                     error: function (result) {
-                        {% for offer in offeritem_list %}
-                            $("#offer_item{{ offer.id|unlocalize }}").html("{% trans "retry" %}");
-                        {% endfor %}
+                        offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');
                     }
                 });
-                $("#li_my_basket").show();
-                $('#btn_receive_email').on('click', function(event) {
-                    event.preventDefault(); // To prevent following the link (optional)
-                    $("#receive_email").hide();
-                });
-                $("select").mouseover(function (event) {
-                    var object = $(this);
-                    var object_id = object.closest('div').data('id');
-                    if(saved_offer_item_id !== object_id) {
-                        saved_offer_item_id = object_id;
-                        saved_delivery_val=0;
-                        var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + object_id;
-                        $.ajax({
-                            url: lien1,
-                            cache: false,
-                            dataType: 'json',
-                            async: false,
-                            success: function (result) {
-                                var selectOption = '';
-                                var selectVal = 0;
-                                $.each(result, function (key, val) {
-                                    if (val.html) {
-                                        selectOption += val.html
-                                    } else {
-                                        if (val.selected === 'selected') {
-                                            selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                            selectVal = val.value
-                                        } else {
-                                            selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
-                                        }
-                                    }
-                                });
-                                object.html(selectOption);
-                            },
-                            error: function (result) {
-                                object.html('<option value="0" selected>{% trans "retry" %}</option>');
+            }
+        }
+        function delivery_select_ajax() {
+            var delivery = $("#delivery");
+            var delivery_val = $("option:selected", delivery).val();
+            if(saved_delivery_val === 0){
+                saved_delivery_val=1;
+                var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
+                $.ajax({
+                    url: lien2,
+                    cache: false,
+                    dataType: 'json',
+                    async: false,
+                    success: function (result) {
+                        var selectOption = '';
+                        var selectVal = 0;
+                        $.each(result, function (key, val) {
+                            if (val.selected === 'selected') {
+                                selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                selectVal = val.value
+                            } else {
+                                selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
                             }
                         });
+                        delivery.html(selectOption);
+                    },
+                    error: function (result) {
+                        delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
                     }
                 });
-                {% endif %}
-                $('#orderModal').modal({
-                    keyboard: true,
-                    backdrop: false,
-                    show: false
-                }).on('show.bs.modal', function (event) {
-                    t_row=$(event.relatedTarget);
-                    var getIdFromRow = t_row.data('id');
-                    var getProductFromRow = t_row.data('product');
-                    var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
-                    var content =
-                            $.ajax({
-                                url: lien,
-                                cache: false,
-                                async: false,
-                                success: function (result) {
-                                    $('#orderModalLabel').html(getProductFromRow);
-                                    $('#orderDetails').html(result)
-                                },
-                                error: function (result) {
-                                    $('#orderModalLabel').html($('{% trans "Communication error" %}'));
-                                    $('#orderDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))
+
+            }
+
+        }
+        function delivery_ajax() {
+            var delivery = $("#delivery");
+            var delivery_val = $("option:selected", delivery).val();
+
+            var lien = '{% url 'delivery_ajax' %}?delivery=' + delivery_val + "&permanence=" + {{ permanence.id|unlocalize }} + "{% if is_basket %}&is_basket=yes{%  endif %}";
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: true,
+                success: function (result) {
+                    $.each(result, function (key, val) {
+                        if(val.id === '#error') {
+                            delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
+                        } else {
+                            $(val.id).html(val.html);
+                        }
+                    });
+                    saved_delivery_val=0;
+                },
+                error: function (result) {
+                    delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
+                    saved_delivery_val=0;
+                }
+            });
+        }
+        function btn_receive_order_email() {
+            var receive_email = $("#btn_confirm_order");
+            receive_email.attr("disabled", true);
+            receive_email.removeClass("btn-info");
+
+            var lien = '{% url 'btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: true,
+                success: function (result) {
+                    $.each(result, function (key, val) {
+                        $(val.id).html(val.html);
+                    });
+                },
+                error: function (result) {
+                    receive_email.attr("disabled", false);
+                    receive_email.addClass("btn-info");
+                }
+            });
+
+        }
+        function like_ajax(offer_item_id) {
+            var lien = '{% url 'like_ajax' %}?offer_item=' + offer_item_id;
+            $.ajax({
+                url: lien,
+                cache: false,
+                async: true,
+                success: function (result) {
+                    $.each(result, function (key, val) {
+                        $(val.id).each(function( index ) { $( this ).html(val.html)});
+                    });
+                }
+            });
+        }
+        $(document).ready(function () {
+            $("#link_to_order_or_filter_view").html('<a href="{% url "order_filter_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-default" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+{% if not is_anonymous %}
+            var lien = '{% url 'order_init_ajax' %}?{% for offer in offeritem_list %}oi={{ offer.id|unlocalize }}&{% endfor %}pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                dataType: 'json',
+                async: true,
+                success: function (result) {
+                    $.each(result, function (key, val) {
+                        if(val.id === '#communication') {
+                            $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
+                            $('#communicationDetails').html(val.html);
+                            $('#communicationModal').modal('show')
+                        } else {
+                            $(val.id).each(function( index ) { $( this ).html(val.html)});
+                        }
+                    });
+                },
+                error: function (result) {
+                    {% for offer in offeritem_list %}
+                        $("#offer_item{{ offer.id|unlocalize }}").html("{% trans "retry" %}");
+                    {% endfor %}
+                }
+            });
+            $("#li_my_basket").show();
+            $('#btn_receive_email').on('click', function(event) {
+                event.preventDefault(); // To prevent following the link (optional)
+                $("#receive_email").hide();
+            });
+            $("select").mouseover(function (event) {
+                var object = $(this);
+                var object_id = object.closest('div').data('id');
+                if(saved_offer_item_id !== object_id) {
+                    saved_offer_item_id = object_id;
+                    saved_delivery_val=0;
+                    var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + object_id;
+                    $.ajax({
+                        url: lien1,
+                        cache: false,
+                        dataType: 'json',
+                        async: false,
+                        success: function (result) {
+                            var selectOption = '';
+                            var selectVal = 0;
+                            $.each(result, function (key, val) {
+                                if (val.html) {
+                                    selectOption += val.html
+                                } else {
+                                    if (val.selected === 'selected') {
+                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                        selectVal = val.value
+                                    } else {
+                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
+                                    }
                                 }
                             });
-                });
+                            object.html(selectOption);
+                        },
+                        error: function (result) {
+                            object.html('<option value="0" selected>{% trans "retry" %}</option>');
+                        }
+                    });
+                }
             });
-        </script>
-    {% endaddtoblock %}
-    {% static_placeholder 'footer' %}
+{% endif %}
+            $('#orderModal').modal({
+                keyboard: true,
+                backdrop: false,
+                show: false
+            }).on('show.bs.modal', function (event) {
+                t_row=$(event.relatedTarget);
+                var getIdFromRow = t_row.data('id');
+                var getProductFromRow = t_row.data('product');
+                var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
+                var content =
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            async: false,
+                            success: function (result) {
+                                $('#orderModalLabel').html(getProductFromRow);
+                                $('#orderDetails').html(result)
+                            },
+                            error: function (result) {
+                                $('#orderModalLabel').html($('{% trans "Communication error" %}'));
+                                $('#orderDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))
+                            }
+                        });
+            });
+        });
+    </script>
+{% endaddtoblock %}
 {% endblock %}

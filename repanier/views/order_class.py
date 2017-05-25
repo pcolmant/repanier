@@ -7,8 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.views.generic import ListView
 
-import repanier.apps
-from repanier.const import PERMANENCE_OPENED, EMPTY_STRING, PRODUCT_ORDER_UNIT_DEPOSIT
+from repanier.const import EMPTY_STRING
 from repanier.models import Permanence, Producer, LUT_DepartmentForCustomer, OfferItem, Staff, BoxContent
 from repanier.tools import sint, permanence_ok_or_404, html_box_content
 
@@ -28,12 +27,11 @@ class OrderView(ListView):
         self.is_box = False
         self.communication = 0
         self.q = None
-        self.basket = None
-        self.like = None
-        self.is_anonymous = None
-        self.may_order = None
+        self.is_basket = False
+        self.is_like = False
+        self.is_anonymous = True
+        self.may_order = False
         self.permanence = None
-        self.delivery_id = 0
 
     def dispatch(self, request, *args, **kwargs):
         permanence_id = sint(kwargs.get('permanence_id', 0))
@@ -42,14 +40,8 @@ class OrderView(ListView):
         ).order_by('?').first()
         permanence_ok_or_404(self.permanence)
         self.user = request.user
-        self.basket = kwargs.get('basket', False)
-        if not self.basket:
-            self.like = kwargs.get('like', False)
-        else:
-            # Not both favorite and basket
-            self.like = False
-        if self.permanence.with_delivery_point:
-            self.delivery_id = sint(kwargs.get('delivery_id', 0))
+        self.is_basket = self.request.GET.get('is_basket', False)
+        self.is_like = self.request.GET.get('is_like', False)
         if self.user.is_anonymous or self.user.is_staff:
             self.is_anonymous = True
             self.may_order = False
@@ -76,7 +68,7 @@ class OrderView(ListView):
         else:
             self.is_box = False
         if self.producer_id == 'all' and self.departementforcustomer_id == 'all' \
-                and not self.basket and 'page' not in request.GET \
+                and not self.is_basket and 'page' not in request.GET \
                 and self.q is None:
             # This to let display a communication into a popup when the user is on the first order screen
             self.communication = True
@@ -87,7 +79,7 @@ class OrderView(ListView):
     def get_context_data(self, **kwargs):
         context = super(OrderView, self).get_context_data(**kwargs)
         context['permanence'] = self.permanence
-        context['delivery_id'] = self.delivery_id
+        context['permanence_id'] = self.permanence.id
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
             REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM, REPANIER_SETTINGS_CONFIG
         if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
@@ -127,13 +119,13 @@ class OrderView(ListView):
             'translations__long_name',
         )
         context['box_id'] = str(self.box_id)
-        context['box'] = self.is_box
+        context['is_box'] = "yes" if self.is_box else EMPTY_STRING
         if self.is_box:
             html = EMPTY_STRING
             offer_item = get_object_or_404(OfferItem, id=self.box_id)
             context['box_description']=html_box_content(offer_item, self.user, html)
-        context['basket'] = self.basket
-        context['like'] = self.like
+        context['is_basket'] = "yes" if self.is_basket else EMPTY_STRING
+        context['is_like'] = "yes" if self.is_like else EMPTY_STRING
         context['staff_order'] = Staff.objects.filter(
             is_reply_to_order_email=True) \
             .only("customer_responsible__long_basket_name", "customer_responsible__phone1",
@@ -154,7 +146,7 @@ class OrderView(ListView):
     def get_queryset(self):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
         if self.is_anonymous and \
-                (not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM or self.basket or self.like):
+                (not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM or self.is_basket or self.is_like):
             return OfferItem.objects.none()
         else:
             if self.is_box:
@@ -185,7 +177,7 @@ class OrderView(ListView):
                     "translations__order_sort_order"
                 )
             else:
-                if self.basket:
+                if self.is_basket:
                     qs = OfferItem.objects.filter(
                         permanence_id=self.permanence.id,
                         may_order=True,  # Don't display technical products.
@@ -238,6 +230,6 @@ class OrderView(ListView):
                             translations__long_name__icontains=self.q,
                             translations__language_code=translation.get_language()
                         )
-        if self.like:
+        if self.is_like:
             qs = qs.filter(product__likes__id=self.user.id)
         return qs

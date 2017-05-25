@@ -9,10 +9,10 @@ from django.core import urlresolvers
 # from django.core.validators import MinLengthValidator
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q
+# from django.db.models import Q
 from django.db.models import Sum
 from django.utils import timezone
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
@@ -22,8 +22,10 @@ from django.utils.translation import ugettext_lazy as _
 import bankaccount
 import invoice
 import offeritem
+import product
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.tools import update_offer_item
 
 
 @python_2_unicode_compatible
@@ -351,12 +353,12 @@ def producer_pre_save(sender, **kwargs):
     if producer.email3:
         producer.email3 = producer.email3.lower()
     if producer.producer_pre_opening:
-        # Important to make difference between the stock of the group and the stock of the producer
+        # Used to make difference between the stock of the group and the stock of the producer
         producer.manage_replenishment = False
         producer.manage_production = True
         producer.is_resale_price_fixed = False
     elif producer.manage_replenishment:
-        # Important to compute ProducerInvoice.total_price_with_tax
+        # Needed to compute ProducerInvoice.total_price_with_tax
         producer.invoice_by_basket = False
     if producer.price_list_multiplier <= DECIMAL_ZERO:
         producer.price_list_multiplier = DECIMAL_ONE
@@ -364,3 +366,10 @@ def producer_pre_save(sender, **kwargs):
         producer.uuid = uuid.uuid4()
     if producer.bank_account is not None and len(producer.bank_account.strip()) == 0:
         producer.bank_account = None
+
+@receiver(post_save, sender=Producer)
+def producer_post_save(sender, **kwargs):
+    producer = kwargs["instance"]
+    for a_product in product.Product.objects.filter(producer_id=producer.id).order_by('?'):
+        a_product.save()
+    update_offer_item(producer_id=producer.id)

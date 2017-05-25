@@ -1,0 +1,117 @@
+{% extends 'cms_page.html' %}
+{% load cms_tags sekizai_tags i18n l10n %}
+{% block sub_content %}
+<div class="col-xs-12">
+    <nav class="bs-docs-sidebar">
+        <div class="fixed">
+{#            q : {{ q }}<br/>#}
+{#            producer_id : {{ producer_id }}<br/>#}
+{#            departementforcustomer_id : {{ departementforcustomer_id }}<br/>#}
+{#            box_id : {{ box_id }}<br/>#}
+{#            is_like : {{ is_like }}{% if is_like %} is_like==True{% endif %}<br/>#}
+{#            is_basket : {{ is_basket }}<br/>#}
+{#            is_box : {{ is_box }}<br/>#}
+            <form action="{% url "order_view" permanence_id %}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
+                {% csrf_token %}
+                <div class="input-group">
+                    {% if q != None %}
+                        <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
+                    {% else %}
+                        <input type="search" autosave="repanier" class="form-control" placeholder="{% trans "Search" %}"
+                               name="q">
+                    {% endif %}
+                    <div class="input-group-btn">
+                        <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+                <input type="hidden" name="producer" value="{{ producer_id }}">
+                <input type="hidden" name="departementforcustomer" value="{{ departementforcustomer_id }}">
+                <input type="hidden" name="box" value="{{ box_id }}">
+                <input type="hidden" name="is_like" value="{{ is_like }}">
+                <input type="hidden" name="is_basket" value="{{ is_basket }}">
+            </form>
+            <br/>
+            <ul class="nav nav-stacked" id="sidebar">
+
+<li>
+    <a href="{% url "order_view" permanence_id %}?{% if not is_like %}is_like=yes{% endif %}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My likes" %} <span class="glyphicon glyphicon-heart"></span></a>
+</li>
+{% if box_set %}
+    {% for box in box_set.all %}
+        <li><a href="{% url "order_view" permanence_id %}?box={{ box.id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+               {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} 📦{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
+    {% endfor %}
+{% endif %}
+{% if producer_set %}
+    <li>
+        <a href="{% url "order_view" permanence_id %}?departementforcustomer={{ departementforcustomer_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+           {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
+        <ul class="nav nav-stacked">
+    {% for producer in producer_set.all %}
+        <li><a href="{% url "order_view" permanence_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+               {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span><span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
+        </li>
+    {% endfor %}
+        </ul>
+    </li>
+{% else %}{% if not departementforcustomer_set %}{% if is_like or is_basket or is_box or q %}
+    <li>
+        <a href="{% url "order_view" permanence_id %}">{% trans "All products" %}</a>
+    </li>
+{% endif %}{% endif %}{% endif %}
+{% if departementforcustomer_set %}
+    <li>
+        <a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+           {% if departementforcustomer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
+        <ul class="nav nav-stacked">
+            {% for departementforcustomer in departementforcustomer_set.all %}
+                {% if departementforcustomer.level > 0 %}
+                    {% ifchanged departementforcustomer.parent_id %}
+                    {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
+                    <li><a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+                           {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
+                    </li>
+                    {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                    {% endifchanged %}
+                    <li>
+                        <a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+                           {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                    </li>
+                {% else %}
+                        </ul><li>
+                        <a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}"
+                           {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                        </li><ul class="nav nav-stacked">
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </li>
+{% endif %}
+            </ul>
+        </div>
+    </nav>
+</div>
+{% if not is_anonymous %}
+    {% addtoblock "lastjs" %}
+        <script type="text/javascript">
+        $(document).ready(function () {
+            $("#link_to_order_or_filter_view").html('<a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-default" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+            var lien = '{% url "my_cart_amount_ajax" permanence_id %}';
+            $.ajax({
+                url: lien,
+                cache: false,
+                dataType: 'json',
+                async: true,
+                success: function (result) {
+                    $.each(result, function (key, val) {
+                        $(val.id).each(function( index ) { $( this ).html(val.html)});
+                    });
+                }
+            });
+            $("#li_my_basket").show();
+            });
+        </script>
+    {% endaddtoblock %}
+{% endif %}
+{% endblock %}
+

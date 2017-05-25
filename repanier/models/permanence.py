@@ -85,7 +85,6 @@ class Permanence(TranslatableModel):
             help_text=_(
                 'This message is send by mail to all customers having bought something when closing the permanence.'),
             blank=True, default=EMPTY_STRING),
-        cache_part_d=HTMLField(configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING)
     )
 
     status = models.CharField(
