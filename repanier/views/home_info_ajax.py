@@ -21,7 +21,7 @@ def home_info_ajax(request):
     if request.is_ajax():
         from repanier.apps import REPANIER_SETTINGS_CONFIG
         permanences = []
-        home_info = EMPTY_STRING
+        home_info = "&nbsp;"
         for permanence in Permanence.objects.filter(
                 status=PERMANENCE_OPENED) \
                 .only("id", "permanence_date", "with_delivery_point") \
