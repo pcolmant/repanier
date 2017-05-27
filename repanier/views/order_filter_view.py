@@ -5,13 +5,16 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.utils import translation
 from django.shortcuts import render
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_GET
 
 from repanier.models import OfferItem, Producer, LUT_DepartmentForCustomer
 from repanier.const import EMPTY_STRING
 
 
-@login_required()
+@never_cache
+@require_GET
 @csrf_protect
 def order_filter_view(request, permanence_id):
     if request.user.is_staff or request.user.is_superuser:

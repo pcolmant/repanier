@@ -358,3 +358,8 @@ ul.djng-field-errors li.valid::before {
     word-break: normal;
     overflow-wrap: break-word;
 }
+/* Disable link using css */
+.not-active {
+   pointer-events: none;
+   cursor: default;
+}

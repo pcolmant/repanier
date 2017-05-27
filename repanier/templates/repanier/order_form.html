@@ -45,7 +45,7 @@
             </div>
             {% if page_obj.has_next %}
                 <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}"
-                   class="infinite-more-link btn btn-success btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                   class="infinite-more-link btn btn-success btn-disabled not-active">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
             {% endif %}
             <div class="loading" style="display: none;">
                 {% trans "Loading..." %}

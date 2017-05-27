@@ -65,13 +65,15 @@
             <span class="sr-only">{% trans "Toggle navigation" %}</span>
             <span class="glyphicon glyphicon-list"></span>
           </a>
-          {% if is_anonymous or not permanence_id %}
+          {% if not permanence_id %}
               <span class="navbar-group-name"><small>{{ group_name | truncatechars:25 }}</small></span>
           {% else %}
               <span id="link_to_order_or_filter_view"></span>
-              <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right" style="margin-right: 10px;">
-                  <span id="prepared_amount_visible_xs"></span>
-              </a>
+              {% if is_authenticated %}
+                  <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right" style="margin-right: 10px;">
+                      <span id="prepared_amount_visible_xs"></span>
+                  </a>
+              {%  endif %}
           {%  endif %}
         </div>
       <div class="container-menu">
@@ -80,7 +82,7 @@
           <ul class="nav navbar-nav navbar-left">
             <li>
               <a href="{% repanier_home %}"><span class="glyphicon glyphicon glyphicon-home"></span></a>
-              <button type="button" class="visible-xs-inline-block pull-right closebtn" onclick="closeNav()">&times;</button>
+              <button type="button" class="visible-xs-inline-block pull-right btn btn-sm closebtn" onclick="closeNav()">&times;</button>
             </li>
           </ul>
           <ul class="nav navbar-nav">
