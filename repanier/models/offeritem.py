@@ -236,6 +236,17 @@ def offer_item_pre_save(sender, **kwargs):
 
 
 @python_2_unicode_compatible
+class OfferItemWoReceiver(OfferItem):
+    def __str__(self):
+        return EMPTY_STRING
+
+    class Meta:
+        proxy = True
+        verbose_name = _("offer's item")
+        verbose_name_plural = _("offer's items")
+
+
+@python_2_unicode_compatible
 class OfferItemSend(OfferItem):
     def __str__(self):
         return self.display(is_quantity_invoiced=True)

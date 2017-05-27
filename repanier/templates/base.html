@@ -115,21 +115,21 @@
     <a name="content"></a><section>
     {% if current_page.is_home %}
         <div class="container-info" id="containerInfo" style="display: none"></div>
-{% addtoblock "lastjs" %}{% spaceless %}
-    <script type="text/javascript">
-        $(document).ready(function () {
-            lien = '{% url 'home_info' %}';
-            $.ajax({
-                url: lien,
-                cache: false,
-                async: false,
-                success: function (result) {
-                    $("#containerInfo").html(result).show();
-                }
-            });
-        });
-    </script>
-{% endspaceless %}{% endaddtoblock %}
+        {% addtoblock "lastjs" %}{% spaceless %}
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    lien = '{% url 'home_info' %}';
+                    $.ajax({
+                        url: lien,
+                        cache: false,
+                        async: false,
+                        success: function (result) {
+                            $("#containerInfo").html(result).show();
+                        }
+                    });
+                });
+            </script>
+        {% endspaceless %}{% endaddtoblock %}
     {% endif %}
     {% block base_content%}{% endblock %}
     </section>

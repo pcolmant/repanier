@@ -646,7 +646,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                     rule_of_3_target = row[_('rule of 3')]
                     if rule_of_3_target is not None:
                         rule_of_3_target = Decimal(rule_of_3_target).quantize(TWO_DECIMALS)
-                        print(rule_of_3_target)
+                        # print(rule_of_3_target)
                         if rule_of_3_target != rule_of_3_source:
                             max_purchase_counter = len(array_purchase)
                             if max_purchase_counter <= 1:

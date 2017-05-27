@@ -8,8 +8,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO
-from repanier.models import PermanenceBoard, CustomerInvoice
-from repanier.tools import sint
+from repanier.models import PermanenceBoard, CustomerInvoice, Purchase
+from repanier.tools import sint, display_selected_value, display_selected_box_value
 
 register = template.Library()
 
@@ -188,4 +188,59 @@ def repanier_select_task(context, *args, **kwargs):
                             """.format(
                                 permanence_board_id=permanence_board.id
                             )
+    return mark_safe(result)
+
+
+@register.simple_tag(takes_context=True)
+def repanier_select_offer_item(context, *args, **kwargs):
+    request = context['request']
+    user = request.user
+    result = EMPTY_STRING
+    if user.is_authenticated and not(user.is_staff or user.is_superuser):
+        offer_item = kwargs.get('offer_item', None)
+        str_id = str(offer_item.id)
+        if offer_item.may_order:
+            purchase = Purchase.objects.filter(
+                customer_id=user.customer,
+                offer_item_id=offer_item.id,
+                is_box_content=False
+            ).order_by('?').first()
+            if purchase is not None:
+                option_dict = display_selected_value(
+                    offer_item,
+                    purchase.quantity_ordered)
+            else:
+                option_dict = display_selected_value(
+                    offer_item,
+                    DECIMAL_ZERO)
+            # print(option_dict)
+            result = '<select name="offer_item{str_id}" id="offer_item{str_id}" {onchange} onclick="show_select_order_list_ajax({str_id})" class="form-control">{option}</select>'.format(
+                str_id=str_id,
+                onchange='onchange="order_ajax(%s)"' % str_id if user.is_authenticated else 'disabled',
+                option=option_dict['html']
+            )
+        box_purchase = Purchase.objects.filter(
+            customer_id=user.customer,
+            offer_item_id=offer_item.id,
+            is_box_content=True
+        ).order_by('?').first()
+        if box_purchase is not None:
+            offer_item = box_purchase.offer_item
+            option_dict = display_selected_box_value(offer_item, box_purchase)
+            result = result + option_dict['html']
+    return mark_safe(result)
+
+
+@register.simple_tag(takes_context=True)
+def repanier_btn_like(context, *args, **kwargs):
+    request = context['request']
+    user = request.user
+    result = EMPTY_STRING
+    if not(user.is_staff or user.is_superuser):
+        offer_item = kwargs.get('offer_item', None)
+        str_id = str(offer_item.id)
+        result = '<br/><span class="btn_like{str_id}" style="cursor: pointer;">{html}</span>'.format(
+            str_id=str_id,
+            html=offer_item.get_like(user)
+        )
     return mark_safe(result)

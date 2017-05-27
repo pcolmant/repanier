@@ -674,7 +674,7 @@ def display_selected_value(offer_item, quantity_ordered):
             }
     else:
         option_dict = {
-            'id'  : "#box_offer_item%d" % offer_item.id,
+            'id'  : "#offer_item%d" % offer_item.id,
             'html': EMPTY_STRING
         }
     return option_dict
@@ -713,7 +713,7 @@ def display_selected_box_value(offer_item, box_purchase):
     else:
         option_dict = {
             'id'  : "#box_offer_item%d" % offer_item.id,
-            'html': ''
+            'html': EMPTY_STRING
         }
     return option_dict
 
@@ -1136,7 +1136,7 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                                             'decrease': number_format((DECIMAL_ONE - customer_invoice.price_list_multiplier) * 100, 2)
                                         }
 
-        msg_delivery = '%s<b><i><select name="delivery" id="delivery" onmouseover="delivery_select_ajax()" onchange="delivery_ajax()" class="form-control"><option value="%d" selected>%s</option></select></i></b><br/>%s%s' % (
+        msg_delivery = '%s<b><i><select name="delivery" id="delivery" onclick="show_select_delivery_list_ajax()" onchange="delivery_ajax()" class="form-control"><option value="%d" selected>%s</option></select></i></b><br/>%s%s' % (
             _("Delivery point"),
             delivery_id,
             label,

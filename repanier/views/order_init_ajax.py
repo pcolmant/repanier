@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 import json
 
+from django.contrib.auth.decorators import login_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404
 from django.http import HttpResponse
@@ -18,17 +19,16 @@ from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENC
 from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, OfferItem, \
     ProducerInvoice, Purchase
 from repanier.tools import sboolean, sint, display_selected_value, \
-    display_selected_box_value, my_basket, my_order_confirmation, calc_basket_message, permanence_ok_or_404
+    display_selected_box_value, my_order_confirmation, calc_basket_message, permanence_ok_or_404
 
 
 @never_cache
 @require_GET
+@login_required
 def order_init_ajax(request):
     if not request.is_ajax():
         raise Http404
     user = request.user
-    if not user.is_authenticated:
-        raise Http404
     customer = Customer.objects.filter(
         user_id=user.id, is_active=True
     ).only(
@@ -58,8 +58,6 @@ def order_init_ajax(request):
 
     if customer_invoice is None:
         raise Http404
-
-    my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
 
     basket = sboolean(request.GET.get('ba', False))
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
@@ -120,48 +118,5 @@ def order_init_ajax(request):
                     {'permanence_boards': permanence_boards, 'count_activity': count_activity})
                 option_dict = {'id': "#communication", 'html': html}
                 to_json.append(option_dict)
-
-    request_offer_items = request.GET.getlist('oi')
-    for request_offer_item in request_offer_items:
-        offer_item_id = sint(request_offer_item)
-        # No need to check customer.may_order.
-        # Select one purchase
-        purchase = Purchase.objects.filter(
-            customer_id=customer.id,
-            offer_item_id=offer_item_id,
-            is_box_content=False
-        ).select_related(
-            "offer_item"
-        ).order_by('?').first()
-        if purchase is not None:
-            offer_item = purchase.offer_item
-            if offer_item is not None:
-                option_dict = display_selected_value(
-                    offer_item,
-                    purchase.quantity_ordered)
-                to_json.append(option_dict)
-        else:
-            offer_item = OfferItem.objects.filter(
-                id=offer_item_id
-            ).order_by('?').first()
-            if offer_item is not None:
-                option_dict = display_selected_value(
-                    offer_item,
-                    DECIMAL_ZERO)
-                to_json.append(option_dict)
-        box_purchase = Purchase.objects.filter(
-            customer_id=customer.id,
-            offer_item_id=offer_item_id,
-            is_box_content=True
-        ).select_related(
-            "offer_item"
-        ).order_by('?').first()
-        if box_purchase is not None:
-            offer_item = box_purchase.offer_item
-            if offer_item is not None:
-                option_dict = display_selected_box_value(offer_item, box_purchase)
-                to_json.append(option_dict)
-        option_dict = {'id': ".btn_like%s" % offer_item_id, 'html': offer_item.get_like(user)}
-        to_json.append(option_dict)
 
     return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")

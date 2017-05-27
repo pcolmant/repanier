@@ -18,5 +18,5 @@ from box import BoxContent
 # proxies
 from box import Box
 from invoice import CustomerSend
-from offeritem import OfferItemSend, OfferItemClosed
+from offeritem import OfferItemSend, OfferItemClosed, OfferItemWoReceiver
 from permanence import PermanenceInPreparation, PermanenceDone
