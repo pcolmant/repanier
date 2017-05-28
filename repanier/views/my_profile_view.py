@@ -47,7 +47,9 @@ class CustomerForm(RepanierForm):
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
-    about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
+    # about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
+    about_me = forms.CharField(label=_('About me'), widget=forms.Textarea(attrs={'cols': '40', 'rows': '3'}),
+                              required=False)
 
     def clean_email1(self):
         email1 = self.cleaned_data['email1']
