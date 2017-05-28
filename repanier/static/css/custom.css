@@ -363,3 +363,8 @@ ul.djng-field-errors li.valid::before {
    pointer-events: none;
    cursor: default;
 }
+/* sticky "Update" button */
+.form-sticky-update-button{
+    position:sticky;
+    bottom:65px;
+}
