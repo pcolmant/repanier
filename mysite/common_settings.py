@@ -253,9 +253,11 @@ TEMPLATES = [
             'cms.context_processors.cms_settings'
         ],
         'loaders': [
-            'django.template.loaders.filesystem.Loader',
-            'django.template.loaders.app_directories.Loader',
-            'django.template.loaders.eggs.Loader'
+            ('django.template.loaders.cached.Loader', [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                # 'django.template.loaders.eggs.Loader'
+            ]),
         ],
     },
 },
