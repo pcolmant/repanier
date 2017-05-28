@@ -49,9 +49,18 @@
             {% endif %}
             <div class="loaded" style="display: none;">
                 <div class="clearfix visible-sm-block visible-md-block visible-lg-block"></div>
-                <a class="btn btn-default btn-disabled" href="#top"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>
+                <a class="btn btn-default btn-disabled back-to-top-sticky-button" id="backToTop" href="#top"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>
             </div>
             <script>
+{#                https://www.w3schools.com/howto/howto_js_scroll_to_top.asp#}
+                window.onscroll = function() {scrollFunction()};
+                function scrollFunction() {
+                    if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                        document.getElementById("backToTop").style.display = "block";
+                    } else {
+                        document.getElementById("backToTop").style.display = "none";
+                    }
+                }
                 var infinite = new Waypoint.Infinite({
                   element: $('.infinite-container')[0],
                   onBeforePageLoad: function () {

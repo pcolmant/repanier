@@ -368,6 +368,14 @@ ul.djng-field-errors li.valid::before {
     position:sticky;
     bottom:65px;
 }
+/* https://www.w3schools.com/howto/howto_js_scroll_to_top.asp */
+.back-to-top-sticky-button{
+    display:none;
+    position:fixed;
+    bottom:20px;
+    right:30px;
+    z-index:2000;
+}
 /* Bootstrap refresh animated */
 .gly-spin {
   -webkit-animation: spin 2s infinite linear;
