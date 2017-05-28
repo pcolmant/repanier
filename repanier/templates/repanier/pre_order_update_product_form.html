@@ -237,7 +237,7 @@
             <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
             <script>
                 t_row.find('span[id=get_long_name]').html('{{ offer_item.get_long_name | safe }}{% if offer_item.picture2 %}<img class="img-responsive img-rounded" style = "float:right; margin:5px; min-height:32px; min-width:32px; max-height:48px; max-width:48px;" src="{{ MEDIA_URL }}{{ offer_item.picture2 }}"/>{% endif %}');
-                row = '{{ offer_item.producer_unit_price_wo_tax }}'
+                row = '{{ offer_item.producer_unit_price_wo_tax }}';
                 {% if offer_item.order_unit == "140" %}
                     row += '&nbsp;/&nbsp;({% trans "kg" %})';
                 {% endif %}

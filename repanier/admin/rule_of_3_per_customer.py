@@ -13,6 +13,7 @@ from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
 from repanier.models import Customer, Permanence, Producer, OfferItemSend, Purchase
+from repanier.tools import rule_of_3_reload_purchase
 
 
 class CustomerPurchaseSendInlineFormSet(BaseInlineFormSet):
@@ -216,33 +217,8 @@ class CustomerSendAdmin(admin.ModelAdmin):
             if offer_item is None:
                 purchase_form.repanier_is_valid = False
             else:
-                purchase_form.repanier_is_valid = True
-                # Reload purchase, because it has maybe be deleted
-                purchase = Purchase.objects.filter(
-                    customer_id=customer.id,
-                    offer_item_id=offer_item.id,
-                    is_box_content=False
-                ).order_by('?').first()
-                if purchase is None:
-                    # Doesn't exists ? Create one
-                    purchase = Purchase.objects.create(
-                        permanence=offer_item.permanence,
-                        permanence_date=offer_item.permanence.permanence_date,
-                        offer_item=offer_item,
-                        producer=offer_item.producer,
-                        customer=customer,
-                        quantity_ordered=DECIMAL_ZERO,
-                        quantity_invoiced=DECIMAL_ZERO,
-                        comment=purchase_form_instance.comment,
-                        is_box_content=False,
-                        status=PERMANENCE_SEND
-                    )
-                # And set the form's values
-                purchase.quantity_invoiced = purchase_form_instance.quantity_invoiced
-                purchase.purchase_price = purchase_form_instance.purchase_price
-                purchase.comment = purchase_form_instance.comment
-                # Set it as new form instance
-                purchase_form.instance = purchase
+                purchase = rule_of_3_reload_purchase(customer, offer_item, purchase_form,
+                                                     purchase_form_instance)
                 previous_purchase_price = purchase_form.fields['previous_purchase_price'].initial
                 if purchase.purchase_price != previous_purchase_price:
                     if purchase.get_producer_unit_price() != DECIMAL_ZERO:
