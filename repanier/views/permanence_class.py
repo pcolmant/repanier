@@ -23,10 +23,11 @@ class PermanenceView(ListView):
     def get_queryset(self):
         qs = PermanenceBoard.objects.filter(
             permanence__status__lte=PERMANENCE_SEND,
+            permanence__master_permanence__isnull=True,
             permanence_role__rght=F('permanence_role__lft') + 1,
             permanence_role__is_active=True
         ).order_by(
-            "permanence_date", "permanence",
+            "permanence_date",
             "permanence_role__tree_id",
             "permanence_role__lft"
         )

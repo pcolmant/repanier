@@ -36,21 +36,16 @@ def order_filter_view(request, permanence_id):
     else:
         is_box = False
     q = request.GET.get('q', None)
-    if producer_id == 'all':
-        departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
-            offeritem__permanence_id=permanence_id,
-            offeritem__is_active=True,
-            offeritem__is_box=False) \
-            .order_by("tree_id", "lft") \
-            .distinct("id", "tree_id", "lft")
-    else:
-        departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
-            offeritem__producer_id=producer_id,
-            offeritem__permanence_id=permanence_id,
-            offeritem__is_active=True,
-            offeritem__is_box=False) \
-            .order_by("tree_id", "lft") \
-            .distinct("id", "tree_id", "lft")
+    departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
+        offeritem__permanence_id=permanence_id,
+        offeritem__is_active=True,
+        offeritem__is_box=False) \
+        .order_by("tree_id", "lft") \
+        .distinct("id", "tree_id", "lft")
+    if producer_id != 'all':
+        departementforcustomer_set = departementforcustomer_set.filter(
+            offeritem__producer_id=producer_id
+        )
     return render(
         request, "repanier/order_filter.html",
         {
@@ -74,6 +69,7 @@ def order_filter_view(request, permanence_id):
                             'translations__long_name',
                         ),
             'box_id': box_id,
-            'permanence_id': permanence_id
+            'permanence_id': permanence_id,
+            'may_order': True
         }
     )

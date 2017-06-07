@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for permanence in Permanence.objects.filter(
-            id=229
+            id=223
         ).order_by('permanence_date'):
             print ("Cancel %s %s" % (permanence.permanence_date, permanence.get_status_display()))
             permanence.recalculate_order_amount(re_init=True)

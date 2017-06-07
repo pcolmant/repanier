@@ -6,16 +6,12 @@
 {% block permanence_description %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock permanence_description %}
 {% block confirm_basket %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock confirm_basket %}
 {% block product_filter %}{% if not page_obj.has_previous %}<div class="hidden-xs">{{ block.super }}</div>{% endif %}{% endblock product_filter %}
-{% block product_list %}
-    {% if not is_anonymous or display_anonymous_order_form %}
+{% block product_list %}{% spaceless %}
+    {% if may_order or display_anonymous_order_form %}
         {% addtoblock "jshead" %}<script src="{{ STATIC_URL}}waypoints/jquery.waypoints.min.js"></script>{% endaddtoblock %}
         {% addtoblock "jshead" %}<script src="{{ STATIC_URL}}waypoints/shortcuts/infinite.min.js"></script>{% endaddtoblock %}
         {% if offeritem_list %}
             <div class="infinite-container">
-            {% if page_obj.has_next %}
-                <span href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}"
-                   class="infinite-more-link"></span>
-            {% endif %}
             {% for offer in offeritem_list %}
                 <div class="infinite-item">
                 {% if offer.picture %}
@@ -27,9 +23,9 @@
                     {{ offer.cache_part_a | safe }}
                 </div>
                 <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
-                    {% repanier_select_offer_item offer_item=offer %}
+                    {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
                     {{ offer.cache_part_b | safe }}
-                    {% if not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}
+                    {% if may_order and not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}
                 </div>
                 {% if offer.is_box %}
                     <div class="clearfix"></div>
@@ -49,7 +45,8 @@
             </div>
             {% if page_obj.has_next %}
                 <div class="loading" style="display: none;">
-                    <a href="#" class="btn btn-default not-active"><span class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% trans "Loading..." %}</a>
+                    <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}"
+                   class="infinite-more-link btn btn-default not-active"><span class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% trans "Loading..." %}</a>
                 </div>
             {% endif %}
             <div class="loaded" style="display: none;">
@@ -67,8 +64,9 @@
                 }
                 var infinite = new Waypoint.Infinite({
                   element: $('.infinite-container')[0],
+{#                  offset: '50%',#}
+                  offset: function() { return Waypoint.viewportHeight() - this.element.clientHeight + 3500 },
                   onBeforePageLoad: function () {
-                    $('.loaded').hide();
                     $('.loading').show();
                   },
                   onAfterPageLoad: function ($items) {
@@ -82,11 +80,11 @@
         {% endif %}
         </div>
     </div>
-    {% endif %} {# not is_anonymous or display_anonymous_order_form #}
+    {% endif %} {# may_order or display_anonymous_order_form #}
 
-{% endblock product_list %}
+{% endspaceless %}{% endblock product_list %}
 {% block order_modal %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock order_modal %}
-{% block my_cart_amount_js %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock my_cart_amount_js %}
+{% block my_cart_amount_js %}{% endblock my_cart_amount_js %}
 {% block my_order_js %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock my_order_js %}
-{% block link_to_filter_js %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock link_to_filter_js %}
+{#{% block link_to_filter_js %}{{ block.super }}{% endblock link_to_filter_js %}#}
 {% block link_to_order_js %}{% endblock link_to_order_js %}

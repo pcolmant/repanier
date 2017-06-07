@@ -7,8 +7,8 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO
-from repanier.models import PermanenceBoard, CustomerInvoice, Purchase
+from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMANENCE_OPENED
+from repanier.models import PermanenceBoard, CustomerInvoice, Purchase, ProducerInvoice
 from repanier.tools import sint, display_selected_value, display_selected_box_value
 
 register = template.Library()
@@ -131,9 +131,7 @@ def repanier_select_task(context, *args, **kwargs):
     request = context['request']
     user = request.user
     result = EMPTY_STRING
-    if user.is_staff or user.is_superuser:
-        pass
-    else:
+    if not(user.is_staff or user.is_superuser):
         p_permanence_board_id = sint(kwargs.get('permanence_board_id', 0))
         if p_permanence_board_id > 0:
             permanence_board = PermanenceBoard.objects.filter(id=p_permanence_board_id).select_related(
@@ -196,7 +194,7 @@ def repanier_select_offer_item(context, *args, **kwargs):
     request = context['request']
     user = request.user
     result = EMPTY_STRING
-    if user.is_authenticated and not(user.is_staff or user.is_superuser):
+    if not(user.is_staff or user.is_superuser):
         offer_item = kwargs.get('offer_item', None)
         str_id = str(offer_item.id)
         if offer_item.may_order:
@@ -206,19 +204,34 @@ def repanier_select_offer_item(context, *args, **kwargs):
                 is_box_content=False
             ).order_by('?').first()
             if purchase is not None:
+                is_open=purchase.status == PERMANENCE_OPENED
                 option_dict = display_selected_value(
                     offer_item,
-                    purchase.quantity_ordered)
+                    purchase.quantity_ordered,
+                    is_open=is_open
+                )
             else:
+                is_open = ProducerInvoice.objects.filter(
+                    permanence__offeritem=offer_item.id,
+                    producer__offeritem=offer_item.id,
+                    status=PERMANENCE_OPENED
+                ).order_by('?').exists()
                 option_dict = display_selected_value(
                     offer_item,
-                    DECIMAL_ZERO)
+                    DECIMAL_ZERO,
+                    is_open=is_open
+                )
             # print(option_dict)
-            result = '<select name="offer_item{str_id}" id="offer_item{str_id}" {onchange} onclick="show_select_order_list_ajax({str_id})" class="form-control">{option}</select>'.format(
-                str_id=str_id,
-                onchange='onchange="order_ajax(%s)"' % str_id if user.is_authenticated else 'disabled',
-                option=option_dict['html']
-            )
+            if is_open:
+                result = '<select name="offer_item{str_id}" id="offer_item{str_id}" onchange="order_ajax({str_id})" onmouseover="show_select_order_list_ajax({str_id})" class="form-control">{option}</select>'.format(
+                    str_id=str_id,
+                    option=option_dict['html']
+                )
+            else:
+                result = '<select name="offer_item{str_id}" id="offer_item{str_id}" class="form-control">{option}</select>'.format(
+                    str_id=str_id,
+                    option=option_dict['html']
+                )
         box_purchase = Purchase.objects.filter(
             customer_id=user.customer,
             offer_item_id=offer_item.id,

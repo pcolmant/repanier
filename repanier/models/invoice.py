@@ -14,6 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import producer
 import purchase
+import deliveryboard
 from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
@@ -23,7 +24,7 @@ from repanier.tools import create_or_update_one_cart_item, get_signature
 def permanence_verbose_name():
     if DJANGO_IS_MIGRATION_RUNNING:
         return EMPTY_STRING
-    from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
+    # from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
     return _('order') # lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
 
 @python_2_unicode_compatible
@@ -166,14 +167,18 @@ class CustomerInvoice(Invoice):
         #   self.customer_charged_id = self.customer_id
         #   price_list_multiplier may vary
         from repanier.apps import REPANIER_SETTINGS_TRANSPORT, REPANIER_SETTINGS_MIN_TRANSPORT
-        self.delivery = delivery
         if delivery is None:
             if self.permanence.with_delivery_point:
                 delivery_point = self.customer.delivery_point
+                delivery = deliveryboard.DeliveryBoard.objects.filter(
+                    delivery_point=delivery_point,
+                    permanence=self.permanence
+                ).order_by('?').first()
             else:
                 delivery_point = None
         else:
             delivery_point = delivery.delivery_point
+        self.delivery = delivery
 
         if delivery_point is None:
             self.customer_charged = self.customer

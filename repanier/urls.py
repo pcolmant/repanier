@@ -120,7 +120,7 @@ urlpatterns = [
     url(r'^ajax/display-status/(?P<permanence_id>\d+)/$', display_status, name='display_status'),
     url(r'^ajax/like/$', like_ajax, name='like_ajax'),
     url(r'^ajax/is-into-offer/(?P<product_id>\d+)/$', is_into_offer, name='is_into_offer'),
-    url(r'^permanence/$', login_required(never_cache(PermanenceView.as_view())), name='permanence_view'),
+    url(r'^permanence/$', never_cache(PermanenceView.as_view()), name='permanence_view'),
     url(r'^customer-invoice/(?P<pk>[0-9]+)/$', login_required(CustomerInvoiceView.as_view()),
         name='customer_invoice_view'),
     url(r'^producer-invoice/(?P<pk>[0-9]+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',

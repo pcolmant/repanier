@@ -66,7 +66,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                 # At least one order
                 to_email_board = []
                 for permanence_board in PermanenceBoard.objects.filter(
-                        permanence=permanence.id).order_by('?'):
+                        permanence_id=permanence.id).order_by('?'):
                     if permanence_board.customer:
                         to_email_board.append(permanence_board.customer.user.email)
 
@@ -108,7 +108,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
         # Orders send to our producers
         if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER:
             producer_set = Producer.objects.filter(
-                permanence=permanence.id,
+                permanence_id=permanence.id,
                 language=language_code,
             ).order_by('?')
             if producers_id:

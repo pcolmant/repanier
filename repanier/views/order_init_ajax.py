@@ -14,12 +14,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_OPENED, DECIMAL_ONE, \
-    REPANIER_MONEY_ZERO, EMPTY_STRING
-from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, OfferItem, \
-    ProducerInvoice, Purchase
-from repanier.tools import sboolean, sint, display_selected_value, \
-    display_selected_box_value, my_order_confirmation, calc_basket_message, permanence_ok_or_404
+from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_OPENED, \
+    EMPTY_STRING
+from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, ProducerInvoice
+from repanier.tools import sboolean, sint, \
+    my_order_confirmation, calc_basket_message, permanence_ok_or_404, my_basket
 
 
 @never_cache
@@ -118,5 +117,5 @@ def order_init_ajax(request):
                     {'permanence_boards': permanence_boards, 'count_activity': count_activity})
                 option_dict = {'id': "#communication", 'html': html}
                 to_json.append(option_dict)
-
+    my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
     return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")

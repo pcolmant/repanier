@@ -8,7 +8,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin import TabularInline
-from django.db.models import Sum
 from django.forms import ModelForm, BaseInlineFormSet
 from django.forms.formsets import DELETION_FIELD_NAME
 from django.shortcuts import render
@@ -20,9 +19,10 @@ from parler.forms import TranslatableModelForm
 
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import DECIMAL_ZERO, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP
+    COORDINATION_GROUP, PERMANENCE_OPENED, PERMANENCE_PLANNED, PERMANENCE_CLOSED
 from repanier.models.box import BoxContent, Box
 from repanier.models.product import Product
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.task import task_box
 from repanier.tools import update_offer_item
 
@@ -99,6 +99,29 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
     readonly_fields = [
         'get_calculated_customer_content_price'
     ]
+    has_add_or_delete_permission = None
+
+    def has_delete_permission(self, request, obj=None):
+        if self.has_add_or_delete_permission is None:
+            try:
+                parent_object = Box.objects.filter(
+                    id=request.resolver_match.args[0]
+                ).only(
+                    "id").order_by('?').first()
+                if parent_object is not None and OfferItemWoReceiver.objects.filter(
+                    product=parent_object.id,
+                    permanence__status__gt=PERMANENCE_PLANNED,
+                    permanence__status__lt=PERMANENCE_CLOSED
+                ).order_by('?').exists():
+                    self.has_add_or_delete_permission = False
+                else:
+                    self.has_add_or_delete_permission = True
+            except:
+                self.has_add_or_delete_permission = True
+        return self.has_add_or_delete_permission
+
+    def has_add_permission(self, request):
+        return self.has_delete_permission(request)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "product":
@@ -119,7 +142,7 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
 
 class BoxForm(TranslatableModelForm):
     calculated_stock = forms.DecimalField(
-        label=_("Current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
+        label=_("Calculated current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
     calculated_customer_box_price = forms.DecimalField(
         label=_("calculated customer box price"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     calculated_box_deposit = forms.DecimalField(
@@ -127,19 +150,13 @@ class BoxForm(TranslatableModelForm):
 
     def __init__(self, *args, **kwargs):
         super(BoxForm, self).__init__(*args, **kwargs)
-        if self.instance.id is not None:
-            result_set = BoxContent.objects.filter(box_id=self.instance.id).aggregate(
-                Sum('calculated_customer_content_price'),
-                Sum('calculated_content_deposit')
-            )
-            calculated_customer_box_price = result_set["calculated_customer_content_price__sum"] \
-                if result_set["calculated_customer_content_price__sum"] is not None else DECIMAL_ZERO
-            calculated_box_deposit = result_set["calculated_content_deposit__sum"] \
-                if result_set["calculated_content_deposit__sum"] is not None else DECIMAL_ZERO
+        box = self.instance
+        if box.id is not None:
+            box_price, box_deposit = box.get_calculated_price()
 
-            self.fields["calculated_stock"].initial = self.instance.stock
-            self.fields["calculated_customer_box_price"].initial = calculated_customer_box_price
-            self.fields["calculated_box_deposit"].initial = calculated_box_deposit
+            self.fields["calculated_stock"].initial = box.get_calculated_stock()
+            self.fields["calculated_customer_box_price"].initial = box_price
+            self.fields["calculated_box_deposit"].initial = box_deposit
 
         self.fields["calculated_customer_box_price"].disabled = True
         self.fields["calculated_stock"].disabled = True
@@ -182,10 +199,11 @@ class BoxAdmin(TranslatableAdmin):
         return self.has_delete_permission(request, box)
 
     def get_list_display(self, request):
+        self.list_editable = ('stock',)
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            return ('is_into_offer', 'get_long_name', 'language_column')
+            return ('get_is_into_offer', 'get_long_name', 'language_column', 'stock')
         else:
-            return ('is_into_offer', 'get_long_name')
+            return ('get_is_into_offer', 'get_long_name', 'stock')
 
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_box.flip_flop_is_into_offer(queryset)
@@ -222,9 +240,9 @@ class BoxAdmin(TranslatableAdmin):
 
     def get_fieldsets(self, request, box=None):
         fields_basic = [
-            ('long_name', 'picture2', 'calculated_stock'),
-            ('calculated_customer_box_price', 'calculated_box_deposit'),
-            ('customer_unit_price', 'unit_deposit'),
+            ('long_name', 'picture2'),
+            ('calculated_stock', 'calculated_customer_box_price', 'calculated_box_deposit'),
+            ('stock', 'customer_unit_price', 'unit_deposit'),
         ]
         fields_advanced_descriptions = [
             'placement',
@@ -243,7 +261,7 @@ class BoxAdmin(TranslatableAdmin):
         return fieldsets
 
     def get_readonly_fields(self, request, customer=None):
-        return ['stock', 'is_updated_on']
+        return ['is_updated_on']
 
     def get_form(self, request, box=None, **kwargs):
         form = super(BoxAdmin, self).get_form(request, box, **kwargs)
@@ -271,18 +289,21 @@ class BoxAdmin(TranslatableAdmin):
             if not hasattr(formset, 'changed_objects'): formset.changed_objects = []
             if not hasattr(formset, 'deleted_objects'): formset.deleted_objects = []
         box = form.instance
-        formset = formsets[0]
-        for box_content_form in formset:
-            box_content = box_content_form.instance
-            previous_product = box_content_form.fields['previous_product'].initial
-            if previous_product is not None and previous_product != box_content.product:
-                # Delete the box_content because the product has changed
-                box_content_form.instance.delete()
-            if box_content.product is not None:
-                if box_content.id is None:
-                    box_content.box_id = box.id
-                if box_content_form.cleaned_data.get(DELETION_FIELD_NAME, False):
+        try:
+            formset = formsets[0]
+            for box_content_form in formset:
+                box_content = box_content_form.instance
+                previous_product = box_content_form.fields['previous_product'].initial
+                if previous_product is not None and previous_product != box_content.product:
+                    # Delete the box_content because the product has changed
                     box_content_form.instance.delete()
-                elif box_content_form.has_changed():
-                    box_content_form.instance.save()
-        box.save_update_stock()
+                if box_content.product is not None:
+                    if box_content.id is None:
+                        box_content.box_id = box.id
+                    if box_content_form.cleaned_data.get(DELETION_FIELD_NAME, False):
+                        box_content_form.instance.delete()
+                    elif box_content_form.has_changed():
+                        box_content_form.instance.save()
+        except IndexError:
+            # No formset present in list admin, but well in detail admin
+            pass

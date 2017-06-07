@@ -46,7 +46,7 @@ class Command(BaseCommand):
         #         self.move(record=obj, to_subdir="LUT_PermanenceRole", size="S")
         for product in Product.objects.all():
             if product.picture is not None:
-                self.move(record=product, to_subdir="product" + os.sep + str(product.producer.id), size="M")
+                self.move(record=product, to_subdir="product" + os.sep + str(product.producer_id), size="M")
             for obj in OfferItem.objects.filter(product_id=product.id).order_by('?'):
                 obj.picture2 = product.picture2
                 obj.save()

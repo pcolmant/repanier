@@ -76,7 +76,7 @@ class UserDataForm(forms.ModelForm):
             may_order = self.cleaned_data["may_order"]
             if may_order:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
-                        customer_responsible=self.instance.id
+                        customer_responsible_id=self.instance.id
                 ).order_by('?').first()
                 if delivery_point is not None:
                     self.add_error(
@@ -87,7 +87,7 @@ class UserDataForm(forms.ModelForm):
             is_active = self.cleaned_data.get("is_active")
             if is_active is not None and not is_active:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
-                    customer_responsible=self.instance.id
+                    customer_responsible_id=self.instance.id
                 ).order_by('?').first()
                 if delivery_point is not None:
                     self.add_error(

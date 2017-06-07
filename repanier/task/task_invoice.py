@@ -2,7 +2,7 @@
 import threading
 
 from django.contrib import messages
-from django.db.models import Sum
+from django.db.models import Sum, ProtectedError
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
@@ -60,13 +60,19 @@ def generate_invoice(permanence, payment_date):
         producers_to_keep = list(Producer.objects.filter(
             producerinvoice__permanence_id=permanence.id,
             producerinvoice__invoice_sort_order__isnull=True,
-            producerinvoice__to_be_paid=True).only('id').order_by('?'))
+            producerinvoice__to_be_paid=True
+        ).values_list(
+            'id', flat=True
+        ).order_by('?'))
         permanence.producers.clear()
         permanence.producers.add(*producers_to_keep)
         producers_to_move = list(Producer.objects.filter(
             producerinvoice__permanence_id=permanence.id,
             producerinvoice__invoice_sort_order__isnull=True,
-            producerinvoice__to_be_paid=False).only('id').order_by('?'))
+            producerinvoice__to_be_paid=False
+        ).values_list(
+            'id', flat=True
+        ).order_by('?'))
         new_permanence = permanence.create_child(PERMANENCE_SEND)
         new_permanence.producers.add(*producers_to_move)
         ProducerInvoice.objects.filter(
@@ -88,16 +94,20 @@ def generate_invoice(permanence, payment_date):
             permanence_id=new_permanence.id
         )
 
-        for purchase in Purchase.objects.filter(
+        customer_invoice_id_to_create = list(Purchase.objects.filter(
             permanence_id=permanence.id,
             producer_id__in=producers_to_move
-        ).order_by().distinct('customer_invoice'):
+        ).order_by('customer_invoice_id').distinct('customer_invoice').values_list(
+            'customer_invoice', flat=True
+        ))
+        for customer_invoice_id in customer_invoice_id_to_create:
             customer_invoice = CustomerInvoice.objects.filter(
-                id=purchase.customer_invoice_id
+                id=customer_invoice_id
             ).order_by('?').first()
             new_customer_invoice = customer_invoice.create_child(new_permanence=new_permanence)
-
             new_customer_invoice.set_delivery(customer_invoice.delivery)
+            # Save new_customer_invoice before reference it when updating the purchases
+            new_customer_invoice.save()
             # Important : The purchase customer charged must be calculated before calculate_and_save_delta_buyinggroup
             Purchase.objects.filter(
                 customer_invoice_id=customer_invoice.id,
@@ -107,7 +117,6 @@ def generate_invoice(permanence, payment_date):
                 customer_invoice_id=new_customer_invoice.id,
             )
             new_customer_invoice.calculate_and_save_delta_buyinggroup()
-            new_customer_invoice.save()
 
         new_permanence.recalculate_order_amount(re_init=True)
 
@@ -615,6 +624,12 @@ def cancel_invoice(permanence):
                     BANK_COMPENSATION # BANK_COMPENSATION may occurs in previous release of Repanier
                 ]
             ).order_by('?').delete()
+        # # Recover all producers in case of ...
+        # permanence.producers.clear()
+        # for purchase in Purchase.objects.filter(
+        #         permanence_id=permanence.id
+        # ).order_by().distinct("producer_id"):
+        #     permanence.producers.add(purchase.producer_id)
         Permanence.objects.filter(
             id=permanence.id
         ).update(invoice_sort_order=None)

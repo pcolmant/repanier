@@ -16,7 +16,7 @@ from repanier.const import BOX_UNICODE, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, 
     DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC, \
     TWO_DECIMALS, PRODUCT_ORDER_UNIT_LT, DICT_VAT, DICT_VAT_RATE, FOUR_DECIMALS, PRODUCT_ORDER_UNIT_DEPOSIT, \
     LUT_PRODUCT_ORDER_UNIT, PRODUCT_ORDER_UNIT_PC, LUT_PRODUCT_PLACEMENT, PRODUCT_PLACEMENT_BASKET, LUT_ALL_VAT, \
-    LIMIT_ORDER_QTY_ITEM
+    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
 from repanier.tools import get_display
 
@@ -108,7 +108,7 @@ class Item(TranslatableModel):
 
     stock = models.DecimalField(
         _("Current stock"),
-        default=DECIMAL_ZERO, max_digits=9, decimal_places=3,
+        default=DECIMAL_MAX_STOCK, max_digits=9, decimal_places=3,
         validators=[MinValueValidator(0)])
     limit_order_quantity_to_stock = models.BooleanField(
         _("limit maximum order qty of the group to stock qty"),

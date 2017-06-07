@@ -124,13 +124,12 @@ def product_pre_save(sender, **kwargs):
     if producer.producer_pre_opening or producer.manage_production:
         product.producer_order_by_quantity = DECIMAL_ZERO
         product.limit_order_quantity_to_stock = True
-        if not product.is_box:
-            # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
-            product.is_into_offer = product.stock > DECIMAL_ZERO
+        # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
+        product.is_into_offer = product.stock > DECIMAL_ZERO
     elif not producer.manage_replenishment:
         product.limit_order_quantity_to_stock = False
     if product.is_box:
-        product.limit_order_quantity_to_stock = False
+        product.limit_order_quantity_to_stock = True
     if product.limit_order_quantity_to_stock:
         product.customer_alert_order_quantity = min(999, product.stock)
     elif product.order_unit == PRODUCT_ORDER_UNIT_SUBSCRIPTION:
@@ -144,9 +143,9 @@ def product_pre_save(sender, **kwargs):
     if not product.reference:
         product.reference = uuid.uuid4()
     # Update stock of boxes containing this product
-    for box_content in product.box_content.all():
-        if box_content.box is not None:
-            box_content.box.save_update_stock()
+    # for box_content in product.box_content.all():
+    #     if box_content.box is not None:
+    #         box_content.box.save_update_stock()
 
 
 @receiver(post_save, sender=Product)

@@ -30,7 +30,7 @@ def send_invoice(permanence_id):
             # To the producer we speak of "payment".
             # This is the detail of the payment to the producer, i.e. received products
             for producer in Producer.objects.filter(
-                    permanence=permanence.id,
+                    permanence_id=permanence.id,
                     language=language_code
             ).order_by('?'):
                 long_profile_name = producer.long_profile_name \
@@ -80,7 +80,7 @@ def send_invoice(permanence_id):
                 'invoice_description', any_language=True, default=EMPTY_STRING
             )
             for customer in Customer.objects.filter(
-                customerinvoice__permanence=permanence.id,
+                customerinvoice__permanence_id=permanence.id,
                 customerinvoice__customer_charged_id=F('customer_id'),
                 represent_this_buyinggroup=False,
                 language=language_code

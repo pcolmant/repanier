@@ -32,7 +32,11 @@ def automatically_pre_open():
             status=PERMANENCE_PLANNED,
             permanence_date__lte=max_3_days_in_the_future,
             automatically_closed=True):
-        producers = list(Producer.objects.filter(is_active=True, producer_pre_opening=True).only('id').order_by('?'))
+        producers = list(Producer.objects.filter(
+            is_active=True, producer_pre_opening=True
+        ).values_list(
+            'id', flat=True
+        ).order_by('?'))
         permanence.producers.add(*producers)
         permanence.set_status(PERMANENCE_WAIT_FOR_PRE_OPEN)
         pre_open_order(permanence.id)
@@ -284,10 +288,10 @@ def automatically_closed():
                 status=PERMANENCE_OPENED,
                 automatically_closed=True):
             if permanence.with_delivery_point:
-                deliveries_id = DeliveryBoard.objects.filter(
+                deliveries_id = list(DeliveryBoard.objects.filter(
                     permanence_id=permanence.id,
                     status=PERMANENCE_OPENED
-                ).values_list('id', flat=True).order_by("id")
+                ).values_list('id', flat=True).order_by("id"))
             else:
                 deliveries_id = None
             close_send_order(permanence.id, all_producers=True, deliveries_id=deliveries_id, send=False)
@@ -297,10 +301,10 @@ def automatically_closed():
                 status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED],
                 automatically_closed=True):
             if permanence.with_delivery_point:
-                deliveries_id = DeliveryBoard.objects.filter(
+                deliveries_id = list(DeliveryBoard.objects.filter(
                     permanence_id=permanence.id,
                     status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED]
-                ).values_list('id', flat=True).order_by("id")
+                ).values_list('id', flat=True).order_by("id"))
             else:
                 deliveries_id = None
             close_send_order(permanence.id, all_producers=True, deliveries_id=deliveries_id, send=True)

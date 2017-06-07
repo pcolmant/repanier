@@ -20,7 +20,6 @@ from django.core import mail
 from django.core import urlresolvers
 from django.core.cache import cache
 from django.core.mail import EmailMessage, mail_admins
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import F
 from django.db.models import Q
@@ -625,39 +624,27 @@ def payment_message(customer, permanence):
     return customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount
 
 
-def display_selected_value(offer_item, quantity_ordered):
+def display_selected_value(offer_item, quantity_ordered, is_open=True):
+    option_dict = {
+        'id': "#offer_item%d" % offer_item.id,
+    }
     if offer_item.may_order:
         if quantity_ordered <= DECIMAL_ZERO:
-            q_min = offer_item.customer_minimum_order_quantity
-            if offer_item.limit_order_quantity_to_stock:
-                q_alert = offer_item.stock - offer_item.quantity_invoiced
-                if q_alert < DECIMAL_ZERO:
-                    q_alert = DECIMAL_ZERO
-            else:
-                q_alert = offer_item.customer_alert_order_quantity
-            if q_min <= q_alert:
-                qs = models.ProducerInvoice.objects.filter(
-                    permanence__offeritem=offer_item.id,
-                    producer__offeritem=offer_item.id,
-                    status=PERMANENCE_OPENED
-                ).order_by('?')
-                if qs.exists():
-                    option_dict = {
-                        'id'  : "#offer_item%d" % offer_item.id,
-                        'html': '<option value="0" selected>---</option>'
-                    }
+            if is_open:
+                q_min = offer_item.customer_minimum_order_quantity
+                if offer_item.limit_order_quantity_to_stock:
+                    q_alert = offer_item.stock - offer_item.quantity_invoiced
+                    if q_alert < DECIMAL_ZERO:
+                        q_alert = DECIMAL_ZERO
                 else:
-                    closed = _("Closed")
-                    option_dict = {
-                        'id'  : "#offer_item%d" % offer_item.id,
-                        'html': '<option value="0" selected>%s</option>' % closed
-                    }
+                    q_alert = offer_item.customer_alert_order_quantity
+                if q_min <= q_alert:
+                    label = "---"
+                else:
+                    label = _("Sold out")
             else:
-                sold_out = _("Sold out")
-                option_dict = {
-                    'id'  : "#offer_item%d" % offer_item.id,
-                    'html': '<option value="0" selected>%s</option>' % sold_out
-                }
+                label = _("Closed")
+            option_dict["html"] = '<option value="0" selected>%s</option>' % label
 
         else:
             unit_price_amount = offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
@@ -668,19 +655,16 @@ def display_selected_value(offer_item, quantity_ordered):
                 unit_price_amount=unit_price_amount,
                 for_order_select=True
             )
-            option_dict = {
-                'id'  : "#offer_item%d" % offer_item.id,
-                'html': '<option value="%d" selected>%s</option>' % (quantity_ordered, display)
-            }
+            option_dict["html"] = '<option value="%d" selected>%s</option>' % (quantity_ordered, display)
     else:
-        option_dict = {
-            'id'  : "#offer_item%d" % offer_item.id,
-            'html': EMPTY_STRING
-        }
+        option_dict["html"] = EMPTY_STRING
     return option_dict
 
 
 def display_selected_box_value(offer_item, box_purchase):
+    option_dict = {
+        'id': "#box_offer_item%d" % offer_item.id,
+    }
     if box_purchase.is_box_content:
         box_name = BOX_UNICODE
         # Select one purchase
@@ -693,28 +677,19 @@ def display_selected_box_value(offer_item, box_purchase):
                     for_order_select=True,
                     without_price_display=True
                 )
-                option_dict = {
-                    'id'  : "#box_offer_item%d" % offer_item.id,
-                    'html': '<select name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>'
-                            % (offer_item.id, qty_display, box_name)
-                }
+                option_dict[
+                    "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>' % \
+                                      (offer_item.id, offer_item.id, qty_display, box_name)
             else:
-                option_dict = {
-                    'id'  : "#box_offer_item%d" % offer_item.id,
-                    'html': '<select name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>'
-                            % (offer_item.id, box_name)
-                }
+                option_dict[
+                    "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>' % \
+                              (offer_item.id, offer_item.id, box_name)
         else:
-            option_dict = {
-                'id'  : "#box_offer_item%d" % offer_item.id,
-                'html': '<select name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>'
-                        % (offer_item.id, box_name)
-            }
+            option_dict[
+                "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>' % \
+                          (offer_item.id, offer_item.id, box_name)
     else:
-        option_dict = {
-            'id'  : "#box_offer_item%d" % offer_item.id,
-            'html': EMPTY_STRING
-        }
+        option_dict["html"] = EMPTY_STRING
     return option_dict
 
 
@@ -819,8 +794,8 @@ def create_or_update_one_purchase(
 
 @transaction.atomic
 def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_id=None,
-                                   basket=False, batch_job=False, comment=EMPTY_STRING):
-    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
+                                   is_basket=False, batch_job=False, comment=EMPTY_STRING):
+    # from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
     to_json = []
     offer_item = models.OfferItem.objects.select_for_update(nowait=False) \
         .filter(id=offer_item_id, is_active=True, may_order=True) \
@@ -849,9 +824,7 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                     q_order = q_min + q_step * (value_id - 1)
         if q_order < DECIMAL_ZERO:
             q_order = DECIMAL_ZERO
-        purchase = None
-        permanence_id = offer_item.permanence_id
-        updated = True
+        is_box_updated = True
         if offer_item.is_box:
             # Select one purchase
             purchase = models.Purchase.objects.filter(
@@ -871,9 +844,10 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                 ).only(
                     "product_id", "content_quantity"
                 ).order_by('?'):
-                    box_offer_item = models.OfferItem.objects \
-                        .filter(product_id=content.product_id, permanence_id=offer_item.permanence_id) \
-                        .order_by('?').select_related("producer").first()
+                    box_offer_item = models.OfferItem.objects.filter(
+                        product_id=content.product_id,
+                        permanence_id=offer_item.permanence_id
+                    ).order_by('?').select_related("producer").first()
                     if box_offer_item is not None:
                         # Select one purchase
                         purchase = models.Purchase.objects.filter(
@@ -887,45 +861,20 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                             quantity_ordered = delta_q_order * content.content_quantity
                         if quantity_ordered < DECIMAL_ZERO:
                             quantity_ordered = DECIMAL_ZERO
-                        purchase, updated = create_or_update_one_purchase(
+                        purchase, is_box_updated = create_or_update_one_purchase(
                             customer.id, box_offer_item, q_order=quantity_ordered,
                             batch_job=batch_job, is_box_content=True
                         )
                     else:
-                        updated = False
-                    if not updated:
+                        is_box_updated = False
+                    if not is_box_updated:
                         break
-                if updated:
-                    for content in models.BoxContent.objects.filter(box=offer_item.product_id).only(
-                            "product_id").order_by('?'):
-                        box_offer_item = models.OfferItem.objects.filter(
-                            product_id=content.product_id,
-                            permanence_id=offer_item.permanence_id
-                        ).order_by('?').first()
-                        if box_offer_item is not None:
-                            # Select one purchase
-                            purchase = models.Purchase.objects.filter(
-                                customer_id=customer.id,
-                                offer_item_id=box_offer_item.id,
-                                is_box_content=False
-                            ).order_by('?').first()
-                            option_dict = display_selected_value(
-                                box_offer_item,
-                                purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO
-                            )
-                            to_json.append(option_dict)
-                            box_purchase = models.Purchase.objects.filter(
-                                customer_id=customer.id,
-                                offer_item_id=box_offer_item.id,
-                                is_box_content=True
-                            ).order_by('?').first()
-                            option_dict = display_selected_box_value(box_offer_item, box_purchase)
-                            to_json.append(option_dict)
+                if is_box_updated:
                     transaction.savepoint_commit(sid)
                 else:
                     transaction.savepoint_rollback(sid)
-        if not offer_item.is_box or updated:
-            purchase, updated = create_or_update_one_purchase(
+        if not offer_item.is_box or is_box_updated:
+            return create_or_update_one_purchase(
                 customer.id, offer_item, q_order=q_order, batch_job=batch_job,
                 is_box_content=False, comment=comment
             )
@@ -936,61 +885,62 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                 offer_item_id=offer_item.id,
                 is_box_content=False
             ).order_by('?').first()
+            return purchase, False
 
-        if not batch_job:
-            if purchase is None:
-                if offer_item.is_box:
-                    sold_out = _("Sold out")
-                    option_dict = {
-                        'id'  : "#offer_item%d" % offer_item.id,
-                        'html': '<option value="0" selected>%s</option>' % sold_out
-                    }
-                else:
-                    option_dict = display_selected_value(offer_item, DECIMAL_ZERO)
-                to_json.append(option_dict)
-            else:
-                offer_item = models.OfferItem.objects.filter(id=offer_item_id).order_by('?').first()
-                if offer_item is not None:
-                    option_dict = display_selected_value(offer_item, purchase.quantity_ordered)
-                    to_json.append(option_dict)
-
-            if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
-                producer_invoice = models.ProducerInvoice.objects.filter(
-                    producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
-                ).only("total_price_with_tax").order_by('?').first()
-                producer_invoice.get_order_json(to_json)
-
-            customer_invoice = models.CustomerInvoice.objects.filter(
-                permanence_id=permanence_id,
-                customer_id=customer.id
-            ).order_by('?').first()
-            permanence = models.Permanence.objects.filter(
-                id=permanence_id
-            ).only(
-                "id", "with_delivery_point", "status"
-            ).order_by('?').first()
-            if customer_invoice is not None and permanence is not None:
-                status_changed = customer_invoice.cancel_confirm_order()
-                if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
-                    html = render_to_string(
-                        'repanier/communication_confirm_order.html')
-                    option_dict = {'id': "#communication", 'html': html}
-                    to_json.append(option_dict)
-                customer_invoice.save()
-                my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(),
-                          to_json)
-                if basket:
-                    basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
-                else:
-                    basket_message = EMPTY_STRING
-                my_order_confirmation(
-                    permanence=permanence,
-                    customer_invoice=customer_invoice,
-                    is_basket=basket,
-                    basket_message=basket_message,
-                    to_json=to_json
-                )
-    return json.dumps(to_json, cls=DjangoJSONEncoder)
+        # if not batch_job:
+        #     if purchase is None:
+        #         if offer_item.is_box:
+        #             sold_out = _("Sold out")
+        #             option_dict = {
+        #                 'id'  : "#offer_item%d" % offer_item.id,
+        #                 'html': '<option value="0" selected>%s</option>' % sold_out
+        #             }
+        #         else:
+        #             option_dict = display_selected_value(offer_item, DECIMAL_ZERO)
+        #         to_json.append(option_dict)
+        #     else:
+        #         offer_item = models.OfferItem.objects.filter(id=offer_item_id).order_by('?').first()
+        #         if offer_item is not None:
+        #             option_dict = display_selected_value(offer_item, purchase.quantity_ordered)
+        #             to_json.append(option_dict)
+        #
+        #     if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+        #         producer_invoice = models.ProducerInvoice.objects.filter(
+        #             producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
+        #         ).only("total_price_with_tax").order_by('?').first()
+        #         producer_invoice.get_order_json(to_json)
+        #
+        #     customer_invoice = models.CustomerInvoice.objects.filter(
+        #         permanence_id=permanence_id,
+        #         customer_id=customer.id
+        #     ).order_by('?').first()
+        #     permanence = models.Permanence.objects.filter(
+        #         id=permanence_id
+        #     ).only(
+        #         "id", "with_delivery_point", "status"
+        #     ).order_by('?').first()
+        #     if customer_invoice is not None and permanence is not None:
+        #         status_changed = customer_invoice.cancel_confirm_order()
+        #         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
+        #             html = render_to_string(
+        #                 'repanier/communication_confirm_order.html')
+        #             option_dict = {'id': "#communication", 'html': html}
+        #             to_json.append(option_dict)
+        #         customer_invoice.save()
+        #         my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(),
+        #                   to_json)
+        #         if is_basket:
+        #             basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
+        #         else:
+        #             basket_message = EMPTY_STRING
+        #         my_order_confirmation(
+        #             permanence=permanence,
+        #             customer_invoice=customer_invoice,
+        #             is_basket=is_basket,
+        #             basket_message=basket_message,
+        #             to_json=to_json
+        #         )
+    # return json.dumps(to_json, cls=DjangoJSONEncoder)
 
 
 def my_basket(is_order_confirm_send, order_amount, to_json):
@@ -1031,12 +981,12 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
     option_dict = {'id': "#my_basket", 'html': msg_html}
     to_json.append(option_dict)
     msg_html = """
-{order_amount}&nbsp;&nbsp;&nbsp;
-{msg_confirm}
+    {order_amount}&nbsp;&nbsp;&nbsp;
+    {msg_confirm}
         """.format(
-        order_amount=order_amount,
-        msg_confirm=msg_confirm
-    )
+            order_amount=order_amount,
+            msg_confirm=msg_confirm
+        )
     option_dict = {'id': "#prepared_amount_visible_xs", 'html': msg_html}
     to_json.append(option_dict)
 
@@ -1136,8 +1086,10 @@ def my_order_confirmation(permanence, customer_invoice, is_basket=False,
                                             'decrease': number_format((DECIMAL_ONE - customer_invoice.price_list_multiplier) * 100, 2)
                                         }
 
-        msg_delivery = '%s<b><i><select name="delivery" id="delivery" onclick="show_select_delivery_list_ajax()" onchange="delivery_ajax()" class="form-control"><option value="%d" selected>%s</option></select></i></b><br/>%s%s' % (
+        msg_delivery = '%s<b><i><select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax(%d)" onchange="delivery_ajax(%d)" class="form-control"><option value="%d" selected>%s</option></select></i></b><br/>%s%s' % (
             _("Delivery point"),
+            delivery_id,
+            delivery_id,
             delivery_id,
             label,
             msg_transport,
@@ -1305,8 +1257,6 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
                                                        {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
             offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html',
                                                        {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
-            offer_item.cache_part_e = render_to_string('repanier/cache_part_e.html',
-                                                       {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
             offer_item.save_translations()
 
     translation.activate(cur_language)
@@ -1408,7 +1358,7 @@ def reorder_offer_items(permanence_id):
 def update_offer_item(product_id=None, producer_id=None):
     # The user can modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in models.Permanence.objects.filter(
-            status__in=[PERMANENCE_PRE_OPEN, PERMANENCE_OPENED, PERMANENCE_CLOSED]
+            status__in=[PERMANENCE_PLANNED, PERMANENCE_PRE_OPEN, PERMANENCE_OPENED, PERMANENCE_CLOSED]
     ):
         if producer_id is None:
             offer_item_qs = models.OfferItem.objects.filter(
@@ -1523,93 +1473,44 @@ def calc_basket_message(customer, permanence, status):
     return basket_message
 
 
-def html_box_content(offer_item, user, result=EMPTY_STRING):
+def html_box_content(offer_item, user, previous_result=EMPTY_STRING):
     if offer_item.is_box:
         box_id = offer_item.product_id
-        if result:
-            result += '<hr/>'
-        product_ids = models.BoxContent.objects.filter(
+        box_products = list(models.BoxContent.objects.filter(
             box_id=box_id
-        ).only("product_id")
-        qs = models.OfferItem.objects.filter(
-            permanence_id=offer_item.permanence_id,  # is_active=True,
-            product__box_content__in=product_ids,
-            translations__language_code=translation.get_language()
-        ).order_by(
-            "translations__order_sort_order"
-        )
-        result += '<ul>' + ("".join('<li>%s * %s, %s <span class="btn_like%s" style="cursor: pointer;">%s</span></li>' % (
-            get_display(
-                qty=models.BoxContent.objects.filter(box_id=box_id, product_id=o.product_id).only(
-                    "content_quantity").order_by('?').first().content_quantity,
-                order_average_weight=o.order_average_weight,
-                order_unit=o.order_unit,
-                without_price_display=True),
-            o.long_name,
-            o.producer.short_profile_name,
-            o.id,
-            o.get_like(user)
-        ) for o in qs)) + '</ul>'
-    return result
-
-
-def get_full_status_display(permanence):
-    need_to_refresh_status = permanence.status in [
-        PERMANENCE_WAIT_FOR_PRE_OPEN,
-        PERMANENCE_WAIT_FOR_OPEN,
-        PERMANENCE_WAIT_FOR_CLOSED,
-        PERMANENCE_WAIT_FOR_SEND,
-        PERMANENCE_WAIT_FOR_INVOICED
-    ]
-    if permanence.with_delivery_point:
-        status_list = []
-        status = None
-        status_counter = 0
-        for delivery in models.DeliveryBoard.objects.filter(permanence_id=permanence.id).order_by("status", "id"):
-            need_to_refresh_status |= delivery.status in [
-                PERMANENCE_WAIT_FOR_PRE_OPEN,
-                PERMANENCE_WAIT_FOR_OPEN,
-                PERMANENCE_WAIT_FOR_CLOSED,
-                PERMANENCE_WAIT_FOR_SEND,
-                PERMANENCE_WAIT_FOR_INVOICED
-            ]
-            if status != delivery.status:
-                status = delivery.status
-                status_counter += 1
-                status_list.append("<b>%s</b>" % delivery.get_status_display())
-            status_list.append("- %s" % delivery.get_delivery_display(admin=True))
-        if status_counter > 1:
-            message = "<br/>".join(status_list)
-        else:
-            message = permanence.get_status_display()
-    else:
-        message = permanence.get_status_display()
-    if need_to_refresh_status:
-        url = urlresolvers.reverse(
-                            'display_status',
-                            args=(permanence.id,)
-                        )
-        msg_html = """
-            <div class="wrap-text" id="id_get_status_%d">
-            <script type="text/javascript">
-                window.setTimeout(function(){
-                    django.jQuery.ajax({
-                        url: '%s',
-                        cache: false,
-                        async: false,
-                        success: function (result) {
-                            django.jQuery("#id_get_status_%d").html(result);
-                        }
-                    });
-                }, 1000);
-            </script>
-            %s</div>
-        """ % (
-            permanence.id, url, permanence.id, message
-        )
-        return mark_safe(msg_html)
-    else:
-        return mark_safe('<div class="wrap-text">%s</div>' % message)
+        ).values_list(
+            'product_id', flat=True
+        ).order_by('?'))
+        if len(box_products) > 0:
+            box_offer_items_qs = models.OfferItemWoReceiver.objects.filter(
+                permanence_id=offer_item.permanence_id,
+                product_id__in=box_products,
+                translations__language_code=translation.get_language()
+            ).order_by(
+                "translations__order_sort_order"
+            ).select_related("producer")
+            box_products_description = []
+            for box_offer_item in box_offer_items_qs:
+                box_products_description.append(
+                    '<li>%s * %s, %s <span class="btn_like%s" style="cursor: pointer;">%s</span></li>' % (
+                        get_display(
+                            qty=models.BoxContent.objects.filter(box_id=box_id, product_id=box_offer_item.product_id).only(
+                                "content_quantity").order_by('?').first().content_quantity,
+                            order_average_weight=box_offer_item.order_average_weight,
+                            order_unit=box_offer_item.order_unit,
+                            without_price_display=True),
+                        box_offer_item.long_name,
+                        box_offer_item.producer.short_profile_name,
+                        box_offer_item.id,
+                        box_offer_item.get_like(user)
+                    )
+                )
+            return '%s%s<ul>%s</ul>' % (
+                previous_result,
+                "<hr/>" if previous_result else EMPTY_STRING,
+                "".join(box_products_description)
+            )
+    return previous_result
 
 
 def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form_instance):

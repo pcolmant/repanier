@@ -7,16 +7,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404
 from django.http import HttpResponse
-from django.utils import translation
-from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import DECIMAL_ZERO
-from repanier.email.email_order import export_order_2_1_customer
-from repanier.models import Customer, CustomerInvoice, Permanence
-from repanier.tools import sint, get_signature, my_basket, my_order_confirmation, calc_basket_message
+from repanier.models import CustomerInvoice
+from repanier.tools import my_basket
 
 
 @never_cache

@@ -6,10 +6,11 @@ import datetime
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Sum
 from django.utils import timezone, translation
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
@@ -27,7 +28,7 @@ from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.const import *
-from repanier.tools import get_full_status_display, cap
+from repanier.tools import cap
 
 
 # def verbose_name():
@@ -144,6 +145,9 @@ class Permanence(TranslatableModel):
         verbose_name=_("picture"),
         null=True, blank=True,
         upload_to="permanence", size=SIZE_L)
+    gauge = models.IntegerField(
+        default=0, editable=False
+    )
 
     def get_producers(self):
         if self.status == PERMANENCE_PLANNED:
@@ -215,7 +219,7 @@ class Permanence(TranslatableModel):
                         ))
                 else:
                     if pi.invoice_reference:
-                        if pi.to_be_invoiced_balance != DECIMAL_ZERO:
+                        if pi.to_be_invoiced_balance != DECIMAL_ZERO or pi.total_price_with_tax != DECIMAL_ZERO:
                             label = "%s (%s - %s)" % (
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance,
@@ -227,7 +231,7 @@ class Permanence(TranslatableModel):
                                 cap(pi.invoice_reference, 15)
                             )
                     else:
-                        if pi.to_be_invoiced_balance != DECIMAL_ZERO:
+                        if pi.to_be_invoiced_balance != DECIMAL_ZERO or pi.total_price_with_tax != DECIMAL_ZERO:
                             label = "%s (%s)" % (
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance
@@ -293,22 +297,22 @@ class Permanence(TranslatableModel):
                     else:
                         link.append("<br/><br/>--")
                 total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
-                if ci.is_order_confirm_send:
-                    label = '%s%s (%s) %s%s' % (
-                        "<b><i>" if ci.is_group else EMPTY_STRING,
-                        ci.customer.short_basket_name,
-                        "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
-                        ci.get_is_order_confirm_send_display(),
-                        "</i></b>" if ci.is_group else EMPTY_STRING,
-                    )
-                else:
-                    label = '%s%s (%s) %s%s' % (
-                        "<b><i>" if ci.is_group else EMPTY_STRING,
-                        ci.customer.short_basket_name,
-                        "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
-                        ci.get_is_order_confirm_send_display(),
-                        "</i></b>" if ci.is_group else EMPTY_STRING,
-                    )
+                # if ci.is_order_confirm_send:
+                label = '%s%s (%s) %s%s' % (
+                    "<b><i>" if ci.is_group else EMPTY_STRING,
+                    ci.customer.short_basket_name,
+                    "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
+                    ci.get_is_order_confirm_send_display(),
+                    "</i></b>" if ci.is_group else EMPTY_STRING,
+                )
+                # else:
+                #     label = '%s%s (%s) %s%s' % (
+                #         "<b><i>" if ci.is_group else EMPTY_STRING,
+                #         ci.customer.short_basket_name,
+                #         "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
+                #         ci.get_is_order_confirm_send_display(),
+                #         "</i></b>" if ci.is_group else EMPTY_STRING,
+                #     )
                 # Important : no target="_blank"
                 link.append(
                     '<a href="%s?permanence=%d&customer=%d">%s</a>'
@@ -758,7 +762,65 @@ class Permanence(TranslatableModel):
         self.total_selling_vat += customer_vat
 
     def get_full_status_display(self):
-        return get_full_status_display(self)
+        need_to_refresh_status = self.status in [
+            PERMANENCE_WAIT_FOR_PRE_OPEN,
+            PERMANENCE_WAIT_FOR_OPEN,
+            PERMANENCE_WAIT_FOR_CLOSED,
+            PERMANENCE_WAIT_FOR_SEND,
+            PERMANENCE_WAIT_FOR_INVOICED
+        ]
+        if self.with_delivery_point:
+            status_list = []
+            status = None
+            status_counter = 0
+            for delivery in deliveryboard.DeliveryBoard.objects.filter(permanence_id=self.id).order_by("status", "id"):
+                need_to_refresh_status |= delivery.status in [
+                    PERMANENCE_WAIT_FOR_PRE_OPEN,
+                    PERMANENCE_WAIT_FOR_OPEN,
+                    PERMANENCE_WAIT_FOR_CLOSED,
+                    PERMANENCE_WAIT_FOR_SEND,
+                    PERMANENCE_WAIT_FOR_INVOICED
+                ]
+                if status != delivery.status:
+                    status = delivery.status
+                    status_counter += 1
+                    status_list.append("<b>%s</b>" % delivery.get_status_display())
+                status_list.append("- %s" % delivery.get_delivery_display(admin=True))
+            if status_counter > 1:
+                message = "<br/>".join(status_list)
+            else:
+                message = self.get_status_display()
+        else:
+            message = self.get_status_display()
+        if need_to_refresh_status:
+            url = urlresolvers.reverse(
+                'display_status',
+                args=(self.id,)
+            )
+            progress = "◤◥◢◣"[self.gauge] # "◴◷◶◵" "▛▜▟▙"
+            self.gauge = (self.gauge + 1) % 4
+            self.save(update_fields=['gauge'])
+            msg_html = """
+                    <div class="wrap-text" id="id_get_status_%d">
+                    <script type="text/javascript">
+                        window.setTimeout(function(){
+                            django.jQuery.ajax({
+                                url: '%s',
+                                cache: false,
+                                async: false,
+                                success: function (result) {
+                                    django.jQuery("#id_get_status_%d").html(result);
+                                }
+                            });
+                        }, 500);
+                    </script>
+                    %s %s</div>
+                """ % (
+                self.id, url, self.id, progress, message
+            )
+            return mark_safe(msg_html)
+        else:
+            return mark_safe('<div class="wrap-text">%s</div>' % message)
 
     get_full_status_display.short_description = (_("permanence_status"))
     get_full_status_display.allow_tags = True
@@ -819,9 +881,9 @@ class Permanence(TranslatableModel):
         verbose_name = _('order')
         verbose_name_plural = _('orders')
 
-        index_together = [
-            ["permanence_date"],
-        ]
+        # index_together = [
+        #     ["permanence_date"],
+        # ]
 
 
 class PermanenceInPreparation(Permanence):

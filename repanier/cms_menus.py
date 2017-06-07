@@ -62,14 +62,15 @@ class PermanenceMenu(Menu):
 
         first_pass = True
         closed_separator = separator
-        for permanence in Permanence.objects.filter(status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND]) \
-                .only("id", "permanence_date") \
-                .order_by('-permanence_date'):
+        for permanence in Permanence.objects.filter(
+                status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+                master_permanence__isnull=True
+        ).only("id", "permanence_date").order_by('-permanence_date'):
             displayed_permanence_counter += 1
             if first_pass and closed_separator:
                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
             first_pass = False
-            separator = True
+            # separator = True
             closed_separator = False
             submenu_id = self.append_permanence(is_anonymous, permanence, nodes, master_id, submenu_id)
             if displayed_permanence_counter > 4:

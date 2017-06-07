@@ -113,7 +113,7 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
         if self.instance.id:
             self.fields['customers'].initial = self.instance.customer_set.all()
             self.fields['customers'].queryset = Customer.objects.filter(
-                Q(may_order=True, delivery_point__isnull=True) | Q(delivery_point=self.instance.id)
+                Q(may_order=True, delivery_point__isnull=True) | Q(delivery_point_id=self.instance.id)
             ).distinct()
 
     def clean(self):
@@ -146,7 +146,7 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
                 # The LUT_DeliveryPoint.price_list_multiplier will be used when invoicing the consumer responsible
                 # The link between the customer invoice and this customer responsible is made with
                 # CustomerInvoice.customer_charged
-                Customer.objects.filter(delivery_point=self.instance.id).update(price_list_multiplier=DECIMAL_ONE)
+                Customer.objects.filter(delivery_point_id=self.instance.id).update(price_list_multiplier=DECIMAL_ONE)
 
         return instance
 

@@ -145,7 +145,6 @@ class OrderView(ListView):
 
         context['communication'] = self.communication
         context['q'] = self.q
-        context['is_anonymous'] = self.is_anonymous
 
         context['may_order'] = self.may_order
         context['display_anonymous_order_form'] = REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
@@ -188,18 +187,19 @@ class OrderView(ListView):
                     may_order=True,  # Don't display technical products.
                     purchase__customer__user=self.user,
                     purchase__quantity_ordered__gt=0,
-                    is_box=False,
+                    # is_box=False,
                     translations__language_code=translation.get_language()
                 )
             else:
                 qs = OfferItemWoReceiver.objects.filter(
                     Q(
                         permanence_id=self.permanence.id, is_active=True,
-                        is_box=False,  # Don't display boxes -> Added from customers reactions.
+                        # is_box=False,  # Don't display boxes -> Added from customers reactions.
                         may_order=True,  # Don't display technical products.
                         translations__language_code=translation.get_language()
                     ) | Q(
-                        permanence_id=self.permanence.id, is_box_content=True,
+                        permanence_id=self.permanence.id,
+                        is_box_content=True,
                         may_order=True,  # Don't display technical products.
                         translations__language_code=translation.get_language()
                     )

@@ -70,7 +70,7 @@
               <span class="navbar-group-name"><small>{{ group_name | truncatechars:25 }}</small></span>
           {% else %}
               <span id="link_to_order_or_filter_view"></span>
-              {% if is_authenticated %}
+              {% if user.is_authenticated %}
                   <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right" style="margin-right: 10px;">
                       <span id="prepared_amount_visible_xs"></span>
                   </a>

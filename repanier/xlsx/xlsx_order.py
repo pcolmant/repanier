@@ -324,7 +324,7 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
 
     for customer in customer_set:
         customer_identifier = "%d - %s" % (customer.preparation_order, customer.short_basket_name)
-        s = [placement_id for placement_id in Purchase.objects.filter(
+        s = [placement_id for placement_id in list(Purchase.objects.filter(
             permanence_id=permanence.id,
             customer_id=customer.id
         ).order_by(
@@ -333,7 +333,7 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
             "offer_item__placement", flat=True
         ).distinct(
             "offer_item__placement"
-        )]
+        ))]
         placements = ", ".join(["%s" % dict_placement[placement_id] for placement_id in s])
         if PRODUCT_PLACEMENT_FREEZER in s:
             freezer += [customer_identifier]

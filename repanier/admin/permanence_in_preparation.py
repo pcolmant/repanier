@@ -73,7 +73,9 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
     def has_delete_permission(self, request, obj=None):
         if self.has_add_or_delete_permission is None:
             try:
-                parent_object = PermanenceInPreparation.objects.filter(id=request.resolver_match.args[0]).only(
+                parent_object = PermanenceInPreparation.objects.filter(
+                    id=request.resolver_match.args[0]
+                ).only(
                     "highest_status").order_by('?').first()
                 if parent_object is not None and parent_object.highest_status > PERMANENCE_PLANNED:
                     self.has_add_or_delete_permission = False
@@ -515,7 +517,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             producer_invoices = ProducerInvoice.objects.none()
         else:
             producer_invoices = ProducerInvoice.objects.filter(
-                permanence=permanence.id,
+                permanence_id=permanence.id,
                 status=PERMANENCE_OPENED,
                 producer__represent_this_buyinggroup=False
             ).order_by("producer")
@@ -697,11 +699,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             producer_invoices = ProducerInvoice.objects.filter(
                 Q(
-                    permanence=permanence.id,
+                    permanence_id=permanence.id,
                     status=PERMANENCE_OPENED,
                     producer__represent_this_buyinggroup=False
                 ) | Q(
-                    permanence=permanence.id,
+                    permanence_id=permanence.id,
                     status=PERMANENCE_CLOSED,
                     producer__represent_this_buyinggroup=False
                 )

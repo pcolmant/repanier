@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Sum
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
@@ -16,9 +17,10 @@ from repanier.models.product import Product, product_pre_save
 
 @python_2_unicode_compatible
 class Box(Product):
-    def save_update_stock(self):
+
+    def get_calculated_stock(self):
         # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)
-        stock = 1000000
+        stock = DECIMAL_MAX_STOCK
         for box_content in BoxContent.objects.filter(
                 box_id=self.id,
                 product__limit_order_quantity_to_stock=True,
@@ -30,12 +32,19 @@ class Box(Product):
             "content_quantity", "product__stock", "product__limit_order_quantity_to_stock"
         ).order_by('?'):
             stock = min(stock, box_content.product.stock // box_content.content_quantity)
-        if stock < 1000000:
-            self.stock = stock
-        else:
-            self.stock = DECIMAL_ZERO
-        self.limit_order_quantity_to_stock = True
-        self.save(update_fields=['stock', 'limit_order_quantity_to_stock'])
+        return stock
+
+    def get_calculated_price(self):
+        result_set = BoxContent.objects.filter(box_id=self.id).aggregate(
+            Sum('calculated_customer_content_price'),
+            Sum('calculated_content_deposit')
+        )
+        box_price = result_set["calculated_customer_content_price__sum"] \
+            if result_set["calculated_customer_content_price__sum"] is not None else DECIMAL_ZERO
+        box_deposit = result_set["calculated_content_deposit__sum"] \
+            if result_set["calculated_content_deposit__sum"] is not None else DECIMAL_ZERO
+
+        return box_price, box_deposit
 
     class Meta:
         proxy = True
@@ -57,6 +66,7 @@ def box_pre_save(sender, **kwargs):
     box.order_unit = PRODUCT_ORDER_UNIT_PC
     box.producer_unit_price = box.customer_unit_price
     box.producer_vat = box.customer_vat
+    box.limit_order_quantity_to_stock = True
     # ! Important to initialise all fields of the box. Remember : a box is a product.
     product_pre_save(sender, **kwargs)
 

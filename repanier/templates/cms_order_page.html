@@ -21,7 +21,7 @@
         {% endspaceless %}{% endaddtoblock %}
     {% endblock notification %}
     {% block login %}{% spaceless %}
-        {% if is_anonymous %}
+        {% if user.is_anonymous %}
             <div class="row">
             <div class="panel-group">
                 <div class="panel panel-primary">
@@ -46,7 +46,7 @@
         {% endif %}
     {% endspaceless %}{% endblock login %}
     {% block may_order %}{% spaceless %}
-        {% if not is_anonymous and not may_order %}
+        {% if user.is_authenticated and not may_order %}
             <div class="row">
             <div class="panel panel-danger">
                 <div class="panel-heading">
@@ -57,7 +57,7 @@
         {% endif %}
     {% endspaceless %}{% endblock may_order %}
     {% block permanence_description %}{% spaceless %}
-        {% if not is_anonymous or display_anonymous_order_form %}
+        {% if may_order or display_anonymous_order_form %}
             <div class="row">
             <div class="panel panel-default">
                 {% if permanence.offer_description and permanence.offer_description.strip %}
@@ -82,7 +82,7 @@
         {% endif %}
     {% endspaceless %}{% endblock permanence_description %}
     {% block confirm_basket %}{% spaceless %}
-        {% if not is_anonymous %}
+        {% if may_order %}
             {% if is_basket %}
                 <div class="row">
                 <div class="panel panel-default">
@@ -105,7 +105,7 @@
             {% endif %}
         {% endif %}
     {% endspaceless %}{% endblock confirm_basket %}{% spaceless %}
-    {% if not is_anonymous or display_anonymous_order_form %}
+    {% if may_order or display_anonymous_order_form %}
         <div class="row">
             <div class="col-xs-11 col-sm-3 bs-docs-sidebar">
                 <div class="fixed">
@@ -267,9 +267,9 @@
             </div>
             {#        Other qty modal ends#}
         {% endspaceless %}{% endblock order_modal %}
-    {% endif %} {# not is_anonymous or display_anonymous_order_form #}{% endspaceless %}
+    {% endif %} {# may_order or display_anonymous_order_form #}{% endspaceless %}
     {% block my_cart_amount_js %}{% spaceless %}
-        {% if not is_anonymous %}
+        {% if may_order %}
             {% addtoblock "lastjs" %}
                 <script type="text/javascript">
                 $(document).ready(function () {
@@ -322,9 +322,13 @@
                 });
             </script>
         {% endspaceless %}{% endaddtoblock %}
-        {% if not is_anonymous %}
+        {% if may_order %}
             {% addtoblock "lastjs" %}{% spaceless %}
                 <script type="text/javascript">
+                {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
+                var saved_offer_item_id = -1;
+                {#            saved_delivery_val is a fix for firefox throwings mouseover repeatingly #}
+                var saved_delivery_id = -1;
                 $(document).ready(function () {
                     var lien = '{% url 'order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
                     $.ajax({
@@ -351,7 +355,7 @@
                     });
                 });
                 function order_ajax(offer_item_id) {
-                    saved_offer_item_id = 0;
+                    saved_offer_item_id = -1;
                     var offer_item = $("#offer_item" + offer_item_id);
                     var offer_item_val = $("option:selected", offer_item).val();
 
@@ -387,6 +391,8 @@
                     }
                 }
                 function show_select_order_list_ajax(offer_item_id) {
+                    if(saved_offer_item_id !== offer_item_id) {
+                        saved_offer_item_id = offer_item_id;
                         var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + offer_item_id;
                         $.ajax({
                             url: lien1,
@@ -409,8 +415,9 @@
                                 document.getElementById('offer_item' + offer_item_id).innerHTML = selectOption;
                             }
                         });
+                    }
                 }
-                function delivery_ajax() {
+                function delivery_ajax(delivery_id) {
                     var delivery = $("#delivery");
                     var delivery_val = $("option:selected", delivery).val();
 
@@ -421,10 +428,16 @@
                         async: true,
                         success: function (result) {
                             $.each(result, function (key, val) {
-                                if(val.id === '#error') {
-                                    delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                if(val.id === '#communication') {
+                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
+                                    $('#communicationDetails').html(val.html);
+                                    $('#communicationModal').modal('show')
                                 } else {
-                                    $(val.id).html(val.html);
+                                    if(val.id === '#error') {
+                                        offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                    } else {
+                                        $(val.id).html(val.html);
+                                    }
                                 }
                             });
                         },
@@ -433,30 +446,33 @@
                         }
                     });
                 }
-                function show_select_delivery_list_ajax() {
-                    var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
-                    $.ajax({
-                        url: lien2,
-                        cache: false,
-                        dataType: 'json',
-                        async: false,
-                        success: function (result) {
-                            var selectOption = '';
-                            $.each(result, function (key, val) {
-                                if (val.selected === 'selected') {
-                                    selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                } else {
-                                    selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
-                                }
-                            });
-                            document.getElementById('delivery').innerHTML = selectOption;
-                        }
-                    });
+                function show_select_delivery_list_ajax(delivery_id) {
+                    if(saved_delivery_id !== delivery_id) {
+                        saved_delivery_id = delivery_id;
+                        var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
+                        $.ajax({
+                            url: lien2,
+                            cache: false,
+                            dataType: 'json',
+                            async: false,
+                            success: function (result) {
+                                var selectOption = '';
+                                $.each(result, function (key, val) {
+                                    if (val.selected === 'selected') {
+                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
+                                    } else {
+                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
+                                    }
+                                });
+                                document.getElementById('delivery').innerHTML = selectOption;
+                            }
+                        });
+                    }
                 }
                 function btn_receive_order_email() {
                     var receive_email = $("#btn_confirm_order");
                     receive_email.attr("disabled", true);
-                    receive_email.removeClass("btn-info");
+                    receive_email.html('<span class="glyphicon glyphicon-refresh gly-spin"></span> ' + '{% trans "Your order is being processed..." %}');
 
                     var lien = '{% url 'btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
                     $.ajax({
@@ -470,9 +486,9 @@
                         },
                         error: function (result) {
                             receive_email.attr("disabled", false);
-                            receive_email.addClass("btn-info");
                         }
                     });
+                    saved_delivery_id = -1;
 
                 }
                 function like_ajax(offer_item_id) {
