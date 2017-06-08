@@ -159,16 +159,17 @@ class CustomerInvoice(Invoice):
     def set_delivery(self, delivery):
         # May not use delivery_id because it won't reload customer_invoice.delivery
         # Important
-        # Si c'est une facture du membre d'un groupe :
+        # If it's an invoice of a member of a group :
         #   self.customer_charged_id != self.customer_id
         #   self.customer_charged_id == owner of the group
         #   price_list_multiplier = DECIMAL_ONE
-        # Si c'est une facture lambda ou d'un groupe :
+        # Else :
         #   self.customer_charged_id = self.customer_id
         #   price_list_multiplier may vary
         from repanier.apps import REPANIER_SETTINGS_TRANSPORT, REPANIER_SETTINGS_MIN_TRANSPORT
         if delivery is None:
             if self.permanence.with_delivery_point:
+                # If the customer is member of a group set the group as default delivery point
                 delivery_point = self.customer.delivery_point
                 delivery = deliveryboard.DeliveryBoard.objects.filter(
                     delivery_point=delivery_point,
