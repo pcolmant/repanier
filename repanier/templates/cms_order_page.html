@@ -107,7 +107,7 @@
     {% endspaceless %}{% endblock confirm_basket %}{% spaceless %}
     {% if may_order or display_anonymous_order_form %}
         <div class="row">
-            <div class="col-xs-11 col-sm-3 bs-docs-sidebar">
+            <div class="col-xs-11 col-sm-5 col-md-3 bs-docs-sidebar">
                 <div class="fixed">
         {#            q : {{ q }}<br/>#}
         {#            producer_id : {{ producer_id }}<br/>#}
@@ -196,7 +196,7 @@
                     {% endspaceless %}{% endblock product_filter %}
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-9">
+            <div class="col-xs-12 col-sm-7 col-md-9">
                 {% block product_list %}{% endblock product_list %}
             </div>
         </div>
