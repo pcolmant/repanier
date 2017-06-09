@@ -5,9 +5,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
 from django.utils.html import strip_tags
-from django.utils.translation import ugettext_lazy as _
 
-import repanier.apps
 from repanier.models import Purchase
 from repanier.models import Configuration
 from repanier.models import Customer
