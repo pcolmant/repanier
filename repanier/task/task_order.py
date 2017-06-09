@@ -169,13 +169,13 @@ def pre_open_order(permanence_id):
         producer.offer_uuid = uuid.uuid4()
         producer.offer_filled = False
         producer.save(update_fields=['offer_uuid', 'offer_filled'])
-    try:
-        email_offer.send_pre_open_order(permanence_id)
-        permanence.set_status(PERMANENCE_PRE_OPEN)
-    except Exception as error_str:
-        print("################################## pre_open_order")
-        print(error_str)
-        print("##################################")
+    # try:
+    email_offer.send_pre_open_order(permanence_id)
+    permanence.set_status(PERMANENCE_PRE_OPEN)
+    # except Exception as error_str:
+    #     print("################################## pre_open_order")
+    #     print(error_str)
+    #     print("##################################")
 
 
 @transaction.atomic
@@ -204,14 +204,14 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
 
-    try:
-        if repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER and not do_not_send_any_mail:
-            email_offer.send_open_order(permanence_id)
-        permanence.set_status(PERMANENCE_OPENED)
-    except Exception as error_str:
-        print("################################## open_order")
-        print(error_str)
-        print("##################################")
+    # try:
+    if repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER and not do_not_send_any_mail:
+        email_offer.send_open_order(permanence_id)
+    permanence.set_status(PERMANENCE_OPENED)
+    # except Exception as error_str:
+    #     print("################################## open_order")
+    #     print(error_str)
+    #     print("##################################")
 
 
 def admin_back_to_planned(request, permanence):
@@ -426,12 +426,12 @@ def close_order(permanence, all_producers, producers_id=None):
 def send_order(permanence, all_producers=True, producers_id=None, deliveries_id=None):
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
-    try:
-        email_order.email_order(permanence.id, all_producers, producers_id=producers_id, closed_deliveries_id=deliveries_id)
-    except Exception as error_str:
-        print("################################## send_order")
-        print(error_str)
-        print("##################################")
+    # try:
+    email_order.email_order(permanence.id, all_producers, producers_id=producers_id, closed_deliveries_id=deliveries_id)
+    # except Exception as error_str:
+    #     print("################################## send_order")
+    #     print(error_str)
+    #     print("##################################")
 
 
 def close_send_order(permanence_id, all_producers, producers_id=None, deliveries_id=None, send=False):
@@ -445,7 +445,7 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
             # but there is no more available delivery point for him
             # or when the customer has not selected any delivery point
             qs = DeliveryBoard.objects.filter(
-                permanence_id=permanence.id,
+                permanence_id=permanence_id,
                 status=PERMANENCE_OPENED,
                 id__in=deliveries_id
             ).order_by('?')
@@ -454,7 +454,7 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
                 delivery.set_status(PERMANENCE_WAIT_FOR_CLOSED, all_producers, producers_id=producers_id)
                 close_order_delivery(permanence, delivery, all_producers, producers_id=producers_id)
             if DeliveryBoard.objects.filter(
-                    permanence_id=permanence.id,
+                    permanence_id=permanence_id,
                     status=PERMANENCE_OPENED
             ).order_by('?').count() == 0:
                 # The whole permanence must be closed
@@ -469,7 +469,7 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
             if permanence.with_delivery_point:
                 send_deliveries_id = []
                 qs = DeliveryBoard.objects.filter(
-                    permanence_id=permanence.id,
+                    permanence_id=permanence_id,
                     status=PERMANENCE_CLOSED,
                     id__in=deliveries_id
                 ).order_by('?')
@@ -478,14 +478,14 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
                     send_deliveries_id.append(delivery.id)
                 send_order(permanence, all_producers, producers_id=producers_id, deliveries_id=send_deliveries_id)
                 qs = DeliveryBoard.objects.filter(
-                    permanence_id=permanence.id,
+                    permanence_id=permanence_id,
                     status=PERMANENCE_WAIT_FOR_SEND,
                     id__in=deliveries_id
                 ).order_by('?')
                 for delivery in qs:
                     delivery.set_status(PERMANENCE_SEND, all_producers, producers_id=producers_id)
                 if DeliveryBoard.objects.filter(
-                        permanence_id=permanence.id,
+                        permanence_id=permanence_id,
                         status__gte=PERMANENCE_OPENED,
                         status__lte=PERMANENCE_CLOSED
                 ).order_by('?').count() == 0:
@@ -498,11 +498,10 @@ def close_send_order(permanence_id, all_producers, producers_id=None, deliveries
 
 
 def admin_close(permanence_id, all_producers=False, deliveries_id=None, producers_id=None):
-    # close_send_order(permanence_id, deliveries_id, False, False)
-    # thread.start_new_thread(close_send_order, (permanence_id, all_producers, producers_id, deliveries_id, False))
+    # close_send_order(permanence_id, all_producers, producers_id, deliveries_id, False)
     t = threading.Thread(target=close_send_order,
                          args=(permanence_id, all_producers, producers_id, deliveries_id, False))
-    t.start()
+    # t.start()
     user_message = _("The orders are being closed.")
     user_message_level = messages.INFO
     return user_message, user_message_level
@@ -510,7 +509,6 @@ def admin_close(permanence_id, all_producers=False, deliveries_id=None, producer
 
 def admin_send(permanence_id, all_producers=False, deliveries_id=None, producers_id=None):
     # close_send_order(permanence_id, deliveries_id, True)
-    # thread.start_new_thread(close_send_order, (permanence_id, all_producers, producers_id, deliveries_id, True))
     t = threading.Thread(target=close_send_order,
                          args=(permanence_id, all_producers, producers_id, deliveries_id, True))
     t.start()
