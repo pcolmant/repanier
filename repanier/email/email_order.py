@@ -108,7 +108,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
         # Orders send to our producers
         if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER:
             producer_set = Producer.objects.filter(
-                permanence_id=permanence.id,
+                permanence=permanence,
                 language=language_code,
             ).order_by('?')
             if producers_id:
