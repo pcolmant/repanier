@@ -119,13 +119,11 @@ class Configuration(TranslatableModel):
                                       """
                                       Bonjour,<br />
                                       <br />
-                                      Les commandes de la {{ permanence_link }} sont maintenant ouvertes.<br />
+                                      Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
                                       {% if offer_description %}{{ offer_description }}<br />
-                                      {% endif %} Les commandes sont ouvertes auprès de : {{ offer_producer }}.<br />
-                                      <br />
-                                      Les produits suivants sont en offre :<br />
-                                      {{ offer_detail }}<br />
-                                      {{ offer_recent_detail }}<br />
+                                      {% endif %}
+                                      {% if offer_recent_detail %}<br />Nouveauté(s) :<br />
+                                      {{ offer_recent_detail }}{% endif %}<br />
                                       <br />
                                       {{ signature }}
                                       """,

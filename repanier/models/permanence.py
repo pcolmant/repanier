@@ -6,10 +6,11 @@ import datetime
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
-from django.db import models, transaction
+from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone, translation
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -446,9 +447,7 @@ class Permanence(TranslatableModel):
             else:
                 self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
             if new_status == PERMANENCE_WAIT_FOR_OPEN:
-                for a_producer in producer.Producer.objects.filter(
-                        permanence=self.id
-                ).only('id').order_by('?'):
+                for a_producer in self.producers.all():
                     # Create ProducerInvoice to be able to close those producer on demand
                     if not invoice.ProducerInvoice.objects.filter(
                             permanence_id=self.id,
@@ -574,8 +573,8 @@ class Permanence(TranslatableModel):
                             except TranslationDoesNotExist:
                                 pass
                         translation.activate(cur_language)
-                    for producer in self.producers.all():
-                        new_permanence.producers.add(producer)
+                    for a_producer in self.producers.all():
+                        new_permanence.producers.add(a_producer)
         return creation_counter
 
     def duplicate_short_name(self, new_permanence, cur_language):
@@ -760,6 +759,60 @@ class Permanence(TranslatableModel):
         self.total_selling_with_tax += selling_price
         self.total_purchase_vat += customer_vat
         self.total_selling_vat += customer_vat
+
+    @cached_property
+    def get_new_products(self):
+        assert self.status < PERMANENCE_SEND
+        result = []
+        for a_producer in self.producers.all():
+            current_products = list(offeritem.OfferItem.objects.filter(
+                is_active=True,
+                may_order=True,
+                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                permanence_id=self.id,
+                producer=a_producer
+            ).values_list(
+                'product', flat=True
+            ).order_by('?'))
+            six_months_ago = timezone.now().date() - datetime.timedelta(days=6*30)
+            previous_permanence = Permanence.objects.filter(
+                status__gte=PERMANENCE_SEND,
+                producers=a_producer,
+                permanence_date__gte=six_months_ago
+            ).order_by(
+                "-permanence_date",
+                "status"
+            ).first()
+            if previous_permanence is not None:
+                previous_products = list(offeritem.OfferItem.objects.filter(
+                    is_active=True,
+                    may_order=True,
+                    order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                    permanence_id=previous_permanence.id,
+                    producer=a_producer
+                ).values_list(
+                    'product', flat=True
+                ).order_by('?'))
+                new_products = [item for item in current_products if item not in previous_products]
+            else:
+                new_products = current_products
+
+            qs = offeritem.OfferItem.objects.filter(
+                permanence_id=self.id,
+                product__in=new_products,
+                translations__language_code=translation.get_language()
+            ).order_by(
+                "translations__order_sort_order"
+            )
+            for o in qs:
+                result.append('<li>%s, %s, %s</li>' % (
+                    o.get_long_name(box_unicode=EMPTY_STRING),
+                    o.producer.short_profile_name,
+                    o.email_offer_price_with_vat,
+                ))
+        if result:
+            return '<ul>%s</ul>' % "".join(result)
+        return EMPTY_STRING
 
     def get_full_status_display(self):
         need_to_refresh_status = self.status in [

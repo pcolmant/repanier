@@ -127,22 +127,13 @@ def send_open_order(permanence_id):
             )
                                                     for o in qs
                                                     ),)
-            two_weeks_ago = timezone.now().date() - datetime.timedelta(days=14)
-            qs = qs.filter(product__is_updated_on__gte=two_weeks_ago)
-            offer_recent_detail = '<ul>%s</ul>' % ("".join('<li>%s, %s, %s</li>' % (
-                o.get_long_name(box_unicode=EMPTY_STRING),
-                o.producer.short_profile_name,
-                o.email_offer_price_with_vat,
-            )
-                                                    for o in qs
-                                                    ),)
             template = Template(offer_customer_mail)
             context = TemplateContext({
                 'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                 'offer_description': mark_safe(offer_description),
                 'offer_detail'     : mark_safe(offer_detail),
-                'offer_recent_detail' : mark_safe(offer_recent_detail),
+                'offer_recent_detail' : mark_safe(permanence.get_new_products),
                 'offer_producer'   : offer_producer,
                 'signature'        : mark_safe(
                     '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
