@@ -18,7 +18,7 @@ from repanier.tools import sint
 @never_cache
 @require_GET
 def permanence_form_ajax(request):
-    if not request.is_ajax():
+    if not request.is_ajax() or request.user.is_staff:
         raise Http404
     result = "ko"
     p_permanence_board_id = sint(request.GET.get('permanence_board', -1))
