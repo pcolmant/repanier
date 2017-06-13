@@ -29,7 +29,7 @@ def who_is_who_view(request):
     )
     is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
         customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
-    ).order_by('?').first() is not None
+    ).order_by('?').exists()
     return render(
         request,
         "repanier/who_is_who.html",
