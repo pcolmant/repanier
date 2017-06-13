@@ -38,13 +38,11 @@ class MembersContactValidationForm(NgFormValidationMixin, MembersContactForm):
 @never_cache
 def send_mail_to_all_members_view(request):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
-    if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-        raise Http404
-    if request.user.is_staff:
+    if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO or request.user.is_staff:
         raise Http404
     is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
         customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
-    ).order_by('?').first() is not None
+    ).order_by('?').exists()
     if request.method == 'POST':
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
         user_customer = Customer.objects.filter(
