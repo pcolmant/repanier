@@ -99,8 +99,11 @@ def login_view(request, template_name='repanier/registration/login.html',
                 return HttpResponseRedirect(redirect_to)
     else:
         form = authentication_form(request)
-        how_to_register = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-            'how_to_register', any_language=True, default=EMPTY_STRING)
+        try:
+            how_to_register = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+                'how_to_register', any_language=True, default=EMPTY_STRING)
+        except:
+            how_to_register = EMPTY_STRING
 
     current_site = get_current_site(request)
 

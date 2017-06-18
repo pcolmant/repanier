@@ -56,8 +56,11 @@ class ConfigurationDataForm(TranslatableModelForm):
                 'send_abstract_order_mail_to_customer',
                 _('The abstract can only be send if the order is also send to producer'))
         email_host_password = self.cleaned_data["email_host_password"]
-        if email_host_password:
+        email_is_custom = self.cleaned_data["email_is_custom"]
+        if email_is_custom:
             # Send test email
+            if not email_host_password:
+                email_host_password = self.instance.previous_email_host_password
             email_host = self.cleaned_data["email_host"]
             email_port = self.cleaned_data["email_port"]
             email_use_tls = self.cleaned_data["email_use_tls"]
@@ -71,8 +74,9 @@ class ConfigurationDataForm(TranslatableModelForm):
             )
             if not email_send:
                 self.add_error(
-                    'email_host_password',
+                    'email_is_custom',
                     _('Repanier tried to send a test email without success.'))
+                self.instance.email_is_custom = False
 
     class Meta:
         model = Configuration
@@ -162,18 +166,10 @@ class ConfigurationAdmin(TranslatableAdmin):
                         'invoice',
                         ('currency', 'vat_id'),
                         'sms_gateway_mail',
+                        'email_is_custom',
                         ('email_host', 'email_port', 'email_use_tls'),
                         ('email_host_user', 'email_host_password')
                     ),
             }),
         ]
         return fieldsets
-
-    # def get_readonly_fields(self, request, configuration=None):
-    #     permanence = Permanence.objects.all().order_by('?')
-    #     is_coordinator = request.user.is_superuser or request.user.is_staff
-    #
-    #     if is_coordinator or not permanence.exists():
-    #         return []
-    #     else:
-    #         return ['bank_account']

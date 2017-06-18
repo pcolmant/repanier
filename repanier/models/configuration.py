@@ -100,6 +100,8 @@ class Configuration(TranslatableModel):
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
     notification_is_public = models.BooleanField(_("the notification is public"), default=False)
+    email_is_custom = models.BooleanField(
+        _("Email is customised"), default=False)
     email_host = models.CharField(
         _("email host"),
         help_text=_("For @gmail.com, see: https://mail.google.com/mail/u/0/#settings/fwdandpop and activate POP"),
@@ -107,6 +109,7 @@ class Configuration(TranslatableModel):
     email_port = models.IntegerField(
         _("email port"),
         help_text=_("Usually 587 for @gmail.com, otherwise 25"),
+        blank=True, null=True,
         default=587)
     email_use_tls = models.BooleanField(
         _("email use tls"),
@@ -311,7 +314,7 @@ def configuration_pre_save(sender, **kwargs):
     config = kwargs["instance"]
     if not config.bank_account:
         config.bank_account = None
-    if not config.email_host_password:
+    if config.email_is_custom and not config.email_host_password:
         config.email_host_password = config.previous_email_host_password
 
 

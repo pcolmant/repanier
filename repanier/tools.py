@@ -102,6 +102,7 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
         )
         return send_email(
             email,
+            test=True,
             host=host,
             port=port,
             host_user=host_user,
@@ -113,13 +114,15 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
 
 def send_email(
         email=None, from_name=EMPTY_STRING, track_customer_on_error=False,
-        host=None, port=None, host_user=None, host_password=None, use_tls=None):
+        test=False, host=None, port=None, host_user=None, host_password=None, use_tls=None):
     email_send = False
+    from_email, host, host_password, host_user, port, use_tls = send_email_get_connection_param(
+        test, host, host_password, host_user, port, use_tls)
     if settings.DJANGO_SETTINGS_DEMO:
         email.to = [DEMO_EMAIL]
         email.cc = []
         email.bcc = []
-        email_send = send_email_with_error_log(email, from_name, host=host,
+        email_send = send_email_with_error_log(email, from_name, from_email=from_email, host=host,
             port=port,
             host_user=host_user,
             host_password=host_password,
@@ -132,7 +135,7 @@ def send_email(
                 # Send the mail only if there is at least one tester
                 email.cc = []
                 email.bcc = []
-                email_send = send_email_with_error_log(email, from_name, host=host,
+                email_send = send_email_with_error_log(email, from_name, from_email=from_email, host=host,
                     port=port,
                     host_user=host_user,
                     host_password=host_password,
@@ -158,7 +161,12 @@ def send_email(
                     customer = None
                     for email_to in send_email_to:
                         email.to = [email_to]
-                        email_send &= send_email_with_error_log(email, from_name, track_customer_on_error, host=host,
+                        email_send &= send_email_with_error_log(
+                            email,
+                            from_name,
+                            track_customer_on_error,
+                            from_email=from_email,
+                            host=host,
                             port=port,
                             host_user=host_user,
                             host_password=host_password,
@@ -169,14 +177,11 @@ def send_email(
 
 def send_email_with_error_log(
         email, from_name=None, track_customer_on_error=False,
-        host=None, port=None, host_user=None, host_password=None, use_tls=None):
+        from_email=None, host=None, port=None, host_user=None, host_password=None, use_tls=None):
     email_send = False
     email_to = email.to[0]
     customer, send_mail = send_email_get_customer(email_to, track_customer_on_error)
     if send_mail:
-        from_email, host, host_password, host_user, port, use_tls = send_email_get_connection_param(host, host_password,
-                                                                                                    host_user, port,
-                                                                                                    use_tls)
         try:
             with mail.get_connection(host=host, port=port, username=host_user, password=host_password, use_tls=use_tls, use_ssl=not use_tls) as connection:
                 email.connection = connection
@@ -232,16 +237,16 @@ def send_email_with_error_log(
     return email_send
 
 
-def send_email_get_connection_param(host, host_password, host_user, port, use_tls):
+def send_email_get_connection_param(test, host, host_password, host_user, port, use_tls):
     from repanier.apps import REPANIER_SETTINGS_CONFIG
     config = REPANIER_SETTINGS_CONFIG
-    if config.email_host_password and not settings.DJANGO_SETTINGS_DEMO:
+    if config.email_is_custom and not test and not settings.DJANGO_SETTINGS_DEMO:
         host = config.email_host
         port = config.email_port
         from_email = host_user = config.email_host_user
         host_password = config.email_host_password
         use_tls = config.email_use_tls
-    elif host and host_user and not settings.DJANGO_SETTINGS_DEMO:
+    if test and not settings.DJANGO_SETTINGS_DEMO:
         from_email = host_user
     else:
         host = settings.EMAIL_HOST
