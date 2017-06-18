@@ -1,17 +1,43 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django import forms
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from repanier.const import ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP
-from repanier.models import Permanence, Producer
+from repanier.const import COORDINATION_GROUP
+from repanier.models import Configuration, Producer
+from repanier.tools import send_test_email
 
 
 class ConfigurationDataForm(TranslatableModelForm):
-    def __init__(self, *args, **kwargs):
-        super(ConfigurationDataForm, self).__init__(*args, **kwargs)
+    home_site = forms.URLField(
+        label=_("home site"),
+        required=False,
+        widget=forms.URLInput(attrs={'style': "width:100% !important"}))
+    group_label = forms.CharField(
+        label=_("group label"),
+        required=False,
+        widget=forms.TextInput(attrs={'style': "width:100% !important"}))
+    email_host_user = forms.CharField(
+        label=_("email host user"),
+        help_text=_("For @gmail.com : username@gmail.com"),
+        required=False,
+        widget=forms.EmailInput(attrs={'style': "width:100% !important"})
+    )
+    email_host_password = forms.CharField(
+        label=_("email host password"),
+        help_text=_(
+            "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
+        required=False,
+        widget=forms.PasswordInput(attrs={'style': "width:100% !important"}))
+    sms_gateway_mail = forms.CharField(
+        label=_("sms gateway email"),
+        help_text=_(
+            "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
+        required=False,
+        widget=forms.EmailInput(attrs={'style': "width:50% !important"}))
 
     def clean(self):
         if any(self.errors):
@@ -29,20 +55,45 @@ class ConfigurationDataForm(TranslatableModelForm):
             self.add_error(
                 'send_abstract_order_mail_to_customer',
                 _('The abstract can only be send if the order is also send to producer'))
+        email_host_password = self.cleaned_data["email_host_password"]
+        if email_host_password:
+            # Send test email
+            email_host = self.cleaned_data["email_host"]
+            email_port = self.cleaned_data["email_port"]
+            email_use_tls = self.cleaned_data["email_use_tls"]
+            email_host_user = self.cleaned_data["email_host_user"]
+            email_send = send_test_email(
+                host=email_host,
+                port=email_port,
+                host_user=email_host_user,
+                host_password=email_host_password,
+                use_tls=email_use_tls
+            )
+            if not email_send:
+                self.add_error(
+                    'email_host_password',
+                    _('Repanier tried to send a test email without success.'))
+
+    class Meta:
+        model = Configuration
+        fields = "__all__"
 
 
 class ConfigurationAdmin(TranslatableAdmin):
     form = ConfigurationDataForm
 
     def has_delete_permission(self, request, obj=None):
+        # nobody even a superadmin
         return False
 
     def has_add_permission(self, request):
+        # Nobody even a superadmin
+        # There is only one configuration record created at application start
         return False
 
     def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+        # Only a coordinator has this permission
+        if request.user.is_superuser or request.user.groups.filter(name=COORDINATION_GROUP).exists():
             return True
         return False
 
@@ -103,24 +154,26 @@ class ConfigurationAdmin(TranslatableAdmin):
                     (
                         'home_site',
                         ('transport', 'min_transport'),
+                        'how_to_register',
                         'group_label',
                         'page_break_on_customer_check',
                         'close_wo_sending',
                         'display_who_is_who',
-                        'sms_gateway_mail',
                         'invoice',
                         ('currency', 'vat_id'),
-                        'how_to_register'
+                        'sms_gateway_mail',
+                        ('email_host', 'email_port', 'email_use_tls'),
+                        ('email_host_user', 'email_host_password')
                     ),
             }),
         ]
         return fieldsets
 
-    def get_readonly_fields(self, request, configuration=None):
-        permanence = Permanence.objects.all().order_by('?')
-        is_coordinator = request.user.is_superuser or request.user.is_staff
-
-        if is_coordinator or not permanence.exists():
-            return []
-        else:
-            return ['bank_account']
+    # def get_readonly_fields(self, request, configuration=None):
+    #     permanence = Permanence.objects.all().order_by('?')
+    #     is_coordinator = request.user.is_superuser or request.user.is_staff
+    #
+    #     if is_coordinator or not permanence.exists():
+    #         return []
+    #     else:
+    #         return ['bank_account']

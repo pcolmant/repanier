@@ -29,8 +29,8 @@ from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
-from repanier.views.permanence_class import PermanenceView
-from repanier.views.permanence_form_ajax import permanence_form_ajax
+from repanier.views.task_class import PermanenceView
+from repanier.views.task_form_ajax import task_form_ajax
 from repanier.views.pre_order_class import PreOrderView
 from repanier.views.pre_order_create_product_ajax import pre_order_create_product_ajax
 from repanier.views.pre_order_update_product_ajax import pre_order_update_product_ajax
@@ -100,7 +100,7 @@ urlpatterns = [
     url(r'^ajax/order-init/$', order_init_ajax, name='order_init_ajax'),
     url(r'^ajax/order-select/$', order_select_ajax, name='order_select_ajax'),
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),
-    url(r'^ajax/permanence/$', permanence_form_ajax, name='permanence_form_ajax'),
+    url(r'^ajax/permanence/$', task_form_ajax, name='task_form_ajax'),
     url(r'^ajax/customer-basket-message/(?P<pk>\d+)/$', customer_basket_message_form_ajax, name='customer_basket_message_form_ajax'),
     url(r'^ajax/producer-basket-message/(?P<pk>\d+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         producer_basket_message_form_ajax, name='producer_basket_message_form_ajax'),

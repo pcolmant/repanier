@@ -16,7 +16,7 @@ from models import PermanenceBoard
 
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
-        from apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE, REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+        from apps import REPANIER_SETTINGS_PERMANENCES_NAME
         user = request.user
         if user.is_anonymous or user.is_staff:
             is_anonymous = True
@@ -70,85 +70,10 @@ class PermanenceMenu(Menu):
             if first_pass and closed_separator:
                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
             first_pass = False
-            # separator = True
             closed_separator = False
             submenu_id = self.append_permanence(is_anonymous, permanence, nodes, master_id, submenu_id)
             if displayed_permanence_counter > 4:
                 break
-        # if displayed_permanence_counter < 4:
-        #     max_counter = 4 - displayed_permanence_counter
-        #     for permanence in Permanence.objects.filter(status__in=[PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]) \
-        #             .only("id", "permanence_date") \
-        #             .order_by('-permanence_date'):
-        #         if permanence.permanence_date >= (
-        #             timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)).date():
-        #             if first_pass and closed_separator:
-        #                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
-        #             first_pass = False
-        #             separator = True
-        #             submenu_id = self.append_permanence(is_anonymous, permanence, nodes, master_id, submenu_id)
-        #         max_counter -= 1
-        #         if max_counter <= 0:
-        #             break
-
-        # if REPANIER_SETTINGS_INVOICE and not request.user.is_staff:
-        #     if separator:
-        #         submenu_id = self.append_separator(nodes, master_id, submenu_id)
-        #     submenu_id += 1
-        #     node = NavigationNode(
-        #         '<span id="my_balance">%s</span>' % _('My balance'),
-        #         reverse('customer_invoice_view', args=(0,)),
-        #         id=submenu_id, parent_id=master_id,
-        #         visible=True
-        #     )
-        #     nodes.append(node)
-
-            # for node in nodes:
-            #     logging.debug('Node before : %s' % node.get_menu_title())
-            #     for attr in (x for x in dir(node) if not x.startswith('__')):
-            #         logging.debug('%s => %s' % (attr, getattr(node, attr)))
-
-        # master_id = 3
-        # node = NavigationNode(
-        #     "%s" % _('Group'),
-        #     "/",
-        #     id=master_id,
-        #     visible=True
-        # )
-        # nodes.append(node)
-        # submenu_id = master_id + 1
-        # node = NavigationNode(
-        #     _('Send mail to coordinators'),
-        #     reverse('send_mail_to_coordinators_view'),
-        #     id=submenu_id, parent_id=master_id,
-        #     visible=True
-        # )
-        # nodes.append(node)
-        # submenu_id += 1
-        # if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-        #     node = NavigationNode(
-        #         _('Send mail to all members'),
-        #         reverse('send_mail_to_all_members_view'),
-        #         id=submenu_id, parent_id=master_id,
-        #         visible=True
-        #     )
-        #     nodes.append(node)
-        #     submenu_id += 1
-        #     node = NavigationNode(
-        #         _('Who is who'),
-        #         reverse('who_is_who_view'),
-        #         id=submenu_id, parent_id=master_id,
-        #         visible=True
-        #     )
-        #     nodes.append(node)
-        #     submenu_id += 1
-        # node = NavigationNode(
-        #     _('Me'),
-        #     reverse('me_view'),
-        #     id=submenu_id, parent_id=master_id,
-        #     visible=True
-        # )
-        # nodes.append(node)
 
         return nodes
 

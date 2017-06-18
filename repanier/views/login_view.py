@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout)
+from django.contrib.auth.models import Group
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
@@ -14,7 +15,8 @@ from django.views.decorators.debug import sensitive_post_parameters
 
 from forms import AuthRepanierLoginForm
 from repanier.models import Staff
-from repanier.const import EMPTY_STRING
+from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, WEBMASTER_GROUP, CONTRIBUTOR_GROUP, \
+    COORDINATION_GROUP
 
 
 @sensitive_post_parameters()
@@ -48,8 +50,27 @@ def login_view(request, template_name='repanier/registration/login.html',
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
 
         if as_staff is not None:
+            user = request.user
             auth_logout(request)
-            auth_login(request, as_staff.user)
+            user.is_staff = True
+            user.groups.clear()
+            if as_staff.is_reply_to_order_email:
+                group_id = Group.objects.filter(name=ORDER_GROUP).first()
+                user.groups.add(group_id)
+            if as_staff.is_reply_to_invoice_email:
+                group_id = Group.objects.filter(name=INVOICE_GROUP).first()
+                user.groups.add(group_id)
+            if as_staff.is_webmaster:
+                group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+                user.groups.add(group_id)
+            if as_staff.is_contributor:
+                group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
+                user.groups.add(group_id)
+            if as_staff.is_coordinator:
+                group_id = Group.objects.filter(name=COORDINATION_GROUP).first()
+                user.groups.add(group_id)
+            user.save()
+            auth_login(request, user)
         return HttpResponseRedirect(redirect_to)
     elif request.method == "POST":
         form = authentication_form(request, data=request.POST)

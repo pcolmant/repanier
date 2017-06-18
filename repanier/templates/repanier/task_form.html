@@ -28,10 +28,10 @@
                     <div class="col-md-2">
                     </div>
                     <div class="col-md-5">
-                        {% repanier_display_task permanence_board_id=permanenceboard.id %}
+                        {% repanier_display_task task_id=permanenceboard.id %}
                     </div>
                     <div class="col-md-5">
-                        {% if user.is_authenticated %}{% repanier_select_task permanence_board_id=permanenceboard.id %}{%  endif %}
+                        {% if user.is_authenticated %}{% repanier_select_task task_id=permanenceboard.id %}{%  endif %}
                         <br/>
                     </div>
                 </div>
@@ -42,19 +42,19 @@
     {% endif %}{% endspaceless %}
     {% addtoblock "lastjs" %}{% spaceless %}
         <script type="text/javascript">
-            function permanence_board_ajax(permanence_board_id) {
-                var lien = '{% url 'permanence_form_ajax' %}?value=' + $("#permanence_board" + permanence_board_id).val() + "&permanence_board=" + permanence_board_id;
+            function task_ajax(task_id) {
+                var lien = '{% url 'task_form_ajax' %}?value=' + $("#task" + task_id).val() + "&task=" + task_id;
                 $.ajax({
                     url: lien,
                     cache: false,
                     async: true,
                     success: function (result) {
-                        if (result.indexOf("ok") != 0) {
-                            $("#permanence_board" + permanence_board_id).val($("#permanence_board" + permanence_board_id).data('oldValue'));
+                        if (result.indexOf("ok") !== 0) {
+                            $("#task" + task_id).val($("#task" + task_id).data('oldValue'));
                         }
                     },
                     error: function (result) {
-                        $("#permanence_board" + permanence_board_id).val($("#permanence_board" + permanence_board_id).data('oldValue'));
+                        $("#task" + task_id).val($("#task" + task_id).data('oldValue'));
                     }
                 });
             }

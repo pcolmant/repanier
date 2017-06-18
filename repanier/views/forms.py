@@ -36,12 +36,10 @@ class AuthRepanierLoginForm(AuthenticationForm):
         """
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
-        confirm = self.cleaned_data.get('confirm')
 
         if username and password:
             self.user_cache = authenticate(username=username,
-                                           password=password,
-                                           confirm=confirm)
+                                           password=password)
             if self.user_cache is None:
                 raise forms.ValidationError(
                     self.error_messages['invalid_login'],
@@ -85,7 +83,12 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
 
         """
         active_users = User.objects.filter(
-            Q(username__iexact=email[:30], is_active=True) | Q(email__iexact=email, is_active=True)).order_by('?')
+            Q(
+                username__iexact=email[:30], is_active=True, is_staff=False
+            ) | Q(
+                email__iexact=email, is_active=True, is_staff=False
+            )
+        ).order_by('?')
         return (u for u in active_users if u.has_usable_password())
 
 

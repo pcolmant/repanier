@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.core.checks import messages
@@ -96,6 +97,8 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
 
 
 class PermanenceInPreparationForm(TranslatableModelForm):
+    short_name = forms.CharField(label=_("offer name"),
+                                  widget=forms.TextInput(attrs={'style': "width:100% !important"}))
 
     def __init__(self, *args, **kwargs):
         super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)

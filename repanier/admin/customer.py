@@ -41,12 +41,10 @@ class UserDataForm(forms.ModelForm):
         super(UserDataForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        cleaned_data = super(UserDataForm, self).clean()
-        initial_username = None
-        try:
-            initial_username = self.instance.user.username
-        except:
-            pass
+        if any(self.errors):
+            # Don't bother validating the formset unless each form is valid on its own
+            return
+        # cleaned_data = super(UserDataForm, self).clean()
         username_field_name = 'short_basket_name'
         username = self.cleaned_data.get(username_field_name)
         user_error1 = _('The given short_basket_name must be set')
@@ -59,15 +57,16 @@ class UserDataForm(forms.ModelForm):
         else:
             email = self.cleaned_data["email"]
             user_model = get_user_model()
-            user = user_model.objects.filter(email=email).order_by("?").first()
-            # Check that the username is not already used
-            if user is not None:
-                if initial_username != user.username:
-                    self.add_error('email', _('The given email is used by another user'))
-            user = user_model.objects.filter(username=username).order_by("?").first()
-            if user is not None:
-                if initial_username != user.username:
-                    self.add_error(username_field_name, user_error2)
+            qs = user_model.objects.filter(email=email, is_staff=False).order_by('?')
+            if self.instance.id is not None:
+                qs = qs.exclude(id=self.instance.user_id)
+            if qs.exists():
+                self.add_error('email', _('The given email is used by another user'))
+            qs = user_model.objects.filter(username=username).order_by('?')
+            if self.instance.id is not None:
+                qs = qs.exclude(id=self.instance.user_id)
+            if qs.exists():
+                self.add_error(username_field_name, user_error2)
         if self.instance.id is not None and "price_list_multiplier" in self.cleaned_data:
             if self.instance.delivery_point is not None \
                     and self.instance.delivery_point.customer_responsible is not None \
@@ -97,23 +96,23 @@ class UserDataForm(forms.ModelForm):
                             'delivery_point': delivery_point,})
         bank_account1 = self.cleaned_data["bank_account1"]
         if bank_account1:
-            other_bank_account1 = Customer.objects.filter(
+            qs = Customer.objects.filter(
                 Q(bank_account1=bank_account1) | Q(bank_account2=bank_account1)
             ).order_by("?")
             if self.instance.id is not None:
-                other_bank_account1 = other_bank_account1.exclude(id=self.instance.id)
-            if other_bank_account1.exists():
+                qs = qs.exclude(id=self.instance.id)
+            if qs.exists():
                 self.add_error('bank_account1', _('This bank account already belongs to another customer.'))
         bank_account2 = self.cleaned_data["bank_account2"]
         if bank_account2:
-            other_bank_account2 = Customer.objects.filter(
+            qs = Customer.objects.filter(
                 Q(bank_account1=bank_account2) | Q(bank_account2=bank_account2)
             ).order_by("?")
             if self.instance.id is not None:
-                other_bank_account2 = other_bank_account2.exclude(id=self.instance.id)
-            if other_bank_account2.exists():
+                qs = qs.exclude(id=self.instance.id)
+            if qs.exists():
                 self.add_error('bank_account2', _('This bank account already belongs to another customer.'))
-        return cleaned_data
+        # return cleaned_data
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -130,7 +129,7 @@ class UserDataForm(forms.ModelForm):
             user.save()
         else:
             user = user_model.objects.create_user(
-                username=username, email=email, password=uuid.uuid1().hex,
+                username=username, email=email, password=None,
                 first_name=EMPTY_STRING, last_name=username)
         self.user = user
         return self.instance
@@ -170,7 +169,7 @@ class CustomerResource(resources.ModelResource):
         Override to add additional logic.
         """
         user_model = get_user_model()
-        user_email_qs = user_model.objects.filter(email=instance.user.email).order_by('?')
+        user_email_qs = user_model.objects.filter(email=instance.user.email, is_staff=False).order_by('?')
         user_username_qs = user_model.objects.filter(username=instance.short_basket_name).order_by('?')
         if instance.id is not None:
             customer = Customer.objects.filter(id=instance.id).order_by('?').only('id', 'user_id').first()
@@ -392,7 +391,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         if customer is not None:
             user_model = get_user_model()
             user = user_model.objects.get(id=customer.user_id)
-            username_field.initial = getattr(user, user_model.USERNAME_FIELD)
+            # username_field.initial = getattr(user, user_model.USERNAME_FIELD)
+            username_field.initial = user.username
             email_field.initial = user.email
             # One folder by customer to avoid picture names conflicts
             picture_field = form.base_fields["picture"]

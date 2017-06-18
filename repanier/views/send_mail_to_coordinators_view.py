@@ -18,6 +18,7 @@ from djng.forms import NgFormValidationMixin
 from djng.forms.field_mixins import EmailFieldMixin, CharFieldMixin, MultipleChoiceFieldMixin
 from djng.styling.bootstrap3.field_mixins import BooleanFieldMixin
 
+from repanier.models import Customer
 from repanier.const import EMPTY_STRING
 from repanier.models import Staff
 from repanier.tools import send_email
@@ -82,7 +83,9 @@ class CoordinatorsContactValidationForm(NgFormValidationMixin, CoordinatorsConta
 @csrf_protect
 @never_cache
 def send_mail_to_coordinators_view(request):
-    if request.user.is_staff:
+    user=request.user
+    customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+    if not customer_is_active:
         raise Http404
     if request.method == 'POST':
         form = CoordinatorsContactValidationForm(request.POST)

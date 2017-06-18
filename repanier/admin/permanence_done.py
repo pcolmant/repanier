@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django import forms
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
@@ -14,13 +15,14 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
+from parler.forms import TranslatableModelForm
 
 import repanier.apps
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm, ImportXlsxForm, ImportInvoiceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.models import Customer, Purchase, PermanenceBoard, LUT_PermanenceRole, BankAccount, ProducerInvoice
+from repanier.models import Customer, Purchase, PermanenceBoard, LUT_PermanenceRole, BankAccount, PermanenceDone, ProducerInvoice
 from repanier.task import task_invoice
 from repanier.tools import send_email_to_who, get_signature
 from repanier.xlsx.views import import_xslx_view
@@ -44,7 +46,17 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
         return super(PermanenceBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class PermanenceDoneForm(TranslatableModelForm):
+    short_name = forms.CharField(label=_("offer name"),
+                                  widget=forms.TextInput(attrs={'style': "width:100% !important"}))
+
+    class Meta:
+        model = PermanenceDone
+        fields = "__all__"
+
 class PermanenceDoneAdmin(TranslatableAdmin):
+    form = PermanenceDoneForm
+
     fields = (
         'permanence_date',
         'short_name',

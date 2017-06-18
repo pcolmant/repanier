@@ -166,7 +166,7 @@ def pre_open_order(permanence_id):
     for producer in Producer.objects.filter(
             permanence=permanence_id, producer_pre_opening=True
     ).only('offer_uuid').order_by('?'):
-        producer.offer_uuid = uuid.uuid4()
+        producer.offer_uuid = uuid.uuid1()
         producer.offer_filled = False
         producer.save(update_fields=['offer_uuid', 'offer_filled'])
     # try:
@@ -186,7 +186,7 @@ def open_order(permanence_id, do_not_send_any_mail=False):
             permanence=permanence_id,
             producer_pre_opening=True
     ).only('offer_uuid', 'offer_filled').order_by('?'):
-        producer.offer_uuid = uuid.uuid4()
+        producer.offer_uuid = uuid.uuid1()
         producer.save(update_fields=['offer_uuid', ])
         if not producer.offer_filled:
             # Deactivate offer item if the producer as not reacted to the pre opening

@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_init
 from django.dispatch import receiver
 from django.template import Template
 from django.utils import timezone
@@ -72,7 +72,10 @@ class Configuration(TranslatableModel):
         _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     page_break_on_customer_check = models.BooleanField(_("page break on customer check"), default=False)
     sms_gateway_mail = models.EmailField(
-        _("sms gateway email"), null=True, blank=True, default=EMPTY_STRING)
+        _("sms gateway email"),
+        help_text=_(
+            "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
+        max_length=50, null=True, blank=True, default=EMPTY_STRING)
     customers_must_confirm_orders = models.BooleanField(_("customers must confirm orders"), default=False)
     membership_fee = ModelMoneyField(
         _("membership fee"),
@@ -97,11 +100,33 @@ class Configuration(TranslatableModel):
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
     notification_is_public = models.BooleanField(_("the notification is public"), default=False)
+    email_host = models.CharField(
+        _("email host"),
+        help_text=_("For @gmail.com, see: https://mail.google.com/mail/u/0/#settings/fwdandpop and activate POP"),
+        max_length=50, null=True, blank=True, default="smtp.gmail.com")
+    email_port = models.IntegerField(
+        _("email port"),
+        help_text=_("Usually 587 for @gmail.com, otherwise 25"),
+        default=587)
+    email_use_tls = models.BooleanField(
+        _("email use tls"),
+        help_text=_("TLS is used otherwise SSL is used"),
+        default=True
+    )
+    email_host_user = models.EmailField(
+        _("email host user"),
+        help_text=_("For @gmail.com : username@gmail.com"),
+        max_length=50, null=True, blank=True, default="username@gmail.com")
+    email_host_password = models.CharField(
+        _("email host password"),
+        help_text=_(
+            "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
+        max_length=25, null=True, blank=True, default=EMPTY_STRING)
     translations = TranslatedFields(
         group_label=models.CharField(_("group label"),
                                     max_length=100,
                                     default=EMPTY_STRING,
-                                     blank=True),
+                                    blank=True),
         how_to_register=HTMLField(_("how to register"),
                                   help_text=EMPTY_STRING,
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -127,7 +152,7 @@ class Configuration(TranslatableModel):
                                       <br />
                                       {{ signature }}
                                       """,
-                                      blank=False),
+                                      blank=True),
         offer_producer_mail=HTMLField(_("offer producer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -142,7 +167,7 @@ class Configuration(TranslatableModel):
                                       <br />
                                       {{ signature }}
                                       """,
-                                      blank=False),
+                                      blank=True),
         order_customer_mail=HTMLField(_("order customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -160,7 +185,7 @@ class Configuration(TranslatableModel):
                                       <br />
                                       {{ signature }}
                                       """,
-                                      blank=False),
+                                      blank=True),
         cancel_order_customer_mail=HTMLField(_("cancelled order customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -172,7 +197,7 @@ class Configuration(TranslatableModel):
                                       <br />
                                       {{ signature }}
                                       """,
-                                      blank=False),
+                                      blank=True),
         order_staff_mail=HTMLField(_("order staff mail"),
                                    help_text=EMPTY_STRING,
                                    configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -189,7 +214,7 @@ class Configuration(TranslatableModel):
                                    <br/>
                                    {{ signature }}
                                    """,
-                                   blank=False),
+                                   blank=True),
         order_producer_mail=HTMLField(_("order producer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -202,7 +227,7 @@ class Configuration(TranslatableModel):
                                       <br />
                                       {{ signature }}
                                       """,
-                                      blank=False),
+                                      blank=True),
         invoice_customer_mail=HTMLField(_("invoice customer mail"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -221,7 +246,7 @@ class Configuration(TranslatableModel):
                                         <br />
                                         {{ signature }}
                                         """,
-                                        blank=False),
+                                        blank=True),
         invoice_producer_mail=HTMLField(_("invoice producer mail"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -233,7 +258,7 @@ class Configuration(TranslatableModel):
                                         <br/>
                                         {{ signature }}
                                         """,
-                                        blank=False),
+                                        blank=True),
     )
 
     def clean(self):
@@ -271,11 +296,23 @@ class Configuration(TranslatableModel):
         verbose_name_plural = _("configurations")
 
 
-@receiver(pre_save, sender=Configuration)
-def product_pre_save(sender, **kwargs):
+@receiver(post_init, sender=Configuration)
+def configuration_post_init(sender, **kwargs):
     config = kwargs["instance"]
-    if config.bank_account is not None and config.bank_account == EMPTY_STRING:
+    if config.id is not None:
+        config.previous_email_host_password = config.email_host_password
+    else:
+        config.previous_email_host_password = EMPTY_STRING
+    config.email_host_password = EMPTY_STRING
+
+
+@receiver(pre_save, sender=Configuration)
+def configuration_pre_save(sender, **kwargs):
+    config = kwargs["instance"]
+    if not config.bank_account:
         config.bank_account = None
+    if not config.email_host_password:
+        config.email_host_password = config.previous_email_host_password
 
 
 @receiver(post_save, sender=Configuration)

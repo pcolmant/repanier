@@ -141,7 +141,7 @@ def product_pre_save(sender, **kwargs):
     if product.order_average_weight <= DECIMAL_ZERO:
         product.order_average_weight = DECIMAL_ONE
     if not product.reference:
-        product.reference = uuid.uuid4()
+        product.reference = uuid.uuid1()
     # Update stock of boxes containing this product
     # for box_content in product.box_content.all():
     #     if box_content.box is not None:

@@ -363,7 +363,7 @@ def producer_pre_save(sender, **kwargs):
     if producer.price_list_multiplier <= DECIMAL_ZERO:
         producer.price_list_multiplier = DECIMAL_ONE
     if not producer.uuid:
-        producer.uuid = uuid.uuid4()
+        producer.uuid = uuid.uuid1()
     if producer.bank_account is not None and len(producer.bank_account.strip()) == 0:
         producer.bank_account = None
 

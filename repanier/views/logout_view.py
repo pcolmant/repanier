@@ -2,8 +2,10 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth import (REDIRECT_FIELD_NAME, logout as auth_logout)
+from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
+from django.dispatch import receiver
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
@@ -11,6 +13,8 @@ from django.utils.http import is_safe_url
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+
+from repanier.models import Customer
 
 
 @login_required()
@@ -50,3 +54,16 @@ def logout_view(request, next_page=None,
         context.update(extra_context)
 
     return TemplateResponse(request, template_name, context)
+
+
+def remove_staff_right(user, is_customer=False):
+    is_customer = is_customer or Customer.objects.filter(user_id=user.id).exists()
+    if is_customer and user.is_staff:
+        user.is_staff = False
+        user.groups.clear()
+        user.save()
+
+
+@receiver(user_logged_out)
+def receiver_user_logged_out(sender, request, user, **kwargs):
+    remove_staff_right(user)

@@ -121,6 +121,7 @@ class ProducerDataForm(forms.ModelForm):
         widget=admin.widgets.FilteredSelectMultiple(repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False),
         required=False
     )
+    reference_site = forms.URLField(label=_("reference site"), widget=forms.URLInput(attrs={'style': "width:100% !important"}))
 
     def __init__(self, *args, **kwargs):
         super(ProducerDataForm, self).__init__(*args, **kwargs)
@@ -199,14 +200,20 @@ class ProducerDataForm(forms.ModelForm):
                            _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
             self.add_error('is_resale_price_fixed',
                            _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
+        short_profile_name = self.cleaned_data["short_profile_name"]
+        qs = Producer.objects.filter(short_profile_name=short_profile_name).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.id)
+        if qs.exists():
+            self.add_error('short_profile_name', _('The given short_profile_name is used by another producer.'))
         bank_account = self.cleaned_data["bank_account"]
         if bank_account:
-            other_bank_account = Producer.objects.filter(
+            qs = Producer.objects.filter(
                 bank_account=bank_account
             ).order_by("?")
             if self.instance.id is not None:
-                other_bank_account = other_bank_account.exclude(id=self.instance.id)
-            if other_bank_account.exists():
+                qs = qs.exclude(id=self.instance.id)
+            if qs.exists():
                 self.add_error('bank_account', _('This bank account already belongs to another producer.'))
 
     def save(self, *args, **kwargs):

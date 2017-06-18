@@ -2,11 +2,11 @@
 from __future__ import unicode_literals
 
 from django.db.models import Q
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.views.generic import ListView
 
+from repanier.models import Customer
 from repanier.const import EMPTY_STRING
 from repanier.models import Permanence, Producer, LUT_DepartmentForCustomer, OfferItem, OfferItemWoReceiver, Staff, BoxContent
 from repanier.tools import sint, permanence_ok_or_404, html_box_content
@@ -45,7 +45,8 @@ class OrderView(ListView):
         self.user = request.user
         self.is_basket = self.request.GET.get('is_basket', False)
         self.is_like = self.request.GET.get('is_like', False)
-        if self.user.is_anonymous or self.user.is_staff:
+        customer_may_order = Customer.objects.filter(user_id=self.user.id, is_active=True).order_by('?').exists()
+        if self.user.is_anonymous or not customer_may_order:
             self.is_anonymous = True
             self.may_order = False
         else:

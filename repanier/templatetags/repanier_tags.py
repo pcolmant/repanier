@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
+from repanier.models import Customer
 from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMANENCE_OPENED
 from repanier.models import PermanenceBoard, CustomerInvoice, Purchase, ProducerInvoice
 from repanier.tools import sint, display_selected_value, display_selected_box_value
@@ -41,7 +42,8 @@ def repanier_user(context, *args, **kwargs):
             _('Welkom'),
             user.username or '<span id = "my_name"></ span>'
         )]
-        if not user.is_staff:
+        customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+        if customer_is_active:
 
             nodes.append('<li><a href="%s">%s</a></li>' % (
                 reverse('send_mail_to_coordinators_view'),
@@ -113,9 +115,9 @@ def repanier_display_languages(*args, **kwargs):
 @register.simple_tag(takes_context=False)
 def repanier_display_task(*args, **kwargs):
     result = EMPTY_STRING
-    p_permanence_board_id = sint(kwargs.get('permanence_board_id', 0))
-    if p_permanence_board_id > 0:
-        permanence_board = PermanenceBoard.objects.filter(id=p_permanence_board_id).select_related(
+    p_task_id = sint(kwargs.get('task_id', 0))
+    if p_task_id > 0:
+        permanence_board = PermanenceBoard.objects.filter(id=p_task_id).select_related(
             "permanence_role"
         ).order_by('?').first()
         if permanence_board is not None:
@@ -131,10 +133,11 @@ def repanier_select_task(context, *args, **kwargs):
     request = context['request']
     user = request.user
     result = EMPTY_STRING
-    if not(user.is_staff or user.is_superuser):
-        p_permanence_board_id = sint(kwargs.get('permanence_board_id', 0))
-        if p_permanence_board_id > 0:
-            permanence_board = PermanenceBoard.objects.filter(id=p_permanence_board_id).select_related(
+    customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+    if customer_is_active:
+        p_task_id = sint(kwargs.get('task_id', 0))
+        if p_task_id > 0:
+            permanence_board = PermanenceBoard.objects.filter(id=p_task_id).select_related(
                 "customer", "permanence_role", "permanence"
             ).order_by('?').first()
             if permanence_board is not None:
@@ -142,24 +145,24 @@ def repanier_select_task(context, *args, **kwargs):
                     if permanence_board.customer.user_id == user.id and permanence_board.permanence.status <= PERMANENCE_CLOSED:
                         result = """
                         <b><i>
-                        <select name="value" id="permanence_board{permanence_board_id}"
-                        onchange="permanence_board_ajax({permanence_board_id})" class="form-control">
+                        <select name="value" id="task{task_id}"
+                        onchange="task_ajax({task_id})" class="form-control">
                         <option value="0">---</option>
                         <option value="1" selected>{long_basket_name}</option>
                         </select>
                         </i></b>
                         """.format(
-                            permanence_board_id=permanence_board.id,
+                            task_id=permanence_board.id,
                             long_basket_name=user.customer.long_basket_name
                         )
                     else:
                         result = """
-                        <select name="value" id="permanence_board{permanence_board_id}"
+                        <select name="value" id="task{task_id}"
                         class="form-control">
                         <option value="0" selected>{long_basket_name}</option>
                         </select>
                         """.format(
-                            permanence_board_id=permanence_board.id,
+                            task_id=permanence_board.id,
                             long_basket_name=permanence_board.customer.long_basket_name
                         )
                 else:
@@ -167,24 +170,24 @@ def repanier_select_task(context, *args, **kwargs):
                         if permanence_board.permanence.status <= PERMANENCE_CLOSED:
                             result = """
                             <b><i>
-                            <select name="value" id="permanence_board{permanence_board_id}"
-                            onchange="permanence_board_ajax({permanence_board_id})" class="form-control">
+                            <select name="value" id="task{task_id}"
+                            onchange="task_ajax({task_id})" class="form-control">
                             <option value="0" selected>---</option>
                             <option value="1">{long_basket_name}</option>
                             </select>
                             </i></b>
                             """.format(
-                                permanence_board_id=permanence_board.id,
+                                task_id=permanence_board.id,
                                 long_basket_name=user.customer.long_basket_name
                             )
                         else:
                             result = """
-                            <select name="value" id="permanence_board{permanence_board_id}"
+                            <select name="value" id="task{task_id}"
                             class="form-control">
                             <option value="0" selected>---</option>
                             </select>
                             """.format(
-                                permanence_board_id=permanence_board.id
+                                task_id=permanence_board.id
                             )
     return mark_safe(result)
 
@@ -194,7 +197,8 @@ def repanier_select_offer_item(context, *args, **kwargs):
     request = context['request']
     user = request.user
     result = EMPTY_STRING
-    if not(user.is_staff or user.is_superuser):
+    customer_may_order = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+    if customer_may_order:
         offer_item = kwargs.get('offer_item', None)
         str_id = str(offer_item.id)
         if offer_item.may_order:
@@ -249,7 +253,8 @@ def repanier_btn_like(context, *args, **kwargs):
     request = context['request']
     user = request.user
     result = EMPTY_STRING
-    if not(user.is_staff or user.is_superuser):
+    customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+    if customer_is_active:
         offer_item = kwargs.get('offer_item', None)
         str_id = str(offer_item.id)
         result = '<br/><span class="btn_like{str_id}" style="cursor: pointer;">{html}</span>'.format(

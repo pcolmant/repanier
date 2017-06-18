@@ -11,9 +11,9 @@ from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from djangocms_text_ckeditor.widgets import TextEditorWidget
 from djng.forms import NgFormValidationMixin
 
+from repanier.models import Customer
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 from repanier.picture.const import SIZE_S
 from repanier.picture.widgets import AjaxPictureWidget
@@ -52,10 +52,12 @@ class CustomerForm(RepanierForm):
                               required=False)
 
     def clean_email1(self):
-        email1 = self.cleaned_data['email1']
+        email1 = self.cleaned_data["email1"]
         user_model = get_user_model()
-        user = user_model.objects.filter(email=email1).order_by('?').first()
-        if user is not None and user.id != self.request.user.id:
+        qs = user_model.objects.filter(email=email1, is_staff=False).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.user_id)
+        if qs.exists():
             self.add_error('email1', _('The given email is used by another user'))
         return email1
 
@@ -78,7 +80,9 @@ class CustomerValidationForm(NgFormValidationMixin, CustomerForm):
 @csrf_protect
 @never_cache
 def my_profile_view(request):
-    if request.user.is_staff or request.user.is_superuser:
+    user = request.user
+    customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+    if not customer_is_active:
         raise Http404
     customer = request.user.customer
     from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE

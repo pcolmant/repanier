@@ -18,9 +18,15 @@ class RepanierCustomBackend(ModelBackend):
     def __init__(self, *args, **kwargs):
         super(RepanierCustomBackend, self).__init__()
 
-    def authenticate(self, username=None, password=None, confirm=None, **kwargs):
+    def authenticate(self, username=None, password=None, **kwargs):
         self.user = None
-        user_username = User.objects.filter(Q(username=username[:30]) | Q(email=username)).order_by('?').first()
+        user_username = User.objects.filter(
+            Q(
+                username__iexact=username[:30]
+            ) | Q(
+                email__iexact=username
+            )
+        ).order_by('?').first()
         is_admin = False
         staff = customer = None
         login_attempt_counter = DECIMAL_THREE
@@ -41,6 +47,7 @@ class RepanierCustomBackend(ModelBackend):
                         'login_attempt_counter'
                     ).first().login_attempt_counter
                 else:
+                    # TODO : Remove staff login
                     login_attempt_counter = staff.login_attempt_counter
             else:
                 login_attempt_counter = customer.login_attempt_counter

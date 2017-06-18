@@ -13,7 +13,7 @@ except ImportError:
     # Fall back to Python 2's urllib2
     from urllib2 import urlopen
 
-from smtplib import SMTPRecipientsRefused
+from smtplib import SMTPRecipientsRefused, SMTPAuthenticationError
 
 from django.conf import settings
 from django.core import mail
@@ -86,12 +86,44 @@ def emails_of_testers():
     return list(set(testers))
 
 
-def send_email(email=None, from_name=EMPTY_STRING, track_customer_on_error=False):
+def send_test_email(host=None, port=None, host_user=None, host_password=None, use_tls=None):
+    if host and port:
+        to = emails_of_testers()
+        if len(to) == 0:
+            to = host_user
+        # Avoid : string payload expected: <class 'django.utils.functional.__proxy__'>
+        subject = "%s" % _("Test from Repanier")
+        body = "%s" % _("The mail is correctly configured on your Repanier website")
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=host_user,
+            to=to
+        )
+        return send_email(
+            email,
+            host=host,
+            port=port,
+            host_user=host_user,
+            host_password=host_password,
+            use_tls=use_tls)
+    else:
+        return False
+
+
+def send_email(
+        email=None, from_name=EMPTY_STRING, track_customer_on_error=False,
+        host=None, port=None, host_user=None, host_password=None, use_tls=None):
+    email_send = False
     if settings.DJANGO_SETTINGS_DEMO:
         email.to = [DEMO_EMAIL]
         email.cc = []
         email.bcc = []
-        send_email_with_error_log(email, from_name)
+        email_send = send_email_with_error_log(email, from_name, host=host,
+            port=port,
+            host_user=host_user,
+            host_password=host_password,
+            use_tls=use_tls)
     else:
         from repanier.apps import REPANIER_SETTINGS_TEST_MODE
         if REPANIER_SETTINGS_TEST_MODE:
@@ -100,7 +132,11 @@ def send_email(email=None, from_name=EMPTY_STRING, track_customer_on_error=False
                 # Send the mail only if there is at least one tester
                 email.cc = []
                 email.bcc = []
-                send_email_with_error_log(email, from_name)
+                email_send = send_email_with_error_log(email, from_name, host=host,
+                    port=port,
+                    host_user=host_user,
+                    host_password=host_password,
+                    use_tls=use_tls)
             else:
                 print('############################ test mode, without tester...')
         else:
@@ -109,6 +145,7 @@ def send_email(email=None, from_name=EMPTY_STRING, track_customer_on_error=False
                 print("cc : %s" % email.cc)
                 print("bcc : %s" % email.bcc)
                 print("subject : %s" % slugify(email.subject))
+                email_send = True
             else:
                 # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
                 # for chunk in chunks:
@@ -116,73 +153,119 @@ def send_email(email=None, from_name=EMPTY_STRING, track_customer_on_error=False
                 send_email_to = list(set(email.to + email.cc + email.bcc))
                 email.cc = []
                 email.bcc = []
+                email_send = True
                 if len(send_email_to) >= 1:
                     customer = None
                     for email_to in send_email_to:
                         email.to = [email_to]
-                        send_email_with_error_log(email, from_name, track_customer_on_error)
+                        email_send &= send_email_with_error_log(email, from_name, track_customer_on_error, host=host,
+                            port=port,
+                            host_user=host_user,
+                            host_password=host_password,
+                            use_tls=use_tls)
                         time.sleep(1)
+    return email_send
 
 
-def send_email_with_error_log(email, from_name=None, track_customer_on_error=False):
-    send_mail = True
+def send_email_with_error_log(
+        email, from_name=None, track_customer_on_error=False,
+        host=None, port=None, host_user=None, host_password=None, use_tls=None):
+    email_send = False
+    email_to = email.to[0]
+    customer, send_mail = send_email_get_customer(email_to, track_customer_on_error)
+    if send_mail:
+        from_email, host, host_password, host_user, port, use_tls = send_email_get_connection_param(host, host_password,
+                                                                                                    host_user, port,
+                                                                                                    use_tls)
+        try:
+            with mail.get_connection(host=host, port=port, username=host_user, password=host_password, use_tls=use_tls, use_ssl=not use_tls) as connection:
+                email.connection = connection
+                message = EMPTY_STRING
+                if not email.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+                    email.reply_to = [email.from_email]
+                    email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, from_email)
+                else:
+                    email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
+                try:
+                    print("################################## send_email")
+                    reply_to = "reply_to : %s" % email.reply_to
+                    to = "to : %s" % email.to
+                    cc = "cc : %s" % email.cc
+                    bcc = "bcc : %s" % email.bcc
+                    subject = "subject : %s" % slugify(email.subject)
+                    print(reply_to)
+                    print(to)
+                    print(cc)
+                    print(bcc)
+                    print(subject)
+                    message = "%s\n%s\n%s\n%s" % (to, cc, bcc, subject)
+                    email.send()
+                    email_send = True
+                except SMTPRecipientsRefused as error_str:
+                    print("################################## send_email SMTPRecipientsRefused")
+                    print(error_str)
+                    time.sleep(1)
+                    connection = mail.get_connection()
+                    connection.open()
+                    mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
+                    connection.close()
+                except Exception as error_str:
+                    print("################################## send_email error")
+                    print(error_str)
+                    time.sleep(1)
+                    connection = mail.get_connection()
+                    connection.open()
+                    mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
+                    connection.close()
+                print("##################################")
+                if customer is not None:
+                    # customer.valid_email = valid_email
+                    # customer.save(update_fields=['valid_email'])
+                    # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                    models.Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=email_send)
+        except SMTPAuthenticationError as error_str:
+            print("################################## send_email SMTPAuthenticationError")
+            # https://support.google.com/accounts/answer/185833
+            # https://support.google.com/accounts/answer/6010255
+            # https://security.google.com/settings/security/apppasswords
+            print(error_str)
+    return email_send
+
+
+def send_email_get_connection_param(host, host_password, host_user, port, use_tls):
+    from repanier.apps import REPANIER_SETTINGS_CONFIG
+    config = REPANIER_SETTINGS_CONFIG
+    if config.email_host_password and not settings.DJANGO_SETTINGS_DEMO:
+        host = config.email_host
+        port = config.email_port
+        from_email = host_user = config.email_host_user
+        host_password = config.email_host_password
+        use_tls = config.email_use_tls
+    elif host and host_user and not settings.DJANGO_SETTINGS_DEMO:
+        from_email = host_user
+    else:
+        host = settings.EMAIL_HOST
+        port = settings.EMAIL_PORT
+        host_user = settings.EMAIL_HOST_USER
+        from_email = settings.DEFAULT_FROM_EMAIL
+        host_password = settings.EMAIL_HOST_PASSWORD
+        use_tls = settings.EMAIL_USE_TLS
+    return from_email, host, host_password, host_user, port, use_tls
+
+
+def send_email_get_customer(email_to, track_customer_on_error):
     if track_customer_on_error:
         # select the customer based on user__email or customer__email2
-        email_to = email.to[0]
-        customer = models.Customer.objects.filter(user__email=email_to, subscribe_to_email=True).exclude(valid_email=False).only('id').order_by('?').first()
+        customer = models.Customer.objects.filter(user__email=email_to, subscribe_to_email=True).exclude(
+            valid_email=False).only('id').order_by('?').first()
         if customer is None:
-            customer = models.Customer.objects.filter(email2=email_to, subscribe_to_email=True).exclude(valid_email=False).only('id').order_by('?').first()
+            customer = models.Customer.objects.filter(email2=email_to, subscribe_to_email=True).exclude(
+                valid_email=False).only('id').order_by('?').first()
         send_mail = customer is not None
     else:
+        send_mail = True
         customer = None
-    if send_mail:
-        with mail.get_connection() as connection:
-            email.connection = connection
-            message = EMPTY_STRING
-            if not email.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-                email.reply_to = [email.from_email]
-                email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, settings.DEFAULT_FROM_EMAIL)
-            else:
-                email.from_email = "%s <%s>" % (from_name or apps.REPANIER_SETTINGS_GROUP_NAME, email.from_email)
-            try:
-                print("################################## send_email")
-                reply_to = "reply_to : %s" % email.reply_to
-                to = "to : %s" % email.to
-                cc = "cc : %s" % email.cc
-                bcc = "bcc : %s" % email.bcc
-                subject = "subject : %s" % slugify(email.subject)
-                print(reply_to)
-                print(to)
-                print(cc)
-                print(bcc)
-                print(subject)
-                message = "%s\n%s\n%s\n%s" % (to, cc, bcc, subject)
-                email.send()
-                valid_email = True
-            except SMTPRecipientsRefused as error_str:
-                valid_email = False
-                print("################################## send_email error")
-                print(error_str)
-                time.sleep(1)
-                connection = mail.get_connection()
-                connection.open()
-                mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
-                connection.close()
-            except Exception as error_str:
-                valid_email = None
-                print("################################## send_email error")
-                print(error_str)
-                time.sleep(1)
-                connection = mail.get_connection()
-                connection.open()
-                mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
-                connection.close()
-            print("##################################")
-            if customer is not None:
-                # customer.valid_email = valid_email
-                # customer.save(update_fields=['valid_email'])
-                # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                models.Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=valid_email)
+    return customer, send_mail
 
 
 def send_email_to_who(is_email_send, board=False):

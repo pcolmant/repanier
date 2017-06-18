@@ -14,10 +14,11 @@ from lut import LUTAdmin
 from repanier.const import EMPTY_STRING, \
     COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP, ONE_LEVEL_DEPTH
 from repanier.models import Customer, Staff
+from repanier.views.logout_view import remove_staff_right
 
 
 class UserDataForm(TranslatableModelForm):
-    username = forms.CharField(label=_('Username'), max_length=25, required=True)
+    # username = forms.CharField(label=_('Username'), max_length=25, required=True)
     email = forms.EmailField(label=_('Email'))
     user = None
 
@@ -28,23 +29,13 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        # The Staff has no first_name or last_name because it's a function with login/pwd.
-        # A Customer with a first_name and last_name is responsible of this function.
-        username_field_name = 'username'
-        initial_username = None
-        try:
-            initial_username = self.instance.user.username
-        except:
-            pass
-        username = self.cleaned_data.get(username_field_name)
-        user_error2 = _('The given username is used by another user')
         # Check that the email is set
         if not "email" in self.cleaned_data:
             self.add_error('email', _('The given email must be set'))
         else:
-            email = self.cleaned_data["email"]
             is_reply_to_order_email = self.cleaned_data["is_reply_to_order_email"]
             is_reply_to_invoice_email = self.cleaned_data["is_reply_to_invoice_email"]
+            is_coordinator = self.cleaned_data["is_coordinator"]
             # if is_reply_to_order_email or is_reply_to_invoice_email:
             #     if not email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
             #         self.add_error(
@@ -53,47 +44,37 @@ class UserDataForm(TranslatableModelForm):
             #             {'allowed_extension': settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION}
             #         )
             if is_reply_to_order_email:
-                if self.instance.id is None:
-                    exists = Staff.objects.filter(is_reply_to_order_email=True)
-                else:
-                    exists = Staff.objects.filter(is_reply_to_order_email=True).exclude(id=self.instance.id)
-                if exists:
+                qs = Staff.objects.filter(is_reply_to_order_email=True).order_by('?')
+                if self.instance.id is not None:
+                    qs = qs.exclude(id=self.instance.id)
+                if qs.exists():
                     self.add_error('is_reply_to_order_email', _('This flag is already set for another staff member'))
             if is_reply_to_invoice_email:
-                if self.instance.id is None:
-                    exists = Staff.objects.filter(is_reply_to_invoice_email=True)
-                else:
-                    exists = Staff.objects.filter(is_reply_to_invoice_email=True).exclude(id=self.instance.id)
-                if exists:
+                qs = Staff.objects.filter(is_reply_to_invoice_email=True).order_by('?')
+                if self.instance.id is not None:
+                    qs = qs.exclude(id=self.instance.id)
+                if qs.exists():
                     self.add_error('is_reply_to_invoice_email', _('This flag is already set for another staff member'))
-            user_model = get_user_model()
-            user = user_model.objects.filter(email=email).order_by("?").first()
-            # Check that the username is not already used
-            if user is not None:
-                if initial_username != user.username:
-                    self.add_error('email', _('The given email is used by another user'))
-            user = user_model.objects.filter(username=username).order_by("?").first()
-            if user is not None:
-                if initial_username != user.username:
-                    self.add_error(username_field_name, user_error2)
+            if not is_coordinator:
+                qs = Staff.objects.filter(is_coordinator=True).order_by('?')
+                if self.instance.id is not None:
+                    qs = qs.exclude(id=self.instance.id)
+                if not qs.exists():
+                    self.add_error('is_coordinator', _('At least on coordinator must be set'))
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
         change = (self.instance.id is not None)
-        username = self.data['username']
         email = self.data['email'].lower()
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = username
-            user.first_name = EMPTY_STRING
-            user.last_name = username
             user.email = email
             user.save()
         else:
             user = user_model.objects.create_user(
-                username=username, email=email, password=uuid.uuid1().hex,
-                first_name=EMPTY_STRING, last_name=username)
+                username=uuid.uuid1().hex, email=email, password=None,
+                first_name=EMPTY_STRING, last_name=EMPTY_STRING)
         self.user = user
         return self.instance
 
@@ -112,16 +93,15 @@ class StaffWithUserDataAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
     item_label_field_name = 'title_for_admin'
     form = StaffWithUserDataForm
-    fields = ['username',
+    fields = ['long_name',
               'email',
-              'long_name',
               'customer_responsible',
               'is_reply_to_order_email', 'is_reply_to_invoice_email',
               'is_coordinator', 'is_contributor', 'is_webmaster',
               'is_tester',
               'is_active']
-    list_display = ('user', 'language_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
-    list_display_links = ('user',)
+    list_display = ('long_name', 'language_column', 'customer_responsible', 'get_customer_phone1')
+    list_display_links = ('long_name',)
     # list_filter = ('is_active',)
     list_select_related = ('customer_responsible',)
     list_per_page = 16
@@ -134,23 +114,24 @@ class StaffWithUserDataAdmin(LUTAdmin):
         return False
 
     def has_add_permission(self, request):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_delete_permission(request)
+        # if request.user.groups.filter(
+        #         name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+        #     return True
+        # return False
 
     def has_change_permission(self, request, staff=None):
-        return self.has_add_permission(request)
+        return self.has_delete_permission(request)
 
     def get_list_display(self, request):
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            return ('user', 'language_column', 'long_name', 'customer_responsible', 'get_customer_phone1')
+            return ('long_name', 'language_column', 'customer_responsible', 'get_customer_phone1')
         else:
-            return ('user', 'long_name', 'customer_responsible', 'get_customer_phone1')
+            return ('long_name', 'customer_responsible', 'get_customer_phone1')
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StaffWithUserDataAdmin, self).get_form(request, obj, **kwargs)
-        username_field = form.base_fields['username']
+        # username_field = form.base_fields['username']
         email_field = form.base_fields['email']
         if "customer_responsible" in form.base_fields:
             customer_responsible_field = form.base_fields["customer_responsible"]
@@ -159,17 +140,16 @@ class StaffWithUserDataAdmin(LUTAdmin):
                 customer_responsible_field.empty_label = None
                 customer_responsible_field.initial = obj.customer_responsible
             else:
-                customer_responsible_field.queryset = Customer.objects.filter(is_active=True).order_by(
-                    "short_basket_name")
+                customer_responsible_field.queryset = Customer.objects.filter(is_active=True)
 
         if obj:
             user_model = get_user_model()
             user = user_model.objects.get(id=obj.user_id)
-            username_field.initial = getattr(user, user_model.USERNAME_FIELD)
+            # username_field.initial = user.username
             email_field.initial = user.email
         else:
             # Clean data displayed
-            username_field.initial = EMPTY_STRING
+            # username_field.initial = EMPTY_STRING
             email_field.initial = EMPTY_STRING
         return form
 
@@ -178,6 +158,14 @@ class StaffWithUserDataAdmin(LUTAdmin):
         form.user.is_staff = True
         form.user.is_active = staff.is_active
         form.user.save()
-        # pre save stuff here
+        old_customer_responsible_field = form.base_fields["customer_responsible"].initial
+        new_customer_responsible_field = form.cleaned_data["customer_responsible"]
+        change_previous_customer_responsible = (
+            change and
+            old_customer_responsible_field is not None and
+            old_customer_responsible_field.id != new_customer_responsible_field.id
+        )
+
         super(StaffWithUserDataAdmin, self).save_model(request, staff, form, change)
-        # post save stuff here
+        if change_previous_customer_responsible:
+            remove_staff_right(old_customer_responsible_field.user, is_customer=True)

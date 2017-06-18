@@ -19,20 +19,22 @@ class RepanierToolbar(CMSToolbar):
         from apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE
         if settings.DJANGO_SETTINGS_DEMO:
             self.toolbar.get_or_create_menu("demo-menu", _('Demo (%s)') % (DEMO_EMAIL,))
-        if self.request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or self.request.user.is_superuser:
+        user = self.request.user
+        if user.is_superuser or user.groups.filter(
+                name=COORDINATION_GROUP).exists():
             display_all = True
-        elif self.request.user.groups.filter(
+            display_configuration = True
+        elif user.groups.filter(
+                name__in=[ORDER_GROUP, INVOICE_GROUP]).exists():
+            display_all = True
+            display_configuration = False
+        elif user.groups.filter(
                 name=CONTRIBUTOR_GROUP).exists():
             display_all = False
+            display_configuration = False
         else:
             return
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER, _('Manage'))
-        # position = admin_menu.get_alphabetical_insert_position(
-        #     _('Parameters'),
-        #     SubMenu
-        # )
-        # if not position:
         position = 0
         admin_menu.add_break('custom-break', position=position)
         if display_all:
@@ -42,17 +44,19 @@ class RepanierToolbar(CMSToolbar):
                 position=position
             )
             # add_sideframe_item
-            config = Configuration.objects.filter(id=DECIMAL_ONE).only('id').first()
-            url = reverse('admin:repanier_configuration_change', args=(config.id,))
-            office_menu.add_sideframe_item(_('Configuration'), url=url)
-            url = reverse('admin:repanier_staff_changelist')
-            office_menu.add_sideframe_item(_('Staff Member List'), url=url)
+            if display_configuration:
+                config = Configuration.objects.filter(id=DECIMAL_ONE).only('id').first()
+                url = reverse('admin:repanier_configuration_change', args=(config.id,))
+                office_menu.add_sideframe_item(_('Configuration'), url=url)
+                url = reverse('admin:repanier_staff_changelist')
+                office_menu.add_sideframe_item(_('Staff Member List'), url=url)
+                url = reverse('admin:repanier_lut_deliverypoint_changelist')
+                office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
+
             url = reverse('admin:repanier_lut_permanencerole_changelist')
             office_menu.add_sideframe_item(_('Permanence Role List'), url=url)
             url = reverse('admin:repanier_lut_productionmode_changelist')
             office_menu.add_sideframe_item(_('Production Mode List'), url=url)
-            url = reverse('admin:repanier_lut_deliverypoint_changelist')
-            office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
             url = reverse('admin:repanier_lut_departmentforcustomer_changelist')
             office_menu.add_sideframe_item(_('Departement for Customer List'), url=url)
             position += 1

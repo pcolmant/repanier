@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from django.db.models import F
 from django.views.generic import ListView
 
-import repanier.apps
 from repanier.const import PERMANENCE_SEND
 from repanier.models import PermanenceBoard
 
@@ -16,8 +15,9 @@ class PermanenceView(ListView):
     paginate_orphans = 5
 
     def get_context_data(self, **kwargs):
+        from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
         context = super(PermanenceView, self).get_context_data(**kwargs)
-        context['DISPLAY_PRODUCER'] = repanier.apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
+        context['DISPLAY_PRODUCER'] = REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
         return context
 
     def get_queryset(self):
