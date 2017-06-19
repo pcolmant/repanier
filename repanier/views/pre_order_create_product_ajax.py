@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 
-from forms import ProducerProductForm
+from repanier.views.forms import ProducerProductForm
 from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, TWO_DECIMALS, ONE_DECIMAL, \
     PRODUCT_ORDER_UNIT_PC_KG, PERMANENCE_PRE_OPEN, EMPTY_STRING, VAT_400
 from repanier.models import Producer, Permanence, Product, OfferItem

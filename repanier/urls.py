@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 # from django.views.i18n import JavaScriptCatalog
 
-from picture.views import ajax_picture
+from repanier.picture.views import ajax_picture
 from repanier.rest.lut import departments_for_customers_rest, department_for_customer_rest
 from repanier.rest.permanence import permanences_rest, permanence_producer_product_rest, \
     permanence_producer_rest
