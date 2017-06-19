@@ -17,13 +17,13 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
-import customer
-import deliveryboard
-import invoice
-import offeritem
-import permanenceboard
-import producer
-import purchase
+from repanier.models import customer
+from repanier.models import deliveryboard
+from repanier.models import invoice
+from repanier.models import offeritem
+from repanier.models import permanenceboard
+from repanier.models import producer
+from repanier.models import purchase
 import repanier.apps
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField

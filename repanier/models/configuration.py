@@ -23,7 +23,7 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields
 
-import product
+from repanier.models import product
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 

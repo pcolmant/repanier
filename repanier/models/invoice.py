@@ -12,9 +12,9 @@ from django.utils.formats import number_format
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
-import producer
-import purchase
-import deliveryboard
+from repanier.models import producer
+from repanier.models import purchase
+from repanier.models import deliveryboard
 from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField

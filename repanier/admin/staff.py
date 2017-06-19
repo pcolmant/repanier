@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm
 
-from lut import LUTAdmin
+from .lut import LUTAdmin
 from repanier.const import EMPTY_STRING, \
     COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP, ONE_LEVEL_DEPTH
 from repanier.models import Customer, Staff

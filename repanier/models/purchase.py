@@ -11,10 +11,10 @@ from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
-import invoice
-import offeritem
-import permanence
-import producer
+from repanier.models import invoice
+from repanier.models import offeritem
+from repanier.models import permanence
+from repanier.models import producer
 import repanier.apps
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
