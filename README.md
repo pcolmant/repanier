@@ -29,3 +29,30 @@ https://commande.lebuisson.be/fr/
 https://saisonsvanbiervliet.be/fr/
 
 Licence : GPL v3
+
+Development instructions
+------------------------
+
+ 1. Clone repository:
+
+    git clone https://github.com/pcolmant/repanier.git
+
+ 2. Initialize python virtual environment
+
+    virtualenv -p python3 venv
+
+ 3. Activate it
+
+    . venv/bin/activate
+
+ 4. Install python dependencies
+
+    pip install -r requirements/requirement.txt
+
+ 5. Synchronize database
+
+    ./manage.py migrate
+
+ 6. Launch the application
+
+    ./manage.py runserver

@@ -33,8 +33,8 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from six import string_types
 
-import models
-from const import *
+from repanier import models
+from repanier.const import *
 from repanier import apps
 from repanier.fields.RepanierMoneyField import RepanierMoney
 

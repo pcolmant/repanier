@@ -10,7 +10,7 @@ from django.forms import widgets
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
-from const import SIZE_M
+from repanier.picture.const import SIZE_M
 from repanier.const import EMPTY_STRING
 
 

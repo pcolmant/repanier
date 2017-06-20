@@ -12,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatedFields
 
-import invoice
+from repanier.models import invoice
 from repanier.models.item import Item
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import *

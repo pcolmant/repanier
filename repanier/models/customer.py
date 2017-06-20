@@ -15,10 +15,10 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-import bankaccount
-import invoice
-import permanenceboard
-import purchase
+from repanier.models import bankaccount
+from repanier.models import invoice
+from repanier.models import permanenceboard
+from repanier.models import purchase
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.picture.const import SIZE_S

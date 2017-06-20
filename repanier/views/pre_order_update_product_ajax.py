@@ -7,7 +7,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import never_cache
 
-from forms import ProducerProductForm
+from repanier.views.forms import ProducerProductForm
 from repanier.const import ONE_DECIMAL, TWO_DECIMALS, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, DECIMAL_ONE, \
     PERMANENCE_PRE_OPEN
 from repanier.models import Producer, OfferItem

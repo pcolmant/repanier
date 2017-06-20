@@ -11,7 +11,7 @@ from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
-from settings import *
+from .settings import *
 
 import os
 

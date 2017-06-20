@@ -11,8 +11,8 @@ from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields
 
-import invoice
-import purchase
+from repanier.models import invoice
+from repanier.models import purchase
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import LUT_PERMANENCE_STATUS, PERMANENCE_PLANNED, PERMANENCE_SEND, EMPTY_STRING
 

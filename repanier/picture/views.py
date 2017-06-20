@@ -1,7 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from const import SIZE_XS, SIZE_S, SIZE_M, SIZE_L
+from .const import SIZE_XS, SIZE_S, SIZE_M, SIZE_L
 from repanier.tools import sint
 
 try:

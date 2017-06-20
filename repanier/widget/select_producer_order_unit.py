@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from itertools import chain
 
 from django import forms
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -126,7 +126,7 @@ class SelectProducerOrderUnitWidget(forms.Select):
         return mark_safe(output)
 
     def render_option2(self, selected_choices, option_value, option_label, name):
-        option_value = force_unicode(option_value)
+        option_value = force_text(option_value)
         if option_value in selected_choices:
             selected_html = ' selected="selected"'
             self.selected_choice = option_label
@@ -167,11 +167,11 @@ class SelectProducerOrderUnitWidget(forms.Select):
                    name, option_value, option_label, increment_order_quantity_label,
                    stock_label, increment_order_quantity_addon, stock_addon, price_addon,
                    escape(option_value), selected_html,
-                   conditional_escape(force_unicode(option_label)))
+                   conditional_escape(force_text(option_label)))
 
     def render_options2(self, choices, selected_choices, name):
         # Normalize to strings.
-        selected_choices = set([force_unicode(v) for v in selected_choices])
+        selected_choices = set([force_text(v) for v in selected_choices])
         output = []
         for option_value, option_label in chain(self.choices, choices):
             output.append(self.render_option2(selected_choices, option_value, option_label, name))

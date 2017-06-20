@@ -19,10 +19,10 @@ from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-import bankaccount
-import invoice
-import offeritem
-import product
+from repanier.models import bankaccount
+from repanier.models import invoice
+from repanier.models import offeritem
+from repanier.models import product
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.tools import update_offer_item

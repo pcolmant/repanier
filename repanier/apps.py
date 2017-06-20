@@ -67,9 +67,10 @@ class RepanierSettings(AppConfig):
             try:
                 db_started = connection.cursor() is not None
             except:
+                print("waiting for database connection")
                 time.sleep(1)
-        from models import Configuration, LUT_DepartmentForCustomer, Product
-        from const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
+        from repanier.models import Configuration, LUT_DepartmentForCustomer, Product
+        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
