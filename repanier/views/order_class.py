@@ -6,9 +6,14 @@ from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.views.generic import ListView
 
-from repanier.models import Customer
 from repanier.const import EMPTY_STRING
-from repanier.models import Permanence, Producer, LUT_DepartmentForCustomer, OfferItem, OfferItemWoReceiver, Staff, BoxContent
+from repanier.models.box import BoxContent
+from repanier.models.customer import Customer
+from repanier.models.lut import LUT_DepartmentForCustomer
+from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.staff import Staff
 from repanier.tools import sint, permanence_ok_or_404, html_box_content
 
 

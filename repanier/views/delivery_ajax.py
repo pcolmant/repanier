@@ -12,9 +12,12 @@ from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO
-from repanier.models import Customer, DeliveryBoard, CustomerInvoice, Purchase, Permanence
-from repanier.tools import sint, sboolean, calc_basket_message, my_order_confirmation, my_basket
+from repanier.const import PERMANENCE_OPENED
+from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.permanence import Permanence
+from repanier.tools import sint, sboolean, my_basket
 
 
 @never_cache
@@ -98,9 +101,8 @@ def delivery_ajax(request):
                 to_json.append(option_dict)
 
     is_basket = sboolean(request.GET.get('is_basket', False))
-    my_order_confirmation(
+    customer_invoice.my_order_confirmation(
         permanence=permanence,
-        customer_invoice=customer_invoice,
         is_basket=is_basket,
         to_json=to_json
     )

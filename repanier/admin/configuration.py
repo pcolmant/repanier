@@ -2,12 +2,14 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.const import COORDINATION_GROUP
-from repanier.models import Configuration, Producer
+from repanier.models.configuration import Configuration
+from repanier.models.producer import Producer
 from repanier.tools import send_test_email
 
 
@@ -55,28 +57,29 @@ class ConfigurationDataForm(TranslatableModelForm):
             self.add_error(
                 'send_abstract_order_mail_to_customer',
                 _('The abstract can only be send if the order is also send to producer'))
-        email_host_password = self.cleaned_data["email_host_password"]
-        email_is_custom = self.cleaned_data["email_is_custom"]
-        if email_is_custom:
-            # Send test email
-            if not email_host_password:
-                email_host_password = self.instance.previous_email_host_password
-            email_host = self.cleaned_data["email_host"]
-            email_port = self.cleaned_data["email_port"]
-            email_use_tls = self.cleaned_data["email_use_tls"]
-            email_host_user = self.cleaned_data["email_host_user"]
-            email_send = send_test_email(
-                host=email_host,
-                port=email_port,
-                host_user=email_host_user,
-                host_password=email_host_password,
-                use_tls=email_use_tls
-            )
-            if not email_send:
-                self.add_error(
-                    'email_is_custom',
-                    _('Repanier tried to send a test email without success.'))
-                self.instance.email_is_custom = False
+        if not settings.DJANGO_SETTINGS_DEMO:
+            email_is_custom = self.cleaned_data["email_is_custom"]
+            if email_is_custom:
+                email_host_password = self.cleaned_data["email_host_password"]
+                # Send test email
+                if not email_host_password:
+                    email_host_password = self.instance.previous_email_host_password
+                email_host = self.cleaned_data["email_host"]
+                email_port = self.cleaned_data["email_port"]
+                email_use_tls = self.cleaned_data["email_use_tls"]
+                email_host_user = self.cleaned_data["email_host_user"]
+                email_send = send_test_email(
+                    host=email_host,
+                    port=email_port,
+                    host_user=email_host_user,
+                    host_password=email_host_password,
+                    use_tls=email_use_tls
+                )
+                if not email_send:
+                    self.add_error(
+                        'email_is_custom',
+                        _('Repanier tried to send a test email without success.'))
+                    self.instance.email_is_custom = False
 
     class Meta:
         model = Configuration

@@ -7,10 +7,10 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
 from django.db.models import F
-from django.shortcuts import render
-from django.utils import timezone
 from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -19,10 +19,17 @@ from parler.forms import TranslatableModelForm
 
 import repanier.apps
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
-from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm, ImportXlsxForm, ImportInvoiceForm
+from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm, ImportXlsxForm, \
+    ImportInvoiceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.models import Customer, Purchase, PermanenceBoard, LUT_PermanenceRole, BankAccount, PermanenceDone, ProducerInvoice
+from repanier.models.bankaccount import BankAccount
+from repanier.models.customer import Customer
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.lut import LUT_PermanenceRole
+from repanier.models.permanence import PermanenceDone
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.purchase import Purchase
 from repanier.task import task_invoice
 from repanier.tools import send_email_to_who, get_signature
 from repanier.xlsx.views import import_xslx_view

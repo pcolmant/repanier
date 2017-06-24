@@ -13,7 +13,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from djng.forms import NgFormValidationMixin
 
-from repanier.models import Customer
+from repanier.models.customer import Customer
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 from repanier.picture.const import SIZE_S
 from repanier.picture.widgets import AjaxPictureWidget

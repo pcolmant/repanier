@@ -5,7 +5,9 @@ from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
 
-from repanier.models import CustomerInvoice, BankAccount, Purchase
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.bankaccount import BankAccount
+from repanier.models.purchase import Purchase
 
 
 class CustomerInvoiceView(DetailView):

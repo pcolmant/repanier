@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from string import upper, rsplit
+
+from string import rsplit
+
 from PIL import Image
 
 try:
@@ -12,8 +14,9 @@ from django.core.files.storage import default_storage
 from django.utils.text import slugify
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from repanier.models import LUT_ProductionMode, LUT_DeliveryPoint, LUT_DepartmentForCustomer, LUT_PermanenceRole, \
-    Product, OfferItem
+from repanier.models.lut import LUT_ProductionMode
+from repanier.models.product import Product
+from repanier.models.offeritem import OfferItem
 
 # sudo rm -rf /var/tmp/django_cache/ptidej.repanier.be/
 # cd /home/pi/v2/ptidej/ptidej/media/

@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render
-from django.utils import translation
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
-from repanier.models import Customer, Staff
+from repanier.models.customer import Customer
+from repanier.models.staff import Staff
+from repanier.tools import check_if_is_coordinator
 
 
 @login_required()
@@ -27,9 +28,7 @@ def who_is_who_view(request):
     staff_list = Staff.objects.filter(
         is_active=True, is_contributor=False
     )
-    is_coordinator = request.user.is_superuser or request.user.is_staff or Staff.objects.filter(
-        customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
-    ).order_by('?').exists()
+    is_coordinator = check_if_is_coordinator(request)
     return render(
         request,
         "repanier/who_is_who.html",

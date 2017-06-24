@@ -1,7 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from djng.styling.bootstrap3.forms import Bootstrap3Form
 from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -16,14 +15,18 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
+from djng.styling.bootstrap3.forms import Bootstrap3Form
 
 from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, LUT_PRODUCER_PRODUCT_ORDER_UNIT, EMPTY_STRING, DEMO_EMAIL
-from repanier.models import LUT_ProductionMode, Staff, Customer, Configuration
+from repanier.email.email import RepanierEmail
+from repanier.models.configuration import Configuration
+from repanier.models.customer import Customer
+from repanier.models.lut import LUT_ProductionMode
+from repanier.models.staff import Staff
 from repanier.picture.const import SIZE_M
 from repanier.picture.widgets import AjaxPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
-from repanier.tools import send_email_with_error_log
 
 
 class AuthRepanierLoginForm(AuthenticationForm):
@@ -58,20 +61,29 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
+        print('AuthRepanierPasswordResetForm send_mail')
+        print(email_template_name)
+        print(html_email_template_name)
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = ''.join(subject.splitlines())
-        body = loader.render_to_string(email_template_name, context)
+        html_content = loader.render_to_string('repanier/registration/password_reset_email.html', context)
 
         if settings.DJANGO_SETTINGS_DEMO:
             to_email = DEMO_EMAIL
-        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
-        if html_email_template_name is not None:
-            html_email = loader.render_to_string(html_email_template_name, context)
-            email_message.attach_alternative(html_email, 'text/html')
+        email = RepanierEmail(
+            subject,
+            html_content=html_content,
+            from_email=from_email,
+            to=[to_email],
+            unsubscribe=False
+        )
+        # if html_email_template_name is not None:
+        #     html_email = loader.render_to_string(html_email_template_name, context)
+        #     email.attach_alternative(html_email, 'text/html')
 
         # email_message.send()
-        send_email_with_error_log(email_message, track_customer_on_error=True)
+        email.send_email()
 
     # From Django 1.8, this let the user enter name or email to recover
     def get_users(self, email):

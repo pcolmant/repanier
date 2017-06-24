@@ -12,11 +12,15 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.models import BoxContent, OfferItem, Purchase
 from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO, EMPTY_STRING
-from repanier.models import Customer, Permanence, ProducerInvoice, CustomerInvoice, OfferItemWoReceiver
+from repanier.models.box import BoxContent
+from repanier.models.customer import Customer
+from repanier.models.invoice import ProducerInvoice, CustomerInvoice
+from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
+from repanier.models.permanence import Permanence
+from repanier.models.purchase import Purchase
 from repanier.tools import create_or_update_one_cart_item, sint, sboolean, display_selected_value, \
-    my_order_confirmation, calc_basket_message, my_basket, display_selected_box_value
+    calc_basket_message, my_basket, display_selected_box_value
 
 
 @never_cache
@@ -132,9 +136,8 @@ def order_ajax(request):
                 basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
             else:
                 basket_message = EMPTY_STRING
-            my_order_confirmation(
+            customer_invoice.my_order_confirmation(
                 permanence=permanence,
-                customer_invoice=customer_invoice,
                 is_basket=is_basket,
                 basket_message=basket_message,
                 to_json=to_json

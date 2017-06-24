@@ -9,8 +9,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import EMPTY_STRING
-from repanier.models import OfferItem
+from repanier.models.offeritem import OfferItem
 from repanier.tools import sint
 
 

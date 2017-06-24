@@ -9,12 +9,16 @@ from openpyxl.styles import Color
 import repanier.apps
 from export_tools import *
 from repanier.const import *
-from repanier.models import Customer, OfferItem, CustomerInvoice, ProducerInvoice, \
-    DeliveryBoard, Purchase, Configuration
-from repanier.models import Permanence
-from repanier.models import PermanenceBoard
-from repanier.models import Producer
-from repanier.models import Staff
+from repanier.models.configuration import Configuration
+from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.producer import Producer
+from repanier.models.purchase import Purchase
+from repanier.models.staff import Staff
 from repanier.tools import get_base_unit, next_row
 from xlsx_stock import export_permanence_stock
 

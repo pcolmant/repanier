@@ -14,11 +14,14 @@ import repanier.apps
 from repanier.const import *
 from repanier.email import email_offer
 from repanier.email import email_order
-from repanier.models import Customer, BoxContent, DeliveryBoard, CustomerInvoice
-from repanier.models import OfferItem
-from repanier.models import Permanence
-from repanier.models import Producer
-from repanier.models import Product
+from repanier.models.box import BoxContent
+from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.product import Product
 from repanier.tools import clean_offer_item, reorder_purchases
 from repanier.tools import create_or_update_one_purchase, reorder_offer_items
 
@@ -501,7 +504,7 @@ def admin_close(permanence_id, all_producers=False, deliveries_id=None, producer
     # close_send_order(permanence_id, all_producers, producers_id, deliveries_id, False)
     t = threading.Thread(target=close_send_order,
                          args=(permanence_id, all_producers, producers_id, deliveries_id, False))
-    # t.start()
+    t.start()
     user_message = _("The orders are being closed.")
     user_message_level = messages.INFO
     return user_message, user_message_level

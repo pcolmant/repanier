@@ -46,6 +46,7 @@ from repanier.views.home_info_ajax import home_info_ajax
 from repanier.views.order_info_ajax import order_info_ajax
 from repanier.views.order_filter_view import order_filter_view
 from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
+from repanier.views.unsubscribe_view import unsubscribe_view
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -152,4 +153,5 @@ urlpatterns = [
         name='product_rest'),
     url(r'^rest/version/$', version_rest, name='version_rest'),
     url(r'^dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice, name='download_customer_invoice'),
+    url(r'^unsubscribe/(?P<short_name>.*)/(?P<token>[\w.:\-_=]+)/$', unsubscribe_view, name='unsubscribe_view'),
 ]

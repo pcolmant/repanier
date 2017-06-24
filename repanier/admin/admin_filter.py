@@ -1,16 +1,17 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+# Filters in the right sidebar of the change list page of the admin
+from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
-from django.conf import settings
 from repanier.const import *
-# Filters in the right sidebar of the change list page of the admin
-from django.contrib.admin import SimpleListFilter
-
-from repanier.models import Producer, Product, LUT_DepartmentForCustomer, Customer, CustomerInvoice, ProducerInvoice, \
-    Permanence, LUT_ProductionMode
+from repanier.models.customer import Customer
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer, Product
 from repanier.tools import sint
 
 

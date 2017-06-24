@@ -1,7 +1,6 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -11,15 +10,14 @@ from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import invoice
-from repanier.models import offeritem
-from repanier.models import permanence
-from repanier.models import producer
 import repanier.apps
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.box import BoxContent
-from repanier.tools import get_or_create_offer_item, cap
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.tools import cap
 
 
 @python_2_unicode_compatible
@@ -36,7 +34,7 @@ class Purchase(models.Model):
     offer_item = models.ForeignKey(
         'OfferItem', verbose_name=_("offer_item"), on_delete=models.PROTECT)
     producer = models.ForeignKey(
-        producer.Producer, verbose_name=_("producer"), on_delete=models.PROTECT)
+        'Producer', verbose_name=_("producer"), on_delete=models.PROTECT)
     customer = models.ForeignKey(
         'Customer', verbose_name=_("customer"), on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
@@ -208,11 +206,11 @@ class Purchase(models.Model):
         if not self.pk:
             # This code only happens if the objects is not in the database yet.
             # Otherwise it would have pk
-            customer_invoice = invoice.CustomerInvoice.objects.filter(
+            customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=self.permanence_id,
                 customer_id=self.customer_id).only("id").order_by('?').first()
             if customer_invoice is None:
-                customer_invoice = invoice.CustomerInvoice.objects.create(
+                customer_invoice = CustomerInvoice.objects.create(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_id,
                     customer_charged_id=self.customer_id,
@@ -221,22 +219,22 @@ class Purchase(models.Model):
                 customer_invoice.set_delivery(delivery=None)
                 customer_invoice.save()
             self.customer_invoice = customer_invoice
-            producer_invoice = invoice.ProducerInvoice.objects.filter(
+            producer_invoice = ProducerInvoice.objects.filter(
                 permanence_id=self.permanence_id,
                 producer_id=self.producer_id).only("id").order_by('?').first()
             if producer_invoice is None:
-                producer_invoice = invoice.ProducerInvoice.objects.create(
+                producer_invoice = ProducerInvoice.objects.create(
                     permanence_id=self.permanence_id,
                     producer_id=self.producer_id,
                     status=self.status
                 )
             self.producer_invoice = producer_invoice
-            customer_producer_invoice = invoice.CustomerProducerInvoice.objects.filter(
+            customer_producer_invoice = CustomerProducerInvoice.objects.filter(
                 permanence_id=self.permanence_id,
                 customer_id=self.customer_id,
                 producer_id=self.producer_id).only("id").order_by('?').first()
             if customer_producer_invoice is None:
-                customer_producer_invoice = invoice.CustomerProducerInvoice.objects.create(
+                customer_producer_invoice = CustomerProducerInvoice.objects.create(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_id,
                     producer_id=self.producer_id,
@@ -248,7 +246,7 @@ class Purchase(models.Model):
     def save_box(self):
         if self.offer_item.is_box:
             for content in BoxContent.objects.filter(box_id=self.offer_item.product_id).order_by('?'):
-                content_offer_item = get_or_create_offer_item(self.permanence, content.product)
+                content_offer_item = content.product.get_or_create_offer_item(self.permanence)
                 # Select one purchase
                 content_purchase = Purchase.objects.filter(
                     customer_id=self.customer_id,
@@ -331,7 +329,7 @@ def purchase_pre_save(sender, **kwargs):
     if purchase.is_box_content:
         purchase.is_resale_price_fixed = True
         if delta_quantity != DECIMAL_ZERO:
-            offeritem.OfferItem.objects.filter(id=purchase.offer_item_id).update(
+            OfferItem.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F('quantity_invoiced') + delta_quantity,
             )
     else:
@@ -365,19 +363,19 @@ def purchase_pre_save(sender, **kwargs):
             delta_selling_vat = purchase.customer_vat.amount - purchase.previous_customer_vat
             delta_deposit = purchase.deposit.amount - purchase.previous_deposit
 
-            offeritem.OfferItem.objects.filter(id=purchase.offer_item_id).update(
+            OfferItem.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F('quantity_invoiced') + delta_quantity,
                 total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
                 total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price
             )
-            purchase.offer_item = offeritem.OfferItem.objects.filter(
+            purchase.offer_item = OfferItem.objects.filter(
                 id=purchase.offer_item_id).order_by('?').first()
-            invoice.CustomerInvoice.objects.filter(id=purchase.customer_invoice.id).update(
+            CustomerInvoice.objects.filter(id=purchase.customer_invoice.id).update(
                 total_price_with_tax=F('total_price_with_tax') + delta_selling_price,
                 total_vat=F('total_vat') + delta_selling_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
-            invoice.CustomerProducerInvoice.objects.filter(id=purchase.customer_producer_invoice_id).update(
+            CustomerProducerInvoice.objects.filter(id=purchase.customer_producer_invoice_id).update(
                 total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
                 total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price
             )
@@ -386,20 +384,20 @@ def purchase_pre_save(sender, **kwargs):
                 delta_purchase_price = delta_selling_price
                 delta_purchase_vat = delta_selling_vat
 
-            invoice.ProducerInvoice.objects.filter(id=purchase.producer_invoice_id).update(
+            ProducerInvoice.objects.filter(id=purchase.producer_invoice_id).update(
                 total_price_with_tax=F('total_price_with_tax') + delta_purchase_price,
                 total_vat=F('total_vat') + delta_purchase_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
             if purchase.offer_item.price_list_multiplier < DECIMAL_ONE or purchase.price_list_multiplier < DECIMAL_ONE:
-                permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
+                Permanence.objects.filter(id=purchase.permanence_id).update(
                     total_purchase_with_tax=F('total_purchase_with_tax') + delta_selling_price,
                     total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price,
                     total_purchase_vat=F('total_purchase_vat') + delta_selling_vat,
                     total_selling_vat=F('total_selling_vat') + delta_selling_vat,
                 )
             else:
-                permanence.Permanence.objects.filter(id=purchase.permanence_id).update(
+                Permanence.objects.filter(id=purchase.permanence_id).update(
                     total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
                     total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price,
                     total_purchase_vat=F('total_purchase_vat') + delta_purchase_vat,

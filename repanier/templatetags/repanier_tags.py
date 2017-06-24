@@ -7,9 +7,11 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import Customer
 from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMANENCE_OPENED
-from repanier.models import PermanenceBoard, CustomerInvoice, Purchase, ProducerInvoice
+from repanier.models.customer import Customer
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.purchase import Purchase
 from repanier.tools import sint, display_selected_value, display_selected_box_value
 
 register = template.Library()

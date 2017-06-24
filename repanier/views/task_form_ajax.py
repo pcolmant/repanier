@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.http import HttpResponse
@@ -10,7 +11,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.const import PERMANENCE_CLOSED, PERMANENCE_SEND, PERMANENCE_OPENED
-from repanier.models import PermanenceBoard
+from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import sint
 
 

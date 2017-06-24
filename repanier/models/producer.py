@@ -6,25 +6,23 @@ import uuid
 
 from django.conf import settings
 from django.core import urlresolvers
-# from django.core.validators import MinLengthValidator
 from django.core.validators import MinValueValidator
 from django.db import models
-# from django.db.models import Q
 from django.db.models import Sum
-from django.utils import timezone
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import bankaccount
-from repanier.models import invoice
-from repanier.models import offeritem
-from repanier.models import product
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.models.bankaccount import BankAccount
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.product import Product
 from repanier.tools import update_offer_item
 
 
@@ -122,7 +120,7 @@ class Producer(models.Model):
 
     def get_admin_date_balance(self):
         if self.id is not None:
-            bank_account = bankaccount.BankAccount.objects.filter(
+            bank_account = BankAccount.objects.filter(
                 producer_id=self.id, producer_invoice__isnull=True
             ).order_by("-operation_date").only("operation_date").first()
             if bank_account is not None:
@@ -146,7 +144,7 @@ class Producer(models.Model):
     def get_order_not_invoiced(self):
         from repanier.apps import REPANIER_SETTINGS_INVOICE
         if REPANIER_SETTINGS_INVOICE:
-            result_set = invoice.ProducerInvoice.objects.filter(
+            result_set = ProducerInvoice.objects.filter(
                 producer_id=self.id,
                 status__gte=PERMANENCE_OPENED,
                 status__lte=PERMANENCE_SEND
@@ -166,7 +164,7 @@ class Producer(models.Model):
     def get_bank_not_invoiced(self):
         from repanier.apps import REPANIER_SETTINGS_INVOICE
         if REPANIER_SETTINGS_INVOICE:
-            result_set = bankaccount.BankAccount.objects.filter(
+            result_set = BankAccount.objects.filter(
                 producer_id=self.id, producer_invoice__isnull=True
             ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
             if result_set["bank_amount_in__sum"] is not None:
@@ -187,7 +185,7 @@ class Producer(models.Model):
         bank_not_invoiced = self.get_bank_not_invoiced()
         # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
-        result_set = offeritem.OfferItem.objects.filter(
+        result_set = OfferItem.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
             price_list_multiplier__lt=1
@@ -201,7 +199,7 @@ class Producer(models.Model):
         else:
             payment_needed = DECIMAL_ZERO
         # print("payment_needed (1) %f" % payment_needed)
-        result_set = offeritem.OfferItem.objects.filter(
+        result_set = OfferItem.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
             price_list_multiplier__gte=1,
@@ -216,7 +214,7 @@ class Producer(models.Model):
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
         # print("calculated_invoiced_balance %f" % calculated_invoiced_balance)
         if self.manage_replenishment:
-            for offer_item in offeritem.OfferItem.objects.filter(
+            for offer_item in OfferItem.objects.filter(
                     is_active=True,
                     permanence_id=permanence_id,
                     producer_id=self.id,
@@ -239,11 +237,10 @@ class Producer(models.Model):
     get_calculated_invoiced_balance.allow_tags = False
 
     def get_balance(self):
-        last_producer_invoice_set = invoice.ProducerInvoice.objects.filter(
+        last_producer_invoice_set = ProducerInvoice.objects.filter(
             producer_id=self.id, invoice_sort_order__isnull=False
         ).order_by('?')
 
-        # label = "%s, %s, %s, %s" % (self.balance, self.get_bank_not_invoiced(), self.get_order_not_invoiced(), self.get_admin_balance())
         balance = self.get_admin_balance()
         if last_producer_invoice_set.exists():
             if balance.amount < 0:
@@ -277,7 +274,7 @@ class Producer(models.Model):
     get_balance.admin_order_field = 'balance'
 
     def get_last_invoice(self):
-        producer_last_invoice = invoice.ProducerInvoice.objects.filter(
+        producer_last_invoice = ProducerInvoice.objects.filter(
             producer_id=self.id, invoice_sort_order__isnull=False
         ).order_by("-id").first()
         if producer_last_invoice is not None:
@@ -370,6 +367,6 @@ def producer_pre_save(sender, **kwargs):
 @receiver(post_save, sender=Producer)
 def producer_post_save(sender, **kwargs):
     producer = kwargs["instance"]
-    for a_product in product.Product.objects.filter(producer_id=producer.id).order_by('?'):
+    for a_product in Product.objects.filter(producer_id=producer.id).order_by('?'):
         a_product.save()
     update_offer_item(producer_id=producer.id)

@@ -6,8 +6,10 @@ from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
 
-from repanier.const import DECIMAL_ZERO, PERMANENCE_PRE_OPEN
-from repanier.models import Permanence, Producer, OfferItem
+from repanier.const import PERMANENCE_PRE_OPEN
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
 
 
 class PreOrderView(DetailView):

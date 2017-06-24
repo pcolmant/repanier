@@ -11,7 +11,10 @@ from django.views.decorators.cache import never_cache
 from repanier.views.forms import ProducerProductForm
 from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, TWO_DECIMALS, ONE_DECIMAL, \
     PRODUCT_ORDER_UNIT_PC_KG, PERMANENCE_PRE_OPEN, EMPTY_STRING, VAT_400
-from repanier.models import Producer, Permanence, Product, OfferItem
+from repanier.models.offeritem import OfferItem
+from repanier.models.product import Product
+from repanier.models.producer import Producer
+from repanier.models.permanence import Permanence
 from repanier.tools import clean_offer_item
 
 

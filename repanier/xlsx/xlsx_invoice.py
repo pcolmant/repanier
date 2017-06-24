@@ -5,19 +5,20 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
-from openpyxl.style import Border
-from openpyxl.style import NumberFormat
 
 import repanier.apps
 from export_tools import *
-from repanier.models import Configuration
 from repanier.const import *
-from repanier.models import BankAccount, Permanence, Product, Purchase
-from repanier.models import Customer
+from repanier.models import Configuration
 from repanier.models import CustomerInvoice
-from repanier.models import Producer
-from repanier.models import ProducerInvoice
-from repanier.tools import get_invoice_unit, get_reverse_invoice_unit, get_or_create_offer_item, \
+from repanier.models.bankaccount import BankAccount
+from repanier.models.customer import Customer
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.product import Product
+from repanier.models.purchase import Purchase
+from repanier.tools import get_invoice_unit, get_reverse_invoice_unit, \
     create_or_update_one_purchase, reorder_offer_items, reorder_purchases
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
     get_header, get_row
@@ -402,7 +403,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                     if product.long_name.endswith(qty_and_price_display):
                         product.long_name = product.long_name[:-len(qty_and_price_display)]
                         product.save()
-                    offer_item = get_or_create_offer_item(permanence, product)
+                    offer_item = product.get_or_create_offer_item(permanence)
                     create_or_update_one_purchase(
                         customer_id,
                         offer_item,

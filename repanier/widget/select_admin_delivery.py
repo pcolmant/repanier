@@ -6,7 +6,7 @@ from django.forms.utils import flatatt
 from django.utils.safestring import mark_safe
 
 from repanier.const import EMPTY_STRING, PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND, PERMANENCE_PLANNED
-from repanier.models import DeliveryBoard
+from repanier.models.deliveryboard import DeliveryBoard
 
 
 class SelectAdminDeliveryWidget(forms.Select):

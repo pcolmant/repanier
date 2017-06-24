@@ -14,7 +14,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.const import PERMANENCE_OPENED
-from repanier.models import Customer, CustomerInvoice, DeliveryBoard
+from repanier.models.customer import Customer
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.deliveryboard import DeliveryBoard
 from repanier.tools import sint
 
 

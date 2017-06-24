@@ -16,9 +16,13 @@ from django.views.decorators.http import require_GET
 
 from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_OPENED, \
     EMPTY_STRING
-from repanier.models import Customer, Permanence, CustomerInvoice, PermanenceBoard, Staff, ProducerInvoice
+from repanier.models.customer import Customer
+from repanier.models.permanence import Permanence
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.staff import Staff
 from repanier.tools import sboolean, sint, \
-    my_order_confirmation, calc_basket_message, permanence_ok_or_404, my_basket
+        calc_basket_message, permanence_ok_or_404, my_basket
 
 
 @never_cache
@@ -74,9 +78,8 @@ def order_init_ajax(request):
             basket_message = "%s" % (
                 _('The orders are closed.'),
             )
-    my_order_confirmation(
+    customer_invoice.my_order_confirmation(
         permanence=permanence,
-        customer_invoice=customer_invoice,
         is_basket=basket,
         basket_message=basket_message,
         to_json=to_json

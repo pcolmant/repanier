@@ -3,7 +3,7 @@ from django.utils import translation
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 
-from repanier.models import LUT_DepartmentForCustomer
+from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.rest.view import JSONResponse
 
 

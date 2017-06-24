@@ -12,7 +12,8 @@ from openpyxl.styles import Color
 import repanier.apps
 from export_tools import *
 from repanier.const import *
-from repanier.models import OfferItem, Product
+from repanier.models.offeritem import OfferItem
+from repanier.models.product import Product
 from repanier.tools import update_offer_item, next_row
 from repanier.xlsx.import_tools import get_row, get_header
 

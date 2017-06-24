@@ -2,9 +2,10 @@
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
-from repanier.models import OfferItem
-from repanier.models import Purchase, BankAccount
+from repanier.models.bankaccount import BankAccount
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.purchase import Purchase
 
 
 def admin_delete(permanence_id):

@@ -19,16 +19,15 @@ from import_export.widgets import CharWidget
 
 import repanier.apps
 from repanier.admin.forms import ImportXlsxForm
-from repanier.models import BoxContent
 from repanier.const import *
-from repanier.models import Permanence, Product, \
-    Producer
-from repanier.tools import producer_web_services_activated, \
-    update_offer_item
-from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
-    DecimalBooleanWidget, TwoMoneysWidget, DateWidgetExcel
+from repanier.models.box import BoxContent
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.tools import producer_web_services_activated
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.views import import_xslx_view
+from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
+    DecimalBooleanWidget, TwoMoneysWidget, DateWidgetExcel
 from repanier.xlsx.xlsx_invoice import export_invoice
 from repanier.xlsx.xlsx_product import export_customer_prices
 from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stock

@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_GET
 
 from repanier.const import EMPTY_STRING, PERMANENCE_OPENED, PERMANENCE_SEND
-from repanier.models import OfferItem
+from repanier.models.offeritem import OfferItem
 from repanier.tools import permanence_ok_or_404, sint, html_box_content
 
 

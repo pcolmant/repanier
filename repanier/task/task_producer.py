@@ -8,8 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.models import BankAccount
-from repanier.models import ProducerInvoice, Producer, CustomerInvoice
+from repanier.models.bankaccount import BankAccount
+from repanier.models.invoice import ProducerInvoice
 from repanier.tools import cap
 
 

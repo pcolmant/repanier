@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.core import urlresolvers
@@ -23,15 +22,19 @@ from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanenc
     PurchaseFilterByCustomer, PurchaseFilterByPermanence
 from repanier.const import *
 from repanier.email.email_order import export_order_2_1_customer
-from repanier.models import Customer, Purchase, Permanence, Product, \
-    CustomerInvoice, DeliveryBoard, OfferItem
-from repanier.tools import sint, get_or_create_offer_item, get_signature, \
-    my_order_confirmation_email_send_to
+from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.product import Product
+from repanier.models.purchase import Purchase
+from repanier.tools import sint, get_signature
 from repanier.widget.select_admin_delivery import SelectAdminDeliveryWidget
 from repanier.widget.select_admin_permanence import SelectAdminPermanenceWidget
+from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, \
     ChoiceWidget, FourDecimalsWidget, TwoMoneysWidget, DateWidgetExcel
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 
 try:
     from urllib.parse import parse_qsl
@@ -249,7 +252,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             customer, filename, permanence, sender_email,
                             sender_function, signature)
                         user_message_level = messages.INFO
-                        user_message = my_order_confirmation_email_send_to(customer)
+                        user_message = customer.my_order_confirmation_email_send_to()
                     else:
                         user_message_level = messages.INFO
                         user_message = _('Order confirmed')
@@ -493,7 +496,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             else:
                 # New : product_or_offer_item_id is a product_id
                 product = Product.objects.filter(id=product_or_offer_item_id).order_by('?').first()
-                offer_item = get_or_create_offer_item(purchase.permanence, product)
+                offer_item = product.get_or_create_offer_item(purchase.permanence)
                 # Select one purchase
                 previous_purchase = Purchase.objects.filter(
                     customer=purchase.customer,

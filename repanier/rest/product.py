@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.fields import DecimalField
 
 from repanier.const import PRODUCT_ORDER_UNIT_DEPOSIT
-from repanier.models import Product
+from repanier.models.product import Product
 from repanier.rest.view import JSONResponse
 
 

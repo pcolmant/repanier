@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 from rest_framework.fields import DecimalField
 
-from repanier.models import Producer
+from repanier.models.producer import Producer
 from repanier.rest.view import JSONResponse
 
 

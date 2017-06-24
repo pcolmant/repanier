@@ -9,7 +9,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 
-from repanier.models import OfferItem, Producer, LUT_DepartmentForCustomer
+from repanier.models.offeritem import OfferItem
+from repanier.models.producer import Producer
+from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.const import EMPTY_STRING
 
 

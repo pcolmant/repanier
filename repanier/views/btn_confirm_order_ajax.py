@@ -15,8 +15,10 @@ from django.views.decorators.http import require_GET
 
 from repanier.const import DECIMAL_ZERO
 from repanier.email.email_order import export_order_2_1_customer
-from repanier.models import Customer, CustomerInvoice, Permanence
-from repanier.tools import sint, get_signature, my_basket, my_order_confirmation, calc_basket_message
+from repanier.models.customer import Customer
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.permanence import Permanence
+from repanier.tools import sint, get_signature, my_basket, calc_basket_message
 
 
 @never_cache
@@ -70,9 +72,8 @@ def btn_confirm_order_ajax(request):
         permanence,
         status
     )
-    my_order_confirmation(
+    customer_invoice.my_order_confirmation(
         permanence=permanence,
-        customer_invoice=customer_invoice,
         is_basket=True,
         basket_message=basket_message,
         to_json=to_json

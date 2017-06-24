@@ -23,9 +23,9 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields
 
-from repanier.models import product
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.models.product import Product
 
 
 class Configuration(TranslatableModel):
@@ -321,7 +321,9 @@ def configuration_pre_save(sender, **kwargs):
 @receiver(post_save, sender=Configuration)
 def configuration_post_save(sender, **kwargs):
     import repanier.cms_toolbar
-    from repanier.models import BankAccount, Producer, Customer
+    from repanier.models.bankaccount import BankAccount
+    from repanier.models.producer import Producer
+    from repanier.models.customer import Customer
 
     config = kwargs["instance"]
     if config.id is not None:
@@ -427,12 +429,12 @@ def configuration_post_save(sender, **kwargs):
                 represent_this_buyinggroup=True
             )
         if producer_buyinggroup is not None:
-            membership_fee_product = product.Product.objects.filter(
+            membership_fee_product = Product.objects.filter(
                 order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                 is_active=True
             ).order_by('?').first()
             if membership_fee_product is None:
-                membership_fee_product = product.Product.objects.create(
+                membership_fee_product = Product.objects.create(
                     producer_id=producer_buyinggroup.id,
                     order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                     vat_level=VAT_100
@@ -445,22 +447,24 @@ def configuration_post_save(sender, **kwargs):
                 membership_fee_product.long_name = "%s" % (_("Membership fee"))
                 membership_fee_product.save()
             translation.activate(cur_language)
+        repanier.apps.REPANIER_SETTINGS_GROUP_PRODUCER_ID = producer_buyinggroup.id
 
-        customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?')
-        if not customer_buyinggroup.exists():
+        customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
+        if customer_buyinggroup is None:
             user = User.objects.create_user(
                 username="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                 email="%s%s" % (
                 repanier.apps.REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
                 password=uuid.uuid1().hex,
                 first_name=EMPTY_STRING, last_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
-            Customer.objects.create(
+            customer_buyinggroup = Customer.objects.create(
                 user=user,
                 short_basket_name="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                 long_basket_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                 phone1='0499/96.64.32',
                 represent_this_buyinggroup=True
             )
+        repanier.apps.REPANIER_SETTINGS_GROUP_CUSTOMER_ID = customer_buyinggroup.id
 
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)

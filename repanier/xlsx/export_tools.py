@@ -11,7 +11,7 @@ from openpyxl.workbook import Workbook
 
 from const import *
 from repanier.const import EMPTY_STRING
-from repanier.models import Staff
+from repanier.models.staff import Staff
 from repanier.tools import cap
 
 

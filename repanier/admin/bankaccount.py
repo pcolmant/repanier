@@ -2,10 +2,7 @@
 from __future__ import unicode_literals
 
 from django import forms
-from django.conf.urls import url
 from django.contrib import admin
-from django.core import urlresolvers
-from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
@@ -15,9 +12,12 @@ from import_export.formats.base_formats import XLS
 from repanier.admin.admin_filter import BankAccountFilterByStatus
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
-from repanier.models import BankAccount, Customer, Producer, ProducerInvoice, CustomerInvoice
-from repanier.xlsx.widget import IdWidget, TwoMoneysWidget, ProducerNameWidget, CustomerNameWidget, DateWidgetExcel
+from repanier.models.bankaccount import BankAccount
+from repanier.models.customer import Customer
+from repanier.models.invoice import ProducerInvoice, CustomerInvoice
+from repanier.models.producer import Producer
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
+from repanier.xlsx.widget import IdWidget, TwoMoneysWidget, ProducerNameWidget, CustomerNameWidget, DateWidgetExcel
 
 
 class BankAccountResource(resources.ModelResource):

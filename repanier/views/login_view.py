@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
 from repanier.views.forms import AuthRepanierLoginForm
-from repanier.models import Staff
+from repanier.models.staff import Staff
 from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, WEBMASTER_GROUP, CONTRIBUTOR_GROUP, \
     COORDINATION_GROUP
 

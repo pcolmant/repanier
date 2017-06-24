@@ -5,7 +5,7 @@ import uuid
 
 from django.conf import settings
 from django.core import urlresolvers
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
@@ -15,8 +15,9 @@ from djangocms_text_ckeditor.fields import HTMLField
 from parler.fields import TranslatedField
 from parler.models import TranslatedFieldsModel
 
-from repanier.models.item import Item
 from repanier.const import *
+from repanier.models.item import Item
+from repanier.tools import clean_offer_item
 
 
 @python_2_unicode_compatible
@@ -42,6 +43,24 @@ class Product(Item):
         :return: Integer: Likes for the product
         """
         return self.likes.count()
+
+    @transaction.atomic()
+    def get_or_create_offer_item(self, permanence):
+        from repanier.models.offeritem import OfferItem
+
+        offer_item_qs = OfferItem.objects.filter(
+            permanence_id=permanence.id,
+            product_id=self.id,
+        ).order_by('?')
+        if not offer_item_qs.exists():
+            OfferItem.objects.create(
+                permanence=permanence,
+                product_id=self.id,
+                producer=self.producer,
+            )
+            clean_offer_item(permanence, offer_item_qs)
+        offer_item = offer_item_qs.first()
+        return offer_item
 
     def get_is_into_offer(self):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon

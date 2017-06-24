@@ -1,9 +1,9 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from repanier.models import Customer
-from repanier.models import LUT_DepartmentForCustomer
-from repanier.models import Producer
+from repanier.models.customer import Customer
+from repanier.models.lut import LUT_DepartmentForCustomer
+from repanier.models.producer import Producer
 
 
 def get_header(worksheet):

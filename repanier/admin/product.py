@@ -23,14 +23,15 @@ from parler.forms import TranslatableModelForm
 from repanier.admin.admin_filter import ProductFilterByDepartmentForThisProducer, ProductFilterByProducer, \
     ProductFilterByProductioMode, ProductFilterByPlacement, ProductFilterByVatLevel
 from repanier.const import *
-from repanier.models import Product, \
-    LUT_ProductionMode, LUT_DepartmentForCustomer, Producer
+from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
+from repanier.models.producer import Producer
+from repanier.models.product import Product
 from repanier.task import task_product
 from repanier.tools import sint, update_offer_item
 from repanier.widget.select_admin_order_unit import SelectAdminOrderUnitWidget
+from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, TranslatedForeignKeyWidget, \
     DecimalBooleanWidget, ChoiceWidget, ThreeDecimalsWidget, TranslatedManyToManyWidget, TwoMoneysWidget
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 
 try:
     from urllib.parse import parse_qsl

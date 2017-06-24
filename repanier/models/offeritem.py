@@ -12,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatedFields
 
-from repanier.models import invoice
+from repanier.models.invoice import ProducerInvoice
 from repanier.models.item import Item
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import *
@@ -219,7 +219,7 @@ def offer_item_pre_save(sender, **kwargs):
                                offer_item.unit_deposit.amount) * offer_item.add_2_stock)
             delta_add_2_stock_invoiced = offer_item.add_2_stock - offer_item.previous_add_2_stock
             delta_producer_price = producer_price - previous_producer_price
-            invoice.ProducerInvoice.objects.filter(
+            ProducerInvoice.objects.filter(
                 producer_id=offer_item.producer_id,
                 permanence_id=offer_item.permanence_id
             ).update(

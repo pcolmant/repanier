@@ -2,22 +2,21 @@
 import threading
 
 from django.contrib import messages
-from django.db.models import Sum, ProtectedError
+from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
 from repanier.email import email_invoice
-from repanier.models import BankAccount
-from repanier.models import Customer
-from repanier.models import CustomerInvoice
-from repanier.models import OfferItem
-from repanier.models import CustomerProducerInvoice
-from repanier.models import Permanence
-from repanier.models import Producer
-from repanier.models import ProducerInvoice
-from repanier.models import Product
-from repanier.models import Purchase
-from repanier.models import LUT_DeliveryPoint
+from repanier.models.bankaccount import BankAccount
+from repanier.models.customer import Customer
+from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.lut import LUT_DeliveryPoint
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.product import Product
+from repanier.models.purchase import Purchase
 from repanier.task import task_producer
 from repanier.tools import *
 
@@ -155,9 +154,8 @@ def generate_invoice(permanence, payment_date):
             if not customer.represent_this_buyinggroup:
                 # There is a membership fee
                 if customer.membership_fee_valid_until < today:
-                    membership_fee_offer_item = get_or_create_offer_item(
-                        permanence,
-                        membership_fee_product
+                    membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(
+                        permanence
                     )
                     permanence.producers.add(membership_fee_offer_item.producer_id)
                     create_or_update_one_purchase(
@@ -174,7 +172,7 @@ def generate_invoice(permanence, payment_date):
                     )
                     # customer.save(update_fields=['membership_fee_valid_until', ])
                     # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                    models.Customer.objects.filter(id=customer.id).order_by('?').update(
+                    Customer.objects.filter(id=customer.id).order_by('?').update(
                         membership_fee_valid_until=customer.membership_fee_valid_until
                     )
 
@@ -549,7 +547,7 @@ def cancel_invoice(permanence):
                 # customer.date_balance = customer_invoice.date_previous_balance
                 # customer.save(update_fields=['balance', 'date_balance'])
                 # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                models.Customer.objects.filter(id=customer_invoice.customer_id).order_by('?').update(
+                Customer.objects.filter(id=customer_invoice.customer_id).order_by('?').update(
                     balance=customer_invoice.previous_balance,
                     date_balance=customer_invoice.date_previous_balance
                 )

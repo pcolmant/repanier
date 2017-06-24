@@ -3,13 +3,13 @@ from __future__ import unicode_literals
 
 from django.http import Http404
 from django.utils import translation
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import never_cache
 from django.views.generic import DetailView
 
-from repanier.models import Purchase
 from repanier.const import DECIMAL_ZERO
-from repanier.models import ProducerInvoice, BankAccount, OfferItem, Producer
+from repanier.models.bankaccount import BankAccount
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.producer import Producer
 
 
 class ProducerInvoiceView(DetailView):

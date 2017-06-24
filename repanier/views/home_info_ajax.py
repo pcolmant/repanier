@@ -12,7 +12,7 @@ from django.views.decorators.http import require_GET
 from parler.models import TranslationDoesNotExist
 
 from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
-from repanier.models import Permanence
+from repanier.models.permanence import Permanence
 
 
 @never_cache

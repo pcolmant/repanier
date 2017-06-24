@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand
 
-from repanier.const import PERMANENCE_CLOSED, \
-    PERMANENCE_INVOICED, PERMANENCE_ARCHIVED, PERMANENCE_SEND
-from repanier.models import Permanence
+from repanier.models.permanence import Permanence
 
 
 class Command(BaseCommand):

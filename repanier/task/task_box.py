@@ -3,9 +3,9 @@ from django.contrib import messages
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import BoxContent
 from repanier.const import *
-from repanier.models import Product_Translation
+from repanier.models.box import BoxContent
+from repanier.models.product import Product_Translation
 from repanier.tools import cap
 
 

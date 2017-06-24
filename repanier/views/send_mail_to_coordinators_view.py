@@ -2,10 +2,10 @@
 from __future__ import unicode_literals
 
 import threading
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMessage
 from django.http import Http404
 from django.shortcuts import render
 from django.utils import translation
@@ -18,10 +18,10 @@ from djng.forms import NgFormValidationMixin
 from djng.forms.field_mixins import EmailFieldMixin, CharFieldMixin, MultipleChoiceFieldMixin
 from djng.styling.bootstrap3.field_mixins import BooleanFieldMixin
 
-from repanier.models import Customer
 from repanier.const import EMPTY_STRING
-from repanier.models import Staff
-from repanier.tools import send_email
+from repanier.email.email import RepanierEmail
+from repanier.models.customer import Customer
+from repanier.models.staff import Staff
 from repanier.views.forms import RepanierForm
 from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidget
 
@@ -97,18 +97,16 @@ def send_mail_to_coordinators_view(request):
 
             if to_email_staff:
                 to_email_customer = [request.user.email]
-                email = EmailMessage(
+                email = RepanierEmail(
                     strip_tags(form.cleaned_data.get('subject')),
-                    strip_tags(form.cleaned_data.get('message')),
+                    html_content=strip_tags(form.cleaned_data.get('message')),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=to_email_customer,
                     cc=to_email_staff
                 )
-                # send_email(email=email)
-                # thread.start_new_thread(send_email, (email,))
-                t = threading.Thread(target=send_email, args=(email,))
+                # email.send_email()
+                t = threading.Thread(target=email.send_email)
                 t.start()
-                # return HttpResponseRedirect('/')
                 email = form.fields["your_email"]
                 email.initial = request.user.email
                 email.widget.attrs['readonly'] = True

@@ -11,8 +11,12 @@ from easy_select2 import Select2
 
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
-from repanier.models import Customer, Permanence, Producer, OfferItemSend, Purchase
+from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.models.customer import Customer
+from repanier.models.offeritem import OfferItemSend
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.purchase import Purchase
 from repanier.tools import rule_of_3_reload_purchase
 
 

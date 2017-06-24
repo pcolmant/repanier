@@ -5,7 +5,8 @@ import datetime
 from django.core.management.base import BaseCommand
 
 from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO
-from repanier.models import Permanence, CustomerInvoice
+from repanier.models.permanence import Permanence
+from repanier.models.invoice import CustomerInvoice
 from django.conf import settings
 from django.utils import translation
 

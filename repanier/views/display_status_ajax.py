@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.models import Permanence
+from repanier.models.permanence import Permanence
 
 
 @never_cache

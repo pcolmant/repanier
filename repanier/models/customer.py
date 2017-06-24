@@ -5,22 +5,24 @@ import datetime
 
 from django.conf import settings
 from django.core import urlresolvers
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q, Sum
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import bankaccount
-from repanier.models import invoice
-from repanier.models import permanenceboard
-from repanier.models import purchase
+# from repanier.models.purchase import Purchase
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.models.bankaccount import BankAccount
+from repanier.models.invoice import CustomerInvoice
+from repanier.models.permanenceboard import PermanenceBoard
 from repanier.picture.const import SIZE_S
 from repanier.picture.fields import AjaxPictureField
 
@@ -132,7 +134,7 @@ class Customer(models.Model):
     def get_order_not_invoiced(self):
         from repanier.apps import REPANIER_SETTINGS_INVOICE
         if REPANIER_SETTINGS_INVOICE:
-            result_set = invoice.CustomerInvoice.objects.filter(
+            result_set = CustomerInvoice.objects.filter(
                 customer_id=self.id,
                 status__gte=PERMANENCE_OPENED,
                 status__lte=PERMANENCE_SEND,
@@ -153,7 +155,7 @@ class Customer(models.Model):
     def get_bank_not_invoiced(self):
         from repanier.apps import REPANIER_SETTINGS_INVOICE
         if REPANIER_SETTINGS_INVOICE:
-            result_set = bankaccount.BankAccount.objects.filter(
+            result_set = BankAccount.objects.filter(
                 customer_id=self.id, customer_invoice__isnull=True
             ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
             if result_set["bank_amount_in__sum"] is not None:
@@ -170,7 +172,7 @@ class Customer(models.Model):
         return bank_not_invoiced
 
     def get_balance(self):
-        last_customer_invoice = invoice.CustomerInvoice.objects.filter(
+        last_customer_invoice = CustomerInvoice.objects.filter(
             customer_id=self.id, invoice_sort_order__isnull=False
         ).order_by('?')
         balance = self.get_admin_balance()
@@ -237,7 +239,9 @@ class Customer(models.Model):
         return customer_on_hold_movement
 
     def get_last_membership_fee(self):
-        last_membership_fee = purchase.Purchase.objects.filter(
+        from repanier.models.purchase import Purchase
+
+        last_membership_fee = Purchase.objects.filter(
             customer_id=self.id,
             offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
         ).order_by("-id")
@@ -248,7 +252,9 @@ class Customer(models.Model):
     get_last_membership_fee.allow_tags = False
 
     def last_membership_fee_date(self):
-        last_membership_fee = purchase.Purchase.objects.filter(
+        from repanier.models.purchase import Purchase
+
+        last_membership_fee = Purchase.objects.filter(
             customer_id=self.id,
             offer_item__order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
         ).order_by("-id").prefetch_related("customer_invoice")
@@ -271,7 +277,7 @@ class Customer(models.Model):
 
     def get_participation(self):
         now = timezone.now()
-        return permanenceboard.PermanenceBoard.objects.filter(
+        return PermanenceBoard.objects.filter(
             customer_id=self.id,
             permanence_date__gte=now - datetime.timedelta(
                 days=365),
@@ -284,7 +290,7 @@ class Customer(models.Model):
 
     def get_purchase(self):
         now = timezone.now()
-        return invoice.CustomerInvoice.objects.filter(
+        return CustomerInvoice.objects.filter(
             customer_id=self.id,
             total_price_with_tax__gt=DECIMAL_ZERO,
             date_balance__gte=now - datetime.timedelta(365)
@@ -293,10 +299,49 @@ class Customer(models.Model):
     get_purchase.short_description = _("purchase")
     get_purchase.allow_tags = False
 
+    def my_order_confirmation_email_send_to(self):
+        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+
+        if self.email2:
+            to_email = (self.user.email, self.email2)
+        else:
+            to_email = (self.user.email,)
+        sent_to = ", ".join(to_email) if to_email is not None else EMPTY_STRING
+        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+            msg_confirmation = _(
+                "Your order is confirmed. An email containing this order summary has been sent to %s.") % sent_to
+        else:
+            msg_confirmation = _("An email containing this order summary has been sent to %s.") % sent_to
+        return msg_confirmation
+
     @property
     def who_is_who_display(self):
         return self.picture or self.accept_mails_from_members or self.accept_phone_call_from_members \
                or (self.about_me is not None and len(self.about_me.strip()) > 1)
+
+    def get_unsubscribe_mail_footer(self):
+        return '<br/><br/><hr/><br/><a href="%s">%s</a>' % (self._get_unsubscribe_link(), _("Unsubscribe to emails"))
+
+    def _get_unsubscribe_link(self):
+        username, token = self.make_token().split(":", 1)
+        return "https://%s%s" % (
+            settings.ALLOWED_HOSTS[0],
+            reverse(
+                'unsubscribe_view',
+                kwargs={'short_name': self.short_basket_name, 'token': token, }
+            )
+        )
+
+    def make_token(self):
+        return TimestampSigner().sign(self.short_basket_name)
+
+    def check_token(self, token):
+        try:
+            key = '%s:%s' % (self.short_basket_name, token)
+            TimestampSigner().unsign(key, max_age=60 * 60 * 48)  # Valid for 2 days
+        except (BadSignature, SignatureExpired):
+            return False
+        return True
 
     def __str__(self):
         return self.short_basket_name

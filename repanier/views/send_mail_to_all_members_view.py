@@ -2,9 +2,9 @@
 from __future__ import unicode_literals
 
 import threading
+
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMessage
 from django.forms import Textarea
 from django.http import Http404
 from django.shortcuts import render
@@ -14,9 +14,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from djng.forms import NgFormValidationMixin
 
-from repanier.models import Customer, Staff
-from repanier.tools import send_email
+from repanier.email.email import RepanierEmail
+from repanier.models.customer import Customer
 from repanier.views.forms import RepanierForm
+from repanier.tools import check_if_is_coordinator
 
 
 class MembersContactForm(RepanierForm):
@@ -44,9 +45,7 @@ def send_mail_to_all_members_view(request):
     customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
     if not customer_is_active:
         raise Http404
-    is_coordinator = request.user.is_superuser or Staff.objects.filter(
-        customer_responsible_id=request.user.customer.id, is_coordinator=True, is_active=True
-    ).order_by('?').exists()
+    is_coordinator = check_if_is_coordinator(request)
     if request.method == 'POST':
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
         user_customer = Customer.objects.filter(
@@ -55,26 +54,28 @@ def send_mail_to_all_members_view(request):
         ).order_by('?').first()
         if form.is_valid() and user_customer is not None:  # All validation rules pass
             to_email_customer = []
-            if is_coordinator:
-                qs = Customer.objects.filter(is_active=True, represent_this_buyinggroup=False, may_order=True)
-            else:
-                qs = Customer.objects.filter(is_active=True, accept_mails_from_members=True,
-                                             represent_this_buyinggroup=False, may_order=True)
+            qs = Customer.objects.filter(
+                is_active=True,
+                represent_this_buyinggroup=False,
+                subscribe_to_email=True,
+                user__last_login__isnull=False)
+            if not is_coordinator:
+                qs = qs.filter(accept_mails_from_members=True)
             for customer in qs:
                 if customer.user_id != request.user.id:
                     to_email_customer.append(customer.user.email)
-                # if customer.email2 is not None and customer.email2 != EMPTY_STRING:
-                #     to_email_customer.append(customer.email2)
+                    if customer.email2:
+                        to_email_customer.append(customer.email2)
             to_email_customer.append(request.user.email)
-            email = EmailMessage(
+            email = RepanierEmail(
                 strip_tags(form.cleaned_data.get('subject')),
-                strip_tags(form.cleaned_data.get('message')),
+                html_content=strip_tags(form.cleaned_data.get('message')),
                 from_email=request.user.email,
                 cc=to_email_customer
             )
             # send_email(email=email, from_name=user_customer.long_basket_name)
             # thread.start_new_thread(send_email,(email, user_customer.long_basket_name, True))
-            t = threading.Thread(target=send_email, args=(email, user_customer.long_basket_name, True))
+            t = threading.Thread(target=email.send_email, args=(email, user_customer.long_basket_name))
             t.start()
             email = form.fields["your_email"]
             email.initial = request.user.email

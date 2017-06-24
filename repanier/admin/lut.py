@@ -15,7 +15,10 @@ from parler.forms import TranslatableModelForm
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import PERMANENCE_CLOSED, ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, DECIMAL_ONE, ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
-from repanier.models import PermanenceBoard, Customer, Permanence, LUT_DeliveryPoint
+from repanier.models.customer import Customer
+from repanier.models.lut import LUT_DeliveryPoint
+from repanier.models.permanence import Permanence
+from repanier.models.permanenceboard import PermanenceBoard
 
 
 class LUTDataForm(TranslatableModelForm):

@@ -6,8 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
 from export_tools import *
-from repanier.models import Producer, OfferItem
-from repanier.models import Product
+from repanier.models.producer import Producer
+from repanier.models.offeritem import OfferItem
+from repanier.models.product import Product
 from repanier.tools import *
 
 
@@ -99,9 +100,8 @@ def export_offer_row(product, row_num, ws):
     while q_valid <= q_alert and q_counter <= LIMIT_ORDER_QTY_ITEM:
         q_counter += 1
         c = ws.cell(row=row_num, column=col_num)
-        c.value = get_display(
+        c.value = product.get_display(
             qty=q_valid,
-            order_average_weight=product.order_average_weight,
             order_unit=product.order_unit,
             unit_price_amount=product.customer_unit_price.amount
         )

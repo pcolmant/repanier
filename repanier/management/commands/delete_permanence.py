@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-from django.core.management.base import BaseCommand
-
-from repanier.const import PERMANENCE_SEND
-from repanier.models import Permanence, Purchase, OfferItem, CustomerInvoice, ProducerInvoice, CustomerProducerInvoice, BankAccount
 from django.conf import settings
+from django.core.management.base import BaseCommand
 from django.utils import translation
 
+from repanier.models.permanence import Permanence
 from repanier.task.task_purchase import admin_delete
 
 

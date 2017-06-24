@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatableModel
 
@@ -18,7 +19,6 @@ from repanier.const import BOX_UNICODE, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, 
     LUT_PRODUCT_ORDER_UNIT, PRODUCT_ORDER_UNIT_PC, LUT_PRODUCT_PLACEMENT, PRODUCT_PLACEMENT_BASKET, LUT_ALL_VAT, \
     LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
-from repanier.tools import get_display
 
 
 @python_2_unicode_compatible
@@ -227,23 +227,171 @@ class Item(TranslatableModel):
         else:
             return EMPTY_STRING
 
+    def get_display(self, qty=0, order_unit=PRODUCT_ORDER_UNIT_PC, unit_price_amount=None,
+                    for_customer=True, for_order_select=False, without_price_display=False):
+        magnitude = None
+        display_qty = True
+        if order_unit == PRODUCT_ORDER_UNIT_KG:
+            if qty == DECIMAL_ZERO:
+                unit = EMPTY_STRING
+            elif for_customer and qty < 1:
+                unit = "%s" % (_('gr'))
+                magnitude = 1000
+            else:
+                unit = "%s" % (_('kg'))
+        elif order_unit == PRODUCT_ORDER_UNIT_LT:
+            if qty == DECIMAL_ZERO:
+                unit = EMPTY_STRING
+            elif for_customer and qty < 1:
+                unit = "%s" % (_('cl'))
+                magnitude = 100
+            else:
+                unit = "%s" % (_('l'))
+        elif order_unit in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG]:
+            # display_qty = not (order_average_weight == 1 and order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG)
+            average_weight = self.order_average_weight
+            if for_customer:
+                average_weight *= qty
+            if order_unit == PRODUCT_ORDER_UNIT_PC_KG and unit_price_amount is not None:
+                unit_price_amount *= self.order_average_weight
+            if average_weight < 1:
+                average_weight_unit = _('gr')
+                average_weight *= 1000
+            else:
+                average_weight_unit = _('kg')
+            decimal = 3
+            if average_weight == int(average_weight):
+                decimal = 0
+            elif average_weight * 10 == int(average_weight * 10):
+                decimal = 1
+            elif average_weight * 100 == int(average_weight * 100):
+                decimal = 2
+            tilde = EMPTY_STRING
+            if order_unit == PRODUCT_ORDER_UNIT_PC_KG:
+                tilde = '~'
+            if for_customer:
+                if qty == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                else:
+                    if self.order_average_weight == 1 and order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
+                        unit = "%s%s %s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+                    else:
+                        unit = "%s%s%s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+            else:
+                if qty == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                else:
+                    unit = "%s%s%s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+        elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
+            display_qty = self.order_average_weight != 1
+            average_weight = self.order_average_weight
+            if for_customer:
+                average_weight *= qty
+            if average_weight < 1:
+                average_weight_unit = _('cl')
+                average_weight *= 100
+            else:
+                average_weight_unit = _('l')
+            decimal = 3
+            if average_weight == int(average_weight):
+                decimal = 0
+            elif average_weight * 10 == int(average_weight * 10):
+                decimal = 1
+            elif average_weight * 100 == int(average_weight * 100):
+                decimal = 2
+            if for_customer:
+                if qty == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                else:
+                    if display_qty:
+                        unit = "%s%s" % (number_format(average_weight, decimal), average_weight_unit)
+                    else:
+                        unit = "%s %s" % (number_format(average_weight, decimal), average_weight_unit)
+            else:
+                if qty == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                else:
+                    unit = "%s%s" % (number_format(average_weight, decimal), average_weight_unit)
+        elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
+            display_qty = self.order_average_weight != 1
+            average_weight = self.order_average_weight
+            if for_customer:
+                average_weight *= qty
+                if qty == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                else:
+                    if average_weight < 2:
+                        pc_pcs = _('pc')
+                    else:
+                        pc_pcs = _('pcs')
+                    if display_qty:
+                        unit = "%s%s" % (number_format(average_weight, 0), pc_pcs)
+                    else:
+                        unit = "%s %s" % (number_format(average_weight, 0), pc_pcs)
+            else:
+                if average_weight == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                elif average_weight < 2:
+                    unit = '%s %s' % (number_format(average_weight, 0), _('pc'))
+                else:
+                    unit = '%s %s' % (number_format(average_weight, 0), _('pcs'))
+        else:
+            if for_order_select:
+                if qty == DECIMAL_ZERO:
+                    unit = EMPTY_STRING
+                elif qty < 2:
+                    unit = "%s" % (_('unit'))
+                else:
+                    unit = "%s" % (_('units'))
+            else:
+                unit = EMPTY_STRING
+        if unit_price_amount is not None:
+            price_display = " = %s" % RepanierMoney(unit_price_amount * qty)
+        else:
+            price_display = EMPTY_STRING
+        if magnitude is not None:
+            qty *= magnitude
+        decimal = 3
+        if qty == int(qty):
+            decimal = 0
+        elif qty * 10 == int(qty * 10):
+            decimal = 1
+        elif qty * 100 == int(qty * 100):
+            decimal = 2
+        if for_customer or for_order_select:
+            if unit:
+                if display_qty:
+                    qty_display = "%s (%s)" % (number_format(qty, decimal), unit)
+                else:
+                    qty_display = "%s" % unit
+            else:
+                qty_display = "%s" % number_format(qty, decimal)
+        else:
+            if unit:
+                qty_display = "(%s)" % unit
+            else:
+                qty_display = EMPTY_STRING
+        if without_price_display:
+            return qty_display
+        else:
+            display = "%s%s" % (qty_display, price_display)
+            return display
+
     def get_qty_display(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
         if self.is_box:
             # To avoid unicode error in email_offer.send_open_order
             qty_display = box_unicode
         else:
             if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                qty_display = get_display(
+                qty_display = self.get_display(
                     qty=1,
-                    order_average_weight=self.order_average_weight,
                     order_unit=PRODUCT_ORDER_UNIT_KG,
                     for_customer=False,
                     without_price_display=True
                 )
             else:
-                qty_display = get_display(
+                qty_display = self.get_display(
                     qty=1,
-                    order_average_weight=self.order_average_weight,
                     order_unit=self.order_unit,
                     for_customer=False,
                     without_price_display=True

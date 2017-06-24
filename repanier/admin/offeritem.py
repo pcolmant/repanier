@@ -10,7 +10,10 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanence, \
     ProductFilterByDepartmentForThisProducer, OfferItemFilter
 from repanier.const import PERMANENCE_CLOSED, PERMANENCE_OPENED, ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP
-from repanier.models import Permanence, Product, LUT_DepartmentForCustomer, Producer
+from repanier.models.lut import LUT_DepartmentForCustomer
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.product import Product
 from repanier.tools import sint, update_offer_item
 
 

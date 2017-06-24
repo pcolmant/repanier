@@ -14,8 +14,11 @@ from django.views.decorators.http import require_GET
 
 from repanier.const import PERMANENCE_OPENED, PERMANENCE_SEND, LIMIT_ORDER_QTY_ITEM, DECIMAL_ZERO, \
     EMPTY_STRING
-from repanier.models import Customer, OfferItem, ProducerInvoice, Purchase, CustomerInvoice
-from repanier.tools import get_display, sint, display_selected_value
+from repanier.models.customer import Customer
+from repanier.models.invoice import ProducerInvoice, CustomerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.purchase import Purchase
+from repanier.tools import sint, display_selected_value
 
 
 @never_cache
@@ -98,9 +101,8 @@ def order_select_ajax(request):
                                 selected = "selected"
                         if (status == PERMANENCE_OPENED or
                                 (status <= PERMANENCE_SEND and selected == "selected")):
-                            display = get_display(
+                            display = offer_item.get_display(
                                 qty=q_valid,
-                                order_average_weight=offer_item.order_average_weight,
                                 order_unit=offer_item.order_unit,
                                 unit_price_amount=a_price,
                                 for_order_select=True
@@ -121,9 +123,8 @@ def order_select_ajax(request):
                         # An custom order_qty > q_alert
                         q_select_id += 1
                         selected = "selected"
-                        display = get_display(
+                        display = offer_item.get_display(
                             qty=q_previous_order,
-                            order_average_weight=offer_item.order_average_weight,
                             order_unit=offer_item.order_unit,
                             unit_price_amount=a_price,
                             for_order_select=True

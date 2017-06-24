@@ -9,7 +9,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
-from repanier.models import CustomerInvoice
+from repanier.models.invoice import CustomerInvoice
 
 
 @never_cache

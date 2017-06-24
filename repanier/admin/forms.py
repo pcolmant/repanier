@@ -3,7 +3,7 @@ from django.forms.formsets import formset_factory
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
 
-from repanier.models import Producer
+from repanier.models.producer import Producer
 from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormMoneyField
 

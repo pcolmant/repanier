@@ -1,13 +1,11 @@
-from django.http import Http404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from rest_framework import serializers
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 from repanier.const import PERMANENCE_OPENED
-from repanier.models import Permanence, OfferItem
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
 from repanier.rest.view import JSONResponse
 
 

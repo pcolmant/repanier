@@ -37,10 +37,10 @@ class Command(BaseCommand):
 
             if result == 0:
                 email = EmailMultiAlternatives(
-                    "Backup " + db_name,
-                    "Backup of the DB : " + db_name,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [v for k, v in settings.ADMINS]
+                    subject="Backup " + db_name,
+                    body="Backup of the DB : " + db_name,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[v for k, v in settings.ADMINS]
                 )
                 email.attach_file(os.path.abspath(backup_file.name),
                                   'application/zip')

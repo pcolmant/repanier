@@ -1,19 +1,20 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+import sys
 import time
 
-import sys
 from django.apps import AppConfig
 from django.conf import settings
 from django.db import connection
-from django.db.models import F
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 REPANIER_SETTINGS_CONFIG = None
 REPANIER_SETTINGS_TEST_MODE = None
 REPANIER_SETTINGS_GROUP_NAME = None
+REPANIER_SETTINGS_GROUP_CUSTOMER_ID = None
+REPANIER_SETTINGS_GROUP_PRODUCER_ID = None
 REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
 REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
 REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence on ")
@@ -69,7 +70,9 @@ class RepanierSettings(AppConfig):
             except:
                 print("waiting for database connection")
                 time.sleep(1)
-        from repanier.models import Configuration, LUT_DepartmentForCustomer, Product
+        from repanier.models.configuration import Configuration
+        from repanier.models.lut import LUT_DepartmentForCustomer
+        from repanier.models.product import Product
         from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
         try:

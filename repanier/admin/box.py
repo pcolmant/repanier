@@ -19,7 +19,7 @@ from parler.forms import TranslatableModelForm
 
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import DECIMAL_ZERO, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, PERMANENCE_OPENED, PERMANENCE_PLANNED, PERMANENCE_CLOSED
+    COORDINATION_GROUP, PERMANENCE_PLANNED, PERMANENCE_CLOSED
 from repanier.models.box import BoxContent, Box
 from repanier.models.product import Product
 from repanier.models.offeritem import OfferItemWoReceiver

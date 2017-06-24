@@ -10,11 +10,12 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm
 
-from .lut import LUTAdmin
 from repanier.const import EMPTY_STRING, \
-    COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP, ONE_LEVEL_DEPTH
-from repanier.models import Customer, Staff
+    COORDINATION_GROUP, ONE_LEVEL_DEPTH
+from repanier.models.customer import Customer
+from repanier.models.staff import Staff
 from repanier.views.logout_view import remove_staff_right
+from .lut import LUTAdmin
 
 
 class UserDataForm(TranslatableModelForm):

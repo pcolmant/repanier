@@ -23,8 +23,17 @@ from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.models import Customer, Purchase, Producer, PermanenceBoard, LUT_PermanenceRole, PermanenceInPreparation, \
-    Box, OfferItem, DeliveryBoard, LUT_DeliveryPoint, ProducerInvoice, Product
+from repanier.models.customer import Customer
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
+from repanier.models.permanence import PermanenceInPreparation
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.purchase import Purchase
+from repanier.models.box import Box
+from repanier.models.offeritem import OfferItem
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.product import Product
+from repanier.models.producer import Producer
 from repanier.task import task_order, task_purchase
 from repanier.tools import send_email_to_who, get_signature, get_board_composition
 from repanier.xlsx.xlsx_offer import export_offer

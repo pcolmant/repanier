@@ -17,19 +17,21 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
-from repanier.models import customer
-from repanier.models import deliveryboard
-from repanier.models import invoice
-from repanier.models import offeritem
-from repanier.models import permanenceboard
-from repanier.models import producer
-from repanier.models import purchase
 import repanier.apps
+from repanier.const import *
+from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice, ProducerInvoice
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.producer import Producer
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
-from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.const import *
 from repanier.tools import cap
+
+
+# from repanier.models.purchase import Purchase
 
 
 # def verbose_name():
@@ -173,7 +175,7 @@ class Permanence(TranslatableModel):
 
             link = []
             for p in self.producers.all().only("id"):
-                pi = invoice.ProducerInvoice.objects.filter(
+                pi = ProducerInvoice.objects.filter(
                     producer_id=p.id, permanence_id=self.id
                 ).order_by('?').first()
                 if pi is not None:
@@ -203,7 +205,7 @@ class Permanence(TranslatableModel):
             )
             link = []
             at_least_one_permanence_send = False
-            for pi in invoice.ProducerInvoice.objects.filter(permanence_id=self.id).select_related(
+            for pi in ProducerInvoice.objects.filter(permanence_id=self.id).select_related(
                     "producer").order_by('producer'):
                 if pi.status == PERMANENCE_SEND:
                     at_least_one_permanence_send = True
@@ -273,7 +275,7 @@ class Permanence(TranslatableModel):
         else:
             return '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name
                                    for p in
-                                   producer.Producer.objects.filter(
+                                   Producer.objects.filter(
                                        producerinvoice__permanence_id=self.id).only(
                                        'short_profile_name')])
 
@@ -289,7 +291,7 @@ class Permanence(TranslatableModel):
             )
             link = []
             delivery_save = None
-            for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
+            for ci in CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
                 "customer").order_by('delivery', 'customer'):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
@@ -322,7 +324,7 @@ class Permanence(TranslatableModel):
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             link = []
             delivery_save = None
-            for ci in invoice.CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
+            for ci in CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
                 "customer").order_by('delivery', 'customer'):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
@@ -352,7 +354,7 @@ class Permanence(TranslatableModel):
         else:
             customers = ", ".join([c.short_basket_name
                                    for c in
-                                   customer.Customer.objects.filter(customerinvoice__permanence_id=self.id).only(
+                                   Customer.objects.filter(customerinvoice__permanence_id=self.id).only(
                                        'short_basket_name')])
         if len(customers) > 0:
             msg_html = """
@@ -377,7 +379,7 @@ class Permanence(TranslatableModel):
     get_customers.allow_tags = True
 
     def get_board(self):
-        permanenceboard_set = permanenceboard.PermanenceBoard.objects.filter(
+        permanenceboard_set = PermanenceBoard.objects.filter(
             permanence=self, permanence_role__rght=F('permanence_role__lft') + 1
         ).order_by("permanence_role__tree_id", "permanence_role__lft")
         first_board = True
@@ -431,6 +433,8 @@ class Permanence(TranslatableModel):
 
     def set_status(self, new_status, all_producers=True, producers_id=None, update_payment_date=False,
                    payment_date=None, allow_downgrade=True):
+        from repanier.models.purchase import Purchase
+
         if all_producers:
             now = timezone.now().date()
             self.is_updated_on = now
@@ -449,20 +453,20 @@ class Permanence(TranslatableModel):
             if new_status == PERMANENCE_WAIT_FOR_OPEN:
                 for a_producer in self.producers.all():
                     # Create ProducerInvoice to be able to close those producer on demand
-                    if not invoice.ProducerInvoice.objects.filter(
+                    if not ProducerInvoice.objects.filter(
                             permanence_id=self.id,
                             producer_id=a_producer.id
                     ).order_by('?').exists():
-                        invoice.ProducerInvoice.objects.create(
+                        ProducerInvoice.objects.create(
                             permanence_id=self.id,
                             producer_id=a_producer.id
                         )
 
-            self.with_delivery_point = deliveryboard.DeliveryBoard.objects.filter(
+            self.with_delivery_point = DeliveryBoard.objects.filter(
                 permanence_id=self.id
             ).order_by('?').exists()
             if self.with_delivery_point:
-                qs = deliveryboard.DeliveryBoard.objects.filter(
+                qs = DeliveryBoard.objects.filter(
                     permanence_id=self.id
                 ).exclude(status=new_status).order_by('?')
                 for delivery_point in qs:
@@ -472,18 +476,18 @@ class Permanence(TranslatableModel):
                         #  -> PERMANENCE_CLOSED, PERMANENCE_WAIT_FOR_CLOSED
                         # This occur if directly sending order of a opened delivery point
                         delivery_point.set_status(new_status)
-            invoice.CustomerInvoice.objects.filter(
+            CustomerInvoice.objects.filter(
                 permanence_id=self.id,
                 delivery__isnull=True
             ).order_by('?').update(
                 status=new_status
             )
-            purchase.Purchase.objects.filter(
+            Purchase.objects.filter(
                 permanence_id=self.id,
                 customer_invoice__delivery__isnull=True
             ).order_by('?').update(
                 status=new_status)
-            invoice.ProducerInvoice.objects.filter(
+            ProducerInvoice.objects.filter(
                 permanence_id=self.id
             ).order_by('?').update(
                 status=new_status
@@ -501,9 +505,9 @@ class Permanence(TranslatableModel):
             cache.clear()
         else:
             # /!\ If one delivery point has been closed, I may not close anymore by producer
-            purchase.Purchase.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by('?').update(
+            Purchase.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by('?').update(
                 status=new_status)
-            invoice.ProducerInvoice.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by(
+            ProducerInvoice.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by(
                 '?').update(status=new_status)
 
     def duplicate(self, repeat_counter=0, repeat_step=1):
@@ -547,17 +551,17 @@ class Permanence(TranslatableModel):
                         new_permanence,
                         cur_language=translation.get_language(),
                     )
-                    for permanence_board in permanenceboard.PermanenceBoard.objects.filter(
+                    for permanence_board in PermanenceBoard.objects.filter(
                             permanence=self
                     ):
-                        permanenceboard.PermanenceBoard.objects.create(
+                        PermanenceBoard.objects.create(
                             permanence=new_permanence,
                             permanence_role=permanence_board.permanence_role
                         )
-                    for delivery_board in deliveryboard.DeliveryBoard.objects.filter(
+                    for delivery_board in DeliveryBoard.objects.filter(
                             permanence=self
                     ):
-                        new_delivery_board = deliveryboard.DeliveryBoard.objects.create(
+                        new_delivery_board = DeliveryBoard.objects.create(
                             permanence=new_permanence,
                             delivery_point=delivery_board.delivery_point,
                             delivery_date=delivery_board.delivery_date + datetime.timedelta(days=every_x_days * i)
@@ -606,31 +610,32 @@ class Permanence(TranslatableModel):
                                  offer_item_qs=None,
                                  re_init=False,
                                  send_to_producer=False):
+        from repanier.models.purchase import Purchase
         getcontext().rounding = ROUND_HALF_UP
 
         if send_to_producer or re_init:
             assert offer_item_qs is None, 'offer_item_qs must be set to None when send_to_producer or re_init'
-            invoice.ProducerInvoice.objects.filter(
+            ProducerInvoice.objects.filter(
                 permanence_id=self.id
             ).update(
                 total_price_with_tax=DECIMAL_ZERO,
                 total_vat=DECIMAL_ZERO,
                 total_deposit=DECIMAL_ZERO,
             )
-            invoice.CustomerInvoice.objects.filter(
+            CustomerInvoice.objects.filter(
                 permanence_id=self.id
             ).update(
                 total_price_with_tax=DECIMAL_ZERO,
                 total_vat=DECIMAL_ZERO,
                 total_deposit=DECIMAL_ZERO
             )
-            invoice.CustomerProducerInvoice.objects.filter(
+            CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id
             ).update(
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO
             )
-            offeritem.OfferItem.objects.filter(
+            OfferItem.objects.filter(
                 permanence_id=self.id
             ).update(
                 quantity_invoiced=DECIMAL_ZERO,
@@ -641,7 +646,7 @@ class Permanence(TranslatableModel):
             self.total_selling_with_tax=DECIMAL_ZERO
             self.total_purchase_vat=DECIMAL_ZERO
             self.total_selling_vat=DECIMAL_ZERO
-            for offer_item in offeritem.OfferItem.objects.filter(
+            for offer_item in OfferItem.objects.filter(
                     permanence_id=self.id,
                     is_active=True,
                     manage_replenishment=True
@@ -653,11 +658,11 @@ class Permanence(TranslatableModel):
                 offer_item.save()
 
         if offer_item_qs is not None:
-            purchase_set = purchase.Purchase.objects \
+            purchase_set = Purchase.objects \
                 .filter(permanence_id=self.id, offer_item__in=offer_item_qs) \
                 .order_by('?')
         else:
-            purchase_set = purchase.Purchase.objects \
+            purchase_set = Purchase.objects \
                 .filter(permanence_id=self.id) \
                 .order_by('?')
 
@@ -685,9 +690,10 @@ class Permanence(TranslatableModel):
         self.save()
 
     def recalculate_profit(self):
+        from repanier.models.purchase import Purchase
         getcontext().rounding = ROUND_HALF_UP
 
-        result_set = invoice.CustomerInvoice.objects.filter(
+        result_set = CustomerInvoice.objects.filter(
             permanence_id=self.id,
             is_group=True,
         ).order_by('?').aggregate(
@@ -708,7 +714,7 @@ class Permanence(TranslatableModel):
         else:
             ci_sum_delta_transport = DECIMAL_ZERO
 
-        result_set = purchase.Purchase.objects.filter(
+        result_set = Purchase.objects.filter(
             permanence_id=self.id,
             offer_item__price_list_multiplier__gte=DECIMAL_ONE
         ).order_by('?').aggregate(
@@ -740,7 +746,7 @@ class Permanence(TranslatableModel):
         self.total_purchase_vat = producer_vat
         self.total_selling_vat = customer_vat
 
-        result_set = purchase.Purchase.objects.filter(
+        result_set = Purchase.objects.filter(
             permanence_id=self.id,
             offer_item__price_list_multiplier__lt=DECIMAL_ONE
         ).order_by('?').aggregate(
@@ -765,7 +771,7 @@ class Permanence(TranslatableModel):
         assert self.status < PERMANENCE_SEND
         result = []
         for a_producer in self.producers.all():
-            current_products = list(offeritem.OfferItem.objects.filter(
+            current_products = list(OfferItem.objects.filter(
                 is_active=True,
                 may_order=True,
                 order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
@@ -784,7 +790,7 @@ class Permanence(TranslatableModel):
                 "status"
             ).first()
             if previous_permanence is not None:
-                previous_products = list(offeritem.OfferItem.objects.filter(
+                previous_products = list(OfferItem.objects.filter(
                     is_active=True,
                     may_order=True,
                     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
@@ -797,7 +803,7 @@ class Permanence(TranslatableModel):
             else:
                 new_products = current_products
 
-            qs = offeritem.OfferItem.objects.filter(
+            qs = OfferItem.objects.filter(
                 permanence_id=self.id,
                 product__in=new_products,
                 translations__language_code=translation.get_language()
@@ -826,7 +832,7 @@ class Permanence(TranslatableModel):
             status_list = []
             status = None
             status_counter = 0
-            for delivery in deliveryboard.DeliveryBoard.objects.filter(permanence_id=self.id).order_by("status", "id"):
+            for delivery in DeliveryBoard.objects.filter(permanence_id=self.id).order_by("status", "id"):
                 need_to_refresh_status |= delivery.status in [
                     PERMANENCE_WAIT_FOR_PRE_OPEN,
                     PERMANENCE_WAIT_FOR_OPEN,
@@ -913,7 +919,7 @@ class Permanence(TranslatableModel):
                 if self.status == PERMANENCE_OPENED:
                     deliveries_count = 0
                 else:
-                    deliveries_qs = deliveryboard.DeliveryBoard.objects.filter(
+                    deliveries_qs = DeliveryBoard.objects.filter(
                         permanence_id=self.id,
                         status=PERMANENCE_OPENED
                     ).order_by('?')

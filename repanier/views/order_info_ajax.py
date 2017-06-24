@@ -1,17 +1,12 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.http import Http404
 from django.http import HttpResponse
-from django.urls import reverse
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
-from repanier.models import Permanence
+from repanier.const import EMPTY_STRING
 
 
 @never_cache

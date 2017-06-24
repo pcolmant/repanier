@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.models import Producer
+from repanier.models.producer import Producer
 
 
 @never_cache

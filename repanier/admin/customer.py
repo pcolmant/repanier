@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 
 import uuid
 from collections import OrderedDict
+from decimal import Decimal
 from os import sep as os_sep
 
-from decimal import Decimal
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -26,10 +26,11 @@ from import_export.widgets import CharWidget
 import repanier.apps
 from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, DECIMAL_ONE, TWO_DECIMALS
-from repanier.models import Customer, LUT_DeliveryPoint
+from repanier.models.customer import Customer
+from repanier.models.lut import LUT_DeliveryPoint
+from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, OneToOneWidget, \
     DecimalBooleanWidget, ZeroDecimalsWidget, TwoMoneysWidget, TranslatedForeignKeyWidget, DateWidgetExcel
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.xlsx_invoice import export_invoice
 
 

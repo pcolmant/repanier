@@ -9,7 +9,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
-from repanier.models import CustomerInvoice
+from repanier.models.invoice import CustomerInvoice
 # from repanier.xlsx.xlsx_purchase import export_purchase
 from repanier.xlsx.xlsx_invoice import export_invoice
 

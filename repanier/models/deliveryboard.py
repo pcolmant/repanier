@@ -11,8 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields
 
-from repanier.models import invoice
-from repanier.models import purchase
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import LUT_PERMANENCE_STATUS, PERMANENCE_PLANNED, PERMANENCE_SEND, EMPTY_STRING
 
@@ -45,6 +43,9 @@ class DeliveryBoard(TranslatableModel):
         help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
 
     def set_status(self, new_status, all_producers=True, producers_id=None):
+        from repanier.models.invoice import CustomerInvoice
+        from repanier.models.purchase import Purchase
+
         if all_producers:
             now = timezone.now()
             self.is_updated_on = now
@@ -52,19 +53,19 @@ class DeliveryBoard(TranslatableModel):
             if self.highest_status < new_status:
                 self.highest_status = new_status
             self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-            invoice.CustomerInvoice.objects.filter(
+            CustomerInvoice.objects.filter(
                 delivery_id=self.id
             ).order_by('?').update(
                 status=new_status
             )
-            purchase.Purchase.objects.filter(
+            Purchase.objects.filter(
                 customer_invoice__delivery_id=self.id
             ).order_by('?').update(
                 status=new_status)
             menu_pool.clear()
             cache.clear()
         else:
-            purchase.Purchase.objects.filter(
+            Purchase.objects.filter(
                 customer_invoice__delivery_id=self.id,
                 producer__in=producers_id
             ).order_by('?').update(

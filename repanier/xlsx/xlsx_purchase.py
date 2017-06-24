@@ -12,9 +12,9 @@ from export_tools import *
 from import_tools import *
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
 from repanier.const import *
-from repanier.models import OfferItem
-from repanier.models import Producer
-from repanier.models import Purchase
+from repanier.models.offeritem import OfferItem
+from repanier.models.producer import Producer
+from repanier.models.purchase import Purchase
 from repanier.tools import cap, next_row
 
 

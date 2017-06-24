@@ -5,7 +5,7 @@ from django.db.models import F
 from django.views.generic import ListView
 
 from repanier.const import PERMANENCE_SEND
-from repanier.models import PermanenceBoard
+from repanier.models.permanenceboard import PermanenceBoard
 
 
 class PermanenceView(ListView):

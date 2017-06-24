@@ -17,7 +17,11 @@ from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanenc
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
-from repanier.models import Customer, Permanence, Product, LUT_DepartmentForCustomer, Purchase, OfferItem
+from repanier.models.customer import Customer
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.product import Product
+from repanier.models.purchase import Purchase
 from repanier.tools import rule_of_3_reload_purchase
 
 

@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
-from repanier.models import Customer
+from repanier.models.customer import Customer
 
 
 @login_required()

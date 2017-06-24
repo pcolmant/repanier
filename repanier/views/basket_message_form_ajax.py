@@ -9,8 +9,8 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.models import Producer
-from repanier.models import Customer
+from repanier.models.producer import Producer
+from repanier.models.customer import Customer
 
 
 @never_cache
