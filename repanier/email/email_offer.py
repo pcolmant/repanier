@@ -3,16 +3,18 @@ from __future__ import unicode_literals
 
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
-
 # AttributeError: 'Context' object has no attribute 'render_context'
 # OK, i got the solution:
 # from decimal import *
 # is the "bad One" this lib has a Context object too. Thanks for anyone reading!
-from django.core.mail import EmailMultiAlternatives
-from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from repanier.models import Permanence, Producer, OfferItem
-from repanier.models import Customer, Configuration
+
+from repanier.models.configuration import Configuration
+from repanier.models.customer import Customer
+from repanier.models.offeritem import OfferItem
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
 from repanier.tools import *
 
 
@@ -46,13 +48,13 @@ def send_pre_open_order(permanence_id):
             context = TemplateContext({
                 'name'             : long_profile_name,
                 'long_profile_name': long_profile_name,
-                'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                     settings.ALLOWED_HOSTS[0],
                     reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("offer"))
                                                ),
                 'offer_description': mark_safe(offer_description),
                 'offer_link'       : mark_safe(
-                    '<a href="http://%s%s">%s</a>' % (
+                    '<a href="https://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0],
                         reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("offer"))
                 ),
@@ -68,15 +70,14 @@ def send_pre_open_order(permanence_id):
                 to_email_producer.append(producer.email2)
             if producer.email3:
                 to_email_producer.append(producer.email3)
-            email = EmailMultiAlternatives(
-                offer_producer_mail_subject,
-                strip_tags(html_content),
+            email = RepanierEmail(
+                subject=offer_producer_mail_subject,
+                html_content=html_content,
                 from_email=sender_email,
                 to=to_email_producer,
                 cc=cc_email_staff
             )
-            email.attach_alternative(html_content, "text/html")
-            send_email(email=email)
+            email.send_email()
             send_sms(
                 sms_nr=producer.phone1,
                 sms_msg="%s : %s - %s" % (REPANIER_SETTINGS_GROUP_NAME,
@@ -129,7 +130,7 @@ def send_open_order(permanence_id):
                                                     ),)
             template = Template(offer_customer_mail)
             context = TemplateContext({
-                'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                 'offer_description': mark_safe(offer_description),
                 'offer_detail'     : mark_safe(offer_detail),
@@ -139,12 +140,11 @@ def send_open_order(permanence_id):
                     '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
             })
             html_content = template.render(context)
-            email = EmailMultiAlternatives(
-                offer_customer_mail_subject,
-                strip_tags(html_content),
+            email = RepanierEmail(
+                subject=offer_customer_mail_subject,
+                html_content=html_content,
                 from_email=sender_email,
                 bcc=list(set(to_email_staff) | set(to_email_customer))
             )
-            email.attach_alternative(html_content, "text/html")
-            send_email(email=email, track_customer_on_error=True)
+            email.send_email()
         translation.activate(cur_language)

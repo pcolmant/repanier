@@ -1,16 +1,15 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
-from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
 
-from repanier.models import Purchase
-from repanier.models import Configuration
-from repanier.models import Customer
-from repanier.models import Permanence
-from repanier.models import Producer
+from repanier.models.configuration import Configuration
+from repanier.models.customer import Customer
+from repanier.models.permanence import Permanence
+from repanier.models.producer import Producer
+from repanier.models.purchase import Purchase
 from repanier.tools import *
 
 
@@ -46,7 +45,7 @@ def send_invoice(permanence_id):
                         'name'             : long_profile_name,
                         'long_profile_name': long_profile_name,
                         'permanence_link'  : mark_safe(
-                            '<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0],
+                            '<a href="https://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0],
                                                               reverse('producer_invoice_uuid_view',
                                                                       args=(0, producer.uuid)),
                                                               permanence)),
@@ -62,14 +61,13 @@ def send_invoice(permanence_id):
                         to_email_producer.append(producer.email2)
                     if producer.email3:
                         to_email_producer.append(producer.email3)
-                    email = EmailMultiAlternatives(
-                        invoice_producer_mail_subject,
-                        strip_tags(html_content),
+                    email = RepanierEmail(
+                        subject=invoice_producer_mail_subject,
+                        html_content=html_content,
                         from_email=sender_email,
                         to=to_email_producer
                     )
-                    email.attach_alternative(html_content, "text/html")
-                    send_email(email=email)
+                    email.send_email()
 
         if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER:
             # To the customer we speak of "invoice".
@@ -105,10 +103,10 @@ def send_invoice(permanence_id):
                         'basket_name'        : customer.short_basket_name,
                         'short_basket_name'  : customer.short_basket_name,
                         'permanence_link'    : mark_safe(
-                            '<a href="http://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0],
+                            '<a href="https://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0],
                                                               reverse('order_view', args=(permanence.id,)),
                                                               permanence)),
-                        'last_balance_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                        'last_balance_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                             settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)),
                             customer_last_balance)),
                         'last_balance'       : mark_safe(customer_last_balance),
@@ -120,12 +118,11 @@ def send_invoice(permanence_id):
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
                     html_content = template.render(context)
-                    email = EmailMultiAlternatives(
-                        invoice_customer_mail_subject,
-                        strip_tags(html_content),
+                    email = RepanierEmail(
+                        subject=invoice_customer_mail_subject,
+                        html_content=html_content,
                         from_email=sender_email,
                         to=to_email_customer
                     )
-                    email.attach_alternative(html_content, "text/html")
-                    send_email(email=email)
+                    email.send_email()
     translation.activate(cur_language)

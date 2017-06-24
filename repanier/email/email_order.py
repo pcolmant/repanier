@@ -1,18 +1,20 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-from django.core.mail import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
-from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.writer.excel import save_virtual_workbook
 
-from repanier.models import Customer
-from repanier.models import DeliveryBoard
-from repanier.models import Permanence, Configuration, CustomerInvoice
-from repanier.models import PermanenceBoard
-from repanier.models import Producer, ProducerInvoice
+from repanier.models.configuration import Configuration
+from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.permanence import Permanence
+from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.producer import Producer
 from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
@@ -79,7 +81,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
 
                 template = Template(order_staff_mail)
                 context = TemplateContext({
-                    'permanence_link'                  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                    'permanence_link'                  : mark_safe('<a href="https://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'board_composition'                : mark_safe(board_composition),
                     'board_composition_and_description': mark_safe(board_composition_and_description),
@@ -87,9 +89,9 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                         '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
-                email = EmailMultiAlternatives(
-                    order_staff_mail_subject,
-                    strip_tags(html_content),
+                email = RepanierEmail(
+                    subject=order_staff_mail_subject,
+                    html_content=html_content,
                     from_email=sender_email,
                     to=to_email_board,
                     cc=cc_email_staff
@@ -97,13 +99,12 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                 email.attach(group_filename,
                              save_virtual_workbook(wb),
                              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                email.attach_alternative(html_content, "text/html")
 
                 if not REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
                     email.to = cc_email_staff
                     email.cc = []
                     email.bcc = []
-                send_email(email=email)
+                email.send_email()
 
         # Orders send to our producers
         if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER:
@@ -128,14 +129,14 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                     'long_profile_name': long_profile_name,
                     'order_empty'      : wb is None,
                     'duplicate'        : not (wb is None or producer.manage_replenishment),
-                    'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                    'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'signature'        : mark_safe(
                         '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
 
-                producer_invoice = models.ProducerInvoice.objects.filter(
+                producer_invoice = ProducerInvoice.objects.filter(
                     producer_id=producer.id, permanence_id=permanence.id
                 ).only("total_price_with_tax").order_by('?').first()
                 if producer_invoice is not None \
@@ -154,9 +155,9 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                         to_email_producer.append(producer.email2)
                     if producer.email3:
                         to_email_producer.append(producer.email3)
-                email = EmailMultiAlternatives(
-                    order_producer_mail_subject,
-                    strip_tags(html_content),
+                email = RepanierEmail(
+                    subject=order_producer_mail_subject,
+                    html_content=html_content,
                     from_email=sender_email,
                     to=to_email_producer,
                     cc=cc_email_staff
@@ -171,8 +172,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                     )
 
-                email.attach_alternative(html_content, "text/html")
-                send_email(email=email)
+                email.send_email()
 
         if all_producers:
             # Orders send to our customers only if they don't have already received it
@@ -233,9 +233,9 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
             'long_basket_name' : long_basket_name,
             'basket_name'      : customer.short_basket_name,
             'short_basket_name': customer.short_basket_name,
-            'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
+            'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                 settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-            'last_balance_link': mark_safe('<a href="http://%s%s">%s</a>' % (
+            'last_balance_link': mark_safe('<a href="https://%s%s">%s</a>' % (
                 settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), _("Group invoices"))),
             'last_balance'     : EMPTY_STRING,
             'order_amount'     : EMPTY_STRING,
@@ -246,9 +246,9 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
                 '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
         })
         html_content = template.render(context)
-        email = EmailMultiAlternatives(
-            order_customer_mail_subject,
-            strip_tags(html_content),
+        email = RepanierEmail(
+            subject=order_customer_mail_subject,
+            html_content=html_content,
             from_email=sender_email,
             to=to_email_customer
         )
@@ -256,8 +256,7 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
                      save_virtual_workbook(wb),
                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-        email.attach_alternative(html_content, "text/html")
-        send_email(email=email)
+        email.send_email()
 
 
 def export_order_2_1_customer(customer, filename, permanence, sender_email, sender_function, signature,
@@ -311,9 +310,9 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     'long_basket_name' : long_basket_name,
                     'basket_name'      : customer.short_basket_name,
                     'short_basket_name': customer.short_basket_name,
-                    'permanence_link'  : mark_safe('<a href="http://%s%s">%s</a>' % (
+                    'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                    'last_balance_link': mark_safe('<a href="http://%s%s">%s</a>' % (
+                    'last_balance_link': mark_safe('<a href="https://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), customer_last_balance)),
                     'last_balance'     : mark_safe(customer_last_balance),
                     'order_amount'     : mark_safe(customer_order_amount),
@@ -324,9 +323,9 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                         '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
-                email = EmailMultiAlternatives(
-                    order_customer_mail_subject,
-                    strip_tags(html_content),
+                email = RepanierEmail(
+                    subject=order_customer_mail_subject,
+                    html_content=html_content,
                     from_email=sender_email,
                     to=to_email_customer
                 )
@@ -337,5 +336,4 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                              save_virtual_workbook(wb),
                              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-                email.attach_alternative(html_content, "text/html")
-                send_email(email=email)
+                email.send_email()
