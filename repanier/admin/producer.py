@@ -120,7 +120,11 @@ class ProducerDataForm(forms.ModelForm):
         widget=admin.widgets.FilteredSelectMultiple(repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False),
         required=False
     )
-    reference_site = forms.URLField(label=_("reference site"), widget=forms.URLInput(attrs={'style': "width:100% !important"}))
+    reference_site = forms.URLField(
+        label=_("reference site"),
+        widget=forms.URLInput(attrs={'style': "width:100% !important"}),
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(ProducerDataForm, self).__init__(*args, **kwargs)
