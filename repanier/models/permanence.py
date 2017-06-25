@@ -561,11 +561,17 @@ class Permanence(TranslatableModel):
                     for delivery_board in DeliveryBoard.objects.filter(
                             permanence=self
                     ):
-                        new_delivery_board = DeliveryBoard.objects.create(
-                            permanence=new_permanence,
-                            delivery_point=delivery_board.delivery_point,
-                            delivery_date=delivery_board.delivery_date + datetime.timedelta(days=every_x_days * i)
-                        )
+                        if delivery_board.delivery_date is not None:
+                            new_delivery_board = DeliveryBoard.objects.create(
+                                permanence=new_permanence,
+                                delivery_point=delivery_board.delivery_point,
+                                delivery_date=delivery_board.delivery_date + datetime.timedelta(days=every_x_days * i)
+                            )
+                        else:
+                            new_delivery_board = DeliveryBoard.objects.create(
+                                permanence=new_permanence,
+                                delivery_point=delivery_board.delivery_point,
+                            )
                         for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
                             language_code = language["code"]
                             translation.activate(language_code)
