@@ -323,21 +323,21 @@ class Customer(models.Model):
         return '<br/><br/><hr/><br/><a href="%s">%s</a>' % (self._get_unsubscribe_link(), _("Unsubscribe to emails"))
 
     def _get_unsubscribe_link(self):
-        username, token = self.make_token().split(":", 1)
+        customer_id, token = self.make_token().split(":", 1)
         return "https://%s%s" % (
             settings.ALLOWED_HOSTS[0],
             reverse(
                 'unsubscribe_view',
-                kwargs={'short_name': self.short_basket_name, 'token': token, }
+                kwargs={'customer_id': customer_id, 'token': token, }
             )
         )
 
     def make_token(self):
-        return TimestampSigner().sign(self.short_basket_name)
+        return TimestampSigner().sign(self.id)
 
     def check_token(self, token):
         try:
-            key = '%s:%s' % (self.short_basket_name, token)
+            key = '%s:%s' % (self.id, token)
             TimestampSigner().unsign(key, max_age=60 * 60 * 48)  # Valid for 2 days
         except (BadSignature, SignatureExpired):
             return False
