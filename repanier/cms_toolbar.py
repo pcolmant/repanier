@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from cms.cms_toolbars import ADMIN_MENU_IDENTIFIER
-from cms.toolbar.items import SubMenu
 from cms.toolbar_base import CMSToolbar
 from cms.toolbar_pool import toolbar_pool
 from django.conf import settings
@@ -50,13 +49,15 @@ class RepanierToolbar(CMSToolbar):
                 office_menu.add_sideframe_item(_('Configuration'), url=url)
                 url = reverse('admin:repanier_staff_changelist')
                 office_menu.add_sideframe_item(_('Staff Member List'), url=url)
-                url = reverse('admin:repanier_lut_deliverypoint_changelist')
-                office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
+                if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                    url = reverse('admin:repanier_lut_deliverypoint_changelist')
+                    office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
 
             url = reverse('admin:repanier_lut_permanencerole_changelist')
             office_menu.add_sideframe_item(_('Permanence Role List'), url=url)
-            url = reverse('admin:repanier_lut_productionmode_changelist')
-            office_menu.add_sideframe_item(_('Production Mode List'), url=url)
+            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                url = reverse('admin:repanier_lut_productionmode_changelist')
+                office_menu.add_sideframe_item(_('Production Mode List'), url=url)
             url = reverse('admin:repanier_lut_departmentforcustomer_changelist')
             office_menu.add_sideframe_item(_('Departement for Customer List'), url=url)
             position += 1
@@ -69,9 +70,10 @@ class RepanierToolbar(CMSToolbar):
         admin_menu.add_sideframe_item(_('Producer List'), url=url, position=position)
 
         if display_all:
-            position += 1
-            url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_box_changelist')
-            admin_menu.add_sideframe_item(_('Box List'), url=url, position=position)
+            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                position += 1
+                url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_box_changelist')
+                admin_menu.add_sideframe_item(_('Box List'), url=url, position=position)
 
             position += 1
             url = reverse('admin:repanier_permanenceinpreparation_changelist')
