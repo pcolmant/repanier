@@ -153,5 +153,5 @@ urlpatterns = [
         name='product_rest'),
     url(r'^rest/version/$', version_rest, name='version_rest'),
     url(r'^dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice, name='download_customer_invoice'),
-    url(r'^unsubscribe/(?P<short_name>.*)/(?P<token>[\w.:\-_=]+)/$', unsubscribe_view, name='unsubscribe_view'),
+    url(r'^unsubscribe/(?P<customer_id>.*)/(?P<token>[\w.:\-_=]+)/$', unsubscribe_view, name='unsubscribe_view'),
 ]
