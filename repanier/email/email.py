@@ -95,7 +95,6 @@ class RepanierEmail(EmailMultiAlternatives):
     def _send_email_with_error_log(self, from_name=EMPTY_STRING):
         email_to = self.to[0]
         if not self.test_connection:
-            # customer = self._get_customer("ask.it@test.it")
             customer = self._get_customer(email_to)
             if customer is not None:
                 if customer.user.last_login is None:
@@ -109,6 +108,7 @@ class RepanierEmail(EmailMultiAlternatives):
         else:
             customer = None
 
+        self.alternatives = []
         if self.unsubscribe and customer is not None:
             self.attach_alternative(
                 "%s%s" % (self.html_content, customer.get_unsubscribe_mail_footer()),
@@ -119,7 +119,6 @@ class RepanierEmail(EmailMultiAlternatives):
                 self.html_content,
                 "text/html"
             )
-
         email_send = False
         try:
             with mail.get_connection(
@@ -190,12 +189,12 @@ class RepanierEmail(EmailMultiAlternatives):
             subscribe_to_email=True,
         ).exclude(
             valid_email=False,
-        ).only('id').order_by('?').first()
+        ).order_by('?').first()
         if customer is None:
             customer = Customer.objects.filter(
                 email2=email_address,
                 subscribe_to_email=True,
             ).exclude(
                 valid_email=False
-            ).only('id').order_by('?').first()
+            ).order_by('?').first()
         return customer
