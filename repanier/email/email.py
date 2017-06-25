@@ -43,7 +43,16 @@ class RepanierEmail(EmailMultiAlternatives):
             self.use_tls = settings.EMAIL_USE_TLS
 
     def send_email(self, from_name=EMPTY_STRING):
+        from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+
         email_send = False
+        if not self.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+            self.reply_to = [self.from_email]
+            self.from_email = "%s <%s>" % (from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
+        else:
+            self.from_email = "%s <%s>" % (from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
+        self.body = strip_tags(self.html_content)
+
         if settings.DJANGO_SETTINGS_DEMO:
             self.to = [DEMO_EMAIL]
             self.cc = []
@@ -100,7 +109,6 @@ class RepanierEmail(EmailMultiAlternatives):
         else:
             customer = None
 
-        self.body = strip_tags(self.html_content)
         if self.unsubscribe and customer is not None:
             self.attach_alternative(
                 "%s%s" % (self.html_content, customer.get_unsubscribe_mail_footer()),
@@ -114,7 +122,6 @@ class RepanierEmail(EmailMultiAlternatives):
 
         email_send = False
         try:
-            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
             with mail.get_connection(
                     host=self.host,
                     port=self.port,
@@ -124,13 +131,9 @@ class RepanierEmail(EmailMultiAlternatives):
                     use_ssl=not self.use_tls) as connection:
                 self.connection = connection
                 message = EMPTY_STRING
-                if not self.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-                    self.reply_to = [self.from_email]
-                    self.from_email = "%s <%s>" % (from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
-                else:
-                    self.from_email = "%s <%s>" % (from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
                 try:
                     print("################################## send_email")
+                    # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
                     from_email = "from_email : %s" % self.from_email
                     reply_to = "reply_to : %s" % self.reply_to
                     to = "to : %s" % self.to
@@ -143,7 +146,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     print(cc)
                     print(bcc)
                     print(subject)
-                    message = "%s\n%s\n%s\n%s" % (to, cc, bcc, subject)
+                    message = "%s\n%s\n%s\n%s\n%s\n%s" % (from_email, reply_to, to, cc, bcc, subject)
                     self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:
