@@ -444,24 +444,19 @@ def display_selected_box_value(offer_item, box_purchase):
     option_dict = {
         'id': "#box_offer_item%d" % offer_item.id,
     }
-    if box_purchase.is_box_content:
+    if box_purchase is not None and box_purchase.is_box_content:
         box_name = BOX_UNICODE
         # Select one purchase
-        if box_purchase is not None:
-            if box_purchase.quantity_ordered > DECIMAL_ZERO:
-                qty_display = offer_item.get_display(
-                    qty=box_purchase.quantity_ordered,
-                    order_unit=offer_item.order_unit,
-                    for_order_select=True,
-                    without_price_display=True
-                )
-                option_dict[
-                    "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>' % \
-                                      (offer_item.id, offer_item.id, qty_display, box_name)
-            else:
-                option_dict[
-                    "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>' % \
-                              (offer_item.id, offer_item.id, box_name)
+        if box_purchase.quantity_ordered > DECIMAL_ZERO:
+            qty_display = offer_item.get_display(
+                qty=box_purchase.quantity_ordered,
+                order_unit=offer_item.order_unit,
+                for_order_select=True,
+                without_price_display=True
+            )
+            option_dict[
+                "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>' % \
+                                  (offer_item.id, offer_item.id, qty_display, box_name)
         else:
             option_dict[
                 "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>' % \

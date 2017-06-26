@@ -118,6 +118,20 @@ class Producer(models.Model):
     get_products.short_description = (_("link to his products"))
     get_products.allow_tags = True
 
+    def get_contracts(self):
+        # This producer may have contrat's list
+        if self.is_active:
+            changeproductslist_url = urlresolvers.reverse(
+                'admin:repanier_contract_changelist',
+            )
+            link = '<a href="%s?is_active__exact=1&producer=%s" class="btn addlink">&nbsp;%s</a>' \
+                   % (changeproductslist_url, str(self.id), _("his contracts"))
+            return link
+        return EMPTY_STRING
+
+    get_contracts.short_description = (_("link to his contracts"))
+    get_contracts.allow_tags = True
+
     def get_admin_date_balance(self):
         if self.id is not None:
             bank_account = BankAccount.objects.filter(

@@ -16,26 +16,26 @@ from repanier.models.product import Product, product_pre_save
 
 
 @python_2_unicode_compatible
-class Box(Product):
+class Contract(Product):
 
     def get_calculated_stock(self):
         # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)
         stock = DECIMAL_MAX_STOCK
-        for box_content in BoxContent.objects.filter(
-                box_id=self.id,
+        for contract_content in ContractContent.objects.filter(
+                contract_id=self.id,
                 product__limit_order_quantity_to_stock=True,
                 content_quantity__gt=DECIMAL_ZERO,
-                product__is_box=False  # Disallow recursivity
+                product__is_contract=False  # Disallow recursivity
         ).prefetch_related(
             "product"
         ).only(
             "content_quantity", "product__stock", "product__limit_order_quantity_to_stock"
         ).order_by('?'):
-            stock = min(stock, box_content.product.stock // box_content.content_quantity)
+            stock = min(stock, contract_content.product.stock // contract_content.content_quantity)
         return stock
 
     def get_calculated_price(self):
-        result_set = BoxContent.objects.filter(box_id=self.id).aggregate(
+        result_set = ContractContent.objects.filter(box_id=self.id).aggregate(
             Sum('calculated_customer_content_price'),
             Sum('calculated_content_deposit')
         )
@@ -50,34 +50,33 @@ class Box(Product):
         proxy = True
         verbose_name = _("box")
         verbose_name_plural = _("boxes")
-        # ordering = ("sort_order",)
 
     def __str__(self):
         return '%s' % self.long_name
 
 
-@receiver(pre_save, sender=Box)
-def box_pre_save(sender, **kwargs):
-    box = kwargs["instance"]
-    box.is_box = True
-    box.producer_id = Producer.objects.filter(
+@receiver(pre_save, sender=Contract)
+def contract_pre_save(sender, **kwargs):
+    contract = kwargs["instance"]
+    contract.is_contract = True
+    contract.producer_id = Producer.objects.filter(
         represent_this_buyinggroup=True
     ).order_by('?').only('id').first().id
-    box.order_unit = PRODUCT_ORDER_UNIT_PC
-    box.producer_unit_price = box.customer_unit_price
-    box.producer_vat = box.customer_vat
-    box.limit_order_quantity_to_stock = True
+    contract.order_unit = PRODUCT_ORDER_UNIT_PC
+    contract.producer_unit_price = contract.customer_unit_price
+    contract.producer_vat = contract.customer_vat
+    contract.limit_order_quantity_to_stock = True
     # ! Important to initialise all fields of the box. Remember : a box is a product.
     product_pre_save(sender, **kwargs)
 
 
 @python_2_unicode_compatible
-class BoxContent(models.Model):
-    box = models.ForeignKey(
-        'Box', verbose_name=_("box"),
+class ContractContent(models.Model):
+    contract = models.ForeignKey(
+        'Contract', verbose_name=_("contract"),
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     product = models.ForeignKey(
-        'Product', verbose_name=_("product"), related_name='box_content',
+        'Product', verbose_name=_("product"), related_name='contract_content',
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     content_quantity = models.DecimalField(
         _("content quantity"),
@@ -99,26 +98,26 @@ class BoxContent(models.Model):
     get_calculated_customer_content_price.allow_tags = False
 
     class Meta:
-        verbose_name = _("box content")
-        verbose_name_plural = _("boxes content")
-        unique_together = ("box", "product",)
+        verbose_name = _("contract content")
+        verbose_name_plural = _("contracts content")
+        unique_together = ("contract", "product",)
         index_together = [
-            ["product", "box"],
+            ["product", "contract"],
         ]
 
     def __str__(self):
         return EMPTY_STRING
 
 
-@receiver(pre_save, sender=BoxContent)
-def box_content_pre_save(sender, **kwargs):
-    box_content = kwargs["instance"]
-    product_id = box_content.product_id
+@receiver(pre_save, sender=ContractContent)
+def contract_content_pre_save(sender, **kwargs):
+    contract_content = kwargs["instance"]
+    product_id = contract_content.product_id
     if product_id is not None:
         product = Product.objects.filter(id=product_id).order_by('?').only(
             'customer_unit_price',
             'unit_deposit'
         ).first()
         if product is not None:
-            box_content.calculated_customer_content_price.amount = box_content.content_quantity * product.customer_unit_price.amount
-            box_content.calculated_content_deposit.amount = int(box_content.content_quantity) * product.unit_deposit.amount
+            contract_content.calculated_customer_content_price.amount = contract_content.content_quantity * product.customer_unit_price.amount
+            contract_content.calculated_content_deposit.amount = int(contract_content.content_quantity) * product.unit_deposit.amount
