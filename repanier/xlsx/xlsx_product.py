@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from export_tools import *
+from repanier.xlsx.export_tools import *
 from repanier.const import *
 from repanier.models.product import Product
 from repanier.tools import next_row

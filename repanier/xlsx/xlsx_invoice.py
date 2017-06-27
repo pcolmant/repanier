@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
 
 import repanier.apps
-from export_tools import *
+from repanier.xlsx.export_tools import *
 from repanier.const import *
 from repanier.models import Configuration
 from repanier.models import CustomerInvoice

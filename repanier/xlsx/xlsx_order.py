@@ -7,7 +7,7 @@ from openpyxl.style import Fill
 from openpyxl.styles import Color
 
 import repanier.apps
-from export_tools import *
+from repanier.xlsx.export_tools import *
 from repanier.const import *
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
@@ -20,7 +20,7 @@ from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
 from repanier.models.staff import Staff
 from repanier.tools import get_base_unit, next_row
-from xlsx_stock import export_permanence_stock
+from .xlsx_stock import export_permanence_stock
 
 
 def next_purchase(purchases):

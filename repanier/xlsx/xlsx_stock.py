@@ -10,7 +10,7 @@ from openpyxl.style import Fill
 from openpyxl.styles import Color
 
 import repanier.apps
-from export_tools import *
+from repanier.xlsx.export_tools import *
 from repanier.const import *
 from repanier.models.offeritem import OfferItem
 from repanier.models.product import Product

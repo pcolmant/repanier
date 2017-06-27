@@ -9,7 +9,7 @@ from openpyxl.style import NumberFormat
 from openpyxl.styles import Border
 from openpyxl.workbook import Workbook
 
-from const import *
+from .const import *
 from repanier.const import EMPTY_STRING
 from repanier.models.staff import Staff
 from repanier.tools import cap
