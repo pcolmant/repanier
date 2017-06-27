@@ -46,6 +46,7 @@ MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 
 DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
+DJANGO_SETTINGS_DATABASE_ENGINE = 'django.db.backends.postgresql_psycopg2'
 
 config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = '%s%s%s.ini' % (
@@ -65,6 +66,7 @@ except IOError:
 
 OPTIONS = ('DJANGO_SETTINGS_ADMIN_EMAIL',
            'DJANGO_SETTINGS_ADMIN_NAME',
+           'DJANGO_SETTINGS_DATABASE_ENGINE',
            'DJANGO_SETTINGS_DATABASE_HOST',
            'DJANGO_SETTINGS_DATABASE_NAME',
            'DJANGO_SETTINGS_DATABASE_PASSWORD',
@@ -137,7 +139,7 @@ SERVER_EMAIL = "%s%s" % (DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAI
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': DJANGO_SETTINGS_DATABASE_ENGINE,
         'NAME': DJANGO_SETTINGS_DATABASE_NAME,  # Or path to database file if using sqlite3.
         'USER': DJANGO_SETTINGS_DATABASE_USER,
         'PASSWORD': DJANGO_SETTINGS_DATABASE_PASSWORD,
