@@ -328,10 +328,17 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             else:
                 return ('__str__', 'get_products', 'phone1', 'email')
         else:
-            if repanier.apps.REPANIER_SETTINGS_INVOICE:
-                return ('__str__', 'get_products', 'get_contracts', 'get_balance', 'phone1', 'email')
+            if settings.DJANGO_SETTINGS_DEBUG:
+                # TODO : Contracts are in development. So they are only availalble in DEBUG mode
+                if repanier.apps.REPANIER_SETTINGS_INVOICE:
+                    return ('__str__', 'get_products', 'get_contracts', 'get_balance', 'phone1', 'email')
+                else:
+                    return ('__str__', 'get_products', 'get_contracts', 'phone1', 'email')
             else:
-                return ('__str__', 'get_products', 'get_contracts', 'phone1', 'email')
+                if repanier.apps.REPANIER_SETTINGS_INVOICE:
+                    return ('__str__', 'get_products', 'get_balance', 'phone1', 'email')
+                else:
+                    return ('__str__', 'get_products', 'phone1', 'email')
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [

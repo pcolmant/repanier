@@ -10,6 +10,7 @@
 {#<link rel="stylesheet" href="{% static "css/custom.css" %}">#}
 {% block extrastyle %}{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
+<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 {% block extrahead %}{% endblock %}
 <style type="text/css">
 {#  vvvvvvvvv django cms admin style 1.2.6  #}
@@ -95,7 +96,6 @@ div, span, ul {line-height: inherit !important;}
 
 </style>
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
-<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 </head>
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
   data-admin-utc-offset="{% now "Z" %}">

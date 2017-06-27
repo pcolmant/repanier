@@ -241,6 +241,7 @@ class ContractAdmin(TranslatableAdmin):
     def get_fieldsets(self, request, contract=None):
         fields_basic = [
             ('long_name', 'picture2'),
+            'recurrences',
             ('calculated_stock', 'calculated_customer_contract_price', 'calculated_contract_deposit'),
             ('stock', 'customer_unit_price', 'unit_deposit'),
         ]

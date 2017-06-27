@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from recurrence.fields import RecurrenceField
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
@@ -17,6 +18,7 @@ from repanier.models.product import Product, product_pre_save
 
 @python_2_unicode_compatible
 class Contract(Product):
+    recurrences = RecurrenceField()
 
     def get_calculated_stock(self):
         # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)
@@ -35,21 +37,20 @@ class Contract(Product):
         return stock
 
     def get_calculated_price(self):
-        result_set = ContractContent.objects.filter(box_id=self.id).aggregate(
+        result_set = ContractContent.objects.filter(contract_id=self.id).aggregate(
             Sum('calculated_customer_content_price'),
             Sum('calculated_content_deposit')
         )
-        box_price = result_set["calculated_customer_content_price__sum"] \
+        contract_price = result_set["calculated_customer_content_price__sum"] \
             if result_set["calculated_customer_content_price__sum"] is not None else DECIMAL_ZERO
-        box_deposit = result_set["calculated_content_deposit__sum"] \
+        contract_deposit = result_set["calculated_content_deposit__sum"] \
             if result_set["calculated_content_deposit__sum"] is not None else DECIMAL_ZERO
 
-        return box_price, box_deposit
+        return contract_price, contract_deposit
 
     class Meta:
-        proxy = True
-        verbose_name = _("box")
-        verbose_name_plural = _("boxes")
+        verbose_name = _("contract")
+        verbose_name_plural = _("contracts")
 
     def __str__(self):
         return '%s' % self.long_name
@@ -66,7 +67,7 @@ def contract_pre_save(sender, **kwargs):
     contract.producer_unit_price = contract.customer_unit_price
     contract.producer_vat = contract.customer_vat
     contract.limit_order_quantity_to_stock = True
-    # ! Important to initialise all fields of the box. Remember : a box is a product.
+    # ! Important to initialise all fields of the contract. Remember : a contract is a product.
     product_pre_save(sender, **kwargs)
 
 

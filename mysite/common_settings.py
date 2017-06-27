@@ -214,6 +214,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'easy_select2',
     'djng',
+    'recurrence'
 )
 
 # https://docs.djangoproject.com/fr/1.9/ref/middleware/
