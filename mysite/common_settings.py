@@ -118,6 +118,10 @@ else:
     # Be carefull from CMS 4.3.2 you must patch ManifestStaticFilesStorage
     # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
+
+if DJANGO_SETTINGS_SITE_NAME == 'mysite':
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
 # STATICFILES_DIRS = (
 #     os.path.join(PROJECT_PATH, "repanier", "static"),
 # )
