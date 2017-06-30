@@ -30,29 +30,34 @@ https://saisonsvanbiervliet.be/fr/
 
 Licence : GPL v3
 
-Development instructions
+Comment contribuer à Repanier?
+------------------------------
+
+  * En participant aux discussions entre utilisateurs et avec les développeur, lors des permanences, par téléphone ou par email, …
+  * [En utilisant les tickets](https://github.com/pcolmant/repanier/issues)
+  * [En envoyant un patch ou une demande de merge](https://guides.github.com/introduction/flow/)
+
+Comment tester Repanier?
 ------------------------
 
- 1. Clone repository:
+Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'application et ses dépendances:
 
-    git clone https://github.com/pcolmant/repanier.git
+1. Clone du projet:
 
- 2. Initialize python virtual environment
+   git clone https://github.com/pcolmant/repanier.git
 
-    virtualenv -p python3 venv
+2. Initialisation et activation de l'environnement de développement, installation des dépendances:
 
- 3. Activate it
+   virtualenv -p python3 venv
+   . venv/bin/activate
+   pip install -r requirements/requirement.txt
 
-    . venv/bin/activate
+3. Synchronisation de la base de données:
 
- 4. Install python dependencies
+   ./manage.py migrate
 
-    pip install -r requirements/requirement.txt
+4. Démarrage de l'application:
 
- 5. Synchronize database
+   ./manage.py runserver
 
-    ./manage.py migrate
-
- 6. Launch the application
-
-    ./manage.py runserver
+Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/
