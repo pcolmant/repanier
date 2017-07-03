@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
-
 try:
     import configparser
 except:
@@ -36,8 +34,6 @@ def get_allowed_mail_extension():
     return allowed_mail_extension
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-print("Python path is :")
-print(sys.path)
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 PROJECT_PATH = os.path.split(PROJECT_DIR)[0]
 os.sys.path.insert(0, PROJECT_PATH)
