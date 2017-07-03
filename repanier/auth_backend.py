@@ -8,8 +8,8 @@ from django.db.models import F, Q
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE
-from models import Customer, Staff, Configuration
+from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE
+from repanier.models import Customer, Staff, Configuration
 
 
 class RepanierCustomBackend(ModelBackend):

@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
-from export_tools import *
+from repanier.xlsx.export_tools import *
 from repanier.models.producer import Producer
 from repanier.models.offeritem import OfferItem
 from repanier.models.product import Product
