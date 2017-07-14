@@ -1,23 +1,16 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
-
-try:
-    import configparser
-except:
-    from six.moves import configparser
-
 import codecs
 import logging
-
+from six.moves import configparser
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.const import *
 from .settings import *
 
-import os
-
 gettext = lambda s: s
+logger = logging.getLogger(__name__)
 
 
 def get_allowed_mail_extension():
@@ -36,8 +29,7 @@ def get_allowed_mail_extension():
     return allowed_mail_extension
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-print("Python path is :")
-print(sys.path)
+logger.info("Python path is : %s" % sys.path)
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 PROJECT_PATH = os.path.split(PROJECT_DIR)[0]
 os.sys.path.insert(0, PROJECT_PATH)
@@ -101,9 +93,9 @@ for name in config.options('ALLOWED_HOSTS'):
     if allowed_host.startswith("demo"):
         DJANGO_SETTINGS_DEMO = True
     DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
-logging.info("Settings loaded from %s" % (conf_file_name,))
-print ("Settings loaded from %s" % (conf_file_name,))
-print(DJANGO_SETTINGS_ALLOWED_HOSTS)
+logger.info("Settings loaded from %s" % (conf_file_name,))
+logger.info("Settings loaded from %s" % (conf_file_name,))
+logger.info("Allowed hosts: %s" % DJANGO_SETTINGS_ALLOWED_HOSTS)
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
