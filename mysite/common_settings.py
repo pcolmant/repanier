@@ -526,7 +526,7 @@ if DJANGO_SETTINGS_LOGGING:
                 'propagate': True,
             },
             'django.db.backends': {
-                'level': 'DEBUG',
+                'level': 'ERROR',
                 'handlers': ['console'],
             },
         }
