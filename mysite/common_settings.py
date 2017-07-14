@@ -114,9 +114,9 @@ else:
 if DJANGO_SETTINGS_SITE_NAME == 'mysite':
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# STATICFILES_DIRS = (
-#     os.path.join(PROJECT_PATH, "repanier", "static"),
-# )
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_PATH, "collect-static"),
+)
 
 
 ###################### DEBUG

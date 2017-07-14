@@ -52,7 +52,7 @@ Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'ap
    . venv/bin/activate
    pip install -r requirements/requirement.txt
 
-3. Synchronisation de la base de données:
+3. Construction de la base de données:
 
    ./manage.py migrate
 
