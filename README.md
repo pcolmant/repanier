@@ -52,12 +52,13 @@ Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'ap
    . venv/bin/activate
    pip install -r requirements/requirement.txt
 
-3. Construction de la base de données:
+3. Construction de la base de données et ajout des données factices:
 
    ./manage.py migrate
+   ./manage.py loaddata fixtures/initial_users.yaml
 
 4. Démarrage de l'application:
 
    ./manage.py runserver
 
-Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/
+Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/ Pour s'authentifier comme administrateur vous pouvez utiliser: *admin* *secret*.
