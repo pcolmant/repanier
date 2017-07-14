@@ -15,7 +15,7 @@ from repanier.models import Configuration
 @toolbar_pool.register
 class RepanierToolbar(CMSToolbar):
     def populate(self):
-        from apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE
+        from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE
         if settings.DJANGO_SETTINGS_DEMO:
             self.toolbar.get_or_create_menu("demo-menu", _('Demo (%s)') % (DEMO_EMAIL,))
         user = self.request.user
