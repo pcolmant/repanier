@@ -8,8 +8,8 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from const import *
-from models import Configuration
+from repanier.const import *
+from repanier.models import Configuration
 
 
 @toolbar_pool.register
