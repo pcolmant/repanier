@@ -105,30 +105,34 @@ class ConfigurationAdmin(TranslatableAdmin):
         return False
 
     def get_fieldsets(self, *args, **kwargs):
+        fields = [
+            ('group_name', 'name'),
+            ('bank_account', 'max_week_wo_participation'),
+            ('membership_fee', 'membership_fee_duration'),
+            'display_anonymous_order_form',
+            'display_producer_on_order_form',
+        ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fields += [
+                'customers_must_confirm_orders',
+                'test_mode',
+            ]
         fieldsets = [
             (None, {
-                'fields':
-                    (('group_name', 'name'),
-                     'test_mode',
-                     'display_anonymous_order_form',
-                     'display_producer_on_order_form',
-                     'customers_must_confirm_orders',
-                     ('bank_account', 'max_week_wo_participation'),
-                     ('membership_fee', 'membership_fee_duration'),
-                     'notification_is_public',
-                     'notification'),
+                'fields': fields,
             }),
         ]
-        if Producer.objects.filter(producer_pre_opening=True).order_by('?').only('id').exists():
-            fieldsets += [
-                (_('Pre-opening mails'), {
-                    'classes': ('collapse',),
-                    'fields' :
-                        (
-                            'offer_producer_mail',
-                        ),
-                }),
-            ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            if Producer.objects.filter(producer_pre_opening=True).order_by('?').only('id').exists():
+                fieldsets += [
+                    (_('Pre-opening mails'), {
+                        'classes': ('collapse',),
+                        'fields' :
+                            (
+                                'offer_producer_mail',
+                            ),
+                    }),
+                ]
         fieldsets += [
             (_('Opening mails'), {
                 'classes': ('collapse',),
@@ -137,42 +141,69 @@ class ConfigurationAdmin(TranslatableAdmin):
                         'send_opening_mail_to_customer', 'offer_customer_mail',
                     ),
             }),
-            (_('Ordering mails'), {
-                'classes': ('collapse',),
-                'fields' :
-                    (
-                        'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail',
-                        'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail',
-                        'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer', 'order_producer_mail',
-                        'send_order_mail_to_board', 'order_staff_mail',
-                    ),
-            }),
-            (_('Invoicing mails'), {
-                'classes': ('collapse',),
-                'fields' :
-                    (
-                        'send_invoice_mail_to_customer', 'invoice_customer_mail',
-                        'send_invoice_mail_to_producer', 'invoice_producer_mail',
-                    ),
-            }),
+            ]
+        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fieldsets += [
+                (_('Ordering mails'), {
+                    'classes': ('collapse',),
+                    'fields' :
+                        (
+                            'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail',
+                            'send_order_mail_to_producer', 'order_producer_mail',
+                            'send_order_mail_to_board', 'order_staff_mail',
+                        ),
+                }),
+            ]
+        else:
+            fieldsets += [
+                (_('Ordering mails'), {
+                    'classes': ('collapse',),
+                    'fields' :
+                        (
+                            'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer',
+                            'order_customer_mail',
+                            'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail',
+                            'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer',
+                            'order_producer_mail',
+                            'send_order_mail_to_board', 'order_staff_mail',
+                        ),
+                }),
+                (_('Invoicing mails'), {
+                    'classes': ('collapse',),
+                    'fields' :
+                        (
+                            'send_invoice_mail_to_customer', 'invoice_customer_mail',
+                            'send_invoice_mail_to_producer', 'invoice_producer_mail',
+                        ),
+                }),
+            ]
+        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fields = [
+                'invoice',
+            ]
+        else:
+            fields = [
+                'how_to_register',
+                'home_site',
+                ('transport', 'min_transport'),
+                'group_label',
+                'page_break_on_customer_check',
+                'close_wo_sending',
+                'display_who_is_who',
+                'invoice',
+                ('currency', 'vat_id'),
+            ]
+
+        fields += [
+            'sms_gateway_mail',
+            'email_is_custom',
+            ('email_host', 'email_port', 'email_use_tls'),
+            ('email_host_user', 'email_host_password')
+        ]
+        fieldsets += [
             (_('Advanced options'), {
                 'classes': ('collapse',),
-                'fields' :
-                    (
-                        'home_site',
-                        ('transport', 'min_transport'),
-                        'how_to_register',
-                        'group_label',
-                        'page_break_on_customer_check',
-                        'close_wo_sending',
-                        'display_who_is_who',
-                        'invoice',
-                        ('currency', 'vat_id'),
-                        'sms_gateway_mail',
-                        'email_is_custom',
-                        ('email_host', 'email_port', 'email_use_tls'),
-                        ('email_host_user', 'email_host_password')
-                    ),
+                'fields' : fields,
             }),
         ]
         return fieldsets

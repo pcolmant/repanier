@@ -8,6 +8,7 @@ from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.db.models import Q
+from django.forms import Textarea
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.text import slugify
@@ -154,55 +155,57 @@ class ProducerDataForm(forms.ModelForm):
                         'reference_site',
                         _("The reference site may not be your site."))
                     break
-        producer_pre_opening = self.cleaned_data["producer_pre_opening"]
-        manage_replenishment = self.cleaned_data["manage_replenishment"]
-        manage_production = self.cleaned_data["manage_production"]
         invoice_by_basket = self.cleaned_data["invoice_by_basket"]
-        is_resale_price_fixed = self.cleaned_data["is_resale_price_fixed"]
         price_list_multiplier = self.cleaned_data["price_list_multiplier"]
-        if manage_replenishment and producer_pre_opening:
-            # The producer set his offer -> no possibility to manage stock
-            self.add_error('producer_pre_opening',
-                           _("Either 'manage replenishment' or 'producer pre opening' may be set. Not both."))
-            self.add_error('manage_replenishment',
-                           _("Either 'manage replenishment' or 'producer pre opening' may be set. Not both."))
-        if manage_replenishment and invoice_by_basket:
-            # The group manage the replenishment -> no possibility for the producer to prepare basket
-            self.add_error('invoice_by_basket',
-                           _("Either 'manage replenishment' or 'invoice by basket' may be set. Not both."))
-            self.add_error('manage_replenishment',
-                           _("Either 'manage replenishment' or 'invoice by basket' may be set. Not both."))
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            producer_pre_opening = self.cleaned_data["producer_pre_opening"]
+            manage_replenishment = self.cleaned_data["manage_replenishment"]
+            manage_production = self.cleaned_data["manage_production"]
+            is_resale_price_fixed = self.cleaned_data["is_resale_price_fixed"]
+            if manage_replenishment and producer_pre_opening:
+                # The producer set his offer -> no possibility to manage stock
+                self.add_error('producer_pre_opening',
+                               _("Either 'manage replenishment' or 'producer pre opening' may be set. Not both."))
+                self.add_error('manage_replenishment',
+                               _("Either 'manage replenishment' or 'producer pre opening' may be set. Not both."))
+            if manage_replenishment and invoice_by_basket:
+                # The group manage the replenishment -> no possibility for the producer to prepare basket
+                self.add_error('invoice_by_basket',
+                               _("Either 'manage replenishment' or 'invoice by basket' may be set. Not both."))
+                self.add_error('manage_replenishment',
+                               _("Either 'manage replenishment' or 'invoice by basket' may be set. Not both."))
+            if is_resale_price_fixed and producer_pre_opening:
+                # The producer set his price -> no possibility to fix the resale price
+                self.add_error('producer_pre_opening',
+                               _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
+                self.add_error('is_resale_price_fixed',
+                               _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
+            if manage_replenishment and manage_production:
+                self.add_error('manage_production',
+                               _("Either 'manage replenishment' or 'manage production' may be set. Not both."))
+                self.add_error('manage_replenishment',
+                               _("Either 'manage replenishment' or 'manage production' may be set. Not both."))
+            if is_resale_price_fixed and manage_production:
+                self.add_error('manage_production',
+                               _("Either 'is resale price fixed' or 'manage production' may be set. Not both."))
+                self.add_error('is_resale_price_fixed',
+                               _("Either 'is resale price fixed' or 'manage production' may be set. Not both."))
+            if manage_production and price_list_multiplier != DECIMAL_ONE:
+                self.add_error('manage_production',
+                               _("The 'price list multiplier' must be set to 1 when 'manage production'."))
+                self.add_error('price_list_multiplier',
+                               _("The 'price list multiplier' must be set to 1 when 'manage production'."))
+            if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
+                # Important : For invoicing correctly
+                self.add_error('price_list_multiplier',
+                               _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
+                self.add_error('is_resale_price_fixed',
+                               _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
+
         if invoice_by_basket and self.instance.id is not None:
             if BoxContent.objects.filter(product__producer_id=self.instance.id).exists():
                 self.add_error('invoice_by_basket',
                                _("Some products of this producer are in a box. This implies that this producer cannot invoice by basket."))
-        if is_resale_price_fixed and producer_pre_opening:
-            # The producer set his price -> no possibility to fix the resale price
-            self.add_error('producer_pre_opening',
-                           _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
-            self.add_error('is_resale_price_fixed',
-                           _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
-        if manage_replenishment and manage_production:
-            self.add_error('manage_production',
-                           _("Either 'manage replenishment' or 'manage production' may be set. Not both."))
-            self.add_error('manage_replenishment',
-                           _("Either 'manage replenishment' or 'manage production' may be set. Not both."))
-        if is_resale_price_fixed and manage_production:
-            self.add_error('manage_production',
-                           _("Either 'is resale price fixed' or 'manage production' may be set. Not both."))
-            self.add_error('is_resale_price_fixed',
-                           _("Either 'is resale price fixed' or 'manage production' may be set. Not both."))
-        if manage_production and price_list_multiplier != DECIMAL_ONE:
-            self.add_error('manage_production',
-                           _("The 'price list multiplier' must be set to 1 when 'manage production'."))
-            self.add_error('price_list_multiplier',
-                           _("The 'price list multiplier' must be set to 1 when 'manage production'."))
-        if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
-            # Important : For invoicing correctly
-            self.add_error('price_list_multiplier',
-                           _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
-            self.add_error('is_resale_price_fixed',
-                           _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
         short_profile_name = self.cleaned_data["short_profile_name"]
         qs = Producer.objects.filter(short_profile_name=short_profile_name).order_by('?')
         if self.instance.id is not None:
@@ -234,6 +237,14 @@ class ProducerDataForm(forms.ModelForm):
             # update_offer_item(producer_id=instance.id)
 
         return instance
+
+    class Meta:
+        widgets = {
+            'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
+            'memo'   : Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
+        }
+        model = Producer
+        fields = "__all__"
 
 
 class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -322,23 +333,16 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return actions
 
     def get_list_display(self, request):
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_IS_AMAP:
+            if repanier.apps.REPANIER_SETTINGS_INVOICE:
+                return ('__str__', 'get_products', 'get_contracts', 'get_balance', 'phone1', 'email')
+            else:
+                return ('__str__', 'get_products', 'get_contracts', 'phone1', 'email')
+        else:
             if repanier.apps.REPANIER_SETTINGS_INVOICE:
                 return ('__str__', 'get_products', 'get_balance', 'phone1', 'email')
             else:
                 return ('__str__', 'get_products', 'phone1', 'email')
-        else:
-            if settings.DJANGO_SETTINGS_DEBUG:
-                # TODO : Contracts are in development. So they are only availalble in DEBUG mode
-                if repanier.apps.REPANIER_SETTINGS_INVOICE:
-                    return ('__str__', 'get_products', 'get_contracts', 'get_balance', 'phone1', 'email')
-                else:
-                    return ('__str__', 'get_products', 'get_contracts', 'phone1', 'email')
-            else:
-                if repanier.apps.REPANIER_SETTINGS_INVOICE:
-                    return ('__str__', 'get_products', 'get_balance', 'phone1', 'email')
-                else:
-                    return ('__str__', 'get_products', 'phone1', 'email')
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [
@@ -348,29 +352,48 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         ]
         if producer is not None:
             fields_basic += [
+                ('address', 'city', 'picture'),
+                'memo',
+            ]
+        else:
+            # Do not accept the picture because there is no producer.id for the "upload_to"
+            fields_basic += [
+                ('address', 'city'),
+                'memo',
+            ]
+        if producer is not None:
+            fields_basic += [
                 'permanences',
                 ('get_admin_balance', 'get_admin_date_balance'),
             ]
-        if producer is None or not producer.represent_this_buyinggroup:
-            fields_basic += [
-                ('producer_price_are_wo_vat', 'is_active'),
+        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fields_advanced = [
+                'bank_account',
+                'price_list_multiplier',
+                'minimum_order_value',
+                'invoice_by_basket',
+                'reference_site',
+                'web_services_activated',
             ]
-        fields_advanced = [
-            'bank_account',
-            'vat_id',
-            'is_resale_price_fixed',
-            'price_list_multiplier',
-            'minimum_order_value',
-            'invoice_by_basket',
-            'manage_replenishment',
-            'manage_production',
-            'sort_products_by_reference',
-            'producer_pre_opening',
-            'address',
-            'memo',
-            'reference_site',
-            'web_services_activated',
-        ]
+        else:
+            if producer is None or not producer.represent_this_buyinggroup:
+                fields_basic += [
+                    ('producer_price_are_wo_vat', 'is_active'),
+                ]
+            fields_advanced = [
+                'bank_account',
+                'vat_id',
+                'is_resale_price_fixed',
+                'price_list_multiplier',
+                'minimum_order_value',
+                'invoice_by_basket',
+                'manage_replenishment',
+                'manage_production',
+                'sort_products_by_reference',
+                'producer_pre_opening',
+                'reference_site',
+                'web_services_activated',
+            ]
         if producer is not None and producer.represent_this_buyinggroup:
             fields_advanced += [
                 'represent_this_buyinggroup'
@@ -404,4 +427,5 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
 
     class Media:
-        js = ('js/export_import_stock.js',)
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            js = ('js/export_import_stock.js',)

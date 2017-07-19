@@ -7,6 +7,9 @@ admin.site.register(BankAccount, BankAccountAdmin)
 from repanier.models.configuration import Configuration
 from repanier.admin.configuration import ConfigurationAdmin
 admin.site.register(Configuration, ConfigurationAdmin)
+from repanier.models.configuration import Notification
+from repanier.admin.notification import NotificationAdmin
+admin.site.register(Notification, NotificationAdmin)
 from repanier.models.customer import Customer
 from repanier.admin.customer import CustomerWithUserDataAdmin
 admin.site.register(Customer, CustomerWithUserDataAdmin)

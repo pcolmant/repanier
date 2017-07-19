@@ -11,7 +11,7 @@ from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatableModel
 
-from repanier.picture.const import SIZE_M
+from repanier.picture.const import SIZE_M, SIZE_L
 from repanier.picture.fields import AjaxPictureField
 from repanier.const import BOX_UNICODE, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG, EMPTY_STRING, \
     DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC, \
@@ -36,7 +36,7 @@ class Item(TranslatableModel):
     picture2 = AjaxPictureField(
         verbose_name=_("picture"),
         null=True, blank=True,
-        upload_to="product", size=SIZE_M)
+        upload_to="product", size=SIZE_L)
     reference = models.CharField(
         _("reference"), max_length=36,
         blank=True, null=True)
@@ -116,9 +116,7 @@ class Item(TranslatableModel):
     )
 
     is_box = models.BooleanField(_("is a box"), default=False)
-    is_box_content = models.BooleanField(_("is a box content"), default=False)
-    is_contract = models.BooleanField(_("is a contract"), default=False)
-    is_contract_content = models.BooleanField(_("is a contract content"), default=False)
+    # is_contract = models.BooleanField(_("is a contract"), default=False)
     # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     # may_order = models.BooleanField(_("may_order"), default=True)
     is_active = models.BooleanField(_("is_active"), default=True)
@@ -444,10 +442,12 @@ class Item(TranslatableModel):
             result = '%s %s' % (self.long_name, qty_and_price_display)
         else:
             result = '%s' % self.long_name
-        if self.is_box_content:
-            return "%s %s" % (result, BOX_UNICODE)
-        else:
-            return result
+        # if self.is_box_content:
+        #     return "%s %s" % (result, BOX_UNICODE)
+        # elif self.is_contract:
+        #     return "%s %s" % (result, CONTRACT_UNICODE)
+        # else:
+        return result
 
     get_long_name.short_description = (_("long_name"))
     get_long_name.allow_tags = False

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django import forms
-# from django.apps import apps
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.db.models import Q
@@ -135,7 +135,6 @@ class LUTDeliveryPointDataForm(TranslatableModelForm):
                             'This customer is already responsible of another delivery point (%(delivery_point)s). A customer may be responsible of maximum one delivery point.') % {
                             'delivery_point': delivery_point,})
 
-
     def save(self, *args, **kwargs):
         instance = super(LUTDeliveryPointDataForm, self).save(*args, **kwargs)
         if instance.id is not None:
@@ -207,11 +206,22 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
 
 class LUTPermanenceRoleAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
-    inlines = [PermanenceBoardInline]
+    if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        inlines = [PermanenceBoardInline]
 
     def get_fields(self, request, obj=None):
-        return [
-            'short_name',
-            ('is_active', 'customers_may_register', 'is_counted_as_participation'),
-            'description',
-        ]
+        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            return [
+                'short_name',
+                'is_active',
+                'customers_may_register',
+                'description',
+            ]
+        else:
+            return [
+                'short_name',
+                'is_active',
+                'customers_may_register',
+                'is_counted_as_participation',
+                'description',
+            ]

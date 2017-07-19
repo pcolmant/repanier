@@ -26,6 +26,7 @@ from import_export.widgets import CharWidget
 import repanier.apps
 from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, DECIMAL_ONE, TWO_DECIMALS
+from repanier.models import Contract
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
@@ -239,6 +240,25 @@ def create__customer_action(year):
 
 
 class CustomerWithUserDataForm(UserDataForm):
+    contracts = forms.ModelMultipleChoiceField(
+        Contract.objects.all(), # filter(status=PERMANENCE_PLANNED),
+        widget=admin.widgets.FilteredSelectMultiple(_('Contracts'), False),
+        required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
+        if self.instance.id:
+            self.fields['contracts'].initial = self.instance.contract_set.filter(is_active=True)
+
+    def save(self, *args, **kwargs):
+        instance = super(CustomerWithUserDataForm, self).save(*args, **kwargs)
+        if instance.id is not None:
+            instance.contract_set.clear()
+            instance.contract_set.add(*self.cleaned_data['contracts'])
+
+        return instance
+
     class Meta:
         widgets = {
             'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
@@ -257,7 +277,12 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     search_fields = ('short_basket_name', 'long_basket_name', 'user__email', 'email2')
     list_per_page = 16
     list_max_show_all = 16
-    list_filter = ('is_active', 'may_order', 'is_group', 'valid_email')
+    list_filter = (
+        'may_order',
+        'is_active',
+        'is_group',
+        'valid_email'
+    )
 
     def has_delete_permission(self, request, customer=None):
         if request.user.groups.filter(
@@ -344,6 +369,10 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_basic += [
                 'price_list_multiplier',
                 ('may_order', 'is_active'),
+            ]
+        if settings.DJANGO_SETTINGS_IS_AMAP:
+            fields_basic += [
+                'contracts',
             ]
         fields_advanced = [
             'bank_account1',

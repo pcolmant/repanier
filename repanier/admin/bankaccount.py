@@ -265,7 +265,9 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display = ['operation_date', 'get_producer', 'get_customer',
                     'get_bank_amount_in', 'get_bank_amount_out', 'operation_comment']
     date_hierarchy = 'operation_date'
-    list_filter = (BankAccountFilterByStatus,)
+    list_filter = (
+        BankAccountFilterByStatus,
+    )
     ordering = ('-operation_date', '-id')
     search_fields = ('producer__short_profile_name', 'customer__short_basket_name', 'operation_comment')
     actions = []

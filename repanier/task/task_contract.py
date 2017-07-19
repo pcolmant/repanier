@@ -4,7 +4,7 @@ from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
-from repanier.models.contract import ContractContent
+from repanier.models.box import BoxContent
 from repanier.models.product import Product_Translation
 from repanier.tools import cap
 
@@ -45,7 +45,7 @@ def admin_duplicate(queryset):
             offer_description=EMPTY_STRING,
             language_code=translation.get_language()
         )
-        for contract_content in ContractContent.objects.filter(
+        for contract_content in BoxContent.objects.filter(
             contract_id=previous_contract_id
         ):
             contract_content.id = None

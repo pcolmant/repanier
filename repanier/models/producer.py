@@ -23,6 +23,8 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItem
 from repanier.models.product import Product
+from repanier.picture.const import SIZE_L
+from repanier.picture.fields import AjaxPictureField
 from repanier.tools import update_offer_item
 
 
@@ -44,6 +46,10 @@ class Producer(models.Model):
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
         verbose_name=_("language"))
+    picture = AjaxPictureField(
+        verbose_name=_("picture"),
+        null=True, blank=True,
+        upload_to="producer", size=SIZE_L)
     phone1 = models.CharField(
         _("phone1"),
         max_length=25,
@@ -56,6 +62,8 @@ class Producer(models.Model):
     fax = models.CharField(
         _("fax"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     address = models.TextField(_("address"), null=True, blank=True, default=EMPTY_STRING)
+    city = models.CharField(
+        _("city"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
     memo = models.TextField(
         _("memo"), null=True, blank=True, default=EMPTY_STRING)
     reference_site = models.URLField(
@@ -121,15 +129,24 @@ class Producer(models.Model):
     def get_contracts(self):
         # This producer may have contrat's list
         if self.is_active:
-            changeproductslist_url = urlresolvers.reverse(
-                'admin:repanier_contract_changelist',
-            )
-            link = '<a href="%s?is_active__exact=1&producer=%s" class="btn addlink">&nbsp;%s</a>' \
-                   % (changeproductslist_url, str(self.id), _("his contracts"))
+            if self.represent_this_buyinggroup:
+                label = _("Boxes")
+                is_into_offer = "&is_into_offer__exact=1"
+                changecontractslist_url = urlresolvers.reverse(
+                    'admin:repanier_box_changelist',
+                )
+            else:
+                label = _("Contracts")
+                is_into_offer =EMPTY_STRING
+                changecontractslist_url = urlresolvers.reverse(
+                    'admin:repanier_contract_changelist',
+                )
+            link = '<a href="%s?is_active__exact=1%s&producer=%s" class="btn addlink">&nbsp;%s</a>' \
+                   % (changecontractslist_url, is_into_offer, str(self.id), label)
             return link
         return EMPTY_STRING
 
-    get_contracts.short_description = (_("link to his contracts"))
+    get_contracts.short_description = (_("Assemblies"))
     get_contracts.allow_tags = True
 
     def get_admin_date_balance(self):

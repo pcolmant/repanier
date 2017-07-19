@@ -138,7 +138,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = (
-        'get_permanence_admin_display', 'language_column', 'get_producers', 'get_customers', 'get_board', 'get_full_status_display'
+        'get_permanence_admin_display',
     )
     ordering = ('permanence_date', '-status')
     actions = [
@@ -156,7 +156,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def has_delete_permission(self, request, obj=None):
         if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+                name__in=[ORDER_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
             return True
         return False
 

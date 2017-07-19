@@ -14,11 +14,10 @@ from .product import Product, Product_Translation
 from .purchase import Purchase
 from .staff import Staff
 # after Producer and Product
-from .box import BoxContent
-from .contract import ContractContent
-# proxies
 from .box import Box
-from.contract import Contract
+from .box import BoxContent
+from .contract import Contract
+# proxies
 from .invoice import CustomerSend
 from .offeritem import OfferItemSend, OfferItemClosed, OfferItemWoReceiver
 from .permanence import PermanenceInPreparation, PermanenceDone

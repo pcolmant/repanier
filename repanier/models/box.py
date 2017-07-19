@@ -11,7 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.models.producer import Producer
 from repanier.models.product import Product, product_pre_save
 
 
@@ -46,23 +45,23 @@ class Box(Product):
 
         return box_price, box_deposit
 
+    def __str__(self):
+        return '%s' % self.long_name
+
     class Meta:
         proxy = True
         verbose_name = _("box")
         verbose_name_plural = _("boxes")
         # ordering = ("sort_order",)
 
-    def __str__(self):
-        return '%s' % self.long_name
-
 
 @receiver(pre_save, sender=Box)
 def box_pre_save(sender, **kwargs):
     box = kwargs["instance"]
     box.is_box = True
-    box.producer_id = Producer.objects.filter(
-        represent_this_buyinggroup=True
-    ).order_by('?').only('id').first().id
+    # box.producer_id = Producer.objects.filter(
+    #     represent_this_buyinggroup=True
+    # ).order_by('?').only('id').first().id
     box.order_unit = PRODUCT_ORDER_UNIT_PC
     box.producer_unit_price = box.customer_unit_price
     box.producer_vat = box.customer_vat
@@ -80,9 +79,14 @@ class BoxContent(models.Model):
         'Product', verbose_name=_("product"), related_name='box_content',
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     content_quantity = models.DecimalField(
-        _("content quantity"),
+        _("box content quantity"),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
+    may_order_more = models.BooleanField(_("may order more"), default=False)
+    contract = models.OneToOneField(
+        'Contract', verbose_name=_("contract"),
+        null=True, blank=True, db_index=True, on_delete=models.PROTECT
+    )
     calculated_customer_content_price = ModelMoneyField(
         _("customer content price"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
@@ -122,3 +126,4 @@ def box_content_pre_save(sender, **kwargs):
         if product is not None:
             box_content.calculated_customer_content_price.amount = box_content.content_quantity * product.customer_unit_price.amount
             box_content.calculated_content_deposit.amount = int(box_content.content_quantity) * product.unit_deposit.amount
+

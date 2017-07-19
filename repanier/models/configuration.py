@@ -17,6 +17,7 @@ from django.dispatch import receiver
 from django.template import Template
 from django.utils import timezone
 from django.utils import translation
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -28,6 +29,7 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.product import Product
 
 
+@python_2_unicode_compatible
 class Configuration(TranslatableModel):
     group_name = models.CharField(_("group name"), max_length=50, default=EMPTY_STRING)
     test_mode = models.BooleanField(_("test mode"), default=False)
@@ -294,6 +296,9 @@ class Configuration(TranslatableModel):
         except Exception as error_str:
             raise ValidationError(mark_safe("%s : %s" % (self.invoice_producer_mail, error_str)))
 
+    def __str__(self):
+        return EMPTY_STRING
+
     class Meta:
         verbose_name = _("configuration")
         verbose_name_plural = _("configurations")
@@ -470,3 +475,15 @@ def configuration_post_save(sender, **kwargs):
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)
         toolbar_pool.register(repanier.cms_toolbar.RepanierToolbar)
         cache.clear()
+
+
+@python_2_unicode_compatible
+class Notification(Configuration):
+
+    class Meta:
+        proxy = True
+        verbose_name = _("notification")
+        verbose_name_plural = _("notifications")
+
+    def __str__(self):
+        return EMPTY_STRING

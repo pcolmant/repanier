@@ -46,6 +46,8 @@ class OfferItem(Item):
         'Product',
         verbose_name=_("product"),
         on_delete=models.PROTECT)
+    # is a box or a contract content
+    is_box_content = models.BooleanField(_("is a box content"), default=False)
 
     producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
     price_list_multiplier = models.DecimalField(
