@@ -1,10 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
-import datetime
-
 from django.core.urlresolvers import reverse
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
