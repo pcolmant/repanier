@@ -186,7 +186,7 @@ Create the django project my_web_site
 Set the system configuration of Repanier.
 
 
-    nano my_web_site/my_web_site/my_web_site.ini
+    nano ~/venv/my_web_site/my_web_site/my_web_site.ini
         [DJANGO_SETTINGS]
         DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@gmail.com
         DJANGO_SETTINGS_ADMIN_NAME=repanier
