@@ -66,31 +66,35 @@ Vous pouvez désormais accéder à l'application avec votre navigateur à l'adre
 How to setup repanier on Debian 9
 ---------------------------------
 
-# Log into the terminal as "root" user
-useradd -m pi
-passwd pi
-apt-get update
-apt-get install sudo
-nano /etc/sudoers
-    # User privilege specification
-    root	ALL=(ALL:ALL) ALL
-    pi	    ALL=(ALL:ALL) ALL
-groupadd sshusers
-usermod -a -G sshusers pi
-nano /etc/ssh/sshd_config
-    PermitRootLogin no
-    AllowGroups sshusers   <<--- ajouter la ligne
-service sshd restart
-# Try to connect with a ssh client as user "pi" before closing the current session.
+Log into the terminal as "root" user
 
-sudo dpkg-reconfigure locales
-        -- select>>>> fr_BE.UTF-8  and/or other following your need
-sudo apt-get install python-virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
+    useradd -m pi
+    passwd pi
+    apt-get update
+    apt-get install sudo
+    nano /etc/sudoers
+        # User privilege specification
+        root	ALL=(ALL:ALL) ALL
+        pi	    ALL=(ALL:ALL) ALL
+    groupadd sshusers
+    usermod -a -G sshusers pi
+    nano /etc/ssh/sshd_config
+        PermitRootLogin no
+        AllowGroups sshusers   <<--- add this line
+    service sshd restart
 
-sudo -u postgres psql
-    CREATE USER db_user PASSWORD 'db_password';
-    ALTER ROLE db_user WITH CREATEDB;
-    CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+
+Try to connect with a ssh client as user "pi" before closing the current session.
+
+
+    sudo dpkg-reconfigure locales
+            -- select>>>> fr_BE.UTF-8  and/or other following your need
+    sudo apt-get install python-virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
+
+    sudo -u postgres psql
+        CREATE USER db_user PASSWORD 'db_password';
+        ALTER ROLE db_user WITH CREATEDB;
+        CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
 
 # create nginx my_web_site config
 sudo nano /etc/nginx/sites-available/my_web_site
