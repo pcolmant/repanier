@@ -1,7 +1,7 @@
 Repanier
 ========
 
-Collective buying group management web site using Django CMS 3.4.1 / Bootstrap 3.
+Collective buying group management web site using Django CMS 3.4.41 / Bootstrap 3 / Python 3.5.
 
 - https://repanier.be/fr/documentation/survol/
 
@@ -62,3 +62,158 @@ Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'ap
    ./manage.py runserver
 
 Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/ Pour s'authentifier comme administrateur vous pouvez utiliser: *admin* *secret*.
+
+How to setup repanier on Debian 9
+---------------------------------
+
+# Log into the terminal as "root" user
+useradd -m pi
+passwd pi
+apt-get update
+apt-get install sudo
+nano /etc/sudoers
+    # User privilege specification
+    root	ALL=(ALL:ALL) ALL
+    pi	    ALL=(ALL:ALL) ALL
+groupadd sshusers
+usermod -a -G sshusers pi
+nano /etc/ssh/sshd_config
+    PermitRootLogin no
+    AllowGroups sshusers   <<--- ajouter la ligne
+service sshd restart
+# Try to connect with a ssh client as user "pi" before closing the current session.
+
+sudo dpkg-reconfigure locales
+        -- select>>>> fr_BE.UTF-8  and/or other following your need
+sudo apt-get install python-virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
+
+sudo -u postgres psql
+    CREATE USER db_user PASSWORD 'db_password';
+    ALTER ROLE db_user WITH CREATEDB;
+    CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+
+# create nginx my_web_site config
+sudo nano /etc/nginx/sites-available/my_web_site
+    server {
+        listen 80;
+        server_name repanier.local;
+
+        access_log /var/log/nginx/my_web_site_access.log;
+        error_log /var/log/nginx/my_web_site_error.log;
+        client_max_body_size 3M;
+        location /media/ {
+            alias /home/pi/venv/my_web_site/my_web_site/media/public/;
+        }
+
+        location /static/ {
+            alias /home/pi/venv/my_web_site/my_web_site/collect-static/;
+        }
+
+        location /favicon.ico {
+            alias /home/pi/venv/my_web_site/my_web_site/collect-static/favicon.ico;
+        }
+
+        location /robots.txt {
+            alias /home/pi/venv/my_web_site/my_web_site/collect-static/robots.txt;
+        }
+        location / {
+            include		uwsgi_params;
+            uwsgi_param HTTP_X_FORWARDED_HOST $server_name:9000;
+            uwsgi_pass 	unix:///tmp/my_web_site.sock;
+            uwsgi_read_timeout 600s;
+            uwsgi_send_timeout 60s;
+            uwsgi_connect_timeout 60s;
+        }
+    }
+sudo ln -s /etc/nginx/sites-available/my_web_site /etc/nginx/sites-enabled/my_web_site
+sudo rm /etc/nginx/sites-enabled/default
+# create uwsgi my_web_site config
+sudo nano /etc/uwsgi/apps-available/my_web_site.ini
+    [uwsgi]
+    vhost = true
+    plugins = python35
+    socket = /tmp/my_web_site.sock
+    master = true
+    enable-threads = true
+    processes = 1
+    thread = 2
+    buffer-size = 8192
+    wsgi-file = /home/pi/venv/my_web_site/my_web_site/wsgi.py
+    virtualenv = /home/pi/venv/
+    chdir = /home/pi/venv/my_web_site/
+    harakiri = 360
+sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
+
+cd ~
+virtualenv --python=python3 venv
+cd venv
+source bin/activate
+cd ~/pi/venv
+# now : copy from gihub/pcolmant/repanier/requirements/requirement.txt to ~/pi/venv
+pip install -r requirement.txt
+django-admin.py startproject my_web_site
+nano my_web_site/my_web_site/my_web_site.ini
+    [DJANGO_SETTINGS]
+    DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@gmail.com
+    DJANGO_SETTINGS_ADMIN_NAME=repanier
+    DJANGO_SETTINGS_DATABASE_ENGINE=django.db.backends.postgresql_psycopg2
+    DJANGO_SETTINGS_DATABASE_NAME=db_name
+    DJANGO_SETTINGS_DATABASE_USER=db_user
+    DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
+    DJANGO_SETTINGS_DATABASE_HOST=127.0.0.1
+    DJANGO_SETTINGS_DATABASE_PORT=5432
+    DJANGO_SETTINGS_DEBUG=True
+    DJANGO_SETTINGS_DEMO=False
+    DJANGO_SETTINGS_EMAIL_HOST=email_host
+    DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
+    DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
+    DJANGO_SETTINGS_EMAIL_PORT=email_port
+    DJANGO_SETTINGS_EMAIL_USE_TLS=True
+    DJANGO_SETTINGS_ENV=dev
+    DJANGO_SETTINGS_LANGUAGE=fr-en
+    DJANGO_SETTINGS_LOGGING=False
+    DJANGO_SETTINGS_CACHE=/var/tmp/django-cache
+    DJANGO_SETTINGS_SESSION=/var/tmp/django-session
+    DJANGO_SETTINGS_COUNTRY=be
+    DJANGO_SETTINGS_STATIC=static
+    DJANGO_SETTINGS_IS_MINIMALIST=False
+    DJANGO_SETTINGS_IS_AMAP=True
+    [ALLOWED_HOSTS]
+    1:repanier.local
+
+cd ~/venv/my_web_site/my_web_site/
+mkdir media
+cd media
+mkdir public
+cd ..
+sudo chgrp -R www-data media
+sudo chmod -R g+w media
+# now : copy from gihub/pcolmant/repanier/mysite/media/... to ~/venv/my_web_site/my_web_site/media/
+#            favicon.ico
+#            robot.txt
+# now : copy from gihub/pcolmant/repanier/mysite/... to ~/venv/my_web_site/my_web_site/
+#            locale (all the directory and subdirectories content)
+#            my_web_site.ini
+#            common_settings.py
+#            urls.py
+#            wsgi.py
+# now : copy from gihub/pcolmant/repanier to ~/venv/my_web_site/
+#            manage.py
+#            repanier (all the directory and subdirectories content)
+# ----------------- Create django cache directory
+mkdir /var/tmp/django-cache
+sudo chgrp www-data /var/tmp/django-cache
+sudo chmod g+w /var/tmp/django-cache
+sudo rm -rf /var/tmp/django-cache/*
+# ----------------- Create django file session directory
+sudo chgrp www-data /var/tmp/django-session
+sudo chmod g+w /var/tmp/django-session
+sudo rm -rf /var/tmp/django-session/*
+
+python manage.py collectstatic
+python manage.py makemigrations repanier
+python manage.py migrate
+python manage.py createsuperuser
+sudo rm -rf /var/tmp/django-cache/*
+sudo /etc/init.d/uwsgi restart
+sudo /etc/init.d/nginx restart
