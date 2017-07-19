@@ -33,5 +33,5 @@ easy-thumbnails==2.4.1
 openpyxl==1.8.6
 psycopg2==2.7.1
 uwsgi
-tablib==0.10
+tablib=0.11.4
 pyaml
