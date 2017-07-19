@@ -101,9 +101,9 @@ class RepanierEmail(EmailMultiAlternatives):
                     # Do not spam someone who has never logged in
                     return False
                 else:
-                    max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=730)
+                    max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=426)
                     if customer.user.last_login < max_2_years_in_the_past:
-                        # Do not spam someone who has never logged in since more than 2 years
+                        # Do not spam someone who has never logged in since more than 1 year and 2 months
                         return False
         else:
             customer = None
