@@ -110,7 +110,7 @@ def send_email_to_who(is_email_send, board=False):
     if not is_email_send:
         if board:
             if REPANIER_SETTINGS_TEST_MODE:
-                return True, _("This email will be sent to %s.") % ', '.join(emails_of_testers())
+                return True, _("This email will be sent to the following tester(s) : %s.") % ', '.join(emails_of_testers())
             else:
                 if settings.DEBUG:
                     return False, _("No email will be sent.")
@@ -120,7 +120,7 @@ def send_email_to_who(is_email_send, board=False):
             return False, _("No email will be sent.")
     else:
         if REPANIER_SETTINGS_TEST_MODE:
-            return True, _("This email will be sent to %s.") % ', '.join(emails_of_testers())
+            return True, _("This email will be sent to the following tester(s) : %s.") % ', '.join(emails_of_testers())
         else:
             if settings.DEBUG:
                 return False, _("No email will be sent.")
