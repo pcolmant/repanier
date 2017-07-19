@@ -75,159 +75,152 @@ class RepanierSettings(AppConfig):
         from repanier.models.product import Product
         from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
-        try:
-            # Create if needed and load RepanierSettings var when performing config.save()
-            translation.activate(settings.LANGUAGE_CODE)
-            config = Configuration.objects.filter(id=DECIMAL_ONE).first()
-            if config is None:
-                group_name = settings.ALLOWED_HOSTS[0]
-                site = Site.objects.get_current()
-                if site is not None:
-                    site.name = group_name
-                    site.domain = group_name
-                    site.save()
-                config = Configuration.objects.create(
-                    group_name=group_name,
-                    name=PERMANENCE_NAME_PERMANENCE,
-                    bank_account="BE99 9999 9999 9999",
-                    currency=CURRENCY_EUR
-                )
-            config.save()
-            # Purchase.objects.filter(customer_charged__isnull=True).update(
-            #     customer_charged=F('customer_invoice__customer_charged')
-            # )
-            # for purchase in Purchase.objects.filter(
-            #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
-            #     purchase.customer_charged = purchase.customer_invoice.customer_charged
-            #     purchase.save(update_fields=["customer_charged",])
-            # Staff.objects.rebuild()
-            Product.objects.filter(is_box=True).order_by('?').update(limit_order_quantity_to_stock=True)
-            # Create groups with correct rights
-            order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()
-            if order_group is None:
-                order_group = Group.objects.create(name=ORDER_GROUP)
-            invoice_group = Group.objects.filter(name=INVOICE_GROUP).only('id').order_by('?').first()
-            if invoice_group is None:
-                invoice_group = Group.objects.create(name=INVOICE_GROUP)
-            contributor_group = Group.objects.filter(name=CONTRIBUTOR_GROUP).only('id').order_by('?').first()
-            if contributor_group is None:
-                contributor_group = Group.objects.create(name=CONTRIBUTOR_GROUP)
-            coordination_group = Group.objects.filter(name=COORDINATION_GROUP).only('id').order_by('?').first()
-            if coordination_group is None:
-                coordination_group = Group.objects.create(name=COORDINATION_GROUP)
-            content_types = ContentType.objects.exclude(
-                app_label__in=[
-                    'admin',
-                    # 'aldryn_bootstrap3',
-                    'auth',
-                    'cascade_dummy',
-                    'cms',
-                    'cmsplugin_cascade',
-                    'cmsplugin_filer_file',
-                    'cmsplugin_filer_folder',
-                    'cmsplugin_filer_image',
-                    'cmsplugin_filer_link',
-                    'cmsplugin_filer_video',
-                    'contenttypes',
-                    'djangocms_text_ckeditor',
-                    'easy_thumbnails',
-                    'filer'
-                    'menus',
-                    'reversion',
-                    'sessions',
-                    'sites',
-                ]
-            ).only('id').order_by('?')
-            permissions = Permission.objects.filter(
-                content_type__in=content_types
-            ).only('id').order_by('?')
-            order_group.permissions.set(permissions)
-            invoice_group.permissions.set(permissions)
-            coordination_group.permissions.set(permissions)
-            contributor_group.permissions.set(permissions)
-            # WEBMASTER
-            webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only('id').order_by('?').first()
-            if webmaster_group is None:
-                webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
-            content_types = ContentType.objects.exclude(
-                app_label__in=[
-                    'repanier',
-                    'admin',
-                    'auth',
-                    'contenttypes',
-                    'menus',
-                    'repanier',
-                    'reversion',
-                    'sessions',
-                    'sites',
-                ]
-            ).only('id').order_by('?')
-            permissions = Permission.objects.filter(
-                content_type__in=content_types
-            ).only('id').order_by('?')
-            webmaster_group.permissions.set(permissions)
-            if LUT_DepartmentForCustomer.objects.count() == 0:
-                # Generate a template of LUT_DepartmentForCustomer
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Vegetables"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Basket of vegetables"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Salads"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Tomatoes"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Potatoes"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Greens"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Cabbage"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Fruits"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Basket of fruits"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Apples"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Pears"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Plums"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Bakery"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Flour"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Bread"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Pastry"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Butchery"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Delicatessen"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Chicken"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Pork"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Beef"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Beef and pork"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Veal"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Lamb"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Grocery"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Takeaway"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Pasta"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Chocolates"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Oils"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Eggs"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Jams"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Cookies"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Creamery"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Dairy"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Cow cheese"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Goat cheese"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Sheep cheese"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Mixed cheese"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Cup of icecream"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream per liter"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream in frisco"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream cake"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Cup of sorbet"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet per liter"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Drink"))
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Juices"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Coffees"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Teas"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Herbal teas"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Wines"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Aperitifs"), parent=parent)
-                LUT_DepartmentForCustomer.objects.create(short_name=_("Liqueurs"), parent=parent)
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Hygiene"))
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Deposit"))
-                parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Subscription"))
-
-        except Exception as error_str:
-            print("##################################")
-            print(error_str)
-            print("##################################")
-            other = _("Other qty")
+        # Create if needed and load RepanierSettings var when performing config.save()
+        translation.activate(settings.LANGUAGE_CODE)
+        config = Configuration.objects.filter(id=DECIMAL_ONE).first()
+        if config is None:
+            group_name = settings.ALLOWED_HOSTS[0]
+            site = Site.objects.get_current()
+            if site is not None:
+                site.name = group_name
+                site.domain = group_name
+                site.save()
+            config = Configuration.objects.create(
+                group_name=group_name,
+                name=PERMANENCE_NAME_PERMANENCE,
+                bank_account="BE99 9999 9999 9999",
+                currency=CURRENCY_EUR
+            )
+        config.save()
+        # Purchase.objects.filter(customer_charged__isnull=True).update(
+        #     customer_charged=F('customer_invoice__customer_charged')
+        # )
+        # for purchase in Purchase.objects.filter(
+        #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
+        #     purchase.customer_charged = purchase.customer_invoice.customer_charged
+        #     purchase.save(update_fields=["customer_charged",])
+        # Staff.objects.rebuild()
+        Product.objects.filter(is_box=True).order_by('?').update(limit_order_quantity_to_stock=True)
+        # Create groups with correct rights
+        order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()
+        if order_group is None:
+            order_group = Group.objects.create(name=ORDER_GROUP)
+        invoice_group = Group.objects.filter(name=INVOICE_GROUP).only('id').order_by('?').first()
+        if invoice_group is None:
+            invoice_group = Group.objects.create(name=INVOICE_GROUP)
+        contributor_group = Group.objects.filter(name=CONTRIBUTOR_GROUP).only('id').order_by('?').first()
+        if contributor_group is None:
+            contributor_group = Group.objects.create(name=CONTRIBUTOR_GROUP)
+        coordination_group = Group.objects.filter(name=COORDINATION_GROUP).only('id').order_by('?').first()
+        if coordination_group is None:
+            coordination_group = Group.objects.create(name=COORDINATION_GROUP)
+        content_types = ContentType.objects.exclude(
+            app_label__in=[
+                'admin',
+                # 'aldryn_bootstrap3',
+                'auth',
+                'cascade_dummy',
+                'cms',
+                'cmsplugin_cascade',
+                'cmsplugin_filer_file',
+                'cmsplugin_filer_folder',
+                'cmsplugin_filer_image',
+                'cmsplugin_filer_link',
+                'cmsplugin_filer_video',
+                'contenttypes',
+                'djangocms_text_ckeditor',
+                'easy_thumbnails',
+                'filer'
+                'menus',
+                'reversion',
+                'sessions',
+                'sites',
+            ]
+        ).only('id').order_by('?')
+        permissions = Permission.objects.filter(
+            content_type__in=content_types
+        ).only('id').order_by('?')
+        order_group.permissions.set(permissions)
+        invoice_group.permissions.set(permissions)
+        coordination_group.permissions.set(permissions)
+        contributor_group.permissions.set(permissions)
+        # WEBMASTER
+        webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only('id').order_by('?').first()
+        if webmaster_group is None:
+            webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
+        content_types = ContentType.objects.exclude(
+            app_label__in=[
+                'repanier',
+                'admin',
+                'auth',
+                'contenttypes',
+                'menus',
+                'repanier',
+                'reversion',
+                'sessions',
+                'sites',
+            ]
+        ).only('id').order_by('?')
+        permissions = Permission.objects.filter(
+            content_type__in=content_types
+        ).only('id').order_by('?')
+        webmaster_group.permissions.set(permissions)
+        if LUT_DepartmentForCustomer.objects.count() == 0:
+            # Generate a template of LUT_DepartmentForCustomer
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Vegetables"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Basket of vegetables"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Salads"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Tomatoes"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Potatoes"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Greens"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Cabbage"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Fruits"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Basket of fruits"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Apples"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Pears"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Plums"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Bakery"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Flour"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Bread"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Pastry"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Butchery"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Delicatessen"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Chicken"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Pork"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Beef"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Beef and pork"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Veal"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Lamb"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Grocery"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Takeaway"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Pasta"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Chocolates"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Oils"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Eggs"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Jams"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Cookies"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Creamery"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Dairy"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Cow cheese"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Goat cheese"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Sheep cheese"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Mixed cheese"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Cup of icecream"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream per liter"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream in frisco"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream cake"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Cup of sorbet"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet per liter"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Drink"))
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Juices"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Coffees"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Teas"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Herbal teas"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Wines"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Aperitifs"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(short_name=_("Liqueurs"), parent=parent)
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Hygiene"))
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Deposit"))
+            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Subscription"))

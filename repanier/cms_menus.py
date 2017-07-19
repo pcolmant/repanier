@@ -9,14 +9,14 @@ from django.utils.translation import ugettext_lazy as _
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
 
-from const import *
-from models import Permanence
-from models import PermanenceBoard
+from repanier.const import *
+from repanier.models import Permanence
+from repanier.models import PermanenceBoard
 
 
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
-        from apps import REPANIER_SETTINGS_PERMANENCES_NAME
+        from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
         user = request.user
         if user.is_anonymous or user.is_staff:
             is_anonymous = True
