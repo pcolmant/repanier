@@ -3,11 +3,16 @@ import os
 import sys
 import codecs
 import logging
-from six.moves import configparser
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from .settings import *
+
+try:
+    import configparser
+except:
+    from six.moves import configparser
+
 
 gettext = lambda s: s
 logger = logging.getLogger(__name__)
@@ -39,14 +44,12 @@ STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 
 DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
 DJANGO_SETTINGS_DATABASE_ENGINE = 'django.db.backends.postgresql_psycopg2'
-
 config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = '%s%s%s.ini' % (
             PROJECT_DIR,
             os.sep,
             DJANGO_SETTINGS_SITE_NAME
 )
-
 try:
     # Open the file with the correct encoding
     with codecs.open(conf_file_name, 'r', encoding='utf-8') as f:
@@ -78,7 +81,9 @@ OPTIONS = ('DJANGO_SETTINGS_ADMIN_EMAIL',
            'DJANGO_SETTINGS_CACHE',
            'DJANGO_SETTINGS_SESSION',
            'DJANGO_SETTINGS_COUNTRY',
-           'DJANGO_SETTINGS_IS_MINIMALIST')
+           'DJANGO_SETTINGS_IS_MINIMALIST',
+           'DJANGO_SETTINGS_IS_AMAP',
+           'DJANGO_SETTINGS_STATIC')
 
 for OPTION in OPTIONS:
     try:
@@ -86,14 +91,12 @@ for OPTION in OPTIONS:
     except configparser.NoOptionError:
         pass
 
-DJANGO_STATIC = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STATIC')
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):
     allowed_host = config.get('ALLOWED_HOSTS', name)
     if allowed_host.startswith("demo"):
         DJANGO_SETTINGS_DEMO = True
     DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
-logger.info("Settings loaded from %s" % (conf_file_name,))
 logger.info("Settings loaded from %s" % (conf_file_name,))
 logger.info("Allowed hosts: %s" % DJANGO_SETTINGS_ALLOWED_HOSTS)
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
@@ -103,21 +106,16 @@ DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
 # If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
 STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
-if DJANGO_SETTINGS_DEBUG:
-    # Activate ManifestStaticFilesStorage also when in debug mode
-    STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
-else:
-    # Be carefull from CMS 4.3.2 you must patch ManifestStaticFilesStorage
-    # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-    STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
 
 if DJANGO_SETTINGS_SITE_NAME == 'mysite':
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+else:
+    # Activate ManifestStaticFilesStorage also when in debug mode
+    STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
 
 STATICFILES_DIRS = (
     os.path.join(PROJECT_PATH, "collect-static"),
 )
-
 
 ###################### DEBUG
 DEBUG = DJANGO_SETTINGS_DEBUG
@@ -507,7 +505,7 @@ if DJANGO_SETTINGS_LOGGING:
                 'class': 'django.utils.log.AdminEmailHandler'
             },
             'console': {
-                'level': 'INFO',
+                # 'level': 'INFO',
                 'class': 'logging.StreamHandler',
             },
         },
