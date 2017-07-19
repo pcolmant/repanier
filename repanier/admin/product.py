@@ -177,9 +177,12 @@ class ProductDataForm(TranslatableModelForm):
             customer_increment_order_quantity = self.cleaned_data.get("customer_increment_order_quantity", DECIMAL_ZERO)
             field_customer_alert_order_quantity_is_present = "customer_alert_order_quantity" in self.cleaned_data
             customer_alert_order_quantity = self.cleaned_data.get("customer_alert_order_quantity", LIMIT_ORDER_QTY_ITEM)
-            # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
-            # if the pre-opening of offer is activated fro this producer.
-            limit_order_quantity_to_stock = self.cleaned_data.get("limit_order_quantity_to_stock", True)
+            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                limit_order_quantity_to_stock = False
+            else:
+                # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
+                # if the pre-opening of offer is activated fro this producer.
+                limit_order_quantity_to_stock = self.cleaned_data.get("limit_order_quantity_to_stock", True)
 
             if order_unit in [
                 PRODUCT_ORDER_UNIT_PC,
@@ -249,14 +252,15 @@ class ProductDataForm(TranslatableModelForm):
                             'customer_alert_order_quantity',
                             _('This alert quantity is not reachable. %(q_max)s is the best lower choice.') % {
                                 'q_max': number_format(q_max, 3)})
-            reference = self.cleaned_data.get("reference", EMPTY_STRING)
-            if reference.strip() != EMPTY_STRING:
-                producer = self.cleaned_data.get("producer", None)
-                if producer is None:
-                    self.add_error(
-                        'producer',
-                        _('Please select first a producer in the filter of previous screen'))
-                else:
+
+            producer = self.cleaned_data.get("producer", None)
+            if producer is None:
+                self.add_error(
+                    'producer',
+                    _('Please select first a producer in the filter of previous screen'))
+            else:
+                reference = self.cleaned_data.get("reference", EMPTY_STRING)
+                if reference:
                     qs = Product.objects.filter(reference=reference, producer_id=producer.id).order_by('?')
                     if self.instance.id is not None:
                         qs = qs.exclude(id=self.instance.id)
@@ -278,8 +282,7 @@ class ProductDataForm(TranslatableModelForm):
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     form = ProductDataForm
     resource_class = ProductResource
-    list_display = ('producer', 'department_for_customer', 'get_long_name', 'get_is_into_offer', 'producer_unit_price',
-                    'get_customer_alert_order_quantity', 'stock')
+    list_display = ('get_long_name',)
     list_display_links = ('get_long_name',)
     readonly_fields = ('is_updated_on',)
     list_select_related = ('producer', 'department_for_customer')
@@ -289,15 +292,28 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     ordering = ('producer',
                 'translations__long_name',)
     search_fields = ('translations__long_name',)
-    list_filter = ('is_active',
-                   'is_into_offer',
-                   'wrapped',
-                   ProductFilterByProducer,
-                   ProductFilterByDepartmentForThisProducer,
-                   ProductFilterByProductioMode,
-                   ProductFilterByPlacement,
-                   'limit_order_quantity_to_stock',
-                   ProductFilterByVatLevel)
+    if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        list_filter = (
+            ProductFilterByProducer,
+            ProductFilterByDepartmentForThisProducer,
+            'is_into_offer',
+            'is_active',
+            'wrapped',
+            ProductFilterByPlacement,
+            ProductFilterByVatLevel
+        )
+    else:
+        list_filter = (
+            ProductFilterByProducer,
+            ProductFilterByDepartmentForThisProducer,
+            'is_into_offer',
+            'is_active',
+            'wrapped',
+            ProductFilterByProductioMode,
+            ProductFilterByPlacement,
+            'limit_order_quantity_to_stock',
+            ProductFilterByVatLevel
+        )
     actions = [
         'flip_flop_select_for_offer_status',
         'duplicate_product'
@@ -388,10 +404,17 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                             'producer_unit_price',
                             'get_customer_alert_order_quantity')
             else:
-                self.list_editable = ('producer_unit_price', 'stock')
-                return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
+                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                    self.list_editable = ('producer_unit_price')
+                    return (
+                        'producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
                         'producer_unit_price',
-                        'get_customer_alert_order_quantity', 'stock')
+                        'get_customer_alert_order_quantity')
+                else:
+                    self.list_editable = ('producer_unit_price', 'stock')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity', 'stock')
         else:
             if producer is not None:
                 if producer.producer_pre_opening:
@@ -410,10 +433,16 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                             'producer_unit_price',
                             'get_customer_alert_order_quantity')
             else:
-                self.list_editable = ('producer_unit_price', 'stock')
-                return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
-                        'producer_unit_price',
-                        'get_customer_alert_order_quantity', 'stock')
+                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                    self.list_editable = ('producer_unit_price')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity')
+                else:
+                    self.list_editable = ('producer_unit_price', 'stock')
+                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
+                            'producer_unit_price',
+                            'get_customer_alert_order_quantity', 'stock')
 
     def get_form(self, request, product=None, **kwargs):
         department_for_customer_id = None
@@ -444,7 +473,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         limit_order_quantity_to_stock = product is not None and product.limit_order_quantity_to_stock
         fields_basic = [
             ('producer', 'long_name', 'picture2'),
-            ('order_unit', 'wrapped'),
+            'order_unit',
+            'wrapped',
         ]
         if producer_resale_price_fixed:
             fields_basic += [
@@ -469,31 +499,39 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         fields_advanced_descriptions = [
             ('department_for_customer', 'placement'),
             'offer_description',
-            'production_mode',
         ]
-        if producer_pre_opening or producer_manage_production:
+        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields_advanced_options = [
-                ('reference', 'vat_level'),
-                ('is_into_offer', 'is_active', 'is_updated_on')
-            ]
-        elif limit_order_quantity_to_stock:
-            fields_advanced_options = [
-                ('limit_order_quantity_to_stock', 'producer_order_by_quantity'),
-                ('reference', 'vat_level'),
-                ('is_into_offer', 'is_active', 'is_updated_on')
-            ]
-        elif producer_manage_replenishment:
-            fields_advanced_options = [
-                ('stock', 'limit_order_quantity_to_stock', 'producer_order_by_quantity'),
-                ('reference', 'vat_level'),
-                ('is_into_offer', 'is_active', 'is_updated_on')
+                'vat_level',
+                ('is_into_offer', 'is_active')
             ]
         else:
-            fields_advanced_options = [
-                ('producer_order_by_quantity'),
-                ('reference', 'vat_level'),
-                ('is_into_offer', 'is_active', 'is_updated_on')
+            fields_advanced_descriptions += [
+                'production_mode',
             ]
+            if producer_pre_opening or producer_manage_production:
+                fields_advanced_options = [
+                    ('reference', 'vat_level'),
+                    ('is_into_offer', 'is_active')
+                ]
+            elif limit_order_quantity_to_stock:
+                fields_advanced_options = [
+                    ('limit_order_quantity_to_stock', 'producer_order_by_quantity'),
+                    ('reference', 'vat_level'),
+                    ('is_into_offer', 'is_active')
+                ]
+            elif producer_manage_replenishment:
+                fields_advanced_options = [
+                    ('stock', 'limit_order_quantity_to_stock', 'producer_order_by_quantity'),
+                    ('reference', 'vat_level'),
+                    ('is_into_offer', 'is_active')
+                ]
+            else:
+                fields_advanced_options = [
+                    ('producer_order_by_quantity'),
+                    ('reference', 'vat_level'),
+                    ('is_into_offer', 'is_active')
+                ]
 
         self.fieldsets = (
             (None, {'fields': fields_basic}),
@@ -505,7 +543,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
         producer_field = form.base_fields["producer"]
         department_for_customer_field = form.base_fields["department_for_customer"]
-        production_mode_field = form.base_fields["production_mode"]
+
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
         vat_level_field = form.base_fields["vat_level"]
@@ -515,6 +553,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         department_for_customer_field.widget.can_delete_related = False
         # TODO : Make it dependent of the producer country
         vat_level_field.widget.choices = settings.LUT_VAT
+
+        if "production_mode" in form.base_fields:
+            production_mode_field = form.base_fields["production_mode"]
+        else:
+            production_mode_field = None
 
         order_unit_choices = LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION
         if producer is not None:
@@ -531,7 +574,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
                 rght=F('lft') + 1, is_active=True, translations__language_code=translation.get_language()).order_by(
                 'translations__short_name')
-            production_mode_field.empty_label = None
+            if production_mode_field is not None:
+                production_mode_field.empty_label = None
         else:
             if producer is not None:
                 producer_field.empty_label = None
@@ -559,9 +603,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     is_into_offer_field.initial = False
                 else:
                     is_into_offer_field.initial = True
-        production_mode_field.queryset = LUT_ProductionMode.objects.filter(
-            rght=F('lft') + 1, is_active=True, translations__language_code=translation.get_language()).order_by(
-            'translations__short_name')
+        if production_mode_field is not None:
+            production_mode_field.queryset = LUT_ProductionMode.objects.filter(
+                rght=F('lft') + 1, is_active=True, translations__language_code=translation.get_language()).order_by(
+                'translations__short_name')
         return form
 
     def save_model(self, request, product, form, change):
@@ -573,6 +618,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         queryset = super(ProductAdmin, self).get_queryset(request)
         return queryset.filter(
             is_box=False,
+            is_contract=False,
             # is_membership_fee=False,
             producer__is_active=True,
             translations__language_code=translation.get_language()
