@@ -273,26 +273,15 @@ class BoxAdmin(TranslatableAdmin):
                 ('stock', 'customer_unit_price', 'unit_deposit'),
                 ('calculated_stock', 'calculated_customer_box_price', 'calculated_box_deposit'),
             ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            fields_advanced_descriptions = [
-                'placement',
-                'offer_description',
-            ]
-            fields_advanced_options = [
-                'vat_level',
-                'is_into_offer',
-                'is_active'
-            ]
-        else:
-            fields_advanced_descriptions = [
-                'placement',
-                'offer_description',
-            ]
-            fields_advanced_options = [
-                'vat_level',
-                'is_into_offer',
-                'is_active'
-            ]
+        fields_advanced_descriptions = [
+            'placement',
+            'offer_description',
+        ]
+        fields_advanced_options = [
+            'vat_level',
+            'is_into_offer',
+            'is_active'
+        ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced descriptions'), {'classes': ('collapse',), 'fields': fields_advanced_descriptions}),
