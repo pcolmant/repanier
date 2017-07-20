@@ -618,7 +618,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         queryset = super(ProductAdmin, self).get_queryset(request)
         return queryset.filter(
             is_box=False,
-            is_contract=False,
             # is_membership_fee=False,
             producer__is_active=True,
             translations__language_code=translation.get_language()
