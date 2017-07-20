@@ -2,11 +2,14 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from recurrence.fields import RecurrenceField
 
 import repanier.apps
+from repanier.models.box import box_pre_save
 from repanier.models import Box
 from repanier.const import *
 
@@ -42,3 +45,9 @@ class Contract(Box):
     class Meta:
         verbose_name = _("contract")
         verbose_name_plural = _("contracts")
+
+
+@receiver(pre_save, sender=Contract)
+def contract_pre_save(sender, **kwargs):
+    # ! Important to initialise all fields of the contract. Remember : a contract is a box.
+    box_pre_save(sender, **kwargs)
