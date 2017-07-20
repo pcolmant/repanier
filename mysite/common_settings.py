@@ -13,7 +13,6 @@ try:
 except:
     from six.moves import configparser
 
-
 gettext = lambda s: s
 logger = logging.getLogger(__name__)
 
@@ -33,6 +32,7 @@ def get_allowed_mail_extension():
         allowed_mail_extension = "@repanier.be"
     return allowed_mail_extension
 
+
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 logger.info("Python path is : %s" % sys.path)
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
@@ -43,12 +43,12 @@ MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 
 DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
-DJANGO_SETTINGS_DATABASE_ENGINE = 'django.db.backends.postgresql_psycopg2'
+
 config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = '%s%s%s.ini' % (
-            PROJECT_DIR,
-            os.sep,
-            DJANGO_SETTINGS_SITE_NAME
+    PROJECT_DIR,
+    os.sep,
+    DJANGO_SETTINGS_SITE_NAME
 )
 try:
     # Open the file with the correct encoding
@@ -59,37 +59,31 @@ except IOError:
     print ("Unable to open %s settings" % (conf_file_name,))
     raise SystemExit(-1)
 
-OPTIONS = ('DJANGO_SETTINGS_ADMIN_EMAIL',
-           'DJANGO_SETTINGS_ADMIN_NAME',
-           'DJANGO_SETTINGS_DATABASE_ENGINE',
-           'DJANGO_SETTINGS_DATABASE_HOST',
-           'DJANGO_SETTINGS_DATABASE_NAME',
-           'DJANGO_SETTINGS_DATABASE_PASSWORD',
-           'DJANGO_SETTINGS_DATABASE_PORT',
-           'DJANGO_SETTINGS_DATABASE_USER',
-           'DJANGO_SETTINGS_DEBUG',
-           'DJANGO_SETTINGS_DEMO',
-           'DJANGO_SETTINGS_EMAIL_HOST',
-           'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD',
-           'DJANGO_SETTINGS_EMAIL_HOST_USER',
-           'DJANGO_SETTINGS_EMAIL_PORT',
-           'DJANGO_SETTINGS_EMAIL_USE_SSL',
-           'DJANGO_SETTINGS_EMAIL_USE_TLS',
-           'DJANGO_SETTINGS_ENV',
-           'DJANGO_SETTINGS_LANGUAGE',
-           'DJANGO_SETTINGS_LOGGING',
-           'DJANGO_SETTINGS_CACHE',
-           'DJANGO_SETTINGS_SESSION',
-           'DJANGO_SETTINGS_COUNTRY',
-           'DJANGO_SETTINGS_IS_MINIMALIST',
-           'DJANGO_SETTINGS_IS_AMAP',
-           'DJANGO_SETTINGS_STATIC')
-
-for OPTION in OPTIONS:
-    try:
-        globals()[OPTION] = config.get('DJANGO_SETTINGS', OPTION)
-    except configparser.NoOptionError:
-        pass
+DJANGO_SETTINGS_ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
+DJANGO_SETTINGS_ADMIN_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_NAME')
+DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE')
+DJANGO_SETTINGS_DATABASE_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_HOST')
+DJANGO_SETTINGS_DATABASE_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_NAME')
+DJANGO_SETTINGS_DATABASE_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PASSWORD')
+DJANGO_SETTINGS_DATABASE_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PORT')
+DJANGO_SETTINGS_DATABASE_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_USER')
+DJANGO_SETTINGS_DEBUG = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG')
+DJANGO_SETTINGS_DEMO = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEMO')
+DJANGO_SETTINGS_EMAIL_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST')
+DJANGO_SETTINGS_EMAIL_HOST_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD')
+DJANGO_SETTINGS_EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_USER')
+DJANGO_SETTINGS_EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT')
+DJANGO_SETTINGS_EMAIL_USE_SSL = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_SSL')
+DJANGO_SETTINGS_EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS')
+DJANGO_SETTINGS_ENV = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ENV')
+DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE')
+DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING')
+DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE')
+DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION')
+DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY')
+DJANGO_SETTINGS_IS_MINIMALIST = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_IS_MINIMALIST')
+DJANGO_SETTINGS_IS_AMAP = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_IS_AMAP')
+DJANGO_STATIC = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STATIC')
 
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):
@@ -133,12 +127,12 @@ SERVER_EMAIL = "%s%s" % (DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAI
 
 DATABASES = {
     'default': {
-        'ENGINE': DJANGO_SETTINGS_DATABASE_ENGINE,
-        'NAME': DJANGO_SETTINGS_DATABASE_NAME,  # Or path to database file if using sqlite3.
-        'USER': DJANGO_SETTINGS_DATABASE_USER,
+        'ENGINE'  : DJANGO_SETTINGS_DATABASE_ENGINE,
+        'NAME'    : DJANGO_SETTINGS_DATABASE_NAME,  # Or path to database file if using sqlite3.
+        'USER'    : DJANGO_SETTINGS_DATABASE_USER,
         'PASSWORD': DJANGO_SETTINGS_DATABASE_PASSWORD,
-        'HOST': DJANGO_SETTINGS_DATABASE_HOST,
-        'PORT': DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
+        'HOST'    : DJANGO_SETTINGS_DATABASE_HOST,
+        'PORT'    : DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
     }
 }
 EMAIL_HOST = DJANGO_SETTINGS_EMAIL_HOST
@@ -149,7 +143,7 @@ EMAIL_USE_TLS = DJANGO_SETTINGS_EMAIL_USE_TLS
 if EMAIL_USE_TLS:
     EMAIL_USE_SSL = False
 else:
-    EMAIL_USE_SSL =DJANGO_SETTINGS_EMAIL_USE_SSL
+    EMAIL_USE_SSL = DJANGO_SETTINGS_EMAIL_USE_SSL
 ###################### I18N
 
 TIME_ZONE = 'Europe/Brussels'
@@ -180,7 +174,7 @@ LOCALE_PATHS = (
 )
 
 INSTALLED_APPS = (
-    'repanier', # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
+    'repanier',  # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
     'djangocms_admin_style',  # note this needs to be above the 'django.contrib.admin' entry
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -245,35 +239,35 @@ MIDDLEWARE = (
 )
 
 TEMPLATES = [
-{
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [
-        os.path.join(PROJECT_DIR, "templates"),
-    ],
-    # 'APP_DIRS': True,
-    'OPTIONS': {
-        'context_processors': [
-            'django.contrib.auth.context_processors.auth',
-            'django.contrib.messages.context_processors.messages',
-            'django.template.context_processors.i18n',
-            'django.template.context_processors.debug',
-            'django.template.context_processors.request',
-            'django.template.context_processors.media',
-            'django.template.context_processors.csrf',
-            'django.template.context_processors.tz',
-            'sekizai.context_processors.sekizai',
-            'django.template.context_processors.static',
-            'cms.context_processors.cms_settings'
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS'   : [
+            os.path.join(PROJECT_DIR, "templates"),
         ],
-        'loaders': [
-            ('django.template.loaders.cached.Loader', [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
-                # 'django.template.loaders.eggs.Loader'
-            ]),
-        ],
+        # 'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.template.context_processors.media',
+                'django.template.context_processors.csrf',
+                'django.template.context_processors.tz',
+                'sekizai.context_processors.sekizai',
+                'django.template.context_processors.static',
+                'cms.context_processors.cms_settings'
+            ],
+            'loaders'           : [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    # 'django.template.loaders.eggs.Loader'
+                ]),
+            ],
+        },
     },
-},
 ]
 
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
@@ -287,11 +281,11 @@ CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
 
 CKEDITOR_SETTINGS = {
-    'language': '{{ language }}',
-    'toolbar_CMS': [
+    'language'             : '{{ language }}',
+    'toolbar_CMS'          : [
         ['Undo', 'Redo'],
         ['cmsplugins', '-', 'ShowBlocks'],
-        ['Format',],
+        ['Format', ],
         ['TextColor', 'BGColor', '-', 'PasteText'],
         ['Maximize', ''],
         '/',
@@ -301,60 +295,60 @@ CKEDITOR_SETTINGS = {
         ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
         ['Source']
     ],
-    'toolbar_HTMLField': [
+    'toolbar_HTMLField'    : [
         ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
     ],
     'forcePasteAsPlainText': 'true',
-    'skin': 'moono',
+    'skin'                 : 'moono',
     # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
-    'format_tags': 'p;h4;h5;blockquote;mutted;success;info;danger;heart;pushpin',
-    'format_blockquote': {'element': 'blockquote', 'name': 'Blockquote'},
-    'format_heart': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
-    'format_infosign': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-info-sign'}},
-    'format_warningsign': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-warning-sign'}},
-    'format_pushpin': {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-pushpin'}},
-    'format_mutted': {'element': 'p', 'attributes': {'class': 'text-muted'}, 'name': 'Mutted'},
-    'format_success': {'element': 'p', 'attributes': {'class': 'bg-success'}, 'name': 'Success'},
-    'format_info': {'element': 'p', 'attributes': {'class': 'bg-info'}, 'name': 'Info'},
-    'format_danger': {'element': 'p', 'attributes': {'class': 'bg-danger'}, 'name': 'Danger'},
+    'format_tags'          : 'p;h4;h5;blockquote;mutted;success;info;danger;heart;pushpin',
+    'format_blockquote'    : {'element': 'blockquote', 'name': 'Blockquote'},
+    'format_heart'         : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
+    'format_infosign'      : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-info-sign'}},
+    'format_warningsign'   : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-warning-sign'}},
+    'format_pushpin'       : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-pushpin'}},
+    'format_mutted'        : {'element': 'p', 'attributes': {'class': 'text-muted'}, 'name': 'Mutted'},
+    'format_success'       : {'element': 'p', 'attributes': {'class': 'bg-success'}, 'name': 'Success'},
+    'format_info'          : {'element': 'p', 'attributes': {'class': 'bg-info'}, 'name': 'Info'},
+    'format_danger'        : {'element': 'p', 'attributes': {'class': 'bg-danger'}, 'name': 'Danger'},
     # format_p = { element: 'p', attributes: { 'class': 'normalPara' } };
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'} };
     # 'contentsCss' : '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
-    'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
+    'contentsCss'          : '%sbootstrap/css/bootstrap.css' % STATIC_URL,
     # 'extraAllowedContent' : '*(*)',
     # 'extraAllowedContent' : 'iframe[*]',
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
     # the following parameters to CKEDITOR_SETTINGS:
-    'basicEntities': False,
-    'entities': False,
-    'enterMode' : 2,
+    'basicEntities'        : False,
+    'entities'             : False,
+    'enterMode'            : 2,
     # Do not dispaly the HTML Path below the edit window
-    'removePlugins': 'elementspath',
+    'removePlugins'        : 'elementspath',
 }
 
 CKEDITOR_SETTINGS_MODEL2 = {
-    'language': '{{ language }}',
-    'toolbar_HTMLField': [
+    'language'             : '{{ language }}',
+    'toolbar_HTMLField'    : [
         ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         # ['Preview', 'Cut', 'Copy', 'PasteText', 'Image', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
         # ['Maximize', '']
     ],
-    'extraPlugins': 'simplebox',
+    'extraPlugins'         : 'simplebox',
     'forcePasteAsPlainText': 'true',
-    'skin': 'moono',
-    'format_tags': 'p;h4;h5',
-    'contentsCss': '%sbootstrap/css/bootstrap.css' % STATIC_URL,
-    'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
-    'basicEntities': False,
-    'entities': False,
-    'enterMode': 2,
-    'removePlugins': 'elementspath',
+    'skin'                 : 'moono',
+    'format_tags'          : 'p;h4;h5',
+    'contentsCss'          : '%sbootstrap/css/bootstrap.css' % STATIC_URL,
+    'removeFormatTags'     : 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    'basicEntities'        : False,
+    'entities'             : False,
+    'enterMode'            : 2,
+    'removePlugins'        : 'elementspath',
 }
 
 # Drag & Drop Images
@@ -390,8 +384,8 @@ THUMBNAIL_PROGRESSIVE = 100
 THUMBNAIL_PRESERVE_EXTENSIONS = True
 
 THUMBNAIL_OPTIMIZE_COMMAND = {
-    'png': '/usr/bin/optipng {filename}',
-    'gif': '/usr/bin/optipng {filename}',
+    'png' : '/usr/bin/optipng {filename}',
+    'gif' : '/usr/bin/optipng {filename}',
     'jpeg': '/usr/bin/jpegoptim {filename}',
 }
 THUMBNAIL_DEBUG = FILER_DEBUG
@@ -455,19 +449,19 @@ CACHE_MIDDLEWARE_SECONDS = 3600
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'BACKEND' : 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+        'TIMEOUT' : 300,
+        'OPTIONS' : {
+            'MAX_ENTRIES'   : 1000,
             'CULL_FREQUENCY': 3
         }
     }
 }
 
 CMS_CACHE_DURATIONS = {
-    'content': 300,  # default 60
-    'menus': 3600,  # default 3600
+    'content'    : 300,  # default 60
+    'menus'      : 3600,  # default 3600
     'permissions': 3600  # default: 3600
 }
 
@@ -479,49 +473,47 @@ getcontext().rounding = ROUND_HALF_UP
 ##################### DJANGO REST_FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
-    'PAGE_SIZE': 10
+    'PAGE_SIZE'                 : 10
 }
 
 ##################### DJANGO IMPORT EXPORT
 IMPORT_EXPORT_USE_TRANSACTIONS = True
-
 
 DATE_INPUT_FORMATS = (DJANGO_SETTINGS_DATE, "%d/%m/%Y", "%Y-%m-%d")
 DATETIME_INPUT_FORMATS = (DJANGO_SETTINGS_DATETIME,)
 
 if DJANGO_SETTINGS_LOGGING:
     LOGGING = {
-        'version': 1,
+        'version'                 : 1,
         'disable_existing_loggers': False,
-        'filters': {
+        'filters'                 : {
             'require_debug_false': {
                 '()': 'django.utils.log.RequireDebugFalse'
             }
         },
-        'handlers': {
+        'handlers'                : {
             'mail_admins': {
-                'level': 'ERROR',
+                'level'  : 'ERROR',
                 'filters': ['require_debug_false'],
-                'class': 'django.utils.log.AdminEmailHandler'
+                'class'  : 'django.utils.log.AdminEmailHandler'
             },
-            'console': {
+            'console'    : {
                 # 'level': 'INFO',
                 'class': 'logging.StreamHandler',
             },
         },
-        'loggers': {
-            'django.request': {
-                'handlers': ['mail_admins'],
-                'level': 'ERROR',
+        'loggers'                 : {
+            'django.request'    : {
+                'handlers' : ['mail_admins'],
+                'level'    : 'ERROR',
                 'propagate': True,
             },
             'django.db.backends': {
-                'level': 'ERROR',
+                'level'   : 'ERROR',
                 'handlers': ['console'],
             },
         }
     }
-
 
 CMS_TEMPLATES = (
     ('cms_page.html', gettext("Internal page")),
@@ -540,17 +532,17 @@ LANGUAGES = [
 CMS_LANGUAGES = {
     SITE_ID: [
         {
-        'code': 'fr',
-        'name': get_language_info('fr')['name'],
-        'public': True,
-        'hide_untranslated': False,
+            'code'             : 'fr',
+            'name'             : get_language_info('fr')['name'],
+            'public'           : True,
+            'hide_untranslated': False,
         },
     ]
 }
 PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
 PARLER_LANGUAGES = {
-    SITE_ID: (
-        {'code': LANGUAGE_CODE,},
+    SITE_ID  : (
+        {'code': LANGUAGE_CODE, },
     ),
     'default': {
         'fallbacks'        : [LANGUAGE_CODE],
@@ -567,17 +559,17 @@ if DJANGO_SETTINGS_LANGUAGE == 'es':
     CMS_LANGUAGES = {
         SITE_ID: [
             {
-            'code': 'es',
-            'name': get_language_info('es')['name'],
-            'public': True,
-            'hide_untranslated': False,
+                'code'             : 'es',
+                'name'             : get_language_info('es')['name'],
+                'public'           : True,
+                'hide_untranslated': False,
             },
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID: (
-            {'code': LANGUAGE_CODE,},
+        SITE_ID  : (
+            {'code': LANGUAGE_CODE, },
         ),
         'default': {
             'fallbacks'        : [LANGUAGE_CODE],
@@ -596,36 +588,36 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-nl-en':
     CMS_LANGUAGES = {
         SITE_ID: [
             {
-                'code': 'fr',
-                'name': get_language_info('fr')['name'],
-                'public': True,
-                'redirect_on_fallback':False,
-                'hide_untranslated': False,
+                'code'                : 'fr',
+                'name'                : get_language_info('fr')['name'],
+                'public'              : True,
+                'redirect_on_fallback': False,
+                'hide_untranslated'   : False,
             },
             {
-                'code': 'nl',
-                'name': get_language_info('nl')['name'],
+                'code'     : 'nl',
+                'name'     : get_language_info('nl')['name'],
                 'fallbacks': ['en', 'fr'],
-                'public': True,
+                'public'   : True,
             },
             {
-                'code': 'en',
-                'name': get_language_info('en')['name'],
+                'code'     : 'en',
+                'name'     : get_language_info('en')['name'],
                 'fallbacks': [LANGUAGE_CODE],
-                'public': True,
+                'public'   : True,
             },
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID: (
-            {'code': 'fr',},
-            {'code': 'nl',},
-            {'code': 'en',},
+        SITE_ID  : (
+            {'code': 'fr', },
+            {'code': 'nl', },
+            {'code': 'en', },
         ),
         'default': {
-                'fallbacks': [LANGUAGE_CODE],
-                'hide_untranslated': False,
+            'fallbacks'        : [LANGUAGE_CODE],
+            'hide_untranslated': False,
         },
     }
 elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
@@ -638,29 +630,29 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
     CMS_LANGUAGES = {
         SITE_ID: [
             {
-                'code': 'fr',
-                'name': get_language_info('fr')['name'],
-                'public': True,
-                'redirect_on_fallback':False,
-                'hide_untranslated': False,
+                'code'                : 'fr',
+                'name'                : get_language_info('fr')['name'],
+                'public'              : True,
+                'redirect_on_fallback': False,
+                'hide_untranslated'   : False,
             },
             {
-                'code': 'en',
-                'name': get_language_info('en')['name'],
+                'code'     : 'en',
+                'name'     : get_language_info('en')['name'],
                 'fallbacks': [LANGUAGE_CODE],
-                'public': True,
+                'public'   : True,
             },
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID: (
-            {'code': 'fr',},
-            {'code': 'en',},
+        SITE_ID  : (
+            {'code': 'fr', },
+            {'code': 'en', },
         ),
         'default': {
-                'fallbacks': [LANGUAGE_CODE],
-                'hide_untranslated': False,
+            'fallbacks'        : [LANGUAGE_CODE],
+            'hide_untranslated': False,
         },
     }
 
@@ -675,22 +667,23 @@ CMSPLUGIN_CASCADE_PLUGINS = (
 )
 
 from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
+
 CMSPLUGIN_CASCADE = {
     'plugins_with_extra_fields': {
-        'BootstrapRowPlugin': PluginExtraFieldsConfig(inline_styles={
+        'BootstrapRowPlugin'      : PluginExtraFieldsConfig(inline_styles={
             'extra_fields:Margins': ['margin-top', 'margin-bottom'],
-            'extra_units:Margins': 'px,em'}),
+            'extra_units:Margins' : 'px,em'}),
         'BootstrapJumbotronPlugin': PluginExtraFieldsConfig(inline_styles={
             'extra_fields:Margins': ['padding-top', 'padding-bottom', 'margin-bottom'],
-            'extra_units:Margins': 'px,em'}),
+            'extra_units:Margins' : 'px,em'}),
     },
-    'bootstrap3': (
+    'bootstrap3'               : (
         ('xs', (768, 'mobile', _("mobile phones"), 750, 768)),
         ('sm', (768, 'tablet', _("tablets"), 750, 992)),
         ('md', (992, 'laptop', _("laptops"), 970, 1200)),
         ('lg', (1200, 'desktop', _("large desktops"), 1170, 2500)),
     ),
-    'segmentation_mixins': (
+    'segmentation_mixins'      : (
         (
             'cmsplugin_cascade.segmentation.mixins.EmulateUserModelMixin',
             'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
@@ -699,9 +692,9 @@ CMSPLUGIN_CASCADE = {
 }
 
 CMS_PLACEHOLDER_CONF = {
-    'home-hero': {
-        'name': gettext('Hero'),
-        'plugins': [
+    'home-hero'        : {
+        'name'             : gettext('Hero'),
+        'plugins'          : [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -711,10 +704,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins': [
+        'default_plugins'  : [
             {
                 'plugin_type': 'TextPlugin',
-                'values': {
+                'values'     : {
                     'body':
                         """
                         <h3>Lorem ipsum</h3>
@@ -727,9 +720,9 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'home-col-1': {
-        'name': gettext('Column 1'),
-        'plugins': [
+    'home-col-1'       : {
+        'name'             : gettext('Column 1'),
+        'plugins'          : [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -739,10 +732,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins': [
+        'default_plugins'  : [
             {
                 'plugin_type': 'TextPlugin',
-                'values': {
+                'values'     : {
                     'body':
                         """
                         <div class="panel panel-info">
@@ -759,8 +752,8 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'home-col-2': {
-        'name': gettext('Column 2'),
+    'home-col-2'       : {
+        'name'             : gettext('Column 2'),
         'plugins'          : [
             'TextPlugin',
         ],
@@ -771,10 +764,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins': [
+        'default_plugins'  : [
             {
                 'plugin_type': 'TextPlugin',
-                'values': {
+                'values'     : {
                     'body':
                         """
                         <div class="panel panel-danger">
@@ -791,8 +784,8 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'home-col-3': {
-        'name': gettext('Column 3'),
+    'home-col-3'       : {
+        'name'             : gettext('Column 3'),
         'plugins'          : [
             'TextPlugin',
         ],
@@ -803,10 +796,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins': [
+        'default_plugins'  : [
             {
                 'plugin_type': 'TextPlugin',
-                'values': {
+                'values'     : {
                     'body':
                         """
                         <div class="panel panel-warning">
@@ -823,8 +816,8 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'subpage_content': {
-        'name': gettext('Content'),
+    'subpage_content'  : {
+        'name'             : gettext('Content'),
         'plugins'          : [
             'TextPlugin',
         ],
@@ -835,10 +828,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins': [
+        'default_plugins'  : [
             {
                 'plugin_type': 'TextPlugin',
-                'values': {
+                'values'     : {
                     'body':
                         """
                         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed luctus tortor quis imperdiet egestas. Proin mollis sem ipsum, nec facilisis nibh cursus eu. Sed convallis cursus venenatis. Maecenas rutrum, elit ut ornare lobortis, mi dolor placerat elit, at laoreet sapien urna vitae arcu. Phasellus consectetur tincidunt ullamcorper. Sed et enim at lacus cursus rhoncus. Vestibulum porttitor velit non ante ullamcorper, ut gravida ipsum vestibulum. Aenean sed condimentum nisi. Quisque sagittis mauris non leo tincidunt vulputate. Ut euismod ante purus, sed pulvinar nisl volutpat quis. Maecenas consequat mi vitae libero egestas varius. Nam in tempor augue, sit amet pulvinar purus.</p>
@@ -850,8 +843,8 @@ CMS_PLACEHOLDER_CONF = {
         ]
     },
     'bootstrap_content': {
-        'name'           : gettext('Bootstrap Content'),
-        'plugins'        : [
+        'name'             : gettext('Bootstrap Content'),
+        'plugins'          : [
             'BootstrapContainerPlugin',
             'BootstrapJumbotronPlugin',
         ],
@@ -862,15 +855,15 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'parent_classes' : {
+        'parent_classes'   : {
             'BootstrapContainerPlugin': None,
             'BootstrapJumbotronPlugin': None,
         },
-        'glossary': {
-            'breakpoints': ['xs', 'sm', 'md', 'lg'],
+        'glossary'         : {
+            'breakpoints'         : ['xs', 'sm', 'md', 'lg'],
             'container_max_widths': {'xs': 750, 'sm': 750, 'md': 970, 'lg': 1170},
-            'fluid': False,
-            'media_queries': {
+            'fluid'               : False,
+            'media_queries'       : {
                 'xs': ['(max-width: 768px)'],
                 'sm': ['(min-width: 768px)', '(max-width: 992px)'],
                 'md': ['(min-width: 992px)', '(max-width: 1200px)'],
@@ -879,17 +872,17 @@ CMS_PLACEHOLDER_CONF = {
         },
     },
 
-    'footer': {
-        'name': gettext('Footer'),
-        'plugins': ['TextPlugin',  'FilerImagePlugin'],
+    'footer'           : {
+        'name'             : gettext('Footer'),
+        'plugins'          : ['TextPlugin', 'FilerImagePlugin'],
         'text_only_plugins': ['TextLinkPlugin'],
-        'limits': {
+        'limits'           : {
             'TextPlugin': 1,
         },
-        'default_plugins': [
+        'default_plugins'  : [
             {
                 'plugin_type': 'TextPlugin',
-                'values': {
+                'values'     : {
                     'body':
                         'Lorem ipsum dolor sit amet'
 
