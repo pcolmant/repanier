@@ -198,16 +198,6 @@ class ContractDataForm(TranslatableModelForm):
             self.add_error(
                 'producer',
                 _('Please select first a producer in the filter of previous screen'))
-        else:
-            reference = self.cleaned_data.get("reference", EMPTY_STRING)
-            if reference:
-                qs = Product.objects.filter(reference=reference, producer_id=producer.id).order_by('?')
-                if self.instance.id is not None:
-                    qs = qs.exclude(id=self.instance.id)
-                if qs.exists():
-                    self.add_error(
-                        "reference",
-                        _('The reference is already used by %(product)s') % {'product': qs.first()})
 
     def save(self, *args, **kwargs):
         instance = super(ContractDataForm, self).save(*args, **kwargs)
@@ -229,14 +219,15 @@ class ContractAdmin(TranslatableAdmin):
     list_max_show_all = 16
     inlines = (ContractContentInline,)
     ordering = (
+        '-first_permanence_date',
         'customer_unit_price',
         'unit_deposit',
         'translations__long_name'
     )
     search_fields = ('translations__long_name',)
     list_filter = (
-        'is_active',
         'is_into_offer',
+        'is_active',
         ProductFilterByProducer,
         ProductFilterByVatLevel
    )
@@ -266,17 +257,17 @@ class ContractAdmin(TranslatableAdmin):
         #     producer = None
 
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                self.list_editable = ('stock',)
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'language_column', 'stock')
+            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                return ('producer', 'get_is_into_offer', 'get_long_name', 'language_column', 'first_permanence_date', 'get_full_status_display')
             else:
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'language_column')
+                self.list_editable = ('stock',)
+                return ('producer', 'get_is_into_offer', 'get_long_name', 'language_column', 'first_permanence_date', 'stock', 'get_full_status_display')
         else:
-            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                self.list_editable = ('stock',)
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'stock')
+            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                return ('producer', 'get_is_into_offer', 'get_long_name', 'first_permanence_date', 'get_full_status_display')
             else:
-                return ('producer', 'get_is_into_offer', 'get_long_name')
+                self.list_editable = ('stock',)
+                return ('producer', 'get_is_into_offer', 'get_long_name', 'first_permanence_date', 'stock', 'get_full_status_display')
 
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_contract.flip_flop_is_into_offer(queryset)
@@ -315,33 +306,27 @@ class ContractAdmin(TranslatableAdmin):
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields_basic = [
                 ('producer', 'long_name', 'picture2'),
+                'first_permanence_date',
+                'recurrences',
                 ('calculated_stock', 'calculated_customer_contract_price', 'calculated_contract_deposit'),
                 ('stock', 'customer_unit_price', 'unit_deposit'),
             ]
         else:
             fields_basic = [
                 ('producer', 'long_name', 'picture2'),
+                'first_permanence_date',
+                'recurrences',
                 ('calculated_customer_contract_price', 'calculated_contract_deposit'),
                 ('customer_unit_price', 'unit_deposit'),
             ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            fields_advanced_descriptions = [
-                'placement',
-                'offer_description',
-            ]
-            fields_advanced_options = [
-                'vat_level',
-                ('is_into_offer', 'is_active')
-            ]
-        else:
-            fields_advanced_descriptions = [
-                'placement',
-                'offer_description',
-            ]
-            fields_advanced_options = [
-                ('reference', 'vat_level'),
-                ('is_into_offer', 'is_active')
-            ]
+        fields_advanced_descriptions = [
+            'placement',
+            'offer_description',
+        ]
+        fields_advanced_options = [
+            'vat_level',
+            ('is_into_offer', 'is_active')
+        ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced descriptions'), {'classes': ('collapse',), 'fields': fields_advanced_descriptions}),
