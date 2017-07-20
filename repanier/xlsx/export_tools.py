@@ -9,7 +9,7 @@ from openpyxl.style import NumberFormat
 from openpyxl.styles import Border
 from openpyxl.workbook import Workbook
 
-from .const import *
+from repanier.xlsx.const import *
 from repanier.const import EMPTY_STRING
 from repanier.models.staff import Staff
 from repanier.tools import cap
@@ -25,7 +25,12 @@ def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     worksheet.print_gridlines = True
     if add_print_title:
         worksheet.add_print_title(1, rows_or_cols='rows')
-        worksheet.freeze_panes = 'A2'.encode("utf8")
+        try:
+            # Python 2
+            worksheet.freeze_panes = 'A2'.encode("utf8")
+        except:
+            # Python 3
+            worksheet.freeze_panes = 'A2'
     worksheet.header_footer.left_header.text = Site.objects.get_current().name
     worksheet.header_footer.left_footer.text = "%s" % (title2)
     worksheet.header_footer.center_footer.text = title1
