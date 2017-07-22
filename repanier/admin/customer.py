@@ -240,24 +240,24 @@ def create__customer_action(year):
 
 
 class CustomerWithUserDataForm(UserDataForm):
-    contracts = forms.ModelMultipleChoiceField(
-        Contract.objects.all(), # filter(status=PERMANENCE_PLANNED),
-        widget=admin.widgets.FilteredSelectMultiple(_('Contracts'), False),
-        required=False
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
-        if self.instance.id:
-            self.fields['contracts'].initial = self.instance.contract_set.filter(is_active=True)
-
-    def save(self, *args, **kwargs):
-        instance = super(CustomerWithUserDataForm, self).save(*args, **kwargs)
-        if instance.id is not None:
-            instance.contract_set.clear()
-            instance.contract_set.add(*self.cleaned_data['contracts'])
-
-        return instance
+    # contracts = forms.ModelMultipleChoiceField(
+    #     Contract.objects.all(), # filter(status=PERMANENCE_PLANNED),
+    #     widget=admin.widgets.FilteredSelectMultiple(_('Contracts'), False),
+    #     required=False
+    # )
+    #
+    # def __init__(self, *args, **kwargs):
+    #     super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
+    #     if self.instance.id:
+    #         self.fields['contracts'].initial = self.instance.contract_set.filter(is_active=True)
+    #
+    # def save(self, *args, **kwargs):
+    #     instance = super(CustomerWithUserDataForm, self).save(*args, **kwargs)
+    #     if instance.id is not None:
+    #         instance.contract_set.clear()
+    #         instance.contract_set.add(*self.cleaned_data['contracts'])
+    #
+    #     return instance
 
     class Meta:
         widgets = {
@@ -370,10 +370,10 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 'price_list_multiplier',
                 ('may_order', 'is_active'),
             ]
-        if settings.DJANGO_SETTINGS_IS_AMAP:
-            fields_basic += [
-                'contracts',
-            ]
+        # if settings.DJANGO_SETTINGS_IS_AMAP:
+        #     fields_basic += [
+        #         'contracts',
+        #     ]
         fields_advanced = [
             'bank_account1',
             'bank_account2',
