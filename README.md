@@ -44,22 +44,22 @@ Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'ap
 
 1. Clone du projet:
 
-   git clone https://github.com/pcolmant/repanier.git
+    git clone https://github.com/pcolmant/repanier.git
 
 2. Initialisation et activation de l'environnement de développement, installation des dépendances:
 
-   virtualenv -p python3 venv
-   . venv/bin/activate
-   pip install -r requirements/requirement.txt
+    virtualenv -p python3 venv
+    . venv/bin/activate
+    pip install -r requirements/requirement.txt
 
 3. Construction de la base de données et ajout des données factices:
 
-   ./manage.py migrate
-   ./manage.py loaddata fixtures/initial_users.yaml
+    ./manage.py migrate
+    ./manage.py loaddata fixtures/initial_users.yaml
 
 4. Démarrage de l'application:
 
-   ./manage.py runserver
+    ./manage.py runserver
 
 Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/ Pour s'authentifier comme administrateur vous pouvez utiliser: *admin* *secret*.
 
