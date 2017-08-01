@@ -1,8 +1,8 @@
 Repanier
 ========
 
-Repanier is a tool for local producers and consumers groups (GAC, GASAP, AMAP, …)
-which helps organizing schedules, orders, membership and payments followup.
+Repanier is a tool for local consumers groups (GAC, GASAP, AMAP, …) which helps
+organizing schedules, orders, membership and payments followup.
 
   - [Documentation](https://repanier.be/fr/)
   - [Survol](https://repanier.be/fr/documentation/survol/)
