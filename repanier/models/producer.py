@@ -81,7 +81,6 @@ class Producer(models.Model):
     offer_filled = models.BooleanField(_("offer filled"), default=False)
     invoice_by_basket = models.BooleanField(_("invoice by basket"), default=False)
     manage_replenishment = models.BooleanField(_("manage stock"), default=False)
-    manage_production = models.BooleanField(_("manage production"), default=False)
     producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
     producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
     sort_products_by_reference = models.BooleanField(_("sort products by reference"), default=False)
@@ -383,7 +382,6 @@ def producer_pre_save(sender, **kwargs):
     if producer.producer_pre_opening:
         # Used to make difference between the stock of the group and the stock of the producer
         producer.manage_replenishment = False
-        producer.manage_production = True
         producer.is_resale_price_fixed = False
     elif producer.manage_replenishment:
         # Needed to compute ProducerInvoice.total_price_with_tax

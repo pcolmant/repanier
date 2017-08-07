@@ -140,7 +140,7 @@ def product_pre_save(sender, **kwargs):
         producer.price_list_multiplier
     )
 
-    if producer.producer_pre_opening or producer.manage_production:
+    if producer.producer_pre_opening or producer.represent_this_buyinggroup:
         product.producer_order_by_quantity = DECIMAL_ZERO
         product.limit_order_quantity_to_stock = True
         # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
@@ -151,7 +151,7 @@ def product_pre_save(sender, **kwargs):
         product.limit_order_quantity_to_stock = True
     if product.limit_order_quantity_to_stock:
         product.customer_alert_order_quantity = min(999, product.stock)
-    elif product.order_unit == PRODUCT_ORDER_UNIT_SUBSCRIPTION:
+    elif settings.DJANGO_SETTINGS_IS_MINIMALIST:
         product.customer_alert_order_quantity = LIMIT_ORDER_QTY_ITEM
     if product.customer_increment_order_quantity <= DECIMAL_ZERO:
         product.customer_increment_order_quantity = DECIMAL_ONE

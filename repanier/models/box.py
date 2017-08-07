@@ -46,7 +46,7 @@ class Box(Product):
         return box_price, box_deposit
 
     def __str__(self):
-        return '%s' % self.long_name
+        return super(Box, self).display()
 
     class Meta:
         proxy = True
@@ -79,7 +79,7 @@ class BoxContent(models.Model):
         'Product', verbose_name=_("product"), related_name='box_content',
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     content_quantity = models.DecimalField(
-        _("box content quantity"),
+        _("fixed content quantity"),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     may_order_more = models.BooleanField(_("may order more"), default=False)

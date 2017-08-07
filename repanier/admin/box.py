@@ -59,8 +59,6 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
 
 
 class BoxContentInlineForm(ModelForm):
-    is_into_offer = forms.BooleanField(
-        label=_("is_into_offer"), required=False, initial=True)
     previous_product = forms.ModelChoiceField(
         Product.objects.none(), required=False)
     if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
@@ -74,13 +72,11 @@ class BoxContentInlineForm(ModelForm):
         self.fields["product"].widget.can_add_related = False
         self.fields["product"].widget.can_delete_related = False
         if self.instance.id is not None:
-            self.fields["is_into_offer"].initial = self.instance.product.is_into_offer
             self.fields["previous_product"].initial = self.instance.product
             if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
                 self.fields["stock"].initial = self.instance.product.stock
                 self.fields["limit_order_quantity_to_stock"].initial = self.instance.product.limit_order_quantity_to_stock
 
-        self.fields["is_into_offer"].disabled = True
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             self.fields["stock"].disabled = True
             self.fields["limit_order_quantity_to_stock"].disabled = True
@@ -97,10 +93,10 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
     model = BoxContent
     ordering = ("product",)
     if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-        fields = ['product', 'is_into_offer', 'content_quantity',
+        fields = ['product', 'content_quantity',
                   'get_calculated_customer_content_price']
     else:
-        fields = ['product', 'is_into_offer', 'content_quantity', 'stock', 'limit_order_quantity_to_stock',
+        fields = ['product', 'content_quantity', 'stock', 'limit_order_quantity_to_stock',
                   'get_calculated_customer_content_price']
     extra = 0
     fk_name = 'box'
@@ -274,7 +270,6 @@ class BoxAdmin(TranslatableAdmin):
                 ('calculated_stock', 'calculated_customer_box_price', 'calculated_box_deposit'),
             ]
         fields_advanced_descriptions = [
-            'placement',
             'offer_description',
         ]
         fields_advanced_options = [

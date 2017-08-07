@@ -11,7 +11,7 @@ from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMAN
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
-from repanier.models.purchase import Purchase
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, display_selected_value, display_selected_box_value
 
 register = template.Library()
@@ -204,11 +204,11 @@ def repanier_select_offer_item(context, *args, **kwargs):
         offer_item = kwargs.get('offer_item', None)
         str_id = str(offer_item.id)
         if offer_item.may_order:
-            purchase = Purchase.objects.filter(
+            purchase = PurchaseWoReceiver.objects.filter(
                 customer_id=user.customer,
                 offer_item_id=offer_item.id,
                 is_box_content=False
-            ).order_by('?').first()
+            ).order_by('?').only('quantity_ordered').first()
             if purchase is not None:
                 is_open=purchase.status == PERMANENCE_OPENED
                 option_dict = display_selected_value(
@@ -238,14 +238,14 @@ def repanier_select_offer_item(context, *args, **kwargs):
                     str_id=str_id,
                     option=option_dict['html']
                 )
-        box_purchase = Purchase.objects.filter(
+        box_purchase = PurchaseWoReceiver.objects.filter(
             customer_id=user.customer,
             offer_item_id=offer_item.id,
             is_box_content=True
-        ).order_by('?').first()
+        ).order_by('?').select_related('offer_item').only('offer_item', 'quantity_ordered').first()
         if box_purchase is not None:
             offer_item = box_purchase.offer_item
-            option_dict = display_selected_box_value(offer_item, box_purchase)
+            option_dict = display_selected_box_value(offer_item, box_purchase.quantity_ordered)
             result = result + option_dict['html']
     return mark_safe(result)
 

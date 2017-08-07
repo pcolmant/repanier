@@ -38,28 +38,37 @@ class SelectAdminOrderUnitWidget(forms.Select):
                     $("div.field-box.field-customer_minimum_order_quantity").show();
                     $("div.field-box.field-customer_increment_order_quantity").show();
                     $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").show();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
                     $("div.field-box.field-customer_unit_price").show();
-                    $("div.field-box.field-wrapped").show();
+                    $("div.form-row.field-wrapped").show();
                     break;
                 case "105":
                 case "110":
                 case "115":
                     $("div.field-box.field-unit_deposit").show();
                     $("div.field-box.field-order_average_weight").show();
-                    $("div.field-box.field-order_average_weight").show();
                     $("div.field-box.field-customer_minimum_order_quantity").show();
+                    $("div.field-box.field-customer_increment_order_quantity").show();
                     $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").show();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
                     $("div.field-box.field-customer_unit_price").show();
-                    $("div.field-box.field-wrapped").show();
+                    $("div.form-row.field-wrapped").show();
                     break;
-                case "140":
+                case "140":html
                     $("div.field-box.field-unit_deposit").hide();
                     $("div.field-box.field-order_average_weight").show();
                     $("div.field-box.field-customer_minimum_order_quantity").show();
                     $("div.field-box.field-customer_increment_order_quantity").show();
                     $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").show();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
                     $("div.field-box.field-customer_unit_price").show();
-                    $("div.field-box.field-wrapped").show();
+                    $("div.form-row.field-wrapped").show();
                     break;
                 case "120":
                 case "150":
@@ -68,8 +77,11 @@ class SelectAdminOrderUnitWidget(forms.Select):
                     $("div.field-box.field-customer_minimum_order_quantity").show();
                     $("div.field-box.field-customer_increment_order_quantity").show();
                     $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").show();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
                     $("div.field-box.field-customer_unit_price").show();
-                    $("div.field-box.field-wrapped").show();
+                    $("div.form-row.field-wrapped").show();
                     break;
                 case "300":
                 case "400":
@@ -79,8 +91,23 @@ class SelectAdminOrderUnitWidget(forms.Select):
                     $("div.field-box.field-customer_minimum_order_quantity").hide();
                     $("div.field-box.field-customer_increment_order_quantity").hide();
                     $("div.field-box.field-customer_alert_order_quantity").hide();
+                    $("div.form-row.field-customer_minimum_order_quantity").hide();
+                    $("div.form-row.field-customer_increment_order_quantity").hide();
+                    $("div.form-row.field-customer_alert_order_quantity").hide();
                     $("div.field-box.field-customer_unit_price").hide();
-                    $("div.field-box.field-wrapped").hide();
+                    $("div.form-row.field-wrapped").hide();
+                    break;
+                case "600":
+                    $("div.field-box.field-unit_deposit").hide();
+                    $("div.field-box.field-order_average_weight").hide();
+                    $("div.field-box.field-customer_minimum_order_quantity").hide();
+                    $("div.field-box.field-customer_increment_order_quantity").hide();
+                    $("div.field-box.field-customer_alert_order_quantity").hide();
+                    $("div.form-row.field-customer_minimum_order_quantity").hide();
+                    $("div.form-row.field-customer_increment_order_quantity").hide();
+                    $("div.form-row.field-customer_alert_order_quantity").hide();
+                    $("div.field-box.field-customer_unit_price").show();
+                    $("div.form-row.field-wrapped").hide();
                     break;
             }}
             switch (value) {{
@@ -120,11 +147,12 @@ class SelectAdminOrderUnitWidget(forms.Select):
                 case "300":
                     $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_DEPOSIT}");
                     break;
-                case "400":
-                    $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_SUBSCRIPTION}");
-                    break;
                 case "500":
                     $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_TRANSPORTATION}");
+                    break;
+                case "600":
+                    $("div.field-box.field-producer_unit_price label").html("{PRODUCER_PRICE_ONE_SUBSCRIPTION}");
+                    break;
             }}
         }}(django.jQuery))
     }}

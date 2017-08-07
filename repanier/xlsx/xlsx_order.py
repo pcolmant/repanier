@@ -450,7 +450,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
             producer_save = producer
             at_least_one_product = False
             ######################################################################################################################
-            if producer.invoice_by_basket and not producer.manage_production:
+            if producer.invoice_by_basket and not producer.represent_this_buyinggroup:
                 # If the producer manage the production, he need to go into his field to pick up products.
                 # In this cas, the preparation list must not be done by basket.
                 # But the invoice must be done by basket.

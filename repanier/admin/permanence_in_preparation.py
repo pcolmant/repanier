@@ -23,17 +23,16 @@ from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.models.box import Box
 from repanier.models.customer import Customer
+from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
 from repanier.models.permanence import PermanenceInPreparation
 from repanier.models.permanenceboard import PermanenceBoard
-from repanier.models.purchase import Purchase
-from repanier.models.box import Box
-from repanier.models.offeritem import OfferItem
-from repanier.models.deliveryboard import DeliveryBoard
-from repanier.models.product import Product
 from repanier.models.producer import Producer
+from repanier.models.product import Product
+from repanier.models.purchase import Purchase
 from repanier.task import task_order, task_purchase
 from repanier.tools import send_email_to_who, get_signature, get_board_composition
 from repanier.xlsx.xlsx_offer import export_offer
@@ -107,7 +106,7 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
 
 class PermanenceInPreparationForm(TranslatableModelForm):
     short_name = forms.CharField(label=_("offer name"),
-                                  widget=forms.TextInput(attrs={'style': "width:100% !important"}))
+                                 widget=forms.TextInput(attrs={'style': "width:100% !important"}))
 
     def __init__(self, *args, **kwargs):
         super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
@@ -121,8 +120,8 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         #         print('<%s>' % check_if_translation_exists)
         #     except TranslationDoesNotExist:
         #         The translation doesn't exists
-                # config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
-                # self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
+        # config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
+        # self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
 
     class Meta:
         model = PermanenceInPreparation
@@ -134,7 +133,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     exclude = ['invoice_description']
     list_per_page = 10
     list_max_show_all = 10
-    filter_horizontal = ('producers',)
+    filter_horizontal = ('producers', 'assemblies')
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = (
@@ -183,15 +182,17 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'offer_description_on_home_page',
             'producers'
         ]
-        if self.get_boxes():
-            fields.append('get_boxes')
+        if settings.DJANGO_SETTINGS_IS_AMAP or not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fields.append('assemblies')
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
-        if permanence is not None:
-            if permanence.status > PERMANENCE_PLANNED:
-                return ['status', 'producers', 'get_boxes']
-        return ['status', 'get_boxes']
+        if permanence is not None and permanence.status > PERMANENCE_PLANNED:
+            if settings.DJANGO_SETTINGS_IS_AMAP or not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                return ['status', 'producers', 'assemblies']
+            else:
+                return ['status', 'producers']
+        return ['status']
 
     def get_formsets_with_inlines(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
@@ -205,31 +206,31 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 continue
             yield inline.get_formset(request, obj), inline
 
-    def get_boxes(self, permanence=None):
-        if permanence is None or permanence.status == PERMANENCE_PLANNED:
-            qs = Box.objects.filter(
-                is_box=True,
-                is_into_offer=True,
-                translations__language_code=translation.get_language()
-            ).order_by(
-                "customer_unit_price",
-                "unit_deposit",
-                "translations__long_name"
-            )
-            result = ", ".join(o.long_name for o in qs)
-        else:
-            qs = OfferItem.objects.filter(
-                permanence_id=permanence.id,
-                is_box=True,
-                may_order=True,
-                translations__language_code=translation.get_language()
-            ).order_by(
-                "translations__preparation_sort_order"
-            )
-            result = ", ".join(o.long_name for o in qs)
+    def get_assemblies(self, permanence=None):
+        # if permanence is None or permanence.status == PERMANENCE_PLANNED:
+        qs = Box.objects.filter(
+            is_box=True,
+            is_into_offer=True,
+            translations__language_code=translation.get_language()
+        ).order_by(
+            "customer_unit_price",
+            "unit_deposit",
+            "translations__long_name"
+        )
+        result = ", ".join(o.long_name for o in qs)
+        # else:
+        #     qs = OfferItem.objects.filter(
+        #         permanence_id=permanence.id,
+        #         is_box=True,
+        #         may_order=True,
+        #         translations__language_code=translation.get_language()
+        #     ).order_by(
+        #         "translations__preparation_sort_order"
+        #     )
+        #     result = ", ".join(o.long_name for o in qs)
         return result if result is not None else EMPTY_STRING
 
-    get_boxes.short_description = _("boxes")
+    get_assemblies.short_description = _("Assemblies")
 
     def export_xlsx_offer(self, request, queryset):
         permanence = queryset.first()
@@ -285,8 +286,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return
-                # Also display order without delivery point -> The customer has not selected it yet
-                # deliveries_to_be_exported.append(None)
+                    # Also display order without delivery point -> The customer has not selected it yet
+                    # deliveries_to_be_exported.append(None)
             else:
                 deliveries_to_be_exported = None
             response = None
@@ -413,18 +414,18 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     "translations__long_name"
                 )[:5]
                 offer_detail = '<ul>%s</ul>' % ("".join('<li>%s, %s</li>' % (
-                    p.get_long_name(box_unicode=EMPTY_STRING),
+                    p.get_long_name(with_box_unicode=False),
                     p.producer.short_profile_name
                 )
                                                         for p in qs
                                                         ),)
                 context = TemplateContext({
-                    'offer_description': mark_safe(offer_description),
-                    'offer_detail'     : offer_detail,
+                    'offer_description'  : mark_safe(offer_description),
+                    'offer_detail'       : offer_detail,
                     'offer_recent_detail': offer_detail,
-                    'offer_producer'   : offer_producer,
-                    'permanence_link'  : mark_safe('<a href="#">%s</a>' % permanence),
-                    'signature'        : mark_safe(
+                    'offer_producer'     : offer_producer,
+                    'permanence_link'    : mark_safe('<a href="#">%s</a>' % permanence),
+                    'signature'          : mark_safe(
                         '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
                 template_offer_mail.append(language_code)
@@ -437,7 +438,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         'short_basket_name': _('short_basket_name'),
                         'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
                         'signature'        : mark_safe(
-                            '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                            '%s<br/>%s<br/>%s' % (
+                            signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                     })
                     template_cancel_order_mail.append(language_code)
                     template_cancel_order_mail.append(template.render(context))
@@ -456,8 +458,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             form = OpenAndSendOfferForm(
                 initial={
-                    'template_offer_customer_mail': mark_safe("<br/>==============<br/>".join(template_offer_mail)),
-                    'template_cancel_order_customer_mail': mark_safe("<br/>==============<br/>".join(template_cancel_order_mail)),
+                    'template_offer_customer_mail'       : mark_safe(
+                        "<br/>==============<br/>".join(template_offer_mail)),
+                    'template_cancel_order_customer_mail': mark_safe(
+                        "<br/>==============<br/>".join(template_cancel_order_mail)),
                 }
             )
         return render(
@@ -681,8 +685,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             template_order_staff_mail.append(language_code)
             template_order_staff_mail.append(template.render(context))
 
-
-
         translation.activate(cur_language)
 
         order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = send_email_to_who(
@@ -697,8 +699,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
         form = CloseAndSendOrderForm(
             initial={
-                'template_order_customer_mail': mark_safe("<br/>==============<br/>".join(template_order_customer_mail)),
-                'template_order_producer_mail': mark_safe("<br/>==============<br/>".join(template_order_producer_mail)),
+                'template_order_customer_mail': mark_safe(
+                    "<br/>==============<br/>".join(template_order_customer_mail)),
+                'template_order_producer_mail': mark_safe(
+                    "<br/>==============<br/>".join(template_order_producer_mail)),
                 'template_order_staff_mail'   : mark_safe("<br/>==============<br/>".join(template_order_staff_mail)),
             }
         )
@@ -883,6 +887,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
+        if db_field.name == "assemblies":
+            kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
         return super(PermanenceInPreparationAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs)
 

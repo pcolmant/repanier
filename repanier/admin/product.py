@@ -386,63 +386,22 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         else:
             producer = None
 
+        list_display = ['producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',]
+        list_editable = ['producer_unit_price',]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            if producer is not None:
-                if producer.producer_pre_opening:
-                    self.list_editable = ('producer_unit_price', 'stock')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
-                            'producer_unit_price',
-                            'stock')
-                elif producer.manage_replenishment or producer.manage_production:
-                    self.list_editable = ('producer_unit_price', 'stock')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity', 'stock')
-                else:
-                    self.list_editable = ('producer_unit_price',)
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity')
-            else:
-                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                    self.list_editable = ('producer_unit_price')
-                    return (
-                        'producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
-                        'producer_unit_price',
-                        'get_customer_alert_order_quantity')
-                else:
-                    self.list_editable = ('producer_unit_price', 'stock')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name', 'language_column',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity', 'stock')
-        else:
-            if producer is not None:
-                if producer.producer_pre_opening:
-                    self.list_editable = ('producer_unit_price', 'stock')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
-                            'producer_unit_price',
-                            'stock')
-                elif producer.manage_replenishment or producer.manage_production:
-                    self.list_editable = ('producer_unit_price', 'stock')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity', 'stock')
-                else:
-                    self.list_editable = ('producer_unit_price',)
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity')
-            else:
-                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                    self.list_editable = ('producer_unit_price')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity')
-                else:
-                    self.list_editable = ('producer_unit_price', 'stock')
-                    return ('producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',
-                            'producer_unit_price',
-                            'get_customer_alert_order_quantity', 'stock')
+            list_display += ['language_column',]
+        list_display += ['producer_unit_price']
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            list_display += ['get_customer_alert_order_quantity', ]
+        if producer is not None:
+            if producer.producer_pre_opening or producer.manage_replenishment:
+                list_display += ['stock', ]
+                list_editable += ['stock',]
+            elif not settings.DJANGO_SETTINGS_IS_MINIMALIST and producer.represent_this_buyinggroup:
+                list_display += ['stock', ]
+                list_editable += ['stock', ]
+        self.list_editable = list_editable
+        return list_display
 
     def get_form(self, request, product=None, **kwargs):
         department_for_customer_id = None
@@ -467,8 +426,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     is_into_offer_value = param['is_into_offer__exact']
         producer = producer_queryset.first()
         producer_manage_replenishment = producer is not None and producer.manage_replenishment
-        producer_manage_production = producer is not None and producer.manage_production
         producer_pre_opening = producer is not None and producer.producer_pre_opening
+        producer_represent_this_buyinggroup = producer is not None and producer.represent_this_buyinggroup
         producer_resale_price_fixed = producer is not None and producer.is_resale_price_fixed
         limit_order_quantity_to_stock = product is not None and product.limit_order_quantity_to_stock
         fields_basic = [
@@ -487,15 +446,18 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ]
         if producer_pre_opening \
                 or (limit_order_quantity_to_stock and producer_manage_replenishment) \
-                or producer_manage_production:
+                or producer_represent_this_buyinggroup:
             fields_basic += [
                 ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'stock')
             ]
         else:
-            fields_basic += [
-                (
-                'customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity')
-            ]
+            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                # Important : do not use ( ) for minimalist. The UI will be more logical.
+                fields_basic += ['customer_minimum_order_quantity', 'customer_increment_order_quantity']
+            else:
+                fields_basic += [
+                    ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity',)
+                ]
         fields_advanced_descriptions = [
             ('department_for_customer', 'placement'),
             'offer_description',
@@ -509,7 +471,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             fields_advanced_descriptions += [
                 'production_mode',
             ]
-            if producer_pre_opening or producer_manage_production:
+            if producer_pre_opening or producer_represent_this_buyinggroup:
                 fields_advanced_options = [
                     ('reference', 'vat_level'),
                     ('is_into_offer', 'is_active')

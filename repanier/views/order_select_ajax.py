@@ -17,7 +17,7 @@ from repanier.const import PERMANENCE_OPENED, PERMANENCE_SEND, LIMIT_ORDER_QTY_I
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItem
-from repanier.models.purchase import Purchase
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, display_selected_value
 
 
@@ -37,14 +37,12 @@ def order_select_ajax(request):
     translation.activate(customer.language)
     offer_item_id = sint(request.GET.get('offer_item', 0))
     # Select one purchase
-    purchase = Purchase.objects.filter(
+    purchase = PurchaseWoReceiver.objects.filter(
         customer_id=customer.id,
         offer_item_id=offer_item_id,
         is_box_content=False
-    ).order_by('?').first()
-    offer_item = OfferItem.objects.filter(
-        id=offer_item_id, is_active=True
-    ).order_by('?').first()
+    ).order_by('?').select_related('offer_item').only('offer_item', 'quantity_ordered').first()
+    offer_item = purchase.offer_item
     qs = ProducerInvoice.objects.filter(
         permanence__offeritem=offer_item_id,
         producer__offeritem=offer_item_id,

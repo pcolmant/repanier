@@ -51,8 +51,6 @@ class ProducerResource(resources.ModelResource):
                                      readonly=False)
     manage_replenishment = fields.Field(attribute='manage_replenishment', default=False, widget=DecimalBooleanWidget(),
                                         readonly=False)
-    manage_production = fields.Field(attribute='manage_production', default=False, widget=DecimalBooleanWidget(),
-                                     readonly=False)
     sort_products_by_reference = fields.Field(attribute='sort_products_by_reference', default=False,
                                               widget=DecimalBooleanWidget(),
                                               readonly=False)
@@ -79,7 +77,7 @@ class ProducerResource(resources.ModelResource):
         fields = (
             'id', 'short_profile_name', 'long_profile_name',
             'email', 'email2', 'email3', 'language', 'phone1', 'phone2',
-            'fax', 'address', 'invoice_by_basket', 'manage_replenishment', 'manage_production',
+            'fax', 'address', 'invoice_by_basket', 'manage_replenishment',
             'sort_products_by_reference',
             'producer_pre_opening', 'producer_price_are_wo_vat',
             'price_list_multiplier', 'is_resale_price_fixed',
@@ -156,12 +154,23 @@ class ProducerDataForm(forms.ModelForm):
                         _("The reference site may not be your site."))
                     break
         invoice_by_basket = self.cleaned_data["invoice_by_basket"]
-        price_list_multiplier = self.cleaned_data["price_list_multiplier"]
+        if "price_list_multiplier" in self.cleaned_data:
+            price_list_multiplier = self.cleaned_data["price_list_multiplier"]
+        else:
+            price_list_multiplier = DECIMAL_ONE
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            producer_pre_opening = self.cleaned_data["producer_pre_opening"]
-            manage_replenishment = self.cleaned_data["manage_replenishment"]
-            manage_production = self.cleaned_data["manage_production"]
-            is_resale_price_fixed = self.cleaned_data["is_resale_price_fixed"]
+            if "producer_pre_opening" in self.cleaned_data:
+                producer_pre_opening = self.cleaned_data["producer_pre_opening"]
+            else:
+                producer_pre_opening = False
+            if "manage_replenishment" in self.cleaned_data:
+                manage_replenishment = self.cleaned_data["manage_replenishment"]
+            else:
+                manage_replenishment = False
+            if "is_resale_price_fixed" in self.cleaned_data:
+                is_resale_price_fixed = self.cleaned_data["is_resale_price_fixed"]
+            else:
+                is_resale_price_fixed = False
             if manage_replenishment and producer_pre_opening:
                 # The producer set his offer -> no possibility to manage stock
                 self.add_error('producer_pre_opening',
@@ -180,21 +189,6 @@ class ProducerDataForm(forms.ModelForm):
                                _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
                 self.add_error('is_resale_price_fixed',
                                _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
-            if manage_replenishment and manage_production:
-                self.add_error('manage_production',
-                               _("Either 'manage replenishment' or 'manage production' may be set. Not both."))
-                self.add_error('manage_replenishment',
-                               _("Either 'manage replenishment' or 'manage production' may be set. Not both."))
-            if is_resale_price_fixed and manage_production:
-                self.add_error('manage_production',
-                               _("Either 'is resale price fixed' or 'manage production' may be set. Not both."))
-                self.add_error('is_resale_price_fixed',
-                               _("Either 'is resale price fixed' or 'manage production' may be set. Not both."))
-            if manage_production and price_list_multiplier != DECIMAL_ONE:
-                self.add_error('manage_production',
-                               _("The 'price list multiplier' must be set to 1 when 'manage production'."))
-                self.add_error('price_list_multiplier',
-                               _("The 'price list multiplier' must be set to 1 when 'manage production'."))
             if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
                 # Important : For invoicing correctly
                 self.add_error('price_list_multiplier',
@@ -212,15 +206,6 @@ class ProducerDataForm(forms.ModelForm):
             qs = qs.exclude(id=self.instance.id)
         if qs.exists():
             self.add_error('short_profile_name', _('The given short_profile_name is used by another producer.'))
-        bank_account = self.cleaned_data["bank_account"]
-        if bank_account:
-            qs = Producer.objects.filter(
-                bank_account=bank_account
-            ).order_by("?")
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.id)
-            if qs.exists():
-                self.add_error('bank_account', _('This bank account already belongs to another producer.'))
 
     def save(self, *args, **kwargs):
         instance = super(ProducerDataForm, self).save(*args, **kwargs)
@@ -305,7 +290,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def export_xlsx_stock(self, request):
         # return xlsx_stock.admin_export(self, Producer.objects.all())
         wb = export_producer_stock(producers=Producer.objects.filter(
-            Q(manage_replenishment=True) | Q(manage_production=True)
+            Q(manage_replenishment=True) | Q(represent_this_buyinggroup=True)
         ).order_by("short_profile_name"), wb=None)
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -354,6 +339,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_basic += [
                 ('address', 'city', 'picture'),
                 'memo',
+                'permanences',
+                ('get_admin_balance', 'get_admin_date_balance'),
             ]
         else:
             # Do not accept the picture because there is no producer.id for the "upload_to"
@@ -361,43 +348,43 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 ('address', 'city'),
                 'memo',
             ]
-        if producer is not None:
-            fields_basic += [
-                'permanences',
-                ('get_admin_balance', 'get_admin_date_balance'),
-            ]
         if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            fields_advanced = [
-                'bank_account',
-                'price_list_multiplier',
-                'minimum_order_value',
-                'invoice_by_basket',
-                'reference_site',
-                'web_services_activated',
-            ]
+            if producer is not None and producer.represent_this_buyinggroup:
+                fields_advanced = [
+                    'invoice_by_basket',
+                    'represent_this_buyinggroup'
+                ]
+            else:
+                fields_advanced = [
+                    'price_list_multiplier',
+                    'minimum_order_value',
+                    'invoice_by_basket',
+                ]
         else:
-            if producer is None or not producer.represent_this_buyinggroup:
+            if producer is not None and producer.represent_this_buyinggroup:
+                fields_advanced = [
+                    'vat_id',
+                    'invoice_by_basket',
+                    'sort_products_by_reference',
+                    'represent_this_buyinggroup'
+                ]
+            else:
                 fields_basic += [
                     ('producer_price_are_wo_vat', 'is_active'),
                 ]
-            fields_advanced = [
-                'bank_account',
-                'vat_id',
-                'is_resale_price_fixed',
-                'price_list_multiplier',
-                'minimum_order_value',
-                'invoice_by_basket',
-                'manage_replenishment',
-                'manage_production',
-                'sort_products_by_reference',
-                'producer_pre_opening',
-                'reference_site',
-                'web_services_activated',
-            ]
-        if producer is not None and producer.represent_this_buyinggroup:
-            fields_advanced += [
-                'represent_this_buyinggroup'
-            ]
+                fields_advanced = [
+                    'bank_account',
+                    'vat_id',
+                    'is_resale_price_fixed',
+                    'price_list_multiplier',
+                    'minimum_order_value',
+                    'invoice_by_basket',
+                    'manage_replenishment',
+                    'sort_products_by_reference',
+                    'producer_pre_opening',
+                    'reference_site',
+                    'web_services_activated',
+                ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced options'), {'classes': ('collapse',), 'fields': fields_advanced})

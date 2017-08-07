@@ -122,7 +122,7 @@ def send_open_order(permanence_id):
                 "translations__order_sort_order"
             )
             offer_detail = '<ul>%s</ul>' % ("".join('<li>%s, %s, %s</li>' % (
-                o.get_long_name(box_unicode=EMPTY_STRING),
+                o.get_long_name(with_box_unicode=False),
                 o.producer.short_profile_name,
                 o.email_offer_price_with_vat,
             )

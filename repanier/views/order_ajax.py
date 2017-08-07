@@ -18,7 +18,7 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
-from repanier.models.purchase import Purchase
+from repanier.models.purchase import Purchase, PurchaseWoReceiver
 from repanier.tools import create_or_update_one_cart_item, sint, sboolean, display_selected_value, \
     calc_basket_message, my_basket, display_selected_box_value
 
@@ -89,24 +89,29 @@ def order_ajax(request):
                     ).order_by('?').first()
                     if box_offer_item is not None:
                         # Select one purchase
-                        purchase = Purchase.objects.filter(
+                        purchase = PurchaseWoReceiver.objects.filter(
                             customer_id=customer.id,
                             offer_item_id=box_offer_item.id,
                             is_box_content=False
-                        ).order_by('?').first()
-                        option_dict = display_selected_value(
-                            box_offer_item,
-                            purchase.quantity_ordered if purchase is not None else DECIMAL_ZERO,
-                            is_open=True
-                        )
-                        to_json.append(option_dict)
-                        box_purchase = Purchase.objects.filter(
+                        ).order_by('?').only('quantity_ordered').first()
+                        if purchase is not None:
+                            option_dict = display_selected_value(
+                                box_offer_item,
+                                purchase.quantity_ordered,
+                                is_open=True
+                            )
+                            to_json.append(option_dict)
+                        box_purchase = PurchaseWoReceiver.objects.filter(
                             customer_id=customer.id,
                             offer_item_id=box_offer_item.id,
                             is_box_content=True
-                        ).order_by('?').first()
-                        option_dict = display_selected_box_value(box_offer_item, box_purchase)
-                        to_json.append(option_dict)
+                        ).order_by('?').only('quantity_ordered').first()
+                        if box_purchase is not None:
+                            option_dict = display_selected_box_value(
+                                box_offer_item,
+                                box_purchase.quantity_ordered
+                            )
+                            to_json.append(option_dict)
 
 
             if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:

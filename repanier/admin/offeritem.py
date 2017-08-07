@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.utils import translation
 from django.utils.html import strip_tags
@@ -81,10 +82,14 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
                             'stock',
                             'get_html_producer_qty_stock_invoiced',
                             'add_2_stock')
-            elif producer.manage_production:
-                return ('department_for_customer', 'producer', 'get_long_name',
-                        'stock',
-                        'get_html_producer_qty_stock_invoiced')
+            elif producer.represent_this_buyinggroup:
+                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                    return ('department_for_customer', 'producer', 'get_long_name',
+                            'get_html_producer_qty_stock_invoiced')
+                else:
+                    return ('department_for_customer', 'producer', 'get_long_name',
+                            'stock',
+                            'get_html_producer_qty_stock_invoiced')
             else:
                 return ('department_for_customer', 'producer', 'get_long_name',
                         'get_html_producer_qty_stock_invoiced')
@@ -104,11 +109,17 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
                     ('permanence', 'department_for_customer', 'product'),
                     ('stock', 'producer_qty_stock_invoiced',)
                 ]
-        elif obj.manage_production:
-            fields_basic = [
-                ('permanence', 'department_for_customer', 'product'),
-                ('stock', 'producer_qty_stock_invoiced',)
-            ]
+        elif obj.represent_this_buyinggroup:
+            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                fields_basic = [
+                    ('permanence', 'department_for_customer', 'product'),
+                    ('producer_qty_stock_invoiced',)
+                ]
+            else:
+                fields_basic = [
+                    ('permanence', 'department_for_customer', 'product'),
+                    ('stock', 'producer_qty_stock_invoiced',)
+                ]
         else:
             fields_basic = [
                 ('permanence', 'department_for_customer', 'product'),

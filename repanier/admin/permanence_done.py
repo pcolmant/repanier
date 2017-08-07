@@ -331,7 +331,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 invoice_sort_order__isnull=True,
             ).order_by("producer").select_related("producer"):
                 producer = producer_invoice.producer
-                if not producer.manage_production:
+                if not producer.represent_this_buyinggroup:
                     # We have already pay to much (look at the bank movements).
                     # So we do not need to pay anything
                     producer_invoice.calculated_invoiced_balance.amount = \

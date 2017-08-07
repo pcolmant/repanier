@@ -440,29 +440,22 @@ def display_selected_value(offer_item, quantity_ordered, is_open=True):
     return option_dict
 
 
-def display_selected_box_value(offer_item, box_purchase):
-    option_dict = {
-        'id': "#box_offer_item%d" % offer_item.id,
-    }
-    if box_purchase is not None and box_purchase.is_box_content:
-        box_name = BOX_UNICODE
-        # Select one purchase
-        if box_purchase.quantity_ordered > DECIMAL_ZERO:
-            qty_display = offer_item.get_display(
-                qty=box_purchase.quantity_ordered,
-                order_unit=offer_item.order_unit,
-                for_order_select=True,
-                without_price_display=True
-            )
-            option_dict[
-                "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>' % \
-                                  (offer_item.id, offer_item.id, qty_display, box_name)
-        else:
-            option_dict[
-                "html"] = '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ --- %s</option></select>' % \
-                          (offer_item.id, offer_item.id, box_name)
+def display_selected_box_value(offer_item, quantity_ordered):
+    # Select one purchase
+    if quantity_ordered > DECIMAL_ZERO:
+        qty_display = offer_item.get_display(
+            qty=quantity_ordered,
+            order_unit=offer_item.order_unit,
+            for_order_select=True,
+            without_price_display=True
+        )
     else:
-        option_dict["html"] = EMPTY_STRING
+        qty_display = "---"
+    option_dict = {
+        'id'  : "#box_offer_item%d" % offer_item.id,
+        'html': '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>' % \
+                (offer_item.id, offer_item.id, qty_display, BOX_UNICODE)
+    }
     return option_dict
 
 
@@ -729,7 +722,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         offer_item.set_from(product)
 
         offer_item.producer_pre_opening = producer.producer_pre_opening
-        offer_item.manage_production = producer.manage_production
+        offer_item.manage_production = producer.represent_this_buyinggroup
         # Those offer_items not subjects to price modifications
         offer_item.is_resale_price_fixed = producer.is_resale_price_fixed or product.is_box or product.order_unit >= PRODUCT_ORDER_UNIT_DEPOSIT
         offer_item.price_list_multiplier = DECIMAL_ONE if offer_item.is_resale_price_fixed else producer.price_list_multiplier

@@ -104,6 +104,11 @@ class Permanence(TranslatableModel):
         verbose_name=_("producers"),
         blank=True
     )
+    assemblies = models.ManyToManyField(
+        'Box',
+        verbose_name=_('Assemblies'),
+        blank=True
+    )
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
         _("Total amount"),
@@ -818,7 +823,7 @@ class Permanence(TranslatableModel):
             )
             for o in qs:
                 result.append('<li>%s, %s, %s</li>' % (
-                    o.get_long_name(box_unicode=EMPTY_STRING),
+                    o.get_long_name(with_box_unicode=False),
                     o.producer.short_profile_name,
                     o.email_offer_price_with_vat,
                 ))

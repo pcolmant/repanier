@@ -409,3 +409,13 @@ def purchase_pre_save(sender, **kwargs):
     purchase.previous_purchase_price = purchase.purchase_price.amount
     purchase.previous_selling_price = purchase.selling_price.amount
 
+
+@python_2_unicode_compatible
+class PurchaseWoReceiver(Purchase):
+    def __str__(self):
+        return EMPTY_STRING
+
+    class Meta:
+        proxy = True
+        verbose_name = _("purchase")
+        verbose_name_plural = _("purchases")

@@ -60,8 +60,6 @@ class ContractContentInlineFormSet(BaseInlineFormSet):
 
 
 class ContractContentInlineForm(ModelForm):
-    is_into_offer = forms.BooleanField(
-        label=_("is_into_offer"), required=False, initial=True)
     previous_product = forms.ModelChoiceField(
         Product.objects.none(), required=False)
     if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
@@ -76,13 +74,11 @@ class ContractContentInlineForm(ModelForm):
         self.fields["product"].widget.can_add_related = False
         self.fields["product"].widget.can_delete_related = False
         if self.instance.id is not None:
-            self.fields["is_into_offer"].initial = self.instance.product.is_into_offer
             self.fields["previous_product"].initial = self.instance.product
             if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
                 self.fields["stock"].initial = self.instance.product.stock
                 self.fields["limit_order_quantity_to_stock"].initial = self.instance.product.limit_order_quantity_to_stock
 
-        self.fields["is_into_offer"].disabled = True
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             self.fields["stock"].disabled = True
             self.fields["limit_order_quantity_to_stock"].disabled = True
@@ -99,10 +95,10 @@ class ContractContentInline(ForeignKeyCacheMixin, TabularInline):
     model = BoxContent
     ordering = ("product",)
     if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-        fields = ['product', 'is_into_offer', 'content_quantity',
+        fields = ['product', 'content_quantity','may_order_more',
                   'get_calculated_customer_content_price']
     else:
-        fields = ['product', 'is_into_offer', 'content_quantity', 'stock', 'limit_order_quantity_to_stock',
+        fields = ['product', 'may_order_more', 'content_quantity', 'stock', 'limit_order_quantity_to_stock',
                   'get_calculated_customer_content_price']
     extra = 0
     fk_name = 'contract'
@@ -201,11 +197,18 @@ class ContractDataForm(TranslatableModelForm):
 
     def save(self, *args, **kwargs):
         instance = super(ContractDataForm, self).save(*args, **kwargs)
-        if settings.DJANGO_SETTINGS_IS_AMAP:
-            if instance.id is not None:
-                instance.customers.clear()
-                instance.customers.add(*self.cleaned_data['customers'])
+        if instance.id is not None:
+            instance.customers = self.cleaned_data['customers']
+            # The previous save is called with "commit=False"
+            # But we need to update the producer
+            # to recalculate the products prices. So a call to self.instance.save() is required
+            # self.instance.save()
+            # for product in Product.objects.filter(producer_id=instance.id).order_by('?'):
+            #     product.save()
+            # update_offer_item(producer_id=instance.id)
+
         return instance
+
 
 class ContractAdmin(TranslatableAdmin):
     form = ContractDataForm
@@ -217,6 +220,7 @@ class ContractAdmin(TranslatableAdmin):
     list_display_links = ('get_long_name',)
     list_per_page = 16
     list_max_show_all = 16
+    # filter_horizontal = ('customers',)
     inlines = (ContractContentInline,)
     ordering = (
         '-first_permanence_date',
@@ -239,7 +243,7 @@ class ContractAdmin(TranslatableAdmin):
     def has_delete_permission(self, request, contract=None):
         if request.user.groups.filter(
                 name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
+            return settings.DJANGO_SETTINGS_IS_AMAP
         return False
 
     def has_add_permission(self, request):
@@ -303,24 +307,27 @@ class ContractAdmin(TranslatableAdmin):
     duplicate_contract.short_description = _('duplicate contract')
 
     def get_fieldsets(self, request, contract=None):
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields_basic = [
                 ('producer', 'long_name', 'picture2'),
                 'first_permanence_date',
                 'recurrences',
-                ('calculated_stock', 'calculated_customer_contract_price', 'calculated_contract_deposit'),
-                ('stock', 'customer_unit_price', 'unit_deposit'),
+                ('customer_unit_price', 'unit_deposit'),
+                ('calculated_customer_contract_price', 'calculated_contract_deposit'),
             ]
         else:
             fields_basic = [
                 ('producer', 'long_name', 'picture2'),
                 'first_permanence_date',
                 'recurrences',
-                ('calculated_customer_contract_price', 'calculated_contract_deposit'),
-                ('customer_unit_price', 'unit_deposit'),
+                ('stock', 'customer_unit_price', 'unit_deposit'),
+                ('calculated_stock', 'calculated_customer_contract_price', 'calculated_contract_deposit'),
+            ]
+        if contract is not None:
+            fields_basic += [
+                'customers',
             ]
         fields_advanced_descriptions = [
-            'placement',
             'offer_description',
         ]
         fields_advanced_options = [
@@ -334,8 +341,9 @@ class ContractAdmin(TranslatableAdmin):
         )
         return fieldsets
 
-    def get_readonly_fields(self, request, customer=None):
-        return ['is_updated_on']
+    def get_readonly_fields(self, request, contract=None):
+        if contract is not None and contract.highest_status > PERMANENCE_PLANNED:
+            return ['customers',]
 
     def get_form(self, request, contract=None, **kwargs):
         is_active_value = None
@@ -396,6 +404,10 @@ class ContractAdmin(TranslatableAdmin):
                 else:
                     is_into_offer_field.initial = True
         return form
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "customers":
+            kwargs["queryset"] = Customer.objects.filter(may_order=True, represent_this_buyinggroup=False)
 
     def get_queryset(self, request):
         qs = super(ContractAdmin, self).get_queryset(request)

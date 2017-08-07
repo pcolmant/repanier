@@ -17,7 +17,7 @@ from repanier.const import BOX_UNICODE, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, 
     DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC, \
     TWO_DECIMALS, PRODUCT_ORDER_UNIT_LT, DICT_VAT, DICT_VAT_RATE, FOUR_DECIMALS, PRODUCT_ORDER_UNIT_DEPOSIT, \
     LUT_PRODUCT_ORDER_UNIT, PRODUCT_ORDER_UNIT_PC, LUT_PRODUCT_PLACEMENT, PRODUCT_PLACEMENT_BASKET, LUT_ALL_VAT, \
-    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK
+    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK, CONTRACT_UNICODE
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
 
 
@@ -116,7 +116,7 @@ class Item(TranslatableModel):
     )
 
     is_box = models.BooleanField(_("is a box"), default=False)
-    # is_contract = models.BooleanField(_("is a contract"), default=False)
+    is_contract = models.BooleanField(_("is a contract"), default=False)
     # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     # may_order = models.BooleanField(_("may_order"), default=True)
     is_active = models.BooleanField(_("is_active"), default=True)
@@ -398,7 +398,11 @@ class Item(TranslatableModel):
                 )
         return qty_display
 
-    def get_qty_and_price_display(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
+    def get_qty_and_price_display(self, is_quantity_invoiced=False, customer_price=True):
+        if self.is_contract:
+            box_unicode = CONTRACT_UNICODE
+        else:
+            box_unicode = BOX_UNICODE
         qty_display = self.get_qty_display(is_quantity_invoiced, box_unicode)
         unit_price = self.get_unit_price(customer_price=customer_price)
         if len(qty_display) > 0:
@@ -422,9 +426,12 @@ class Item(TranslatableModel):
     get_customer_alert_order_quantity.short_description = (_("customer_alert_order_quantity"))
     get_customer_alert_order_quantity.allow_tags = False
 
-    def get_order_name(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
-
-        qty_display = self.get_qty_display(is_quantity_invoiced, box_unicode)
+    def get_order_name(self):
+        if self.is_contract:
+            box_unicode = CONTRACT_UNICODE
+        else:
+            box_unicode = BOX_UNICODE
+        qty_display = self.get_qty_display(is_quantity_invoiced=False, box_unicode=box_unicode)
         if qty_display:
             return '%s %s' % (self.long_name, qty_display)
         return '%s' % self.long_name
@@ -435,9 +442,17 @@ class Item(TranslatableModel):
     get_long_name_with_producer_price.allow_tags = False
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 
-    def get_long_name(self, is_quantity_invoiced=False, customer_price=True, box_unicode=BOX_UNICODE):
+    def get_long_name(self, is_quantity_invoiced=False, customer_price=True, with_box_unicode=True):
 
-        qty_and_price_display = self.get_qty_and_price_display(is_quantity_invoiced, customer_price, box_unicode)
+        if with_box_unicode:
+            if self.is_contract:
+                box_unicode = CONTRACT_UNICODE
+            else:
+                box_unicode = BOX_UNICODE
+        else:
+            box_unicode = EMPTY_STRING
+
+        qty_and_price_display = self.get_qty_and_price_display(is_quantity_invoiced, customer_price)
         if qty_and_price_display:
             result = '%s %s' % (self.long_name, qty_and_price_display)
         else:
