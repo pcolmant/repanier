@@ -318,16 +318,21 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return actions
 
     def get_list_display(self, request):
-        if settings.DJANGO_SETTINGS_IS_AMAP:
-            if repanier.apps.REPANIER_SETTINGS_INVOICE:
-                return ('__str__', 'get_products', 'get_contracts', 'get_balance', 'phone1', 'email')
-            else:
-                return ('__str__', 'get_products', 'get_contracts', 'phone1', 'email')
-        else:
-            if repanier.apps.REPANIER_SETTINGS_INVOICE:
-                return ('__str__', 'get_products', 'get_balance', 'phone1', 'email')
-            else:
-                return ('__str__', 'get_products', 'phone1', 'email')
+        list_display = [
+            '__str__', 'get_products'
+        ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST or settings.DJANGO_SETTINGS_IS_AMAP:
+            list_display += [
+                'get_assemblies',
+            ]
+        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+            list_display += [
+                'get_balance',
+            ]
+        list_display += [
+            'phone1', 'email'
+        ]
+        return list_display
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [

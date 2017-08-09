@@ -48,7 +48,6 @@ TWO_LEVEL_DEPTH = 1
 
 REPANIER_MONEY_ZERO = RepanierMoney()
 
-PERMANENCE_DISABLED = '050'
 PERMANENCE_PLANNED = '100'
 PERMANENCE_WAIT_FOR_PRE_OPEN = '110'
 PERMANENCE_PRE_OPEN = '120'
@@ -59,28 +58,38 @@ PERMANENCE_CLOSED = '370'
 PERMANENCE_WAIT_FOR_SEND = '400'
 PERMANENCE_SEND = '500'
 PERMANENCE_WAIT_FOR_INVOICED = '600'
-PERMANENCE_INVOICES_VALIDATION_FAILED = '700'
 PERMANENCE_INVOICED = '800'
 PERMANENCE_ARCHIVED = '900'
 PERMANENCE_CANCELLED = '950'
 
 LUT_PERMANENCE_STATUS = (
-    (PERMANENCE_DISABLED, _('disabled')),
-    (PERMANENCE_PLANNED, _('planned')),
-    (PERMANENCE_WAIT_FOR_PRE_OPEN, _('wait for pre-open')),
-    (PERMANENCE_PRE_OPEN, _('orders pre-opened')),
-    (PERMANENCE_WAIT_FOR_OPEN, _('wait for open')),
-    (PERMANENCE_OPENED, _('orders opened')),
-    (PERMANENCE_WAIT_FOR_CLOSED, _('wait for close')),
-    (PERMANENCE_CLOSED, _('orders closed')),
-    (PERMANENCE_WAIT_FOR_SEND, _('wait for send')),
-    (PERMANENCE_SEND, _('orders send to producers')),
-    (PERMANENCE_WAIT_FOR_INVOICED, _('wait for done')),
-    (PERMANENCE_INVOICES_VALIDATION_FAILED, _('invoices validation test failed')),
-    (PERMANENCE_INVOICED, _('invoiced')),
-    (PERMANENCE_ARCHIVED, _('archived')),
-    (PERMANENCE_CANCELLED, _('cancelled'))
+    (PERMANENCE_PLANNED, _('Planned')),
+    (PERMANENCE_WAIT_FOR_PRE_OPEN, _('Wait for pre-open')),
+    (PERMANENCE_PRE_OPEN, _('Orders pre-opened')),
+    (PERMANENCE_WAIT_FOR_OPEN, _('Wait for open')),
+    (PERMANENCE_OPENED, _('Orders opened')),
+    (PERMANENCE_WAIT_FOR_CLOSED, _('Wait for close')),
+    (PERMANENCE_CLOSED, _('Orders closed')),
+    (PERMANENCE_WAIT_FOR_SEND, _('Wait for send')),
+    (PERMANENCE_SEND, _('Orders send')),
+    (PERMANENCE_WAIT_FOR_INVOICED, _('Wait for done')),
+    (PERMANENCE_INVOICED, _('Invoiced')),
+    (PERMANENCE_ARCHIVED, _('Archived')),
+    (PERMANENCE_CANCELLED, _('Cancelled'))
 )
+
+CONTRACT_IN_WRITING = '100'
+CONTRACT_IN_SUBSCRIPTION = '200'
+CONTRACT_IN_EXECUTION = '300'
+CONTRACT_ARCHIVED = '900'
+
+LUT_CONTRACT_STATUS = (
+    (CONTRACT_IN_WRITING, _('In writing')),
+    (CONTRACT_IN_SUBSCRIPTION, _('In subscription')),
+    (CONTRACT_IN_EXECUTION, _('In execution')),
+    (CONTRACT_ARCHIVED, _('Archived')),
+)
+
 
 PRODUCT_PLACEMENT_FREEZER = '100'
 PRODUCT_PLACEMENT_FRIDGE = '200'

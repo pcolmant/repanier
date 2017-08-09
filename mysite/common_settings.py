@@ -107,9 +107,12 @@ else:
     # Activate ManifestStaticFilesStorage also when in debug mode
     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
 
-STATICFILES_DIRS = (
-    os.path.join(PROJECT_PATH, "collect-static"),
-)
+# vvvv Generate Error : No static directory found during a first collect-static
+# STATICFILES_DIRS = (
+#     os.path.join(PROJECT_PATH, "collect-static"),
+# )
+print("-------------")
+print(os.path.join(PROJECT_PATH, "collect-static"))
 
 ###################### DEBUG
 DEBUG = DJANGO_SETTINGS_DEBUG

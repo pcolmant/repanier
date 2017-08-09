@@ -377,10 +377,10 @@ class Item(TranslatableModel):
             display = "%s%s" % (qty_display, price_display)
             return display
 
-    def get_qty_display(self, is_quantity_invoiced=False, box_unicode=BOX_UNICODE):
-        if self.is_box:
+    def get_qty_display(self, is_quantity_invoiced=False, assembly_unicode=EMPTY_STRING):
+        if self.is_box or self.is_contract:
             # To avoid unicode error in email_offer.send_open_order
-            qty_display = box_unicode
+            qty_display = assembly_unicode
         else:
             if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                 qty_display = self.get_display(
@@ -443,14 +443,13 @@ class Item(TranslatableModel):
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 
     def get_long_name(self, is_quantity_invoiced=False, customer_price=True, with_box_unicode=True):
-
-        if with_box_unicode:
-            if self.is_contract:
-                box_unicode = CONTRACT_UNICODE
-            else:
-                box_unicode = BOX_UNICODE
-        else:
-            box_unicode = EMPTY_STRING
+        # if with_box_unicode:
+        #     if self.is_contract:
+        #         box_unicode = CONTRACT_UNICODE
+        #     else:
+        #         box_unicode = BOX_UNICODE
+        # else:
+        #     box_unicode = EMPTY_STRING
 
         qty_and_price_display = self.get_qty_and_price_display(is_quantity_invoiced, customer_price)
         if qty_and_price_display:

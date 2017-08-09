@@ -82,11 +82,6 @@ class BoxContent(models.Model):
         _("fixed content quantity"),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
-    may_order_more = models.BooleanField(_("may order more"), default=False)
-    contract = models.OneToOneField(
-        'Contract', verbose_name=_("contract"),
-        null=True, blank=True, db_index=True, on_delete=models.PROTECT
-    )
     calculated_customer_content_price = ModelMoneyField(
         _("customer content price"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)

@@ -6,11 +6,9 @@ from os import sep as os_sep
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.contrib import messages
 from django.contrib.admin import TabularInline
 from django.forms import ModelForm, BaseInlineFormSet
 from django.forms.formsets import DELETION_FIELD_NAME
-from django.shortcuts import render
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
@@ -20,14 +18,12 @@ from parler.forms import TranslatableModelForm
 from repanier.admin.admin_filter import ProductFilterByProducer, ProductFilterByVatLevel
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import DECIMAL_ZERO, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, PERMANENCE_PLANNED, PERMANENCE_CLOSED, EMPTY_STRING
-from repanier.models import BoxContent
+    COORDINATION_GROUP, CONTRACT_IN_WRITING
 from repanier.models import Contract
 from repanier.models import Customer
-from repanier.models import OfferItemWoReceiver
 from repanier.models import Producer
 from repanier.models import Product
-from repanier.task import task_contract
+from repanier.models.contract import ContractContent
 from repanier.tools import update_offer_item
 
 try:
@@ -42,21 +38,12 @@ class ContractContentInlineFormSet(BaseInlineFormSet):
         for form in self.forms:
             if form.cleaned_data and not form.cleaned_data.get('DELETE'):
                 # This is not an empty form or a "to be deleted" form
-                product = form.cleaned_data.get('product', None)
+                product = form.cleaned_data.get('product')
                 if product is not None:
                     if product in products:
                         raise forms.ValidationError(_('Duplicate product are not allowed.'))
                     else:
                         products.add(product)
-
-    def get_queryset(self):
-        return self.queryset.filter(
-            product__translations__language_code=translation.get_language()
-        ).order_by(
-            "product__producer__short_profile_name",
-            "product__translations__long_name",
-            "product__order_average_weight",
-        )
 
 
 class ContractContentInlineForm(ModelForm):
@@ -71,7 +58,7 @@ class ContractContentInlineForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(ContractContentInlineForm, self).__init__(*args, **kwargs)
         # TODO : Allow to add related products -> to solve : need to send the producer to the product form
-        self.fields["product"].widget.can_add_related = False
+        self.fields["product"].widget.can_add_related = True
         self.fields["product"].widget.can_delete_related = False
         if self.instance.id is not None:
             self.fields["previous_product"].initial = self.instance.product
@@ -92,7 +79,7 @@ class ContractContentInlineForm(ModelForm):
 class ContractContentInline(ForeignKeyCacheMixin, TabularInline):
     form = ContractContentInlineForm
     formset = ContractContentInlineFormSet
-    model = BoxContent
+    model = ContractContent
     ordering = ("product",)
     if settings.DJANGO_SETTINGS_IS_MINIMALIST:
         fields = ['product', 'content_quantity','may_order_more',
@@ -106,26 +93,15 @@ class ContractContentInline(ForeignKeyCacheMixin, TabularInline):
     readonly_fields = [
         'get_calculated_customer_content_price'
     ]
-    has_add_or_delete_permission = None
+    _has_delete_permission = None
 
-    def has_delete_permission(self, request, obj=None):
-        if self.has_add_or_delete_permission is None:
-            try:
-                parent_object = Contract.objects.filter(
-                    id=request.resolver_match.args[0]
-                ).only(
-                    "id").order_by('?').first()
-                if parent_object is not None and OfferItemWoReceiver.objects.filter(
-                    product=parent_object.id,
-                    permanence__status__gt=PERMANENCE_PLANNED,
-                    permanence__status__lt=PERMANENCE_CLOSED
-                ).order_by('?').exists():
-                    self.has_add_or_delete_permission = False
-                else:
-                    self.has_add_or_delete_permission = True
-            except:
-                self.has_add_or_delete_permission = True
-        return self.has_add_or_delete_permission
+    def has_delete_permission(self, request, contract=None):
+        if self._has_delete_permission is None:
+            if contract is not None:
+                self._has_delete_permission = contract.highest_status == CONTRACT_IN_WRITING
+            else:
+                self._has_delete_permission = True
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -136,13 +112,15 @@ class ContractContentInline(ForeignKeyCacheMixin, TabularInline):
             producer_id = None
             if preserved_filters:
                 param = dict(parse_qsl(preserved_filters))
-                if 'producer' in param:
-                    producer_id = param['producer']
-            if producer_id is not None:
+                producer_id = param.get('producer')
+            if producer_id is None:
+                kwargs["queryset"] = Product.objects.none()
+            else:
                 kwargs["queryset"] = Product.objects.filter(
                     producer_id=producer_id,
                     is_active=True,
-                    # A contract may not include another contract
+                    # A contract may not include another contract or box
+                    is_contract=False,
                     is_box=False,
                     translations__language_code=translation.get_language()
                 ).order_by(
@@ -150,8 +128,7 @@ class ContractContentInline(ForeignKeyCacheMixin, TabularInline):
                     "translations__long_name",
                     "order_average_weight",
                 )
-            else:
-                kwargs["queryset"] = Product.objects.none()
+
         return super(ContractContentInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -195,20 +172,6 @@ class ContractDataForm(TranslatableModelForm):
                 'producer',
                 _('Please select first a producer in the filter of previous screen'))
 
-    def save(self, *args, **kwargs):
-        instance = super(ContractDataForm, self).save(*args, **kwargs)
-        if instance.id is not None:
-            instance.customers = self.cleaned_data['customers']
-            # The previous save is called with "commit=False"
-            # But we need to update the producer
-            # to recalculate the products prices. So a call to self.instance.save() is required
-            # self.instance.save()
-            # for product in Product.objects.filter(producer_id=instance.id).order_by('?'):
-            #     product.save()
-            # update_offer_item(producer_id=instance.id)
-
-        return instance
-
 
 class ContractAdmin(TranslatableAdmin):
     form = ContractDataForm
@@ -220,7 +183,6 @@ class ContractAdmin(TranslatableAdmin):
     list_display_links = ('get_long_name',)
     list_per_page = 16
     list_max_show_all = 16
-    # filter_horizontal = ('customers',)
     inlines = (ContractContentInline,)
     ordering = (
         '-first_permanence_date',
@@ -235,16 +197,19 @@ class ContractAdmin(TranslatableAdmin):
         ProductFilterByProducer,
         ProductFilterByVatLevel
    )
-    actions = [
-        'flip_flop_select_for_offer_status',
-        'duplicate_contract'
-    ]
+    _has_delete_permission = None
 
     def has_delete_permission(self, request, contract=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return settings.DJANGO_SETTINGS_IS_AMAP
-        return False
+        if self._has_delete_permission is None:
+            if request.user.groups.filter(
+                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+                if contract is not None:
+                    self._has_delete_permission = contract.highest_status == CONTRACT_IN_WRITING
+                else:
+                    self._has_delete_permission = settings.DJANGO_SETTINGS_IS_AMAP
+            else:
+                self._has_delete_permission = False
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -259,74 +224,42 @@ class ContractAdmin(TranslatableAdmin):
         #     producer = producer_queryset.first()
         # else:
         #     producer = None
-
+        list_display = [
+            'producer', 'get_long_name'
+        ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'language_column', 'first_permanence_date', 'get_full_status_display')
-            else:
-                self.list_editable = ('stock',)
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'language_column', 'first_permanence_date', 'stock', 'get_full_status_display')
-        else:
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'first_permanence_date', 'get_full_status_display')
-            else:
-                self.list_editable = ('stock',)
-                return ('producer', 'get_is_into_offer', 'get_long_name', 'first_permanence_date', 'stock', 'get_full_status_display')
-
-    def flip_flop_select_for_offer_status(self, request, queryset):
-        task_contract.flip_flop_is_into_offer(queryset)
-
-    flip_flop_select_for_offer_status.short_description = _(
-        'flip_flop_select_for_offer_status for offer')
-
-    def duplicate_contract(self, request, queryset):
-        if 'cancel' in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        contract = queryset.first()
-        if contract is None:
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
-        if 'apply' in request.POST:
-            user_message, user_message_level = task_contract.admin_duplicate(queryset)
-            self.message_user(request, user_message, user_message_level)
-            return
-        return render(
-            request,
-            'repanier/confirm_admin_duplicate_contract.html', {
-                'sub_title'           : _("Please, confirm the action : duplicate contract"),
-                'action_checkcontract_name': admin.ACTION_CHECKBOX_NAME,
-                'action'              : 'duplicate_contract',
-                'product'             : contract,
-            })
-
-    duplicate_contract.short_description = _('duplicate contract')
+            list_display += [
+                'language_column',
+            ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            self.list_editable = ('stock',)
+            list_display += [
+                'stock',
+            ]
+        list_display += [
+            'get_full_status_display',
+        ]
+        return list_display
 
     def get_fieldsets(self, request, contract=None):
+        fields_basic = [
+            ('producer', 'long_name', 'picture2'),
+            'first_permanence_date',
+            'recurrences',
+        ]
         if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            fields_basic = [
-                ('producer', 'long_name', 'picture2'),
-                'first_permanence_date',
-                'recurrences',
+            fields_basic += [
                 ('customer_unit_price', 'unit_deposit'),
                 ('calculated_customer_contract_price', 'calculated_contract_deposit'),
             ]
         else:
-            fields_basic = [
-                ('producer', 'long_name', 'picture2'),
-                'first_permanence_date',
-                'recurrences',
+            fields_basic += [
                 ('stock', 'customer_unit_price', 'unit_deposit'),
                 ('calculated_stock', 'calculated_customer_contract_price', 'calculated_contract_deposit'),
             ]
-        if contract is not None:
-            fields_basic += [
-                'customers',
-            ]
+        fields_basic += [
+            'customers',
+        ]
         fields_advanced_descriptions = [
             'offer_description',
         ]
@@ -342,8 +275,7 @@ class ContractAdmin(TranslatableAdmin):
         return fieldsets
 
     def get_readonly_fields(self, request, contract=None):
-        if contract is not None and contract.highest_status > PERMANENCE_PLANNED:
-            return ['customers',]
+        return ['customers',]
 
     def get_form(self, request, contract=None, **kwargs):
         is_active_value = None
@@ -355,14 +287,11 @@ class ContractAdmin(TranslatableAdmin):
             preserved_filters = request.GET.get('_changelist_filters', None)
             if preserved_filters:
                 param = dict(parse_qsl(preserved_filters))
-                if 'producer' in param:
-                    producer_id = param['producer']
-                    if producer_id:
-                        producer_queryset = Producer.objects.filter(id=producer_id).order_by('?')
-                if 'is_active__exact' in param:
-                    is_active_value = param['is_active__exact']
-                if 'is_into_offer__exact' in param:
-                    is_into_offer_value = param['is_into_offer__exact']
+                producer_id = param.get('producer')
+                if producer_id:
+                    producer_queryset = Producer.objects.filter(id=producer_id).order_by('?')
+                is_active_value = param.get('is_active__exact')
+                is_into_offer_value = param.get('is_into_offer__exact')
         producer = producer_queryset.first()
 
         form = super(ContractAdmin, self).get_form(request, contract, **kwargs)
@@ -412,7 +341,7 @@ class ContractAdmin(TranslatableAdmin):
     def get_queryset(self, request):
         qs = super(ContractAdmin, self).get_queryset(request)
         qs = qs.filter(
-            is_box=True,
+            is_contract=True,
             translations__language_code=translation.get_language()
         )
         return qs

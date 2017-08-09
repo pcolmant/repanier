@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from repanier.const import COORDINATION_GROUP
+from repanier.const import COORDINATION_GROUP, EMPTY_STRING
 from repanier.models.configuration import Configuration
 from repanier.models.producer import Producer
 from repanier.tools import send_test_email
@@ -52,7 +52,7 @@ class ConfigurationDataForm(TranslatableModelForm):
                 'send_abstract_order_mail_to_customer',
                 _('The abstract can only be send if the order is also send to customer'))
         send_order_mail_to_producer = self.cleaned_data["send_order_mail_to_producer"]
-        send_abstract_order_mail_to_producer = self.cleaned_data["send_abstract_order_mail_to_producer"]
+        send_abstract_order_mail_to_producer = self.cleaned_data.get("send_abstract_order_mail_to_producer", EMPTY_STRING)
         if send_abstract_order_mail_to_producer and not send_order_mail_to_producer:
             self.add_error(
                 'send_abstract_order_mail_to_customer',

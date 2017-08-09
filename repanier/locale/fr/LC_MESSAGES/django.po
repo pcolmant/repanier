@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-07 21:30+0200\n"
-"PO-Revision-Date: 2017-08-07 21:31+0100\n"
+"POT-Creation-Date: 2017-08-08 09:13+0200\n"
+"PO-Revision-Date: 2017-08-08 09:55+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -178,15 +178,15 @@ msgstr "Tarif consommateur à l'unité calculé"
 msgid "calculated box deposit"
 msgstr "Consigne calculée"
 
-#: admin/box.py:154 admin/contract.py:171
+#: admin/box.py:154 admin/contract.py:159
 msgid "Calculated current stock"
 msgstr "Inventaire calculé"
 
-#: admin/box.py:230 admin/contract.py:280 admin/product.py:342
+#: admin/box.py:230 admin/contract.py:271 admin/product.py:342
 msgid "flip_flop_select_for_offer_status for offer"
 msgstr "✔ en offre  ↔ ✘ pas en offre"
 
-#: admin/box.py:234 admin/contract.py:284 admin/permanence_done.py:127
+#: admin/box.py:234 admin/contract.py:275 admin/permanence_done.py:127
 #: admin/permanence_done.py:227 admin/permanence_done.py:375
 #: admin/permanence_done.py:408 admin/permanence_done.py:445
 #: admin/permanence_in_preparation.py:258
@@ -202,7 +202,7 @@ msgstr "✔ en offre  ↔ ✘ pas en offre"
 msgid "Action canceled by the user."
 msgstr "Action annulée par l'utilisateur."
 
-#: admin/box.py:240 admin/contract.py:290 admin/permanence_done.py:135
+#: admin/box.py:240 admin/contract.py:281 admin/permanence_done.py:135
 #: admin/permanence_done.py:159 admin/permanence_done.py:180
 #: admin/permanence_done.py:233 admin/permanence_done.py:384
 #: admin/permanence_done.py:414 admin/permanence_done.py:451
@@ -230,11 +230,11 @@ msgstr "Veuillez confirmer votre demande de duplication d'une composition."
 msgid "duplicate box"
 msgstr "Créer un duplicata"
 
-#: admin/box.py:282 admin/contract.py:339 admin/product.py:500
+#: admin/box.py:282 admin/contract.py:329 admin/product.py:500
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
-#: admin/box.py:283 admin/configuration.py:204 admin/contract.py:340
+#: admin/box.py:283 admin/configuration.py:204 admin/contract.py:330
 #: admin/customer.py:389 admin/producer.py:390 admin/product.py:501
 msgid "Advanced options"
 msgstr "Paramètres avancés"
@@ -311,31 +311,31 @@ msgstr "✉ mails de transmission des commandes"
 msgid "Invoicing mails"
 msgstr "✉ mails de facturation des commandes"
 
-#: admin/contract.py:160
+#: admin/contract.py:148
 msgid "calculated customer contract price"
 msgstr "Tarif consommateur à l'unité calculé"
 
-#: admin/contract.py:162
+#: admin/contract.py:150
 msgid "calculated contract deposit"
 msgstr "Consigne calculée"
 
-#: admin/contract.py:166 admin/permanence_in_preparation.py:276
+#: admin/contract.py:154 admin/permanence_in_preparation.py:276
 #: admin/permanence_in_preparation.py:299
 msgid "Customers"
 msgstr "Consommateurs"
 
-#: admin/contract.py:196 admin/contract.py:389 admin/product.py:260
+#: admin/contract.py:184 admin/contract.py:379 admin/product.py:260
 #: admin/product.py:546 admin/purchase.py:105
 msgid "Please select first a producer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un producteur via les filtres dans l'écran "
 "précédent..."
 
-#: admin/contract.py:301
+#: admin/contract.py:292
 msgid "Please, confirm the action : duplicate contract"
 msgstr "Veuillez confirmer votre demande de duplication d'un contrat."
 
-#: admin/contract.py:307
+#: admin/contract.py:298
 msgid "duplicate contract"
 msgstr "Créer un duplicata"
 
@@ -1062,7 +1062,7 @@ msgstr "La quantité doit être différente de zéro."
 msgid "department_for_customer"
 msgstr "Rayon"
 
-#: admin/purchase.py:246 const.py:278 email/email_order.py:35
+#: admin/purchase.py:246 const.py:287 email/email_order.py:35
 #: models/configuration.py:356 views/btn_confirm_order_ajax.py:49
 msgid "Order"
 msgstr "Commande"
@@ -1155,7 +1155,7 @@ msgstr ""
 "Au moins un/e coordinateur/trice doit être renseigné/e au sein de l'équipe "
 "de gestion."
 
-#: apps.py:18 const.py:275 models/configuration.py:344
+#: apps.py:18 const.py:284 models/configuration.py:344
 #: xlsx/xlsx_invoice.py:210
 msgid "Permanence"
 msgstr "Permanence"
@@ -1395,7 +1395,7 @@ msgstr "Hygiène"
 msgid "Deposit"
 msgstr "Consigne"
 
-#: apps.py:227 const.py:127 const.py:143 const.py:175
+#: apps.py:227 const.py:136 const.py:152 const.py:184
 msgid "Subscription"
 msgstr "Souscription."
 
@@ -1483,223 +1483,227 @@ msgstr "Mouvements de compte"
 msgid "%(name)s archived list"
 msgstr "%(name)s à archiver"
 
-#: const.py:68
-msgid "disabled"
-msgstr "Désactivé"
-
-#: const.py:69
-msgid "planned"
+#: const.py:66
+msgid "Planned"
 msgstr "Planifié"
 
-#: const.py:70
-msgid "wait for pre-open"
+#: const.py:67
+msgid "Wait for pre-open"
 msgstr "En cours de pré-ouverture"
 
-#: const.py:71
-msgid "orders pre-opened"
+#: const.py:68
+msgid "Orders pre-opened"
 msgstr "Commandes pré-ouvertes"
 
-#: const.py:72
-msgid "wait for open"
+#: const.py:69
+msgid "Wait for open"
 msgstr "En cours d'ouverture"
 
-#: const.py:73
-msgid "orders opened"
+#: const.py:70
+msgid "Orders opened"
 msgstr "Commandes ouvertes"
 
-#: const.py:74
-msgid "wait for close"
+#: const.py:71
+msgid "Wait for close"
 msgstr "En cours de clôture"
 
-#: const.py:75 models/deliveryboard.py:107 models/permanence.py:944
-msgid "orders closed"
+#: const.py:72
+msgid "Orders closed"
 msgstr "Commandes clôturées"
 
-#: const.py:76
-msgid "wait for send"
-msgstr "En cours de transmission"
+#: const.py:73
+msgid "Wait for send"
+msgstr "En cours d'envoi"
 
-#: const.py:77
-msgid "orders send to producers"
-msgstr "Commandes transmises"
+#: const.py:74
+msgid "Orders send"
+msgstr "Commandes envoyées"
 
-#: const.py:78
-msgid "wait for done"
+#: const.py:75
+msgid "Wait for done"
 msgstr "En cours de facturation"
 
-#: const.py:79
-msgid "invoices validation test failed"
-msgstr "Factures non valides"
+#: const.py:76
+msgid "Invoiced"
+msgstr "Facturé"
 
-#: const.py:80
-msgid "invoiced"
-msgstr "Commandes facturés"
+#: const.py:77 const.py:90
+msgid "Archived"
+msgstr "Archivé"
 
-#: const.py:81
-msgid "archived"
-msgstr "Commandes  archivées"
+#: const.py:78
+msgid "Cancelled"
+msgstr "Annulé"
 
-#: const.py:82
-msgid "cancelled"
-msgstr "Livraison annulée"
+#: const.py:87
+msgid "In writing"
+msgstr "En rédaction"
 
-#: const.py:91 const.py:98
+#: const.py:88
+msgid "In subscription"
+msgstr "En souscription"
+
+#: const.py:89
+msgid "In execution"
+msgstr "En exécution"
+
+#: const.py:100 const.py:107
 msgid "freezer"
 msgstr "Surgélateur"
 
-#: const.py:92 const.py:99
+#: const.py:101 const.py:108
 msgid "fridge"
 msgstr "Frigo"
 
-#: const.py:93 const.py:100
+#: const.py:102 const.py:109
 msgid "loose, out of the basket"
 msgstr "En dehors du panier"
 
-#: const.py:94 const.py:101
+#: const.py:103 const.py:110
 msgid "into the basket"
 msgstr "Panier"
 
-#: const.py:117 const.py:133 const.py:151 const.py:165
+#: const.py:126 const.py:142 const.py:160 const.py:174
 msgid "bought per piece"
 msgstr "Vendu à la pièce."
 
-#: const.py:118 const.py:134 const.py:152 const.py:166
+#: const.py:127 const.py:143 const.py:161 const.py:175
 msgid "bought per piece (price /kg)"
 msgstr "Vendu à la pièce (prix affiché au kg)."
 
-#: const.py:119 const.py:135 const.py:153 const.py:167
+#: const.py:128 const.py:144 const.py:162 const.py:176
 msgid "bought per piece (price /l)"
 msgstr "Vendu à la pièce (prix affiché au ℓ)."
 
-#: const.py:120 const.py:136 const.py:154 const.py:168
+#: const.py:129 const.py:145 const.py:163 const.py:177
 msgid "bought per piece (price /pc)"
 msgstr "Vendu en pack."
 
-#: const.py:121 const.py:137 const.py:155 const.py:169
+#: const.py:130 const.py:146 const.py:164 const.py:178
 msgid "bought per kg"
 msgstr "Vendu au poids (en kg)."
 
-#: const.py:122 const.py:138 const.py:156 const.py:170
+#: const.py:131 const.py:147 const.py:165 const.py:179
 msgid "bought per piece, invoiced following the weight"
 msgstr "Vendu à la pièce, facturé selon le poids réel."
 
-#: const.py:123 const.py:139 const.py:157 const.py:171
+#: const.py:132 const.py:148 const.py:166 const.py:180
 msgid "bought per l"
 msgstr "Vendu au volume (en ℓ)."
 
-#: const.py:125 const.py:140 const.py:159 const.py:173
+#: const.py:134 const.py:149 const.py:168 const.py:182
 msgid ""
 "As a deposit, a bag : always add this product to preparation list when the "
 "customer has purchased something."
 msgstr "Consigne reprise à la permanence."
 
-#: const.py:129 const.py:146 const.py:161
+#: const.py:138 const.py:155 const.py:170
 msgid ""
 "As a transportation cost : add the minimal order quantity of this product to "
 "the basket representing the group."
 msgstr "Frais de livraison."
 
-#: const.py:179
+#: const.py:188
 msgid "Sold by piece"
 msgstr "Vendu à la pièce"
 
-#: const.py:180
+#: const.py:189
 msgid "Sold by weight"
 msgstr "Vendu au poids"
 
-#: const.py:181
+#: const.py:190
 msgid "Sold by l"
 msgstr "Vendu au ℓ"
 
-#: const.py:182
+#: const.py:191
 msgid "Sold by piece, invoiced following the weight"
 msgstr "Vendu à la pièce, facturé selon le poids réel"
 
-#: const.py:204 const.py:219 const.py:234
+#: const.py:213 const.py:228 const.py:243
 msgid "none"
 msgstr "Aucune"
 
-#: const.py:205 const.py:220 const.py:235
+#: const.py:214 const.py:229 const.py:244
 msgid "vat 2.1%"
 msgstr "2,1% de TVA"
 
-#: const.py:206 const.py:221 const.py:236
+#: const.py:215 const.py:230 const.py:245
 msgid "vat 2.5%"
 msgstr "2,5% de TVA"
 
-#: const.py:207 const.py:222 const.py:237
+#: const.py:216 const.py:231 const.py:246
 msgid "vat 3.8%"
 msgstr "3,8% de TVA"
 
-#: const.py:208 const.py:223 const.py:238
+#: const.py:217 const.py:232 const.py:247
 msgid "vat 4%"
 msgstr "4% de TVA"
 
-#: const.py:209 const.py:224 const.py:239
+#: const.py:218 const.py:233 const.py:248
 msgid "vat 5.5%"
 msgstr "5,5% de TVA"
 
-#: const.py:210 const.py:225 const.py:240
+#: const.py:219 const.py:234 const.py:249
 msgid "vat 6%"
 msgstr "6% de TVA"
 
-#: const.py:211 const.py:226 const.py:241
+#: const.py:220 const.py:235 const.py:250
 msgid "vat 8%"
 msgstr "8% de TVA"
 
-#: const.py:212 const.py:227 const.py:242
+#: const.py:221 const.py:236 const.py:251
 msgid "vat 10%"
 msgstr "10% de TVA"
 
-#: const.py:213 const.py:228 const.py:243
+#: const.py:222 const.py:237 const.py:252
 msgid "vat 12%"
 msgstr "12% de TVA"
 
-#: const.py:214 const.py:229 const.py:244
+#: const.py:223 const.py:238 const.py:253
 msgid "vat 20%"
 msgstr "20% de TVA"
 
-#: const.py:215 const.py:230 const.py:245
+#: const.py:224 const.py:239 const.py:254
 msgid "vat 21%"
 msgstr "21% de TVA"
 
-#: const.py:258
+#: const.py:267
 msgid "This is not the latest total"
 msgstr "Ceci n'est pas le dernier solde"
 
-#: const.py:263
+#: const.py:272
 msgid "This is the next latest bank total"
 msgstr "Ceci est le prochain solde. Le système est en train de le calculer."
 
-#: const.py:264
+#: const.py:273
 msgid "This is the latest bank total"
 msgstr "Ceci est le dernier solde."
 
-#: const.py:276 models/configuration.py:348
+#: const.py:285 models/configuration.py:348
 msgid "Closure"
 msgstr "Clôture"
 
-#: const.py:277 models/configuration.py:352
+#: const.py:286 models/configuration.py:352
 msgid "Delivery"
 msgstr "Livraison"
 
-#: const.py:279 models/configuration.py:360
+#: const.py:288 models/configuration.py:360
 msgid "Opening"
 msgstr "Offre"
 
-#: const.py:280 models/configuration.py:364
+#: const.py:289 models/configuration.py:364
 msgid "Distribution"
 msgstr "Distribution"
 
-#: const.py:312
+#: const.py:321
 msgid "Euro"
 msgstr "€"
 
-#: const.py:313
+#: const.py:322
 msgid "Franc"
 msgstr "Fr."
 
-#: const.py:314
+#: const.py:323
 msgid "Local"
 msgstr "✿"
 
@@ -1778,7 +1782,7 @@ msgstr "Quantité à l'unité"
 msgid "may order more"
 msgstr "Le consommateur peut en commander d'autres ?"
 
-#: models/box.py:87 models/contract.py:51
+#: models/box.py:87 models/contract.py:49
 msgid "contract"
 msgstr "contrat"
 
@@ -2086,27 +2090,15 @@ msgstr "Date de la première permanence"
 msgid "customers"
 msgstr "Consommateurs"
 
-#: models/contract.py:32 models/deliveryboard.py:35 models/permanence.py:98
-#: models/permanence.py:895
-msgid "permanence_status"
-msgstr "Statut"
-
-#: models/contract.py:33 models/contract.py:39 models/deliveryboard.py:43
-#: models/permanence.py:99 models/permanence.py:141
-msgid ""
-"status of the permanence from planned, orders opened, orders closed, send, "
-"done"
-msgstr "Statut (Planifié, Ouvert, Commandes transmises, Facturé)"
-
-#: models/contract.py:38 models/deliveryboard.py:42 models/permanence.py:140
-msgid "highest permanence_status"
-msgstr "Statut le plus élevé de la permanence"
-
-#: models/contract.py:44
+#: models/contract.py:32 models/contract.py:42
 msgid "contract status"
 msgstr "statut"
 
-#: models/contract.py:52
+#: models/contract.py:37
+msgid "highest contract status"
+msgstr "status le plus élevé"
+
+#: models/contract.py:50
 msgid "contracts"
 msgstr "contrats"
 
@@ -2275,6 +2267,24 @@ msgstr "Commentaire"
 #: models/deliveryboard.py:29
 msgid "delivery date"
 msgstr "Date de livraison"
+
+#: models/deliveryboard.py:35 models/permanence.py:98 models/permanence.py:895
+msgid "permanence_status"
+msgstr "Statut"
+
+#: models/deliveryboard.py:42 models/permanence.py:140
+msgid "highest permanence_status"
+msgstr "Statut le plus élevé de la permanence"
+
+#: models/deliveryboard.py:43 models/permanence.py:99 models/permanence.py:141
+msgid ""
+"status of the permanence from planned, orders opened, orders closed, send, "
+"done"
+msgstr "Statut (Planifié, Ouvert, Commandes transmises, Facturé)"
+
+#: models/deliveryboard.py:107 models/permanence.py:944
+msgid "orders closed"
+msgstr "Commandes clôturées"
 
 #: models/deliveryboard.py:113 models/invoice.py:106
 msgid "delivery board"
@@ -4857,6 +4867,24 @@ msgstr "Contrôle du stock"
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 
+#~ msgid "planned"
+#~ msgstr "Planifié"
+
+#~ msgid "orders send to producers"
+#~ msgstr "Commandes transmises"
+
+#~ msgid "invoices validation test failed"
+#~ msgstr "Factures non valides"
+
+#~ msgid "invoiced"
+#~ msgstr "Facturé"
+
+#~ msgid "archived"
+#~ msgstr "Archivé"
+
+#~ msgid "disabled"
+#~ msgstr "Désactivé"
+
 #~ msgid "first delivery date"
 #~ msgstr "Date de la première livraison"
 
@@ -4972,9 +5000,6 @@ msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 
 #~ msgid "membership_fee"
 #~ msgstr "Cotisation"
-
-#~ msgid "subscriptions"
-#~ msgstr "Cotisations"
 
 #~ msgid ""
 #~ "As a subscription, common expense : add the minimal order quantity of "
@@ -5592,9 +5617,6 @@ msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 
 #~ msgid "accept childs group"
 #~ msgstr "accepter les sites enfants"
-
-#~ msgid "Planned"
-#~ msgstr "Planifié"
 
 #~ msgid "Row %(row_num)d : No valid departement for customer"
 #~ msgstr ""

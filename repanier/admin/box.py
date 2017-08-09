@@ -47,15 +47,14 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
                     else:
                         products.add(product)
 
-    def get_queryset(self):
-        return self.queryset.filter(
-            product__translations__language_code=translation.get_language()
-        ).order_by(
-            "product__producer__short_profile_name",
-            "product__translations__long_name",
-            "product__order_average_weight",
-        )
-
+    # def get_queryset(self):
+    #     return self.queryset.filter(
+    #         product__translations__language_code=translation.get_language()
+    #     ).order_by(
+    #         "product__producer__short_profile_name",
+    #         "product__translations__long_name",
+    #         "product__order_average_weight",
+    #     )
 
 
 class BoxContentInlineForm(ModelForm):
@@ -104,10 +103,10 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
     readonly_fields = [
         'get_calculated_customer_content_price'
     ]
-    has_add_or_delete_permission = None
+    _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if self.has_add_or_delete_permission is None:
+        if self._has_delete_permission is None:
             try:
                 parent_object = Box.objects.filter(
                     id=request.resolver_match.args[0]
@@ -117,12 +116,12 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
                     product=parent_object.id,
                     permanence__status__gt=PERMANENCE_PLANNED
                 ).order_by('?').exists():
-                    self.has_add_or_delete_permission = False
+                    self._has_delete_permission = False
                 else:
-                    self.has_add_or_delete_permission = True
+                    self._has_delete_permission = True
             except:
-                self.has_add_or_delete_permission = True
-        return self.has_add_or_delete_permission
+                self._has_delete_permission = True
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -131,7 +130,8 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
         if db_field.name == "product":
             kwargs["queryset"] = Product.objects.filter(
                 is_active=True,
-                # A box may not include another box
+                # A box may not include another contract or box
+                is_contract=False,
                 is_box=False,
                 # We can't make any composition with producer preparing baskets on basis of our order.
                 producer__invoice_by_basket=False,
@@ -196,12 +196,16 @@ class BoxAdmin(TranslatableAdmin):
         'flip_flop_select_for_offer_status',
         'duplicate_box'
     ]
+    _has_delete_permission = None
 
     def has_delete_permission(self, request, box=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        if self._has_delete_permission is None:
+            if request.user.groups.filter(
+                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+                self._has_delete_permission = True
+            else:
+                self._has_delete_permission = False
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -210,18 +214,19 @@ class BoxAdmin(TranslatableAdmin):
         return self.has_delete_permission(request, box)
 
     def get_list_display(self, request):
+        list_display = [
+            'get_is_into_offer', 'get_long_name'
+        ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                return ('get_is_into_offer', 'get_long_name', 'language_column')
-            else:
-                self.list_editable = ('stock',)
-                return ('get_is_into_offer', 'get_long_name', 'language_column', 'stock')
-        else:
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                return ('get_is_into_offer', 'get_long_name')
-            else:
-                self.list_editable = ('stock',)
-                return ('get_is_into_offer', 'get_long_name', 'stock')
+            list_display += [
+                'language_column',
+            ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            self.list_editable = ('stock',)
+            list_display += [
+                'stock',
+            ]
+        return list_display
 
     def flip_flop_select_for_offer_status(self, request, queryset):
         task_box.flip_flop_is_into_offer(queryset)
