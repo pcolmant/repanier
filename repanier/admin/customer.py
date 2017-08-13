@@ -340,7 +340,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             ('short_basket_name', 'long_basket_name', 'language'),
             ('email', 'email2', 'accept_mails_from_members'),
             ('phone1', 'phone2', 'accept_phone_call_from_members'),
-            ('membership_fee_valid_until', 'vat_id',),
+            'membership_fee_valid_until',
         ]
         if customer is not None:
             fields_basic += [
@@ -353,27 +353,24 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 ('address', 'city'),
                 'memo',
             ]
-
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fields_basic += [
+                'is_group',
+                'price_list_multiplier',
+            ]
         if customer is not None:
-            if customer.represent_this_buyinggroup:
+            if not customer.represent_this_buyinggroup:
                 fields_basic += [
-                    ('get_admin_balance', 'get_admin_date_balance'),
-                    ('may_order', 'represent_this_buyinggroup')
+                    'subscribe_to_email'
                 ]
-            else:
-                fields_basic += [
-                    ('get_admin_balance', 'price_list_multiplier', 'get_admin_date_balance'),
-                    ('may_order', 'is_group', 'is_active', 'subscribe_to_email'),
-                ]
+            fields_basic += [
+                ('get_admin_balance', 'get_admin_date_balance'),
+                ('may_order', 'represent_this_buyinggroup')
+            ]
         else:
             fields_basic += [
-                'price_list_multiplier',
                 ('may_order', 'is_active'),
             ]
-        # if settings.DJANGO_SETTINGS_IS_AMAP:
-        #     fields_basic += [
-        #         'contracts',
-        #     ]
         fields_advanced = [
             'bank_account1',
             'bank_account2',

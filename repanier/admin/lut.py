@@ -51,24 +51,22 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
     mptt_level_indent = 20
     mptt_indent_field = "short_name"
     mptt_level_limit = None
+    _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        if self._has_delete_permission is None:
+            if request.user.groups.filter(
+                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+                self._has_delete_permission = True
+            else:
+                self._has_delete_permission = False
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+    def has_change_permission(self, request, staff=None):
+        return self.has_delete_permission(request)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Overrides parent class formfield_for_foreignkey method."""
@@ -166,14 +164,30 @@ class LUTDeliveryPointAdmin(LUTAdmin):
     form = LUTDeliveryPointDataForm
 
     def get_fields(self, request, obj=None):
-        if obj is None:
-            return ['short_name', 'is_active', 'customer_responsible', 'inform_customer_responsible', 'price_list_multiplier', 'transport', 'min_transport']
-        return ['short_name', 'is_active', 'customer_responsible', 'inform_customer_responsible', 'price_list_multiplier', 'transport', 'min_transport', 'customers']
+        fields = [
+            'short_name',
+            'is_active',
+            'customer_responsible',
+            'inform_customer_responsible',
+            # 'price_list_multiplier',
+            'transport',
+            'min_transport'
+        ]
+        if obj is not None:
+            fields += [
+                'customers'
+            ]
+        return fields
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
-    exclude = ('description',)
+
+    fields = [
+        'parent',
+        'short_name',
+        'is_active',
+    ]
 
 
 class PermanenceBoardInlineForm(forms.ModelForm):
@@ -189,7 +203,10 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
     form = PermanenceBoardInlineForm
 
     model = PermanenceBoard
-    fields = ['permanence', 'customer']
+    fields = [
+        'permanence',
+        'customer'
+    ]
     extra = 1
 
     def get_queryset(self, request):
@@ -206,22 +223,14 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
 
 class LUTPermanenceRoleAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
+
+    fields = [
+        'short_name',
+        'customers_may_register',
+        'is_counted_as_participation',
+        'description',
+        'is_active',
+    ]
+
     if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
         inlines = [PermanenceBoardInline]
-
-    def get_fields(self, request, obj=None):
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            return [
-                'short_name',
-                'is_active',
-                'customers_may_register',
-                'description',
-            ]
-        else:
-            return [
-                'short_name',
-                'is_active',
-                'customers_may_register',
-                'is_counted_as_participation',
-                'description',
-            ]

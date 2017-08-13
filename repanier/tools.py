@@ -203,9 +203,9 @@ def get_board_composition(permanence_id):
         c = permanenceboard.customer
         if c is not None:
             if c.phone2 is not None:
-                c_part = "%s, <b>%s</b>, <b>%s</b>" % (c.long_basket_name, c.phone1, c.phone2)
+                c_part = "<b>%s</b>, %s, %s" % (c.long_basket_name, c.phone1, c.phone2)
             else:
-                c_part = "%s, <b>%s</b>" % (c.long_basket_name, c.phone1)
+                c_part = "<b>%s</b>, %s" % (c.long_basket_name, c.phone1)
             member = "<b>%s</b> : %s, %s<br/>" % (r.short_name, c_part, c.user.email)
             board_composition += member
             board_composition_and_description += "%s%s<br/>" % (member, r.description)

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-08-08 09:13+0200\n"
-"PO-Revision-Date: 2017-08-08 09:55+0100\n"
+"PO-Revision-Date: 2017-08-10 09:54+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -3067,7 +3067,7 @@ msgstr ""
 
 #: models/staff.py:56
 msgid "is_contributor"
-msgstr "Référant"
+msgstr "Référant producteur"
 
 #: models/staff.py:58
 msgid "is_webmaster"

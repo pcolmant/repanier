@@ -110,10 +110,10 @@ class ConfigurationAdmin(TranslatableAdmin):
             ('bank_account', 'max_week_wo_participation'),
             ('membership_fee', 'membership_fee_duration'),
             'display_anonymous_order_form',
-            'display_producer_on_order_form',
         ]
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields += [
+                'display_producer_on_order_form',
                 'customers_must_confirm_orders',
                 'test_mode',
             ]
@@ -148,7 +148,8 @@ class ConfigurationAdmin(TranslatableAdmin):
                     'classes': ('collapse',),
                     'fields' :
                         (
-                            'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer', 'order_customer_mail',
+                            'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer',
+                            'order_customer_mail',
                             'send_order_mail_to_producer', 'order_producer_mail',
                             'send_order_mail_to_board', 'order_staff_mail',
                         ),
@@ -180,22 +181,22 @@ class ConfigurationAdmin(TranslatableAdmin):
         if settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields = [
                 'invoice',
+                'how_to_register',
             ]
         else:
             fields = [
-                'how_to_register',
                 'home_site',
                 ('transport', 'min_transport'),
                 'group_label',
-                'page_break_on_customer_check',
+                # 'page_break_on_customer_check',
                 'close_wo_sending',
                 'display_who_is_who',
                 'invoice',
                 ('currency', 'vat_id'),
+                'sms_gateway_mail',
             ]
 
         fields += [
-            'sms_gateway_mail',
             'email_is_custom',
             ('email_host', 'email_port', 'email_use_tls'),
             ('email_host_user', 'email_host_password')

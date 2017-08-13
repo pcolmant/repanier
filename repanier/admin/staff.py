@@ -37,13 +37,6 @@ class UserDataForm(TranslatableModelForm):
             is_reply_to_order_email = self.cleaned_data["is_reply_to_order_email"]
             is_reply_to_invoice_email = self.cleaned_data["is_reply_to_invoice_email"]
             is_coordinator = self.cleaned_data["is_coordinator"]
-            # if is_reply_to_order_email or is_reply_to_invoice_email:
-            #     if not email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-            #         self.add_error(
-            #             'email',
-            #             _('The given email must end with %(allowed_extension)s') %
-            #             {'allowed_extension': settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION}
-            #         )
             if is_reply_to_order_email:
                 qs = Staff.objects.filter(is_reply_to_order_email=True).order_by('?')
                 if self.instance.id is not None:
@@ -94,45 +87,65 @@ class StaffWithUserDataAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
     item_label_field_name = 'title_for_admin'
     form = StaffWithUserDataForm
-    fields = ['long_name',
-              'email',
-              'customer_responsible',
-              'is_reply_to_order_email', 'is_reply_to_invoice_email',
-              'is_coordinator', 'is_contributor', 'is_webmaster',
-              'is_tester',
-              'is_active']
     list_display = ('long_name', 'language_column', 'customer_responsible', 'get_customer_phone1')
     list_display_links = ('long_name',)
     # list_filter = ('is_active',)
     list_select_related = ('customer_responsible',)
     list_per_page = 16
     list_max_show_all = 16
+    _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.groups.filter(name=COORDINATION_GROUP).exists() or request.user.is_superuser:
-            # Only a coordinator can delete
-            return True
-        return False
+        if self._has_delete_permission is None:
+            if request.user.groups.filter(name=COORDINATION_GROUP).exists() or request.user.is_superuser:
+                # Only a coordinator can delete
+                self._has_delete_permission = True
+            else:
+                self._has_delete_permission = False
+        return self.has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
-        # if request.user.groups.filter(
-        #         name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-        #     return True
-        # return False
 
     def has_change_permission(self, request, staff=None):
         return self.has_delete_permission(request)
 
     def get_list_display(self, request):
+        list_display = [
+            'long_name'
+        ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            return ('long_name', 'language_column', 'customer_responsible', 'get_customer_phone1')
-        else:
-            return ('long_name', 'customer_responsible', 'get_customer_phone1')
+            list_display += [
+                'language_column',
+            ]
+        list_display += [
+            'customer_responsible',
+            'get_customer_phone1'
+        ]
+        return list_display
+
+    def get_fields(self, request, obj=None):
+        fields = [
+            'long_name',
+            'email',
+            'customer_responsible',
+            'is_reply_to_order_email',
+            'is_reply_to_invoice_email',
+            'is_coordinator',
+            'is_contributor',
+            'is_webmaster',
+        ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            fields += [
+                'is_tester',
+            ]
+        fields += [
+            'is_active'
+        ]
+        return fields
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(StaffWithUserDataAdmin, self).get_form(request, obj, **kwargs)
-        # username_field = form.base_fields['username']
         email_field = form.base_fields['email']
         if "customer_responsible" in form.base_fields:
             customer_responsible_field = form.base_fields["customer_responsible"]
@@ -146,11 +159,9 @@ class StaffWithUserDataAdmin(LUTAdmin):
         if obj:
             user_model = get_user_model()
             user = user_model.objects.get(id=obj.user_id)
-            # username_field.initial = user.username
             email_field.initial = user.email
         else:
             # Clean data displayed
-            # username_field.initial = EMPTY_STRING
             email_field.initial = EMPTY_STRING
         return form
 

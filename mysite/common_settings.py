@@ -73,7 +73,6 @@ DJANGO_SETTINGS_EMAIL_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAI
 DJANGO_SETTINGS_EMAIL_HOST_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD')
 DJANGO_SETTINGS_EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_USER')
 DJANGO_SETTINGS_EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT')
-DJANGO_SETTINGS_EMAIL_USE_SSL = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_SSL')
 DJANGO_SETTINGS_EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS')
 DJANGO_SETTINGS_ENV = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ENV')
 DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE')
@@ -103,16 +102,12 @@ STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
 
 if DJANGO_SETTINGS_SITE_NAME == 'mysite':
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    STATICFILES_DIRS = (
+        os.path.join(PROJECT_PATH, "collect-static"),
+    )
 else:
     # Activate ManifestStaticFilesStorage also when in debug mode
     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
-
-# vvvv Generate Error : No static directory found during a first collect-static
-# STATICFILES_DIRS = (
-#     os.path.join(PROJECT_PATH, "collect-static"),
-# )
-print("-------------")
-print(os.path.join(PROJECT_PATH, "collect-static"))
 
 ###################### DEBUG
 DEBUG = DJANGO_SETTINGS_DEBUG
@@ -143,10 +138,7 @@ EMAIL_HOST_USER = DJANGO_SETTINGS_EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = DJANGO_SETTINGS_EMAIL_HOST_PASSWORD
 EMAIL_PORT = DJANGO_SETTINGS_EMAIL_PORT
 EMAIL_USE_TLS = DJANGO_SETTINGS_EMAIL_USE_TLS
-if EMAIL_USE_TLS:
-    EMAIL_USE_SSL = False
-else:
-    EMAIL_USE_SSL = DJANGO_SETTINGS_EMAIL_USE_SSL
+EMAIL_USE_SSL = not DJANGO_SETTINGS_EMAIL_USE_TLS
 ###################### I18N
 
 TIME_ZONE = 'Europe/Brussels'

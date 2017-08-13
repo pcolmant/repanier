@@ -13,6 +13,9 @@ admin.site.register(Notification, NotificationAdmin)
 from repanier.models.customer import Customer
 from repanier.admin.customer import CustomerWithUserDataAdmin
 admin.site.register(Customer, CustomerWithUserDataAdmin)
+from repanier.models.group import Group
+from repanier.admin.group import GroupWithUserDataAdmin
+admin.site.register(Group, GroupWithUserDataAdmin)
 from repanier.models.purchase import Purchase
 from repanier.admin.purchase import PurchaseAdmin
 admin.site.register(Purchase, PurchaseAdmin)

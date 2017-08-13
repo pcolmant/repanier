@@ -73,11 +73,15 @@ class RepanierToolbar(CMSToolbar):
             position += 1
 
             url = reverse('admin:repanier_customer_changelist')
-            admin_menu.add_sideframe_item(_('Customer List'), url=url, position=position)
+            admin_menu.add_sideframe_item(_('Customers'), url=url, position=position)
+            position += 1
+
+            url = reverse('admin:repanier_group_changelist')
+            admin_menu.add_sideframe_item(_('Groups'), url=url, position=position)
             position += 1
 
         url = reverse('admin:repanier_producer_changelist')
-        admin_menu.add_sideframe_item(_('Producer List'), url=url, position=position)
+        admin_menu.add_sideframe_item(_('Producers'), url=url, position=position)
 
         if display_all:
             # if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
