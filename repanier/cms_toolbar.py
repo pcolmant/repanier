@@ -55,21 +55,21 @@ class RepanierToolbar(CMSToolbar):
                 url = reverse('admin:repanier_configuration_change', args=(1,))
                 office_menu.add_sideframe_item(_('Configuration'), url=url)
             url = reverse('admin:repanier_notification_change', args=(1,))
-            office_menu.add_sideframe_item(_('Notification'), url=url)
+            office_menu.add_sideframe_item(_('Flash ads'), url=url)
             if display_configuration:
                 url = reverse('admin:repanier_staff_changelist')
-                office_menu.add_sideframe_item(_('Staff Member List'), url=url)
+                office_menu.add_sideframe_item(_('Management team'), url=url)
                 if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
                     url = reverse('admin:repanier_lut_deliverypoint_changelist')
-                    office_menu.add_sideframe_item(_('Delivery Point List'), url=url)
+                    office_menu.add_sideframe_item(_('Delivery points'), url=url)
 
             url = reverse('admin:repanier_lut_permanencerole_changelist')
-            office_menu.add_sideframe_item(_('Permanence Role List'), url=url)
+            office_menu.add_sideframe_item(_('Tasks'), url=url)
             if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
                 url = reverse('admin:repanier_lut_productionmode_changelist')
-                office_menu.add_sideframe_item(_('Production Mode List'), url=url)
+                office_menu.add_sideframe_item(_('Labels'), url=url)
             url = reverse('admin:repanier_lut_departmentforcustomer_changelist')
-            office_menu.add_sideframe_item(_('Departement for Customer List'), url=url)
+            office_menu.add_sideframe_item(_('Departements'), url=url)
             position += 1
 
             url = reverse('admin:repanier_customer_changelist')
@@ -84,29 +84,27 @@ class RepanierToolbar(CMSToolbar):
         admin_menu.add_sideframe_item(_('Producers'), url=url, position=position)
 
         if display_all:
-            # if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            #     position += 1
-            #     url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_box_changelist')
-            #     admin_menu.add_sideframe_item(_('Box List'), url=url, position=position)
+            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                position += 1
+                url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_box_changelist')
+                admin_menu.add_sideframe_item(_('Assemblies'), url=url, position=position)
+            if settings.DJANGO_SETTINGS_IS_AMAP:
+                position += 1
+                url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_contract_changelist')
+                admin_menu.add_sideframe_item(_('Commitments over time'), url=url, position=position)
             if is_in_order_group:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')
-                admin_menu.add_sideframe_item(
-                    _("%(name)s in preparation list") % {'name': REPANIER_SETTINGS_PERMANENCES_NAME},
-                    url=url, position=position)
+                admin_menu.add_sideframe_item(_("In preparation"), url=url, position=position)
             if is_in_invoice_group:
                 if REPANIER_SETTINGS_INVOICE:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')
-                    admin_menu.add_sideframe_item(
-                        _("%(name)s done list") % {'name': REPANIER_SETTINGS_PERMANENCES_NAME},
-                        url=url, position=position)
+                    admin_menu.add_sideframe_item(_("In billing"), url=url, position=position)
                     position += 1
                     url = reverse('admin:repanier_bankaccount_changelist')
-                    admin_menu.add_sideframe_item(_('Bank Account List'), url=url, position=position)
+                    admin_menu.add_sideframe_item(_('Bank account transactions'), url=url, position=position)
                 else:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')
-                    admin_menu.add_sideframe_item(
-                        _("%(name)s archived list") % {'name': REPANIER_SETTINGS_PERMANENCES_NAME},
-                        url=url, position=position)
+                    admin_menu.add_sideframe_item(_("In archiving"), url=url, position=position)

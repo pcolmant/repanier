@@ -26,7 +26,6 @@ from import_export.widgets import CharWidget
 import repanier.apps
 from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, DECIMAL_ONE, TWO_DECIMALS
-from repanier.models import Contract
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
@@ -74,17 +73,17 @@ class UserDataForm(forms.ModelForm):
                     and self.instance.delivery_point.customer_responsible is not None \
                     and self.cleaned_data["price_list_multiplier"] != DECIMAL_ONE:
                 self.add_error('price_list_multiplier', _('If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE'))
-            may_order = self.cleaned_data["may_order"]
-            if may_order:
-                delivery_point = LUT_DeliveryPoint.objects.filter(
-                        customer_responsible_id=self.instance.id
-                ).order_by('?').first()
-                if delivery_point is not None:
-                    self.add_error(
-                        "may_order",
-                        _(
-                            'This customer is responsible of the delivery point (%(delivery_point)s). A customer responsible of a delivery point may not pass order.') % {
-                            'delivery_point': delivery_point,})
+            # may_order = self.cleaned_data.get("may_order", False)
+            # if may_order:
+            #     delivery_point = LUT_DeliveryPoint.objects.filter(
+            #             customer_responsible_id=self.instance.id
+            #     ).order_by('?').first()
+            #     if delivery_point is not None:
+            #         self.add_error(
+            #             "may_order",
+            #             _(
+            #                 'This customer is responsible of the delivery point (%(delivery_point)s). A customer responsible of a delivery point may not pass order.') % {
+            #                 'delivery_point': delivery_point,})
             is_active = self.cleaned_data.get("is_active")
             if is_active is not None and not is_active:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
@@ -147,8 +146,10 @@ class CustomerResource(resources.ModelResource):
     balance = fields.Field(attribute='get_admin_balance', widget=TwoMoneysWidget(), readonly=True)
     may_order = fields.Field(attribute='may_order', default=False, widget=DecimalBooleanWidget(), readonly=False)
     is_group = fields.Field(attribute='is_group', default=False, widget=DecimalBooleanWidget(), readonly=False)
-    represent_this_buyinggroup = fields.Field(attribute='represent_this_buyinggroup', widget=DecimalBooleanWidget(),
-                                              readonly=True)
+    represent_this_buyinggroup = fields.Field(
+        attribute='represent_this_buyinggroup', default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=True)
     is_active = fields.Field(attribute='is_active', widget=DecimalBooleanWidget(), readonly=True)
     membership_fee_valid_until = fields.Field(
         attribute='membership_fee_valid_until', default=timezone.now().date(),
@@ -280,7 +281,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = (
         'may_order',
         'is_active',
-        'is_group',
+        # 'is_group',
         'valid_email'
     )
 
@@ -355,32 +356,38 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             ]
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields_basic += [
-                'is_group',
                 'price_list_multiplier',
             ]
         if customer is not None:
-            if not customer.represent_this_buyinggroup:
+            if customer.represent_this_buyinggroup:
                 fields_basic += [
-                    'subscribe_to_email'
+                    ('get_admin_balance', 'get_admin_date_balance'),
+                    ('may_order', 'represent_this_buyinggroup')
                 ]
-            fields_basic += [
-                ('get_admin_balance', 'get_admin_date_balance'),
-                ('may_order', 'represent_this_buyinggroup')
+            else:
+                fields_basic += [
+                    'subscribe_to_email',
+                    ('get_admin_balance', 'get_admin_date_balance'),
+                    ('may_order', 'is_active'),
+            ]
+            fields_advanced = [
+                'bank_account1',
+                'bank_account2',
+                'get_last_login',
+                'get_admin_date_joined',
+                'get_last_membership_fee',
+                'get_last_membership_fee_date',
+                'get_participation',
+                'get_purchase'
             ]
         else:
             fields_basic += [
                 ('may_order', 'is_active'),
             ]
-        fields_advanced = [
-            'bank_account1',
-            'bank_account2',
-            'get_last_login',
-            'get_admin_date_joined',
-            'get_last_membership_fee',
-            'get_last_membership_fee_date',
-            'get_participation',
-            'get_purchase'
-        ]
+            fields_advanced = [
+                'bank_account1',
+                'bank_account2',
+            ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced options'), {'classes': ('collapse',), 'fields': fields_advanced})
@@ -389,26 +396,18 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, customer=None):
         if customer is not None:
-            if customer.represent_this_buyinggroup:
-                return [
-                    'get_admin_date_balance', 'get_admin_balance',
-                    'represent_this_buyinggroup', 'get_last_login',
-                    'get_admin_date_joined', 'get_participation', 'get_purchase',
-                    'get_last_membership_fee', 'get_last_membership_fee_date'
-                ]
-            else:
-                return [
-                    'get_admin_date_balance', 'get_admin_balance',
-                    'get_last_login',
-                    'get_admin_date_joined', 'get_participation', 'get_purchase',
-                    'get_last_membership_fee', 'get_last_membership_fee_date'
-                ]
-        else:
-            return [
-                'represent_this_buyinggroup', 'get_last_login',
+            readonly_fields = [
+                'get_admin_date_balance', 'get_admin_balance',
+                'get_last_login',
                 'get_admin_date_joined', 'get_participation', 'get_purchase',
                 'get_last_membership_fee', 'get_last_membership_fee_date'
             ]
+            if customer.represent_this_buyinggroup:
+                readonly_fields += [
+                    'represent_this_buyinggroup',
+                ]
+            return readonly_fields
+        return []
 
     def get_form(self, request, customer=None, **kwargs):
         form = super(CustomerWithUserDataAdmin, self).get_form(request, customer, **kwargs)
@@ -430,6 +429,13 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             username_field.initial = EMPTY_STRING
             email_field.initial = EMPTY_STRING
         return form
+
+    def get_queryset(self, request):
+        qs = super(CustomerWithUserDataAdmin, self).get_queryset(request)
+        qs = qs.filter(
+            is_group=False,
+        )
+        return qs
 
     def save_model(self, request, customer, form, change):
         customer.user = form.user

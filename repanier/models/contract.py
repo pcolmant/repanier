@@ -7,21 +7,37 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from djangocms_text_ckeditor.fields import HTMLField
+from parler.models import TranslatableModel, TranslatedFields
 from recurrence.fields import RecurrenceField
 
 from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.models.product import product_pre_save, Product
+from repanier.models.product import Product
 from repanier.const import *
-from repanier.models import Box
 
 
 @python_2_unicode_compatible
-class Contract(Box):
+class Contract(TranslatableModel):
+    translations = TranslatedFields(
+        short_name=models.CharField(_("offer name"),
+                                    max_length=50,
+                                    blank=False, default=EMPTY_STRING),
+        offer_description=HTMLField(_("offer_description"),
+                                    configuration='CKEDITOR_SETTINGS_MODEL2',
+                                    help_text=_(
+                                        "This message is send by mail to all customers when opening the order or on top "),
+                                    blank=True, default=EMPTY_STRING),
+    )
     first_permanence_date = models.DateField(
         verbose_name=_("first permanence date"),
         db_index=True
     )
     recurrences = RecurrenceField()
+    producers = models.ManyToManyField(
+        'Producer',
+        verbose_name=_("producers"),
+        blank=True
+    )
     customers = models.ManyToManyField(
         'Customer',
         verbose_name=_("customers"),
@@ -50,21 +66,6 @@ class Contract(Box):
     class Meta:
         verbose_name = _("contract")
         verbose_name_plural = _("contracts")
-
-
-@receiver(pre_save, sender=Contract)
-def contract_pre_save(sender, **kwargs):
-    contract = kwargs["instance"]
-    contract.is_contract = True
-    # box.producer_id = Producer.objects.filter(
-    #     represent_this_buyinggroup=True
-    # ).order_by('?').only('id').first().id
-    contract.order_unit = PRODUCT_ORDER_UNIT_PC
-    contract.producer_unit_price = contract.customer_unit_price
-    contract.producer_vat = contract.customer_vat
-    contract.limit_order_quantity_to_stock = True
-    # ! Important to initialise all fields of the contract. Remember : a contract is a product.
-    product_pre_save(sender, **kwargs)
 
 
 @python_2_unicode_compatible

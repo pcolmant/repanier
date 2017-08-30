@@ -5,6 +5,10 @@ import codecs
 import logging
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse_lazy
+
+from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
+from cmsplugin_cascade.utils import format_lazy
 from repanier.const import *
 from .settings import *
 
@@ -191,8 +195,9 @@ INSTALLED_APPS = (
     'cmsplugin_cascade',
     'cmsplugin_cascade.clipboard',  # optional
     'cmsplugin_cascade.extra_fields',  # optional
+    'cmsplugin_cascade.icon', # optional
     'cmsplugin_cascade.sharable',  # optional
-    'cmsplugin_cascade.segmentation',  # optiona
+    'cmsplugin_cascade.segmentation',  # optional
     'cms',
     # 'cms_bootstrap3',
     'menus',
@@ -226,8 +231,8 @@ MIDDLEWARE = (
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.page.CurrentPageMiddleware',
+    'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
     'cms.middleware.language.LanguageCookieMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
@@ -243,15 +248,15 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.i18n',
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
                 'django.template.context_processors.media',
-                'django.template.context_processors.csrf',
-                'django.template.context_processors.tz',
-                'sekizai.context_processors.sekizai',
                 'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.template.context_processors.csrf',
+                'django.template.context_processors.request',
+                'django.contrib.messages.context_processors.messages',
+                'sekizai.context_processors.sekizai',
                 'cms.context_processors.cms_settings'
             ],
             'loaders'           : [
@@ -323,6 +328,8 @@ CKEDITOR_SETTINGS = {
     'enterMode'            : 2,
     # Do not dispaly the HTML Path below the edit window
     'removePlugins'        : 'elementspath',
+    'stylesSet': format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config')),
+
 }
 
 CKEDITOR_SETTINGS_MODEL2 = {
@@ -654,16 +661,17 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
 DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 ##################### DJANGOCMS-CASCADE
 CMSPLUGIN_CASCADE_PLUGINS = (
-    'cmsplugin_cascade.generic',
-    'cmsplugin_cascade.link',
-    'cmsplugin_cascade.sharable',
-    'cmsplugin_cascade.bootstrap3',
     'cmsplugin_cascade.segmentation',
+    'cmsplugin_cascade.generic',
+    'cmsplugin_cascade.leaflet',
+    'cmsplugin_cascade.link',
+    # 'cmsplugin_cascade.sharable',
+    'cmsplugin_cascade.bootstrap3',
+
 )
 
-from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
-
 CMSPLUGIN_CASCADE = {
+    'alien_plugins': ('TextPlugin', 'TextLinkPlugin',),
     'plugins_with_extra_fields': {
         'BootstrapRowPlugin'      : PluginExtraFieldsConfig(inline_styles={
             'extra_fields:Margins': ['margin-top', 'margin-bottom'],
@@ -672,18 +680,40 @@ CMSPLUGIN_CASCADE = {
             'extra_fields:Margins': ['padding-top', 'padding-bottom', 'margin-bottom'],
             'extra_units:Margins' : 'px,em'}),
     },
-    'bootstrap3'               : (
-        ('xs', (768, 'mobile', _("mobile phones"), 750, 768)),
-        ('sm', (768, 'tablet', _("tablets"), 750, 992)),
-        ('md', (992, 'laptop', _("laptops"), 970, 1200)),
-        ('lg', (1200, 'desktop', _("large desktops"), 1170, 2500)),
-    ),
+    # 'bootstrap3'               : (
+    #     ('xs', (768, 'mobile', _("mobile phones"), 750, 768)),
+    #     ('sm', (768, 'tablet', _("tablets"), 750, 992)),
+    #     ('md', (992, 'laptop', _("laptops"), 970, 1200)),
+    #     ('lg', (1200, 'desktop', _("large desktops"), 1170, 2500)),
+    # ),
     'segmentation_mixins'      : (
         (
             'cmsplugin_cascade.segmentation.mixins.EmulateUserModelMixin',
             'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
         ),
     ),
+    'plugins_with_sharables': {
+        'BootstrapImagePlugin'  : ('image_shapes', 'image_width_responsive', 'image_width_fixed',
+                                   'image_height', 'resize_options',),
+        'BootstrapPicturePlugin': ('image_shapes', 'responsive_heights', 'image_size', 'resize_options',),
+        'BootstrapButtonPlugin' : ('button_type', 'button_size', 'button_options', 'icon_font',),
+        'TextLinkPlugin'        : ('link', 'target',),
+    },
+    'exclude_hiding_plugin' : ('SegmentPlugin', 'Badge'),
+    'allow_plugin_hiding'   : True,
+    'leaflet'               : {'default_position': {'lat': 50.0, 'lng': 12.0, 'zoom': 6}},
+}
+
+CACSCADE_WORKAREA_GLOSSARY = {
+    'breakpoints': ['xs', 'sm', 'md', 'lg'],
+    'container_max_widths': {'xs': 750, 'sm': 750, 'md': 970, 'lg': 1170},
+    'fluid': False,
+    'media_queries': {
+        'xs': ['(max-width: 768px)'],
+        'sm': ['(min-width: 768px)', '(max-width: 992px)'],
+        'md': ['(min-width: 992px)', '(max-width: 1200px)'],
+        'lg': ['(min-width: 1200px)'],
+    },
 }
 
 CMS_PLACEHOLDER_CONF = {
@@ -839,10 +869,9 @@ CMS_PLACEHOLDER_CONF = {
     },
     'bootstrap_content': {
         'name'             : gettext('Bootstrap Content'),
-        'plugins'          : [
-            'BootstrapContainerPlugin',
-            'BootstrapJumbotronPlugin',
-        ],
+        'plugins': ['BootstrapContainerPlugin', 'BootstrapJumbotronPlugin'],
+        'parent_classes': {'BootstrapContainerPlugin': None, 'BootstrapJumbotronPlugin': None},
+        'glossary': CACSCADE_WORKAREA_GLOSSARY,
         'text_only_plugins': [
             # 'FilerLinkPlugin',
             'TextLinkPlugin',
@@ -850,21 +879,6 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'parent_classes'   : {
-            'BootstrapContainerPlugin': None,
-            'BootstrapJumbotronPlugin': None,
-        },
-        'glossary'         : {
-            'breakpoints'         : ['xs', 'sm', 'md', 'lg'],
-            'container_max_widths': {'xs': 750, 'sm': 750, 'md': 970, 'lg': 1170},
-            'fluid'               : False,
-            'media_queries'       : {
-                'xs': ['(max-width: 768px)'],
-                'sm': ['(min-width: 768px)', '(max-width: 992px)'],
-                'md': ['(min-width: 992px)', '(max-width: 1200px)'],
-                'lg': ['(min-width: 1200px)'],
-            },
-        },
     },
 
     'footer'           : {

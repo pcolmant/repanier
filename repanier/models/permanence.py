@@ -104,9 +104,9 @@ class Permanence(TranslatableModel):
         verbose_name=_("producers"),
         blank=True
     )
-    assemblies = models.ManyToManyField(
+    boxes = models.ManyToManyField(
         'Box',
-        verbose_name=_('Assemblies'),
+        verbose_name=_('Boxes'),
         blank=True
     )
     # Calculated with Purchase

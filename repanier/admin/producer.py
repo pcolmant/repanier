@@ -43,21 +43,32 @@ class ProducerResource(resources.ModelResource):
     id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
     phone1 = fields.Field(attribute='phone1', default='1234', widget=CharWidget(), readonly=False)
     phone2 = fields.Field(attribute='phone2', widget=CharWidget(), readonly=False)
-    price_list_multiplier = fields.Field(attribute='price_list_multiplier', default=DECIMAL_ONE,
-                                         widget=TwoDecimalsWidget(), readonly=False)
+    price_list_multiplier = fields.Field(
+        attribute='price_list_multiplier', default=DECIMAL_ONE,
+        widget=TwoDecimalsWidget(),
+        readonly=False)
     date_balance = fields.Field(attribute='get_admin_date_balance', widget=DateWidgetExcel(), readonly=True)
     balance = fields.Field(attribute='get_admin_balance', widget=TwoMoneysWidget(), readonly=True)
-    invoice_by_basket = fields.Field(attribute='invoice_by_basket', default=False, widget=DecimalBooleanWidget(),
-                                     readonly=False)
-    manage_replenishment = fields.Field(attribute='manage_replenishment', default=False, widget=DecimalBooleanWidget(),
-                                        readonly=False)
-    sort_products_by_reference = fields.Field(attribute='sort_products_by_reference', default=False,
-                                              widget=DecimalBooleanWidget(),
-                                              readonly=False)
-    is_resale_price_fixed = fields.Field(attribute='is_resale_price_fixed', default=False,
-                                         widget=DecimalBooleanWidget(), readonly=False)
-    represent_this_buyinggroup = fields.Field(attribute='represent_this_buyinggroup', widget=DecimalBooleanWidget(),
-                                              readonly=True)
+    invoice_by_basket = fields.Field(
+        attribute='invoice_by_basket', default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=False)
+    manage_replenishment = fields.Field(
+        attribute='manage_replenishment', default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=False)
+    sort_products_by_reference = fields.Field(
+        attribute='sort_products_by_reference', default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=False)
+    is_resale_price_fixed = fields.Field(
+        attribute='is_resale_price_fixed', default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=False)
+    represent_this_buyinggroup = fields.Field(
+        attribute='represent_this_buyinggroup', default=False,
+        widget=DecimalBooleanWidget(),
+        readonly=True)
     is_active = fields.Field(attribute='is_active', widget=DecimalBooleanWidget(), readonly=True)
     reference_site = fields.Field(attribute='reference_site', readonly=True)
 
@@ -321,10 +332,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         list_display = [
             '__str__', 'get_products'
         ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST or settings.DJANGO_SETTINGS_IS_AMAP:
-            list_display += [
-                'get_assemblies',
-            ]
         if repanier.apps.REPANIER_SETTINGS_INVOICE:
             list_display += [
                 'get_balance',

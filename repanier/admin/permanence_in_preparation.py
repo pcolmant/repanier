@@ -133,7 +133,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     exclude = ['invoice_description']
     list_per_page = 10
     list_max_show_all = 10
-    filter_horizontal = ('producers', 'assemblies')
+    filter_horizontal = ('producers', 'boxes')
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = (
@@ -183,13 +183,13 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'producers'
         ]
         if settings.DJANGO_SETTINGS_IS_AMAP or not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            fields.append('assemblies')
+            fields.append('boxes')
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
         if permanence is not None and permanence.status > PERMANENCE_PLANNED:
             if settings.DJANGO_SETTINGS_IS_AMAP or not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                return ['status', 'producers', 'assemblies']
+                return ['status', 'producers', 'boxes']
             else:
                 return ['status', 'producers']
         return ['status']
@@ -206,31 +206,31 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 continue
             yield inline.get_formset(request, obj), inline
 
-    def get_assemblies(self, permanence=None):
-        # if permanence is None or permanence.status == PERMANENCE_PLANNED:
-        qs = Box.objects.filter(
-            is_box=True,
-            is_into_offer=True,
-            translations__language_code=translation.get_language()
-        ).order_by(
-            "customer_unit_price",
-            "unit_deposit",
-            "translations__long_name"
-        )
-        result = ", ".join(o.long_name for o in qs)
-        # else:
-        #     qs = OfferItem.objects.filter(
-        #         permanence_id=permanence.id,
-        #         is_box=True,
-        #         may_order=True,
-        #         translations__language_code=translation.get_language()
-        #     ).order_by(
-        #         "translations__preparation_sort_order"
-        #     )
-        #     result = ", ".join(o.long_name for o in qs)
-        return result if result is not None else EMPTY_STRING
-
-    get_assemblies.short_description = _("Assemblies")
+    # def get_boxes(self, permanence=None):
+    #     # if permanence is None or permanence.status == PERMANENCE_PLANNED:
+    #     qs = Box.objects.filter(
+    #         is_box=True,
+    #         is_into_offer=True,
+    #         translations__language_code=translation.get_language()
+    #     ).order_by(
+    #         "customer_unit_price",
+    #         "unit_deposit",
+    #         "translations__long_name"
+    #     )
+    #     result = ", ".join(o.long_name for o in qs)
+    #     # else:
+    #     #     qs = OfferItem.objects.filter(
+    #     #         permanence_id=permanence.id,
+    #     #         is_box=True,
+    #     #         may_order=True,
+    #     #         translations__language_code=translation.get_language()
+    #     #     ).order_by(
+    #     #         "translations__preparation_sort_order"
+    #     #     )
+    #     #     result = ", ".join(o.long_name for o in qs)
+    #     return result if result is not None else EMPTY_STRING
+    #
+    # get_boxes.short_description = _("Assemblies")
 
     def export_xlsx_offer(self, request, queryset):
         permanence = queryset.first()
@@ -887,7 +887,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
-        if db_field.name == "assemblies":
+        if db_field.name == "boxes":
             kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
         return super(PermanenceInPreparationAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs)

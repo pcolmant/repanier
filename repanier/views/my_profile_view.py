@@ -47,7 +47,6 @@ class CustomerForm(RepanierForm):
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
-    # about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
     about_me = fields.CharField(label=_('About me'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                               required=False)
 
@@ -59,9 +58,6 @@ class CustomerForm(RepanierForm):
         ).exclude(
             id=self.request.user.id
         ).order_by('?')
-        # print(dir(self))
-        # if self.instance.id is not None:
-        #     qs = qs.exclude(id=self.request.user_id)
         if qs.exists():
             self.add_error('email1', _('The given email is used by another user'))
         return email1

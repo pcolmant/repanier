@@ -177,26 +177,16 @@ class ContractAdmin(TranslatableAdmin):
     form = ContractDataForm
     model = Contract
 
-    list_display = (
-        'is_into_offer', 'get_long_name', 'language_column',
-    )
-    list_display_links = ('get_long_name',)
+    list_display = ('short_name',)
+    list_display_links = ('short_name',)
     list_per_page = 16
     list_max_show_all = 16
     inlines = (ContractContentInline,)
     ordering = (
         '-first_permanence_date',
-        'customer_unit_price',
-        'unit_deposit',
-        'translations__long_name'
+        '-status',
     )
     search_fields = ('translations__long_name',)
-    list_filter = (
-        'is_into_offer',
-        'is_active',
-        ProductFilterByProducer,
-        ProductFilterByVatLevel
-   )
     _has_delete_permission = None
 
     def has_delete_permission(self, request, contract=None):
@@ -225,7 +215,7 @@ class ContractAdmin(TranslatableAdmin):
         # else:
         #     producer = None
         list_display = [
-            'producer', 'get_long_name'
+            'short_name'
         ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += [
@@ -243,25 +233,19 @@ class ContractAdmin(TranslatableAdmin):
 
     def get_fieldsets(self, request, contract=None):
         fields_basic = [
-            ('producer', 'long_name', 'picture2'),
+            ('long_name', 'picture2'),
             'first_permanence_date',
             'recurrences',
+
         ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fields_basic += [
-                ('customer_unit_price', 'unit_deposit'),
-                ('calculated_customer_contract_price', 'calculated_contract_deposit'),
-            ]
-        else:
-            fields_basic += [
-                ('stock', 'customer_unit_price', 'unit_deposit'),
-                ('calculated_stock', 'calculated_customer_contract_price', 'calculated_contract_deposit'),
+                ('stock',),
             ]
         fields_basic += [
-            'customers',
-        ]
-        fields_advanced_descriptions = [
             'offer_description',
+            'producers',
+            'customers',
         ]
         fields_advanced_options = [
             'vat_level',
@@ -269,7 +253,6 @@ class ContractAdmin(TranslatableAdmin):
         ]
         fieldsets = (
             (None, {'fields': fields_basic}),
-            (_('Advanced descriptions'), {'classes': ('collapse',), 'fields': fields_advanced_descriptions}),
             (_('Advanced options'), {'classes': ('collapse',), 'fields': fields_advanced_options})
         )
         return fieldsets

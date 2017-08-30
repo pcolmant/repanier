@@ -125,36 +125,36 @@ class Producer(models.Model):
     get_products.short_description = (_("link to his products"))
     get_products.allow_tags = True
 
-    def get_assemblies(self):
-        # This producer may have contrat's list
-        if self.is_active:
-            return_link = False
-            changeassemblieslist_url = is_into_offer = label = EMPTY_STRING
-
-            if settings.DJANGO_SETTINGS_IS_AMAP:
-                label = _("Contracts")
-                is_into_offer = EMPTY_STRING
-                changeassemblieslist_url = urlresolvers.reverse(
-                    'admin:repanier_contract_changelist',
-                )
-                return_link = True
-            else:
-                if not settings.DJANGO_SETTINGS_IS_MINIMALIST and self.represent_this_buyinggroup:
-                    label = _("Boxes")
-                    is_into_offer = "&is_into_offer__exact=1"
-                    changeassemblieslist_url = urlresolvers.reverse(
-                        'admin:repanier_box_changelist',
-                    )
-                    return_link = True
-
-            if return_link:
-                link = '<a href="%s?is_active__exact=1%s&producer=%s" class="btn addlink">&nbsp;%s</a>' \
-                       % (changeassemblieslist_url, is_into_offer, str(self.id), label)
-                return link
-        return EMPTY_STRING
-
-    get_assemblies.short_description = (_("Contracts")) if settings.DJANGO_SETTINGS_IS_MINIMALIST else (_("Assemblies"))
-    get_assemblies.allow_tags = True
+    # def get_assemblies(self):
+    #     # This producer may have contrat's list
+    #     if self.is_active:
+    #         return_link = False
+    #         changeassemblieslist_url = is_into_offer = label = EMPTY_STRING
+    #
+    #         if settings.DJANGO_SETTINGS_IS_AMAP:
+    #             label = _("Contracts")
+    #             is_into_offer = EMPTY_STRING
+    #             changeassemblieslist_url = urlresolvers.reverse(
+    #                 'admin:repanier_contract_changelist',
+    #             )
+    #             return_link = True
+    #         else:
+    #             if not settings.DJANGO_SETTINGS_IS_MINIMALIST and self.represent_this_buyinggroup:
+    #                 label = _("Boxes")
+    #                 is_into_offer = "&is_into_offer__exact=1"
+    #                 changeassemblieslist_url = urlresolvers.reverse(
+    #                     'admin:repanier_box_changelist',
+    #                 )
+    #                 return_link = True
+    #
+    #         if return_link:
+    #             link = '<a href="%s?is_active__exact=1%s&producer=%s" class="btn addlink">&nbsp;%s</a>' \
+    #                    % (changeassemblieslist_url, is_into_offer, str(self.id), label)
+    #             return link
+    #     return EMPTY_STRING
+    #
+    # get_assemblies.short_description = (_("Contracts")) if settings.DJANGO_SETTINGS_IS_MINIMALIST else (_("Assemblies"))
+    # get_assemblies.allow_tags = True
 
     def get_admin_date_balance(self):
         if self.id is not None:

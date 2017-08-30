@@ -130,8 +130,7 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
         if db_field.name == "product":
             kwargs["queryset"] = Product.objects.filter(
                 is_active=True,
-                # A box may not include another contract or box
-                is_contract=False,
+                # A box may not include another box
                 is_box=False,
                 # We can't make any composition with producer preparing baskets on basis of our order.
                 producer__invoice_by_basket=False,

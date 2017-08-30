@@ -24,6 +24,7 @@ class Group(Customer):
 def group_pre_save(sender, **kwargs):
     group = kwargs["instance"]
     group.is_group = True
+    group.may_order = False
     customer_pre_save(sender, **kwargs)
 
 
