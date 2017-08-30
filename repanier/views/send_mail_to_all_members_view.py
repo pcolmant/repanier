@@ -3,16 +3,15 @@ from __future__ import unicode_literals
 
 import threading
 
-from django import forms
+from django.forms import widgets
 from django.contrib.auth.decorators import login_required
-from django.forms import Textarea
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from djng.forms import NgFormValidationMixin
+from djng.forms import fields, NgFormValidationMixin
 
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
@@ -21,10 +20,10 @@ from repanier.tools import check_if_is_coordinator
 
 
 class MembersContactForm(RepanierForm):
-    recipient = forms.CharField(label=_('Recipient(s)'))
-    your_email = forms.EmailField(label=_('Your Email'))
-    subject = forms.CharField(label=_('Subject'), max_length=100)
-    message = forms.CharField(label=_('Message'), widget=Textarea)
+    recipient = fields.CharField(label=_('Recipient(s)'))
+    your_email = fields.EmailField(label=_('Your Email'))
+    subject = fields.CharField(label=_('Subject'), max_length=100)
+    message = fields.CharField(label=_('Message'), widget=widgets.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(MembersContactForm, self).__init__(*args, **kwargs)

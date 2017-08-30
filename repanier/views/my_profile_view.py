@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from os import sep as os_sep
 
-from django import forms
+from django.forms import widgets
 from django.contrib.auth import (get_user_model)
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from djng.forms import NgFormValidationMixin
+from djng.forms import fields, NgFormValidationMixin
 
 from repanier.models.customer import Customer
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
@@ -22,41 +22,46 @@ from repanier.widget.checkbox import CheckboxWidget
 
 
 class CustomerForm(RepanierForm):
-    long_basket_name = forms.CharField(label=_("Your name"), max_length=100)
+    long_basket_name = fields.CharField(label=_("Your name"), max_length=100)
 
-    email1 = forms.EmailField(label=_('Your main email, used for password recovery and login'))
-    email2 = forms.EmailField(label=_('Your secondary email'), required=False)
-    accept_mails_from_members = forms.BooleanField(
+    email1 = fields.EmailField(label=_('Your main email, used for password recovery and login'))
+    email2 = fields.EmailField(label=_('Your secondary email'), required=False)
+    accept_mails_from_members = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
-    subscribe_to_email  = forms.BooleanField(
+    subscribe_to_email  = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
 
-    phone1 = forms.CharField(label=_('Your main phone'), max_length=25)
-    phone2 = forms.CharField(label=_('Your secondary phone'), max_length=25, required=False)
+    phone1 = fields.CharField(label=_('Your main phone'), max_length=25)
+    phone2 = fields.CharField(label=_('Your secondary phone'), max_length=25, required=False)
 
-    accept_phone_call_from_members = forms.BooleanField(
+    accept_phone_call_from_members = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
-    city = forms.CharField(label=_('Your city'), max_length=50, required=False)
-    address = forms.CharField(label=_('address'), widget=forms.Textarea(attrs={'cols': '40', 'rows': '3'}),
+    city = fields.CharField(label=_('Your city'), max_length=50, required=False)
+    address = fields.CharField(label=_('address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                               required=False)
-    picture = forms.CharField(
+    picture = fields.CharField(
         label=_("picture"),
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
     # about_me = forms.CharField(label=_('About me'), widget=TextEditorWidget, required=False)
-    about_me = forms.CharField(label=_('About me'), widget=forms.Textarea(attrs={'cols': '40', 'rows': '3'}),
+    about_me = fields.CharField(label=_('About me'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                               required=False)
 
     def clean_email1(self):
         email1 = self.cleaned_data["email1"]
         user_model = get_user_model()
-        qs = user_model.objects.filter(email=email1, is_staff=False).order_by('?')
-        if self.instance.id is not None:
-            qs = qs.exclude(id=self.instance.user_id)
+        qs = user_model.objects.filter(
+            email=email1, is_staff=False
+        ).exclude(
+            id=self.request.user.id
+        ).order_by('?')
+        # print(dir(self))
+        # if self.instance.id is not None:
+        #     qs = qs.exclude(id=self.request.user_id)
         if qs.exists():
             self.add_error('email1', _('The given email is used by another user'))
         return email1

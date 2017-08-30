@@ -6,8 +6,10 @@ from django.utils.encoding import force_text
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from djng.forms.widgets import (
-    ChoiceFieldRenderer as DjngChoiceFieldRenderer, CheckboxChoiceInput as DjngCheckboxChoiceInput,
-    CheckboxSelectMultiple as DjngCheckboxSelectMultiple)
+    ChoiceFieldRenderer as DjngChoiceFieldRenderer,
+    CheckboxChoiceInput as DjngCheckboxChoiceInput,
+    CheckboxSelectMultiple as DjngCheckboxSelectMultiple
+)
 
 
 class ChoiceFieldRenderer(DjngChoiceFieldRenderer):
@@ -27,9 +29,8 @@ class CheckboxFieldRendererMixin(object):
     def __init__(self, name, value, attrs, choices):
         attrs.pop('djng-error', None)
         self.field_attrs = [format_html('ng-form="{0}"', name)]
-        if attrs.pop('multiple_checkbox_required', False):
-            field_names = [format_html('{0}.{1}', name, choice) for choice, dummy in choices]
-            self.field_attrs.append(format_html('validate-multiple-fields="{0}"', json.dumps(field_names)))
+        field_names = [format_html('{0}.{1}', name, choice) for choice, dummy in choices]
+        self.field_attrs.append(format_html('validate-multiple-fields="{0}"', json.dumps(field_names)))
         super(CheckboxFieldRendererMixin, self).__init__(name, value, attrs, choices)
 
 
@@ -37,7 +38,7 @@ class CheckboxInlineChoiceInput(DjngCheckboxChoiceInput):
     def render(self, name=None, value=None, attrs=None, choices=()):
         label_attrs = ['class="checkbox-inline"']
         if 'id' in self.attrs:
-            label_attrs.append(format_html('for="{0}_{1}"', self.attrs['id'], self.index))
+            label_attrs.append(format_html('for="{0}"', self.attrs['id']))
         label_for = mark_safe(' '.join(label_attrs))
         output = """
 <div class="checkbox">
@@ -61,13 +62,6 @@ class CheckboxInlineFieldRenderer(CheckboxFieldRendererMixin, ChoiceFieldRendere
 
 class CheckboxSelectMultipleWidget(DjngCheckboxSelectMultiple):
     renderer = CheckboxInlineFieldRenderer
-
-    def value_from_datadict(self, data, files, name):
-        """
-        Given a dictionary of data and this widget's name, returns the value
-        of this widget. Returns None if it's not provided.
-        """
-        return dict(data.iterlists())[name]
 
     class Media:
         css = {

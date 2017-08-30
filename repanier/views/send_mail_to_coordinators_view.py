@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import threading
 
-from django import forms
+from django.forms import widgets
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
@@ -14,9 +14,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from djng.forms import NgFormValidationMixin
-from djng.forms.field_mixins import EmailFieldMixin, CharFieldMixin, MultipleChoiceFieldMixin
-from djng.styling.bootstrap3.field_mixins import BooleanFieldMixin
+from djng.forms import fields, NgFormValidationMixin
 
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
@@ -26,31 +24,15 @@ from repanier.views.forms import RepanierForm
 from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidget
 
 
-class DjngBooleanField(BooleanFieldMixin, forms.BooleanField):
-    pass
-
-
-class DjngEmailField(EmailFieldMixin, forms.EmailField):
-    pass
-
-
-class DjngCharField(CharFieldMixin, forms.CharField):
-    pass
-
-
-class DjngMultipleChoiceField(MultipleChoiceFieldMixin, forms.MultipleChoiceField):
-    pass
-
-
 class CoordinatorsContactForm(RepanierForm):
-    staff = DjngMultipleChoiceField(
+    staff = fields.MultipleChoiceField(
         label=EMPTY_STRING,
         choices=[],
         widget=CheckboxSelectMultipleWidget()
     )
-    your_email = DjngEmailField(label=_('Your Email'))
-    subject = DjngCharField(label=_('Subject'), max_length=100)
-    message = DjngCharField(label=_('Message'), widget=forms.Textarea)
+    your_email = fields.EmailField(label=_('Your Email'))
+    subject = fields.CharField(label=_('Subject'), max_length=100)
+    message = fields.CharField(label=_('Message'), widget=widgets.Textarea)
 
     def __init__(self, *args, **kwargs):
         super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
@@ -68,7 +50,7 @@ class CoordinatorsContactForm(RepanierForm):
                 name = r.long_basket_name if r.long_basket_name else r.short_basket_name
                 signature = "<b>%s</b> : %s%s" % (sender_function, name, phone)
                 choices.append(("%d" % staff.id, mark_safe(signature)))
-        self.fields["staff"] = DjngMultipleChoiceField(
+        self.fields["staff"] = fields.MultipleChoiceField(
             label=EMPTY_STRING,
             choices=choices,
             widget=CheckboxSelectMultipleWidget()
