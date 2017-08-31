@@ -41,7 +41,9 @@ def btn_confirm_order_ajax(request):
         permanence_id=permanence_id,
         customer_id=customer.id,
         is_order_confirm_send=False,
-        total_price_with_tax__gt=DECIMAL_ZERO
+        is_group=False,
+        # total_price_with_tax__gt=DECIMAL_ZERO
+        purchase__quantity_ordered__gt = DECIMAL_ZERO,
     ).order_by('?')
     if not customer_invoice.exists():
         raise Http404

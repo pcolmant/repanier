@@ -30,13 +30,15 @@ class Command(BaseCommand):
                 recently_updated_customer_invoice_qs = CustomerInvoice.objects.filter(
                     permanence_id=permanence.id,
                     is_order_confirm_send=False,
+                    is_group=False,
                     # total_price_with_tax__gt=DECIMAL_ZERO,
-                    purchase__quantity_ordered__gt=DECIMAL_ZERO,
+                    # purchase__quantity_ordered__gt=DECIMAL_ZERO,
                     purchase__is_updated_on__gte=now_less_one_hour
                 ).distinct()
                 customer_invoice_qs = CustomerInvoice.objects.filter(
                     permanence_id=permanence.id,
                     is_order_confirm_send=False,
+                    is_group=False,
                     # total_price_with_tax__gt=DECIMAL_ZERO,
                     purchase__quantity_ordered__gt=DECIMAL_ZERO
                 ).exclude(

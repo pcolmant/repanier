@@ -290,6 +290,7 @@ class Customer(models.Model):
 
     def get_purchase(self):
         now = timezone.now()
+        # Do not count invoice having only products free of charge
         return CustomerInvoice.objects.filter(
             customer_id=self.id,
             total_price_with_tax__gt=DECIMAL_ZERO,
