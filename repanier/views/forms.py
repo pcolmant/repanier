@@ -61,9 +61,6 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
-        print('AuthRepanierPasswordResetForm send_mail')
-        print(email_template_name)
-        print(html_email_template_name)
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = ''.join(subject.splitlines())

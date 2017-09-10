@@ -14,7 +14,7 @@ from repanier.const import *
 @toolbar_pool.register
 class RepanierToolbar(CMSToolbar):
     def populate(self):
-        from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME, REPANIER_SETTINGS_INVOICE
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
         if settings.DJANGO_SETTINGS_DEMO:
             self.toolbar.get_or_create_menu("demo-menu", _('Demo (%s)') % (DEMO_EMAIL,))
         user = self.request.user
@@ -87,11 +87,11 @@ class RepanierToolbar(CMSToolbar):
             if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
                 position += 1
                 url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_box_changelist')
-                admin_menu.add_sideframe_item(_('Assemblies'), url=url, position=position)
+                admin_menu.add_sideframe_item(_('Boxes'), url=url, position=position)
             if settings.DJANGO_SETTINGS_IS_AMAP:
                 position += 1
                 url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_contract_changelist')
-                admin_menu.add_sideframe_item(_('Commitments over time'), url=url, position=position)
+                admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
             if is_in_order_group:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')

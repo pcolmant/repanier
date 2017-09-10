@@ -5,6 +5,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.core.checks import messages
+from django.db import transaction
 from django.db.models import F, Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
@@ -34,7 +35,7 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
 from repanier.task import task_order, task_purchase
-from repanier.tools import send_email_to_who, get_signature, get_board_composition
+from repanier.tools import send_email_to_who, get_signature, get_board_composition, get_recurrence_dates
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
 
@@ -105,11 +106,14 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
 
 
 class PermanenceInPreparationForm(TranslatableModelForm):
-    short_name = forms.CharField(label=_("offer name"),
-                                 widget=forms.TextInput(attrs={'style': "width:100% !important"}))
+    short_name = forms.CharField(
+        label=_("Offer name"),
+        widget=forms.TextInput(attrs={'style': "width:100% !important"}),
+        required=False
+    )
 
-    def __init__(self, *args, **kwargs):
-        super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
         # if self.instance.id is None:
         #     config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
         #     self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
@@ -166,12 +170,17 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return self.has_delete_permission(request, obj)
 
     def get_list_display(self, request):
+        list_display = [
+            'get_permanence_admin_display',
+        ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            return ('get_permanence_admin_display', 'language_column', 'get_producers',
-                    'get_customers', 'get_board', 'get_full_status_display')
-        else:
-            return ('get_permanence_admin_display', 'get_producers',
-                    'get_customers', 'get_board', 'get_full_status_display')
+            list_display += [
+                'language_column',
+            ]
+        list_display += [
+            'get_producers', 'get_customers', 'get_board', 'get_full_status_display',
+        ]
+        return list_display
 
     def get_fields(self, request, permanence=None):
         fields = [
@@ -626,9 +635,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             if bank_account_number is not None:
                 group_name = repanier.apps.REPANIER_SETTINGS_GROUP_NAME
                 if permanence.short_name:
-                    communication = "%s (%s)" % (_('short_basket_name'), permanence.short_name)
+                    communication = "%s (%s)" % (_('Short name'), permanence.short_name)
                 else:
-                    communication = _('short_basket_name')
+                    communication = _('Short name')
                 customer_payment_needed = '<font color="#bd0926">%s</font>' % (
                     _(
                         'Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
@@ -641,10 +650,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             else:
                 customer_payment_needed = EMPTY_STRING
             context = TemplateContext({
-                'name'             : _('long_basket_name'),
-                'long_basket_name' : _('long_basket_name'),
-                'basket_name'      : _('short_basket_name'),
-                'short_basket_name': _('short_basket_name'),
+                'name'             : _('Long name'),
+                'long_basket_name' : _('Long name'),
+                'basket_name'      : _('Short name'),
+                'short_basket_name': _('Short name'),
                 'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
                 'last_balance'     : mark_safe('<a href="#">%s</a>' % customer_last_balance),
                 'order_amount'     : RepanierMoney(123.45),
@@ -660,8 +669,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
             template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.order_producer_mail)
             context = TemplateContext({
-                'name'             : _('long_profile_name'),
-                'long_profile_name': _('long_profile_name'),
+                'name'             : _('Long name'),
+                'long_profile_name': _('Long name'),
                 'order_empty'      : False,
                 'duplicate'        : True,
                 'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
@@ -849,12 +858,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if 'apply' in request.POST:
             form = GeneratePermanenceForm(request.POST)
             if form.is_valid():
-                repeat_counter = int(form.cleaned_data['repeat_counter'])
-                repeat_step = int(form.cleaned_data['repeat_step'])
-                if 1 <= repeat_counter * repeat_step <= 54:
-                    creation_counter = permanence.duplicate(
-                        repeat_counter=repeat_counter,
-                        repeat_step=repeat_step)
+                recurrences = form.cleaned_data['recurrences']
+                dates, dates_counter, display = get_recurrence_dates(permanence.permanence_date, recurrences)
+                if 1 <= dates_counter <= 55:
+                    creation_counter = permanence.duplicate(dates)
                     if creation_counter == 0:
                         user_message = _("Nothing to do.")
                     elif creation_counter == 1:
@@ -868,12 +875,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
         else:
-            form = GeneratePermanenceForm(
-                initial={
-                    'repeat_counter': 0,
-                    'repeat_step'   : 0
-                }
-            )
+            form = GeneratePermanenceForm()
         return render(request, 'repanier/confirm_admin_generate_permanence.html', {
             'sub_title'           : _("How many weekly permanence(s) do you want to generate from this ?"),
             'action'              : 'generate_permanence',
@@ -915,6 +917,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     def get_queryset(self, request):
         qs = super(PermanenceInPreparationAdmin, self).get_queryset(request)
         return qs.filter(status__lte=PERMANENCE_SEND)
+
+    @transaction.atomic
+    def save_related(self, request, form, formsets, change):
+        super(PermanenceInPreparationAdmin, self).save_related(
+            request, form, formsets, change)
+        permanence = form.instance
+        permanence.with_delivery_point = DeliveryBoard.objects.filter(permanence_id=permanence.id).exists()
+        form.instance.save(update_fields=['with_delivery_point'])
 
     def save_model(self, request, permanence, form, change):
         if change and ('permanence_date' in form.changed_data):

@@ -98,6 +98,7 @@ logger.info("Settings loaded from %s" % (conf_file_name,))
 logger.info("Allowed hosts: %s" % DJANGO_SETTINGS_ALLOWED_HOSTS)
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
+DJANGO_SETTINGS_DAY = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 

@@ -73,7 +73,7 @@ class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
 class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     is_active = models.BooleanField(_("is_active"), default=True)
@@ -82,28 +82,30 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
     inform_customer_responsible = models.BooleanField(_("inform_customer_responsible"), default=False)
-    closed_group = models.BooleanField(_("with entitled customer"), default=False)
-    price_list_multiplier = models.DecimalField(
-        _("Delivery point price list multiplier"),
-        help_text=_("This multiplier is applied once for groups with entitled customer."),
-        default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
-        validators=[MinValueValidator(0)])
+    # closed_group = models.BooleanField(_("with entitled customer"), default=False)
+    # price_list_multiplier = models.DecimalField(
+    #     _("Delivery point price list multiplier"),
+    #     help_text=_("This multiplier is applied once for groups with entitled customer."),
+    #     default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
+    #     validators=[MinValueValidator(0)])
     transport = ModelMoneyField(
         _("Delivery point transport"),
-        help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
+        # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
+        default=DECIMAL_ZERO, blank=True, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
     min_transport = ModelMoneyField(
         _("Minium order amount for free shipping cost"),
-        help_text=_("This is the minimum order amount to avoid shipping cost."),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
+        # help_text=_("This is the minimum order amount to avoid shipping cost."),
+        default=DECIMAL_ZERO, blank=True, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
 
     objects = LUT_DeliveryPointManager()
 
     def __str__(self):
-        # return self.short_name
-        return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
+        if self.customer_responsible:
+            return "[%s] %s" % (_("Group"), self.customer_responsible.short_basket_name)
+        else:
+            return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
         verbose_name = _("delivery point")
@@ -134,7 +136,6 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        # return self.short_name
         return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
@@ -169,7 +170,6 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        # return self.short_name
         return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:

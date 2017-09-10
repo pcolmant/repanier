@@ -280,16 +280,20 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                 invoice = ProducerInvoice.objects.filter(
                     permanence=permanence, producer=producer
                 ).order_by('?').first()
+                minimum_order_amount_reached = EMPTY_STRING
                 if invoice is None:
                     total_price_with_tax = REPANIER_MONEY_ZERO
                 else:
                     total_price_with_tax = invoice.total_price_with_tax
+                    if invoice.total_price_with_tax < producer.minimum_order_value:
+                        minimum_order_amount_reached = _('Minimum order amount not reached')
                 row = [
                     producer.short_profile_name,
                     producer.long_profile_name,
                     producer.phone1,
                     producer.phone2,
                     total_price_with_tax.amount,
+                    minimum_order_amount_reached
                 ]
                 for col_num in range(len(row)):
                     c = ws.cell(row=row_num, column=col_num)

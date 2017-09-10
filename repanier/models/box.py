@@ -45,6 +45,12 @@ class Box(Product):
 
         return box_price, box_deposit
 
+    def get_box_admin_display(self):
+        return self.get_long_name()
+
+    get_box_admin_display.short_description = _("Box")
+    get_box_admin_display.allow_tags = False
+
     def __str__(self):
         return super(Box, self).display()
 
@@ -97,6 +103,9 @@ class BoxContent(models.Model):
     get_calculated_customer_content_price.short_description = (_("customer content price"))
     get_calculated_customer_content_price.allow_tags = False
 
+    def __str__(self):
+        return EMPTY_STRING
+
     class Meta:
         verbose_name = _("box content")
         verbose_name_plural = _("boxes content")
@@ -104,9 +113,6 @@ class BoxContent(models.Model):
         index_together = [
             ["product", "box"],
         ]
-
-    def __str__(self):
-        return EMPTY_STRING
 
 
 @receiver(pre_save, sender=BoxContent)

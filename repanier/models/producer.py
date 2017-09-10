@@ -31,10 +31,10 @@ from repanier.tools import update_offer_item
 @python_2_unicode_compatible
 class Producer(models.Model):
     short_profile_name = models.CharField(
-        _("short_profile_name"), max_length=25, null=False, default=EMPTY_STRING,
+        _("Short name"), max_length=25, null=False, default=EMPTY_STRING,
         db_index=True, unique=True)
     long_profile_name = models.CharField(
-        _("long_profile_name"), max_length=100, null=True, default=EMPTY_STRING)
+        _("Long name"), max_length=100, null=True, default=EMPTY_STRING)
     email = models.EmailField(
         _("email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(

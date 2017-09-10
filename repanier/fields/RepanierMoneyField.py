@@ -269,44 +269,8 @@ class FormMoneyField(DecimalField):
         except:
             return value
 
-    # def validate(self, value):
-    #     super(DecimalField, self).validate(value)
-    #     if value in self.empty_values or not self.required:
-    #         return
-    #     # Check for NaN, Inf and -Inf values. We can't compare directly for NaN,
-    #     # since it is never equal to itself. However, NaN is the only value that
-    #     # isn't equal to itself, so we can use this to identify NaN
-    #     if value != value or value == Decimal("Inf") or value == Decimal("-Inf"):
-    #         raise ValidationError(self.error_messages['invalid'], code='invalid')
-    #     sign, digittuple, exponent = value.amount.as_tuple()
-    #     decimals = abs(exponent)
-    #     # digittuple doesn't include any leading zeros.
-    #     digits = len(digittuple)
-    #     if decimals > digits:
-    #         # We have leading zeros up to or past the decimal point.  Count
-    #         # everything past the decimal point as a digit.  We do not count
-    #         # 0 before the decimal point as a digit since that would mean
-    #         # we would not allow max_digits = decimal_places.
-    #         digits = decimals
-    #     whole_digits = digits - decimals
-    #
-    #     if self.max_digits is not None and digits > self.max_digits:
-    #         raise ValidationError(
-    #             self.error_messages['max_digits'],
-    #             code='max_digits',
-    #             params={'max': self.max_digits},
-    #         )
-    #     if self.decimal_places is not None and decimals > self.decimal_places:
-    #         raise ValidationError(
-    #             self.error_messages['max_decimal_places'],
-    #             code='max_decimal_places',
-    #             params={'max': self.decimal_places},
-    #         )
-    #     if (self.max_digits is not None and self.decimal_places is not None
-    #         and whole_digits > (self.max_digits - self.decimal_places)):
-    #         raise ValidationError(
-    #             self.error_messages['max_whole_digits'],
-    #             code='max_whole_digits',
-    #             params={'max': (self.max_digits - self.decimal_places)},
-    #         )
-    #     return value
+
+class RepanierMoneyWidget(NumberInput):
+
+    def format_value(value):
+        pass

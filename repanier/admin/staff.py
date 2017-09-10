@@ -19,7 +19,6 @@ from .lut import LUTAdmin
 
 
 class UserDataForm(TranslatableModelForm):
-    # username = forms.CharField(label=_('Username'), max_length=25, required=True)
     email = forms.EmailField(label=_('Email'))
     user = None
 
@@ -66,6 +65,9 @@ class UserDataForm(TranslatableModelForm):
             user.email = email
             user.save()
         else:
+            # Important : The username who is never used is uuid1 to avoid clash with customer username
+            # The staff member login with his customer mail address
+            # Linked with AuthRepanierPasswordResetForm.get_users
             user = user_model.objects.create_user(
                 username=uuid.uuid1().hex, email=email, password=None,
                 first_name=EMPTY_STRING, last_name=EMPTY_STRING)
@@ -102,7 +104,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
                 self._has_delete_permission = True
             else:
                 self._has_delete_permission = False
-        return self.has_delete_permission
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)

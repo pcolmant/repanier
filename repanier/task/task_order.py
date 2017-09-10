@@ -425,7 +425,6 @@ def close_order(permanence, all_producers, producers_id=None):
         permanence.set_status(PERMANENCE_CLOSED, all_producers=all_producers, producers_id=producers_id)
 
 
-@transaction.atomic
 def send_order(permanence, all_producers=True, producers_id=None, deliveries_id=None):
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)

@@ -193,7 +193,7 @@ class CustomerInvoice(Invoice):
             customer_responsible = delivery_point.customer_responsible
             if customer_responsible is None:
                 self.customer_charged = self.customer
-                self.price_list_multiplier = delivery_point.price_list_multiplier
+                self.price_list_multiplier = DECIMAL_ONE
                 self.transport = delivery_point.transport
                 self.min_transport = delivery_point.min_transport
             else:
@@ -212,7 +212,7 @@ class CustomerInvoice(Invoice):
                             customer_id=customer_responsible.id,
                             status=self.status,
                             customer_charged_id=customer_responsible.id,
-                            price_list_multiplier=delivery_point.price_list_multiplier,
+                            price_list_multiplier=customer_responsible.price_list_multiplier,
                             transport=delivery_point.transport,
                             min_transport=delivery_point.min_transport,
                             is_order_confirm_send=True,
@@ -239,14 +239,14 @@ class CustomerInvoice(Invoice):
                             status=PERMANENCE_OPENED
                         ) | Q(
                             permanence_id=permanence.id,
-                            delivery_point__closed_group=False,
+                            delivery_point__customer_responsible__isnull=False,
                             status=PERMANENCE_OPENED
                         )
                     ).order_by('?')
                 else:
                     qs = DeliveryBoard.objects.filter(
                         permanence_id=permanence.id,
-                        delivery_point__closed_group=False,
+                        delivery_point__customer_responsible__isnull=False,
                         status=PERMANENCE_OPENED
                     ).order_by('?')
                 if qs.exists():

@@ -241,25 +241,6 @@ def create__customer_action(year):
 
 
 class CustomerWithUserDataForm(UserDataForm):
-    # contracts = forms.ModelMultipleChoiceField(
-    #     Contract.objects.all(), # filter(status=PERMANENCE_PLANNED),
-    #     widget=admin.widgets.FilteredSelectMultiple(_('Contracts'), False),
-    #     required=False
-    # )
-    #
-    # def __init__(self, *args, **kwargs):
-    #     super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
-    #     if self.instance.id:
-    #         self.fields['contracts'].initial = self.instance.contract_set.filter(is_active=True)
-    #
-    # def save(self, *args, **kwargs):
-    #     instance = super(CustomerWithUserDataForm, self).save(*args, **kwargs)
-    #     if instance.id is not None:
-    #         instance.contract_set.clear()
-    #         instance.contract_set.add(*self.cleaned_data['contracts'])
-    #
-    #     return instance
-
     class Meta:
         widgets = {
             'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
@@ -272,37 +253,33 @@ class CustomerWithUserDataForm(UserDataForm):
 class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     form = CustomerWithUserDataForm
     resource_class = CustomerResource
-    list_display = (
-        'short_basket_name', 'get_balance', 'may_order', 'long_basket_name', 'phone1', 'get_email',
-        'get_last_login', 'valid_email')
+    list_display = ('short_basket_name',)
     search_fields = ('short_basket_name', 'long_basket_name', 'user__email', 'email2')
-    list_per_page = 16
-    list_max_show_all = 16
     list_filter = (
         'may_order',
         'is_active',
-        # 'is_group',
         'valid_email'
     )
+    list_per_page = 16
+    list_max_show_all = 16
+    _has_delete_permission = None
 
     def has_delete_permission(self, request, customer=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            if customer is not None:
-                if customer.represent_this_buyinggroup:
-                    # I can't delete the customer representing the buying group
-                    return False
-            return True
-        return False
+        if self._has_delete_permission is None:
+            if request.user.groups.filter(
+                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]
+            ).exists() or request.user.is_superuser:
+                # Only a coordinator can delete
+                self._has_delete_permission = True
+            else:
+                self._has_delete_permission = False
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        return self.has_delete_permission(request)
 
-    def has_change_permission(self, request, obj=None):
-        return self.has_add_permission(request)
+    def has_change_permission(self, request, staff=None):
+        return self.has_delete_permission(request)
 
     def get_email(self, customer):
         if customer.user is not None:
@@ -330,10 +307,10 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_list_display(self, request):
         if repanier.apps.REPANIER_SETTINGS_INVOICE:
-            return ('short_basket_name', 'get_balance', 'may_order', 'long_basket_name', 'phone1', 'get_email',
+            return ('__str__', 'get_balance', 'may_order', 'long_basket_name', 'phone1', 'get_email',
                     'get_last_login', 'valid_email')
         else:
-            return ('short_basket_name', 'may_order', 'long_basket_name', 'phone1', 'get_email',
+            return ('__str__', 'may_order', 'long_basket_name', 'phone1', 'get_email',
                     'get_last_login', 'valid_email')
 
     def get_fieldsets(self, request, customer=None):

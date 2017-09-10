@@ -429,7 +429,7 @@ class Item(TranslatableModel):
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)
-    get_long_name_with_producer_price.short_description = (_("long_name"))
+    get_long_name_with_producer_price.short_description = (_("Long name"))
     get_long_name_with_producer_price.allow_tags = False
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 
@@ -441,7 +441,7 @@ class Item(TranslatableModel):
             result = '%s' % self.long_name
         return result
 
-    get_long_name.short_description = (_("long_name"))
+    get_long_name.short_description = (_("Long name"))
     get_long_name.allow_tags = False
     get_long_name.admin_order_field = 'translations__long_name'
 

@@ -77,31 +77,41 @@ from repanier.tools import cap
 @python_2_unicode_compatible
 class Permanence(TranslatableModel):
     translations = TranslatedFields(
-        short_name=models.CharField(_("offer name"), max_length=50, blank=True),
-        offer_description=HTMLField(_("offer_description"),
-                                    configuration='CKEDITOR_SETTINGS_MODEL2',
-                                    help_text=_(
-                                        "This message is send by mail to all customers when opening the order or on top "),
-                                    blank=True, default=EMPTY_STRING),
+        short_name=models.CharField(
+            _("offer name"),
+            max_length=50, blank=True
+        ),
+        offer_description=HTMLField(
+            _("offer_description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2',
+            help_text=_(
+                "This message is send by mail to all customers when opening the order or on top "),
+            blank=True, default=EMPTY_STRING
+        ),
         invoice_description=HTMLField(
             _("invoice_description"),
             configuration='CKEDITOR_SETTINGS_MODEL2',
             help_text=_(
                 'This message is send by mail to all customers having bought something when closing the permanence.'),
-            blank=True, default=EMPTY_STRING),
+            blank=True, default=EMPTY_STRING
+        ),
     )
 
     status = models.CharField(
+        _("Status"),
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
-        verbose_name=_("permanence_status"),
-        help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
-    permanence_date = models.DateField(_("date"), db_index=True)
-    payment_date = models.DateField(_("payment_date"), blank=True, null=True, db_index=True)
+    )
+    permanence_date = models.DateField(
+        _("Date"), db_index=True
+    )
+    payment_date = models.DateField(
+        _("Payment date"), blank=True, null=True, db_index=True
+    )
     producers = models.ManyToManyField(
         'Producer',
-        verbose_name=_("producers"),
+        verbose_name=_("Producers"),
         blank=True
     )
     boxes = models.ManyToManyField(
@@ -138,9 +148,10 @@ class Permanence(TranslatableModel):
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
         verbose_name=_("highest permanence_status"),
-        help_text=_('status of the permanence from planned, orders opened, orders closed, send, done'))
+    )
     master_permanence = models.ForeignKey(
-        'Permanence', verbose_name=_("master permanence"),
+        'Permanence',
+        verbose_name=_("master permanence"),
         related_name='child_permanence',
         blank=True, null=True, default=None,
         on_delete=models.PROTECT, db_index=True)
@@ -157,6 +168,7 @@ class Permanence(TranslatableModel):
         default=0, editable=False
     )
 
+    @cached_property
     def get_producers(self):
         if self.status == PERMANENCE_PLANNED:
             if len(self.producers.all()) > 0:
@@ -168,11 +180,11 @@ class Permanence(TranslatableModel):
                     link.append(
                         '<a href="%s?producer=%d">&nbsp;%s</a>' % (
                             changelist_url, p.id, p.short_profile_name))
-                return '<div class="wrap-text">%s</div>' % ", ".join(link)
+                    msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
             else:
-                return '<div class="wrap-text">%s</div>' % _("No offer")
+                msg_html = '<div class="wrap-text">%s</div>' % _("No offer")
         elif self.status == PERMANENCE_PRE_OPEN:
-            return '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name + " (" + p.phone1 + ")" for p in self.producers.all()])
+            msg_html = '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name + " (" + p.phone1 + ")" for p in self.producers.all()])
         elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
             close_offeritem_changelist_url = urlresolvers.reverse(
                 'admin:repanier_offeritemclosed_changelist',
@@ -199,7 +211,7 @@ class Permanence(TranslatableModel):
                 link.append(
                     '<a href="%s?permanence=%s&producer=%d">%s</a>' % (
                         offeritem_changelist_url, self.id, p.id, label))
-            return '<div class="wrap-text">%s</div>' % ", ".join(link)
+            msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             send_offeritem_changelist_url = urlresolvers.reverse(
@@ -276,17 +288,18 @@ class Permanence(TranslatableModel):
                 """ % (
                     self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, producers
                 )
-            return msg_html
         else:
-            return '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name
+            msg_html = '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name
                                    for p in
                                    Producer.objects.filter(
                                        producerinvoice__permanence_id=self.id).only(
                                        'short_profile_name')])
+        return mark_safe(msg_html)
 
-    get_producers.short_description = (_("producers in this permanence"))
-    get_producers.allow_tags = True
+    get_producers.short_description = (_("Offers from"))
+    # get_producers.allow_tags = True
 
+    @cached_property
     def get_customers(self):
         if self.status in [
             PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND
@@ -376,13 +389,14 @@ class Permanence(TranslatableModel):
             """ % (
                 self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, customers
             )
-            return msg_html
+            return mark_safe(msg_html)
         else:
-            return '<div class="wrap-text">%s</div>' % _("No purchase")
+            return mark_safe('<div class="wrap-text">%s</div>' % _("No purchase"))
 
-    get_customers.short_description = (_("customers in this permanence"))
-    get_customers.allow_tags = True
+    get_customers.short_description = (_("Purchases by"))
+    # get_customers.allow_tags = True
 
+    @cached_property
     def get_board(self):
         permanenceboard_set = PermanenceBoard.objects.filter(
             permanence=self, permanence_role__rght=F('permanence_role__lft') + 1
@@ -429,12 +443,12 @@ class Permanence(TranslatableModel):
             """ % (
                 self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, board
             )
-            return msg_html
+            return mark_safe(msg_html)
         else:
-            return '<div class="wrap-text">%s</div>' % _("Empty board")
+            return mark_safe('<div class="wrap-text">%s</div>' % _("No task"))
 
-    get_board.short_description = (_("permanence board"))
-    get_board.allow_tags = True
+    get_board.short_description = (_("Tasks"))
+    # get_board.allow_tags = True
 
     def set_status(self, new_status, all_producers=True, producers_id=None, update_payment_date=False,
                    payment_date=None, allow_downgrade=True):
@@ -467,9 +481,9 @@ class Permanence(TranslatableModel):
                             producer_id=a_producer.id
                         )
 
-            self.with_delivery_point = DeliveryBoard.objects.filter(
-                permanence_id=self.id
-            ).order_by('?').exists()
+            # self.with_delivery_point = DeliveryBoard.objects.filter(
+            #     permanence_id=self.id
+            # ).order_by('?').exists()
             if self.with_delivery_point:
                 qs = DeliveryBoard.objects.filter(
                     permanence_id=self.id
@@ -515,81 +529,76 @@ class Permanence(TranslatableModel):
             ProducerInvoice.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by(
                 '?').update(status=new_status)
 
-    def duplicate(self, repeat_counter=0, repeat_step=1):
+    def duplicate(self, dates):
         creation_counter = 0
-        if 1 <= repeat_counter * repeat_step <= 54:
-            # 54 weeks in a year
-            repeat_counter += 1
-            starting_date = self.permanence_date
-            short_name = self.safe_translation_getter(
-                'short_name', any_language=True, default=EMPTY_STRING
-            )
-            cur_language = translation.get_language()
-            every_x_days = 7 * int(repeat_step)
-            for i in range(1, repeat_counter):
-                new_date = starting_date + datetime.timedelta(days=every_x_days * i)
-                # Mandatory because of Parler
-                if short_name != EMPTY_STRING:
-                    already_exists = Permanence.objects.filter(
-                        permanence_date=new_date,
-                        translations__language_code=cur_language,
-                        translations__short_name=short_name
-                    ).exists()
-                else:
-                    already_exists = False
-                    for existing_permanence in Permanence.objects.filter(
-                            permanence_date=new_date
-                    ):
-                        try:
-                            short_name = existing_permanence.short_name
-                            already_exists = short_name == EMPTY_STRING
-                        except TranslationDoesNotExist:
-                            already_exists = True
-                        if already_exists:
-                            break
-                if not already_exists:
-                    creation_counter += 1
-                    new_permanence = Permanence.objects.create(
-                        permanence_date=new_date
+        short_name = self.safe_translation_getter(
+            'short_name', any_language=True, default=EMPTY_STRING
+        )
+        cur_language = translation.get_language()
+        for date in dates:
+            delta_days = (date - self.permanence_date).days
+            # Mandatory because of Parler
+            if short_name != EMPTY_STRING:
+                already_exists = Permanence.objects.filter(
+                    permanence_date=date,
+                    translations__language_code=cur_language,
+                    translations__short_name=short_name
+                ).exists()
+            else:
+                already_exists = False
+                for existing_permanence in Permanence.objects.filter(
+                        permanence_date=date
+                ):
+                    try:
+                        short_name = existing_permanence.short_name
+                        already_exists = short_name == EMPTY_STRING
+                    except TranslationDoesNotExist:
+                        already_exists = True
+                    if already_exists:
+                        break
+            if not already_exists:
+                creation_counter += 1
+                new_permanence = Permanence.objects.create(
+                    permanence_date=date
+                )
+                self.duplicate_short_name(
+                    new_permanence,
+                    cur_language=translation.get_language(),
+                )
+                for permanence_board in PermanenceBoard.objects.filter(
+                        permanence=self
+                ):
+                    PermanenceBoard.objects.create(
+                        permanence=new_permanence,
+                        permanence_role=permanence_board.permanence_role
                     )
-                    self.duplicate_short_name(
-                        new_permanence,
-                        cur_language=translation.get_language(),
-                    )
-                    for permanence_board in PermanenceBoard.objects.filter(
-                            permanence=self
-                    ):
-                        PermanenceBoard.objects.create(
+                for delivery_board in DeliveryBoard.objects.filter(
+                        permanence=self
+                ):
+                    if delivery_board.delivery_date is not None:
+                        new_delivery_board = DeliveryBoard.objects.create(
                             permanence=new_permanence,
-                            permanence_role=permanence_board.permanence_role
+                            delivery_point=delivery_board.delivery_point,
+                            delivery_date=delivery_board.delivery_date + datetime.timedelta(days=delta_days)
                         )
-                    for delivery_board in DeliveryBoard.objects.filter(
-                            permanence=self
-                    ):
-                        if delivery_board.delivery_date is not None:
-                            new_delivery_board = DeliveryBoard.objects.create(
-                                permanence=new_permanence,
-                                delivery_point=delivery_board.delivery_point,
-                                delivery_date=delivery_board.delivery_date + datetime.timedelta(days=every_x_days * i)
-                            )
-                        else:
-                            new_delivery_board = DeliveryBoard.objects.create(
-                                permanence=new_permanence,
-                                delivery_point=delivery_board.delivery_point,
-                            )
-                        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                            language_code = language["code"]
-                            translation.activate(language_code)
-                            new_delivery_board.set_current_language(language_code)
-                            delivery_board.set_current_language(language_code)
-                            try:
-                                new_delivery_board.delivery_comment = delivery_board.delivery_comment
-                                new_delivery_board.save()
-                            except TranslationDoesNotExist:
-                                pass
-                        translation.activate(cur_language)
-                    for a_producer in self.producers.all():
-                        new_permanence.producers.add(a_producer)
+                    else:
+                        new_delivery_board = DeliveryBoard.objects.create(
+                            permanence=new_permanence,
+                            delivery_point=delivery_board.delivery_point,
+                        )
+                    for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                        language_code = language["code"]
+                        translation.activate(language_code)
+                        new_delivery_board.set_current_language(language_code)
+                        delivery_board.set_current_language(language_code)
+                        try:
+                            new_delivery_board.delivery_comment = delivery_board.delivery_comment
+                            new_delivery_board.save()
+                        except TranslationDoesNotExist:
+                            pass
+                    translation.activate(cur_language)
+                for a_producer in self.producers.all():
+                    new_permanence.producers.add(a_producer)
         return creation_counter
 
     def duplicate_short_name(self, new_permanence, cur_language):
@@ -828,7 +837,7 @@ class Permanence(TranslatableModel):
                     o.email_offer_price_with_vat,
                 ))
         if result:
-            return '<ul>%s</ul>' % "".join(result)
+            return mark_safe('<ul>%s</ul>' % "".join(result))
         return EMPTY_STRING
 
     def get_full_status_display(self):
@@ -856,10 +865,10 @@ class Permanence(TranslatableModel):
                     status_counter += 1
                     status_list.append("<b>%s</b>" % delivery.get_status_display())
                 status_list.append("- %s" % delivery.get_delivery_display(admin=True))
-            if status_counter > 1:
-                message = "<br/>".join(status_list)
-            else:
-                message = self.get_status_display()
+            # if status_counter > 1:
+            message = "<br/>".join(status_list)
+            # else:
+            #     message = self.get_status_display()
         else:
             message = self.get_status_display()
         if need_to_refresh_status:
@@ -888,11 +897,12 @@ class Permanence(TranslatableModel):
                 """ % (
                 self.id, url, self.id, progress, message
             )
-            return mark_safe(msg_html)
-        else:
-            return mark_safe('<div class="wrap-text">%s</div>' % message)
 
-    get_full_status_display.short_description = (_("permanence_status"))
+        else:
+            msg_html = '<div class="wrap-text">%s</div>' % message
+        return mark_safe(msg_html)
+
+    get_full_status_display.short_description = (_("Status"))
     get_full_status_display.allow_tags = True
 
     def get_permanence_display(self):
@@ -921,7 +931,7 @@ class Permanence(TranslatableModel):
         else:
             return self.get_permanence_display()
 
-    get_permanence_admin_display.short_description = lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
+    get_permanence_admin_display.short_description = _("Offers")
     get_permanence_admin_display.allow_tags = True
 
     def get_permanence_customer_display(self, with_status=True):

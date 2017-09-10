@@ -98,7 +98,8 @@ def order_init_ajax(request):
                 and not customer_invoice.is_order_confirm_send:
             now = timezone.now()
             permanence_boards = PermanenceBoard.objects.filter(
-                customer_id=customer.id, permanence_date__gte=now,
+                customer_id=customer.id,
+                permanence_date__gte=now,
                 permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
             ).order_by("permanence_date")[:2]
             is_staff = Staff.objects.filter(

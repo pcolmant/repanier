@@ -590,3 +590,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         Returns available import formats.
         """
         return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+
+    class Media:
+        js = ('js/confirm_exit.js',)

@@ -64,34 +64,31 @@ class Product(Item):
 
     def get_is_into_offer(self):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
-        if self.limit_order_quantity_to_stock:
-            link = _boolean_icon(self.is_into_offer)
-        else:
-            switch_is_into_offer = urlresolvers.reverse(
-                'is_into_offer', args=(self.id,)
-            )
-            javascript = """
-            (function($) {{
-                var lien = '{LINK}';
-                $.ajax({{
-                        url: lien,
-                        cache: false,
-                        async: true,
-                        success: function (result) {{
-                            $('#is_into_offer_{PRODUCT_ID}').html(result)
-                        }}
-                    }});
-            }})(django.jQuery);
-            """.format(
-                LINK=switch_is_into_offer,
-                PRODUCT_ID=self.id
-            )
-            # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
-            link = '<a id="is_into_offer_%d" href="#" onclick="%s;return false;" class="btn">%s</a>' % (
-                self.id,
-                javascript,
-                _boolean_icon(self.is_into_offer)
-            )
+        switch_is_into_offer = urlresolvers.reverse(
+            'is_into_offer', args=(self.id,)
+        )
+        javascript = """
+        (function($) {{
+            var lien = '{LINK}';
+            $.ajax({{
+                    url: lien,
+                    cache: false,
+                    async: true,
+                    success: function (result) {{
+                        $('#is_into_offer_{PRODUCT_ID}').html(result)
+                    }}
+                }});
+        }})(django.jQuery);
+        """.format(
+            LINK=switch_is_into_offer,
+            PRODUCT_ID=self.id
+        )
+        # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
+        link = '<a id="is_into_offer_%d" href="#" onclick="%s;return false;" class="btn">%s</a>' % (
+            self.id,
+            javascript,
+            _boolean_icon(self.is_into_offer)
+        )
         return link
 
     get_is_into_offer.short_description = (_("is into offer"))

@@ -22,10 +22,15 @@ class Group(Customer):
 
 @receiver(pre_save, sender=Group)
 def group_pre_save(sender, **kwargs):
+    customer_pre_save(sender, **kwargs)
     group = kwargs["instance"]
     group.is_group = True
     group.may_order = False
-    customer_pre_save(sender, **kwargs)
+    group.delivery_point = None
+    # find or create delivery point with this group:
+    #     set price_list_multiplier
+    #     set transport
+    #     set min transport
 
 
 @receiver(post_delete, sender=Customer)

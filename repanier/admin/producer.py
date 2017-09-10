@@ -125,8 +125,10 @@ def create__producer_action(year):
 
 
 class ProducerDataForm(forms.ModelForm):
+    from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
     permanences = forms.ModelMultipleChoiceField(
         Permanence.objects.filter(status=PERMANENCE_PLANNED),
+        label="%s" % REPANIER_SETTINGS_PERMANENCES_NAME,
         widget=admin.widgets.FilteredSelectMultiple(repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False),
         required=False
     )

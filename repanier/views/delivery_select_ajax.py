@@ -46,13 +46,13 @@ def delivery_select_ajax(request):
                     delivery_point_id=customer.delivery_point_id,
                 ) | Q(
                     permanence_id=permanence_id,
-                    delivery_point__closed_group=False
+                    delivery_point__customer_responsible__isnull=False
                 )
             ).order_by("id")
         else:
             qs = DeliveryBoard.objects.filter(
                 permanence_id=permanence_id,
-                delivery_point__closed_group=False
+                delivery_point__customer_responsible__isnull=False
             ).order_by("id")
         selected = False
         delivery_counter = 0

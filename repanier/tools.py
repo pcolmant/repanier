@@ -5,6 +5,8 @@ import calendar
 import datetime
 import json
 
+from django.utils.datetime_safe import new_datetime, date
+
 try:
     # For Python 3.0 and later
     from urllib.request import urlopen
@@ -1039,3 +1041,24 @@ def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form
 
 def check_if_is_coordinator(request):
     return request.user.is_superuser or request.user.groups.filter(name=COORDINATION_GROUP).exists()
+
+
+def get_recurrence_dates(first_date, recurrences):
+    dates = []
+    dates_counter = 0
+    d_start = first_date
+    dt_start = new_datetime(d_start)
+    dt_end = new_datetime(date(d_start.year + 1, d_start.month, d_start.day))
+    occurrences = recurrences.between(
+        dt_start,
+        dt_end,
+        dtstart=dt_start,
+        inc=True
+    )
+    for occurrence in occurrences:
+        dates.append(occurrence.date())
+        dates_counter += 1
+    return dates, dates_counter, '{} : {}'.format(
+        dates_counter,
+        ", ".join(date.strftime(settings.DJANGO_SETTINGS_DAY) for date in dates)
+    )

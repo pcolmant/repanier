@@ -2,6 +2,7 @@ from django import forms
 from django.forms.formsets import formset_factory
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
+from recurrence.forms import RecurrenceField
 
 from repanier.models.producer import Producer
 from repanier.const import REPANIER_MONEY_ZERO
@@ -35,8 +36,9 @@ class CloseAndSendOrderForm(forms.Form):
 
 
 class GeneratePermanenceForm(forms.Form):
-    repeat_counter = forms.IntegerField(label=_("Number of permanence(s)"), min_value=0, max_value=54)
-    repeat_step = forms.IntegerField(label=_("Number of week(s) between two permanences"), min_value=0, max_value=12)
+    # repeat_counter = forms.IntegerField(label=_("Number of permanence(s)"), min_value=0, max_value=54)
+    # repeat_step = forms.IntegerField(label=_("Number of week(s) between two permanences"), min_value=0, max_value=12)
+    recurrences = RecurrenceField()
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)

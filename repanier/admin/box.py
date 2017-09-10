@@ -173,9 +173,9 @@ class BoxAdmin(TranslatableAdmin):
     model = Box
 
     list_display = (
-        'is_into_offer', 'get_long_name', 'language_column',
+        'is_into_offer', 'get_box_admin_display', 'language_column',
     )
-    list_display_links = ('get_long_name',)
+    list_display_links = ('get_box_admin_display',)
     list_per_page = 16
     list_max_show_all = 16
     inlines = (BoxContentInline,)
@@ -214,7 +214,7 @@ class BoxAdmin(TranslatableAdmin):
 
     def get_list_display(self, request):
         list_display = [
-            'get_is_into_offer', 'get_long_name'
+            'get_is_into_offer', 'get_box_admin_display'
         ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += [

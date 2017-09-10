@@ -35,10 +35,10 @@ class Customer(models.Model):
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
 
     short_basket_name = models.CharField(
-        _("short_basket_name"), max_length=25, null=False, default=EMPTY_STRING,
+        _("Short name"), max_length=25, null=False, default=EMPTY_STRING,
         db_index=True, unique=True)
     long_basket_name = models.CharField(
-        _("long_basket_name"), max_length=100, null=True, default=EMPTY_STRING)
+        _("Long name"), max_length=100, null=True, default=EMPTY_STRING)
     email2 = models.EmailField(
         _("secondary email"), null=True, blank=True, default=EMPTY_STRING)
     language = models.CharField(
@@ -279,8 +279,7 @@ class Customer(models.Model):
         now = timezone.now()
         return PermanenceBoard.objects.filter(
             customer_id=self.id,
-            permanence_date__gte=now - datetime.timedelta(
-                days=365),
+            permanence_date__gte=now - datetime.timedelta(days=365),
             permanence_date__lt=now,
             permanence_role__is_counted_as_participation=True
         ).order_by('?').count()
@@ -391,14 +390,14 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = None
     if not customer.is_active:
         customer.may_order = False
-    if customer.is_group:
-        customer.may_order = False
-        customer.delivery_point = None
+    # if customer.is_group:
+    #     customer.may_order = False
+    #     customer.delivery_point = None
     if customer.price_list_multiplier <= DECIMAL_ZERO:
         customer.price_list_multiplier = DECIMAL_ONE
-    if customer.delivery_point is not None and customer.delivery_point.customer_responsible is not None:
+    # if customer.delivery_point is not None and customer.delivery_point.customer_responsible is not None:
         # If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE
-        customer.price_list_multiplier = DECIMAL_ONE
+        # customer.price_list_multiplier = DECIMAL_ONE
     customer.city = ("%s" % customer.city).upper()
     customer.login_attempt_counter = DECIMAL_ZERO
     customer.valid_email = None
