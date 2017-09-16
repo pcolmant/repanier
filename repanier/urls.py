@@ -40,7 +40,7 @@ from repanier.views.send_mail_to_all_members_view import send_mail_to_all_member
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
 from repanier.views.who_is_who_view import who_is_who_view
 from repanier.views.display_status_ajax import display_status
-from repanier.views.is_into_offer_ajax import is_into_offer
+from repanier.views.is_into_offer_ajax import is_into_offer, is_into_offer_content
 from repanier.views.download_customer_invoice import download_customer_invoice
 from repanier.views.home_info_ajax import home_info_ajax
 from repanier.views.order_info_ajax import order_info_ajax
@@ -120,7 +120,8 @@ urlpatterns = [
     url(r'^ajax/btn-confirm-order/$', btn_confirm_order_ajax, name='btn_confirm_order_ajax'),
     url(r'^ajax/display-status/(?P<permanence_id>\d+)/$', display_status, name='display_status'),
     url(r'^ajax/like/$', like_ajax, name='like_ajax'),
-    url(r'^ajax/is-into-offer/(?P<product_id>\d+)/$', is_into_offer, name='is_into_offer'),
+    url(r'^ajax/is-into-offer/(?P<product_id>\d+)/(?P<contract_id>\d+)/$', is_into_offer, name='is_into_offer'),
+    url(r'^ajax/is-into-offer-content/(?P<product_id>\d+)/(?P<contract_id>\d+)/(?P<one_date_str>.*)/$', is_into_offer_content, name='is_into_offer_content'),
     url(r'^permanence/$', never_cache(PermanenceView.as_view()), name='permanence_view'),
     url(r'^customer-invoice/(?P<pk>[0-9]+)/$', login_required(CustomerInvoiceView.as_view()),
         name='customer_invoice_view'),

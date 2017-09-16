@@ -13,6 +13,7 @@ WEBMASTER_GROUP = "webmaster"
 DEMO_EMAIL = "repanier@no-spam.ws"
 
 EMPTY_STRING = ''
+ONE_YEAR = 365
 
 DECIMAL_ZERO = Decimal('0')
 DECIMAL_ONE = Decimal('1')
@@ -300,6 +301,7 @@ BANK_NOTE_UNICODE = "💶"
 CONTRACT_VALUE_STR = "-1"
 CONTRACT_VALUE_INT = -1
 CONTRACT_UNICODE = "🤝"
+LINK_UNICODE = "⛓"
 
 LUT_CONFIRM = (
     (True, LOCK_UNICODE), (False, EMPTY_STRING)

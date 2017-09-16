@@ -231,25 +231,25 @@ def admin_back_to_planned(request, permanence):
     return user_message, user_message_level
 
 
-def admin_undo_back_to_planned(request, permanence):
-    user_message = _("Action canceled by the system.")
-    user_message_level = messages.ERROR
-    if PERMANENCE_PLANNED == permanence.status \
-            and permanence.highest_status in [PERMANENCE_PRE_OPEN, PERMANENCE_OPENED]:
-        OfferItem.objects.filter(permanence_id=permanence.id).update(is_active=True)
-        permanence.producers.clear()
-        for offer_item in OfferItem.objects.filter(
-                permanence_id=permanence.id
-        ).order_by().distinct("producer_id"):
-            permanence.producers.add(offer_item.producer_id)
-        if permanence.highest_status == PERMANENCE_PRE_OPEN:
-            permanence.set_status(PERMANENCE_PRE_OPEN)
-            user_message = _("The permanence is back to pre-opened.")
-        elif permanence.highest_status == PERMANENCE_OPENED:
-            permanence.set_status(PERMANENCE_OPENED)
-            user_message = _("The permanence is back to open.")
-        user_message_level = messages.INFO
-    return user_message, user_message_level
+# def admin_undo_back_to_planned(request, permanence):
+#     user_message = _("Action canceled by the system.")
+#     user_message_level = messages.ERROR
+#     if PERMANENCE_PLANNED == permanence.status \
+#             and permanence.highest_status in [PERMANENCE_PRE_OPEN, PERMANENCE_OPENED]:
+#         OfferItem.objects.filter(permanence_id=permanence.id).update(is_active=True)
+#         permanence.producers.clear()
+#         for offer_item in OfferItem.objects.filter(
+#                 permanence_id=permanence.id
+#         ).order_by().distinct("producer_id"):
+#             permanence.producers.add(offer_item.producer_id)
+#         if permanence.highest_status == PERMANENCE_PRE_OPEN:
+#             permanence.set_status(PERMANENCE_PRE_OPEN)
+#             user_message = _("The permanence is back to pre-opened.")
+#         elif permanence.highest_status == PERMANENCE_OPENED:
+#             permanence.set_status(PERMANENCE_OPENED)
+#             user_message = _("The permanence is back to open.")
+#         user_message_level = messages.INFO
+#     return user_message, user_message_level
 
 
 def admin_open_and_send(request, permanence, do_not_send_any_mail=False):

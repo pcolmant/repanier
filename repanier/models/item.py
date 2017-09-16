@@ -445,12 +445,16 @@ class Item(TranslatableModel):
     get_long_name.allow_tags = False
     get_long_name.admin_order_field = 'translations__long_name'
 
-    def display(self, is_quantity_invoiced=False):
+    def get_long_name_with_producer(self, is_quantity_invoiced=False):
         if self.id is not None:
             return '%s, %s' % (self.producer.short_profile_name, self.get_long_name(is_quantity_invoiced=is_quantity_invoiced))
         else:
             # Nedeed for django import export since django_import_export-0.4.5
             return 'N/A'
+
+    get_long_name_with_producer.short_description = (_("Long name"))
+    get_long_name_with_producer.allow_tags = False
+    get_long_name_with_producer.admin_order_field = 'translations__long_name'
 
     def __str__(self):
         return self.display()

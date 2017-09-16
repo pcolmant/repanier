@@ -5,11 +5,11 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.utils import translation
-from django.utils.datetime_safe import new_datetime, date
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
+from repanier.admin.admin_filter import ContractFilterByProducer
 from repanier.const import ORDER_GROUP, INVOICE_GROUP, \
     COORDINATION_GROUP, CONTRACT_IN_WRITING
 from repanier.models import Contract
@@ -37,11 +37,13 @@ class ContractAdmin(TranslatableAdmin):
 
     list_display = ('get_contract_admin_display',)
     list_display_links = ('get_contract_admin_display',)
+    list_filter = [ContractFilterByProducer, ]
+    date_hierarchy = 'first_permanence_date'
     list_per_page = 16
     list_max_show_all = 16
     ordering = (
-        '-first_permanence_date',
-        '-status',
+        'status',
+        'first_permanence_date',
     )
     search_fields = ('translations__long_name',)
     _has_delete_permission = None
@@ -66,7 +68,7 @@ class ContractAdmin(TranslatableAdmin):
 
     def get_list_display(self, request):
         list_display = [
-            'get_contract_admin_display', 'get_dates', 'get_producers'
+            'get_contract_admin_display', 'get_producers'
         ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += [
@@ -81,11 +83,16 @@ class ContractAdmin(TranslatableAdmin):
         fields_basic = [
             ('long_name', 'picture2'),
             'first_permanence_date',
-            'recurrences',
-            'get_dates',
+            'recurrences'
+        ]
+        if contract is not None:
+            fields_basic += [
+                'get_dates'
+            ]
+        fields_basic += [
             'offer_description',
             'producers',
-            'customers',
+            'customers'
         ]
         fieldsets = (
             (None, {'fields': fields_basic}),
@@ -93,7 +100,10 @@ class ContractAdmin(TranslatableAdmin):
         return fieldsets
 
     def get_readonly_fields(self, request, contract=None):
-        return ['get_dates', 'customers',]
+        if contract is not None:
+            return ['get_dates', 'customers']
+        else:
+            return ['customers']
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "customers":

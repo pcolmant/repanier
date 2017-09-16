@@ -98,9 +98,11 @@ logger.info("Settings loaded from %s" % (conf_file_name,))
 logger.info("Allowed hosts: %s" % DJANGO_SETTINGS_ALLOWED_HOSTS)
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
-DJANGO_SETTINGS_DAY = "%d-%m"
-DJANGO_SETTINGS_DATE = "%d-%m-%Y"
-DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
+DJANGO_SETTINGS_DATES_SEPARATOR = ","
+DJANGO_SETTINGS_DATE_SEPARATOR = "-"
+DJANGO_SETTINGS_DAY = "%d{}%m".format(DJANGO_SETTINGS_DATE_SEPARATOR)
+DJANGO_SETTINGS_DATE = "%d{0}%m{0}%Y".format(DJANGO_SETTINGS_DATE_SEPARATOR)
+DJANGO_SETTINGS_DATETIME = "%d{0}%m{0}%Y %H:%M".format(DJANGO_SETTINGS_DATE_SEPARATOR)
 
 # If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
 STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)

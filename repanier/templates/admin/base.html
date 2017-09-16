@@ -17,15 +17,28 @@
 label.translatable-field:before {color:red;content:"\2691\a0";}
 div.parler-language-tabs span.current:before {color:red;content:"\2691\a0";}
 .calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {width: initial !important;}
-table thead th {padding:0;white-space:normal;vertical-align:middle;}
-table tbody td {vertical-align:middle !important;white-space:nowrap;}
-table tbody th {vertical-align:middle !important;white-space: normal;}
+table thead th {padding:0;vertical-align:middle !important;white-space:normal !important;}
+table tbody td {vertical-align:middle !important;white-space:nowrap !important;}
+table tbody th {vertical-align:middle !important;white-space: normal !important;}
 #change-history thead th,
 .change-list table thead th,
 .dashboard table thead th,
 .results table thead th,
 .tabular table thead th,
 #changelist table thead th {white-space: normal;}
+#change-history tbody td,
+#change-history tbody th,
+.change-list table tbody td,
+.change-list table tbody th,
+.dashboard table tbody td,
+.dashboard table tbody th,
+.results table tbody td,
+.results table tbody th,
+.tabular table tbody td,
+.tabular table tbody th {
+    line-height: normal !important;
+    vertical-align: middle !important;
+}
 .wrap-text {white-space: normal !important;}
 .module {width: 100%;white-space: normal;}
 form fieldset {width: 100%;white-space: nowrap;}
@@ -53,6 +66,7 @@ div, span, ul {line-height: inherit !important;}
 {#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}
 .submit-row {position:sticky;bottom:20px;}
 div.recurrence-widget {width:100%;}
+.change-list #changelist table tbody td, .change-list #changelist table tbody th {white-space: normal;}
 /* Bootstrap refresh animated */
 .gly-spin {
   -webkit-animation: spin 2s infinite linear;

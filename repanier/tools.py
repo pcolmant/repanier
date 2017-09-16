@@ -1045,10 +1045,9 @@ def check_if_is_coordinator(request):
 
 def get_recurrence_dates(first_date, recurrences):
     dates = []
-    dates_counter = 0
     d_start = first_date
     dt_start = new_datetime(d_start)
-    dt_end = new_datetime(date(d_start.year + 1, d_start.month, d_start.day))
+    dt_end = new_datetime(d_start + datetime.timedelta(days=ONE_YEAR))
     occurrences = recurrences.between(
         dt_start,
         dt_end,
@@ -1057,8 +1056,7 @@ def get_recurrence_dates(first_date, recurrences):
     )
     for occurrence in occurrences:
         dates.append(occurrence.date())
-        dates_counter += 1
-    return dates, dates_counter, '{} : {}'.format(
-        dates_counter,
+    return dates, '{} : {}'.format(
+        len(dates),
         ", ".join(date.strftime(settings.DJANGO_SETTINGS_DAY) for date in dates)
     )

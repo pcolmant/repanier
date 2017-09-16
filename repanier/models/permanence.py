@@ -180,7 +180,7 @@ class Permanence(TranslatableModel):
                     link.append(
                         '<a href="%s?producer=%d">&nbsp;%s</a>' % (
                             changelist_url, p.id, p.short_profile_name))
-                    msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
+                msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
             else:
                 msg_html = '<div class="wrap-text">%s</div>' % _("No offer")
         elif self.status == PERMANENCE_PRE_OPEN:
@@ -969,13 +969,13 @@ class Permanence(TranslatableModel):
 class PermanenceInPreparation(Permanence):
     class Meta:
         proxy = True
-        verbose_name = _('In preparation')
-        verbose_name_plural = _('In preparation')
+        verbose_name = _('Offer in preparation')
+        verbose_name_plural = _('Offers in preparation')
 
 
 class PermanenceDone(Permanence):
     class Meta:
         proxy = True
-        verbose_name = _('In billing')
-        verbose_name_plural = _('In billing')
+        verbose_name = _('Billing offer')
+        verbose_name_plural = _('Billing offers')
 

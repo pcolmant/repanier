@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-08 08:53+0200\n"
-"PO-Revision-Date: 2017-09-08 12:57+0100\n"
+"POT-Creation-Date: 2017-09-12 18:19+0200\n"
+"PO-Revision-Date: 2017-09-14 22:50+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -18,68 +18,73 @@ msgstr ""
 "X-Generator: Poedit 1.7.1\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: admin/admin_filter.py:21 admin/admin_filter.py:161 models/contract.py:40
-#: models/permanence.py:104 models/producer.py:374 xlsx/xlsx_order.py:272
-msgid "producers"
+#: admin/admin_filter.py:22 admin/admin_filter.py:179 admin/contract.py:28
+#: admin/contract.py:29 admin/permanence_in_preparation.py:349
+#: cms_toolbar.py:84 models/contract.py:47 models/permanence.py:114
+msgid "Producers"
 msgstr "Producteurs"
 
-#: admin/admin_filter.py:53 models/lut.py:143
-msgid "departments for customer"
+#: admin/admin_filter.py:54 cms_toolbar.py:94 models/contract.py:112
+#: models/contract.py:120
+msgid "Commitments"
+msgstr "Contrats de solidarité"
+
+#: admin/admin_filter.py:71
+msgid "Departments for customer"
 msgstr "Rayons"
 
-#: admin/admin_filter.py:83 models/lut.py:56
-msgid "production modes"
+#: admin/admin_filter.py:101
+msgid "Productions modes"
 msgstr "Labels"
 
-#: admin/admin_filter.py:100 models/item.py:106
-msgid "product_placement"
-msgstr "Emplacement du produit pendant la préparation"
+#: admin/admin_filter.py:118
+msgid "Products placements"
+msgstr "Emplacements"
 
-#: admin/admin_filter.py:117 models/item.py:63 models/item.py:66
-#: models/purchase.py:78 models/purchase.py:81 xlsx/xlsx_product.py:50
-msgid "vat"
+#: admin/admin_filter.py:135 templates/repanier/customer_invoice_form.html:44
+#: templates/repanier/producer_invoice_form.html:17 xlsx/xlsx_invoice.py:234
+#: xlsx/xlsx_invoice.py:250
+msgid "Vat"
 msgstr "TVA"
 
-#: admin/admin_filter.py:134 admin/bankaccount.py:147 models/bankaccount.py:23
-#: models/bankaccount.py:110 models/customer.py:351 models/invoice.py:100
-#: models/invoice.py:103 models/invoice.py:740 models/invoice.py:784
-#: models/permanenceboard.py:15 models/purchase.py:39 xlsx/xlsx_invoice.py:265
-#: xlsx/xlsx_invoice.py:373 xlsx/xlsx_order.py:414 xlsx/xlsx_purchase.py:42
-#: xlsx/xlsx_purchase.py:595
-msgid "customer"
-msgstr "Consommateur"
+#: admin/admin_filter.py:152 admin/permanence_in_preparation.py:285
+#: admin/permanence_in_preparation.py:308 cms_toolbar.py:76
+#: models/contract.py:53
+msgid "Customers"
+msgstr "Consommateurs"
 
-#: admin/admin_filter.py:184 admin/admin_filter.py:205 models/purchase.py:164
-msgid "permanence"
-msgstr "permanence"
+#: admin/admin_filter.py:202 admin/admin_filter.py:223 apps.py:19
+#: models/configuration.py:345 models/contract.py:100
+msgid "Permanences"
+msgstr "Permanences"
 
-#: admin/admin_filter.py:224 models/product.py:107
-msgid "products"
+#: admin/admin_filter.py:242 admin/producer.py:293 models/producer.py:121
+msgid "Products"
 msgstr "Produits"
 
-#: admin/admin_filter.py:228
+#: admin/admin_filter.py:246
 msgid "only invoiced"
 msgstr "Seulement facturés"
 
-#: admin/admin_filter.py:238 models/contract.py:56
-msgid "status"
+#: admin/admin_filter.py:256 models/permanence.py:101 models/permanence.py:905
+msgid "Status"
 msgstr "Statut"
 
-#: admin/admin_filter.py:243
+#: admin/admin_filter.py:261
 msgid "not invoiced"
 msgstr "Pas encore facturés"
 
-#: admin/admin_filter.py:244 models/customer.py:99 models/customer.py:131
+#: admin/admin_filter.py:262 models/customer.py:99 models/customer.py:131
 #: models/customer.py:200 models/invoice.py:82 models/producer.py:104
 #: models/producer.py:179 models/producer.py:274 models/producer.py:310
 msgid "balance"
 msgstr "Solde"
 
-#: admin/admin_filter.py:245
+#: admin/admin_filter.py:263
 msgid "loses and profits"
 msgstr "Pertes et profits"
 
-#: admin/admin_filter.py:246
+#: admin/admin_filter.py:264
 msgid "taxes"
 msgstr "Taxes dues"
 
@@ -98,7 +103,15 @@ msgstr ""
 "Ce mouvement existe déjà. S'il est nécessaire de l'encoder une seconde fois, "
 "faites le manuellement sans passer par l'importation."
 
-#: admin/bankaccount.py:155 admin/forms.py:78 models/bankaccount.py:20
+#: admin/bankaccount.py:147 models/bankaccount.py:23 models/bankaccount.py:110
+#: models/customer.py:350 models/invoice.py:100 models/invoice.py:103
+#: models/invoice.py:740 models/invoice.py:784 models/permanenceboard.py:15
+#: models/purchase.py:39 xlsx/xlsx_invoice.py:265 xlsx/xlsx_invoice.py:373
+#: xlsx/xlsx_order.py:414 xlsx/xlsx_purchase.py:42 xlsx/xlsx_purchase.py:595
+msgid "customer"
+msgstr "Consommateur"
+
+#: admin/bankaccount.py:155 admin/forms.py:80 models/bankaccount.py:20
 #: models/bankaccount.py:86 models/invoice.py:663 models/invoice.py:743
 #: models/item.py:28 models/producer.py:373 models/purchase.py:37
 #: templates/repanier/pre_order_form.html:32 xlsx/xlsx_order.py:411
@@ -182,21 +195,21 @@ msgstr "Consigne calculée"
 msgid "Calculated current stock"
 msgstr "Inventaire calculé"
 
-#: admin/box.py:234 admin/product.py:342
+#: admin/box.py:234 admin/product.py:320
 msgid "flip_flop_select_for_offer_status for offer"
 msgstr "✔ en offre  ↔ ✘ pas en offre"
 
 #: admin/box.py:238 admin/permanence_done.py:127 admin/permanence_done.py:227
 #: admin/permanence_done.py:375 admin/permanence_done.py:408
-#: admin/permanence_done.py:445 admin/permanence_in_preparation.py:263
-#: admin/permanence_in_preparation.py:325
-#: admin/permanence_in_preparation.py:357
-#: admin/permanence_in_preparation.py:489
-#: admin/permanence_in_preparation.py:563
-#: admin/permanence_in_preparation.py:757
-#: admin/permanence_in_preparation.py:786
-#: admin/permanence_in_preparation.py:816
-#: admin/permanence_in_preparation.py:842 admin/product.py:346
+#: admin/permanence_done.py:445 admin/permanence_in_preparation.py:267
+#: admin/permanence_in_preparation.py:329
+#: admin/permanence_in_preparation.py:361
+#: admin/permanence_in_preparation.py:493
+#: admin/permanence_in_preparation.py:567
+#: admin/permanence_in_preparation.py:761
+#: admin/permanence_in_preparation.py:790
+#: admin/permanence_in_preparation.py:820
+#: admin/permanence_in_preparation.py:846 admin/product.py:324
 #: xlsx/views.py:48
 msgid "Action canceled by the user."
 msgstr "Action annulée par l'utilisateur."
@@ -204,18 +217,18 @@ msgstr "Action annulée par l'utilisateur."
 #: admin/box.py:244 admin/permanence_done.py:135 admin/permanence_done.py:159
 #: admin/permanence_done.py:180 admin/permanence_done.py:233
 #: admin/permanence_done.py:384 admin/permanence_done.py:414
-#: admin/permanence_done.py:451 admin/permanence_in_preparation.py:243
-#: admin/permanence_in_preparation.py:269
-#: admin/permanence_in_preparation.py:331
-#: admin/permanence_in_preparation.py:363
-#: admin/permanence_in_preparation.py:495
-#: admin/permanence_in_preparation.py:569
-#: admin/permanence_in_preparation.py:767
-#: admin/permanence_in_preparation.py:792
-#: admin/permanence_in_preparation.py:811
-#: admin/permanence_in_preparation.py:822
-#: admin/permanence_in_preparation.py:850
-#: admin/permanence_in_preparation.py:871 admin/product.py:352
+#: admin/permanence_done.py:451 admin/permanence_in_preparation.py:247
+#: admin/permanence_in_preparation.py:273
+#: admin/permanence_in_preparation.py:335
+#: admin/permanence_in_preparation.py:367
+#: admin/permanence_in_preparation.py:499
+#: admin/permanence_in_preparation.py:573
+#: admin/permanence_in_preparation.py:771
+#: admin/permanence_in_preparation.py:796
+#: admin/permanence_in_preparation.py:815
+#: admin/permanence_in_preparation.py:826
+#: admin/permanence_in_preparation.py:854
+#: admin/permanence_in_preparation.py:873 admin/product.py:330
 #: admin/purchase.py:234 admin/purchase.py:279 task/task_order.py:235
 msgid "Action canceled by the system."
 msgstr "Action annulée par Repanier."
@@ -228,12 +241,12 @@ msgstr "Veuillez confirmer votre demande de duplication d'une composition."
 msgid "duplicate box"
 msgstr "Créer un duplicata"
 
-#: admin/box.py:286 admin/product.py:500
+#: admin/box.py:286 admin/product.py:506
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
 #: admin/box.py:287 admin/configuration.py:205 admin/customer.py:370
-#: admin/group.py:284 admin/producer.py:404 admin/product.py:501
+#: admin/group.py:284 admin/producer.py:404 admin/product.py:507
 msgid "Advanced options"
 msgstr "Paramètres avancés"
 
@@ -308,11 +321,6 @@ msgstr "✉ mails de transmission des commandes"
 #: admin/configuration.py:172
 msgid "Invoicing mails"
 msgstr "✉ mails de facturation des commandes"
-
-#: admin/contract.py:38 admin/contract.py:39
-#: admin/permanence_in_preparation.py:345 cms_toolbar.py:84
-msgid "Producers"
-msgstr "Producteurs"
 
 #: admin/customer.py:38 admin/group.py:30 admin/staff.py:22
 #: templates/repanier/who_is_who.html:60 templates/repanier/who_is_who.html:84
@@ -421,61 +429,53 @@ msgstr ""
 "Une surcharge de %(surcharge)s%% sur les factures avec livraison "
 "\"%(delivery_point)s\" est appliquée%(customer_price)s."
 
-#: admin/forms.py:12 admin/forms.py:26 models/configuration.py:145
+#: admin/forms.py:13 admin/forms.py:27 models/configuration.py:145
 msgid "offer customer mail"
 msgstr "Contenu du ✉"
 
-#: admin/forms.py:15
+#: admin/forms.py:16
 msgid "If customers must confirm orderds, cancelled order customer mail"
 msgstr ""
 "Si l'option \"seules les commandes confirmées sont prises en compte\" est "
 "activée, ✉ signalant qu'une commande a été annulée"
 
-#: admin/forms.py:28 models/configuration.py:161
+#: admin/forms.py:29 models/configuration.py:161
 msgid "offer producer mail"
 msgstr "Contenu du ✉"
 
-#: admin/forms.py:30
+#: admin/forms.py:31
 msgid "offer staff mail"
 msgstr "Contenu du ✉"
 
-#: admin/forms.py:38
-msgid "Number of permanence(s)"
-msgstr "Nombre de permanence(s)"
-
-#: admin/forms.py:39
-msgid "Number of week(s) between two permanences"
-msgstr "Nombre de semaine(s) entre deux permamences"
-
-#: admin/forms.py:48 models/configuration.py:236
+#: admin/forms.py:50 models/configuration.py:236
 msgid "invoice customer mail"
 msgstr "Contenu du ✉"
 
-#: admin/forms.py:51 models/configuration.py:255
+#: admin/forms.py:53 models/configuration.py:255
 msgid "invoice producer mail"
 msgstr "Contenu du ✉"
 
-#: admin/forms.py:60 templates/repanier/confirm_admin_invoice.html:73
+#: admin/forms.py:62 templates/repanier/confirm_admin_invoice.html:73
 msgid "payment date"
 msgstr "Date du paiement"
 
-#: admin/forms.py:71
+#: admin/forms.py:73
 msgid "File to import"
 msgstr "Fichier à importer"
 
-#: admin/forms.py:77 admin/forms.py:92 models/invoice.py:694
+#: admin/forms.py:79 admin/forms.py:94 models/invoice.py:694
 msgid "invoice reference"
 msgstr "Référence facture"
 
-#: admin/forms.py:87
+#: admin/forms.py:89
 msgid "short_profile_name"
 msgstr "Nom abrégé"
 
-#: admin/forms.py:89 models/invoice.py:687
+#: admin/forms.py:91 models/invoice.py:687
 msgid "calculated balance to be invoiced"
 msgstr "Montant réclamé par le producteur calculé par Repanier"
 
-#: admin/forms.py:91 models/invoice.py:689
+#: admin/forms.py:93 models/invoice.py:689
 msgid "balance to be invoiced"
 msgstr "Montant réclamé par le producteur"
 
@@ -508,7 +508,7 @@ msgstr ""
 msgid "quantity invoiced by the producer"
 msgstr "Quantité facturée par le producteur"
 
-#: admin/permanence_done.py:57 models/permanence.py:80
+#: admin/permanence_done.py:57 models/permanence.py:81
 msgid "offer name"
 msgstr "dénomination de l'offre"
 
@@ -610,13 +610,13 @@ msgstr "Annuler la dernière facture / annulation de livraison"
 msgid "cancel archiving"
 msgstr "Annuler l'archivage"
 
-#: admin/permanence_done.py:462 tools.py:344
+#: admin/permanence_done.py:462 tools.py:346
 #, python-format
 msgid "The amount of your order is %(amount)s."
 msgstr "Le montant de votre commande s'élève à %(amount)s."
 
-#: admin/permanence_done.py:466 admin/permanence_in_preparation.py:618
-#: tools.py:353
+#: admin/permanence_done.py:466 admin/permanence_in_preparation.py:622
+#: tools.py:355
 #, python-format
 msgid "The balance of your account as of %(date)s is %(balance)s."
 msgstr "Le solde de votre compte en date du %(date)s est de %(balance)s."
@@ -634,20 +634,20 @@ msgid "with communication"
 msgstr "avec comme communication"
 
 #: admin/permanence_done.py:476 admin/permanence_done.py:480
-#: admin/permanence_done.py:481 admin/permanence_in_preparation.py:442
-#: admin/permanence_in_preparation.py:443
+#: admin/permanence_done.py:481 admin/permanence_in_preparation.py:446
+#: admin/permanence_in_preparation.py:447
 msgid "short_basket_name"
 msgstr "Dénomination abrégée du panier"
 
 #: admin/permanence_done.py:478 admin/permanence_done.py:479
-#: admin/permanence_in_preparation.py:440
-#: admin/permanence_in_preparation.py:441
+#: admin/permanence_in_preparation.py:444
+#: admin/permanence_in_preparation.py:445
 msgid "long_basket_name"
 msgstr "Dénomination étendue du panier"
 
 #: admin/permanence_done.py:501 admin/permanence_done.py:502
-#: admin/permanence_in_preparation.py:386
-#: admin/permanence_in_preparation.py:387
+#: admin/permanence_in_preparation.py:390
+#: admin/permanence_in_preparation.py:391
 msgid "long_profile_name"
 msgstr "Nom étendu"
 
@@ -659,74 +659,69 @@ msgstr "Veuillez confirmer votre demande de transmettre les factures."
 msgid "send invoices"
 msgstr "5 --- Envoyer les factures"
 
-#: admin/permanence_in_preparation.py:108
+#: admin/permanence_in_preparation.py:110
 msgid "Offer name"
 msgstr "Dénomination de l'offre"
 
-#: admin/permanence_in_preparation.py:251
+#: admin/permanence_in_preparation.py:255
 msgid "Preview report"
 msgstr "Prévisualisation"
 
-#: admin/permanence_in_preparation.py:259
+#: admin/permanence_in_preparation.py:263
 msgid "Export planned xlsx"
 msgstr "1 --- Vérifier l'écran de commande avant l'ouverture"
 
-#: admin/permanence_in_preparation.py:281
-#: admin/permanence_in_preparation.py:304 cms_toolbar.py:76
-msgid "Customers"
-msgstr "Consommateurs"
-
-#: admin/permanence_in_preparation.py:290
+#: admin/permanence_in_preparation.py:294
 msgid "You must select at least one delivery to export."
 msgstr "Vous n'avez pas sélectionné de point de livraison."
 
-#: admin/permanence_in_preparation.py:312
+#: admin/permanence_in_preparation.py:316
 msgid "Please, confirm the action : export customers orders"
 msgstr ""
 "Veuillez renseigner les point de livraisons des commandes consommateurs à "
 "exporter."
 
-#: admin/permanence_in_preparation.py:321
+#: admin/permanence_in_preparation.py:325
 msgid "Export xlsx customers orders"
 msgstr "Exporter les commandes consommateurs"
 
-#: admin/permanence_in_preparation.py:353
+#: admin/permanence_in_preparation.py:357
 msgid "Export xlsx producers orders"
 msgstr "Exporter les commandes producteurs"
 
-#: admin/permanence_in_preparation.py:388
-#: admin/permanence_in_preparation.py:390 email/email_offer.py:53
+#: admin/permanence_in_preparation.py:392
+#: admin/permanence_in_preparation.py:394 email/email_offer.py:53
 #: email/email_offer.py:59
 msgid "offer"
 msgstr "liste de produits en offre et leurs prix"
 
-#: admin/permanence_in_preparation.py:475
+#: admin/permanence_in_preparation.py:479
 msgid "Please, confirm the action : open and send offers"
 msgstr "Veuillez confirmer votre demande d'ouverture des commandes."
 
-#: admin/permanence_in_preparation.py:485
+#: admin/permanence_in_preparation.py:489
 msgid "open and send offers"
 msgstr "2 --- Ouvrir les commandes"
 
-#: admin/permanence_in_preparation.py:506
-#: admin/permanence_in_preparation.py:580
+#: admin/permanence_in_preparation.py:510
+#: admin/permanence_in_preparation.py:584
 msgid "You must select at least one delivery point."
 msgstr "Vous deviez sélectionner au moins un point de livraison."
 
-#: admin/permanence_in_preparation.py:517
-#: admin/permanence_in_preparation.py:589
+#: admin/permanence_in_preparation.py:521
+#: admin/permanence_in_preparation.py:593
 msgid "You must select at least one producer."
 msgstr "Vous deviez sélectionner au moins un producteur."
 
-#: admin/permanence_in_preparation.py:548
+#: admin/permanence_in_preparation.py:552
 msgid "Please, confirm the action : close orders"
 msgstr "Veuillez confirmer votre demande de clôture des commandes."
 
-#: admin/permanence_in_preparation.py:559
+#: admin/permanence_in_preparation.py:563
 msgid "close orders"
 msgstr "3 --- Clôturer les commandes"
 
-#: admin/permanence_in_preparation.py:624 models/customer.py:224
+#: admin/permanence_in_preparation.py:628 models/customer.py:224
 #: models/producer.py:351
 #, python-format
 msgid ""
@@ -737,15 +732,15 @@ msgstr ""
 "facture pour un montant de %(bank)s, ni compte des commandes qui ne sont pas "
 "encore facturées pour un montant de %(other_order)s."
 
-#: admin/permanence_in_preparation.py:634
-#: admin/permanence_in_preparation.py:636
-#: admin/permanence_in_preparation.py:651
-#: admin/permanence_in_preparation.py:652 models/customer.py:38
+#: admin/permanence_in_preparation.py:638
+#: admin/permanence_in_preparation.py:640
+#: admin/permanence_in_preparation.py:655
+#: admin/permanence_in_preparation.py:656 models/customer.py:38
 #: models/lut.py:76 models/producer.py:34
 msgid "Short name"
 msgstr "Nom abrégé"
 
-#: admin/permanence_in_preparation.py:639 tools.py:388
+#: admin/permanence_in_preparation.py:643 tools.py:390
 #, python-format
 msgid ""
 "Please pay %(payment)s to the bank account %(name)s %(number)s with "
@@ -754,48 +749,49 @@ msgstr ""
 "Veuillez verser %(payment)s sur le compte bancaire %(name)s %(number)s avec "
 "comme communication \"%(communication)s\"."
 
-#: admin/permanence_in_preparation.py:649
-#: admin/permanence_in_preparation.py:650
-#: admin/permanence_in_preparation.py:668
-#: admin/permanence_in_preparation.py:669 models/customer.py:41
-#: models/item.py:432 models/item.py:444 models/producer.py:37
+#: admin/permanence_in_preparation.py:653
+#: admin/permanence_in_preparation.py:654
+#: admin/permanence_in_preparation.py:672
+#: admin/permanence_in_preparation.py:673 models/contract.py:29
+#: models/customer.py:41 models/item.py:432 models/item.py:444
+#: models/producer.py:37
 msgid "Long name"
 msgstr "Nom étendu"
 
-#: admin/permanence_in_preparation.py:658 admin/purchase.py:97
+#: admin/permanence_in_preparation.py:662 admin/purchase.py:97
 #: models/customer.py:107 models/deliveryboard.py:25 models/lut.py:111
 #: models/purchase.py:172 xlsx/xlsx_order.py:40
 msgid "delivery point"
 msgstr "Point de livraison"
 
-#: admin/permanence_in_preparation.py:735
+#: admin/permanence_in_preparation.py:739
 msgid "Please, confirm the action : send orders"
 msgstr "Veuillez confirmer votre demande de transmettre les commandes."
 
-#: admin/permanence_in_preparation.py:753
-#: admin/permanence_in_preparation.py:905
+#: admin/permanence_in_preparation.py:757
+#: admin/permanence_in_preparation.py:902
 msgid "send orders2"
 msgstr "3 --- Clôturer et transmettre les commandes"
 
-#: admin/permanence_in_preparation.py:776
+#: admin/permanence_in_preparation.py:780
 msgid "Please, confirm the action : back to planned"
 msgstr "Veuillez confirmer votre demande de re-planification de la permanence."
 
-#: admin/permanence_in_preparation.py:782
+#: admin/permanence_in_preparation.py:786
 msgid "back to planned"
-msgstr "Retour au statut \"Planifié\""
+msgstr "Modifier l'offre ouverte aux commandes"
 
-#: admin/permanence_in_preparation.py:801
+#: admin/permanence_in_preparation.py:805
 msgid "Please, confirm the action : undo back to planned"
 msgstr ""
 "Veuillez confirmer votre demande d'annulation de re-planification de la "
 "permanence."
 
-#: admin/permanence_in_preparation.py:807
+#: admin/permanence_in_preparation.py:811
 msgid "undo back to planned"
 msgstr "Annuler le retour au statut \"Planifié\""
 
-#: admin/permanence_in_preparation.py:832
+#: admin/permanence_in_preparation.py:836
 msgid ""
 "Please, confirm the action : delete purchases. Be carefull : !!! THERE IS NO "
 "WAY TO RESTORE THEM AUTOMATICALY !!!!"
@@ -803,34 +799,34 @@ msgstr ""
 "Veuillez confirmer votre demande de suppression des commandes. Prudence : ⚠ "
 "AUCUN RETOUR AUTOMATIQUE EN ARRIERE N'EST POSSIBLE ⚠"
 
-#: admin/permanence_in_preparation.py:838
+#: admin/permanence_in_preparation.py:842
 msgid "DEV - Delete purchases"
 msgstr "DEV - Delete purchases"
 
-#: admin/permanence_in_preparation.py:864
+#: admin/permanence_in_preparation.py:866
 msgid "Nothing to do."
 msgstr "Rien à faire."
 
-#: admin/permanence_in_preparation.py:866
+#: admin/permanence_in_preparation.py:868
 #, python-format
 msgid "%d permanence generated."
 msgstr "%d permanence générée."
 
-#: admin/permanence_in_preparation.py:868
+#: admin/permanence_in_preparation.py:870
 #, python-format
 msgid "%d permanences generated."
 msgstr "%d permanences générées."
 
-#: admin/permanence_in_preparation.py:883
+#: admin/permanence_in_preparation.py:880
 msgid "How many weekly permanence(s) do you want to generate from this ?"
 msgstr ""
 "Combien de permanence(s) voulez-vous générer sur le modèle de celle-ci ?"
 
-#: admin/permanence_in_preparation.py:890
+#: admin/permanence_in_preparation.py:887
 msgid "Generate permanence"
 msgstr "Créer un duplicata"
 
-#: admin/permanence_in_preparation.py:907
+#: admin/permanence_in_preparation.py:904
 msgid "send orders1"
 msgstr "4 --- Transmettre les commandes"
 
@@ -898,10 +894,6 @@ msgstr ""
 #: admin/producer.py:221
 msgid "The given short_profile_name is used by another producer."
 msgstr "Ce nom abrégé est déjà attribué à un autre producteur."
-
-#: admin/producer.py:293 models/producer.py:121
-msgid "Products"
-msgstr "Produits"
 
 #: admin/producer.py:301
 msgid ""
@@ -986,7 +978,7 @@ msgstr ""
 "Cette quantité d'alerte n'est pas accessible. %(q_max)s est le meilleur "
 "choix inférieur le plus proche."
 
-#: admin/product.py:260 admin/product.py:546 admin/purchase.py:105
+#: admin/product.py:260 admin/product.py:552 admin/purchase.py:105
 msgid "Please select first a producer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un producteur via les filtres dans l'écran "
@@ -997,23 +989,23 @@ msgstr ""
 msgid "The reference is already used by %(product)s"
 msgstr "La référence est déjà attribuée à %(product)s"
 
-#: admin/product.py:365
+#: admin/product.py:343
 msgid "You must select one and only one producer."
 msgstr ""
 "Action annulée par Repanier. Vous ne pouvez sélectionner qu'un seul "
 "producteur."
 
-#: admin/product.py:372
+#: admin/product.py:350
 msgid "Please, confirm the action : duplicate product"
 msgstr ""
 "Veuillez confirmer votre demande de duplication d'un produit et renseigner "
 "le producteur cible."
 
-#: admin/product.py:379
+#: admin/product.py:357
 msgid "duplicate product"
 msgstr "Créer un duplicata"
 
-#: admin/purchase.py:96 models/box.py:85 models/contract.py:110
+#: admin/purchase.py:96 models/box.py:85 models/contract.py:129
 #: models/offeritem.py:47 models/product.py:106 xlsx/xlsx_order.py:413
 #: xlsx/xlsx_purchase.py:41
 msgid "product"
@@ -1032,7 +1024,7 @@ msgstr "La quantité doit être différente de zéro."
 msgid "department_for_customer"
 msgstr "Rayon"
 
-#: admin/purchase.py:246 const.py:287 email/email_order.py:35
+#: admin/purchase.py:246 const.py:288 email/email_order.py:35
 #: models/configuration.py:356 views/btn_confirm_order_ajax.py:51
 msgid "Order"
 msgstr "Commande"
@@ -1125,14 +1117,10 @@ msgstr ""
 "Au moins un/e coordinateur/trice doit être renseigné/e au sein de l'équipe "
 "de gestion."
 
-#: apps.py:18 const.py:284 models/configuration.py:344
+#: apps.py:18 const.py:285 models/configuration.py:344
 #: xlsx/xlsx_invoice.py:210
 msgid "Permanence"
 msgstr "Permanence"
-
-#: apps.py:19 models/configuration.py:345
-msgid "Permanences"
-msgstr "Permanences"
 
 #: apps.py:20 models/configuration.py:346
 msgid "Permanence on "
@@ -1365,7 +1353,7 @@ msgstr "Hygiène"
 msgid "Deposit"
 msgstr "Consigne"
 
-#: apps.py:227 const.py:136 const.py:152 const.py:184
+#: apps.py:227 const.py:137 const.py:153 const.py:185
 msgid "Subscription"
 msgstr "Souscription."
 
@@ -1414,7 +1402,7 @@ msgstr "Equipe de gestion"
 msgid "Delivery points"
 msgstr "Points de livraisons"
 
-#: cms_toolbar.py:67 models/permanence.py:436
+#: cms_toolbar.py:67 models/permanence.py:450
 msgid "Tasks"
 msgstr "Tâches"
 
@@ -1430,21 +1418,17 @@ msgstr "Rayons"
 msgid "Groups"
 msgstr "Groupes"
 
-#: cms_toolbar.py:90 models/permanence.py:109
+#: cms_toolbar.py:90 models/permanence.py:119
 msgid "Boxes"
 msgstr "Compositions"
 
-#: cms_toolbar.py:94 models/contract.py:93 models/contract.py:101
-msgid "Commitments"
-msgstr "Engagements GASAP"
+#: cms_toolbar.py:98 models/permanence.py:973
+msgid "Offers in preparation"
+msgstr "Offres en préparation"
 
-#: cms_toolbar.py:98 models/permanence.py:962 models/permanence.py:963
-msgid "In preparation"
-msgstr "En préparation"
-
-#: cms_toolbar.py:103 models/permanence.py:969 models/permanence.py:970
-msgid "In billing"
-msgstr "En facturation"
+#: cms_toolbar.py:103 models/permanence.py:980
+msgid "Billing offers"
+msgstr "Offres en facturation"
 
 #: cms_toolbar.py:106
 msgid "Bank account transactions"
@@ -1454,227 +1438,227 @@ msgstr "Mouvements de compte"
 msgid "In archiving"
 msgstr "En archivage"
 
-#: const.py:66
+#: const.py:67
 msgid "Planned"
 msgstr "Planifié"
 
-#: const.py:67
+#: const.py:68
 msgid "Wait for pre-open"
 msgstr "En cours de pré-ouverture"
 
-#: const.py:68
+#: const.py:69
 msgid "Orders pre-opened"
 msgstr "Commandes pré-ouvertes"
 
-#: const.py:69
+#: const.py:70
 msgid "Wait for open"
 msgstr "En cours d'ouverture"
 
-#: const.py:70
+#: const.py:71
 msgid "Orders opened"
 msgstr "Commandes ouvertes"
 
-#: const.py:71
+#: const.py:72
 msgid "Wait for close"
 msgstr "En cours de clôture"
 
-#: const.py:72
+#: const.py:73
 msgid "Orders closed"
 msgstr "Commandes clôturées"
 
-#: const.py:73
+#: const.py:74
 msgid "Wait for send"
 msgstr "En cours d'envoi"
 
-#: const.py:74
+#: const.py:75
 msgid "Orders send"
 msgstr "Commandes envoyées"
 
-#: const.py:75
+#: const.py:76
 msgid "Wait for done"
 msgstr "En cours de facturation"
 
-#: const.py:76
+#: const.py:77
 msgid "Invoiced"
 msgstr "Facturé"
 
-#: const.py:77 const.py:90
+#: const.py:78 const.py:91
 msgid "Archived"
 msgstr "Archivé"
 
-#: const.py:78
+#: const.py:79
 msgid "Cancelled"
 msgstr "Annulé"
 
-#: const.py:87
+#: const.py:88
 msgid "In writing"
 msgstr "En rédaction"
 
-#: const.py:88
+#: const.py:89
 msgid "In subscription"
 msgstr "En souscription"
 
-#: const.py:89
+#: const.py:90
 msgid "In execution"
 msgstr "En exécution"
 
-#: const.py:100 const.py:107
+#: const.py:101 const.py:108
 msgid "freezer"
 msgstr "Surgélateur"
 
-#: const.py:101 const.py:108
+#: const.py:102 const.py:109
 msgid "fridge"
 msgstr "Frigo"
 
-#: const.py:102 const.py:109
+#: const.py:103 const.py:110
 msgid "loose, out of the basket"
 msgstr "En dehors du panier"
 
-#: const.py:103 const.py:110
+#: const.py:104 const.py:111
 msgid "into the basket"
 msgstr "Panier"
 
-#: const.py:126 const.py:142 const.py:160 const.py:174
+#: const.py:127 const.py:143 const.py:161 const.py:175
 msgid "bought per piece"
 msgstr "Vendu à la pièce."
 
-#: const.py:127 const.py:143 const.py:161 const.py:175
+#: const.py:128 const.py:144 const.py:162 const.py:176
 msgid "bought per piece (price /kg)"
 msgstr "Vendu à la pièce (prix affiché au kg)."
 
-#: const.py:128 const.py:144 const.py:162 const.py:176
+#: const.py:129 const.py:145 const.py:163 const.py:177
 msgid "bought per piece (price /l)"
 msgstr "Vendu à la pièce (prix affiché au ℓ)."
 
-#: const.py:129 const.py:145 const.py:163 const.py:177
+#: const.py:130 const.py:146 const.py:164 const.py:178
 msgid "bought per piece (price /pc)"
 msgstr "Vendu en pack."
 
-#: const.py:130 const.py:146 const.py:164 const.py:178
+#: const.py:131 const.py:147 const.py:165 const.py:179
 msgid "bought per kg"
 msgstr "Vendu au poids (en kg)."
 
-#: const.py:131 const.py:147 const.py:165 const.py:179
+#: const.py:132 const.py:148 const.py:166 const.py:180
 msgid "bought per piece, invoiced following the weight"
 msgstr "Vendu à la pièce, facturé selon le poids réel."
 
-#: const.py:132 const.py:148 const.py:166 const.py:180
+#: const.py:133 const.py:149 const.py:167 const.py:181
 msgid "bought per l"
 msgstr "Vendu au volume (en ℓ)."
 
-#: const.py:134 const.py:149 const.py:168 const.py:182
+#: const.py:135 const.py:150 const.py:169 const.py:183
 msgid ""
 "As a deposit, a bag : always add this product to preparation list when the "
 "customer has purchased something."
 msgstr "Consigne reprise à la permanence."
 
-#: const.py:138 const.py:155 const.py:170
+#: const.py:139 const.py:156 const.py:171
 msgid ""
 "As a transportation cost : add the minimal order quantity of this product to "
 "the basket representing the group."
 msgstr "Frais de livraison."
 
-#: const.py:188
+#: const.py:189
 msgid "Sold by piece"
 msgstr "Vendu à la pièce"
 
-#: const.py:189
+#: const.py:190
 msgid "Sold by weight"
 msgstr "Vendu au poids"
 
-#: const.py:190
+#: const.py:191
 msgid "Sold by l"
 msgstr "Vendu au ℓ"
 
-#: const.py:191
+#: const.py:192
 msgid "Sold by piece, invoiced following the weight"
 msgstr "Vendu à la pièce, facturé selon le poids réel"
 
-#: const.py:213 const.py:228 const.py:243
+#: const.py:214 const.py:229 const.py:244
 msgid "none"
 msgstr "Aucune"
 
-#: const.py:214 const.py:229 const.py:244
+#: const.py:215 const.py:230 const.py:245
 msgid "vat 2.1%"
 msgstr "2,1% de TVA"
 
-#: const.py:215 const.py:230 const.py:245
+#: const.py:216 const.py:231 const.py:246
 msgid "vat 2.5%"
 msgstr "2,5% de TVA"
 
-#: const.py:216 const.py:231 const.py:246
+#: const.py:217 const.py:232 const.py:247
 msgid "vat 3.8%"
 msgstr "3,8% de TVA"
 
-#: const.py:217 const.py:232 const.py:247
+#: const.py:218 const.py:233 const.py:248
 msgid "vat 4%"
 msgstr "4% de TVA"
 
-#: const.py:218 const.py:233 const.py:248
+#: const.py:219 const.py:234 const.py:249
 msgid "vat 5.5%"
 msgstr "5,5% de TVA"
 
-#: const.py:219 const.py:234 const.py:249
+#: const.py:220 const.py:235 const.py:250
 msgid "vat 6%"
 msgstr "6% de TVA"
 
-#: const.py:220 const.py:235 const.py:250
+#: const.py:221 const.py:236 const.py:251
 msgid "vat 8%"
 msgstr "8% de TVA"
 
-#: const.py:221 const.py:236 const.py:251
+#: const.py:222 const.py:237 const.py:252
 msgid "vat 10%"
 msgstr "10% de TVA"
 
-#: const.py:222 const.py:237 const.py:252
+#: const.py:223 const.py:238 const.py:253
 msgid "vat 12%"
 msgstr "12% de TVA"
 
-#: const.py:223 const.py:238 const.py:253
+#: const.py:224 const.py:239 const.py:254
 msgid "vat 20%"
 msgstr "20% de TVA"
 
-#: const.py:224 const.py:239 const.py:254
+#: const.py:225 const.py:240 const.py:255
 msgid "vat 21%"
 msgstr "21% de TVA"
 
-#: const.py:267
+#: const.py:268
 msgid "This is not the latest total"
 msgstr "Ceci n'est pas le dernier solde"
 
-#: const.py:272
+#: const.py:273
 msgid "This is the next latest bank total"
 msgstr "Ceci est le prochain solde. Le système est en train de le calculer."
 
-#: const.py:273
+#: const.py:274
 msgid "This is the latest bank total"
 msgstr "Ceci est le dernier solde."
 
-#: const.py:285 models/configuration.py:348
+#: const.py:286 models/configuration.py:348
 msgid "Closure"
 msgstr "Clôture"
 
-#: const.py:286 models/configuration.py:352
+#: const.py:287 models/configuration.py:352
 msgid "Delivery"
 msgstr "Livraison"
 
-#: const.py:288 models/configuration.py:360
+#: const.py:289 models/configuration.py:360
 msgid "Opening"
 msgstr "Offre"
 
-#: const.py:289 models/configuration.py:364
+#: const.py:290 models/configuration.py:364
 msgid "Distribution"
 msgstr "Distribution"
 
-#: const.py:321
+#: const.py:322
 msgid "Euro"
 msgstr "€"
 
-#: const.py:322
+#: const.py:323
 msgid "Franc"
 msgstr "Fr."
 
-#: const.py:323
+#: const.py:324
 msgid "Local"
 msgstr "✿"
 
@@ -1721,7 +1705,7 @@ msgid "customer_invoice"
 msgstr "Facture d'un consommateur"
 
 #: models/bankaccount.py:51 models/deliveryboard.py:37
-#: models/permanence.py:135 models/product.py:37 models/purchase.py:99
+#: models/permanence.py:145 models/product.py:37 models/purchase.py:99
 msgid "is_updated_on"
 msgstr "Enregistrement mis à jour le"
 
@@ -1749,20 +1733,19 @@ msgstr "Composition"
 msgid "boxes"
 msgstr "Compositions"
 
-#: models/box.py:88 models/contract.py:113
+#: models/box.py:88
 msgid "fixed content quantity"
 msgstr "Quantité à l'unité"
 
-#: models/box.py:92 models/box.py:103 models/contract.py:118
-#: models/contract.py:129
+#: models/box.py:92 models/box.py:103 models/contract.py:148
 msgid "customer content price"
 msgstr "Tarif consommateur calculé"
 
-#: models/box.py:95 models/contract.py:121
+#: models/box.py:95
 msgid "content deposit"
 msgstr "Consigne calculée"
 
-#: models/box.py:96 models/contract.py:122
+#: models/box.py:96 models/contract.py:141
 msgid "deposit to add to the original content price"
 msgstr "En supplément"
 
@@ -2046,19 +2029,11 @@ msgstr "Cotisation"
 msgid "notifications"
 msgstr "Annonces \"flash\""
 
-#: models/contract.py:25 models/offeritem.py:25 models/product.py:179
-#: models/staff.py:48 views/forms.py:179
-#: views/pre_order_create_product_ajax.py:40
-#: views/pre_order_create_product_ajax.py:98 xlsx/xlsx_product.py:49
-msgid "long_name"
-msgstr "Nom étendu"
-
-#: models/contract.py:27 models/permanence.py:81 models/product.py:180
-#: views/forms.py:219
-msgid "offer_description"
+#: models/contract.py:33
+msgid "Offer description"
 msgstr "Message accompagnant l'offre"
 
-#: models/contract.py:30 models/permanence.py:84
+#: models/contract.py:36 models/permanence.py:88
 msgid ""
 "This message is send by mail to all customers when opening the order or on "
 "top "
@@ -2067,55 +2042,65 @@ msgstr ""
 "groupe autorisé à passer commande. Il est aussi affiché en haut de l'écran "
 "des commandes."
 
-#: models/contract.py:34
-msgid "first permanence date"
+#: models/contract.py:41
+msgid "First permanence date"
 msgstr "Date de la première permanence"
 
-#: models/contract.py:45 models/customer.py:352 models/invoice.py:785
-msgid "customers"
-msgstr "Consommateurs"
-
-#: models/contract.py:49 models/customer.py:51 models/item.py:37
-#: models/lut.py:43 models/permanence.py:153 models/producer.py:50
-#: views/forms.py:216 views/my_profile_view.py:46
-msgid "picture"
+#: models/contract.py:57
+msgid "Picture"
 msgstr "Photo"
 
-#: models/contract.py:61
-msgid "highest status"
-msgstr "status le plus élevé"
+#: models/contract.py:64
+msgid "status"
+msgstr "Statut"
 
-#: models/contract.py:76 models/permanence.py:173
+#: models/contract.py:69
+msgid "Highest status"
+msgstr "Status le plus élevé"
+
+#: models/contract.py:87 models/permanence.py:185
 msgid "No offer"
 msgstr "Pas d'offre"
 
-#: models/contract.py:81 models/permanence.py:287
+#: models/contract.py:92 models/permanence.py:299
 msgid "Offers from"
 msgstr "Offres de"
 
-#: models/contract.py:87
-msgid "contract status"
-msgstr "statut"
+#: models/contract.py:106
+msgid "Contract status"
+msgstr "Statut"
 
-#: models/contract.py:100
+#: models/contract.py:119
 msgid "Commitment"
-msgstr "Engagement GASAP"
+msgstr "Contrat de solidarité"
 
-#: models/contract.py:107
+#: models/contract.py:126
 msgid "contract"
 msgstr "contrat"
 
-#: models/contract.py:116
+#: models/contract.py:132
+msgid "Fixed content quantity"
+msgstr "Quantité fixe à l'unité"
+
+#: models/contract.py:135
 msgid "may order more"
 msgstr "Le consommateur peut en commander d'autres ?"
 
-#: models/contract.py:136
-msgid "Commitment content"
-msgstr "Contenu de l'engagement GASAP"
-
 #: models/contract.py:137
+msgid "Customer content price"
+msgstr "Tarif consommateur calculé"
+
+#: models/contract.py:140
+msgid "Content deposit"
+msgstr "Consigne calculée"
+
+#: models/contract.py:155
+msgid "Commitment content"
+msgstr "Contenu du contrat de solidarité"
+
+#: models/contract.py:156
 msgid "Commitments content"
-msgstr "Contenu des engagements GASAP"
+msgstr "Contenu des contrats de solidarité"
 
 #: models/customer.py:43 models/producer.py:41 models/producer.py:43
 msgid "secondary email"
@@ -2124,6 +2109,12 @@ msgstr "Adresse ✉ secondaire"
 #: models/customer.py:48 models/producer.py:48
 msgid "language"
 msgstr "Langue"
+
+#: models/customer.py:51 models/item.py:37 models/lut.py:43
+#: models/permanence.py:164 models/producer.py:50 views/forms.py:216
+#: views/my_profile_view.py:46
+msgid "picture"
+msgstr "Photo"
 
 #: models/customer.py:55 models/producer.py:54 models/staff.py:74
 msgid "phone1"
@@ -2242,31 +2233,35 @@ msgstr "Dernière cotisation"
 msgid "last membership fee date"
 msgstr "Date de la dernière cotisation"
 
-#: models/customer.py:288
+#: models/customer.py:287
 msgid "participation"
 msgstr "Participation"
 
-#: models/customer.py:300 models/purchase.py:280 models/purchase.py:420
+#: models/customer.py:299 models/purchase.py:280 models/purchase.py:420
 msgid "purchase"
 msgstr "Achat"
 
-#: models/customer.py:313
+#: models/customer.py:312
 #, python-format
 msgid ""
 "Your order is confirmed. An email containing this order summary has been "
 "sent to %s."
 msgstr "Commande confirmée : un ✉ récapitulatif de celle-ci a été envoyé à %s"
 
-#: models/customer.py:315
+#: models/customer.py:314
 #, python-format
 msgid "An email containing this order summary has been sent to %s."
 msgstr "Un ✉ récapitulatif de la commande a été envoyé à %s."
 
-#: models/customer.py:324
+#: models/customer.py:323
 msgid "Unsubscribe to emails"
 msgstr ""
 "Ne plus recevoir de mail provenant de ce site. Les éventuels mails pour "
 "réinitialiser votre mot de passe seront cependant toujours envoyés."
+
+#: models/customer.py:351 models/invoice.py:785
+msgid "customers"
+msgstr "Consommateurs"
 
 #: models/deliveryboard.py:21 models/purchase.py:97 xlsx/xlsx_invoice.py:262
 #: xlsx/xlsx_invoice.py:414 xlsx/xlsx_purchase.py:49 xlsx/xlsx_purchase.py:602
@@ -2277,21 +2272,21 @@ msgstr "Commentaire"
 msgid "delivery date"
 msgstr "Date de livraison"
 
-#: models/deliveryboard.py:35 models/permanence.py:98
+#: models/deliveryboard.py:35
 msgid "permanence_status"
 msgstr "Statut"
 
-#: models/deliveryboard.py:42 models/permanence.py:140
+#: models/deliveryboard.py:42 models/permanence.py:150
 msgid "highest permanence_status"
 msgstr "Statut le plus élevé de la permanence"
 
-#: models/deliveryboard.py:43 models/permanence.py:99 models/permanence.py:141
+#: models/deliveryboard.py:43
 msgid ""
 "status of the permanence from planned, orders opened, orders closed, send, "
 "done"
 msgstr "Statut (Planifié, Ouvert, Commandes transmises, Facturé)"
 
-#: models/deliveryboard.py:107 models/permanence.py:944
+#: models/deliveryboard.py:107 models/permanence.py:954
 msgid "orders closed"
 msgstr "Commandes clôturées"
 
@@ -2311,7 +2306,7 @@ msgstr "groupe"
 msgid "groups"
 msgstr "groupes"
 
-#: models/invoice.py:30 models/permanence.py:951
+#: models/invoice.py:30 models/permanence.py:961
 msgid "order"
 msgstr "Commande"
 
@@ -2327,13 +2322,13 @@ msgstr "Date de calcul du solde précédemment facturé"
 msgid "previous_balance"
 msgstr "Solde précédent facturé"
 
-#: models/invoice.py:49 models/invoice.py:53 models/permanence.py:114
-#: models/permanence.py:118
+#: models/invoice.py:49 models/invoice.py:53 models/permanence.py:124
+#: models/permanence.py:128
 msgid "Total amount"
 msgstr "Total avec TVA"
 
-#: models/invoice.py:50 models/offeritem.py:65 models/permanence.py:115
-#: models/permanence.py:119
+#: models/invoice.py:50 models/offeritem.py:65 models/permanence.py:125
+#: models/permanence.py:129
 msgid "Total purchase amount vat included"
 msgstr "Facturé par le producteur TVAC"
 
@@ -2345,12 +2340,12 @@ msgstr "Montant à ajouter TVA incluse"
 msgid "transport to add"
 msgstr "Transport à ajouter"
 
-#: models/invoice.py:62 models/invoice.py:66 models/permanence.py:122
-#: models/permanence.py:126 xlsx/xlsx_order.py:44 xlsx/xlsx_order.py:141
+#: models/invoice.py:62 models/invoice.py:66 models/permanence.py:132
+#: models/permanence.py:136 xlsx/xlsx_order.py:44 xlsx/xlsx_order.py:141
 msgid "Total vat"
 msgstr "Total avec TVA"
 
-#: models/invoice.py:63 models/permanence.py:123 models/permanence.py:127
+#: models/invoice.py:63 models/permanence.py:133 models/permanence.py:137
 msgid "Vat part of the total purchased"
 msgstr "TVA"
 
@@ -2373,7 +2368,7 @@ msgstr "En supplément"
 msgid "is_order_confirm_send"
 msgstr "confirmation de la commande envoyée"
 
-#: models/invoice.py:118 models/invoice.py:691 models/permanence.py:148
+#: models/invoice.py:118 models/invoice.py:691 models/permanence.py:159
 msgid "invoice sort order"
 msgstr "Ordre de tri des factures"
 
@@ -2403,7 +2398,7 @@ msgstr ""
 "cas où le groupe possède un consommateur responsable. Sinon il est ajouté au "
 "total de chaque facture individuelle."
 
-#: models/invoice.py:136 models/permanence.py:143
+#: models/invoice.py:136 models/permanence.py:154
 msgid "master permanence"
 msgstr "Permanence maître"
 
@@ -2584,6 +2579,11 @@ msgstr "Tarif producteur à l'unité"
 msgid "customer unit price"
 msgstr "Tarif consommateur à l'unité"
 
+#: models/item.py:63 models/item.py:66 models/purchase.py:78
+#: models/purchase.py:81 xlsx/xlsx_product.py:50
+msgid "vat"
+msgstr "TVA"
+
 #: models/item.py:77 templates/repanier/pre_order_form.html:41
 #: views/forms.py:210 xlsx/xlsx_purchase.py:47
 msgid "tax"
@@ -2591,7 +2591,7 @@ msgstr "Taxe"
 
 #: models/item.py:80
 msgid "Individually wrapped by the producer"
-msgstr "Emballé séparément pour chaque membre par le producteur"
+msgstr "Emballage individuel"
 
 #: models/item.py:83
 msgid "customer_minimum_order_quantity"
@@ -2627,6 +2627,10 @@ msgstr "Arrondir les commandes producteurs par multiple de"
 msgid "1,5 Kg [i.e. 1500 gr], 1 piece, 3 Kg)"
 msgstr "1,5 = 1 kg 5, ou 1,5 pièce ou 1 ℓ 5."
 
+#: models/item.py:106
+msgid "product_placement"
+msgstr "Emplacement du produit pendant la préparation"
+
 #: models/item.py:107
 msgid "used for helping to determine the order of preparation of this product"
 msgstr "Utilisé pour aider à déterminer l'ordre de préparation des paniers"
@@ -2635,15 +2639,15 @@ msgstr "Utilisé pour aider à déterminer l'ordre de préparation des paniers"
 msgid "is a box"
 msgstr "est une composition"
 
-#: models/item.py:199 models/item.py:218 tools.py:274 tools.py:287
+#: models/item.py:199 models/item.py:218 tools.py:276 tools.py:289
 msgid "/ kg"
 msgstr "/ kg"
 
-#: models/item.py:201 models/item.py:220 tools.py:276 tools.py:289
+#: models/item.py:201 models/item.py:220 tools.py:278 tools.py:291
 msgid "/ l"
 msgstr "/ ℓ"
 
-#: models/item.py:204 tools.py:279
+#: models/item.py:204 tools.py:281
 msgid "/ piece"
 msgstr "/ pièce"
 
@@ -2658,7 +2662,7 @@ msgstr "gr"
 #: models/item.py:240 models/item.py:260
 #: templates/repanier/pre_order_create_product_form.html:4
 #: templates/repanier/pre_order_form.html:68
-#: templates/repanier/pre_order_update_product_form.html:242 tools.py:317
+#: templates/repanier/pre_order_update_product_form.html:242 tools.py:319
 msgid "kg"
 msgstr "kg"
 
@@ -2666,7 +2670,7 @@ msgstr "kg"
 msgid "cl"
 msgstr "cℓ"
 
-#: models/item.py:248 models/item.py:293 tools.py:322
+#: models/item.py:248 models/item.py:293 tools.py:324
 msgid "l"
 msgstr "ℓ"
 
@@ -2698,6 +2702,10 @@ msgstr "Description"
 msgid "production mode"
 msgstr "Label"
 
+#: models/lut.py:56
+msgid "production modes"
+msgstr "Labels"
+
 #: models/lut.py:81 models/staff.py:42
 msgid "customer_responsible"
 msgstr "Consommateur responsable"
@@ -2723,6 +2731,10 @@ msgstr "Points de livraisons"
 msgid "department for customer"
 msgstr "Rayon"
 
+#: models/lut.py:143
+msgid "departments for customer"
+msgstr "Rayons"
+
 #: models/lut.py:167
 msgid "is_counted_as_participation"
 msgstr "Cette tâche constitue une participation aux activités du groupe"
@@ -2740,6 +2752,12 @@ msgstr "Tâche"
 #: models/lut.py:177
 msgid "permanences roles"
 msgstr "Tâches"
+
+#: models/offeritem.py:25 models/product.py:179 models/staff.py:48
+#: views/forms.py:179 views/pre_order_create_product_ajax.py:40
+#: views/pre_order_create_product_ajax.py:98 xlsx/xlsx_product.py:49
+msgid "long_name"
+msgstr "Nom étendu"
 
 #: models/offeritem.py:30
 msgid "customer sort order for optimization"
@@ -2830,11 +2848,15 @@ msgstr "Produit proposé"
 msgid "offer's items"
 msgstr "Produits proposés"
 
-#: models/permanence.py:87
+#: models/permanence.py:85 models/product.py:180 views/forms.py:219
+msgid "offer_description"
+msgstr "Message accompagnant l'offre"
+
+#: models/permanence.py:92
 msgid "invoice_description"
 msgstr "Message accompagnant la facture"
 
-#: models/permanence.py:90
+#: models/permanence.py:95
 msgid ""
 "This message is send by mail to all customers having bought something when "
 "closing the permanence."
@@ -2842,60 +2864,64 @@ msgstr ""
 "Ce message est envoyé par mail avec le détail de sa facture à chaque "
 "consommateur du groupe."
 
-#: models/permanence.py:100
-msgid "date"
-msgstr "date"
+#: models/permanence.py:107 xlsx/xlsx_purchase.py:39
+msgid "Date"
+msgstr "Date"
 
-#: models/permanence.py:101
-msgid "payment_date"
+#: models/permanence.py:110
+msgid "Payment date"
 msgstr "Date du paiement"
 
-#: models/permanence.py:131
+#: models/permanence.py:141
 msgid "with_delivery_point"
 msgstr "avec point de livraison"
 
-#: models/permanence.py:133
+#: models/permanence.py:143
 msgid "automatically_closed"
 msgstr "Clôturer ET transmettre automatiquement les commandes"
 
-#: models/permanence.py:151
+#: models/permanence.py:162
 msgid ""
 "Publish the offer description on the home page when the permanence is open"
 msgstr ""
 "Lorsque les commandes sont ouvertes, publier le message accompagnant l'offre "
 "sur la page d'accueil, y compris auprès des visiteurs anonymes"
 
-#: models/permanence.py:277 models/permanence.py:377 models/permanence.py:430
+#: models/permanence.py:289 models/permanence.py:390 models/permanence.py:444
 msgid "Show"
 msgstr "Montrer"
 
-#: models/permanence.py:277 models/permanence.py:377 models/permanence.py:430
+#: models/permanence.py:289 models/permanence.py:390 models/permanence.py:444
 msgid "Hide"
 msgstr "Masquer"
 
-#: models/permanence.py:381
+#: models/permanence.py:394
 msgid "No purchase"
 msgstr "Pas d'achat"
 
-#: models/permanence.py:383
+#: models/permanence.py:396
 msgid "Purchases by"
 msgstr "Achats par"
 
-#: models/permanence.py:434
+#: models/permanence.py:448
 msgid "No task"
 msgstr "Pas de tâche"
 
-#: models/permanence.py:895
-msgid "Status"
-msgstr "Statut"
-
-#: models/permanence.py:924
+#: models/permanence.py:934
 msgid "Offers"
 msgstr "Offres"
 
-#: models/permanence.py:952
+#: models/permanence.py:962
 msgid "orders"
 msgstr "Commandes"
+
+#: models/permanence.py:972
+msgid "Offer in preparation"
+msgstr "Offre en préparation"
+
+#: models/permanence.py:979
+msgid "Billing offer"
+msgstr "Offre en facturation"
 
 #: models/permanenceboard.py:20 models/purchase.py:33
 msgid "permanence_date"
@@ -2968,6 +2994,10 @@ msgstr "dernière facture"
 msgid "wo tax"
 msgstr "HTVA"
 
+#: models/producer.py:374 xlsx/xlsx_order.py:272
+msgid "producers"
+msgstr "Producteurs"
+
 #: models/product.py:34
 msgid "is_into_offer"
 msgstr "En offre"
@@ -2975,6 +3005,10 @@ msgstr "En offre"
 #: models/product.py:94
 msgid "is into offer"
 msgstr "En offre"
+
+#: models/product.py:107
+msgid "products"
+msgstr "Produits"
 
 #: models/product.py:184
 msgid "Product translation"
@@ -3011,6 +3045,10 @@ msgstr "Total au tarif producteur"
 #: models/purchase.py:74 models/purchase.py:133
 msgid "customer row price"
 msgstr "Total tarif consommateur"
+
+#: models/purchase.py:164
+msgid "permanence"
+msgstr "permanence"
 
 #: models/purchase.py:281 models/purchase.py:421
 msgid "purchases"
@@ -3204,11 +3242,11 @@ msgstr ""
 msgid "The offers are being generated."
 msgstr "Les commandes sont en train d'être ouvertes."
 
-#: task/task_order.py:508
+#: task/task_order.py:507
 msgid "The orders are being closed."
 msgstr "Les commandes sont en train d'être clôturées."
 
-#: task/task_order.py:518
+#: task/task_order.py:517
 msgid "The orders are being send."
 msgstr "Les commandes sont en train d'être envoyées."
 
@@ -3277,15 +3315,16 @@ msgstr "Sélectionner l'entièreté des %(total_count)s %(module_name)s"
 msgid "Clear selection"
 msgstr "Annuler la sélection"
 
-#: templates/admin/base.html:108
+#: templates/admin/base.html:109
 #: templates/repanier/pre_order_create_product_form.html:239
 msgid "Add"
 msgstr "Ajouter"
 
-#: templates/admin/base.html:144
+#: templates/admin/base.html:145
 msgid "Help"
 msgstr "Aide ❓"
 
+#: templates/admin/contract_filter.html:9
 #: templates/admin/customer_filter.html:9
 #: templates/admin/department_filter.html:10
 #: templates/admin/dropdown_filter.html:3
@@ -3343,7 +3382,7 @@ msgstr ""
 #: templates/repanier/confirm_admin_duplicate_box.html:12
 #: templates/repanier/confirm_admin_duplicate_product.html:12
 #: templates/repanier/confirm_admin_export_customer_order.html:42
-#: templates/repanier/confirm_admin_generate_permanence.html:34
+#: templates/repanier/confirm_admin_generate_permanence.html:45
 #: templates/repanier/confirm_admin_open_and_send_offer.html:12
 #: templates/repanier/confirm_admin_send_invoice.html:12
 #: templates/repanier/confirm_admin_send_order.html:43
@@ -3510,7 +3549,7 @@ msgstr "Votre commande n'est plus confirmée car vous venez de la modifier."
 msgid "Do not forget to confirm it again."
 msgstr "N'oubliez pas de la confirmer à nouveau."
 
-#: templates/repanier/communication_confirm_order.html:5 tools.py:922
+#: templates/repanier/communication_confirm_order.html:5 tools.py:924
 msgid "You can increase the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
@@ -3539,7 +3578,7 @@ msgstr "permanence(s) au cours des 12 dernières semaines."
 #: templates/repanier/confirm_admin_duplicate_box.html:11
 #: templates/repanier/confirm_admin_duplicate_product.html:11
 #: templates/repanier/confirm_admin_export_customer_order.html:41
-#: templates/repanier/confirm_admin_generate_permanence.html:33
+#: templates/repanier/confirm_admin_generate_permanence.html:44
 #: templates/repanier/confirm_admin_invoice.html:57
 #: templates/repanier/confirm_admin_open_and_send_offer.html:11
 #: templates/repanier/confirm_admin_send_invoice.html:11
@@ -3569,8 +3608,8 @@ msgstr "Tous les points de livraisons"
 msgid "Select all producers."
 msgstr "Tous les producteurs"
 
-#: templates/repanier/confirm_admin_close_order.html:118 tools.py:116
-#: tools.py:120 tools.py:126
+#: templates/repanier/confirm_admin_close_order.html:118 tools.py:118
+#: tools.py:122 tools.py:128
 msgid "No email will be sent."
 msgstr "Aucun ✉ ne sera envoyé."
 
@@ -3663,12 +3702,6 @@ msgstr "Achats"
 #: templates/repanier/customer_invoice_form.html:36
 msgid "Payment centralized by"
 msgstr "Paiement centralisé par"
-
-#: templates/repanier/customer_invoice_form.html:44
-#: templates/repanier/producer_invoice_form.html:17 xlsx/xlsx_invoice.py:234
-#: xlsx/xlsx_invoice.py:250
-msgid "Vat"
-msgstr "(TVA)"
 
 #: templates/repanier/customer_invoice_form.html:79
 #: templates/repanier/producer_invoice_form.html:29
@@ -4186,6 +4219,10 @@ msgstr ""
 msgid "Phone"
 msgstr "✆"
 
+#: templatetags/admin_list.py:403
+msgid "All dates"
+msgstr "Toutes les dates"
+
 #: templatetags/repanier_tags.py:44
 msgid "Welkom"
 msgstr "Bienvenue"
@@ -4220,67 +4257,67 @@ msgstr "Mon solde : <font color=\"green\">%(balance)s</font> au %(date)s"
 msgid "My balance"
 msgstr "Mon solde"
 
-#: tools.py:87
+#: tools.py:89
 msgid "Test from Repanier"
 msgstr "Test de Repanier"
 
-#: tools.py:88
+#: tools.py:90
 msgid "The mail is correctly configured on your Repanier website"
 msgstr ""
 "Les paramètres mails sont correctement configuré sur votre site Repanier."
 
-#: tools.py:113 tools.py:123
+#: tools.py:115 tools.py:125
 #, python-format
 msgid "This email will be sent to the following tester(s) : %s."
 msgstr ""
 "Les mails générés par Repanier sont uniquement envoyés aux testeurs de "
 "l'équipe de gestion qui sont : %s."
 
-#: tools.py:118
+#: tools.py:120
 msgid "This email will be sent to the staff."
 msgstr "Cet ✉ sera envoyé à tous les membres de l'équipe de gestion."
 
-#: tools.py:129
+#: tools.py:131
 msgid "This email will be sent to the preparation team and the staff."
 msgstr ""
 "Cet ✉ sera envoyé à tous les membres de l'équipe de préparation et de "
 "l'équipe de gestion."
 
-#: tools.py:131
+#: tools.py:133
 msgid ""
 "This email will be sent to customers or producers depending of the case."
 msgstr "Ce ✉ sera envoyé aux consommateurs ou aux producteurs selon le cas."
 
-#: tools.py:281
+#: tools.py:283
 msgid "/ pieces"
 msgstr "/ pièces"
 
-#: tools.py:300
+#: tools.py:302
 msgid "Piece(s) :"
 msgstr "Pièce(s) :"
 
-#: tools.py:302
+#: tools.py:304
 #, python-format
 msgid "%s or kg :"
 msgstr "%s ou kg :"
 
-#: tools.py:304
+#: tools.py:306
 msgid "L :"
 msgstr "ℓ :"
 
-#: tools.py:306
+#: tools.py:308
 msgid "Kg :"
 msgstr "kg :"
 
-#: tools.py:327
+#: tools.py:329
 msgid "piece"
 msgstr "pièce"
 
-#: tools.py:329
+#: tools.py:331
 msgid "pieces"
 msgstr "pièces"
 
-#: tools.py:363
+#: tools.py:365
 #, python-format
 msgid ""
 "Invoices for this delivery point are sent to %(name)s who is responsible for "
@@ -4289,19 +4326,19 @@ msgstr ""
 "Vos factures pour ce point de livraison sont envoyées à %(name)s qui se "
 "charge de centraliser les paiements."
 
-#: tools.py:398
+#: tools.py:400
 msgid "Your account balance is sufficient"
 msgstr "Le solde de votre compte est suffisant"
 
-#: tools.py:424 views/order_ajax.py:67 views/order_select_ajax.py:88
+#: tools.py:426 views/order_ajax.py:67 views/order_select_ajax.py:88
 msgid "Sold out"
 msgstr "Épuisé"
 
-#: tools.py:426 views/order_select_ajax.py:152
+#: tools.py:428 views/order_select_ajax.py:152
 msgid "Closed"
 msgstr "Clôturé"
 
-#: tools.py:918
+#: tools.py:920
 msgid ""
 "You can increase the order quantities as long as the orders are open for "
 "your delivery point."
@@ -4309,7 +4346,7 @@ msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
 "longtemps que les commandes sont ouvertes pour votre point de livraison."
 
-#: tools.py:927
+#: tools.py:929
 msgid ""
 "You can change the order quantities as long as the orders are open for your "
 "delivery point."
@@ -4317,17 +4354,17 @@ msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes pour votre point de livraison."
 
-#: tools.py:931
+#: tools.py:933
 msgid "You can change the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes."
 
-#: tools.py:936
+#: tools.py:938
 msgid "The orders are closed for your delivery point."
 msgstr "Les commandes sont clôturées pour votre point de livraison."
 
-#: tools.py:940 views/order_init_ajax.py:79
+#: tools.py:942 views/order_init_ajax.py:79
 msgid "The orders are closed."
 msgstr "Les commandes sont clôturées."
 
@@ -4751,10 +4788,6 @@ msgstr "Non"
 msgid "Format"
 msgstr "Format"
 
-#: xlsx/xlsx_purchase.py:39
-msgid "Date"
-msgstr "Date"
-
 #: xlsx/xlsx_purchase.py:48 xlsx/xlsx_purchase.py:646
 msgid "rule of 3"
 msgstr "Règle de 3"
@@ -4844,6 +4877,24 @@ msgstr "Contrôle du stock"
 #, python-format
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
+
+#~ msgid "Number of permanence(s)"
+#~ msgstr "Nombre de permanence(s)"
+
+#~ msgid "Number of week(s) between two permanences"
+#~ msgstr "Nombre de semaine(s) entre deux permamences"
+
+#~ msgid "In preparation"
+#~ msgstr "En préparation"
+
+#~ msgid "In billing"
+#~ msgstr "En facturation"
+
+#~ msgid "date"
+#~ msgstr "date"
+
+#~ msgid "payment_date"
+#~ msgstr "Date du paiement"
 
 #~ msgid "Assemblies"
 #~ msgstr "Compositions"
@@ -5140,9 +5191,6 @@ msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 
 #~ msgid "permanences"
 #~ msgstr "permanences"
-
-#~ msgid "Xs in preparation"
-#~ msgstr "en préparation"
 
 #~ msgid "X done"
 #~ msgstr "en facturation"

@@ -8,7 +8,6 @@
 <script type="text/javascript" src="{% static "easy_select2/vendor/select2/js/select2.min.js" %}"></script>
 <h3>{% blocktrans with title as filter_title %} By {{ filter_title }} {% endblocktrans %}</h3>
 <ul class="admin-filter-{{ title|cut:' ' }}">
-{% if choices|slice:"1:" %}
     <li>
     <select style="width: 95%;" id="id_filter_vat_level"
         onchange="go_from_select(this.options[this.selectedIndex].value)">
@@ -22,16 +21,4 @@
                    id="id_filter_vat_level"
                    ></div>
     </li>
-{% else %}
-
-    {% for choice in choices %}
-            <li{% if choice.selected %} class="selected"{% endif %}>
-            <a href="{{ choice.query_string|iriencode }}">{{ choice.display }}</a></li>
-    {% endfor %}
-
-{% endif %}
 </ul>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>

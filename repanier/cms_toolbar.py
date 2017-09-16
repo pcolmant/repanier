@@ -95,12 +95,12 @@ class RepanierToolbar(CMSToolbar):
             if is_in_order_group:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')
-                admin_menu.add_sideframe_item(_("In preparation"), url=url, position=position)
+                admin_menu.add_sideframe_item(_("Offers in preparation"), url=url, position=position)
             if is_in_invoice_group:
                 if REPANIER_SETTINGS_INVOICE:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')
-                    admin_menu.add_sideframe_item(_("In billing"), url=url, position=position)
+                    admin_menu.add_sideframe_item(_("Billing offers"), url=url, position=position)
                     position += 1
                     url = reverse('admin:repanier_bankaccount_changelist')
                     admin_menu.add_sideframe_item(_('Bank account transactions'), url=url, position=position)

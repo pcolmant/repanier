@@ -21,8 +21,9 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.admin.admin_filter import ProductFilterByDepartmentForThisProducer, ProductFilterByProducer, \
-    ProductFilterByProductioMode, ProductFilterByPlacement, ProductFilterByVatLevel
+    ProductFilterByProductioMode, ProductFilterByPlacement, ProductFilterByVatLevel, ProductFilterByContract
 from repanier.const import *
+from repanier.models import Contract
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -282,8 +283,8 @@ class ProductDataForm(TranslatableModelForm):
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     form = ProductDataForm
     resource_class = ProductResource
-    list_display = ('get_long_name',)
-    list_display_links = ('get_long_name',)
+    list_display = ('__str__',)
+    list_display_links = ('__str__',)
     readonly_fields = ('is_updated_on',)
     list_select_related = ('producer', 'department_for_customer')
     list_per_page = 16
@@ -292,32 +293,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     ordering = ('producer',
                 'translations__long_name',)
     search_fields = ('translations__long_name',)
-    if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-        list_filter = (
-            ProductFilterByProducer,
-            ProductFilterByDepartmentForThisProducer,
-            'is_into_offer',
-            'is_active',
-            'wrapped',
-            ProductFilterByPlacement,
-            ProductFilterByVatLevel
-        )
-    else:
-        list_filter = (
-            ProductFilterByProducer,
-            ProductFilterByDepartmentForThisProducer,
-            'is_into_offer',
-            'is_active',
-            'wrapped',
-            ProductFilterByProductioMode,
-            ProductFilterByPlacement,
-            'limit_order_quantity_to_stock',
-            ProductFilterByVatLevel
-        )
     actions = [
-        'flip_flop_select_for_offer_status',
+        # 'flip_flop_select_for_offer_status',
         'duplicate_product'
     ]
+    _contract = None
 
     def has_delete_permission(self, request, obj=None):
         if request.user.groups.filter(
@@ -335,11 +315,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def has_change_permission(self, request, obj=None):
         return self.has_add_permission(request)
 
-    def flip_flop_select_for_offer_status(self, request, queryset):
-        task_product.flip_flop_is_into_offer(queryset)
+    # def flip_flop_select_for_offer_status(self, request, queryset):
+    #     task_product.flip_flop_is_into_offer(queryset)
 
-    flip_flop_select_for_offer_status.short_description = _(
-        'flip_flop_select_for_offer_status for offer')
+    # flip_flop_select_for_offer_status.short_description = _(
+    #     'flip_flop_select_for_offer_status for offer')
 
     def duplicate_product(self, request, queryset):
         if 'cancel' in request.POST:
@@ -386,7 +366,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         else:
             producer = None
 
-        list_display = ['producer', 'department_for_customer', 'get_is_into_offer', 'get_long_name',]
+        list_display = ['get_is_into_offer', '__str__',]
         list_editable = ['producer_unit_price',]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ['language_column',]
@@ -402,6 +382,27 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 list_editable += ['stock', ]
         self.list_editable = list_editable
         return list_display
+
+    def get_list_filter(self, request):
+        if settings.DJANGO_SETTINGS_IS_AMAP:
+            list_filter = [ProductFilterByContract, ]
+        else:
+            list_filter = []
+        list_filter += [
+            ProductFilterByProducer,
+            ProductFilterByDepartmentForThisProducer,
+            'is_into_offer',
+            'is_active',
+            'wrapped',
+            ProductFilterByPlacement,
+            ProductFilterByVatLevel
+        ]
+        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            list_filter += [
+                ProductFilterByProductioMode,
+                'limit_order_quantity_to_stock',
+            ]
+        return list_filter
 
     def get_form(self, request, product=None, **kwargs):
         department_for_customer_id = None
@@ -571,6 +572,22 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 'translations__short_name')
         return form
 
+    def changelist_view(self, request, extra_context=None):
+        # Important : Needed to pass contract to product.get_is_into_offer() in the list_display of 'get_is_into_offer'
+        if settings.DJANGO_SETTINGS_IS_AMAP:
+            contract_id = sint(request.GET.get('commitment', 0))
+            contract = Contract.objects.filter(id=contract_id).order_by('?').first()
+        else:
+            contract = None
+        self._contract = contract
+        return super(ProductAdmin, self).changelist_view(request, extra_context=extra_context)
+
+    def get_is_into_offer(self, product):
+        return product.get_is_into_offer(self._contract)
+
+    get_is_into_offer.short_description = (_("is into offer"))
+    get_is_into_offer.allow_tags = True
+
     def save_model(self, request, product, form, change):
         super(ProductAdmin, self).save_model(
             request, product, form, change)
@@ -580,7 +597,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         queryset = super(ProductAdmin, self).get_queryset(request)
         return queryset.filter(
             is_box=False,
-            # is_membership_fee=False,
             producer__is_active=True,
             translations__language_code=translation.get_language()
         ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)

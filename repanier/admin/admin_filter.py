@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
+from repanier.models.contract import Contract
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
@@ -18,7 +19,7 @@ from repanier.tools import sint
 class ProductFilterByProducer(SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar.
-    title = _("producers")
+    title = _("Producers")
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'producer'
     template = 'admin/producer_filter.html'
@@ -49,8 +50,42 @@ class ProductFilterByProducer(SimpleListFilter):
             return queryset
 
 
+class ContractFilterByProducer(SimpleListFilter):
+    title = _("Producers")
+    parameter_name = 'producer'
+    template = 'admin/producer_filter.html'
+
+    def lookups(self, request, model_admin):
+        return [(c.id, c.short_profile_name) for c in
+                Producer.objects.filter(is_active=True)
+                ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(producers=self.value())
+        else:
+            return queryset
+
+
+class ProductFilterByContract(SimpleListFilter):
+    title = _("Commitments")
+    parameter_name = 'commitment'
+    template = 'admin/contract_filter.html'
+
+    def lookups(self, request, model_admin):
+        return [(c.id, c.long_name) for c in
+                Contract.objects.filter(status=CONTRACT_IN_WRITING)
+                ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(producer__contracts__id=self.value())
+        else:
+            return queryset
+
+
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
-    title = _("departments for customer")
+    title = _("Departments for customer")
     parameter_name = 'department_for_customer'
     template = 'admin/department_filter.html'
 
@@ -80,7 +115,7 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
 
 
 class ProductFilterByProductioMode(SimpleListFilter):
-    title = _("production modes")
+    title = _("Productions modes")
     parameter_name = 'production_mode'
     template = 'admin/production_mode_filter.html'
 
@@ -97,7 +132,7 @@ class ProductFilterByProductioMode(SimpleListFilter):
 
 
 class ProductFilterByPlacement(SimpleListFilter):
-    title = _("product_placement")
+    title = _("Products placements")
     parameter_name = 'placement'
     template = 'admin/placement_filter.html'
 
@@ -114,7 +149,7 @@ class ProductFilterByPlacement(SimpleListFilter):
 
 
 class ProductFilterByVatLevel(SimpleListFilter):
-    title = _("vat")
+    title = _("Vat")
     parameter_name = 'vat_level'
     template = 'admin/vat_level_filter.html'
 
@@ -131,7 +166,7 @@ class ProductFilterByVatLevel(SimpleListFilter):
 
 
 class PurchaseFilterByCustomer(SimpleListFilter):
-    title = _("customer")
+    title = _("Customers")
     parameter_name = 'customer'
     template = 'admin/customer_filter.html'
 
@@ -158,7 +193,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
 
 
 class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
-    title = _("producers")
+    title = _("Producers")
     parameter_name = 'producer'
     template = 'admin/producer_filter.html'
 
@@ -181,7 +216,7 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
 
 
 class PurchaseFilterByPermanence(SimpleListFilter):
-    title = _("permanence")
+    title = _("Permanences")
     parameter_name = 'permanence'
 
     def lookups(self, request, model_admin):
@@ -202,7 +237,7 @@ class PurchaseFilterByPermanence(SimpleListFilter):
 
 
 class OfferItemSendFilterByPermanence(SimpleListFilter):
-    title = _("permanence")
+    title = _("Permanences")
     parameter_name = 'permanence'
 
     def lookups(self, request, model_admin):
@@ -221,7 +256,7 @@ class OfferItemSendFilterByPermanence(SimpleListFilter):
 
 
 class OfferItemFilter(SimpleListFilter):
-    title = _("products")
+    title = _("Products")
     parameter_name = 'is_filled_exact'
 
     def lookups(self, request, model_admin):
@@ -235,7 +270,7 @@ class OfferItemFilter(SimpleListFilter):
 
 
 class BankAccountFilterByStatus(SimpleListFilter):
-    title = _("status")
+    title = _("Status")
     parameter_name = 'is_filled_exact'
 
     def lookups(self, request, model_admin):

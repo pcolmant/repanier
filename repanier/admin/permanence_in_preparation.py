@@ -148,7 +148,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         'export_xlsx_offer',
         'open_and_send_offer',
         'back_to_planned',
-        'undo_back_to_planned',
+        # 'undo_back_to_planned',
         'close_order',
         'export_xlsx_customer_order',
         'export_xlsx_producer_order',
@@ -785,30 +785,30 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     back_to_planned.short_description = _('back to planned')
 
-    def undo_back_to_planned(self, request, queryset):
-        if 'cancel' in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence is None or not (PERMANENCE_PLANNED == permanence.status):
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
-        if 'apply' in request.POST:
-            user_message, user_message_level = task_order.admin_undo_back_to_planned(request, permanence)
-            self.message_user(request, user_message, user_message_level)
-            return
-        return render(request, 'repanier/confirm_admin_action.html', {
-            'sub_title'           : _("Please, confirm the action : undo back to planned"),
-            'action'              : 'undo_back_to_planned',
-            'permanence'          : permanence,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-        })
-
-    undo_back_to_planned.short_description = _('undo back to planned')
+    # def undo_back_to_planned(self, request, queryset):
+    #     if 'cancel' in request.POST:
+    #         user_message = _("Action canceled by the user.")
+    #         user_message_level = messages.INFO
+    #         self.message_user(request, user_message, user_message_level)
+    #         return
+    #     permanence = queryset.first()
+    #     if permanence is None or not (PERMANENCE_PLANNED == permanence.status):
+    #         user_message = _("Action canceled by the system.")
+    #         user_message_level = messages.ERROR
+    #         self.message_user(request, user_message, user_message_level)
+    #         return
+    #     if 'apply' in request.POST:
+    #         user_message, user_message_level = task_order.admin_undo_back_to_planned(request, permanence)
+    #         self.message_user(request, user_message, user_message_level)
+    #         return
+    #     return render(request, 'repanier/confirm_admin_action.html', {
+    #         'sub_title'           : _("Please, confirm the action : undo back to planned"),
+    #         'action'              : 'undo_back_to_planned',
+    #         'permanence'          : permanence,
+    #         'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+    #     })
+    #
+    # undo_back_to_planned.short_description = _('undo back to planned')
 
     def delete_purchases(self, request, queryset):
         if not request.user.is_superuser:
@@ -859,8 +859,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             form = GeneratePermanenceForm(request.POST)
             if form.is_valid():
                 recurrences = form.cleaned_data['recurrences']
-                dates, dates_counter, display = get_recurrence_dates(permanence.permanence_date, recurrences)
-                if 1 <= dates_counter <= 55:
+                dates, display = get_recurrence_dates(permanence.permanence_date, recurrences)
+                if 1 <= len(dates) <= 55:
                     creation_counter = permanence.duplicate(dates)
                     if creation_counter == 0:
                         user_message = _("Nothing to do.")

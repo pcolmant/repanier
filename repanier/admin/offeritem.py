@@ -97,23 +97,12 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             return ('department_for_customer', 'producer', 'get_long_name',
                     'get_html_producer_qty_stock_invoiced')
 
-    def get_form(self, request, obj=None, **kwargs):
-        if obj.manage_replenishment:
-            if obj.permanence.status == PERMANENCE_CLOSED:
+    def get_form(self, request, offer_item=None, **kwargs):
+        if offer_item.manage_replenishment:
+            if offer_item.permanence.status == PERMANENCE_CLOSED:
                 fields_basic = [
                     ('permanence', 'department_for_customer', 'product'),
                     ('stock', 'producer_qty_stock_invoiced', 'add_2_stock',)
-                ]
-            else:
-                fields_basic = [
-                    ('permanence', 'department_for_customer', 'product'),
-                    ('stock', 'producer_qty_stock_invoiced',)
-                ]
-        elif obj.represent_this_buyinggroup:
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                fields_basic = [
-                    ('permanence', 'department_for_customer', 'product'),
-                    ('producer_qty_stock_invoiced',)
                 ]
             else:
                 fields_basic = [
@@ -129,7 +118,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             (None, {'fields': fields_basic}),
         )
 
-        form = super(OfferItemClosedAdmin, self).get_form(request, obj, **kwargs)
+        form = super(OfferItemClosedAdmin, self).get_form(request, offer_item, **kwargs)
         permanence_field = form.base_fields["permanence"]
         department_for_customer_field = form.base_fields["department_for_customer"]
         product_field = form.base_fields["product"]
@@ -142,11 +131,11 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         product_field.empty_label = None
 
         permanence_field.queryset = Permanence.objects \
-            .filter(id=obj.permanence_id)
+            .filter(id=offer_item.permanence_id)
         department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects \
-            .filter(id=obj.department_for_customer_id)
+            .filter(id=offer_item.department_for_customer_id)
         product_field.queryset = Product.objects \
-            .filter(id=obj.product_id)
+            .filter(id=offer_item.product_id)
         return form
 
     def has_add_permission(self, request):

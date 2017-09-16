@@ -279,7 +279,7 @@ class Customer(models.Model):
         now = timezone.now()
         return PermanenceBoard.objects.filter(
             customer_id=self.id,
-            permanence_date__gte=now - datetime.timedelta(days=365),
+            permanence_date__gte=now - datetime.timedelta(days=ONE_YEAR),
             permanence_date__lt=now,
             permanence_role__is_counted_as_participation=True
         ).order_by('?').count()
@@ -293,7 +293,7 @@ class Customer(models.Model):
         return CustomerInvoice.objects.filter(
             customer_id=self.id,
             total_price_with_tax__gt=DECIMAL_ZERO,
-            date_balance__gte=now - datetime.timedelta(365)
+            date_balance__gte=now - datetime.timedelta(ONE_YEAR)
         ).count()
 
     get_purchase.short_description = _("purchase")

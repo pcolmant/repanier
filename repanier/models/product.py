@@ -10,12 +10,14 @@ from django.db.models import F
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.fields import TranslatedField
 from parler.models import TranslatedFieldsModel
 
 from repanier.const import *
+from repanier.models.contract import ContractContent
 from repanier.models.item import Item
 from repanier.tools import clean_offer_item
 
@@ -29,7 +31,12 @@ class Product(Item):
         verbose_name=_("production mode"),
         blank=True)
     permanences = models.ManyToManyField(
-        'Permanence', through='OfferItem',
+        'Permanence',
+        through='OfferItem',
+        blank=True)
+    contracts = models.ManyToManyField(
+        'Contract',
+        through='ContractContent',
         blank=True)
     is_into_offer = models.BooleanField(_("is_into_offer"), default=True)
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='likes')
@@ -62,45 +69,110 @@ class Product(Item):
         offer_item = offer_item_qs.first()
         return offer_item
 
-    def get_is_into_offer(self):
+    def get_is_into_offer(self, contract=None):
+        return mark_safe('<div id="is_into_offer_%d">{}</div>'.format(
+            self.get_is_into_offer_html(contract)
+        ))
+
+    get_is_into_offer.short_description = (_("is into offer"))
+
+    def get_is_into_offer_html(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
+        css_class = ' class = "btn"'
+        if contract is not None or contract_content is not None:
+            css_class = EMPTY_STRING
+            if contract_content is None:
+                contract_content = ContractContent.objects.filter(
+                    product=self,
+                    contract=contract
+                ).order_by('?').first()
+            if contract_content is not None:
+                all_dates = contract_content.all_dates
+                is_into_offer = len(all_dates) > 0
+            else:
+                all_dates = []
+                is_into_offer = False
+
+            contract_icons = []
+            month_save = None
+            print(all_dates)
+            for one_date in contract.all_dates:
+                if month_save != one_date.month:
+                    month_save = one_date.month
+                    if month_save is not None:
+                        new_line = "<br/>"
+                    else:
+                        new_line = EMPTY_STRING
+                else:
+                    new_line = EMPTY_STRING
+                # Important : linked to django.utils.dateparse.parse_date format
+                one_date_str = one_date.strftime("%Y-%m-%d")
+                switch_is_into_offer = urlresolvers.reverse(
+                    'is_into_offer_content',
+                    args=(self.id, contract.id, one_date_str)
+                )
+                javascript = """
+                                    (function($) {{
+                                        var lien = '{LINK}';
+                                        $.ajax({{
+                                                url: lien,
+                                                cache: false,
+                                                async: true,
+                                                success: function (result) {{
+                                                    $('#is_into_offer_{PRODUCT_ID}').html(result)
+                                                }}
+                                            }});
+                                    }})(django.jQuery);
+                                    """.format(
+                    LINK=switch_is_into_offer,
+                    PRODUCT_ID=self.id
+                )
+                color = "green" if one_date in all_dates else "red"
+                link = '%s<a href="#" onclick="%s;return false;" style="color:%s !important;">%s</a>' % (
+                    new_line,
+                    javascript,
+                    color,
+                    one_date.strftime(settings.DJANGO_SETTINGS_DAY)
+                )
+                contract_icons.append(
+                    link
+                )
+            contract_icon = ",&nbsp;".join(contract_icons)
+        else:
+            is_into_offer = self.is_into_offer
+            contract_icon = EMPTY_STRING
         switch_is_into_offer = urlresolvers.reverse(
-            'is_into_offer', args=(self.id,)
+            'is_into_offer', args=(self.id, contract.id if contract is not None else 0)
         )
         javascript = """
-        (function($) {{
-            var lien = '{LINK}';
-            $.ajax({{
-                    url: lien,
-                    cache: false,
-                    async: true,
-                    success: function (result) {{
-                        $('#is_into_offer_{PRODUCT_ID}').html(result)
-                    }}
-                }});
-        }})(django.jQuery);
-        """.format(
+                (function($) {{
+                    var lien = '{LINK}';
+                    $.ajax({{
+                            url: lien,
+                            cache: false,
+                            async: true,
+                            success: function (result) {{
+                                $('#is_into_offer_{PRODUCT_ID}').html(result)
+                            }}
+                        }});
+                }})(django.jQuery);
+                """.format(
             LINK=switch_is_into_offer,
             PRODUCT_ID=self.id
         )
         # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
-        link = '<a id="is_into_offer_%d" href="#" onclick="%s;return false;" class="btn">%s</a>' % (
+        link = '<div id="is_into_offer_%d"><a href="#" onclick="%s;return false;"%s>%s</a>%s</div>' % (
             self.id,
             javascript,
-            _boolean_icon(self.is_into_offer)
+            css_class,
+            _boolean_icon(is_into_offer),
+            contract_icon
         )
         return link
 
-    get_is_into_offer.short_description = (_("is into offer"))
-    get_is_into_offer.allow_tags = True
 
     def __str__(self):
-        return super(Product, self).display()
-        # if self.id is not None:
-        #     return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
-        # else:
-        #     # Nedeed for django import export since django_import_export-0.4.5
-        #     return 'N/A'
+        return super(Product, self).get_long_name_with_producer()
 
     class Meta:
         verbose_name = _("product")
