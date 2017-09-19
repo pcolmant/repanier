@@ -30,42 +30,45 @@ class Purchase(models.Model):
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
         verbose_name=_("invoice_status"))
-    permanence_date = models.DateField(_("permanence_date"))
+    permanence_date = models.DateField(_("Permanence date"))
     offer_item = models.ForeignKey(
-        'OfferItem', verbose_name=_("offer_item"), on_delete=models.PROTECT)
+        'OfferItem', verbose_name=_("Offer item"), on_delete=models.PROTECT)
     producer = models.ForeignKey(
-        'Producer', verbose_name=_("producer"), on_delete=models.PROTECT)
+        'Producer', verbose_name=_("Producer"), on_delete=models.PROTECT)
     customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"), on_delete=models.PROTECT, db_index=True)
+        'Customer', verbose_name=_("Customer"), on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
         'CustomerProducerInvoice', verbose_name=_("customer_producer_invoice"),
         on_delete=models.PROTECT, db_index=True)
     producer_invoice = models.ForeignKey(
-        'ProducerInvoice', verbose_name=_("producer_invoice"),
+        'ProducerInvoice', verbose_name=_("Producer invoice"),
         on_delete=models.PROTECT, db_index=True)
     customer_invoice = models.ForeignKey(
-        'CustomerInvoice', verbose_name=_("customer_invoice"),
+        'CustomerInvoice', verbose_name=_("Customer invoice"),
         on_delete=models.PROTECT, db_index=True)
 
-    is_box = models.BooleanField(_("is_box"), default=False)
-    is_box_content = models.BooleanField(_("is_box"), default=False)
+    is_box = models.BooleanField(_("Is box"), default=False)
+    is_box_content = models.BooleanField(_("Is box content"), default=False)
 
     quantity_ordered = models.DecimalField(
-        _("quantity ordered"),
+        _("Quantity ordered"),
+        max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+    quantity_contracted = models.DecimalField(
+        _("Quantity contracted"),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
     quantity_confirmed = models.DecimalField(
-        _("quantity confirmed"),
+        _("Quantity confirmed"),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
     # 0 if this is not a KG product -> the preparation list for this product will be produced by family
     # qty if not -> the preparation list for this product will be produced by qty then by family
     quantity_for_preparation_sort_order = models.DecimalField(
-        _("quantity for preparation order_by"),
+        _("Quantity for preparation order_by"),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
     # If Permanence.status < SEND this is the order quantity
     # During sending the orders to the producer this become the invoiced quantity
     # via tools.recalculate_order_amount(..., send_to_producer=True)
     quantity_invoiced = models.DecimalField(
-        _("quantity invoiced"),
+        _("Quantity invoiced"),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
     purchase_price = ModelMoneyField(
         _("producer row price"),
@@ -75,14 +78,14 @@ class Purchase(models.Model):
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
 
     producer_vat = ModelMoneyField(
-        _("vat"),
+        _("Vat"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     customer_vat = ModelMoneyField(
-        _("vat"),
+        _("Vat"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add to the original unit price'),
+        _("Deposit"),
+        help_text=_('Deposit to add to the original unit price'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2,
         validators=[MinValueValidator(0)])
 
@@ -91,12 +94,12 @@ class Purchase(models.Model):
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])
-    is_resale_price_fixed = models.BooleanField(_("the resale price is set by the producer"),
+    is_resale_price_fixed = models.BooleanField(_("Is the resale price set by the producer"),
                                                 default=False)
     comment = models.CharField(
-        _("comment"), max_length=100, default=EMPTY_STRING, blank=True, null=True)
+        _("Comment"), max_length=100, default=EMPTY_STRING, blank=True, null=True)
     is_updated_on = models.DateTimeField(
-        _("is_updated_on"), auto_now=True, db_index=True)
+        _("Is updated on"), auto_now=True, db_index=True)
 
     def get_customer_unit_price(self):
         offer_item = self.offer_item
@@ -106,7 +109,7 @@ class Purchase(models.Model):
             getcontext().rounding = ROUND_HALF_UP
             return (offer_item.customer_unit_price.amount * self.price_list_multiplier).quantize(TWO_DECIMALS)
 
-    get_customer_unit_price.short_description = (_("customer unit price"))
+    get_customer_unit_price.short_description = (_("Customer unit price"))
     get_customer_unit_price.allow_tags = False
 
     def get_unit_deposit(self):
@@ -130,7 +133,7 @@ class Purchase(models.Model):
         # workaround for a display problem with Money field in the admin list_display
         return self.selling_price
 
-    get_selling_price.short_description = (_("customer row price"))
+    get_selling_price.short_description = (_("Customer row price"))
     get_selling_price.allow_tags = False
 
     def get_producer_unit_price(self):
@@ -139,7 +142,7 @@ class Purchase(models.Model):
             return self.get_customer_unit_price()
         return offer_item.producer_unit_price.amount
 
-    get_producer_unit_price.short_description = (_("producer unit price"))
+    get_producer_unit_price.short_description = (_("Producer unit price"))
     get_producer_unit_price.allow_tags = False
 
     def get_html_producer_unit_price(self):
@@ -147,7 +150,7 @@ class Purchase(models.Model):
             return _("<b>%(price)s</b>") % {'price': self.get_producer_unit_price()}
         return EMPTY_STRING
 
-    get_html_producer_unit_price.short_description = (_("producer unit price"))
+    get_html_producer_unit_price.short_description = (_("Producer unit price"))
     get_html_producer_unit_price.allow_tags = True
 
     def get_html_unit_deposit(self):
@@ -155,13 +158,13 @@ class Purchase(models.Model):
             return _("<b>%(price)s</b>") % {'price': self.offer_item.deposit}
         return EMPTY_STRING
 
-    get_html_unit_deposit.short_description = (_("deposit"))
+    get_html_unit_deposit.short_description = (_("Deposit"))
     get_html_unit_deposit.allow_tags = True
 
     def get_permanence_display(self):
         return self.permanence.get_permanence_display()
 
-    get_permanence_display.short_description = (_("permanence"))
+    get_permanence_display.short_description = (_("Permanence"))
     get_permanence_display.allow_tags = False
 
     def get_delivery_display(self):
@@ -169,7 +172,7 @@ class Purchase(models.Model):
             return self.customer_invoice.delivery.get_delivery_display(admin=True)
         return EMPTY_STRING
 
-    get_delivery_display.short_description = (_("delivery point"))
+    get_delivery_display.short_description = (_("Delivery point"))
     get_delivery_display.allow_tags = False
 
     def get_quantity(self):
@@ -178,7 +181,7 @@ class Purchase(models.Model):
         else:
             return self.quantity_invoiced
 
-    get_quantity.short_description = (_("quantity invoiced"))
+    get_quantity.short_description = (_("Quantity invoiced"))
     get_quantity.allow_tags = False
 
     def get_producer_quantity(self):
@@ -417,5 +420,5 @@ class PurchaseWoReceiver(Purchase):
 
     class Meta:
         proxy = True
-        verbose_name = _("purchase")
-        verbose_name_plural = _("purchases")
+        verbose_name = _("Purchase")
+        verbose_name_plural = _("Purchases")

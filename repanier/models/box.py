@@ -52,7 +52,8 @@ class Box(Product):
     get_box_admin_display.allow_tags = False
 
     def __str__(self):
-        return super(Box, self).display()
+        # return super(Box, self).display()
+        return '%s' % self.long_name
 
     class Meta:
         proxy = True

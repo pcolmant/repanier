@@ -119,6 +119,22 @@ class Permanence(TranslatableModel):
         verbose_name=_('Boxes'),
         blank=True
     )
+    contracts = models.ManyToManyField(
+        'Contract',
+        verbose_name=_("Commitments"),
+        blank=True
+    )
+    # When master contract is defined, this permanence is used to let customer place order to the contract
+    # This master contract will be the only one contract allowed for this permanence
+    # This permanence will not be showed into "admin/permanence_in_preparation" nor "admin/ermanence_done"
+    # but will be used in "admin/contract"
+    master_contract = models.OneToOneField(
+        'Contract',
+        related_name='master_contract',
+        verbose_name=_("Master contract"),
+        on_delete=models.CASCADE,
+        null=True, blank=True, default=None)
+
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
         _("Total amount"),
@@ -138,11 +154,11 @@ class Permanence(TranslatableModel):
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
 
     with_delivery_point = models.BooleanField(
-        _("with_delivery_point"), default=False)
+        _("With delivery point"), default=False)
     automatically_closed = models.BooleanField(
-        _("automatically_closed"), default=False)
+        _("Automatically closed"), default=False)
     is_updated_on = models.DateTimeField(
-        _("is_updated_on"), auto_now=True)
+        _("Is updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
@@ -151,12 +167,12 @@ class Permanence(TranslatableModel):
     )
     master_permanence = models.ForeignKey(
         'Permanence',
-        verbose_name=_("master permanence"),
+        verbose_name=_("Master permanence"),
         related_name='child_permanence',
         blank=True, null=True, default=None,
         on_delete=models.PROTECT, db_index=True)
     invoice_sort_order = models.IntegerField(
-        _("invoice sort order"),
+        _("Invoice sort order"),
         default=None, blank=True, null=True)
     offer_description_on_home_page = models.BooleanField(
         _("Publish the offer description on the home page when the permanence is open"), default=True)
