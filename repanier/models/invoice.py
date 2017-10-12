@@ -27,7 +27,7 @@ def permanence_verbose_name():
     if DJANGO_IS_MIGRATION_RUNNING:
         return EMPTY_STRING
     # from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
-    return _('order') # lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
+    return _('Order') # lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
 
 
 @python_2_unicode_compatible
@@ -39,11 +39,11 @@ class Invoice(models.Model):
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
-        verbose_name=_("invoice_status"))
+        verbose_name=_("Status"))
     date_previous_balance = models.DateField(
-        _("date_previous_balance"), default=datetime.date.today)
+        _("Date previous balance"), default=datetime.date.today)
     previous_balance = ModelMoneyField(
-        _("previous_balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Previous balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # Calculated with Purchase
     total_price_with_tax = ModelMoneyField(
         _("Total amount"),
@@ -51,11 +51,11 @@ class Invoice(models.Model):
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_price_with_tax = ModelMoneyField(
         _("Total amount"),
-        help_text=_('purchase to add amount vat included'),
+        help_text=_('Purchase to add amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_transport = ModelMoneyField(
         _("Delivery point transport"),
-        help_text=_("transport to add"),
+        help_text=_("Transport to add"),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
     total_vat = ModelMoneyField(
@@ -64,22 +64,22 @@ class Invoice(models.Model):
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_vat = ModelMoneyField(
         _("Total vat"),
-        help_text=_('vat to add'),
+        help_text=_('Vat to add'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add to the original unit price'),
+        _("Deposit"),
+        help_text=_('Deposit to add to the original unit price'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     bank_amount_in = ModelMoneyField(
-        _("bank_amount_in"), help_text=_('payment_on_the_account'),
+        _("Bank amount in"), help_text=_('Payment on the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     bank_amount_out = ModelMoneyField(
-        _("bank_amount_out"), help_text=_('payment_from_the_account'),
+        _("Bank amount out"), help_text=_('Payment from the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today)
+        _("Date balance"), default=datetime.date.today)
     balance = ModelMoneyField(
-        _("balance"),
+        _("Balance"),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
 
     def get_delta_price_with_tax(self):
@@ -97,13 +97,13 @@ class Invoice(models.Model):
 @python_2_unicode_compatible
 class CustomerInvoice(Invoice):
     customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"),
+        'Customer', verbose_name=_("Customer"),
         on_delete=models.PROTECT)
     customer_charged = models.ForeignKey(
-        'Customer', verbose_name=_("customer"), related_name='invoices_paid', blank=True, null=True,
+        'Customer', verbose_name=_("Customer"), related_name='invoices_paid', blank=True, null=True,
         on_delete=models.PROTECT, db_index=True)
     delivery = models.ForeignKey(
-        'DeliveryBoard', verbose_name=_("delivery board"),
+        'DeliveryBoard', verbose_name=_("Delivery board"),
         null=True, blank=True, default=None,
         on_delete=models.PROTECT)
     # IMPORTANT: default = True -> for the order form, to display nothing at the begin of the order
@@ -113,9 +113,9 @@ class CustomerInvoice(Invoice):
     # - confirm the order (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and send a mail with the order to me
     # - mail send to XYZ
     # - order confirmed (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and mail send to XYZ
-    is_order_confirm_send = models.BooleanField(_("is_order_confirm_send"), choices=LUT_CONFIRM, default=False)
+    is_order_confirm_send = models.BooleanField(_("Is order confirm send"), choices=LUT_CONFIRM, default=False)
     invoice_sort_order = models.IntegerField(
-        _("invoice sort order"),
+        _("Invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
     price_list_multiplier = models.DecimalField(
         _("Delivery point price list multiplier"),
@@ -133,11 +133,11 @@ class CustomerInvoice(Invoice):
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
     master_permanence = models.ForeignKey(
-        'Permanence', verbose_name=_("master permanence"),
+        'Permanence', verbose_name=_("Master permanence"),
         related_name='child_customer_invoice',
         blank=True, null=True, default=None,
         on_delete=models.PROTECT, db_index=True)
-    is_group = models.BooleanField(_("is a group"), default=False)
+    is_group = models.BooleanField(_("Is a group"), default=False)
 
     def get_abs_delta_vat(self):
         return abs(self.delta_vat)
@@ -652,46 +652,46 @@ class CustomerInvoice(Invoice):
         return '%s, %s' % (self.customer, self.permanence)
 
     class Meta:
-        verbose_name = _("customer invoice")
-        verbose_name_plural = _("customers invoices")
+        verbose_name = _("Customer invoice")
+        verbose_name_plural = _("Customers invoices")
         unique_together = ("permanence", "customer",)
 
 
 @python_2_unicode_compatible
 class ProducerInvoice(Invoice):
     producer = models.ForeignKey(
-        'Producer', verbose_name=_("producer"),
+        'Producer', verbose_name=_("Producer"),
         # related_name='producer_invoice',
         on_delete=models.PROTECT)
 
     delta_stock_with_tax = ModelMoneyField(
         _("Total stock"),
-        help_text=_('stock taken amount vat included'),
+        help_text=_('Stock taken amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
     delta_stock_vat = ModelMoneyField(
         _("Total stock vat"),
-        help_text=_('vat to add'),
+        help_text=_('Vat to add'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add'),
+        _("Deposit"),
+        help_text=_('Deposit to add'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_stock_deposit = ModelMoneyField(
-        _("deposit"),
-        help_text=_('deposit to add'),
+        _("Deposit"),
+        help_text=_('Deposit to add'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
-    to_be_paid = models.BooleanField(_("to be paid"), choices=LUT_BANK_NOTE, default=False)
+    to_be_paid = models.BooleanField(_("To be paid"), choices=LUT_BANK_NOTE, default=False)
     calculated_invoiced_balance = ModelMoneyField(
-        _("calculated balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Calculated balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     to_be_invoiced_balance = ModelMoneyField(
-        _("balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     invoice_sort_order = models.IntegerField(
-        _("invoice sort order"),
+        _("Invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
     invoice_reference = models.CharField(
-        _("invoice reference"), max_length=100, null=True, blank=True)
+        _("Invoice reference"), max_length=100, null=True, blank=True)
 
     def get_negative_previous_balance(self):
         return - self.previous_balance
@@ -729,30 +729,30 @@ class ProducerInvoice(Invoice):
         return '%s, %s' % (self.producer, self.permanence)
 
     class Meta:
-        verbose_name = _("producer invoice")
-        verbose_name_plural = _("producers invoices")
+        verbose_name = _("Producer invoice")
+        verbose_name_plural = _("Producers invoices")
         unique_together = ("permanence", "producer",)
 
 
 @python_2_unicode_compatible
 class CustomerProducerInvoice(models.Model):
     customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"),
+        'Customer', verbose_name=_("Customer"),
         on_delete=models.PROTECT)
     producer = models.ForeignKey(
-        'Producer', verbose_name=_("producer"),
+        'Producer', verbose_name=_("Producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=permanence_verbose_name(), on_delete=models.PROTECT,
         db_index=True)
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
-        _("producer amount invoiced"),
+        _("Producer amount invoiced"),
         help_text=_('Total selling amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     # Calculated with Purchase
     total_selling_with_tax = ModelMoneyField(
-        _("customer amount invoiced"),
+        _("Customer amount invoiced"),
         help_text=_('Total selling amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
@@ -761,7 +761,7 @@ class CustomerProducerInvoice(models.Model):
             return _("<b>%(price)s</b>") % {'price': self.total_purchase_with_tax}
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = (_("producer amount invoiced"))
+    get_html_producer_price_purchased.short_description = (_("Producer amount invoiced"))
     get_html_producer_price_purchased.allow_tags = True
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
@@ -769,8 +769,8 @@ class CustomerProducerInvoice(models.Model):
         return '%s, %s' % (self.producer, self.customer)
 
     class Meta:
-        verbose_name = _("customer x producer invoice")
-        verbose_name_plural = _("customers x producers invoices")
+        verbose_name = _("Customer x producer invoice")
+        verbose_name_plural = _("Customers x producers invoices")
         unique_together = ("permanence", "customer", "producer",)
 
 
@@ -781,5 +781,5 @@ class CustomerSend(CustomerProducerInvoice):
 
     class Meta:
         proxy = True
-        verbose_name = _("customer")
-        verbose_name_plural = _("customers")
+        verbose_name = _("Customer")
+        verbose_name_plural = _("Customers")

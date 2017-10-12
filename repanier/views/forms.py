@@ -62,8 +62,6 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
         subject = loader.render_to_string(subject_template_name, context)
-        # Email subject *must not* contain newlines
-        subject = ''.join(subject.splitlines())
         html_content = loader.render_to_string('repanier/registration/password_reset_email.html', context)
 
         if settings.DJANGO_SETTINGS_DEMO:
@@ -93,7 +91,7 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         """
         active_users = User.objects.filter(
             Q(
-                username__iexact=email[:30], is_active=True, is_staff=False
+                username__iexact=email[:150], is_active=True, is_staff=False
             ) | Q(
                 email__iexact=email, is_active=True, is_staff=False
             )
@@ -176,9 +174,9 @@ class RepanierForm(Bootstrap3Form):
 
 
 class ProducerProductForm(forms.Form):
-    long_name = forms.CharField(label=_('long_name'))
+    long_name = forms.CharField(label=_('Long name'))
     order_unit = forms.ChoiceField(
-        label=_("order unit"),
+        label=_("Order unit"),
         choices=LUT_PRODUCER_PRODUCT_ORDER_UNIT,
         widget=SelectProducerOrderUnitWidget,
         required=True
@@ -188,7 +186,7 @@ class ProducerProductForm(forms.Form):
             rght=F('lft') + 1, is_active=True, translations__language_code=translation.get_language()).order_by(
             'translations__short_name'
         ),
-        label=_("production mode"),
+        label=_("Production mode"),
         widget=SelectBootstrapWidget,
         required=False
     )
@@ -198,25 +196,25 @@ class ProducerProductForm(forms.Form):
     order_average_weight = forms.DecimalField(
         max_digits=4, decimal_places=1)
     producer_unit_price = forms.DecimalField(
-        label=_("producer unit price"),
+        label=_("Producer unit price"),
         max_digits=8, decimal_places=2)
     unit_deposit = forms.DecimalField(
-        label=_("deposit to add"),
+        label=_("Deposit"),
         max_digits=8, decimal_places=2)
     stock = forms.DecimalField(
         label=_("Stock"),
         max_digits=7, decimal_places=1)
     vat_level = forms.ChoiceField(
-        label=_("tax"),
+        label=_("Tax"),
         choices=settings.LUT_VAT,
         widget=SelectBootstrapWidget,
         required=True
     )
     picture = forms.CharField(
-        label=_("picture"),
+        label=_("Picture"),
         widget=AjaxPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
         required=False)
-    offer_description = forms.CharField(label=_('offer_description'), widget=TextEditorWidget, required=False)
+    offer_description = forms.CharField(label=_('Offer description'), widget=TextEditorWidget, required=False)
 
     def __init__(self, *args, **kwargs):
         super(ProducerProductForm, self).__init__(*args, **kwargs)

@@ -37,17 +37,17 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         (_("Format"), 5),
         (_("Id"), 10),
         (_("Date"), 15),
-        (_("producer"), 15),
-        (_("product"), 60),
-        (_("customer"), 15),
-        (_("quantity invoiced"), 10),
-        (_("producer unit price"), 10),
-        (_("deposit"), 10),
-        (_("purchase price"), 10),
-        (_("tax"), 10),
-        (_("rule of 3"), 10),
-        (_("comment"), 30),
-        (_("vat level"), 10),
+        (_("Producer"), 15),
+        (_("Product"), 60),
+        (_("Customer"), 15),
+        (_("Quantity invoiced"), 10),
+        (_("Producer unit price"), 10),
+        (_("Deposit"), 10),
+        (_("Purchase price"), 10),
+        (_("Tax"), 10),
+        (_("Rule of 3"), 10),
+        (_("Comment"), 30),
+        (_("Vat level"), 10),
         (_("CustId_01"), 10),
     ]
 
@@ -76,7 +76,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         wb, ws = new_landscape_a4_sheet(
             wb,
             title1,
-            _('invoices'),
+            _('Invoices'),
             header
         )
         row_num = 1
@@ -586,24 +586,24 @@ def import_purchase_sheet(worksheet, permanence=None,
                             'row_num': row_num + 1}
                         break
                     producer_id = None
-                    if row[_('producer')] in producer_2_id_dict:
-                        producer_id = producer_2_id_dict[row[_('producer')]]
+                    if row[_('Producer')] in producer_2_id_dict:
+                        producer_id = producer_2_id_dict[row[_('Producer')]]
                     if producer_id != purchase.producer_id:
                         error = True
                         error_msg = _("Row %(row_num)d : No valid producer.") % {'row_num': row_num + 1}
                         break
-                    customer_name = "%s" % row[_('customer')]
+                    customer_name = "%s" % row[_('Customer')]
                     if customer_name in customer_2_id_dict:
                         customer_id = customer_2_id_dict[customer_name]
                         if customer_id != purchase.customer_id:
                             error = True
                             error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                             break
-                    comment = cap(row[_('comment')], 100)
+                    comment = cap(row[_('Comment')], 100)
 
                     quantity_has_been_modified = False
 
-                    producer_row_price = row[_('purchase price')]
+                    producer_row_price = row[_('Purchase price')]
                     if producer_row_price is not None:
                         producer_row_price = Decimal(producer_row_price).quantize(TWO_DECIMALS)
                         if purchase.purchase_price.amount != producer_row_price:
@@ -622,15 +622,15 @@ def import_purchase_sheet(worksheet, permanence=None,
                                 purchase.quantity_invoiced = DECIMAL_ZERO
 
                     if not quantity_has_been_modified:
-                        quantity_invoiced = DECIMAL_ZERO if row[_('quantity invoiced')] is None \
-                            else Decimal(row[_('quantity invoiced')]).quantize(FOUR_DECIMALS)
+                        quantity_invoiced = DECIMAL_ZERO if row[_('Quantity invoiced')] is None \
+                            else Decimal(row[_('Quantity invoiced')]).quantize(FOUR_DECIMALS)
                         if purchase.quantity_invoiced != quantity_invoiced:
                             purchase.quantity_invoiced = quantity_invoiced
 
                     if row_format == "A":
                         array_purchase = []
                         rule_of_3_source = DECIMAL_ZERO
-                        producer_unit_price = row[_('producer unit price')]
+                        producer_unit_price = row[_('Producer unit price')]
                         if producer_unit_price is not None and not purchase.producer.invoice_by_basket:
                             previous_producer_unit_price = purchase.get_producer_unit_price()
                             if producer_unit_price != previous_producer_unit_price:
@@ -643,7 +643,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                     array_purchase.append(purchase)
 
                 if row_format in ["C", "D"]:
-                    rule_of_3_target = row[_('rule of 3')]
+                    rule_of_3_target = row[_('Rule of 3')]
                     if rule_of_3_target is not None:
                         rule_of_3_target = Decimal(rule_of_3_target).quantize(TWO_DECIMALS)
                         # print(rule_of_3_target)

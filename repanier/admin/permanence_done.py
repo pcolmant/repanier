@@ -54,7 +54,7 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
 
 
 class PermanenceDoneForm(TranslatableModelForm):
-    short_name = forms.CharField(label=_("offer name"),
+    short_name = forms.CharField(label=_("Offer name"),
                                   widget=forms.TextInput(attrs={'style': "width:100% !important"}))
 
     class Meta:
@@ -70,12 +70,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         'invoice_description',  # 'status'
     )
     readonly_fields = ('status', 'automatically_closed')
-    exclude = ['offer_description', ]
+    # exclude = ['offer_description', ]
     list_per_page = 10
     list_max_show_all = 10
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
-    list_display = ('get_permanence_admin_display',)
+    list_display = ['get_permanence_admin_display',]
     ordering = ('status', '-permanence_date')
     actions = [
         'export_xlsx',
@@ -368,7 +368,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'action_checkbox_name'     : admin.ACTION_CHECKBOX_NAME,
         })
 
-    generate_invoices.short_description = _('generate invoices')
+    generate_invoices.short_description = _('Generate invoices')
 
     def generate_archive(self, request, permanence_qs):
         if 'cancel' in request.POST:
@@ -401,7 +401,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
-    generate_archive.short_description = _('archive')
+    generate_archive.short_description = _('Archive')
 
     def cancel_invoice_or_archive_or_cancelled(self,request, permanence_qs, action):
         if 'cancel' in request.POST:
@@ -433,12 +433,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def cancel_invoices(self, request, permanence_qs):
         return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_invoices')
 
-    cancel_invoices.short_description = _('cancel latest invoices')
+    cancel_invoices.short_description = _('Cancel latest invoices')
 
     def cancel_archive(self, request, permanence_qs):
         return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_archive')
 
-    cancel_archive.short_description = _('cancel archiving')
+    cancel_archive.short_description = _('Cancel archiving')
 
     def send_invoices(self, request, permanence_qs):
         if 'cancel' in request.POST:
@@ -473,12 +473,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             _('to the bank account number'),
             repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT,
             _('with communication'),
-            _('short_basket_name'))
+            _('Short name'))
         context = TemplateContext({
-            'name'               : _('long_basket_name'),
-            'long_basket_name'   : _('long_basket_name'),
-            'basket_name'        : _('short_basket_name'),
-            'short_basket_name'  : _('short_basket_name'),
+            'name'               : _('Long name'),
+            'long_basket_name'   : _('Long name'),
+            'basket_name'        : _('Short name'),
+            'short_basket_name'  : _('Short name'),
             'permanence_link'    : mark_safe('<a href=#">%s</a>' % permanence),
             'last_balance_link'  : mark_safe('<a href="#">%s</a>' % customer_last_balance),
             'last_balance'       : customer_last_balance,
@@ -498,8 +498,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
 
         context = TemplateContext({
-            'name'             : _('long_profile_name'),
-            'long_profile_name': _('long_profile_name'),
+            'name'             : _('Long name'),
+            'long_profile_name': _('Long name'),
             'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
             'signature'        : mark_safe(
                 '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
@@ -538,7 +538,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 'invoice_producer_email_will_be_sent_to': invoice_producer_email_will_be_sent_to
         })
 
-    send_invoices.short_description = _('send invoices')
+    send_invoices.short_description = _('Send invoices')
 
     def get_actions(self, request):
         actions = super(PermanenceDoneAdmin, self).get_actions(request)
@@ -577,9 +577,15 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def get_queryset(self, request):
         qs = super(PermanenceDoneAdmin, self).get_queryset(request)
         if repanier.apps.REPANIER_SETTINGS_INVOICE:
-            return qs.filter(status__gte=PERMANENCE_SEND)
+            return qs.filter(
+                status__gte=PERMANENCE_SEND
+                # master_contract__isnull=True
+            )
         else:
-            return qs.filter(status__gte=PERMANENCE_CLOSED)
+            return qs.filter(
+                status__gte=PERMANENCE_CLOSED
+                # master_contract__isnull=True
+            )
 
     def save_model(self, request, permanence, form, change):
         if change and ('permanence_date' in form.changed_data):

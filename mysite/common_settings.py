@@ -85,7 +85,8 @@ DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE')
 DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION')
 DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY')
 DJANGO_SETTINGS_IS_MINIMALIST = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_IS_MINIMALIST')
-DJANGO_SETTINGS_IS_AMAP = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_IS_AMAP')
+DJANGO_SETTINGS_CONTRACT = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CONTRACT')
+DJANGO_SETTINGS_BOX = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_BOX')
 DJANGO_STATIC = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STATIC')
 
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
@@ -99,10 +100,9 @@ logger.info("Allowed hosts: %s" % DJANGO_SETTINGS_ALLOWED_HOSTS)
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
-DJANGO_SETTINGS_DATE_SEPARATOR = "-"
-DJANGO_SETTINGS_DAY = "%d{}%m".format(DJANGO_SETTINGS_DATE_SEPARATOR)
-DJANGO_SETTINGS_DATE = "%d{0}%m{0}%Y".format(DJANGO_SETTINGS_DATE_SEPARATOR)
-DJANGO_SETTINGS_DATETIME = "%d{0}%m{0}%Y %H:%M".format(DJANGO_SETTINGS_DATE_SEPARATOR)
+DJANGO_SETTINGS_DAY = "%d-%m"
+DJANGO_SETTINGS_DATE = "%d-%m-%Y"
+DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
 # If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
 STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
@@ -910,65 +910,65 @@ if DJANGO_SETTINGS_COUNTRY == "ch":
     # Switzerland
     DICT_VAT_DEFAULT = VAT_325
     LUT_VAT = (
-        (VAT_100, _('none')),
-        (VAT_325, _('vat 2.5%')),
-        (VAT_350, _('vat 3.8%')),
-        (VAT_430, _('vat 8%')),
+        (VAT_100, _('None')),
+        (VAT_325, _('Vat 2.5%')),
+        (VAT_350, _('Vat 3.8%')),
+        (VAT_430, _('Vat 8%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('none'), VAT_100),
-        (_('vat 2.5%'), VAT_325),
-        (_('vat 3.8%'), VAT_350),
-        (_('vat 8%'), VAT_430),
+        (_('None'), VAT_100),
+        (_('Vat 2.5%'), VAT_325),
+        (_('Vat 3.8%'), VAT_350),
+        (_('Vat 8%'), VAT_430),
     )
 elif DJANGO_SETTINGS_COUNTRY == "fr":
     # France
     DICT_VAT_DEFAULT = VAT_375
     LUT_VAT = (
-        (VAT_100, _('none')),
-        (VAT_315, _('vat 2.1%')),
-        (VAT_375, _('vat 5.5%')),
-        (VAT_460, _('vat 10%')),
-        (VAT_590, _('vat 20%')),
+        (VAT_100, _('None')),
+        (VAT_315, _('Vat 2.1%')),
+        (VAT_375, _('Vat 5.5%')),
+        (VAT_460, _('Vat 10%')),
+        (VAT_590, _('Vat 20%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('none'), VAT_100),
-        (_('vat 2.1%'), VAT_315),
-        (_('vat 5.5%'), VAT_375),
-        (_('vat 10%'), VAT_460),
-        (_('vat 20%'), VAT_590),
+        (_('None'), VAT_100),
+        (_('Vat 2.1%'), VAT_315),
+        (_('Vat 5.5%'), VAT_375),
+        (_('Vat 10%'), VAT_460),
+        (_('Vat 20%'), VAT_590),
     )
 elif DJANGO_SETTINGS_COUNTRY == "es":
     # Espagne
     DICT_VAT_DEFAULT = VAT_460
     LUT_VAT = (
-        (VAT_100, _('none')),
-        (VAT_360, _('vat 4%')),
-        (VAT_460, _('vat 10%')),
-        (VAT_600, _('vat 21%')),
+        (VAT_100, _('None')),
+        (VAT_360, _('Vat 4%')),
+        (VAT_460, _('Vat 10%')),
+        (VAT_600, _('Vat 21%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('none'), VAT_100),
-        (_('vat 4%'), VAT_360),
-        (_('vat 10%'), VAT_460),
-        (_('vat 21%'), VAT_600),
+        (_('None'), VAT_100),
+        (_('Vat 4%'), VAT_360),
+        (_('Vat 10%'), VAT_460),
+        (_('Vat 21%'), VAT_600),
     )
 else:
     # Belgium
     DICT_VAT_DEFAULT = VAT_400
     LUT_VAT = (
-        (VAT_100, _('none')),
-        (VAT_400, _('vat 6%')),
-        (VAT_500, _('vat 12%')),
-        (VAT_600, _('vat 21%')),
+        (VAT_100, _('None')),
+        (VAT_400, _('Vat 6%')),
+        (VAT_500, _('Vat 12%')),
+        (VAT_600, _('Vat 21%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('none'), VAT_100),
-        (_('vat 6%'), VAT_400),
-        (_('vat 12%'), VAT_500),
-        (_('vat 21%'), VAT_600),
+        (_('None'), VAT_100),
+        (_('Vat 6%'), VAT_400),
+        (_('Vat 12%'), VAT_500),
+        (_('Vat 21%'), VAT_600),
     )

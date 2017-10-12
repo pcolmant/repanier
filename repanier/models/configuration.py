@@ -31,63 +31,63 @@ from repanier.models.product import Product
 
 @python_2_unicode_compatible
 class Configuration(TranslatableModel):
-    group_name = models.CharField(_("group name"), max_length=50, default=EMPTY_STRING)
-    test_mode = models.BooleanField(_("test mode"), default=False)
+    group_name = models.CharField(_("Group name"), max_length=50, default=EMPTY_STRING)
+    test_mode = models.BooleanField(_("Test mode"), default=False)
     login_attempt_counter = models.DecimalField(
         _("login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     password_reset_on = models.DateTimeField(
-        _("password_reset_on"), null=True, blank=True, default=None)
+        _("Password reset on"), null=True, blank=True, default=None)
     name = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_NAME,
         default=PERMANENCE_NAME_PERMANENCE,
-        verbose_name=_("offers name"))
+        verbose_name=_("Offers name"))
     currency = models.CharField(
         max_length=3,
         choices=LUT_CURRENCY,
         default=CURRENCY_EUR,
-        verbose_name=_("currency"))
+        verbose_name=_("Currency"))
     max_week_wo_participation = models.DecimalField(
-        _("display a pop up on the order form after this max week wo participation"),
+        _("Display a pop up on the order form after this max week wo participation"),
         help_text=_("0 mean : never display a pop up."),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0,
         validators=[MinValueValidator(0)])
-    send_opening_mail_to_customer = models.BooleanField(_("send opening mail to customers"), default=True)
-    send_abstract_order_mail_to_customer = models.BooleanField(_("send abstract order mail to customers"),
+    send_opening_mail_to_customer = models.BooleanField(_("Send opening mail to customers"), default=True)
+    send_abstract_order_mail_to_customer = models.BooleanField(_("Send abstract order mail to customers"),
                                                                default=False)
-    send_order_mail_to_customer = models.BooleanField(_("send order mail to customers"), default=True)
-    send_cancel_order_mail_to_customer = models.BooleanField(_("send cancel order mail to customers"), default=True)
-    send_abstract_order_mail_to_producer = models.BooleanField(_("send abstract order mail to producers"),
+    send_order_mail_to_customer = models.BooleanField(_("Send order mail to customers"), default=True)
+    send_cancel_order_mail_to_customer = models.BooleanField(_("Send cancel order mail to customers"), default=True)
+    send_abstract_order_mail_to_producer = models.BooleanField(_("Send abstract order mail to producers"),
                                                                default=False)
-    send_order_mail_to_producer = models.BooleanField(_("send order mail to producers"), default=True)
-    send_order_mail_to_board = models.BooleanField(_("send order mail to board"), default=True)
-    send_invoice_mail_to_customer = models.BooleanField(_("send invoice mail to customers"), default=True)
-    send_invoice_mail_to_producer = models.BooleanField(_("send invoice mail to producers"), default=False)
-    invoice = models.BooleanField(_("activate invoice"), default=True)
-    close_wo_sending = models.BooleanField(_("close wo sending"), default=False)
-    display_anonymous_order_form = models.BooleanField(_("display anonymous order form"), default=True)
-    display_producer_on_order_form = models.BooleanField(_("display producers on order form"), default=True)
-    display_who_is_who = models.BooleanField(_("display who is who"), default=True)
-    bank_account = models.CharField(_("bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
+    send_order_mail_to_producer = models.BooleanField(_("Send order mail to producers"), default=True)
+    send_order_mail_to_board = models.BooleanField(_("Send order mail to board"), default=True)
+    send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
+    send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
+    invoice = models.BooleanField(_("Activate invoice"), default=True)
+    close_wo_sending = models.BooleanField(_("Close wo sending"), default=False)
+    display_anonymous_order_form = models.BooleanField(_("Display anonymous order form"), default=True)
+    display_producer_on_order_form = models.BooleanField(_("Display producers on order form"), default=True)
+    display_who_is_who = models.BooleanField(_("Display who is who"), default=True)
+    bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
-    page_break_on_customer_check = models.BooleanField(_("page break on customer check"), default=False)
+        _("Vat id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+    page_break_on_customer_check = models.BooleanField(_("Page break on customer check"), default=False)
     sms_gateway_mail = models.EmailField(
-        _("sms gateway email"),
+        _("Sms gateway email"),
         help_text=_(
             "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
         max_length=50, null=True, blank=True, default=EMPTY_STRING)
-    customers_must_confirm_orders = models.BooleanField(_("customers must confirm orders"), default=False)
+    customers_must_confirm_orders = models.BooleanField(_("Customers must confirm orders"), default=False)
     membership_fee = ModelMoneyField(
-        _("membership fee"),
+        _("Membership fee"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     membership_fee_duration = models.DecimalField(
-        _("membership fee duration"),
-        help_text=_("number of month(s). 0 mean : no membership fee."),
+        _("Membership fee duration"),
+        help_text=_("Number of month(s). 0 mean : no membership fee."),
         default=DECIMAL_ZERO, max_digits=3, decimal_places=0,
         validators=[MinValueValidator(0)])
-    home_site = models.URLField(_("home site"), null=True, blank=True, default=EMPTY_STRING)
+    home_site = models.URLField(_("Home site"), null=True, blank=True, default=EMPTY_STRING)
     permanence_of_last_cancelled_invoice = models.ForeignKey(
         'Permanence',
         on_delete=models.PROTECT, blank=True, null=True)
@@ -101,48 +101,48 @@ class Configuration(TranslatableModel):
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
-    notification_is_public = models.BooleanField(_("the notification is public"), default=False)
+    notification_is_public = models.BooleanField(_("The notification is public"), default=False)
     email_is_custom = models.BooleanField(
         _("Email is customised"), default=False)
     email_host = models.CharField(
-        _("email host"),
+        _("Email host"),
         help_text=_("For @gmail.com, see: https://mail.google.com/mail/u/0/#settings/fwdandpop and activate POP"),
         max_length=50, null=True, blank=True, default="smtp.gmail.com")
     email_port = models.IntegerField(
-        _("email port"),
+        _("Email port"),
         help_text=_("Usually 587 for @gmail.com, otherwise 25"),
         blank=True, null=True,
         default=587)
     email_use_tls = models.BooleanField(
-        _("email use tls"),
+        _("Email use tls"),
         help_text=_("TLS is used otherwise SSL is used"),
         default=True
     )
     email_host_user = models.EmailField(
-        _("email host user"),
+        _("Email host user"),
         help_text=_("For @gmail.com : username@gmail.com"),
         max_length=50, null=True, blank=True, default="username@gmail.com")
     email_host_password = models.CharField(
-        _("email host password"),
+        _("Email host password"),
         help_text=_(
             "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
         max_length=25, null=True, blank=True, default=EMPTY_STRING)
     translations = TranslatedFields(
-        group_label=models.CharField(_("group label"),
+        group_label=models.CharField(_("Group label"),
                                     max_length=100,
                                     default=EMPTY_STRING,
                                     blank=True),
-        how_to_register=HTMLField(_("how to register"),
+        how_to_register=HTMLField(_("How to register"),
                                   help_text=EMPTY_STRING,
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
                                   default=EMPTY_STRING,
                                   blank=True),
-        notification=HTMLField(_("notification"),
+        notification=HTMLField(_("Notification"),
                                   help_text=EMPTY_STRING,
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
                                   default=EMPTY_STRING,
                                   blank=True),
-        offer_customer_mail=HTMLField(_("offer customer mail"),
+        offer_customer_mail=HTMLField(_("Offer customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -158,7 +158,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        offer_producer_mail=HTMLField(_("offer producer mail"),
+        offer_producer_mail=HTMLField(_("Offer producer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -173,7 +173,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        order_customer_mail=HTMLField(_("order customer mail"),
+        order_customer_mail=HTMLField(_("Order customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -191,7 +191,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        cancel_order_customer_mail=HTMLField(_("cancelled order customer mail"),
+        cancel_order_customer_mail=HTMLField(_("Cancelled order customer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -203,7 +203,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        order_staff_mail=HTMLField(_("order staff mail"),
+        order_staff_mail=HTMLField(_("Order staff mail"),
                                    help_text=EMPTY_STRING,
                                    configuration='CKEDITOR_SETTINGS_MODEL2',
                                    default=
@@ -220,7 +220,7 @@ class Configuration(TranslatableModel):
                                    {{ signature }}
                                    """,
                                    blank=True),
-        order_producer_mail=HTMLField(_("order producer mail"),
+        order_producer_mail=HTMLField(_("Order producer mail"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -233,7 +233,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        invoice_customer_mail=HTMLField(_("invoice customer mail"),
+        invoice_customer_mail=HTMLField(_("Invoice customer mail"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
                                         default=
@@ -252,7 +252,7 @@ class Configuration(TranslatableModel):
                                         {{ signature }}
                                         """,
                                         blank=True),
-        invoice_producer_mail=HTMLField(_("invoice producer mail"),
+        invoice_producer_mail=HTMLField(_("Invoice producer mail"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
                                         default=
@@ -300,8 +300,8 @@ class Configuration(TranslatableModel):
         return EMPTY_STRING
 
     class Meta:
-        verbose_name = _("configuration")
-        verbose_name_plural = _("configurations")
+        verbose_name = _("Configuration")
+        verbose_name_plural = _("Configurations")
 
 
 @receiver(post_init, sender=Configuration)
@@ -482,8 +482,8 @@ class Notification(Configuration):
 
     class Meta:
         proxy = True
-        verbose_name = _("notification")
-        verbose_name_plural = _("notifications")
+        verbose_name = _("Notification")
+        verbose_name_plural = _("Notifications")
 
     def __str__(self):
         return EMPTY_STRING

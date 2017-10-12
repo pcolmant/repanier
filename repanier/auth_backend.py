@@ -22,7 +22,7 @@ class RepanierCustomBackend(ModelBackend):
         self.user = None
         user_username = User.objects.filter(
             Q(
-                username__iexact=username[:30]
+                username__iexact=username[:150]
             ) | Q(
                 email__iexact=username
             )

@@ -6,6 +6,8 @@ import datetime
 import json
 
 from django.utils.datetime_safe import new_datetime, date
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 try:
     # For Python 3.0 and later
@@ -742,7 +744,6 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
             offer_item.producer_unit_price += offer_item.producer_vat
         offer_item.producer_price_are_wo_vat = False
 
-
         if reset_add_2_stock:
             offer_item.add_2_stock = DECIMAL_ZERO
 
@@ -964,46 +965,45 @@ def calc_basket_message(customer, permanence, status):
     return basket_message
 
 
-def html_box_content(offer_item, user, previous_result=EMPTY_STRING):
+def html_box_content(offer_item, user):
     from repanier.models.box import BoxContent
     from repanier.models.offeritem import OfferItemWoReceiver
 
-    if offer_item.is_box:
-        box_id = offer_item.product_id
-        box_products = list(BoxContent.objects.filter(
-            box_id=box_id
-        ).values_list(
-            'product_id', flat=True
-        ).order_by('?'))
-        if len(box_products) > 0:
-            box_offer_items_qs = OfferItemWoReceiver.objects.filter(
-                permanence_id=offer_item.permanence_id,
-                product_id__in=box_products,
-                translations__language_code=translation.get_language()
-            ).order_by(
-                "translations__order_sort_order"
-            ).select_related("producer")
-            box_products_description = []
-            for box_offer_item in box_offer_items_qs:
-                box_products_description.append(
-                    '<li>%s * %s, %s <span class="btn_like%s" style="cursor: pointer;">%s</span></li>' % (
-                        box_offer_item.get_display(
-                            qty=BoxContent.objects.filter(box_id=box_id, product_id=box_offer_item.product_id).only(
-                                "content_quantity").order_by('?').first().content_quantity,
-                            order_unit=box_offer_item.order_unit,
-                            without_price_display=True),
-                        box_offer_item.long_name,
-                        box_offer_item.producer.short_profile_name,
-                        box_offer_item.id,
-                        box_offer_item.get_like(user)
-                    )
+    box_id = offer_item.product_id
+    box_products = list(BoxContent.objects.filter(
+        box_id=box_id
+    ).values_list(
+        'product_id', flat=True
+    ).order_by('?'))
+    if len(box_products) > 0:
+        box_offer_items_qs = OfferItemWoReceiver.objects.filter(
+            permanence_id=offer_item.permanence_id,
+            product_id__in=box_products,
+            translations__language_code=translation.get_language()
+        ).order_by(
+            "translations__order_sort_order"
+        ).select_related("producer")
+        box_products_description = []
+        for box_offer_item in box_offer_items_qs:
+            box_products_description.append(
+                format_html(
+                    '<li>{} * {}, {} <span class="btn_like{}" style="cursor: pointer;">{}</span></li>',
+                    mark_safe(box_offer_item.get_display(
+                        qty=BoxContent.objects.filter(box_id=box_id, product_id=box_offer_item.product_id).only(
+                            "content_quantity").order_by('?').first().content_quantity,
+                        order_unit=box_offer_item.order_unit,
+                        without_price_display=True)),
+                    box_offer_item.long_name,
+                    box_offer_item.producer.short_profile_name,
+                    box_offer_item.id,
+                    mark_safe(box_offer_item.get_like(user))
                 )
-            return '%s%s<ul>%s</ul>' % (
-                previous_result,
-                "<hr/>" if previous_result else EMPTY_STRING,
-                "".join(box_products_description)
             )
-    return previous_result
+        return format_html(
+            '<ul>{}</ul>',
+            mark_safe(EMPTY_STRING.join(box_products_description))
+        )
+    return EMPTY_STRING
 
 
 def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form_instance):

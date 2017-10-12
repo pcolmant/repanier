@@ -37,12 +37,12 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
         preparation_order = 1
         if deliveries_id is not None:
             header = [
-                (_('delivery point'),20),
+                (_('Delivery point'),20),
                 (_('Family'), 35),
                 (_('Phone1'), 15),
                 (_('Phone2'), 15),
                 (_('Total vat'), 15),
-                (_('email'), 35),
+                (_('Email'), 35),
             ]
             wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
             # customer_set = Customer.objects.filter(
@@ -139,7 +139,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                 (_('Phone1'), 15),
                 (_('Phone2'), 15),
                 (_('Total vat'), 15),
-                (_('email'), 35),
+                (_('Email'), 35),
             ]
             wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
             customer_set = Customer.objects.filter(
@@ -269,7 +269,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
             c = ws.cell(row=row_num, column=0)
             c.value = "-------"
             c = ws.cell(row=row_num, column=1)
-            c.value = "%s" % (_('producers'))
+            c.value = "%s" % (_('Producers'))
             c.style.alignment.wrap_text = False
             c.style.font.bold = True
             c = ws.cell(row=row_num, column=2)
@@ -408,11 +408,11 @@ def export_preparation(permanence, deliveries_id=None, wb=None):
         (_("Purchase"), 10),
         (_("OfferItem"), 5),
         (_("Placement"), 7),
-        (_("producer"), 15),
+        (_("Producer"), 15),
         (EMPTY_STRING, 7), # This column isn't any more used
-        (_("product"), 60),
-        (_("customer"), 15),
-        (_("quantity ordered"), 10),
+        (_("Product"), 60),
+        (_("Customer"), 15),
+        (_("Quantity ordered"), 10),
         (_("Unit"), 10),
         (_("Prepared"), 22),
         (_("To distribute"), 10),
@@ -956,7 +956,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                 if col_num == 4:
                     if producer.producer_price_are_wo_vat:
                         c.value = "%s %s %s" % (
-                            _("Total Price"), _("wo tax"), department_for_customer_save.short_name \
+                            _("Total Price"), _("Wo tax"), department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else "---")
                     else:
                         c.value = "%s %s %s" % (

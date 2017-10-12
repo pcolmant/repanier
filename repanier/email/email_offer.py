@@ -50,13 +50,13 @@ def send_pre_open_order(permanence_id):
                 'long_profile_name': long_profile_name,
                 'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
                     settings.ALLOWED_HOSTS[0],
-                    reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("offer"))
+                    reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offer"))
                                                ),
                 'offer_description': mark_safe(offer_description),
                 'offer_link'       : mark_safe(
                     '<a href="https://%s%s">%s</a>' % (
                         settings.ALLOWED_HOSTS[0],
-                        reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("offer"))
+                        reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offer"))
                 ),
                 'signature'        : mark_safe(
                     '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)

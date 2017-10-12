@@ -6,6 +6,7 @@ from django.http import Http404
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_GET
 
@@ -23,18 +24,14 @@ def customer_product_description_ajax(request):
         permanence_ok_or_404(permanence)
         if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
             offer_item.long_name = offer_item.product.long_name
-            result = html_box_content(
-                offer_item,
-                request.user,
-                render_to_string(
-                    'repanier/cache_part_e.html',
-                     {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL}
-                )
+            result = render_to_string(
+                'repanier/cache_part_e.html',
+                 {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL}
             )
-
-            if result is None or result == EMPTY_STRING:
-                result = "%s" % _("There is no more product's information")
         else:
-            result = "%s" % _("There is no more product's information")
+            result = format_html(
+                "{}",
+                _("There is no more product's information")
+            )
         return HttpResponse(result)
     raise Http404

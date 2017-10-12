@@ -36,18 +36,18 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
     product = next_row(products)
     while product is not None:
         row = [
-            (_("reference"), 10, product.reference if len(product.reference) < 36 else EMPTY_STRING,
+            (_("Reference"), 10, product.reference if len(product.reference) < 36 else EMPTY_STRING,
              NumberFormat.FORMAT_TEXT, False),
-            (_("department_for_customer"), 15,
+            (_("Department"), 15,
              product.department_for_customer.short_name if product.department_for_customer is not None else " ",
              NumberFormat.FORMAT_TEXT, False),
             # (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else _("No"),
             #  NumberFormat.FORMAT_TEXT, False),
-            (_("wrapped"), 7, _("Yes") if product.wrapped else _("No"),
+            (_("Wrapped"), 7, _("Yes") if product.wrapped else _("No"),
              NumberFormat.FORMAT_TEXT, False),
-            (_("producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
-            (_("long_name"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
-            (_("vat"), 10, product.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False),
+            (_("Producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
+            (_("Long name"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
+            (_("Vat"), 10, product.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False),
         ]
 
         if row_num == 0:

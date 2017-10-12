@@ -78,18 +78,18 @@ from repanier.tools import cap
 class Permanence(TranslatableModel):
     translations = TranslatedFields(
         short_name=models.CharField(
-            _("offer name"),
+            _("Offer name"),
             max_length=50, blank=True
         ),
         offer_description=HTMLField(
-            _("offer_description"),
+            _("Offer description"),
             configuration='CKEDITOR_SETTINGS_MODEL2',
             help_text=_(
                 "This message is send by mail to all customers when opening the order or on top "),
             blank=True, default=EMPTY_STRING
         ),
         invoice_description=HTMLField(
-            _("invoice_description"),
+            _("Invoice description"),
             configuration='CKEDITOR_SETTINGS_MODEL2',
             help_text=_(
                 'This message is send by mail to all customers having bought something when closing the permanence.'),
@@ -119,21 +119,21 @@ class Permanence(TranslatableModel):
         verbose_name=_('Boxes'),
         blank=True
     )
-    contracts = models.ManyToManyField(
-        'Contract',
-        verbose_name=_("Commitments"),
-        blank=True
-    )
+    # contracts = models.ManyToManyField(
+    #     'Contract',
+    #     verbose_name=_("Commitments"),
+    #     blank=True
+    # )
     # When master contract is defined, this permanence is used to let customer place order to the contract
     # This master contract will be the only one contract allowed for this permanence
     # This permanence will not be showed into "admin/permanence_in_preparation" nor "admin/ermanence_done"
     # but will be used in "admin/contract"
-    master_contract = models.OneToOneField(
+    contract = models.ForeignKey(
         'Contract',
-        related_name='master_contract',
-        verbose_name=_("Master contract"),
-        on_delete=models.CASCADE,
-        null=True, blank=True, default=None)
+        verbose_name=_("Contract"),
+        on_delete=models.PROTECT,
+        null=True, blank=True, default=None
+    )
 
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
@@ -163,7 +163,7 @@ class Permanence(TranslatableModel):
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
-        verbose_name=_("highest permanence_status"),
+        verbose_name=_("Highest status"),
     )
     master_permanence = models.ForeignKey(
         'Permanence',
@@ -177,7 +177,7 @@ class Permanence(TranslatableModel):
     offer_description_on_home_page = models.BooleanField(
         _("Publish the offer description on the home page when the permanence is open"), default=True)
     picture = AjaxPictureField(
-        verbose_name=_("picture"),
+        verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="permanence", size=SIZE_L)
     gauge = models.IntegerField(
@@ -591,17 +591,17 @@ class Permanence(TranslatableModel):
                 for delivery_board in DeliveryBoard.objects.filter(
                         permanence=self
                 ):
-                    if delivery_board.delivery_date is not None:
-                        new_delivery_board = DeliveryBoard.objects.create(
-                            permanence=new_permanence,
-                            delivery_point=delivery_board.delivery_point,
-                            delivery_date=delivery_board.delivery_date + datetime.timedelta(days=delta_days)
-                        )
-                    else:
-                        new_delivery_board = DeliveryBoard.objects.create(
-                            permanence=new_permanence,
-                            delivery_point=delivery_board.delivery_point,
-                        )
+                    # if delivery_board.delivery_date is not None:
+                    #     new_delivery_board = DeliveryBoard.objects.create(
+                    #         permanence=new_permanence,
+                    #         delivery_point=delivery_board.delivery_point,
+                    #         delivery_date=delivery_board.delivery_date + datetime.timedelta(days=delta_days)
+                    #     )
+                    # else:
+                    new_delivery_board = DeliveryBoard.objects.create(
+                        permanence=new_permanence,
+                        delivery_point=delivery_board.delivery_point,
+                    )
                     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
                         language_code = language["code"]
                         translation.activate(language_code)
@@ -967,15 +967,15 @@ class Permanence(TranslatableModel):
                 if self.status != PERMANENCE_SEND:
                     return "%s - %s" % (self.get_permanence_display(), self.get_status_display())
                 else:
-                    return "%s - %s" % (self.get_permanence_display(), _('orders closed'))
+                    return "%s - %s" % (self.get_permanence_display(), _('Orders closed'))
         return self.get_permanence_display()
 
     def __str__(self):
         return self.get_permanence_display()
 
     class Meta:
-        verbose_name = _('order')
-        verbose_name_plural = _('orders')
+        verbose_name = _('Order')
+        verbose_name_plural = _('Orders')
 
         # index_together = [
         #     ["permanence_date"],

@@ -101,11 +101,11 @@ class CustomerPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
 
 class CustomerSendForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
-        label=_("producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     offer_selling_price = FormMoneyField(
-        label=_("customer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Customer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
-        label=_("apply rule of three"), required=False, initial=False)
+        label=_("Apply rule of three"), required=False, initial=False)
 
     def __init__(self, *args, **kwargs):
         super(CustomerSendForm, self).__init__(*args, **kwargs)

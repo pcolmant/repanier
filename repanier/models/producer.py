@@ -36,77 +36,77 @@ class Producer(models.Model):
     long_profile_name = models.CharField(
         _("Long name"), max_length=100, null=True, default=EMPTY_STRING)
     email = models.EmailField(
-        _("email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
-        _("secondary email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING)
     email3 = models.EmailField(
-        _("secondary email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING)
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
-        verbose_name=_("language"))
+        verbose_name=_("Language"))
     picture = AjaxPictureField(
-        verbose_name=_("picture"),
+        verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="producer", size=SIZE_L)
     phone1 = models.CharField(
-        _("phone1"),
+        _("Phone1"),
         max_length=25,
         null=True, blank=True, default=EMPTY_STRING)
     phone2 = models.CharField(
-        _("phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
-    bank_account = models.CharField(_("bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
+        _("Phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
+    bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("Vat id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     fax = models.CharField(
-        _("fax"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
-    address = models.TextField(_("address"), null=True, blank=True, default=EMPTY_STRING)
+        _("Fax"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
+    address = models.TextField(_("Address"), null=True, blank=True, default=EMPTY_STRING)
     city = models.CharField(
-        _("city"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
+        _("City"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
     memo = models.TextField(
-        _("memo"), null=True, blank=True, default=EMPTY_STRING)
+        _("Memo"), null=True, blank=True, default=EMPTY_STRING)
     reference_site = models.URLField(
-        _("reference site"), null=True, blank=True, default=EMPTY_STRING)
+        _("Reference site"), null=True, blank=True, default=EMPTY_STRING)
     web_services_activated = models.BooleanField(_('Web services activated'), default=False)
     # uuid used to access to producer invoices without login
     uuid = models.CharField(
-        _("uuid"), max_length=36, null=True, default=EMPTY_STRING,
+        "uuid", max_length=36, null=True, default=EMPTY_STRING,
         db_index=True
     )
     offer_uuid = models.CharField(
-        _("uuid"), max_length=36, null=True, default=EMPTY_STRING,
+        "uuid", max_length=36, null=True, default=EMPTY_STRING,
         db_index=True
     )
-    offer_filled = models.BooleanField(_("offer filled"), default=False)
-    invoice_by_basket = models.BooleanField(_("invoice by basket"), default=False)
-    manage_replenishment = models.BooleanField(_("manage stock"), default=False)
-    producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
-    producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
-    sort_products_by_reference = models.BooleanField(_("sort products by reference"), default=False)
+    offer_filled = models.BooleanField(_("Offer filled"), default=False)
+    invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
+    manage_replenishment = models.BooleanField(_("Manage stock"), default=False)
+    producer_pre_opening = models.BooleanField(_("Producer pre-opening"), default=False)
+    producer_price_are_wo_vat = models.BooleanField(_("Producer price are wo vat"), default=False)
+    sort_products_by_reference = models.BooleanField(_("Sort products by reference"), default=False)
 
     price_list_multiplier = models.DecimalField(
-        _("price_list_multiplier"),
+        _("Price list multiplier"),
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])
-    is_resale_price_fixed = models.BooleanField(_("the resale price is set by the producer"),
+    is_resale_price_fixed = models.BooleanField(_("The resale price is set by the producer"),
                                                 default=False)
     minimum_order_value = ModelMoneyField(
-        _("minimum order value"),
+        _("Minimum order value"),
         help_text=_("0 mean : no minimum order value."),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)])
 
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today)
+        _("Date_balance"), default=datetime.date.today)
     balance = ModelMoneyField(
-        _("balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     initial_balance = ModelMoneyField(
-        _("initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     represent_this_buyinggroup = models.BooleanField(
-        _("represent_this_buyinggroup"), default=False)
-    is_active = models.BooleanField(_("is_active"), default=True)
+        _("Represent this buyinggroup"), default=False)
+    is_active = models.BooleanField(_("Is active"), default=True)
 
     def get_negative_balance(self):
         return - self.balance
@@ -122,7 +122,7 @@ class Producer(models.Model):
             return link
         return EMPTY_STRING
 
-    get_products.short_description = (_("link to his products"))
+    get_products.short_description = (_("Link to his products"))
     get_products.allow_tags = True
 
     # def get_assemblies(self):
@@ -131,7 +131,7 @@ class Producer(models.Model):
     #         return_link = False
     #         changeassemblieslist_url = is_into_offer = label = EMPTY_STRING
     #
-    #         if settings.DJANGO_SETTINGS_IS_AMAP:
+    #         if settings.DJANGO_SETTINGS_CONTRACT:
     #             label = _("Contracts")
     #             is_into_offer = EMPTY_STRING
     #             changeassemblieslist_url = urlresolvers.reverse(
@@ -167,7 +167,7 @@ class Producer(models.Model):
         else:
             return timezone.now().date()
 
-    get_admin_date_balance.short_description = (_("date_balance"))
+    get_admin_date_balance.short_description = (_("Date_balance"))
     get_admin_date_balance.allow_tags = False
 
     def get_admin_balance(self):
@@ -176,7 +176,7 @@ class Producer(models.Model):
         else:
             return REPANIER_MONEY_ZERO
 
-    get_admin_balance.short_description = (_("balance"))
+    get_admin_balance.short_description = (_("Balance"))
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
@@ -271,7 +271,7 @@ class Producer(models.Model):
                     calculated_invoiced_balance -= delta_price_with_tax
         return calculated_invoiced_balance
 
-    get_calculated_invoiced_balance.short_description = (_("balance"))
+    get_calculated_invoiced_balance.short_description = (_("Balance"))
     get_calculated_invoiced_balance.allow_tags = False
 
     def get_balance(self):
@@ -307,7 +307,7 @@ class Producer(models.Model):
             else:
                 return '<span style="color:#696969">%s</span>' % (-balance,)
 
-    get_balance.short_description = _("balance")
+    get_balance.short_description = _("Balance")
     get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
 
@@ -331,7 +331,7 @@ class Producer(models.Model):
         else:
             return '<span style="color:#32CD32">%s</span>' % (number_format(0, 2))
 
-    get_last_invoice.short_description = _("last invoice")
+    get_last_invoice.short_description = _("Last invoice")
     get_last_invoice.allow_tags = True
 
     def get_on_hold_movement_json(self, to_json):
@@ -370,8 +370,8 @@ class Producer(models.Model):
         return self.short_profile_name
 
     class Meta:
-        verbose_name = _("producer")
-        verbose_name_plural = _("producers")
+        verbose_name = _("Producer")
+        verbose_name_plural = _("Producers")
         ordering = ("short_profile_name",)
 
 

@@ -98,17 +98,17 @@ PRODUCT_PLACEMENT_OUT_OF_BASKET = '300'
 PRODUCT_PLACEMENT_BASKET = '400'
 
 LUT_PRODUCT_PLACEMENT = (
-    (PRODUCT_PLACEMENT_FREEZER, _('freezer')),
-    (PRODUCT_PLACEMENT_FRIDGE, _('fridge')),
-    (PRODUCT_PLACEMENT_OUT_OF_BASKET, _('loose, out of the basket')),
-    (PRODUCT_PLACEMENT_BASKET, _('into the basket')),
+    (PRODUCT_PLACEMENT_FREEZER, _('Freezer')),
+    (PRODUCT_PLACEMENT_FRIDGE, _('Fridge')),
+    (PRODUCT_PLACEMENT_OUT_OF_BASKET, _('Loose, out of the basket')),
+    (PRODUCT_PLACEMENT_BASKET, _('Into the basket')),
 )
 
 LUT_PRODUCT_PLACEMENT_REVERSE = (
-    (_('freezer'), PRODUCT_PLACEMENT_FREEZER),
-    (_('fridge'), PRODUCT_PLACEMENT_FRIDGE),
-    (_('loose, out of the basket'), PRODUCT_PLACEMENT_OUT_OF_BASKET),
-    (_('into the basket'), PRODUCT_PLACEMENT_BASKET),
+    (_('Freezer'), PRODUCT_PLACEMENT_FREEZER),
+    (_('Fridge'), PRODUCT_PLACEMENT_FRIDGE),
+    (_('Loose, out of the basket'), PRODUCT_PLACEMENT_OUT_OF_BASKET),
+    (_('Into the basket'), PRODUCT_PLACEMENT_BASKET),
 )
 
 PRODUCT_ORDER_UNIT_PC = '100'
@@ -124,13 +124,13 @@ PRODUCT_ORDER_UNIT_TRANSPORTATION = '500'
 PRODUCT_ORDER_UNIT_SUBSCRIPTION = '600'
 
 LUT_PRODUCT_ORDER_UNIT = (
-    (PRODUCT_ORDER_UNIT_PC, _("bought per piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("bought per piece (price /kg)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("bought per piece (price /l)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("bought per piece (price /pc)")),
-    (PRODUCT_ORDER_UNIT_KG, _("bought per kg")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("bought per piece, invoiced following the weight")),
-    (PRODUCT_ORDER_UNIT_LT, _("bought per l")),
+    (PRODUCT_ORDER_UNIT_PC, _("Bought per piece")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Bought per piece (price /kg)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Bought per piece (price /l)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Bought per piece (price /pc)")),
+    (PRODUCT_ORDER_UNIT_KG, _("Bought per kg")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
+    (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
@@ -140,13 +140,13 @@ LUT_PRODUCT_ORDER_UNIT = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_REVERSE = (
-    (_("bought per piece"), PRODUCT_ORDER_UNIT_PC),
-    (_("bought per piece (price /kg)"), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
-    (_("bought per piece (price /l)"), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
-    (_("bought per piece (price /pc)"), PRODUCT_ORDER_UNIT_PC_PRICE_PC),
-    (_("bought per kg"), PRODUCT_ORDER_UNIT_KG),
-    (_("bought per piece, invoiced following the weight"), PRODUCT_ORDER_UNIT_PC_KG),
-    (_("bought per l"), PRODUCT_ORDER_UNIT_LT),
+    (_("Bought per piece"), PRODUCT_ORDER_UNIT_PC),
+    (_("Bought per piece (price /kg)"), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
+    (_("Bought per piece (price /l)"), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
+    (_("Bought per piece (price /pc)"), PRODUCT_ORDER_UNIT_PC_PRICE_PC),
+    (_("Bought per kg"), PRODUCT_ORDER_UNIT_KG),
+    (_("Bought per piece, invoiced following the weight"), PRODUCT_ORDER_UNIT_PC_KG),
+    (_("Bought per l"), PRODUCT_ORDER_UNIT_LT),
     (_('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.'),
      PRODUCT_ORDER_UNIT_DEPOSIT),
     (_(
@@ -158,13 +158,13 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
-    (PRODUCT_ORDER_UNIT_PC, _("bought per piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("bought per piece (price /kg)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("bought per piece (price /l)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("bought per piece (price /pc)")),
-    (PRODUCT_ORDER_UNIT_KG, _("bought per kg")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("bought per piece, invoiced following the weight")),
-    (PRODUCT_ORDER_UNIT_LT, _("bought per l")),
+    (PRODUCT_ORDER_UNIT_PC, _("Bought per piece")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Bought per piece (price /kg)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Bought per piece (price /l)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Bought per piece (price /pc)")),
+    (PRODUCT_ORDER_UNIT_KG, _("Bought per kg")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
+    (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
     (PRODUCT_ORDER_UNIT_TRANSPORTATION, _(
@@ -172,13 +172,13 @@ LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION = (
-    (PRODUCT_ORDER_UNIT_PC, _("bought per piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("bought per piece (price /kg)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("bought per piece (price /l)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("bought per piece (price /pc)")),
-    (PRODUCT_ORDER_UNIT_KG, _("bought per kg")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("bought per piece, invoiced following the weight")),
-    (PRODUCT_ORDER_UNIT_LT, _("bought per l")),
+    (PRODUCT_ORDER_UNIT_PC, _("Bought per piece")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Bought per piece (price /kg)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Bought per piece (price /l)")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Bought per piece (price /pc)")),
+    (PRODUCT_ORDER_UNIT_KG, _("Bought per kg")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
+    (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
@@ -211,48 +211,48 @@ DICT_VAT_LABEL = 0
 DICT_VAT_RATE = 1
 
 DICT_VAT = {
-    VAT_100: (_('none'), DECIMAL_ZERO),
-    VAT_315: (_('vat 2.1%'), DECIMAL_0_021),
-    VAT_325: (_('vat 2.5%'), DECIMAL_0_025),
-    VAT_350: (_('vat 3.8%'), DECIMAL_0_038),
-    VAT_360: (_('vat 4%'), DECIMAL_0_04),
-    VAT_375: (_('vat 5.5%'), DECIMAL_0_055),
-    VAT_400: (_('vat 6%'), DECIMAL_0_06),
-    VAT_430: (_('vat 8%'), DECIMAL_0_08),
-    VAT_460: (_('vat 10%'), DECIMAL_0_10),
-    VAT_500: (_('vat 12%'), DECIMAL_0_12),
-    VAT_590: (_('vat 20%'), DECIMAL_0_20),
-    VAT_600: (_('vat 21%'), DECIMAL_0_21),
+    VAT_100: (_('None'), DECIMAL_ZERO),
+    VAT_315: (_('Vat 2.1%'), DECIMAL_0_021),
+    VAT_325: (_('Vat 2.5%'), DECIMAL_0_025),
+    VAT_350: (_('Vat 3.8%'), DECIMAL_0_038),
+    VAT_360: (_('Vat 4%'), DECIMAL_0_04),
+    VAT_375: (_('Vat 5.5%'), DECIMAL_0_055),
+    VAT_400: (_('Vat 6%'), DECIMAL_0_06),
+    VAT_430: (_('Vat 8%'), DECIMAL_0_08),
+    VAT_460: (_('Vat 10%'), DECIMAL_0_10),
+    VAT_500: (_('Vat 12%'), DECIMAL_0_12),
+    VAT_590: (_('Vat 20%'), DECIMAL_0_20),
+    VAT_600: (_('Vat 21%'), DECIMAL_0_21),
 }
 
 LUT_ALL_VAT = (
-    (VAT_100, _('none')),
-    (VAT_315, _('vat 2.1%')),
-    (VAT_325, _('vat 2.5%')),
-    (VAT_350, _('vat 3.8%')),
-    (VAT_360, _('vat 4%')),
-    (VAT_375, _('vat 5.5%')),
-    (VAT_400, _('vat 6%')),
-    (VAT_430, _('vat 8%')),
-    (VAT_460, _('vat 10%')),
-    (VAT_500, _('vat 12%')),
-    (VAT_590, _('vat 20%')),
-    (VAT_600, _('vat 21%')),
+    (VAT_100, _('None')),
+    (VAT_315, _('Vat 2.1%')),
+    (VAT_325, _('Vat 2.5%')),
+    (VAT_350, _('Vat 3.8%')),
+    (VAT_360, _('Vat 4%')),
+    (VAT_375, _('Vat 5.5%')),
+    (VAT_400, _('Vat 6%')),
+    (VAT_430, _('Vat 8%')),
+    (VAT_460, _('Vat 10%')),
+    (VAT_500, _('Vat 12%')),
+    (VAT_590, _('Vat 20%')),
+    (VAT_600, _('Vat 21%')),
 )
 
 LUT_ALL_VAT_REVERSE = (
-    (_('none'), VAT_100),
-    (_('vat 2.1%'), VAT_315),
-    (_('vat 2.5%'), VAT_325),
-    (_('vat 3.8%'), VAT_350),
-    (_('vat 4%'), VAT_360),
-    (_('vat 5.5%'), VAT_375),
-    (_('vat 6%'), VAT_400),
-    (_('vat 8%'), VAT_430),
-    (_('vat 10%'), VAT_460),
-    (_('vat 12%'), VAT_500),
-    (_('vat 20%'), VAT_590),
-    (_('vat 21%'), VAT_600),
+    (_('None'), VAT_100),
+    (_('Vat 2.1%'), VAT_315),
+    (_('Vat 2.5%'), VAT_325),
+    (_('Vat 3.8%'), VAT_350),
+    (_('Vat 4%'), VAT_360),
+    (_('Vat 5.5%'), VAT_375),
+    (_('Vat 6%'), VAT_400),
+    (_('Vat 8%'), VAT_430),
+    (_('Vat 10%'), VAT_460),
+    (_('Vat 12%'), VAT_500),
+    (_('Vat 20%'), VAT_590),
+    (_('Vat 21%'), VAT_600),
 )
 
 BANK_NOT_LATEST_TOTAL = '100'

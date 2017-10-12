@@ -132,7 +132,7 @@ class GroupWithUserDataForm(UserDataForm):
         required=False
     )
     inform_customer_responsible = forms.BooleanField(
-        label=_('inform_customer_responsible'),
+        label=_('Inform customer responsible'),
         required=False
     )
     transport = FormMoneyField(
@@ -196,7 +196,6 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     list_display = ('short_basket_name',)
     search_fields = ('short_basket_name', 'long_basket_name', 'user__email', 'email2')
     list_filter = (
-        'may_order',
         'is_active',
         'valid_email'
     )
@@ -227,7 +226,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         else:
             return EMPTY_STRING
 
-    get_email.short_description = _("email")
+    get_email.short_description = _("Email")
     get_email.admin_order_field = 'user__email'
 
     def get_last_login(self, group):
@@ -236,7 +235,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         else:
             return EMPTY_STRING
 
-    get_last_login.short_description = _("last login")
+    get_last_login.short_description = _("Last login")
     get_last_login.admin_order_field = 'user__last_login'
 
     def get_actions(self, request):

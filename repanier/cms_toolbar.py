@@ -22,7 +22,7 @@ class RepanierToolbar(CMSToolbar):
         is_in_invoice_group = False
         if user.is_superuser or user.groups.filter(
                 name=COORDINATION_GROUP).exists():
-            display_all = True
+            display_all_but_configuration = True
             display_configuration = True
             is_in_order_group = True
             is_in_invoice_group = True
@@ -32,18 +32,17 @@ class RepanierToolbar(CMSToolbar):
             if user.groups.filter(name=INVOICE_GROUP).exists():
                 is_in_invoice_group=True
             if is_in_order_group or is_in_invoice_group:
-                display_all = True
+                display_all_but_configuration = True
                 display_configuration = False
-            elif user.groups.filter(
-                    name=CONTRIBUTOR_GROUP).exists():
-                display_all = False
+            elif user.groups.filter(name=CONTRIBUTOR_GROUP).exists():
+                display_all_but_configuration = False
                 display_configuration = False
             else:
                 return
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER, _('Manage'))
         position = 0
         admin_menu.add_break('custom-break', position=position)
-        if display_all:
+        if display_all_but_configuration:
             office_menu = admin_menu.get_or_create_menu(
                 'parameter-menu',
                 _('Parameters ...'),
@@ -72,25 +71,25 @@ class RepanierToolbar(CMSToolbar):
             office_menu.add_sideframe_item(_('Departements'), url=url)
             position += 1
 
-            url = reverse('admin:repanier_customer_changelist')
+            url = "%s?is_active__exact=1" % reverse('admin:repanier_customer_changelist')
             admin_menu.add_sideframe_item(_('Customers'), url=url, position=position)
             position += 1
 
-            url = reverse('admin:repanier_group_changelist')
+            url = "%s?is_active__exact=1" % reverse('admin:repanier_group_changelist')
             admin_menu.add_sideframe_item(_('Groups'), url=url, position=position)
             position += 1
 
-        url = reverse('admin:repanier_producer_changelist')
+        url = "%s?is_active__exact=1" % reverse('admin:repanier_producer_changelist')
         admin_menu.add_sideframe_item(_('Producers'), url=url, position=position)
 
-        if display_all:
-            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if display_all_but_configuration:
+            if settings.DJANGO_SETTINGS_BOX:
                 position += 1
-                url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_box_changelist')
+                url = "%s?is_into_offer__exact=1&is_active__exact=1" % reverse('admin:repanier_box_changelist')
                 admin_menu.add_sideframe_item(_('Boxes'), url=url, position=position)
-            if settings.DJANGO_SETTINGS_IS_AMAP:
+            if settings.DJANGO_SETTINGS_CONTRACT:
                 position += 1
-                url = "%s?is_into_offer__exact=1" % reverse('admin:repanier_contract_changelist')
+                url = "%s?is_active__exact=1" % reverse('admin:repanier_contract_changelist')
                 admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
             if is_in_order_group:
                 position += 1

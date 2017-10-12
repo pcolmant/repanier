@@ -16,8 +16,8 @@ class Group(Customer):
 
     class Meta:
         proxy = True
-        verbose_name = _("group")
-        verbose_name_plural = _("groups")
+        verbose_name = _("Group")
+        verbose_name_plural = _("Groups")
 
 
 @receiver(pre_save, sender=Group)

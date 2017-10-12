@@ -1,9 +1,8 @@
-from django.conf.urls import url
 from django.conf import settings
+from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
-# from django.views.i18n import JavaScriptCatalog
 
 from repanier.picture.views import ajax_picture
 from repanier.rest.lut import departments_for_customers_rest, department_for_customer_rest
@@ -19,18 +18,24 @@ from repanier.views.customer_name_ajax import customer_name_ajax
 from repanier.views.customer_product_description_ajax import customer_product_description_ajax
 from repanier.views.delivery_ajax import delivery_ajax
 from repanier.views.delivery_select_ajax import delivery_select_ajax
+from repanier.views.display_status_ajax import display_status
+from repanier.views.download_customer_invoice import download_customer_invoice
+from repanier.views.flexible_dates import flexible_dates
 from repanier.views.forms import AuthRepanierSetPasswordForm, AuthRepanierPasswordResetForm
+from repanier.views.home_info_ajax import home_info_ajax
+from repanier.views.is_into_offer_ajax import is_into_offer, is_into_offer_content
 from repanier.views.like_ajax import like_ajax
 from repanier.views.login_view import login_view
 from repanier.views.logout_view import logout_view
-from repanier.views.my_profile_view import my_profile_view
 from repanier.views.my_balance_ajax import my_balance_ajax
+from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
+from repanier.views.my_profile_view import my_profile_view
 from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
+from repanier.views.order_filter_view import order_filter_view
+from repanier.views.order_info_ajax import order_info_ajax
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
-from repanier.views.task_class import PermanenceView
-from repanier.views.task_form_ajax import task_form_ajax
 from repanier.views.pre_order_class import PreOrderView
 from repanier.views.pre_order_create_product_ajax import pre_order_create_product_ajax
 from repanier.views.pre_order_update_product_ajax import pre_order_update_product_ajax
@@ -38,15 +43,12 @@ from repanier.views.producer_invoice_class import ProducerInvoiceView
 from repanier.views.producer_name_ajax import producer_name_ajax
 from repanier.views.send_mail_to_all_members_view import send_mail_to_all_members_view
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
-from repanier.views.who_is_who_view import who_is_who_view
-from repanier.views.display_status_ajax import display_status
-from repanier.views.is_into_offer_ajax import is_into_offer, is_into_offer_content
-from repanier.views.download_customer_invoice import download_customer_invoice
-from repanier.views.home_info_ajax import home_info_ajax
-from repanier.views.order_info_ajax import order_info_ajax
-from repanier.views.order_filter_view import order_filter_view
-from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
+from repanier.views.task_class import PermanenceView
+from repanier.views.task_form_ajax import task_form_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
+from repanier.views.who_is_who_view import who_is_who_view
+
+# from django.views.i18n import JavaScriptCatalog
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -121,7 +123,10 @@ urlpatterns = [
     url(r'^ajax/display-status/(?P<permanence_id>\d+)/$', display_status, name='display_status'),
     url(r'^ajax/like/$', like_ajax, name='like_ajax'),
     url(r'^ajax/is-into-offer/(?P<product_id>\d+)/(?P<contract_id>\d+)/$', is_into_offer, name='is_into_offer'),
-    url(r'^ajax/is-into-offer-content/(?P<product_id>\d+)/(?P<contract_id>\d+)/(?P<one_date_str>.*)/$', is_into_offer_content, name='is_into_offer_content'),
+    url(r'^ajax/is-into-offer-content/(?P<product_id>\d+)/(?P<contract_id>\d+)/(?P<one_date_str>.*)/$',
+        is_into_offer_content, name='is_into_offer_content'),
+    url(r'^ajax/flexible_dates/(?P<product_id>\d+)/(?P<contract_id>\d+)/$',
+        flexible_dates, name='flexible_dates'),
     url(r'^permanence/$', never_cache(PermanenceView.as_view()), name='permanence_view'),
     url(r'^customer-invoice/(?P<pk>[0-9]+)/$', login_required(CustomerInvoiceView.as_view()),
         name='customer_invoice_view'),

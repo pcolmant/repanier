@@ -50,14 +50,14 @@ class Command(BaseCommand):
         for product in Product.objects.all():
             if product.picture is not None:
                 self.move(record=product, to_subdir="product" + os.sep + str(product.producer_id), size="M")
-            for obj in OfferItem.objects.filter(product_id=product.id).order_by('?'):
-                obj.picture2 = product.picture2
-                obj.save()
+            for offer_item in OfferItem.objects.filter(product_id=product.id).order_by('?'):
+                offer_item.picture2 = product.picture2
+                offer_item.save()
 
     def move(self, record=None, to_subdir=None, size="M"):
         directory = "%s/%s" % (settings.MEDIA_ROOT, to_subdir)
         if not os.path.exists(directory):
-            os.makedirs(directory, 0755)
+            os.makedirs(directory, 0o755)
         file_ = record.picture.file_ptr.file
         file_name, extension = os.path.splitext(rsplit(file_.name, os.sep, 1)[1])
         safe_name = '{0}{1}'.format(slugify(file_name), extension)

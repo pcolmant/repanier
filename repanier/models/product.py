@@ -28,7 +28,7 @@ class Product(Item):
     offer_description = TranslatedField()
     production_mode = models.ManyToManyField(
         'LUT_ProductionMode',
-        verbose_name=_("production mode"),
+        verbose_name=_("Production mode"),
         blank=True)
     permanences = models.ManyToManyField(
         'Permanence',
@@ -38,10 +38,10 @@ class Product(Item):
         'Contract',
         through='ContractContent',
         blank=True)
-    is_into_offer = models.BooleanField(_("is_into_offer"), default=True)
+    is_into_offer = models.BooleanField(_("Is into offer"), default=True)
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='likes')
     is_updated_on = models.DateTimeField(
-        _("is_updated_on"), auto_now=True, blank=True)
+        _("Is updated on"), auto_now=True, blank=True)
 
     @property
     def total_likes(self):
@@ -52,20 +52,56 @@ class Product(Item):
         return self.likes.count()
 
     @transaction.atomic()
-    def get_or_create_offer_item(self, permanence):
-        from repanier.models.offeritem import OfferItem
+    def get_or_create_offer_item(self, permanence, reset_add_2_stock=False):
+        from repanier.models.offeritem import OfferItemWoReceiver
+        from repanier.models.box import BoxContent
 
-        offer_item_qs = OfferItem.objects.filter(
+        offer_item_qs = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence.id,
             product_id=self.id,
+            permanences_dates=EMPTY_STRING
         ).order_by('?')
         if not offer_item_qs.exists():
-            OfferItem.objects.create(
-                permanence=permanence,
+            print("Product.create : %s" % self)
+            OfferItemWoReceiver.objects.create(
+                permanence_id=permanence.id,
                 product_id=self.id,
-                producer=self.producer,
+                producer_id=self.producer_id,
+                permanences_dates=EMPTY_STRING
             )
-            clean_offer_item(permanence, offer_item_qs)
+            clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+        else:
+            print("Product.get : %s" % self)
+            offer_item = offer_item_qs.first()
+            offer_item.is_active = True
+            offer_item.save(update_fields=["is_active"])
+        if self.is_box:
+            # Add box products
+            for box_content in BoxContent.objects.filter(
+                box=self.id
+            ).order_by('?'):
+                box_offer_item_qs = OfferItemWoReceiver.objects.filter(
+                    permanence_id=permanence.id,
+                    product_id=box_content.product_id,
+                    permanences_dates=EMPTY_STRING
+                ).order_by('?')
+                if not box_offer_item_qs.exists():
+                    print("Product.create box content : %s" % box_content)
+                    OfferItemWoReceiver.objects.create(
+                        permanence_id=permanence.id,
+                        product_id=box_content.product_id,
+                        producer_id=box_content.product.producer_id,
+                        permanences_dates=EMPTY_STRING,
+                        is_box_content=True
+                    )
+                    clean_offer_item(permanence, box_offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+                else:
+                    print("Product.get box content : %s" % box_content)
+                    box_offer_item = box_offer_item_qs.first()
+                    box_offer_item.is_active = True
+                    box_offer_item.is_box_content = True
+                    box_offer_item.save(update_fields=["is_box_content", "is_active"])
+
         offer_item = offer_item_qs.first()
         return offer_item
 
@@ -74,7 +110,7 @@ class Product(Item):
             self.get_is_into_offer_html(contract)
         ))
 
-    get_is_into_offer.short_description = (_("is into offer"))
+    get_is_into_offer.short_description = (_("Is into offer"))
 
     def get_is_into_offer_html(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
@@ -89,13 +125,16 @@ class Product(Item):
             if contract_content is not None:
                 all_dates = contract_content.all_dates
                 is_into_offer = len(all_dates) > 0
+                flexible_dates = contract_content.flexible_dates
             else:
                 all_dates = []
                 is_into_offer = False
+                flexible_dates = False
 
-            contract_icons = []
+            contract_dates_array = []
             month_save = None
-            print(all_dates)
+            selected_dates_counter = 0
+            # print(all_dates)
             for one_date in contract.all_dates:
                 if month_save != one_date.month:
                     month_save = one_date.month
@@ -112,6 +151,47 @@ class Product(Item):
                     args=(self.id, contract.id, one_date_str)
                 )
                 javascript = """
+                    (function($) {{
+                        var lien = '{LINK}';
+                        $.ajax({{
+                                url: lien,
+                                cache: false,
+                                async: true,
+                                success: function (result) {{
+                                    $('#is_into_offer_{PRODUCT_ID}').html(result)
+                                }}
+                            }});
+                    }})(django.jQuery);
+                """.format(
+                    LINK=switch_is_into_offer,
+                    PRODUCT_ID=self.id
+                )
+                if one_date in all_dates:
+                    color = "green"
+                    icon = " {}".format(_boolean_icon(True))
+                    selected_dates_counter += 1
+                else:
+                    color = "red"
+                    icon = " {}".format(_boolean_icon(False))
+                link = """
+                        {}<a href="#" onclick="{};return false;" style="color:{} !important;">{}{}</a>
+                    """.format(
+                        new_line,
+                        javascript,
+                        color,
+                        icon,
+                        one_date.strftime(settings.DJANGO_SETTINGS_DAY)
+                    )
+                contract_dates_array.append(
+                    link
+                )
+            contract_dates = ",&nbsp;".join(contract_dates_array)
+            if selected_dates_counter > 1:
+                switch_flexible_dates = urlresolvers.reverse(
+                    'flexible_dates',
+                    args=(self.id, contract.id)
+                )
+                javascript = """
                                     (function($) {{
                                         var lien = '{LINK}';
                                         $.ajax({{
@@ -123,24 +203,29 @@ class Product(Item):
                                                 }}
                                             }});
                                     }})(django.jQuery);
-                                    """.format(
-                    LINK=switch_is_into_offer,
+                                """.format(
+                    LINK=switch_flexible_dates,
                     PRODUCT_ID=self.id
                 )
-                color = "green" if one_date in all_dates else "red"
-                link = '%s<a href="#" onclick="%s;return false;" style="color:%s !important;">%s</a>' % (
-                    new_line,
-                    javascript,
-                    color,
-                    one_date.strftime(settings.DJANGO_SETTINGS_DAY)
-                )
-                contract_icons.append(
-                    link
-                )
-            contract_icon = ",&nbsp;".join(contract_icons)
+                if flexible_dates:
+                    color = EMPTY_STRING
+                    flexible_dates_display = " {}".format(_("Flexible dates"))
+                else:
+                    color = EMPTY_STRING
+                    flexible_dates_display = " {} {}".format(selected_dates_counter, _("fixed dates"))
+                flexible_dates_link = """
+                        <a href="#" onclick="{};return false;" style="color:{} !important;">{}</a>
+                    """.format(
+                        javascript,
+                        color,
+                        flexible_dates_display,
+                    )
+            else:
+                flexible_dates_link = EMPTY_STRING
         else:
             is_into_offer = self.is_into_offer
-            contract_icon = EMPTY_STRING
+            contract_dates = EMPTY_STRING
+            flexible_dates_link = EMPTY_STRING
         switch_is_into_offer = urlresolvers.reverse(
             'is_into_offer', args=(self.id, contract.id if contract is not None else 0)
         )
@@ -161,12 +246,13 @@ class Product(Item):
             PRODUCT_ID=self.id
         )
         # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
-        link = '<div id="is_into_offer_%d"><a href="#" onclick="%s;return false;"%s>%s</a>%s</div>' % (
+        link = '<div id="is_into_offer_%d"><a href="#" onclick="%s;return false;"%s>%s</a>%s%s</div>' % (
             self.id,
             javascript,
             css_class,
             _boolean_icon(is_into_offer),
-            contract_icon
+            flexible_dates_link,
+            contract_dates
         )
         return link
 
@@ -175,8 +261,8 @@ class Product(Item):
         return super(Product, self).get_long_name_with_producer()
 
     class Meta:
-        verbose_name = _("product")
-        verbose_name_plural = _("products")
+        verbose_name = _("Product")
+        verbose_name_plural = _("Products")
         unique_together = ("producer", "reference",)
 
 
@@ -248,8 +334,8 @@ def product_post_save(sender, **kwargs):
 
 class Product_Translation(TranslatedFieldsModel):
     master = models.ForeignKey('Product', related_name='translations', null=True)
-    long_name = models.CharField(_("long_name"), max_length=100)
-    offer_description = HTMLField(_("offer_description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True)
+    long_name = models.CharField(_("Long name"), max_length=100)
+    offer_description = HTMLField(_("Offer_description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True)
 
     class Meta:
         unique_together = ('language_code', 'master')

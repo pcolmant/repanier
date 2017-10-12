@@ -17,15 +17,15 @@ class BankAccount(models.Model):
         'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
         on_delete=models.PROTECT, blank=True, null=True)
     producer = models.ForeignKey(
-        'Producer', verbose_name=_("producer"),
+        'Producer', verbose_name=_("Producer"),
         on_delete=models.PROTECT, blank=True, null=True)
     customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"),
+        'Customer', verbose_name=_("Customer"),
         on_delete=models.PROTECT, blank=True, null=True)
-    operation_date = models.DateField(_("operation_date"),
+    operation_date = models.DateField(_("Operation date"),
                                       db_index=True)
     operation_comment = models.CharField(
-        _("operation_comment"), max_length=100, null=True, blank=True)
+        _("Operation comment"), max_length=100, null=True, blank=True)
     operation_status = models.CharField(
         max_length=3,
         choices=LUT_BANK_TOTAL,
@@ -34,21 +34,21 @@ class BankAccount(models.Model):
         db_index=True
     )
     bank_amount_in = ModelMoneyField(
-        _("bank_amount_in"), help_text=_('payment_on_the_account'),
+        _("Bank amount in"), help_text=_('Payment on the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)])
     bank_amount_out = ModelMoneyField(
-        _("bank_amount_out"), help_text=_('payment_from_the_account'),
+        _("Bank amount out"), help_text=_('Payment from the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)])
     producer_invoice = models.ForeignKey(
-        'ProducerInvoice', verbose_name=_("producer_invoice"),
+        'ProducerInvoice', verbose_name=_("Producer invoice"),
         blank=True, null=True, on_delete=models.PROTECT, db_index=True)
     customer_invoice = models.ForeignKey(
-        'CustomerInvoice', verbose_name=_("customer_invoice"),
+        'CustomerInvoice', verbose_name=_("Customer invoice"),
         blank=True, null=True, on_delete=models.PROTECT, db_index=True)
     is_updated_on = models.DateTimeField(
-        _("is_updated_on"), auto_now=True)
+        _("Is updated on"), auto_now=True)
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
@@ -56,7 +56,7 @@ class BankAccount(models.Model):
         else:
             return self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING
 
-    get_bank_amount_in.short_description = (_("bank_amount_in"))
+    get_bank_amount_in.short_description = (_("Bank amount in"))
     get_bank_amount_in.allow_tags = True
     get_bank_amount_in.admin_order_field = 'bank_amount_in'
 
@@ -66,7 +66,7 @@ class BankAccount(models.Model):
         else:
             return self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING
 
-    get_bank_amount_out.short_description = (_("bank_amount_out"))
+    get_bank_amount_out.short_description = (_("Bank amount out"))
     get_bank_amount_out.allow_tags = True
     get_bank_amount_out.admin_order_field = 'bank_amount_out'
 
@@ -83,7 +83,7 @@ class BankAccount(models.Model):
                     return "<b>%s</b>" % "--- %s" % REPANIER_SETTINGS_GROUP_NAME
             return EMPTY_STRING
 
-    get_producer.short_description = (_("producer"))
+    get_producer.short_description = (_("Producer"))
     get_producer.allow_tags = True
     get_producer.admin_order_field = 'producer'
 
@@ -107,13 +107,13 @@ class BankAccount(models.Model):
                         return "<b>%s</b>" % "--------------"
             return EMPTY_STRING
 
-    get_customer.short_description = (_("customer"))
+    get_customer.short_description = (_("Customer"))
     get_customer.allow_tags = True
     get_customer.admin_order_field = 'customer'
 
     class Meta:
-        verbose_name = _("bank account movement")
-        verbose_name_plural = _("bank account movements")
+        verbose_name = _("Bank account movement")
+        verbose_name_plural = _("Bank account movements")
         ordering = ('-operation_date', '-id')
         index_together = [
             ['operation_date', 'id'],

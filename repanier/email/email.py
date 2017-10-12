@@ -120,6 +120,8 @@ class RepanierEmail(EmailMultiAlternatives):
                 "text/html"
             )
         email_send = False
+        # Email subject *must not* contain newlines
+        self.subject = ''.join(self.subject.splitlines())
         try:
             with mail.get_connection(
                     host=self.host,

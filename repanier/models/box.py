@@ -57,8 +57,8 @@ class Box(Product):
 
     class Meta:
         proxy = True
-        verbose_name = _("box")
-        verbose_name_plural = _("boxes")
+        verbose_name = _("Box")
+        verbose_name_plural = _("Boxes")
         # ordering = ("sort_order",)
 
 
@@ -73,6 +73,8 @@ def box_pre_save(sender, **kwargs):
     box.producer_unit_price = box.customer_unit_price
     box.producer_vat = box.customer_vat
     box.limit_order_quantity_to_stock = True
+    if not box.is_active:
+        box.is_into_offer = False
     # ! Important to initialise all fields of the box. Remember : a box is a product.
     product_pre_save(sender, **kwargs)
 
@@ -80,36 +82,36 @@ def box_pre_save(sender, **kwargs):
 @python_2_unicode_compatible
 class BoxContent(models.Model):
     box = models.ForeignKey(
-        'Box', verbose_name=_("box"),
+        'Box', verbose_name=_("Box"),
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     product = models.ForeignKey(
-        'Product', verbose_name=_("product"), related_name='box_content',
+        'Product', verbose_name=_("Product"), related_name='box_content',
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     content_quantity = models.DecimalField(
-        _("fixed content quantity"),
+        _("Fixed content quantity"),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     calculated_customer_content_price = ModelMoneyField(
-        _("customer content price"),
+        _("Customer content price"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     calculated_content_deposit = ModelMoneyField(
-        _("content deposit"),
-        help_text=_('deposit to add to the original content price'),
+        _("Content deposit"),
+        help_text=_('Deposit to add to the original content price'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
     def get_calculated_customer_content_price(self):
         # workaround for a display problem with Money field in the admin list_display
         return self.calculated_customer_content_price + self.calculated_content_deposit
 
-    get_calculated_customer_content_price.short_description = (_("customer content price"))
+    get_calculated_customer_content_price.short_description = (_("Customer content price"))
     get_calculated_customer_content_price.allow_tags = False
 
     def __str__(self):
         return EMPTY_STRING
 
     class Meta:
-        verbose_name = _("box content")
-        verbose_name_plural = _("boxes content")
+        verbose_name = _("Box content")
+        verbose_name_plural = _("Boxes content")
         unique_together = ("box", "product",)
         index_together = [
             ["product", "box"],

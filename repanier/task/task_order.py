@@ -6,6 +6,7 @@ import uuid
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
@@ -14,11 +15,11 @@ import repanier.apps
 from repanier.const import *
 from repanier.email import email_offer
 from repanier.email import email_order
-from repanier.models.box import BoxContent
+from repanier.models.box import BoxContent, Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -62,99 +63,124 @@ def automatically_open():
 
 def common_to_pre_open_and_open(permanence_id):
     getcontext().rounding = ROUND_HALF_UP
+    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
     # Create offer items which can be purchased depending on selection in the admin
     producers_in_this_permanence = Producer.objects.filter(
-        permanence=permanence_id, is_active=True).order_by('?').only("id")
+        permanence=permanence_id,
+        is_active=True
+    ).order_by('?').only("id")
     product_queryset = Product.objects.filter(
-        producer__in=producers_in_this_permanence,
-        is_box=False,
-        is_into_offer=True
-    ).order_by('?').only("id", "producer_id")
+        # Q(
+            producer__in=producers_in_this_permanence,
+            is_box=False,
+            is_into_offer=True
+        # ) | Q(
+        #     is_box=True,
+        #     is_into_offer=True
+        # )
+    ).order_by('?')
     for product in product_queryset:
-        if not OfferItem.objects.filter(
-            product_id=product.id,
-            permanence_id=permanence_id
-        ).order_by('?').exists():
-            OfferItem.objects.create(
-                permanence_id=permanence_id,
-                product_id=product.id,
-                producer_id=product.producer_id,
-            )
+        product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+        # if not OfferItem.objects.filter(
+        #     product_id=product.id,
+        #     permanence_id=permanence_id
+        # ).order_by('?').exists():
+        #     OfferItem.objects.create(
+        #         permanence_id=permanence_id,
+        #         product_id=product.id,
+        #         producer_id=product.producer_id,
+        #     )
+    boxes_in_this_permanence = Box.objects.filter(
+        permanence=permanence_id,
+        is_active=True
+    ).order_by('?').only("id")
+    for box in boxes_in_this_permanence:
+        box.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+    if permanence.contract is not None:
+        permanence.contract.get_or_create_offer_item(permanence, reset_add_2_stock=True)
     # Deactivate all offer item of this permanence
-    OfferItem.objects.filter(
-        permanence_id=permanence_id
-    ).order_by('?').update(
-        is_active=False, may_order=False,
-        is_box=False, is_box_content=False
-    )
+    # OfferItem.objects.filter(
+    #     permanence_id=permanence_id
+    # ).order_by('?').update(
+    #     is_active=False, may_order=False,
+    #     is_box=False, is_box_content=False
+    # )
     # Activate all offer item of this permanence
-    OfferItem.objects.filter(
-        product__in=product_queryset,
-        permanence_id=permanence_id
-    ).exclude(
-        order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
-    ).order_by('?').update(is_active=True, may_order=True)
-    OfferItem.objects.filter(
-        product__in=product_queryset,
-        permanence_id=permanence_id,
-        order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
-    ).order_by('?').update(is_active=True, may_order=False)
+    # OfferItem.objects.filter(
+    #     product__in=product_queryset,
+    #     permanence_id=permanence_id
+    # ).exclude(
+    #     order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
+    # ).order_by('?').update(is_active=True, may_order=True)
+    # OfferItem.objects.filter(
+    #     product__in=product_queryset,
+    #     permanence_id=permanence_id,
+    #     order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
+    # ).order_by('?').update(is_active=True, may_order=False)
     # Create box offer items which can be purchased depending on selection in the admin
-    product_queryset = Product.objects.filter(
-        is_box=True, is_into_offer=True
-    ).order_by('?').only("id", "producer_id")
-    for product in product_queryset:
-        offer_item = OfferItem.objects.filter(product_id=product.id, permanence_id=permanence_id).order_by('?').first()
-        if offer_item is None:
-            OfferItem.objects.create(
-                permanence_id=permanence_id,
-                product_id=product.id,
-                producer_id=product.producer_id,
-                is_box=True,
-                is_box_content=False,
-                is_active=True,
-                may_order=True
-            )
-        else:
-            offer_item.is_box = True
-            offer_item.is_box_content = False
-            offer_item.is_active = True
-            offer_item.may_order = True
-            offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
-        for box_content in BoxContent.objects.filter(
-                box=product.id
-        ).select_related(
-            "product__producer"
-        ).order_by('?'):
-            box_offer_item = OfferItem.objects.filter(
-                product_id=box_content.product_id,
-                permanence_id=permanence_id
-            ).order_by('?').first()
-            if box_offer_item is None:
-                OfferItem.objects.create(
-                    permanence_id=permanence_id,
-                    product_id=box_content.product_id,
-                    producer_id=box_content.product.producer_id,
-                    is_box=False,
-                    is_box_content=True,
-                    is_active=True,
-                    may_order=False
-                )
-            else:
-                box_offer_item.is_box = False
-                box_offer_item.is_box_content = True
-                box_offer_item.is_active = True
-                box_offer_item.may_order = False
-                box_offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
+    # product_queryset = Product.objects.filter(
+    #     is_box=True,
+    #     is_into_offer=True
+    # ).order_by('?')
+    # for product in product_queryset:
+    #     offer_item = OfferItem.objects.filter(
+    #         product_id=product.id,
+    #         permanence_id=permanence_id
+    #     ).order_by('?').first()
+        # if offer_item is None:
+        #     OfferItem.objects.create(
+        #         permanence_id=permanence_id,
+        #         product_id=product.id,
+        #         producer_id=product.producer_id,
+        #         is_box=True,
+        #         is_box_content=False,
+        #         is_active=True,
+        #         may_order=True
+        #     )
+        # else:
+        #     offer_item.is_box = True
+        #     offer_item.is_box_content = False
+        #     offer_item.is_active = True
+        #     offer_item.may_order = True
+        #     offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
+        # for box_content in BoxContent.objects.filter(
+        #         box=product.id
+        # ).select_related(
+        #     "product__producer"
+        # ).order_by('?'):
+        #     box_offer_item = OfferItem.objects.filter(
+        #         product_id=box_content.product_id,
+        #         permanence_id=permanence_id
+        #     ).order_by('?').first()
+        #     if box_offer_item is None:
+        #         OfferItem.objects.create(
+        #             permanence_id=permanence_id,
+        #             product_id=box_content.product_id,
+        #             producer_id=box_content.product.producer_id,
+        #             is_box=False,
+        #             is_box_content=True,
+        #             is_active=True,
+        #             may_order=False
+        #         )
+        #     else:
+        #         box_offer_item.is_box = False
+        #         box_offer_item.is_box_content = True
+        #         box_offer_item.is_active = True
+        #         box_offer_item.may_order = False
+        #         box_offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
     # Activate purchased products even if not in selected in the admin
-    OfferItem.objects.filter(
-        purchase__permanence_id=permanence_id, is_active=False,
-        order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT
-    ).order_by('?').update(is_active=True)
+    # but prohibit tthe customer to order it any more
+    # for offer_item in OfferItemWoReceiver.objects.filter(
+    #     purchase__permanence_id=permanence_id,
+    #     is_active=False,
+    #     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT
+    # ).order_by('?'):
+    #     offer_item.is_active = True
+    #     offer_item.may_order = False
+    #     offer_item.save(update_fields=["may_order", "is_active"])
     # Create cache
-    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-    offer_item_qs = OfferItem.objects.filter(permanence_id=permanence_id).order_by('?')
-    clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=True)
+    # offer_item_qs = OfferItem.objects.filter(permanence_id=permanence_id).order_by('?')
+    # clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=True)
     # Calculate the sort order of the order display screen
     reorder_offer_items(permanence_id)
     # Calculate the Purchase 'sum' for each customer

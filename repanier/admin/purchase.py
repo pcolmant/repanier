@@ -93,8 +93,8 @@ class PurchaseResource(resources.ModelResource):
 
 
 class PurchaseForm(forms.ModelForm):
-    product = forms.ChoiceField(label=_("product"), widget=Select2(select2attrs={'width': '450px'}))
-    delivery = forms.ChoiceField(label=_("delivery point"), widget=SelectAdminDeliveryWidget())
+    product = forms.ChoiceField(label=_("Product"), widget=Select2(select2attrs={'width': '450px'}))
+    delivery = forms.ChoiceField(label=_("Delivery point"), widget=SelectAdminDeliveryWidget())
 
     def clean_product(self):
         product_id = sint(self.cleaned_data.get("product"), 0)
@@ -169,7 +169,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     def get_department_for_customer(self, obj):
         return obj.offer_item.department_for_customer
 
-    get_department_for_customer.short_description = _("department_for_customer")
+    get_department_for_customer.short_description = _("Department")
 
     def get_queryset(self, request):
         permanence_id = request.GET.get('permanence', None)

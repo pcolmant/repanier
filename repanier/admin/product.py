@@ -356,7 +356,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 'producers'           : Producer.objects.filter(is_active=True)
             })
 
-    duplicate_product.short_description = _('duplicate product')
+    duplicate_product.short_description = _('Duplicate product')
 
     def get_list_display(self, request):
         producer_id = sint(request.GET.get('producer', 0))
@@ -384,7 +384,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return list_display
 
     def get_list_filter(self, request):
-        if settings.DJANGO_SETTINGS_IS_AMAP:
+        if settings.DJANGO_SETTINGS_CONTRACT:
             list_filter = [ProductFilterByContract, ]
         else:
             list_filter = []
@@ -574,7 +574,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def changelist_view(self, request, extra_context=None):
         # Important : Needed to pass contract to product.get_is_into_offer() in the list_display of 'get_is_into_offer'
-        if settings.DJANGO_SETTINGS_IS_AMAP:
+        if settings.DJANGO_SETTINGS_CONTRACT:
             contract_id = sint(request.GET.get('commitment', 0))
             contract = Contract.objects.filter(id=contract_id).order_by('?').first()
         else:
@@ -585,7 +585,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def get_is_into_offer(self, product):
         return product.get_is_into_offer(self._contract)
 
-    get_is_into_offer.short_description = (_("is into offer"))
+    get_is_into_offer.short_description = (_("Is into offer"))
     get_is_into_offer.allow_tags = True
 
     def save_model(self, request, product, form, change):

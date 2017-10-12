@@ -287,7 +287,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return EMPTY_STRING
 
-    get_email.short_description = _("email")
+    get_email.short_description = _("Email")
     get_email.admin_order_field = 'user__email'
 
     def get_last_login(self, customer):
@@ -296,7 +296,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return EMPTY_STRING
 
-    get_last_login.short_description = _("last login")
+    get_last_login.short_description = _("Last login")
     get_last_login.admin_order_field = 'user__last_login'
 
     def get_actions(self, request):

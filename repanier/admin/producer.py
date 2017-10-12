@@ -133,7 +133,7 @@ class ProducerDataForm(forms.ModelForm):
         required=False
     )
     reference_site = forms.URLField(
-        label=_("reference site"),
+        label=_("Reference site"),
         widget=forms.URLInput(attrs={'style': "width:100% !important"}),
         required=False
     )
@@ -315,14 +315,14 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return
 
-    export_xlsx_stock.short_description = _("Export stock to a xlsx file")
+    export_xlsx_stock.short_description = _("Export stock")
 
     def import_xlsx_stock(self, request):
         return import_xslx_view(
             self, admin, request, Producer.objects.all(), _("Import stock"), handle_uploaded_stock,
             action='import_xlsx_stock', form_klass=ImportXlsxForm)
 
-    import_xlsx_stock.short_description = _("Import stock from a xlsx file")
+    import_xlsx_stock.short_description = _("Import stock")
 
     def get_actions(self, request):
         actions = super(ProducerAdmin, self).get_actions(request)

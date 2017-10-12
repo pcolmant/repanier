@@ -27,8 +27,7 @@ def is_into_offer(request, product_id, contract_id):
         user = request.user
         if user.is_staff or user.is_superuser:
             product_id = sint(product_id)
-            product = Product.objects.filter(id=product_id).order_by('?').only(
-                'is_into_offer', 'limit_order_quantity_to_stock', 'stock').first()
+            product = Product.objects.filter(id=product_id).order_by('?').first()
             if product is not None:
                 contract_id = sint(contract_id)
                 contract = None

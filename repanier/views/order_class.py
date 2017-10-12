@@ -59,27 +59,28 @@ class OrderView(ListView):
             customer = self.user.customer
             self.may_order = customer.may_order if customer is not None else False
         self.q = self.request.GET.get('q', None)
-        self.producer_id = self.request.GET.get('producer', 'all')
-        if self.producer_id != 'all':
-            self.producer_id = sint(self.producer_id)
-        self.departementforcustomer_id = self.request.GET.get('departementforcustomer', 'all')
-        if self.departementforcustomer_id != 'all':
-            self.departementforcustomer_id = sint(self.departementforcustomer_id)
-        self.box_id = self.request.GET.get('box', 'all')
-        if self.box_id != 'all':
-            self.box_id = sint(self.box_id)
-            self.is_box = True
-            # Do not display "all department" as selected
-            self.departementforcustomer_id = None
-        else:
-            self.is_box = False
-        if self.producer_id == 'all' and self.departementforcustomer_id == 'all' \
-                and not self.is_basket and 'page' not in request.GET \
-                and self.q is None:
-            # This to let display a communication into a popup when the user is on the first order screen
-            self.communication = True
-        else:
+        if not self.q:
+            self.producer_id = self.request.GET.get('producer', 'all')
+            if self.producer_id != 'all':
+                self.producer_id = sint(self.producer_id)
+            self.departementforcustomer_id = self.request.GET.get('departementforcustomer', 'all')
+            if self.departementforcustomer_id != 'all':
+                self.departementforcustomer_id = sint(self.departementforcustomer_id)
+            self.box_id = self.request.GET.get('box', 'all')
+            if self.box_id != 'all':
+                self.box_id = sint(self.box_id)
+                self.is_box = True
+                # Do not display "all department" as selected
+                self.departementforcustomer_id = None
             self.communication = False
+        else:
+
+            if self.producer_id == 'all' and self.departementforcustomer_id == 'all' \
+                    and not self.is_basket and 'page' not in request.GET:
+                # This to let display a communication into a popup when the user is on the first order screen
+                self.communication = True
+            else:
+                self.communication = False
         return super(OrderView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -143,9 +144,8 @@ class OrderView(ListView):
         context['box_id'] = str(self.box_id)
         context['is_box'] = "yes" if self.is_box else EMPTY_STRING
         if self.is_box:
-            html = EMPTY_STRING
             offer_item = get_object_or_404(OfferItem, id=self.box_id)
-            context['box_description'] = html_box_content(offer_item, self.user, html)
+            context['box_description'] = html_box_content(offer_item, self.user)
         context['is_basket'] = "yes" if self.is_basket else EMPTY_STRING
         context['is_like'] = "yes" if self.is_like else EMPTY_STRING
 
@@ -200,7 +200,7 @@ class OrderView(ListView):
                 qs = OfferItemWoReceiver.objects.filter(
                     Q(
                         permanence_id=self.permanence.id, is_active=True,
-                        # is_box=False,  # Don't display boxes -> Added from customers reactions.
+                        is_box=False,  # Don't display boxes -> Added from customers reactions.
                         may_order=True,  # Don't display technical products.
                         translations__language_code=translation.get_language()
                     ) | Q(

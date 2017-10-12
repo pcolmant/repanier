@@ -64,7 +64,7 @@ class BoxContentInlineForm(ModelForm):
         stock = forms.DecimalField(
             label=_("Current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
         limit_order_quantity_to_stock = forms.BooleanField(
-            label=_("limit maximum order qty of the group to stock qty"), required=False, initial=True)
+            label=_("Limit maximum order qty of the group to stock qty"), required=False, initial=True)
 
     def __init__(self, *args, **kwargs):
         super(BoxContentInlineForm, self).__init__(*args, **kwargs)
@@ -145,9 +145,9 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
 
 class BoxForm(TranslatableModelForm):
     calculated_customer_box_price = forms.DecimalField(
-        label=_("calculated customer box price"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
+        label=_("Calculated customer box price"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     calculated_box_deposit = forms.DecimalField(
-        label=_("calculated box deposit"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
+        label=_("Calculated box deposit"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
         calculated_stock = forms.DecimalField(
             label=_("Calculated current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
@@ -258,7 +258,7 @@ class BoxAdmin(TranslatableAdmin):
                 'product'             : box,
             })
 
-    duplicate_box.short_description = _('duplicate box')
+    duplicate_box.short_description = _('Duplicate box')
 
     def get_fieldsets(self, request, box=None):
         if settings.DJANGO_SETTINGS_IS_MINIMALIST:

@@ -37,7 +37,7 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
             form = ProducerProductForm(request.POST)  # A form bound to the POST data
             if form.is_valid():
                 long_name = form.cleaned_data.get('long_name')
-                if long_name != _("long_name"):
+                if long_name != _("Long name"):
                     order_unit = form.cleaned_data.get('order_unit')
                     producer_unit_price = form.cleaned_data.get('producer_unit_price')
                     stock = form.cleaned_data.get('stock')
@@ -80,22 +80,23 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
                     production_mode = form.cleaned_data.get('production_mode')
                     if production_mode is not None:
                         product.production_mode.add(form.cleaned_data.get('production_mode'))
-                    offer_item = OfferItem.objects.create(
-                        permanence_id=permanence_id,
-                        product_id=product.id,
-                        producer_id=producer.id,
-                        is_active=True
-                    )
-                    offer_item_qs = OfferItem.objects.filter(
-                        id=offer_item.id
-                    ).order_by('?')
-                    clean_offer_item(permanence, offer_item_qs)
+                    # offer_item = OfferItem.objects.create(
+                    #     permanence_id=permanence_id,
+                    #     product_id=product.id,
+                    #     producer_id=producer.id,
+                    #     is_active=True
+                    # )
+                    # offer_item_qs = OfferItem.objects.filter(
+                    #     id=offer_item.id
+                    # ).order_by('?')
+                    # clean_offer_item(permanence, offer_item_qs)
+                    offer_item = product.get_or_create_offer_item(permanence)
                     # Refresh offer_item
-                    offer_item = get_object_or_404(OfferItem, id=offer_item.id)
+                    # offer_item = get_object_or_404(OfferItem, id=offer_item.id)
         else:
             form = ProducerProductForm()  # An unbound form
             field = form.fields["long_name"]
-            field.initial = _("long_name")
+            field.initial = _("Long name")
             field = form.fields["order_unit"]
             field.initial = PRODUCT_ORDER_UNIT_PC_PRICE_KG
             field = form.fields["order_average_weight"]

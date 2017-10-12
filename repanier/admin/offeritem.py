@@ -20,7 +20,7 @@ from repanier.tools import sint, update_offer_item
 
 class OfferItemClosedDataForm(forms.ModelForm):
     producer_qty_stock_invoiced = forms.CharField(
-        label=_("quantity invoiced by the producer"), required=False, initial=0)
+        label=_("Quantity invoiced by the producer"), required=False, initial=0)
 
     def __init__(self, *args, **kwargs):
         super(OfferItemClosedDataForm, self).__init__(*args, **kwargs)
@@ -37,10 +37,10 @@ class OfferItemClosedDataForm(forms.ModelForm):
 class OfferItemClosedAdmin(admin.ModelAdmin):
     form = OfferItemClosedDataForm
     search_fields = ('translations__long_name',)
-    list_display = ('department_for_customer', 'producer', 'get_long_name',
+    list_display = ['department_for_customer', 'producer', 'get_long_name',
                     'stock',
                     'get_html_producer_qty_stock_invoiced',
-                    'add_2_stock')
+                    'add_2_stock']
     list_display_links = ('get_long_name',)
     list_filter = (
         PurchaseFilterByProducerForThisPermanence,

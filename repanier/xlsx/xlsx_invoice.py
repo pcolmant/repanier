@@ -70,8 +70,8 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
         row = [
             (_('Name'), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
             (_('Balance before'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('bank_amount_in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('bank_amount_out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Bank amount in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Bank amount out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Balance after'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Name'), 20, customer.short_basket_name, NumberFormat.FORMAT_TEXT),
@@ -121,8 +121,8 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
         row = [
             (_('Name'), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
             (_('Balance before'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('bank_amount_in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('bank_amount_out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Bank amount in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Bank amount out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Balance after'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Name'), 20, producer.short_profile_name, NumberFormat.FORMAT_TEXT),
@@ -217,7 +217,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 (_("Quantity"), 10, qty, '#,##0.????',
                  True if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG else False),
                 (_("Unit"), 10, unit, NumberFormat.FORMAT_TEXT, False),
-                (_("deposit"), 10, purchase.offer_item.unit_deposit.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                (_("Deposit"), 10, purchase.offer_item.unit_deposit.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
                  False)]
             if hide_producer_prices:
                 row += [
@@ -227,9 +227,9 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             else:
                 row += [
-                    (_("producer unit price"), 10, purchase.get_producer_unit_price(),
+                    (_("Producer unit price"), 10, purchase.get_producer_unit_price(),
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("purchase price"), 10, purchase.purchase_price.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                    (_("Purchase price"), 10, purchase.purchase_price.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
                      False),
                     (_("Vat"), 10, purchase.producer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False)
@@ -243,9 +243,9 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             else:
                 row += [
-                    (_("customer unit price"), 10, purchase.get_customer_unit_price(),
+                    (_("Customer unit price"), 10, purchase.get_customer_unit_price(),
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("selling price"), 10, purchase.selling_price.amount,
+                    (_("Selling price"), 10, purchase.selling_price.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                     (_("Vat"), 10, purchase.customer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
@@ -259,12 +259,12 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                     (_("Vat level"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
-                (_("comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
+                (_("Comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
                  False),
-                (_("invoice_status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
-                (_("customer"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
-                (_("reference"), 10, purchase.offer_item.reference, NumberFormat.FORMAT_TEXT, False),
-                (_("wrapped"), 10, purchase.offer_item.wrapped, NumberFormat.FORMAT_TEXT, False),
+                (_("Invoice status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
+                (_("Customer"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
+                (_("Reference"), 10, purchase.offer_item.reference, NumberFormat.FORMAT_TEXT, False),
+                (_("Wrapped"), 10, purchase.offer_item.wrapped, NumberFormat.FORMAT_TEXT, False),
             ]
 
             if row_num == 0:
@@ -370,7 +370,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
             permanence.producers.add(producer)
             row = get_row(worksheet, header, row_num)
             while row and not error:
-                customer_name = row[_("customer")]
+                customer_name = row[_("Customer")]
                 if customer_name:
                     if customer_name in customer_2_id_dict:
                         customer_id = customer_2_id_dict[customer_name]
@@ -378,7 +378,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                         error = True
                         error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                         break
-                    product_reference = row[_("reference")]
+                    product_reference = row[_("Reference")]
                     unit = row[_("Unit")]
                     order_unit = get_reverse_invoice_unit(unit)
                     vat = row[_("Vat level")]
@@ -393,11 +393,11 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                     # The producer unit price is the imported customer unit price
                     # If the group get a reduction, this one must be mentionned into the producer admin screen
                     # into the "price_list_multiplier" field
-                    product.producer_unit_price = row[_("customer unit price")]
-                    product.unit_deposit = row[_("deposit")]
+                    product.producer_unit_price = row[_("Customer unit price")]
+                    product.unit_deposit = row[_("Deposit")]
                     product.order_unit = order_unit
                     product.vat_level = vat_level
-                    product.wrapped = row[_("wrapped")]
+                    product.wrapped = row[_("Wrapped")]
                     product.save()
                     qty_and_price_display = product.get_qty_and_price_display(customer_price=False)
                     if product.long_name.endswith(qty_and_price_display):
@@ -411,7 +411,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                         status=PERMANENCE_SEND,
                         permanence_date=permanence.permanence_date,
                         batch_job=True, is_box_content=False,
-                        comment=row[_("comment")]
+                        comment=row[_("Comment")]
                     )
                     import_counter += 1
 

@@ -15,27 +15,27 @@ from repanier.tools import send_test_email
 
 class ConfigurationDataForm(TranslatableModelForm):
     home_site = forms.URLField(
-        label=_("home site"),
+        label=_("Home site"),
         required=False,
         widget=forms.URLInput(attrs={'style': "width:100% !important"}))
     group_label = forms.CharField(
-        label=_("group label"),
+        label=_("Group label"),
         required=False,
         widget=forms.TextInput(attrs={'style': "width:100% !important"}))
     email_host_user = forms.CharField(
-        label=_("email host user"),
+        label=_("Email host user"),
         help_text=_("For @gmail.com : username@gmail.com"),
         required=False,
         widget=forms.EmailInput(attrs={'style': "width:100% !important"})
     )
     email_host_password = forms.CharField(
-        label=_("email host password"),
+        label=_("Email host password"),
         help_text=_(
             "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
         required=False,
         widget=forms.PasswordInput(attrs={'style': "width:100% !important"}))
     sms_gateway_mail = forms.CharField(
-        label=_("sms gateway email"),
+        label=_("Sms gateway email"),
         help_text=_(
             "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
         required=False,

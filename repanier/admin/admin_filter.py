@@ -85,7 +85,7 @@ class ProductFilterByContract(SimpleListFilter):
 
 
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
-    title = _("Departments for customer")
+    title = _("Departments")
     parameter_name = 'department_for_customer'
     template = 'admin/department_filter.html'
 
@@ -260,7 +260,7 @@ class OfferItemFilter(SimpleListFilter):
     parameter_name = 'is_filled_exact'
 
     def lookups(self, request, model_admin):
-        return [(1, _('only invoiced')), ]
+        return [(1, _('Only invoiced')), ]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -275,10 +275,10 @@ class BankAccountFilterByStatus(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (1, _('not invoiced')),
-            (2, _('balance')),
-            (3, _('loses and profits')),
-            (4, _('taxes'))]
+            (1, _('Not invoiced')),
+            (2, _('Balance')),
+            (3, _('Loses and profits')),
+            (4, _('Taxes'))]
 
     def queryset(self, request, queryset):
         value = self.value()

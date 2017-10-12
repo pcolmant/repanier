@@ -144,7 +144,7 @@ class ProducerModelChoiceField(forms.ModelChoiceField):
 class BankAccountDataForm(forms.ModelForm):
     customer = CustomerModelChoiceField(
         queryset=Customer.objects.filter(is_active=True),
-        label=_("customer"),
+        label=_("Customer"),
         required=False,
         widget=apply_select2(forms.Select)
     )
@@ -152,18 +152,18 @@ class BankAccountDataForm(forms.ModelForm):
         queryset=Producer.objects.filter(
                 represent_this_buyinggroup=False, is_active=True
             ),
-        label=_("producer"),
+        label=_("Producer"),
         required=False,
         widget=apply_select2(forms.Select)
     )
 
     bank_amount_in = FormMoneyField(
-        label=_("bank_amount_in"),
-        help_text=_('payment_on_the_account'),
+        label=_("Bank amount in"),
+        help_text=_('Payment on the account'),
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     bank_amount_out = FormMoneyField(
-        label=_("bank_amount_out"),
-        help_text=_('payment_from_the_account'),
+        label=_("Bank amount out"),
+        help_text=_('Payment from the account'),
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
 
     def __init__(self, *args, **kwargs):

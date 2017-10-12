@@ -40,10 +40,10 @@ class CustomerForm(RepanierForm):
         label=EMPTY_STRING, required=False
     )
     city = fields.CharField(label=_('Your city'), max_length=50, required=False)
-    address = fields.CharField(label=_('address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
+    address = fields.CharField(label=_('Address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                               required=False)
     picture = fields.CharField(
-        label=_("picture"),
+        label=_("Picture"),
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 

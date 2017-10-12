@@ -29,7 +29,7 @@ class Purchase(models.Model):
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
-        verbose_name=_("invoice_status"))
+        verbose_name=_("Invoice status"))
     permanence_date = models.DateField(_("Permanence date"))
     offer_item = models.ForeignKey(
         'OfferItem', verbose_name=_("Offer item"), on_delete=models.PROTECT)
@@ -38,7 +38,7 @@ class Purchase(models.Model):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("Customer"), on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
-        'CustomerProducerInvoice', verbose_name=_("customer_producer_invoice"),
+        'CustomerProducerInvoice', verbose_name=_("Customer producer invoice"),
         on_delete=models.PROTECT, db_index=True)
     producer_invoice = models.ForeignKey(
         'ProducerInvoice', verbose_name=_("Producer invoice"),
@@ -71,10 +71,10 @@ class Purchase(models.Model):
         _("Quantity invoiced"),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
     purchase_price = ModelMoneyField(
-        _("producer row price"),
+        _("Producer row price"),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     selling_price = ModelMoneyField(
-        _("customer row price"),
+        _("Customer row price"),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
 
     producer_vat = ModelMoneyField(
@@ -280,8 +280,8 @@ class Purchase(models.Model):
         return EMPTY_STRING
 
     class Meta:
-        verbose_name = _("purchase")
-        verbose_name_plural = _("purchases")
+        verbose_name = _("Purchase")
+        verbose_name_plural = _("Purchases")
         ordering = ("permanence", "customer", "offer_item", "is_box_content")
         unique_together = ("customer", "offer_item", "is_box_content")
         index_together = [

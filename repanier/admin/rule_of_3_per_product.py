@@ -57,7 +57,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
 
 class OfferItemPurchaseSendInlineForm(forms.ModelForm):
     previous_purchase_price = FormMoneyField(
-        label=_("purchase price"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Purchase price"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     previous_customer = forms.ModelChoiceField(
         Customer.objects.none(), required=False)
 
@@ -101,16 +101,16 @@ class OfferItemPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
 
 class OfferItemSendDataForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
-        label=_("producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
-        label=_("apply rule of three"), required=False, initial=False)
+        label=_("Apply rule of three"), required=False, initial=False)
     qty_delivered = forms.DecimalField(
         min_value=DECIMAL_ZERO,
-        label=_("stock delivered"), max_digits=9, decimal_places=4, required=False,
+        label=_("Stock delivered"), max_digits=9, decimal_places=4, required=False,
         initial=0
     )
     qty_prepared = forms.DecimalField(
-        label=_("qty prepared"),
+        label=_("Qty prepared"),
         max_digits=9, decimal_places=4, required=False, initial=0)
     previous_producer_unit_price = FormMoneyField(
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
@@ -145,7 +145,7 @@ class OfferItemSendDataForm(forms.ModelForm):
             self.fields["offer_purchase_price"].widget.attrs['readonly'] = True
             self.fields["offer_purchase_price"].disabled = True
         if offer_item.producer_price_are_wo_vat:
-            self.fields["offer_purchase_price"].label = _("producer amount invoiced wo tax")
+            self.fields["offer_purchase_price"].label = _("Producer amount invoiced wo tax")
 
     def get_readonly_fields(self, request, obj=None):
         if obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:

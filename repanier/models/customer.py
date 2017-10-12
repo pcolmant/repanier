@@ -31,7 +31,7 @@ from repanier.picture.fields import AjaxPictureField
 class Customer(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     login_attempt_counter = models.DecimalField(
-        _("login attempt counter"),
+        _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
 
     short_basket_name = models.CharField(
@@ -40,43 +40,43 @@ class Customer(models.Model):
     long_basket_name = models.CharField(
         _("Long name"), max_length=100, null=True, default=EMPTY_STRING)
     email2 = models.EmailField(
-        _("secondary email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING)
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
-        verbose_name=_("language"))
+        verbose_name=_("Language"))
 
     picture = AjaxPictureField(
-        verbose_name=_("picture"),
+        verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="customer", size=SIZE_S)
     phone1 = models.CharField(
-        _("phone1"),
+        _("Phone1"),
         max_length=25,
         null=True, blank=True, default=EMPTY_STRING)
     phone2 = models.CharField(
-        _("phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
-    bank_account1 = models.CharField(_("main bank account"), max_length=100, null=True, blank=True,
+        _("Phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
+    bank_account1 = models.CharField(_("Main bank account"), max_length=100, null=True, blank=True,
                                      default=EMPTY_STRING)
-    bank_account2 = models.CharField(_("secondary bank account"), max_length=100, null=True, blank=True,
+    bank_account2 = models.CharField(_("Secondary bank account"), max_length=100, null=True, blank=True,
                                      default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("vat_id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("Vat id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     address = models.TextField(
-        _("address"), null=True, blank=True, default=EMPTY_STRING)
+        _("Address"), null=True, blank=True, default=EMPTY_STRING)
     city = models.CharField(
-        _("city"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
+        _("City"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
     about_me = models.TextField(
-        _("about me"), null=True, blank=True, default=EMPTY_STRING)
+        _("About me"), null=True, blank=True, default=EMPTY_STRING)
     memo = models.TextField(
-        _("memo"), null=True, blank=True, default=EMPTY_STRING)
+        _("Memo"), null=True, blank=True, default=EMPTY_STRING)
     accept_mails_from_members = models.BooleanField(
-        _("show my mail to other members"), default=False)
+        _("Show my mail to other members"), default=False)
     accept_phone_call_from_members = models.BooleanField(
-        _("show my phone to other members"), default=False)
+        _("Show my phone to other members"), default=False)
     membership_fee_valid_until = models.DateField(
-        _("membership fee valid until"),
+        _("Membership fee valid until"),
         default=datetime.date.today
     )
     # If this customer is member of a closed group, the customer.price_list_multiplier is not used
@@ -92,43 +92,43 @@ class Customer(models.Model):
         validators=[MinValueValidator(0)])
 
     password_reset_on = models.DateTimeField(
-        _("password_reset_on"), null=True, blank=True, default=None)
+        _("Password reset on"), null=True, blank=True, default=None)
     date_balance = models.DateField(
-        _("date_balance"), default=datetime.date.today)
+        _("Date balance"), default=datetime.date.today)
     balance = ModelMoneyField(
-        _("balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # The initial balance is needed to compute the invoice control list
     initial_balance = ModelMoneyField(
-        _("initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     represent_this_buyinggroup = models.BooleanField(
-        _("represent_this_buyinggroup"), default=False)
+        _("Represent_this_buyinggroup"), default=False)
     delivery_point = models.ForeignKey(
         'LUT_DeliveryPoint',
-        verbose_name=_("delivery point"),
+        verbose_name=_("Delivery point"),
         blank=True, null=True, default=None)
-    is_active = models.BooleanField(_("is_active"), default=True)
-    is_group = models.BooleanField(_("is a group"), default=False)
-    may_order = models.BooleanField(_("may_order"), default=True)
-    valid_email = models.NullBooleanField(_("valid_email"), default=None)
-    subscribe_to_email = models.BooleanField(_("subscribe to email"), default=True)
+    is_active = models.BooleanField(_("Is active"), default=True)
+    is_group = models.BooleanField(_("Is a group"), default=False)
+    may_order = models.BooleanField(_("May order"), default=True)
+    valid_email = models.NullBooleanField(_("Valid email"), default=None)
+    subscribe_to_email = models.BooleanField(_("Subscribe to email"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     def get_admin_date_balance(self):
         return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)
 
-    get_admin_date_balance.short_description = (_("date_balance"))
+    get_admin_date_balance.short_description = (_("Date balance"))
     get_admin_date_balance.allow_tags = False
 
     def get_admin_date_joined(self):
         return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
 
-    get_admin_date_joined.short_description = _("date joined")
+    get_admin_date_joined.short_description = _("Date joined")
     get_admin_date_joined.allow_tags = False
 
     def get_admin_balance(self):
         return self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
 
-    get_admin_balance.short_description = (_("balance"))
+    get_admin_balance.short_description = (_("Balance"))
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
@@ -197,7 +197,7 @@ class Customer(models.Model):
             else:
                 return '<span style="color:red">%s</span>' % (balance,)
 
-    get_balance.short_description = _("balance")
+    get_balance.short_description = _("Balance")
     get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
 
@@ -248,7 +248,7 @@ class Customer(models.Model):
         if last_membership_fee.exists():
             return last_membership_fee.first().selling_price
 
-    get_last_membership_fee.short_description = _("last membership fee")
+    get_last_membership_fee.short_description = _("Last membership fee")
     get_last_membership_fee.allow_tags = False
 
     def last_membership_fee_date(self):
@@ -261,7 +261,7 @@ class Customer(models.Model):
         if last_membership_fee.exists():
             return last_membership_fee.first().customer_invoice.date_balance
 
-    last_membership_fee_date.short_description = _("last membership fee date")
+    last_membership_fee_date.short_description = _("Last membership fee date")
     last_membership_fee_date.allow_tags = False
 
     def get_last_membership_fee_date(self):
@@ -272,7 +272,7 @@ class Customer(models.Model):
             return last_membership_fee_date.strftime(settings.DJANGO_SETTINGS_DATE)
         return EMPTY_STRING
 
-    get_last_membership_fee_date.short_description = _("last membership fee date")
+    get_last_membership_fee_date.short_description = _("Last membership fee date")
     get_last_membership_fee_date.allow_tags = False
 
     def get_participation(self):
@@ -284,7 +284,7 @@ class Customer(models.Model):
             permanence_role__is_counted_as_participation=True
         ).order_by('?').count()
 
-    get_participation.short_description = _("participation")
+    get_participation.short_description = _("Participation")
     get_participation.allow_tags = False
 
     def get_purchase(self):
@@ -296,7 +296,7 @@ class Customer(models.Model):
             date_balance__gte=now - datetime.timedelta(ONE_YEAR)
         ).count()
 
-    get_purchase.short_description = _("purchase")
+    get_purchase.short_description = _("Purchase")
     get_purchase.allow_tags = False
 
     def my_order_confirmation_email_send_to(self):
@@ -347,8 +347,8 @@ class Customer(models.Model):
         return self.short_basket_name
 
     class Meta:
-        verbose_name = _("customer")
-        verbose_name_plural = _("customers")
+        verbose_name = _("Customer")
+        verbose_name_plural = _("Customers")
         ordering = ("short_basket_name",)
         index_together = [
             ["user", "is_active", "may_order"],

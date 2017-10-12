@@ -22,18 +22,18 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 @python_2_unicode_compatible
 class OfferItem(Item):
     translations = TranslatedFields(
-        long_name=models.CharField(_("long_name"), max_length=100,
+        long_name=models.CharField(_("Long name"), max_length=100,
                                    default=EMPTY_STRING, blank=True, null=True),
         cache_part_a=HTMLField(default=EMPTY_STRING, blank=True),
         cache_part_b=HTMLField(default=EMPTY_STRING, blank=True),
         order_sort_order=models.IntegerField(
-            _("customer sort order for optimization"),
+            _("Customer sort order for optimization"),
             default=0, db_index=True),
         preparation_sort_order=models.IntegerField(
-            _("preparation sort order for optimization"),
+            _("Preparation sort order for optimization"),
             default=0, db_index=True),
         producer_sort_order=models.IntegerField(
-            _("producer sort order for optimization"),
+            _("Producer sort order for optimization"),
             default=0, db_index=True)
     )
     permanence = models.ForeignKey(
@@ -44,29 +44,29 @@ class OfferItem(Item):
     )
     product = models.ForeignKey(
         'Product',
-        verbose_name=_("product"),
+        verbose_name=_("Product"),
         on_delete=models.PROTECT)
     # is a box or a contract content
-    is_box_content = models.BooleanField(_("is a box content"), default=False)
+    is_box_content = models.BooleanField(_("Is a box content"), default=False)
 
-    producer_price_are_wo_vat = models.BooleanField(_("producer price are wo vat"), default=False)
+    producer_price_are_wo_vat = models.BooleanField(_("Producer price are without vat"), default=False)
     price_list_multiplier = models.DecimalField(
-        _("price_list_multiplier"),
+        _("Price list multiplier"),
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=4,
         validators=[MinValueValidator(0)])
     is_resale_price_fixed = models.BooleanField(
-        _("the resale price is set by the producer"),
+        _("The resale price is set by the producer"),
         default=False)
 
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
-        _("producer amount invoiced"),
+        _("Producer amount invoiced"),
         help_text=_('Total purchase amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     # Calculated with Purchase
     total_selling_with_tax = ModelMoneyField(
-        _("customer amount invoiced"),
+        _("Customer amount invoiced"),
         help_text=_('Total selling amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
@@ -75,15 +75,15 @@ class OfferItem(Item):
     # During sending the orders to the producer this become the invoiced quantity
     # via tools.recalculate_order_amount(..., send_to_producer=True)
     quantity_invoiced = models.DecimalField(
-        _("quantity invoiced"),
-        help_text=_('quantity invoiced to our customer'),
+        _("Qty invoiced"),
+        help_text=_('Quantity invoiced to our customer'),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
 
-    may_order = models.BooleanField(_("may_order"), default=True)
+    may_order = models.BooleanField(_("May order"), default=True)
 
-    manage_replenishment = models.BooleanField(_("manage stock"), default=False)
-    manage_production = models.BooleanField(_("manage production"), default=False)
-    producer_pre_opening = models.BooleanField(_("producer pre-opening"), default=False)
+    manage_replenishment = models.BooleanField(_("Manage stock"), default=False)
+    manage_production = models.BooleanField(_("Manage production"), default=False)
+    producer_pre_opening = models.BooleanField(_("Producer pre-opening"), default=False)
 
     add_2_stock = models.DecimalField(
         _("Add 2 stock"),
@@ -91,6 +91,16 @@ class OfferItem(Item):
     new_stock = models.DecimalField(
         _("Final stock"),
         default=None, max_digits=9, decimal_places=3, null=True)
+    contract = models.OneToOneField(
+        'Contract',
+        verbose_name=_("Contract"),
+        on_delete=models.CASCADE,
+        null=True, blank=True, default=None)
+    permanences_dates = models.TextField(
+        _("Permanences dates"), null=True, blank=True, default=EMPTY_STRING)
+    permanences_dates_counter = models.IntegerField(
+        _("Permanences dates counter"),
+        null=True, blank=True, default=1)
 
     def get_vat_level(self):
         return self.get_vat_level_display()
@@ -125,7 +135,7 @@ class OfferItem(Item):
             if taken_from_stock == DECIMAL_ZERO:
                 return EMPTY_STRING
             else:
-                return _("stock %(stock)s") % {'stock': number_format(taken_from_stock, 4)}
+                return _("Stock %(stock)s") % {'stock': number_format(taken_from_stock, 4)}
         else:
             if taken_from_stock == DECIMAL_ZERO:
                 return _("<b>%(qty)s</b>") % {'qty': number_format(invoiced_qty, 4)}
@@ -133,7 +143,7 @@ class OfferItem(Item):
                 return _("<b>%(qty)s</b> + stock %(stock)s") % {'qty'  : number_format(invoiced_qty, 4),
                                                                 'stock': number_format(taken_from_stock, 4)}
 
-    get_html_producer_qty_stock_invoiced.short_description = (_("quantity invoiced by the producer"))
+    get_html_producer_qty_stock_invoiced.short_description = (_("Qty invoiced by the producer"))
     get_html_producer_qty_stock_invoiced.allow_tags = True
     get_html_producer_qty_stock_invoiced.admin_order_field = 'quantity_invoiced'
 
@@ -171,7 +181,7 @@ class OfferItem(Item):
             return _("<b>%(price)s</b>") % {'price': price}
         return EMPTY_STRING
 
-    get_html_producer_price_purchased.short_description = (_("producer amount invoiced"))
+    get_html_producer_price_purchased.short_description = (_("Producer amount invoiced"))
     get_html_producer_price_purchased.allow_tags = True
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
@@ -180,16 +190,16 @@ class OfferItem(Item):
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
 
     def __str__(self):
-        return super(OfferItem, self).display()
+        return self.get_long_name_with_producer()
         # return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
 
     class Meta:
-        verbose_name = _("offer's item")
-        verbose_name_plural = _("offer's items")
-        unique_together = ("permanence", "product",)
-        index_together = [
-            ["id", "order_unit"]
-        ]
+        verbose_name = _("Offer's item")
+        verbose_name_plural = _("Offer's items")
+        unique_together = ("permanence", "product", "permanences_dates")
+        # index_together = [
+        #     ["id", "order_unit"]
+        # ]
 
 
 @receiver(post_init, sender=OfferItem)
@@ -243,8 +253,8 @@ class OfferItemWoReceiver(OfferItem):
 
     class Meta:
         proxy = True
-        verbose_name = _("offer's item")
-        verbose_name_plural = _("offer's items")
+        verbose_name = _("Offer's item")
+        verbose_name_plural = _("Offer's items")
 
 
 @python_2_unicode_compatible
@@ -254,8 +264,8 @@ class OfferItemSend(OfferItem):
 
     class Meta:
         proxy = True
-        verbose_name = _("offer's item")
-        verbose_name_plural = _("offer's items")
+        verbose_name = _("Offer's item")
+        verbose_name_plural = _("Offer's items")
 
 
 @receiver(post_init, sender=OfferItemSend)
@@ -275,8 +285,8 @@ class OfferItemClosed(OfferItem):
 
     class Meta:
         proxy = True
-        verbose_name = _("offer's item")
-        verbose_name_plural = _("offer's items")
+        verbose_name = _("Offer's item")
+        verbose_name_plural = _("Offer's items")
 
 
 @receiver(post_init, sender=OfferItemClosed)

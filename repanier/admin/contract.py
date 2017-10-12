@@ -37,12 +37,15 @@ class ContractAdmin(TranslatableAdmin):
 
     list_display = ('get_contract_admin_display',)
     list_display_links = ('get_contract_admin_display',)
-    list_filter = [ContractFilterByProducer, ]
+    list_filter = [
+        'is_active',
+        ContractFilterByProducer
+    ]
     date_hierarchy = 'first_permanence_date'
     list_per_page = 16
     list_max_show_all = 16
     ordering = (
-        'status',
+        # 'status',
         'first_permanence_date',
     )
     search_fields = ('translations__long_name',)
@@ -52,10 +55,10 @@ class ContractAdmin(TranslatableAdmin):
         if self._has_delete_permission is None:
             if request.user.groups.filter(
                     name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-                if contract is not None:
-                    self._has_delete_permission = contract.highest_status == CONTRACT_IN_WRITING
-                else:
-                    self._has_delete_permission = settings.DJANGO_SETTINGS_IS_AMAP
+                # if contract is not None:
+                #     self._has_delete_permission = contract.highest_status == CONTRACT_IN_WRITING
+                # else:
+                self._has_delete_permission = settings.DJANGO_SETTINGS_CONTRACT
             else:
                 self._has_delete_permission = False
         return self._has_delete_permission
@@ -74,9 +77,9 @@ class ContractAdmin(TranslatableAdmin):
             list_display += [
                 'language_column',
             ]
-        list_display += [
-            'get_full_status_display',
-        ]
+        # list_display += [
+        #     'get_full_status_display',
+        # ]
         return list_display
 
     def get_fieldsets(self, request, contract=None):
@@ -90,9 +93,10 @@ class ContractAdmin(TranslatableAdmin):
                 'get_dates'
             ]
         fields_basic += [
-            'offer_description',
+            # 'offer_description',
             'producers',
-            'customers'
+            'customers',
+            'is_active'
         ]
         fieldsets = (
             (None, {'fields': fields_basic}),

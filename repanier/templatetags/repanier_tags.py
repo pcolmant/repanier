@@ -227,7 +227,6 @@ def repanier_select_offer_item(context, *args, **kwargs):
                     DECIMAL_ZERO,
                     is_open=is_open
                 )
-            # print(option_dict)
             if is_open:
                 result = '<select name="offer_item{str_id}" id="offer_item{str_id}" onchange="order_ajax({str_id})" onmouseover="show_select_order_list_ajax({str_id})" class="form-control">{option}</select>'.format(
                     str_id=str_id,
@@ -238,14 +237,17 @@ def repanier_select_offer_item(context, *args, **kwargs):
                     str_id=str_id,
                     option=option_dict['html']
                 )
-        box_purchase = PurchaseWoReceiver.objects.filter(
-            customer_id=user.customer,
-            offer_item_id=offer_item.id,
-            is_box_content=True
-        ).order_by('?').select_related('offer_item').only('offer_item', 'quantity_ordered').first()
-        if box_purchase is not None:
-            offer_item = box_purchase.offer_item
-            option_dict = display_selected_box_value(offer_item, box_purchase.quantity_ordered)
+        if offer_item.is_box_content:
+            box_purchase = PurchaseWoReceiver.objects.filter(
+                customer_id=user.customer,
+                offer_item_id=offer_item.id,
+                is_box_content=True
+            ).order_by('?').only('quantity_ordered').first()
+            if box_purchase is None:
+                quantity_ordered = DECIMAL_ZERO
+            else:
+                quantity_ordered = box_purchase.quantity_ordered
+            option_dict = display_selected_box_value(offer_item, quantity_ordered)
             result = result + option_dict['html']
     return mark_safe(result)
 

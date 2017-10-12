@@ -37,33 +37,33 @@ class StaffManager(TreeManager, TranslatableManager):
 class Staff(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_("login"))
+        settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
-        'Customer', verbose_name=_("customer_responsible"),
+        'Customer', verbose_name=_("Customer_responsible"),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
     login_attempt_counter = models.DecimalField(
-        _("login attempt counter"),
+        _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     translations = TranslatedFields(
-        long_name=models.CharField(_("long_name"), max_length=100, db_index=True, null=True, default=EMPTY_STRING),
-        function_description=HTMLField(_("function_description"), configuration='CKEDITOR_SETTINGS_MODEL2',
+        long_name=models.CharField(_("Long name"), max_length=100, db_index=True, null=True, default=EMPTY_STRING),
+        function_description=HTMLField(_("Function description"), configuration='CKEDITOR_SETTINGS_MODEL2',
                                        blank=True, default=EMPTY_STRING),
     )
-    is_reply_to_order_email = models.BooleanField(_("is_reply_to_order_email"),
+    is_reply_to_order_email = models.BooleanField(_("Is reply to order email"),
                                                   default=False)
-    is_reply_to_invoice_email = models.BooleanField(_("is_reply_to_invoice_email"),
+    is_reply_to_invoice_email = models.BooleanField(_("Is reply to invoice email"),
                                                     default=False)
-    is_contributor = models.BooleanField(_("is_contributor"),
+    is_contributor = models.BooleanField(_("Is contributor"),
                                          default=False)
-    is_webmaster = models.BooleanField(_("is_webmaster"),
+    is_webmaster = models.BooleanField(_("Is webmaster"),
                                        default=False)
-    is_coordinator = models.BooleanField(_("is_coordinator"),
+    is_coordinator = models.BooleanField(_("Is coordinator"),
                                          default=False)
-    is_tester = models.BooleanField(_("is_tester"),
+    is_tester = models.BooleanField(_("Is tester"),
                                          default=False)
     password_reset_on = models.DateTimeField(
-        _("password_reset_on"), null=True, blank=True, default=None)
-    is_active = models.BooleanField(_("is_active"), default=True)
+        _("Password reset on"), null=True, blank=True, default=None)
+    is_active = models.BooleanField(_("Is active"), default=True)
 
     def get_customer_phone1(self):
         try:
@@ -71,7 +71,7 @@ class Staff(MPTTModel, TranslatableModel):
         except:
             return "----"
 
-    get_customer_phone1.short_description = (_("phone1"))
+    get_customer_phone1.short_description = (_("Phone1"))
     get_customer_phone1.allow_tags = False
 
     @property
@@ -93,8 +93,8 @@ class Staff(MPTTModel, TranslatableModel):
         return self.long_name
 
     class Meta:
-        verbose_name = _("staff member")
-        verbose_name_plural = _("staff members")
+        verbose_name = _("Staff member")
+        verbose_name_plural = _("Staff members")
 
 
 @receiver(pre_save, sender=Staff)

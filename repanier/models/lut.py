@@ -36,15 +36,15 @@ class LUT_ProductionModeManager(TreeManager, TranslatableManager):
 class LUT_ProductionMode(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     picture2 = AjaxPictureField(
-        verbose_name=_("picture"),
+        verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="label", size=SIZE_XS)
 
-    is_active = models.BooleanField(_("is_active"), default=True)
+    is_active = models.BooleanField(_("Is active"), default=True)
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
@@ -52,8 +52,8 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
         return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
-        verbose_name = _("production mode")
-        verbose_name_plural = _("production modes")
+        verbose_name = _("Production mode")
+        verbose_name_plural = _("Production modes")
 
 
 class LUT_DeliveryPointQuerySet(TranslatableQuerySet):
@@ -74,14 +74,14 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
-    is_active = models.BooleanField(_("is_active"), default=True)
+    is_active = models.BooleanField(_("Is active"), default=True)
     customer_responsible = models.ForeignKey(
-        'Customer', verbose_name=_("customer_responsible"),
+        'Customer', verbose_name=_("Customer responsible"),
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
-    inform_customer_responsible = models.BooleanField(_("inform_customer_responsible"), default=False)
+    inform_customer_responsible = models.BooleanField(_("Inform customer responsible"), default=False)
     # closed_group = models.BooleanField(_("with entitled customer"), default=False)
     # price_list_multiplier = models.DecimalField(
     #     _("Delivery point price list multiplier"),
@@ -108,8 +108,8 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
             return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
-        verbose_name = _("delivery point")
-        verbose_name_plural = _("deliveries points")
+        verbose_name = _("Delivery point")
+        verbose_name_plural = _("Deliveries points")
 
 
 class LUT_DepartmentForCustomerQuerySet(TranslatableQuerySet):
@@ -128,10 +128,10 @@ class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
 @python_2_unicode_compatible
 class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
-    is_active = models.BooleanField(_("is_active"), default=True)
+    is_active = models.BooleanField(_("Is active"), default=True)
     translations = TranslatedFields(
-        short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     objects = LUT_ProductionModeManager()
 
@@ -139,8 +139,8 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
         return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
-        verbose_name = _("department for customer")
-        verbose_name_plural = _("departments for customer")
+        verbose_name = _("Department for customer")
+        verbose_name_plural = _("Departments for customer")
 
 
 class LUT_PermanenceRoleQuerySet(TranslatableQuerySet):
@@ -160,21 +160,21 @@ class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
 class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("short_name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
-        description=HTMLField(_("description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
 
-    is_counted_as_participation = models.BooleanField(_("is_counted_as_participation"), default=True)
-    customers_may_register = models.BooleanField(_("customers_may_register"), default=True)
-    is_active = models.BooleanField(_("is_active"), default=True)
+    is_counted_as_participation = models.BooleanField(_("Is counted as participation"), default=True)
+    customers_may_register = models.BooleanField(_("Customers may register"), default=True)
+    is_active = models.BooleanField(_("Is active"), default=True)
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
         return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
-        verbose_name = _("permanence role")
-        verbose_name_plural = _("permanences roles")
+        verbose_name = _("Permanence role")
+        verbose_name_plural = _("Permanences roles")
 
 
 @receiver(pre_save, sender=LUT_PermanenceRole)

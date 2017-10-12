@@ -12,21 +12,21 @@ from repanier.const import EMPTY_STRING
 
 class PermanenceBoard(models.Model):
     customer = models.ForeignKey(
-        'Customer', verbose_name=_("customer"),
+        'Customer', verbose_name=_("Customer"),
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME)
     # permanence_date duplicated to quickly calculate # participation of lasts 12 months
-    permanence_date = models.DateField(_("permanence_date"), db_index=True)
+    permanence_date = models.DateField(_("Permanence date"), db_index=True)
     permanence_role = models.ForeignKey(
-        'LUT_PermanenceRole', verbose_name=_("permanence_role"),
+        'LUT_PermanenceRole', verbose_name=_("Permanence role"),
         on_delete=models.PROTECT)
     is_registered_on = models.DateTimeField(
-        _("is_registered_on"), null=True, blank=True)
+        _("Is registered on"), null=True, blank=True)
 
     class Meta:
-        verbose_name = _("permanence board")
-        verbose_name_plural = _("permanences board")
+        verbose_name = _("Permanence board")
+        verbose_name_plural = _("Permanences board")
         unique_together = ("permanence", "permanence_role", "customer",)
         index_together = [
             ["permanence_date", "permanence", "permanence_role"],

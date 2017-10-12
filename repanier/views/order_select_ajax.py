@@ -16,7 +16,7 @@ from repanier.const import PERMANENCE_OPENED, PERMANENCE_SEND, LIMIT_ORDER_QTY_I
     EMPTY_STRING
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, display_selected_value
 
@@ -33,23 +33,29 @@ def order_select_ajax(request):
         .only("id", "vat_id", "language").order_by('?').first()
     if customer is None:
         raise Http404
-    to_json = []
     translation.activate(customer.language)
     offer_item_id = sint(request.GET.get('offer_item', 0))
+    offer_item = OfferItemWoReceiver.objects.filter(
+        id=offer_item_id
+    ).order_by('?').first()
+    if offer_item is None:
+        raise Http404
+    to_json = []
     # Select one purchase
     purchase = PurchaseWoReceiver.objects.filter(
         customer_id=customer.id,
         offer_item_id=offer_item_id,
         is_box_content=False
-    ).order_by('?').select_related('offer_item').only('offer_item', 'quantity_ordered').first()
-    offer_item = purchase.offer_item
-    qs = ProducerInvoice.objects.filter(
-        permanence__offeritem=offer_item_id,
-        producer__offeritem=offer_item_id,
+    ).order_by('?').only('quantity_ordered').first()
+    producer_invocie = ProducerInvoice.objects.filter(
+        permanence_id=offer_item.permanence_id,
+        producer_id=offer_item.producer_id,
         status=PERMANENCE_OPENED
     ).order_by('?')
-    if qs.exists():
-        if offer_item is not None:
+    if producer_invocie.exists():
+        # The orders are opened for this producer and this permanence
+        if offer_item.is_active:
+            # This offer_item may be ordered
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id,
                 customer_id=customer.id).only("status").order_by('?').first()

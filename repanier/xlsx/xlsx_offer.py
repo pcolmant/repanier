@@ -62,12 +62,12 @@ def export_offer_row(product, row_num, ws):
          NumberFormat.FORMAT_TEXT,
          False),
         (_("Product"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
-        (_("producer unit price"), 10,
+        (_("Producer unit price"), 10,
          product.producer_unit_price if product.producer_unit_price < product.customer_unit_price and not product.is_box else EMPTY_STRING,
          repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-        (_("customer unit price"), 10, product.customer_unit_price,
+        (_("Customer unit price"), 10, product.customer_unit_price,
          repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-        (_("deposit"), 10, product.unit_deposit,
+        (_("Deposit"), 10, product.unit_deposit,
          repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
     ]
     if row_num == 0:

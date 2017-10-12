@@ -24,6 +24,7 @@ from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.models import Contract
 from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -63,6 +64,19 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super(PermanenceBoardInline, self).get_formset(request, obj, **kwargs)
+        form = formset.form
+        widget = form.base_fields['permanence_role'].widget
+        widget.can_add_related = False
+        widget.can_change_related = False
+        widget.can_delete_related = False
+        widget = form.base_fields['customer'].widget
+        widget.can_add_related = False
+        widget.can_change_related = False
+        widget.can_delete_related = False
+        return formset
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer":
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
@@ -75,7 +89,8 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
 class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
     model = DeliveryBoard
     ordering = ("id",)
-    fields = ['delivery_date', 'delivery_comment', 'delivery_point', 'status', ]
+    # fields = ['delivery_date', 'delivery_comment', 'delivery_point', 'status', ]
+    fields = ['delivery_comment', 'delivery_point', 'status', ]
     extra = 0
     readonly_fields = ['status', ]
     has_add_or_delete_permission = None
@@ -98,11 +113,32 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super(DeliveryBoardInline, self).get_formset(request, obj, **kwargs)
+        form = formset.form
+        widget = form.base_fields['delivery_comment'].widget
+        widget.attrs['size'] = "100%"
+        widget = form.base_fields['delivery_point'].widget
+        widget.can_add_related = False
+        widget.can_change_related = False
+        widget.can_delete_related = False
+        return formset
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "delivery_point":
             kwargs["queryset"] = LUT_DeliveryPoint.objects.filter(is_active=True, rght=F('lft') + 1).order_by("tree_id",
                                                                                                               "lft")
         return super(DeliveryBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+# class PermanenceInPreparationChangeList(ChangeList):
+#     def url_for_result(self, result):
+#         pk = getattr(result, self.pk_attname)
+#
+#         # YOU PROBABLY WANT TO CHANGE NEXT LINES!
+#         return reverse('admin:%s_%s_change' % (self.opts.app_label, "contract"), # self.opts.model_name),
+#                        args=(quote(pk),),
+#                        current_app=self.model_admin.admin_site.name)
 
 
 class PermanenceInPreparationForm(TranslatableModelForm):
@@ -127,6 +163,27 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         # config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
         # self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
 
+    def __init__(self, *args, **kwargs):
+        super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
+        self.fields["contract"].widget.can_delete_related = False
+
+    def clean(self):
+        if any(self.errors):
+            # Don't bother validating the formset unless each form is valid on its own
+            return
+        if settings.DJANGO_SETTINGS_CONTRACT:
+            contract = self.cleaned_data.get("contract", None)
+            if contract is not None:
+                producers = self.cleaned_data.get("producers", None)
+                if producers:
+                    self.add_error('producers', _('No producer may be selected if a contract is also selected.'))
+                if settings.DJANGO_SETTINGS_BOX:
+                    boxes = self.cleaned_data.get("boxes", None)
+                    if boxes:
+                        self.add_error('boxes', _('No box may be selected if a contract is also selected.'))
+        return
+
+
     class Meta:
         model = PermanenceInPreparation
         fields = "__all__"
@@ -134,7 +191,7 @@ class PermanenceInPreparationForm(TranslatableModelForm):
 
 class PermanenceInPreparationAdmin(TranslatableAdmin):
     form = PermanenceInPreparationForm
-    exclude = ['invoice_description']
+    # exclude = ['invoice_description']
     list_per_page = 10
     list_max_show_all = 10
     filter_horizontal = ('producers', 'boxes')
@@ -156,12 +213,16 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         'send_order',
         'generate_permanence'
     ]
+    _has_delete_permission = None
+
+    # def get_changelist(self, request, **kwargs):
+    #     return PermanenceInPreparationChangeList
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-            return True
-        return False
+        if self._has_delete_permission is None:
+            self._has_delete_permission = request.user.groups.filter(
+                    name__in=[ORDER_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser
+        return self._has_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -188,19 +249,25 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'automatically_closed',
             'short_name',
             'offer_description',
-            'offer_description_on_home_page',
+            'offer_description_on_home_page'
+        ]
+        if settings.DJANGO_SETTINGS_CONTRACT:
+            fields.append('contract')
+        fields += [
             'producers'
         ]
-        if settings.DJANGO_SETTINGS_IS_AMAP or not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_BOX:
             fields.append('boxes')
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
         if permanence is not None and permanence.status > PERMANENCE_PLANNED:
-            if settings.DJANGO_SETTINGS_IS_AMAP or not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                return ['status', 'producers', 'boxes']
-            else:
-                return ['status', 'producers']
+            readonly_fields = ['status', 'producers']
+            if settings.DJANGO_SETTINGS_CONTRACT:
+                readonly_fields += ['contract']
+            if settings.DJANGO_SETTINGS_BOX:
+                readonly_fields += ['boxes']
+            return readonly_fields
         return ['status']
 
     def get_formsets_with_inlines(self, request, obj=None):
@@ -387,11 +454,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         'offer_description', any_language=True, default=EMPTY_STRING
                     )
                 context = TemplateContext({
-                    'name'             : _('long_profile_name'),
-                    'long_profile_name': _('long_profile_name'),
-                    'permanence_link'  : mark_safe('<a href="#">%s</a>' % _("offer")),
+                    'name'             : _('Long name'),
+                    'long_profile_name': _('Long name'),
+                    'permanence_link'  : mark_safe('<a href="#">%s</a>' % _("Offer")),
                     'offer_description': mark_safe(offer_description),
-                    'offer_link'       : mark_safe('<a href="#">%s</a>' % _("offer")),
+                    'offer_link'       : mark_safe('<a href="#">%s</a>' % _("Offer")),
                     'signature'        : mark_safe(
                         '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
@@ -441,10 +508,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 template_offer_mail.append(template.render(context))
                 if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
                     context = TemplateContext({
-                        'name'             : _('long_basket_name'),
-                        'long_basket_name' : _('long_basket_name'),
-                        'basket_name'      : _('short_basket_name'),
-                        'short_basket_name': _('short_basket_name'),
+                        'name'             : _('Long name'),
+                        'long_basket_name' : _('Long name'),
+                        'basket_name'      : _('Short name'),
+                        'short_basket_name': _('Short name'),
                         'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
                         'signature'        : mark_safe(
                             '%s<br/>%s<br/>%s' % (
@@ -486,7 +553,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'email_will_be_sent_to': email_will_be_sent_to
             })
 
-    open_and_send_offer.short_description = _('open and send offers')
+    open_and_send_offer.short_description = _('Open and send offers')
 
     def close_order(self, request, queryset):
         if 'cancel' in request.POST:
@@ -560,7 +627,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'producer_invoices'   : producer_invoices,
             })
 
-    close_order.short_description = _('close orders')
+    close_order.short_description = _('Close orders')
 
     def send_order(self, request, queryset):
         if 'cancel' in request.POST:
@@ -659,7 +726,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'order_amount'     : RepanierMoney(123.45),
                 'on_hold_movement' : mark_safe(customer_on_hold_movement),
                 'payment_needed'   : mark_safe(customer_payment_needed),
-                'delivery_point'   : _('delivery point').upper(),
+                'delivery_point'   : _('Delivery point').upper(),
                 'signature'        : mark_safe(
                     '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
@@ -754,7 +821,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'order_board_email_will_be_sent_to'   : order_board_email_will_be_sent_to
             })
 
-    send_order.short_description = _('send orders2')
+    send_order.short_description = _('Send orders2')
 
     def back_to_planned(self, request, queryset):
         if 'cancel' in request.POST:
@@ -783,7 +850,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
-    back_to_planned.short_description = _('back to planned')
+    back_to_planned.short_description = _('Back to planned')
 
     # def undo_back_to_planned(self, request, queryset):
     #     if 'cancel' in request.POST:
@@ -886,6 +953,12 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     generate_permanence.short_description = _("Generate permanence")
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "contract":
+            kwargs["queryset"] = Contract.objects.filter(is_active=True)
+        return super(PermanenceInPreparationAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs)
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
@@ -899,24 +972,26 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         actions['send_order'] = list(actions['send_order'])
         if not repanier.apps.REPANIER_SETTINGS_CLOSE_WO_SENDING:
             del actions['close_order']
-            actions['send_order'][2] = _('send orders2')
+            actions['send_order'][2] = _('Send orders2')
         else:
-            actions['send_order'][2] = _('send orders1')
+            actions['send_order'][2] = _('Send orders1')
         if not settings.DJANGO_SETTINGS_ENV == "dev":
             del actions['delete_purchases']
         return actions
 
-    def changelist_view(self, request, extra_context=None):
-        # Important : Linked to the use of lambda in model verbose_name
-        extra_context = extra_context or {}
-        # extra_context['module_name'] = "%s" % self.model._meta.verbose_name_plural()
-        # Finally I found the use of EMPTY_STRING nicer on the UI
-        extra_context['module_name'] = EMPTY_STRING
-        return super(PermanenceInPreparationAdmin, self).changelist_view(request, extra_context=extra_context)
+    # def changelist_view(self, request, extra_context=None):
+    #     # Important : Linked to the use of lambda in model verbose_name
+    #     extra_context = extra_context or {}
+    #     # extra_context['module_name'] = "%s" % self.model._meta.verbose_name_plural()
+    #     # Finally I found the use of EMPTY_STRING nicer on the UI
+    #     extra_context['module_name'] = EMPTY_STRING
+    #     return super(PermanenceInPreparationAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def get_queryset(self, request):
         qs = super(PermanenceInPreparationAdmin, self).get_queryset(request)
-        return qs.filter(status__lte=PERMANENCE_SEND)
+        return qs.filter(
+            status__lte=PERMANENCE_SEND
+        )
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
