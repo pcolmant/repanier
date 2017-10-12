@@ -271,7 +271,7 @@ def contract_content_pre_save(sender, **kwargs):
             # Important : linked to django.utils.dateparse.parse_date format
             one_date.strftime("%Y-%m-%d") for one_date in contract_content.all_dates
         )
-        if contract_content.flexibles_dates:
+        if contract_content.flexible_dates:
             contract_content.permanences_dates_counter = 1
         else:
             contract_content.permanences_dates_counter = len(contract_content.all_dates)

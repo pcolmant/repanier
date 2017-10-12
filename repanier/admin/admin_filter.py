@@ -74,7 +74,7 @@ class ProductFilterByContract(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [(c.id, c.long_name) for c in
-                Contract.objects.filter(status=CONTRACT_IN_WRITING)
+                Contract.objects.filter(is_active=True)
                 ]
 
     def queryset(self, request, queryset):
