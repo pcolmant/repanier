@@ -22,10 +22,10 @@ from repanier.widget.checkbox import CheckboxWidget
 
 
 class CustomerForm(RepanierForm):
-    long_basket_name = fields.CharField(label=_("Your name"), max_length=100)
+    long_basket_name = fields.CharField(label=_("My name is"), max_length=100)
 
-    email1 = fields.EmailField(label=_('Your main email, used for password recovery and login'))
-    email2 = fields.EmailField(label=_('Your secondary email'), required=False)
+    email1 = fields.EmailField(label=_('My main email address, used to reset the password and connect to the site'))
+    email2 = fields.EmailField(label=_('My secondary email address (does not allow to connect to the site)'), required=False)
     accept_mails_from_members = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
@@ -33,17 +33,17 @@ class CustomerForm(RepanierForm):
         label=EMPTY_STRING, required=False
     )
 
-    phone1 = fields.CharField(label=_('Your main phone'), max_length=25)
-    phone2 = fields.CharField(label=_('Your secondary phone'), max_length=25, required=False)
+    phone1 = fields.CharField(label=_('My main phone number'), max_length=25)
+    phone2 = fields.CharField(label=_('My secondary phone number'), max_length=25, required=False)
 
     accept_phone_call_from_members = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
-    city = fields.CharField(label=_('Your city'), max_length=50, required=False)
-    address = fields.CharField(label=_('Address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
+    city = fields.CharField(label=_('My city'), max_length=50, required=False)
+    address = fields.CharField(label=_('My address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                               required=False)
     picture = fields.CharField(
-        label=_("Picture"),
+        label=_("My picture"),
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
@@ -59,18 +59,18 @@ class CustomerForm(RepanierForm):
             id=self.request.user.id
         ).order_by('?')
         if qs.exists():
-            self.add_error('email1', _('The given email is used by another user'))
+            self.add_error('email1', _('The email is used by another customer'))
         return email1
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         super(CustomerForm, self).__init__(*args, **kwargs)
         self.fields["accept_mails_from_members"].widget = CheckboxWidget(
-            label=_('My emails are visible to all members'))
+            label=_('My email addresses are visible to all members'))
         self.fields["accept_phone_call_from_members"].widget = CheckboxWidget(
-            label=_('My phones numbers are visible to all members'))
+            label=_('My phone numbers are visible to all members'))
         self.fields["subscribe_to_email"].widget = CheckboxWidget(
-            label=_('I subscribe to emails send by repanier'))
+            label=_('I agree to receive emails from this site. Even in case of refusal, the email to reset the password is always sent.'))
 
 
 class CustomerValidationForm(NgFormValidationMixin, CustomerForm):

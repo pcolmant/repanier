@@ -47,7 +47,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         (_("Tax"), 10),
         (_("Rule of 3"), 10),
         (_("Comment"), 30),
-        (_("Vat level"), 10),
+        (_("VAT level"), 10),
         (_("CustId_01"), 10),
     ]
 

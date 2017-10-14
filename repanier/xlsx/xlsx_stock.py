@@ -37,7 +37,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
             (_("Initial stock"), 10),
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
             (_("Stock used"), 10),
-            (_("Add 2 stock"), 10),
+            (_("Additional"), 10),
             (_("Final stock"), 10),
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
         ]

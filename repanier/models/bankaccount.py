@@ -48,7 +48,7 @@ class BankAccount(models.Model):
         'CustomerInvoice', verbose_name=_("Customer invoice"),
         blank=True, null=True, on_delete=models.PROTECT, db_index=True)
     is_updated_on = models.DateTimeField(
-        _("Is updated on"), auto_now=True)
+        _("Updated on"), auto_now=True)
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:

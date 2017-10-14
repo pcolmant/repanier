@@ -478,6 +478,7 @@ getcontext().rounding = ROUND_HALF_UP
 ##################### DJANGO REST_FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'DEFAULT_PAGINATION_CLASS'  : 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE'                 : 10
 }
 
@@ -910,65 +911,65 @@ if DJANGO_SETTINGS_COUNTRY == "ch":
     # Switzerland
     DICT_VAT_DEFAULT = VAT_325
     LUT_VAT = (
-        (VAT_100, _('None')),
-        (VAT_325, _('Vat 2.5%')),
-        (VAT_350, _('Vat 3.8%')),
-        (VAT_430, _('Vat 8%')),
+        (VAT_100, _('---------')),
+        (VAT_325, _('VAT 2.5%')),
+        (VAT_350, _('VAT 3.8%')),
+        (VAT_430, _('VAT 8%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('None'), VAT_100),
-        (_('Vat 2.5%'), VAT_325),
-        (_('Vat 3.8%'), VAT_350),
-        (_('Vat 8%'), VAT_430),
+        (_('---------'), VAT_100),
+        (_('VAT 2.5%'), VAT_325),
+        (_('VAT 3.8%'), VAT_350),
+        (_('VAT 8%'), VAT_430),
     )
 elif DJANGO_SETTINGS_COUNTRY == "fr":
     # France
     DICT_VAT_DEFAULT = VAT_375
     LUT_VAT = (
-        (VAT_100, _('None')),
-        (VAT_315, _('Vat 2.1%')),
-        (VAT_375, _('Vat 5.5%')),
-        (VAT_460, _('Vat 10%')),
-        (VAT_590, _('Vat 20%')),
+        (VAT_100, _('---------')),
+        (VAT_315, _('VAT 2.1%')),
+        (VAT_375, _('VAT 5.5%')),
+        (VAT_460, _('VAT 10%')),
+        (VAT_590, _('VAT 20%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('None'), VAT_100),
-        (_('Vat 2.1%'), VAT_315),
-        (_('Vat 5.5%'), VAT_375),
-        (_('Vat 10%'), VAT_460),
-        (_('Vat 20%'), VAT_590),
+        (_('---------'), VAT_100),
+        (_('VAT 2.1%'), VAT_315),
+        (_('VAT 5.5%'), VAT_375),
+        (_('VAT 10%'), VAT_460),
+        (_('VAT 20%'), VAT_590),
     )
 elif DJANGO_SETTINGS_COUNTRY == "es":
     # Espagne
     DICT_VAT_DEFAULT = VAT_460
     LUT_VAT = (
-        (VAT_100, _('None')),
-        (VAT_360, _('Vat 4%')),
-        (VAT_460, _('Vat 10%')),
-        (VAT_600, _('Vat 21%')),
+        (VAT_100, _('---------')),
+        (VAT_360, _('VAT 4%')),
+        (VAT_460, _('VAT 10%')),
+        (VAT_600, _('VAT 21%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('None'), VAT_100),
-        (_('Vat 4%'), VAT_360),
-        (_('Vat 10%'), VAT_460),
-        (_('Vat 21%'), VAT_600),
+        (_('---------'), VAT_100),
+        (_('VAT 4%'), VAT_360),
+        (_('VAT 10%'), VAT_460),
+        (_('VAT 21%'), VAT_600),
     )
 else:
     # Belgium
     DICT_VAT_DEFAULT = VAT_400
     LUT_VAT = (
-        (VAT_100, _('None')),
-        (VAT_400, _('Vat 6%')),
-        (VAT_500, _('Vat 12%')),
-        (VAT_600, _('Vat 21%')),
+        (VAT_100, _('---------')),
+        (VAT_400, _('VAT 6%')),
+        (VAT_500, _('VAT 12%')),
+        (VAT_600, _('VAT 21%')),
     )
 
     LUT_VAT_REVERSE = (
-        (_('None'), VAT_100),
-        (_('Vat 6%'), VAT_400),
-        (_('Vat 12%'), VAT_500),
-        (_('Vat 21%'), VAT_600),
+        (_('---------'), VAT_100),
+        (_('VAT 6%'), VAT_400),
+        (_('VAT 12%'), VAT_500),
+        (_('VAT 21%'), VAT_600),
     )

@@ -58,7 +58,7 @@ class Producer(models.Model):
         _("Phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("Vat id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     fax = models.CharField(
         _("Fax"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     address = models.TextField(_("Address"), null=True, blank=True, default=EMPTY_STRING)
@@ -106,7 +106,7 @@ class Producer(models.Model):
         _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     represent_this_buyinggroup = models.BooleanField(
         _("Represent this buyinggroup"), default=False)
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
 
     def get_negative_balance(self):
         return - self.balance

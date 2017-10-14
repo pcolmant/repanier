@@ -131,9 +131,9 @@ class StaffWithUserDataAdmin(LUTAdmin):
             'long_name',
             'email',
             'customer_responsible',
+            'is_coordinator',
             'is_reply_to_order_email',
             'is_reply_to_invoice_email',
-            'is_coordinator',
             'is_contributor',
             'is_webmaster',
         ]

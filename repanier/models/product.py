@@ -38,10 +38,10 @@ class Product(Item):
         'Contract',
         through='ContractContent',
         blank=True)
-    is_into_offer = models.BooleanField(_("Is into offer"), default=True)
+    is_into_offer = models.BooleanField(_("In offer"), default=True)
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='likes')
     is_updated_on = models.DateTimeField(
-        _("Is updated on"), auto_now=True, blank=True)
+        _("Updated on"), auto_now=True, blank=True)
 
     @property
     def total_likes(self):
@@ -110,7 +110,7 @@ class Product(Item):
             self.get_is_into_offer_html(contract)
         ))
 
-    get_is_into_offer.short_description = (_("Is into offer"))
+    get_is_into_offer.short_description = (_("In offer"))
 
     def get_is_into_offer_html(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon

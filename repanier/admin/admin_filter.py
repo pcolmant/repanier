@@ -149,7 +149,7 @@ class ProductFilterByPlacement(SimpleListFilter):
 
 
 class ProductFilterByVatLevel(SimpleListFilter):
-    title = _("Vat")
+    title = _("VAT")
     parameter_name = 'vat_level'
     template = 'admin/vat_level_filter.html'
 

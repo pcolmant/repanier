@@ -26,7 +26,7 @@ from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
 
 def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     # Detail of bank movements for a permanence
-    wb, ws = new_landscape_a4_sheet(wb, "%s %s" % (_('Account summary'), sheet_name),
+    wb, ws = new_landscape_a4_sheet(wb, "%s %s" % (_('Dashboard'), sheet_name),
                                     permanence)
 
     row_num = 0
@@ -231,7 +231,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                     (_("Purchase price"), 10, purchase.purchase_price.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
                      False),
-                    (_("Vat"), 10, purchase.producer_vat.amount,
+                    (_("VAT"), 10, purchase.producer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False)
                 ]
 
@@ -247,7 +247,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                     (_("Selling price"), 10, purchase.selling_price.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("Vat"), 10, purchase.customer_vat.amount,
+                    (_("VAT"), 10, purchase.customer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
                 ]
             if hide_producer_prices and hide_customer_prices:
@@ -256,7 +256,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             else:
                 row += [
-                    (_("Vat level"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+                    (_("VAT level"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
                 (_("Comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
@@ -381,7 +381,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                     product_reference = row[_("Reference")]
                     unit = row[_("Unit")]
                     order_unit = get_reverse_invoice_unit(unit)
-                    vat = row[_("Vat level")]
+                    vat = row[_("VAT level")]
                     vat_level = lut_reverse_vat[vat]
                     product = Product.objects.filter(producer_id=producer.id, reference=product_reference).order_by('?').first()
                     if product is None:

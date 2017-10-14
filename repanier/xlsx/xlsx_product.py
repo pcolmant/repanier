@@ -47,7 +47,7 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
              NumberFormat.FORMAT_TEXT, False),
             (_("Producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
             (_("Long name"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
-            (_("Vat"), 10, product.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False),
+            (_("VAT"), 10, product.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False),
         ]
 
         if row_num == 0:

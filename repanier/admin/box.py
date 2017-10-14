@@ -258,7 +258,7 @@ class BoxAdmin(TranslatableAdmin):
                 'product'             : box,
             })
 
-    duplicate_box.short_description = _('Duplicate box')
+    duplicate_box.short_description = _('Duplicate')
 
     def get_fieldsets(self, request, box=None):
         if settings.DJANGO_SETTINGS_IS_MINIMALIST:

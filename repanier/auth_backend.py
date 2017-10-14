@@ -76,14 +76,14 @@ class RepanierCustomBackend(ModelBackend):
             if login_attempt_counter > DECIMAL_THREE:
                 raise forms.ValidationError(
                     _(
-                        "Because you tried to log in too many time without success, you must now first reset your password."),
+                        "You must now first reset your password because you tried to log in too many time without success."),
                     code='attempt',
                 )
         else:
             if login_attempt_counter > DECIMAL_THREE:
                 raise forms.ValidationError(
                     _(
-                        "Because you tried to log in too many time without success, you must now first reset your password."),
+                        "You must now first reset your password because you tried to log in too many time without success."),
                     code='attempt',
                 )
             else:

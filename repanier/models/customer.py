@@ -62,7 +62,7 @@ class Customer(models.Model):
     bank_account2 = models.CharField(_("Secondary bank account"), max_length=100, null=True, blank=True,
                                      default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("Vat id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     address = models.TextField(
         _("Address"), null=True, blank=True, default=EMPTY_STRING)
     city = models.CharField(
@@ -106,8 +106,8 @@ class Customer(models.Model):
         'LUT_DeliveryPoint',
         verbose_name=_("Delivery point"),
         blank=True, null=True, default=None)
-    is_active = models.BooleanField(_("Is active"), default=True)
-    is_group = models.BooleanField(_("Is a group"), default=False)
+    is_active = models.BooleanField(_("Active"), default=True)
+    is_group = models.BooleanField(_("Group"), default=False)
     may_order = models.BooleanField(_("May order"), default=True)
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
     subscribe_to_email = models.BooleanField(_("Subscribe to email"), default=True)
@@ -309,7 +309,7 @@ class Customer(models.Model):
         sent_to = ", ".join(to_email) if to_email is not None else EMPTY_STRING
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             msg_confirmation = _(
-                "Your order is confirmed. An email containing this order summary has been sent to %s.") % sent_to
+                "Order confirmed. An email containing this order summary has been sent to %s.") % sent_to
         else:
             msg_confirmation = _("An email containing this order summary has been sent to %s.") % sent_to
         return msg_confirmation

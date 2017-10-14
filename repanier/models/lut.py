@@ -44,7 +44,7 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
         null=True, blank=True,
         upload_to="label", size=SIZE_XS)
 
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
@@ -76,7 +76,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
@@ -128,7 +128,7 @@ class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
 @python_2_unicode_compatible
 class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
     translations = TranslatedFields(
         short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
@@ -164,9 +164,9 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
 
-    is_counted_as_participation = models.BooleanField(_("Is counted as participation"), default=True)
-    customers_may_register = models.BooleanField(_("Customers may register"), default=True)
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_counted_as_participation = models.BooleanField(_("This task constitutes a participation in the activities of the group"), default=True)
+    customers_may_register = models.BooleanField(_("Consumers can register for this task"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
     objects = LUT_ProductionModeManager()
 
     def __str__(self):

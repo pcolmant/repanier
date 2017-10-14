@@ -59,12 +59,10 @@ class Invoice(models.Model):
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
     total_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('Vat part of the total purchased'),
+        _("VAT"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('Vat to add'),
+        _("VAT to add"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_deposit = ModelMoneyField(
         _("Deposit"),
@@ -113,7 +111,7 @@ class CustomerInvoice(Invoice):
     # - confirm the order (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and send a mail with the order to me
     # - mail send to XYZ
     # - order confirmed (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and mail send to XYZ
-    is_order_confirm_send = models.BooleanField(_("Is order confirm send"), choices=LUT_CONFIRM, default=False)
+    is_order_confirm_send = models.BooleanField(_("Confirmation of the order send"), choices=LUT_CONFIRM, default=False)
     invoice_sort_order = models.IntegerField(
         _("Invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
@@ -137,7 +135,7 @@ class CustomerInvoice(Invoice):
         related_name='child_customer_invoice',
         blank=True, null=True, default=None,
         on_delete=models.PROTECT, db_index=True)
-    is_group = models.BooleanField(_("Is a group"), default=False)
+    is_group = models.BooleanField(_("Group"), default=False)
 
     def get_abs_delta_vat(self):
         return abs(self.delta_vat)
@@ -362,7 +360,7 @@ class CustomerInvoice(Invoice):
                                     or self.total_price_with_tax == DECIMAL_ZERO:
                                 btn_disabled = "disabled"
                             msg_confirmation1 = '<font color="red">%s</font><br/>' % _(
-                                "An unconfirmed order will be canceled.")
+                                "/!\ Unconfirmed orders will be canceled.")
                             msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _(
                                 "Confirm this order and receive an email containing its summary.")
                     else:
@@ -371,7 +369,7 @@ class CustomerInvoice(Invoice):
                         )
                         if self.status == PERMANENCE_OPENED:
                             msg_confirmation1 = '<font color="red">%s</font><br/>' % _(
-                                "An unconfirmed order will be canceled.")
+                                "/!\ Unconfirmed orders will be canceled.")
                             msg_confirmation2 = _("Verify my order content before validating it.")
                             msg_html = """
                                 <div class="row">
@@ -671,7 +669,7 @@ class ProducerInvoice(Invoice):
 
     delta_stock_vat = ModelMoneyField(
         _("Total stock vat"),
-        help_text=_('Vat to add'),
+        help_text=_('VAT to add'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_deposit = ModelMoneyField(
         _("Deposit"),
@@ -769,8 +767,6 @@ class CustomerProducerInvoice(models.Model):
         return '%s, %s' % (self.producer, self.customer)
 
     class Meta:
-        verbose_name = _("Customer x producer invoice")
-        verbose_name_plural = _("Customers x producers invoices")
         unique_together = ("permanence", "customer", "producer",)
 
 

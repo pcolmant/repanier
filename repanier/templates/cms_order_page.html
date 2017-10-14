@@ -50,7 +50,7 @@
             <div class="row">
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    {% trans "You are not allowed to order products" %}
+                    {% trans "The ordering functionality is not activated in your account. <br/> If you wish to order, please contact the managers of your group." %}
                 </div>
             </div>
             </div>
@@ -142,7 +142,7 @@
                                 <a href="{% url "order_view" permanence_id %}" {% if not q and not is_like and departementforcustomer_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All products" %}</a>
                             </li>
                             <li>
-                                <a href="{% url "order_view" permanence_id %}?{% if not is_like %}is_like=yes{% endif %}{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My likes" %} <span class="glyphicon glyphicon-heart"></span></a>
+                                <a href="{% url "order_view" permanence_id %}?{% if not is_like %}is_like=yes{% endif %}{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My" %} <span class="glyphicon glyphicon-heart"></span></a>
                             </li>
                             {% if box_set %}
                                 {% for box in box_set.all %}

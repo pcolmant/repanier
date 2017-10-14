@@ -358,7 +358,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             if admin.ACTION_CHECKBOX_NAME in request.POST:
                 deliveries_to_be_exported = request.POST.getlist("deliveries")
                 if len(deliveries_to_be_exported) == 0:
-                    user_message = _("You must select at least one delivery to export.")
+                    user_message = _("You must select at least one delivery point.")
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return
@@ -456,9 +456,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 context = TemplateContext({
                     'name'             : _('Long name'),
                     'long_profile_name': _('Long name'),
-                    'permanence_link'  : mark_safe('<a href="#">%s</a>' % _("Offer")),
+                    'permanence_link'  : mark_safe('<a href="#">%s</a>' % _("Offers")),
                     'offer_description': mark_safe(offer_description),
-                    'offer_link'       : mark_safe('<a href="#">%s</a>' % _("Offer")),
+                    'offer_link'       : mark_safe('<a href="#">%s</a>' % _("Offers")),
                     'signature'        : mark_safe(
                         '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
@@ -932,9 +932,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     if creation_counter == 0:
                         user_message = _("Nothing to do.")
                     elif creation_counter == 1:
-                        user_message = _("%d permanence generated.") % creation_counter
+                        user_message = _("%d duplicate created.") % creation_counter
                     else:
-                        user_message = _("%d permanences generated.") % creation_counter
+                        user_message = _("%d duplicates created.") % creation_counter
                     user_message_level = messages.INFO
                 else:
                     user_message = _("Action canceled by the system.")
@@ -951,7 +951,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
-    generate_permanence.short_description = _("Generate permanence")
+    generate_permanence.short_description = _("Duplicate")
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "contract":

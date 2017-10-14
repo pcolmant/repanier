@@ -21,7 +21,7 @@ from repanier.tools import check_if_is_coordinator
 
 class MembersContactForm(RepanierForm):
     recipient = fields.CharField(label=_('Recipient(s)'))
-    your_email = fields.EmailField(label=_('Your Email'))
+    your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
     message = fields.CharField(label=_('Message'), widget=widgets.Textarea)
 
@@ -83,7 +83,7 @@ def send_mail_to_all_members_view(request):
             if is_coordinator:
                 recipient.initial = _("All members as coordinator")
             else:
-                recipient.initial = _("All members accepting to show they mail address")
+                recipient.initial = _("All members who agree to show their email addresses to other members")
             recipient.widget.attrs['readonly'] = True
             return render(request, "repanier/send_mail_to_all_members.html",
                           {'form': form, 'update': '2'})
@@ -96,7 +96,7 @@ def send_mail_to_all_members_view(request):
         if is_coordinator:
             recipient.initial = _("All members as coordinator")
         else:
-            recipient.initial = _("All members accepting to show they mail address")
+            recipient.initial = _("All members who agree to show their email addresses to other members")
         recipient.widget.attrs['readonly'] = True
 
     return render(request, "repanier/send_mail_to_all_members.html",

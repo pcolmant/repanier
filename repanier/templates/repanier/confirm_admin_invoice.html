@@ -105,7 +105,7 @@
                         {{ f_form.short_profile_name.value | truncatechars:20 }}
                         {% trans ", calculated : " %}
                             {{ f_form.calculated_invoiced_balance.value }}
-                        {% trans ", balance claimed by the supplier : " %}
+                        {% trans ", invoiced : " %}
                         {{ f_form.to_be_invoiced_balance }}
                         {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}
                         {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}

@@ -39,7 +39,7 @@ class Staff(MPTTModel, TranslatableModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
-        'Customer', verbose_name=_("Customer_responsible"),
+        'Customer', verbose_name=_("Customer responsible"),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
@@ -49,21 +49,21 @@ class Staff(MPTTModel, TranslatableModel):
         function_description=HTMLField(_("Function description"), configuration='CKEDITOR_SETTINGS_MODEL2',
                                        blank=True, default=EMPTY_STRING),
     )
-    is_reply_to_order_email = models.BooleanField(_("Is reply to order email"),
+    is_reply_to_order_email = models.BooleanField(_("Responsible for orders; this contact is used to transmit offers and orders"),
                                                   default=False)
-    is_reply_to_invoice_email = models.BooleanField(_("Is reply to invoice email"),
+    is_reply_to_invoice_email = models.BooleanField(_("Responsible for invoices; this contact is used to transmit invoices"),
                                                     default=False)
-    is_contributor = models.BooleanField(_("Is contributor"),
+    is_contributor = models.BooleanField(_("Producer referent"),
                                          default=False)
-    is_webmaster = models.BooleanField(_("Is webmaster"),
+    is_webmaster = models.BooleanField(_("Webmaster"),
                                        default=False)
-    is_coordinator = models.BooleanField(_("Is coordinator"),
+    is_coordinator = models.BooleanField(_("Coordonnateur"),
                                          default=False)
-    is_tester = models.BooleanField(_("Is tester"),
+    is_tester = models.BooleanField(_("Tester"),
                                          default=False)
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None)
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
 
     def get_customer_phone1(self):
         try:

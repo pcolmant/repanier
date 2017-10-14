@@ -130,7 +130,7 @@ class Permanence(TranslatableModel):
     # but will be used in "admin/contract"
     contract = models.ForeignKey(
         'Contract',
-        verbose_name=_("Contract"),
+        verbose_name=_("Commitment"),
         on_delete=models.PROTECT,
         null=True, blank=True, default=None
     )
@@ -145,12 +145,11 @@ class Permanence(TranslatableModel):
         help_text=_('Total purchase amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     total_purchase_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('Vat part of the total purchased'),
+        _("VAT"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_selling_vat = ModelMoneyField(
-        _("Total vat"),
-        help_text=_('Vat part of the total purchased'),
+        _("VAT"),
+        help_text=_('Vat'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
 
     with_delivery_point = models.BooleanField(
@@ -158,7 +157,7 @@ class Permanence(TranslatableModel):
     automatically_closed = models.BooleanField(
         _("Automatically closed"), default=False)
     is_updated_on = models.DateTimeField(
-        _("Is updated on"), auto_now=True)
+        _("Updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,

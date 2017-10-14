@@ -60,10 +60,10 @@ class Item(TranslatableModel):
         _("Customer unit price"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     producer_vat = ModelMoneyField(
-        _("Vat"),
+        _("VAT"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     customer_vat = ModelMoneyField(
-        _("Vat"),
+        _("VAT"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     unit_deposit = ModelMoneyField(
         _("Deposit"),
@@ -115,10 +115,10 @@ class Item(TranslatableModel):
         default=False
     )
 
-    is_box = models.BooleanField(_("Is a box"), default=False)
+    is_box = models.BooleanField(default=False)
     # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
     # may_order = models.BooleanField(_("may_order"), default=True)
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
 
     @property
     def producer_unit_price_wo_tax(self):

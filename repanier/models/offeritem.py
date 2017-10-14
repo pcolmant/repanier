@@ -47,7 +47,7 @@ class OfferItem(Item):
         verbose_name=_("Product"),
         on_delete=models.PROTECT)
     # is a box or a contract content
-    is_box_content = models.BooleanField(_("Is a box content"), default=False)
+    is_box_content = models.BooleanField(default=False)
 
     producer_price_are_wo_vat = models.BooleanField(_("Producer price are without vat"), default=False)
     price_list_multiplier = models.DecimalField(
@@ -86,14 +86,14 @@ class OfferItem(Item):
     producer_pre_opening = models.BooleanField(_("Producer pre-opening"), default=False)
 
     add_2_stock = models.DecimalField(
-        _("Add 2 stock"),
+        _("Additional"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     new_stock = models.DecimalField(
         _("Final stock"),
         default=None, max_digits=9, decimal_places=3, null=True)
     contract = models.OneToOneField(
         'Contract',
-        verbose_name=_("Contract"),
+        verbose_name=_("Commitment"),
         on_delete=models.CASCADE,
         null=True, blank=True, default=None)
     permanences_dates = models.TextField(

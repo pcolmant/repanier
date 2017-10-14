@@ -30,7 +30,7 @@ class CoordinatorsContactForm(RepanierForm):
         choices=[],
         widget=CheckboxSelectMultipleWidget()
     )
-    your_email = fields.EmailField(label=_('Your Email'))
+    your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
     message = fields.CharField(label=_('Message'), widget=widgets.Textarea)
 

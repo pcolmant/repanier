@@ -103,25 +103,25 @@ class SelectProducerOrderUnitWidget(forms.Select):
             INCREMENT_ORDER_UNIT_PC_PRICE_PC_ADDON=_('pc(s)'),
             STOCK_ORDER_UNIT_PC_PRICE_PC_LABEL=_('Stock'),
             STOCK_ORDER_UNIT_PC_PRICE_PC_ADDON=_('pc(s)'),
-            PRICE_ORDER_UNIT_PC_PRICE_PC_ADDON=_('/pc'),
+            PRICE_ORDER_UNIT_PC_PRICE_PC_ADDON=_('/ pc'),
             PRODUCT_ORDER_UNIT_PC_PRICE_KG=PRODUCT_ORDER_UNIT_PC_PRICE_KG,
             INCREMENT_ORDER_UNIT_PC_PRICE_KG_LABEL=_('By multiple of'),
             INCREMENT_ORDER_UNIT_PC_PRICE_KG_ADDON=_('kg(s)'),
             STOCK_ORDER_UNIT_PC_PRICE_KG_LABEL=_('Stock'),
             STOCK_ORDER_UNIT_PC_PRICE_KG_ADDON=_('kg(s)'),
-            PRICE_ORDER_UNIT_PC_PRICE_KG_ADDON=_('/kg'),
+            PRICE_ORDER_UNIT_PC_PRICE_KG_ADDON=_('/ kg'),
             PRODUCT_ORDER_UNIT_PC_PRICE_LT=PRODUCT_ORDER_UNIT_PC_PRICE_KG,
             INCREMENT_ORDER_UNIT_PC_PRICE_LT_LABEL=_('By multiple of'),
             INCREMENT_ORDER_UNIT_PC_PRICE_LT_ADDON=_('l(s)'),
             STOCK_ORDER_UNIT_PC_PRICE_LT_LABEL=_('Stock'),
             STOCK_ORDER_UNIT_PC_PRICE_LT_ADDON=_('l(s)'),
-            PRICE_ORDER_UNIT_PC_PRICE_LT_ADDON=_('/l'),
+            PRICE_ORDER_UNIT_PC_PRICE_LT_ADDON=_('/ l'),
             PRODUCT_ORDER_UNIT_PC_KG=PRODUCT_ORDER_UNIT_PC_KG,
             INCREMENT_ORDER_UNIT_PC_KG_LABEL=_('By multiple of'),
             INCREMENT_ORDER_UNIT_PC_KG_ADDON=_('pc(s)'),
             STOCK_ORDER_UNIT_PC_KG_LABEL=_('Stock'),
             STOCK_ORDER_UNIT_PC_KG_ADDON=_('pc(s)'),
-            PRICE_ORDER_UNIT_PC_KG_ADDON=_('/kg'),
+            PRICE_ORDER_UNIT_PC_KG_ADDON=_('/ kg'),
         )
         return mark_safe(output)
 
@@ -137,25 +137,25 @@ class SelectProducerOrderUnitWidget(forms.Select):
             increment_order_quantity_addon = _('pc(s)')
             stock_label = _('Stock')
             stock_addon = _('pc(s)')
-            price_addon = _('/pc')
+            price_addon = _('/ pc')
         elif option_value == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
             increment_order_quantity_label = _('By multiple of')
             increment_order_quantity_addon = _('kg(s)')
             stock_label = _('Stock')
             stock_addon = _('kg(s)')
-            price_addon = _('/kg')
+            price_addon = _('/ kg')
         elif option_value == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
             increment_order_quantity_label = _('By multiple of')
             increment_order_quantity_addon = _('l(s)')
             stock_label = _('Stock')
             stock_addon = _('l(s)')
-            price_addon = _('/l')
+            price_addon = _('/ l')
         elif option_value == PRODUCT_ORDER_UNIT_PC_KG:
             increment_order_quantity_label = _('By multiple of')
             increment_order_quantity_addon = _('pc(s)')
             stock_label = _('Stock')
             stock_addon = _('pc(s)')
-            price_addon = _('/kg')
+            price_addon = _('/ kg')
         else:
             increment_order_quantity_label = _('?')
             increment_order_quantity_addon = _('?')

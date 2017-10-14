@@ -71,7 +71,7 @@ class Contract(TranslatableModel):
     #     choices=LUT_CONTRACT_STATUS,
     #     default=CONTRACT_IN_WRITING,
     #     verbose_name=_("Highest status"))
-    is_active = models.BooleanField(_("Is active"), default=True)
+    is_active = models.BooleanField(_("Active"), default=True)
     all_dates = []
     dates_display = EMPTY_STRING
 
@@ -226,7 +226,7 @@ def contract_pre_save(sender, **kwargs):
 @python_2_unicode_compatible
 class ContractContent(models.Model):
     contract = models.ForeignKey(
-        'Contract', verbose_name=_("Contract"),
+        'Contract', verbose_name=_("Commitment"),
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     product = models.ForeignKey(
         'Product', verbose_name=_("Product"), related_name='contract_content',

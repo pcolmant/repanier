@@ -41,51 +41,10 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                 (_('Family'), 35),
                 (_('Phone1'), 15),
                 (_('Phone2'), 15),
-                (_('Total vat'), 15),
+                (_('Total with vat'), 15),
                 (_('Email'), 35),
             ]
             wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
-            # customer_set = Customer.objects.filter(
-            #     customerinvoice__permanence_id=permanence.id,
-            #     represent_this_buyinggroup=False,
-            #     customerinvoice__delivery__isnull=True
-            # )
-            # for customer in customer_set:
-            #     invoice = CustomerInvoice.objects.filter(
-            #         permanence=permanence, customer=customer
-            #     ).order_by('?').first()
-            #     if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
-            #         customer.preparation_order = preparation_order
-            #         customer.save(update_fields=['preparation_order'])
-            #         preparation_order += 1
-            #         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-            #             confirmed = _(" /!\ Unconfirmed")
-            #         else:
-            #             confirmed = EMPTY_STRING
-            #         row = [
-            #             "N/A",
-            #             "  %d - %s%s" % (customer.preparation_order, customer.long_basket_name, confirmed),
-            #             customer.phone1,
-            #             customer.phone2,
-            #             invoice.total_price_with_tax.amount,
-            #             # Used to send mail to customer with an order (via copy-paste to mail)
-            #             ";".join(
-            #                 [customer.user.email, customer.email2, EMPTY_STRING]
-            #             ) if customer.email2 else ";".join(
-            #                 [customer.user.email, customer.email2]
-            #             )
-            #         ]
-            #         for col_num in range(len(row)):
-            #             c = ws.cell(row=row_num, column=col_num)
-            #             c.value = row[col_num]
-            #             if col_num == 4:
-            #                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-            #             else:
-            #                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            #                 c.style.alignment.wrap_text = False
-            #             if row_num % 2 == 0:
-            #                 c.style.borders.bottom.border_style = Border.BORDER_THIN
-            #         row_num += 1
             for delivery_ref, delivery in enumerate(DeliveryBoard.objects.filter(id__in=deliveries_id).order_by("id")):
                 customer_set = Customer.objects.filter(
                     customerinvoice__permanence_id=permanence.id,
@@ -105,7 +64,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         )
                         preparation_order += 1
                         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-                            confirmed = _(" /!\ Unconfirmed")
+                            confirmed = _("/!\ This order isn't confirmed")
                         else:
                             confirmed = EMPTY_STRING
                         row = [
@@ -138,7 +97,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                 (_('Family'), 35),
                 (_('Phone1'), 15),
                 (_('Phone2'), 15),
-                (_('Total vat'), 15),
+                (_('Total with vat'), 15),
                 (_('Email'), 35),
             ]
             wb, ws = new_portrait_a4_sheet(wb, permanence, EMPTY_STRING, header=header, add_print_title=False)
@@ -159,7 +118,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     )
                     preparation_order += 1
                     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-                        confirmed = _(" /!\ Unconfirmed")
+                        confirmed = _("/!\ This order isn't confirmed")
                     else:
                         confirmed = EMPTY_STRING
                     row = [
@@ -352,15 +311,15 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
 
         row_num = customer_label(customer_identifier, placements, row_num, ws)
 
-    placement_label = "[✿ %s ✿]" % dict_placement[PRODUCT_PLACEMENT_FRIDGE]
+    placement_label = "[❄ %s ❄]" % dict_placement[PRODUCT_PLACEMENT_FRIDGE]
     for customer_identifier in fridge:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[✿ %s ✿]" % dict_placement[PRODUCT_PLACEMENT_FREEZER]
+    placement_label = "[❄❄❄ %s ❄❄❄]" % dict_placement[PRODUCT_PLACEMENT_FREEZER]
     for customer_identifier in freezer:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[✿ %s ✿]" % dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET]
+    placement_label = "[⏭ %s ⏭]" % dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET]
     for customer_identifier in out_of_basket:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
@@ -727,7 +686,7 @@ def export_producer_by_product(permanence, producer, wb=None):
         (_("Unit"), 10),
         (_("Reference"), 20),
         (_("Product"), 60),
-        (_("Unit Price"), 10),
+        (_("Unit price"), 10),
         (_("Deposit"), 10),
         (_("Total Price"), 12),
     ]
@@ -1014,7 +973,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
         (_("Unit"), 10),
         (_("Reference"), 20),
         (_("Product"), 60),
-        (_("Unit Price"), 10),
+        (_("Unit price"), 10),
         (_("Deposit"), 10),
         (_("Total Price"), 12),
         (EMPTY_STRING, 15),
@@ -1166,7 +1125,7 @@ def export_customer(
         (_("Product"), 60),
         (_("Quantity"), 10),
         (_("Unit"), 10),
-        (_("Unit Price"), 10),
+        (_("Unit price"), 10),
         (_("Deposit"), 10),
         (_("Total Price"), 12),
         (_("Basket"), 20),

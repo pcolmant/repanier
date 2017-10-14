@@ -34,7 +34,7 @@ class DeliveryBoard(TranslatableModel):
         default=PERMANENCE_PLANNED,
         verbose_name=_("Status"))
     is_updated_on = models.DateTimeField(
-        _("Is updated on"), auto_now=True)
+        _("Updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,

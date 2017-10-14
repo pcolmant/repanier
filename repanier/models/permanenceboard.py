@@ -22,7 +22,7 @@ class PermanenceBoard(models.Model):
         'LUT_PermanenceRole', verbose_name=_("Permanence role"),
         on_delete=models.PROTECT)
     is_registered_on = models.DateTimeField(
-        _("Is registered on"), null=True, blank=True)
+        _("Registered on"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Permanence board")

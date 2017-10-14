@@ -38,7 +38,7 @@ class Purchase(models.Model):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("Customer"), on_delete=models.PROTECT, db_index=True)
     customer_producer_invoice = models.ForeignKey(
-        'CustomerProducerInvoice', verbose_name=_("Customer producer invoice"),
+        'CustomerProducerInvoice',
         on_delete=models.PROTECT, db_index=True)
     producer_invoice = models.ForeignKey(
         'ProducerInvoice', verbose_name=_("Producer invoice"),
@@ -47,8 +47,8 @@ class Purchase(models.Model):
         'CustomerInvoice', verbose_name=_("Customer invoice"),
         on_delete=models.PROTECT, db_index=True)
 
-    is_box = models.BooleanField(_("Is box"), default=False)
-    is_box_content = models.BooleanField(_("Is box content"), default=False)
+    is_box = models.BooleanField(default=False)
+    is_box_content = models.BooleanField(default=False)
 
     quantity_ordered = models.DecimalField(
         _("Quantity ordered"),
@@ -78,10 +78,10 @@ class Purchase(models.Model):
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
 
     producer_vat = ModelMoneyField(
-        _("Vat"),
+        _("VAT"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     customer_vat = ModelMoneyField(
-        _("Vat"),
+        _("VAT"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=4)
     deposit = ModelMoneyField(
         _("Deposit"),
@@ -94,12 +94,12 @@ class Purchase(models.Model):
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])
-    is_resale_price_fixed = models.BooleanField(_("Is the resale price set by the producer"),
+    is_resale_price_fixed = models.BooleanField(_("Consumer prices are set by the producer"),
                                                 default=False)
     comment = models.CharField(
         _("Comment"), max_length=100, default=EMPTY_STRING, blank=True, null=True)
     is_updated_on = models.DateTimeField(
-        _("Is updated on"), auto_now=True, db_index=True)
+        _("Updated on"), auto_now=True, db_index=True)
 
     def get_customer_unit_price(self):
         offer_item = self.offer_item

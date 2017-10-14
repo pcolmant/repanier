@@ -34,7 +34,7 @@ class Configuration(TranslatableModel):
     group_name = models.CharField(_("Group name"), max_length=50, default=EMPTY_STRING)
     test_mode = models.BooleanField(_("Test mode"), default=False)
     login_attempt_counter = models.DecimalField(
-        _("login attempt counter"),
+        _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None)
@@ -71,14 +71,14 @@ class Configuration(TranslatableModel):
     display_who_is_who = models.BooleanField(_("Display who is who"), default=True)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("Vat id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
     page_break_on_customer_check = models.BooleanField(_("Page break on customer check"), default=False)
     sms_gateway_mail = models.EmailField(
         _("Sms gateway email"),
         help_text=_(
             "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
         max_length=50, null=True, blank=True, default=EMPTY_STRING)
-    customers_must_confirm_orders = models.BooleanField(_("Customers must confirm orders"), default=False)
+    customers_must_confirm_orders = models.BooleanField(_("/!\ Customers must confirm orders"), default=False)
     membership_fee = ModelMoneyField(
         _("Membership fee"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
