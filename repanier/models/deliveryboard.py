@@ -39,8 +39,8 @@ class DeliveryBoard(TranslatableModel):
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
-        verbose_name=_("Highest status"),
-        help_text=_('Status of the permanence from planned, orders opened, orders closed, send, done'))
+        verbose_name=_("Highest status")
+    )
 
     def set_status(self, new_status, all_producers=True, producers_id=None):
         from repanier.models.invoice import CustomerInvoice

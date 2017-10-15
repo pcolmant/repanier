@@ -64,40 +64,44 @@ def automatically_open():
 def common_to_pre_open_and_open(permanence_id):
     getcontext().rounding = ROUND_HALF_UP
     permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-    # Create offer items which can be purchased depending on selection in the admin
-    producers_in_this_permanence = Producer.objects.filter(
-        permanence=permanence_id,
-        is_active=True
-    ).order_by('?').only("id")
-    product_queryset = Product.objects.filter(
-        # Q(
+
+    if permanence.contract is not None:
+        print("common_to_pre_open_and_open -> contract is not None")
+        permanence.contract.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+    else:
+        print("common_to_pre_open_and_open -> contract is None")
+        # Create offer items which can be purchased depending on selection in the admin
+        producers_in_this_permanence = Producer.objects.filter(
+            permanence=permanence_id,
+            is_active=True
+        ).order_by('?').only("id")
+        product_queryset = Product.objects.filter(
+            # Q(
             producer__in=producers_in_this_permanence,
             is_box=False,
             is_into_offer=True
-        # ) | Q(
-        #     is_box=True,
-        #     is_into_offer=True
-        # )
-    ).order_by('?')
-    for product in product_queryset:
-        product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-        # if not OfferItem.objects.filter(
-        #     product_id=product.id,
-        #     permanence_id=permanence_id
-        # ).order_by('?').exists():
-        #     OfferItem.objects.create(
-        #         permanence_id=permanence_id,
-        #         product_id=product.id,
-        #         producer_id=product.producer_id,
-        #     )
-    boxes_in_this_permanence = Box.objects.filter(
-        permanence=permanence_id,
-        is_active=True
-    ).order_by('?').only("id")
-    for box in boxes_in_this_permanence:
-        box.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-    if permanence.contract is not None:
-        permanence.contract.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+            # ) | Q(
+            #     is_box=True,
+            #     is_into_offer=True
+            # )
+        ).order_by('?')
+        for product in product_queryset:
+            product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+            # if not OfferItem.objects.filter(
+            #     product_id=product.id,
+            #     permanence_id=permanence_id
+            # ).order_by('?').exists():
+            #     OfferItem.objects.create(
+            #         permanence_id=permanence_id,
+            #         product_id=product.id,
+            #         producer_id=product.producer_id,
+            #     )
+        boxes_in_this_permanence = Box.objects.filter(
+            permanence=permanence_id,
+            is_active=True
+        ).order_by('?').only("id")
+        for box in boxes_in_this_permanence:
+            box.get_or_create_offer_item(permanence, reset_add_2_stock=True)
     # Deactivate all offer item of this permanence
     # OfferItem.objects.filter(
     #     permanence_id=permanence_id
@@ -213,20 +217,21 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     # 1 - Disallow access to the producer to his/her products no more into "pre order" status
     for producer in Producer.objects.filter(
             permanence=permanence_id,
-            producer_pre_opening=True
+            producer_pre_opening=True,
+            is_active=True
     ).only('offer_uuid', 'offer_filled').order_by('?'):
         producer.offer_uuid = uuid.uuid1()
         producer.save(update_fields=['offer_uuid', ])
         if not producer.offer_filled:
             # Deactivate offer item if the producer as not reacted to the pre opening
-            OfferItem.objects.filter(
+            OfferItemWoReceiver.objects.filter(
                 permanence_id=permanence_id,
                 is_active=True,
                 producer_id=producer.id
             ).update(is_active=False)
     # 3 - Keep only producer with active non technical offer items
     permanence.producers.clear()
-    for offer_item in OfferItem.objects.filter(
+    for offer_item in OfferItemWoReceiver.objects.filter(
             permanence_id=permanence.id,
             # order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
             is_active=True
@@ -243,16 +248,16 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     #     print("##################################")
 
 
-def admin_back_to_planned(request, permanence):
+def admin_back_to_scheduled(request, permanence):
     permanence.producers.clear()
-    for offer_item in OfferItem.objects.filter(
+    for offer_item in OfferItemWoReceiver.objects.filter(
             permanence_id=permanence.id,
             may_order=True
     ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
-    OfferItem.objects.filter(permanence_id=permanence.id).update(is_active=False)
+    OfferItemWoReceiver.objects.filter(permanence_id=permanence.id).update(is_active=False)
     permanence.set_status(PERMANENCE_PLANNED)
-    user_message = _("The permanence is back to planned.")
+    user_message = _("The permanence is back to scheduled.")
     user_message_level = messages.INFO
     return user_message, user_message_level
 

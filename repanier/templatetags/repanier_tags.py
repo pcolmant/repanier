@@ -210,7 +210,7 @@ def repanier_select_offer_item(context, *args, **kwargs):
                 is_box_content=False
             ).order_by('?').only('quantity_ordered').first()
             if purchase is not None:
-                is_open=purchase.status == PERMANENCE_OPENED
+                is_open = purchase.status == PERMANENCE_OPENED
                 option_dict = display_selected_value(
                     offer_item,
                     purchase.quantity_ordered,

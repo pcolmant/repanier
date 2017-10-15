@@ -148,24 +148,14 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         required=False
     )
 
-    # def __init__(self, *args, **kwargs):
-    #     super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
-        # if self.instance.id is None:
-        #     config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
-        #     self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
-        # else:
-        #     try:
-        #         check_if_translation_exists = self.instance.offer_customer_mail_subject
-        #         print('------------------ check_if_translation_exists')
-        #         print('<%s>' % check_if_translation_exists)
-        #     except TranslationDoesNotExist:
-        #         The translation doesn't exists
-        # config = Configuration.objects.language(self.language_code).get(id=DECIMAL_ONE)
-        # self.fields["offer_customer_mail_subject"].initial = config.offer_customer_mail_subject
-
     def __init__(self, *args, **kwargs):
         super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
-        self.fields["contract"].widget.can_delete_related = False
+        if settings.DJANGO_SETTINGS_CONTRACT:
+            if "contract" in self.fields:
+                contract_field = self.fields["contract"]
+                contract_field.widget.can_add_related = False
+                contract_field.widget.can_change_related = False
+                contract_field.widget.can_delete_related = False
 
     def clean(self):
         if any(self.errors):
@@ -200,11 +190,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     list_display = (
         'get_permanence_admin_display',
     )
-    ordering = ('permanence_date', '-status')
+    ordering = ('permanence_date', '-status', 'id')
     actions = [
         'export_xlsx_offer',
         'open_and_send_offer',
-        'back_to_planned',
+        'back_to_scheduled',
         # 'undo_back_to_planned',
         'close_order',
         'export_xlsx_customer_order',
@@ -282,32 +272,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 continue
             yield inline.get_formset(request, obj), inline
 
-    # def get_boxes(self, permanence=None):
-    #     # if permanence is None or permanence.status == PERMANENCE_PLANNED:
-    #     qs = Box.objects.filter(
-    #         is_box=True,
-    #         is_into_offer=True,
-    #         translations__language_code=translation.get_language()
-    #     ).order_by(
-    #         "customer_unit_price",
-    #         "unit_deposit",
-    #         "translations__long_name"
-    #     )
-    #     result = ", ".join(o.long_name for o in qs)
-    #     # else:
-    #     #     qs = OfferItem.objects.filter(
-    #     #         permanence_id=permanence.id,
-    #     #         is_box=True,
-    #     #         may_order=True,
-    #     #         translations__language_code=translation.get_language()
-    #     #     ).order_by(
-    #     #         "translations__preparation_sort_order"
-    #     #     )
-    #     #     result = ", ".join(o.long_name for o in qs)
-    #     return result if result is not None else EMPTY_STRING
-    #
-    # get_boxes.short_description = _("Assemblies")
-
     def export_xlsx_offer(self, request, queryset):
         permanence = queryset.first()
         if permanence is None or permanence.status not in [PERMANENCE_PLANNED, PERMANENCE_OPENED]:
@@ -327,7 +291,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             return
 
-    export_xlsx_offer.short_description = _("Export planned xlsx")
+    export_xlsx_offer.short_description = _("1 --- Check the offer before opening")
 
     def export_xlsx_customer_order(self, request, queryset):
         if 'cancel' in request.POST:
@@ -823,7 +787,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     send_order.short_description = _('Send orders2')
 
-    def back_to_planned(self, request, queryset):
+    def back_to_scheduled(self, request, queryset):
         if 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
@@ -840,42 +804,17 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         if 'apply' in request.POST:
-            user_message, user_message_level = task_order.admin_back_to_planned(request, permanence)
+            user_message, user_message_level = task_order.admin_back_to_scheduled(request, permanence)
             self.message_user(request, user_message, user_message_level)
             return
         return render(request, 'repanier/confirm_admin_action.html', {
-            'sub_title'           : _("Please, confirm the action : back to planned"),
-            'action'              : 'back_to_planned',
+            'sub_title'           : _("Please, confirm the action : back to scheduled"),
+            'action'              : 'back_to_scheduled',
             'permanence'          : permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
-    back_to_planned.short_description = _('Back to planned')
-
-    # def undo_back_to_planned(self, request, queryset):
-    #     if 'cancel' in request.POST:
-    #         user_message = _("Action canceled by the user.")
-    #         user_message_level = messages.INFO
-    #         self.message_user(request, user_message, user_message_level)
-    #         return
-    #     permanence = queryset.first()
-    #     if permanence is None or not (PERMANENCE_PLANNED == permanence.status):
-    #         user_message = _("Action canceled by the system.")
-    #         user_message_level = messages.ERROR
-    #         self.message_user(request, user_message, user_message_level)
-    #         return
-    #     if 'apply' in request.POST:
-    #         user_message, user_message_level = task_order.admin_undo_back_to_planned(request, permanence)
-    #         self.message_user(request, user_message, user_message_level)
-    #         return
-    #     return render(request, 'repanier/confirm_admin_action.html', {
-    #         'sub_title'           : _("Please, confirm the action : undo back to planned"),
-    #         'action'              : 'undo_back_to_planned',
-    #         'permanence'          : permanence,
-    #         'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-    #     })
-    #
-    # undo_back_to_planned.short_description = _('undo back to planned')
+    back_to_scheduled.short_description = _('Return to scheduled status to change bid')
 
     def delete_purchases(self, request, queryset):
         if not request.user.is_superuser:

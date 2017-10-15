@@ -1,8 +1,6 @@
-{#{% load cms_tags sekizai_tags menu_tags compress i18n l10n repanier_tags sass_tags %}{% spaceless %}#}
 {% load cms_tags sekizai_tags menu_tags compress i18n l10n static repanier_tags %}{% spaceless %}
 {% addtoblock "css" %}<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">{% endaddtoblock %}
 {% addtoblock "css" %}<link rel="stylesheet" href="{% static "css/custom.css" %}">{% endaddtoblock %}
-{#{% addtoblock "css" %}<link href="{% sass_src '_bootstrap.scss' %}" rel="stylesheet" type="text/css" />{% endaddtoblock %}#}
 {% addtoblock "jshead" %}<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
 {% addtoblock "js" %}<script src="{% static "fluidvids/fluidvids.js" %}"></script>{% endaddtoblock %}
@@ -57,16 +55,27 @@
    </head>
   <body>
     <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
+<a name="#top"></a><section>
 {#    {% cms_toolbar %}#}
     {% spaceless %}
     {# <!-- Header and Nav --> #}
+    {% repanier_group_name as group_name %}
     <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
         <div class="navbar-header visible-xs-inline-block">
           <a href="#" class="btn btn-default" onclick="openNav()">
             <span class="sr-only">{% trans "Toggle navigation" %}</span>
             <span class="glyphicon glyphicon-list"></span>
           </a>
-          <span class="navbar-group-name"><small>{{ group_name | truncatechars:25 }}</small></span>
+          {% if not permanence_id %}
+              <span class="navbar-group-name"><small>{{ group_name | truncatechars:25 }}</small></span>
+          {% else %}
+              <span id="link_to_order_or_filter_view"></span>
+              {% if user.is_authenticated %}
+                  <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right" style="margin-right: 10px;">
+                      <span id="prepared_amount_visible_xs"></span>
+                  </a>
+              {%  endif %}
+          {%  endif %}
         </div>
       <div class="container-menu">
         <div id="mySideNav" class="sidenav collapse navbar-collapse">
@@ -110,7 +119,7 @@
     {% block base_content%}{% endblock %}
     </section>
     <div class="footer">
-      <div class="container">
+      <div class="container-fluid">
         <p class="text-muted">
           {% block footer %}
             {% static_placeholder 'footer' or %}{% trans "Contact" %} : coordi@repanier.be<span class="hidden-xs"> | {% trans "Participer" %} : <a href="https://github.com/pcolmant/repanier">github</a></span>{% endstatic_placeholder %}

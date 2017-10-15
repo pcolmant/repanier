@@ -20,7 +20,7 @@ class PermanenceMenu(Menu):
         else:
             is_anonymous = False
         nodes = []
-        master_id = 2
+        master_id = -1
         node = NavigationNode(
             "%s" % REPANIER_SETTINGS_PERMANENCES_NAME,
             "/",
@@ -49,7 +49,7 @@ class PermanenceMenu(Menu):
         first_pass = True
         for permanence in Permanence.objects.filter(status=PERMANENCE_OPENED) \
                 .only("id", "permanence_date", "with_delivery_point") \
-                .order_by('permanence_date'):
+                .order_by("permanence_date", "id"):
             displayed_permanence_counter += 1
             if first_pass and separator:
                 submenu_id = self.append_separator(nodes, master_id, submenu_id)

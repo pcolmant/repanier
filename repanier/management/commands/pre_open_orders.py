@@ -5,7 +5,7 @@ from repanier.task import task_order
 
 class Command(BaseCommand):
     args = '<none>'
-    help = 'Pre open orders planned up to 3 days in the future'
+    help = 'Pre open orders scheduled up to 3 days in the future'
 
     def handle(self, *args, **options):
         something_to_pre_open = task_order.automatically_pre_open()

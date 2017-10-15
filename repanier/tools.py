@@ -723,6 +723,9 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         product = offer_item.product
         producer = offer_item.producer
 
+        # print("is_active" if offer_item.is_active else "is not active")
+        # print("may_order" if offer_item.may_order else "may not order")
+
         offer_item.set_from(product)
 
         offer_item.producer_pre_opening = producer.producer_pre_opening
@@ -735,8 +738,14 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         offer_item.manage_replenishment = False
         if offer_item.is_active:
             if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                offer_item.may_order = product.is_into_offer
+                if offer_item.contract is not None:
+                    offer_item.may_order = len(offer_item.permanences_dates) > 0
+                else:
+                    offer_item.may_order = product.is_into_offer
                 offer_item.manage_replenishment = producer.manage_replenishment
+
+        # print("is_active" if offer_item.is_active else "is not active")
+        # print("may_order" if offer_item.may_order else "may not order")
 
         # The group must pay the VAT, so it's easier to allways have
         # offer_item with VAT included

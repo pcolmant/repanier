@@ -5,7 +5,7 @@
     {% if update == '2' %}<p class="bg-success">{% trans "The mail has been send" %}</p>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
-        <b>{% trans "This message will be send only to coordinators you have selected." %}</b><p></p>
+        <b>{% trans "This message will only be sent to the member(s) of the management team that you select below:" %}</b><p></p>
         {{ form.as_div }}
         {% if update != '2' %}
             <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-default pull-right">{% trans "Send e-mail" %}</button></div>

@@ -62,7 +62,7 @@ class Product(Item):
             permanences_dates=EMPTY_STRING
         ).order_by('?')
         if not offer_item_qs.exists():
-            print("Product.create : %s" % self)
+            # print("Product.create : %s" % self)
             OfferItemWoReceiver.objects.create(
                 permanence_id=permanence.id,
                 product_id=self.id,
@@ -71,10 +71,11 @@ class Product(Item):
             )
             clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
         else:
-            print("Product.get : %s" % self)
+            # print("Product.get : %s" % self)
             offer_item = offer_item_qs.first()
             offer_item.is_active = True
-            offer_item.save(update_fields=["is_active"])
+            offer_item.contract = None
+            offer_item.save(update_fields=["is_active", "contract"])
         if self.is_box:
             # Add box products
             for box_content in BoxContent.objects.filter(
@@ -86,7 +87,7 @@ class Product(Item):
                     permanences_dates=EMPTY_STRING
                 ).order_by('?')
                 if not box_offer_item_qs.exists():
-                    print("Product.create box content : %s" % box_content)
+                    # print("Product.create box content : %s" % box_content)
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
                         product_id=box_content.product_id,
@@ -96,11 +97,12 @@ class Product(Item):
                     )
                     clean_offer_item(permanence, box_offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                 else:
-                    print("Product.get box content : %s" % box_content)
+                    # print("Product.get box content : %s" % box_content)
                     box_offer_item = box_offer_item_qs.first()
                     box_offer_item.is_active = True
                     box_offer_item.is_box_content = True
-                    box_offer_item.save(update_fields=["is_box_content", "is_active"])
+                    box_offer_item.contract = None
+                    box_offer_item.save(update_fields=["is_box_content", "is_active", "contract"])
 
         offer_item = offer_item_qs.first()
         return offer_item

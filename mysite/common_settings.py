@@ -200,7 +200,7 @@ INSTALLED_APPS = (
     'cmsplugin_cascade.extra_fields',  # optional
     'cmsplugin_cascade.icon', # optional
     'cmsplugin_cascade.sharable',  # optional
-    'cmsplugin_cascade.segmentation',  # optional
+    # 'cmsplugin_cascade.segmentation',  # optional
     'cms',
     # 'cms_bootstrap3',
     'menus',
@@ -665,7 +665,7 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
 DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 ##################### DJANGOCMS-CASCADE
 CMSPLUGIN_CASCADE_PLUGINS = (
-    'cmsplugin_cascade.segmentation',
+    # 'cmsplugin_cascade.segmentation',
     'cmsplugin_cascade.generic',
     'cmsplugin_cascade.leaflet',
     'cmsplugin_cascade.link',
@@ -690,12 +690,12 @@ CMSPLUGIN_CASCADE = {
     #     ('md', (992, 'laptop', _("laptops"), 970, 1200)),
     #     ('lg', (1200, 'desktop', _("large desktops"), 1170, 2500)),
     # ),
-    'segmentation_mixins'      : (
-        (
-            'cmsplugin_cascade.segmentation.mixins.EmulateUserModelMixin',
-            'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
-        ),
-    ),
+    # 'segmentation_mixins'      : (
+    #     (
+    #         'cmsplugin_cascade.segmentation.mixins.EmulateUserModelMixin',
+    #         'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
+    #     ),
+    # ),
     'plugins_with_sharables': {
         'BootstrapImagePlugin'  : ('image_shapes', 'image_width_responsive', 'image_width_fixed',
                                    'image_height', 'resize_options',),

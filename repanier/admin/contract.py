@@ -11,7 +11,7 @@ from parler.forms import TranslatableModelForm
 
 from repanier.admin.admin_filter import ContractFilterByProducer
 from repanier.const import ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, CONTRACT_IN_WRITING
+    COORDINATION_GROUP
 from repanier.models import Contract
 from repanier.models import Customer
 from repanier.models import Producer
@@ -45,7 +45,6 @@ class ContractAdmin(TranslatableAdmin):
     list_per_page = 16
     list_max_show_all = 16
     ordering = (
-        # 'status',
         'first_permanence_date',
     )
     search_fields = ('translations__long_name',)
@@ -55,9 +54,6 @@ class ContractAdmin(TranslatableAdmin):
         if self._has_delete_permission is None:
             if request.user.groups.filter(
                     name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-                # if contract is not None:
-                #     self._has_delete_permission = contract.highest_status == CONTRACT_IN_WRITING
-                # else:
                 self._has_delete_permission = settings.DJANGO_SETTINGS_CONTRACT
             else:
                 self._has_delete_permission = False
@@ -77,9 +73,6 @@ class ContractAdmin(TranslatableAdmin):
             list_display += [
                 'language_column',
             ]
-        # list_display += [
-        #     'get_full_status_display',
-        # ]
         return list_display
 
     def get_fieldsets(self, request, contract=None):
@@ -93,7 +86,6 @@ class ContractAdmin(TranslatableAdmin):
                 'get_dates'
             ]
         fields_basic += [
-            # 'offer_description',
             'producers',
             'customers',
             'is_active'
@@ -119,19 +111,3 @@ class ContractAdmin(TranslatableAdmin):
             translations__language_code=translation.get_language()
         )
         return qs
-
-    # def save_model(self, request, contract, form, change):
-    #     d_start = contract.first_permanence_date
-    #     dt_start = new_datetime(d_start)
-    #     dt_end = new_datetime(date(d_start.year + 1, d_start.month, d_start.day))
-    #     occurences = contract.recurrences.between(
-    #         dt_start,
-    #         dt_end,
-    #         dtstart=dt_start,
-    #         inc=True
-    #     )
-    #     for occurence in occurences:
-    #         print(occurence.date().strftime(settings.DJANGO_SETTINGS_DATE))
-    #
-    #     super(ContractAdmin, self).save_model(
-    #         request, contract, form, change)

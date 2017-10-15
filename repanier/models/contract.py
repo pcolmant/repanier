@@ -4,14 +4,13 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.core import urlresolvers
 from django.db import models, transaction
-from django.db.models.signals import pre_save, post_init, post_save
+from django.db.models.signals import pre_save, post_init
 from django.dispatch import receiver
 from django.utils.dateparse import parse_date
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatableModel, TranslatedFields
 from recurrence.fields import RecurrenceField
 
@@ -28,13 +27,6 @@ class Contract(TranslatableModel):
             _("Long name"), max_length=100,
             default=EMPTY_STRING, blank=True, null=True
         ),
-        # offer_description=HTMLField(
-        #     _("Offer description"),
-        #     configuration='CKEDITOR_SETTINGS_MODEL2',
-        #     help_text=_(
-        #         "This message is send by mail to all customers when opening the order or on top "),
-        #     blank=True, default=EMPTY_STRING
-        # ),
     )
     first_permanence_date = models.DateField(
         verbose_name=_("First permanence date"),
@@ -61,16 +53,6 @@ class Contract(TranslatableModel):
         verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="contract", size=SIZE_L)
-    # status = models.CharField(
-    #     max_length=3,
-    #     choices=LUT_CONTRACT_STATUS,
-    #     default=CONTRACT_IN_WRITING,
-    #     verbose_name=_("status"))
-    # highest_status = models.CharField(
-    #     max_length=3,
-    #     choices=LUT_CONTRACT_STATUS,
-    #     default=CONTRACT_IN_WRITING,
-    #     verbose_name=_("Highest status"))
     is_active = models.BooleanField(_("Active"), default=True)
     all_dates = []
     dates_display = EMPTY_STRING
@@ -79,45 +61,52 @@ class Contract(TranslatableModel):
     def get_or_create_offer_item(self, permanence, reset_add_2_stock=False):
         from repanier.models.offeritem import OfferItemWoReceiver
 
+        # print("------------------ contract.get_or_create_offer_item")
         # In case of contract
         # -1, generate eventually several offer's items if dates are flexible
         # -2, boxes may not be used in contracts
+        OfferItemWoReceiver.objects.filter(permanence_id=permanence.id).update(may_order=False, is_active=False)
         for contract_content in ContractContent.objects.filter(
-                contract_id=permanence.contract_id
+            contract_id=self.id
+        ).exclude(
+            permanences_dates=EMPTY_STRING
         ).order_by('?'):
             if contract_content.flexible_dates:
+                # print("Flex dates")
                 all_dates_str = contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
                 for one_date_str in all_dates_str:
                     offer_item_qs = OfferItemWoReceiver.objects.filter(
                         permanence_id=permanence.id,
                         product_id=contract_content.product_id,
-                        contract_id=self.id,
                         permanences_dates=one_date_str
                     ).order_by('?')
                     if not offer_item_qs.exists():
-                        print("Create : %s at : %s" % (self, one_date_str))
+                        # print("Create 1 : %s at : %s" % (self, one_date_str))
                         OfferItemWoReceiver.objects.create(
                             permanence_id=permanence.id,
                             product_id=contract_content.product_id,
                             producer_id=contract_content.product.producer_id,
                             contract_id=self.id,
                             permanences_dates=one_date_str,
+                            permanences_dates_counter=1
                         )
                         clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                     else:
-                        print("Get : %s at : %s" % (self, one_date_str))
+                        # print("Get : %s at : %s" % (self, one_date_str))
                         offer_item = offer_item_qs.first()
+                        offer_item.contract_id = self.id
                         offer_item.is_active = True
-                        offer_item.save(update_fields=["is_active"])
+                        offer_item.save(update_fields=["is_active", "contract_id"])
+                        clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
             else:
+                # print("Fixed dates")
                 offer_item_qs = OfferItemWoReceiver.objects.filter(
                     permanence_id=permanence.id,
                     product_id=contract_content.product_id,
-                    contract_id=self.id,
                     permanences_dates=contract_content.permanences_dates
                 ).order_by('?')
                 if not offer_item_qs.exists():
-                    print("Create : %s at : %s" % (self, contract_content.permanences_dates))
+                    # print("Create 2 : %s at : %s" % (self, contract_content.permanences_dates))
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
                         product_id=contract_content.product_id,
@@ -128,14 +117,15 @@ class Contract(TranslatableModel):
                     )
                     clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                 else:
-                    print("Get : %s at : %s" % (self, contract_content.permanences_dates))
+                    # print("Get : %s at : %s" % (self, contract_content.permanences_dates))
                     offer_item = offer_item_qs.first()
+                    offer_item.contract_id = self.id
                     offer_item.is_active = True
-                    offer_item.save(update_fields=["is_active"])
+                    offer_item.save(update_fields=["is_active", "contract_id"])
+                    clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
 
     @cached_property
     def get_producers(self):
-        # if self.status == CONTRACT_IN_WRITING:
         if len(self.producers.all()) > 0:
             changelist_url = urlresolvers.reverse(
                 'admin:repanier_product_changelist',
@@ -143,14 +133,11 @@ class Contract(TranslatableModel):
             link = []
             for p in self.producers.all():
                 link.append(
-                    '<a href="%s?producer=%d&commitment=%d">&nbsp;%s</a>' % (
-                        changelist_url, p.id, self.id, p.short_profile_name.replace(" ", "&nbsp;")))
+                    '<a href="%s?producer=%d&commitment=%d">&nbsp;%s&nbsp;%s</a>' % (
+                        changelist_url, p.id, self.id, LINK_UNICODE, p.short_profile_name.replace(" ", "&nbsp;")))
             return mark_safe('<div class="wrap-text">%s</div>' % ", ".join(link))
         else:
             return mark_safe('<div class="wrap-text">%s</div>' % _("No offer"))
-        # else:
-        #     return mark_safe('<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name.replace(" ", "&nbsp;")
-        #                            for p in self.producers.all()]))
 
     get_producers.short_description = (_("Offers from"))
 
@@ -160,12 +147,6 @@ class Contract(TranslatableModel):
 
     get_dates.short_description = (_("Permanences"))
     get_dates.allow_tags = True
-
-    # def get_full_status_display(self):
-    #     return self.get_status_display()
-    #
-    # get_full_status_display.short_description = (_("Contract status"))
-    # get_full_status_display.allow_tags = True
 
     def get_contract_admin_display(self):
         return "%s (%s)" % (self.long_name, self.dates_display)

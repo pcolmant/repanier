@@ -1,22 +1,26 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F
 from django.db.models.signals import pre_save, post_init
 from django.dispatch import receiver
+from django.utils.dateparse import parse_date
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
+from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatedFields
 
-from repanier.models.invoice import ProducerInvoice
-from repanier.models.item import Item
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.models.invoice import ProducerInvoice
+from repanier.models.item import Item
 
 
 @python_2_unicode_compatible
@@ -91,11 +95,12 @@ class OfferItem(Item):
     new_stock = models.DecimalField(
         _("Final stock"),
         default=None, max_digits=9, decimal_places=3, null=True)
-    contract = models.OneToOneField(
+    contract = models.ForeignKey(
         'Contract',
         verbose_name=_("Commitment"),
-        on_delete=models.CASCADE,
-        null=True, blank=True, default=None)
+        on_delete=models.PROTECT,
+        null=True, blank=True, default=None
+    )
     permanences_dates = models.TextField(
         _("Permanences dates"), null=True, blank=True, default=EMPTY_STRING)
     permanences_dates_counter = models.IntegerField(
@@ -188,6 +193,26 @@ class OfferItem(Item):
     def get_like(self, user):
         return '<span class="glyphicon glyphicon-heart%s" onclick="like_ajax(%d);return false;"></span>' % (
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
+
+    @cached_property
+    def get_permanences_dates(self):
+        if self.permanences_dates:
+            all_dates_str = self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+            all_days = []
+            month_save = None
+            for one_date_str in all_dates_str:
+                one_date = parse_date(one_date_str)
+                if month_save != one_date.month:
+                    month_save = one_date.month
+                    if month_save is not None:
+                        new_line = "<br/>"
+                    else:
+                        new_line = EMPTY_STRING
+                else:
+                    new_line = EMPTY_STRING
+                all_days.append("{}{}".format(new_line, one_date.strftime(settings.DJANGO_SETTINGS_DAY)))
+            return mark_safe(", ".join(all_days))
+        return EMPTY_STRING
 
     def __str__(self):
         return self.get_long_name_with_producer()

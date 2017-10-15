@@ -186,20 +186,31 @@ class Permanence(TranslatableModel):
     @cached_property
     def get_producers(self):
         if self.status == PERMANENCE_PLANNED:
-            if len(self.producers.all()) > 0:
+            link = []
+            if self.contract and len(self.contract.producers.all()) > 0:
                 changelist_url = urlresolvers.reverse(
                     'admin:repanier_product_changelist',
                 )
-                link = []
+                for p in self.contract.producers.all():
+                    link.append(
+                        '<a href="%s?producer=%d&commitment=%d">&nbsp;%s&nbsp;%s</a>' % (
+                            changelist_url, p.id, self.contract.id, LINK_UNICODE, p.short_profile_name.replace(" ", "&nbsp;"))
+                    )
+            elif len(self.producers.all()) > 0:
+                changelist_url = urlresolvers.reverse(
+                    'admin:repanier_product_changelist',
+                )
                 for p in self.producers.all():
                     link.append(
                         '<a href="%s?producer=%d">&nbsp;%s</a>' % (
-                            changelist_url, p.id, p.short_profile_name))
+                            changelist_url, p.id, p.short_profile_name.replace(" ", "&nbsp;"))
+                    )
+            if len(link) > 0:
                 msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
             else:
                 msg_html = '<div class="wrap-text">%s</div>' % _("No offer")
         elif self.status == PERMANENCE_PRE_OPEN:
-            msg_html = '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name + " (" + p.phone1 + ")" for p in self.producers.all()])
+            msg_html = '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name.replace(" ", "&nbsp;") + " (" + p.phone1 + ")" for p in self.producers.all()])
         elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
             close_offeritem_changelist_url = urlresolvers.reverse(
                 'admin:repanier_offeritemclosed_changelist',
@@ -485,7 +496,8 @@ class Permanence(TranslatableModel):
             else:
                 self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
             if new_status == PERMANENCE_WAIT_FOR_OPEN:
-                for a_producer in self.producers.all():
+                all_producers = self.contract.producers.all() if self.contract else self.producers.all()
+                for a_producer in all_producers:
                     # Create ProducerInvoice to be able to close those producer on demand
                     if not ProducerInvoice.objects.filter(
                             permanence_id=self.id,
@@ -880,10 +892,7 @@ class Permanence(TranslatableModel):
                     status_counter += 1
                     status_list.append("<b>%s</b>" % delivery.get_status_display())
                 status_list.append("- %s" % delivery.get_delivery_display(admin=True))
-            # if status_counter > 1:
             message = "<br/>".join(status_list)
-            # else:
-            #     message = self.get_status_display()
         else:
             message = self.get_status_display()
         if need_to_refresh_status:
