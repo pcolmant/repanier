@@ -2,7 +2,7 @@
 <b>{{ offer.get_order_name }}</b><br/>{{ offer.producer.short_profile_name }}
 {% if offer.product.offer_description|length > 0 %} <b><span class="glyphicon glyphicon-info-sign"></span></b>{% endif %}
 {% if offer.department_for_customer %}<small>{{ offer.department_for_customer.short_name }}</small>{% endif %}
-{% if offer.permanences_dates %}{% if offer.department_for_customer %}<br/>{% endif %}<small>{{ offer.get_permanences_dates }}</small>{% endif %}
+{% if offer.permanences_dates %}{% if offer.department_for_customer %}<br/>{% endif %}<small>{{ offer.get_html_permanences_dates }}</small>{% endif %}
 <br/>
 {% for production_mode in offer.product.production_mode.all %}
     {% if production_mode.picture2 %}

@@ -473,6 +473,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 else:
                                     c.value = "%s" % purchase.get_long_name()
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                                c.style.alignment.wrap_text = True
                                 c = ws.cell(row=row_num, column=6)
                                 c.value = "%d - %s" % (customer_save.preparation_order, customer_save.short_basket_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -601,6 +602,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                             purchase.get_long_name(), department_for_customer_save__short_name)
                                     else:
                                         c.value = "%s" % purchase.get_long_name()
+                                    c.style.alignment.wrap_text = True
                                     if count_offer_item != 0:
                                         c.style.font.color.index = 'FF939393'
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -784,6 +786,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             c = ws.cell(row=row_num, column=4)
                             c.value = offer_item.get_long_name(customer_price=False)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                            c.style.alignment.wrap_text = True
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             if first_purchase:
                                 first_purchase = False
@@ -830,8 +833,8 @@ def export_producer_by_product(permanence, producer, wb=None):
                     if qty != DECIMAL_ZERO:
                         # Important : in this case, the qty comes from offer item.
                         # Offer item contains weight, not pieces
-                        if status >= PERMANENCE_WAIT_FOR_SEND:
-                            if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG and offer_item.order_average_weight > DECIMAL_ZERO:
+                        if offer_item.use_order_unit_converted:
+                            if offer_item.order_average_weight > DECIMAL_ZERO:
                                 qty = (qty / offer_item.order_average_weight).quantize(TWO_DECIMALS)
                         base_unit = get_base_unit(
                             qty,
@@ -871,6 +874,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         c = ws.cell(row=row_num, column=4)
                         c.value = offer_item.get_long_name(customer_price=False)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                        c.style.alignment.wrap_text = True
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=5)
                         producer_unit_price = offer_item.producer_unit_price.amount
@@ -1038,6 +1042,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     c = ws.cell(row=row_num, column=3)
                     c.value = offer_item_save.get_long_name(customer_price=False)
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                    c.style.alignment.wrap_text = True
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     if first_purchase:
                         first_purchase = False
@@ -1286,6 +1291,7 @@ def export_customer_for_a_delivery(
                         else:
                             c.value = "%s" % purchase.get_long_name()
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                        c.style.alignment.wrap_text = True
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=5)
                         if ref_preparation_sheet is None:

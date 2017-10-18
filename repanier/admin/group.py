@@ -54,7 +54,7 @@ class UserDataForm(forms.ModelForm):
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)
             if qs.exists():
-                self.add_error('email', _('The given email is used by another user'))
+                self.add_error('email', _('The email %s is already used by another user.') % email)
             qs = user_model.objects.filter(username=username).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)

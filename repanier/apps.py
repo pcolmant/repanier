@@ -73,8 +73,11 @@ class RepanierSettings(AppConfig):
         from repanier.models.configuration import Configuration
         from repanier.models.lut import LUT_DepartmentForCustomer
         from repanier.models.product import Product
+        from repanier.models.offeritem import OfferItem
         from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
-            INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP
+            INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP, PERMANENCE_SEND, \
+            PRODUCT_ORDER_UNIT_PC_KG
+
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
             translation.activate(settings.LANGUAGE_CODE)
@@ -101,7 +104,17 @@ class RepanierSettings(AppConfig):
             #     purchase.customer_charged = purchase.customer_invoice.customer_charged
             #     purchase.save(update_fields=["customer_charged",])
             # Staff.objects.rebuild()
-            Product.objects.filter(is_box=True).order_by('?').update(limit_order_quantity_to_stock=True)
+            Product.objects.filter(
+                is_box=True
+            ).order_by('?').update(
+                limit_order_quantity_to_stock=True
+            )
+            OfferItem.objects.filter(
+                permanence__status__gte=PERMANENCE_SEND,
+                order_unit=PRODUCT_ORDER_UNIT_PC_KG
+            ).order_by('?').update(
+                use_order_unit_converted=True
+            )
             # Create groups with correct rights
             order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()
             if order_group is None:

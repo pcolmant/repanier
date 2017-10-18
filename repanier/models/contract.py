@@ -67,9 +67,8 @@ class Contract(TranslatableModel):
         # -2, boxes may not be used in contracts
         OfferItemWoReceiver.objects.filter(permanence_id=permanence.id).update(may_order=False, is_active=False)
         for contract_content in ContractContent.objects.filter(
-            contract_id=self.id
-        ).exclude(
-            permanences_dates=EMPTY_STRING
+            contract_id=self.id,
+            permanences_dates_counter__gt=0
         ).order_by('?'):
             if contract_content.flexible_dates:
                 # print("Flex dates")
@@ -219,6 +218,17 @@ class ContractContent(models.Model):
         null=True, blank=True, default=0)
     flexible_dates = models.BooleanField(_("Flexible permanences dates"), default=False)
     all_dates = []
+
+    @property
+    def get_permanences_dates(self):
+        if self.permanences_dates:
+            all_dates_str = self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+            all_days = []
+            for one_date_str in all_dates_str:
+                one_date = parse_date(one_date_str)
+                all_days.append("{}".format(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)))
+            return mark_safe(", ".join(all_days))
+        return EMPTY_STRING
 
     def __str__(self):
         return EMPTY_STRING

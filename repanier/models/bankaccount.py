@@ -112,8 +112,8 @@ class BankAccount(models.Model):
     get_customer.admin_order_field = 'customer'
 
     class Meta:
-        verbose_name = _("Bank account movement")
-        verbose_name_plural = _("Bank account movements")
+        verbose_name = _("Bank account transaction")
+        verbose_name_plural = _("Bank account transactions")
         ordering = ('-operation_date', '-id')
         index_together = [
             ['operation_date', 'id'],

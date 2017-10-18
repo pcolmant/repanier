@@ -26,7 +26,6 @@ class DeliveryBoard(TranslatableModel):
         db_index=True, on_delete=models.PROTECT)
     permanence = models.ForeignKey(
         'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME)
-    # delivery_date = models.DateField(_("delivery date"), blank=True, null=True, db_index=True)
 
     status = models.CharField(
         max_length=3,
@@ -77,23 +76,11 @@ class DeliveryBoard(TranslatableModel):
             'short_name', any_language=True, default=EMPTY_STRING
         )
         if admin:
-            # if self.delivery_date is not None:
-            #     label = '%s <font color="green">%s</font>' % (
-            #         self.delivery_date.strftime(settings.DJANGO_SETTINGS_DAY), short_name
-            #     )
-            # else:
             label = '<font color="green">%s</font>' % short_name
         else:
             comment = self.safe_translation_getter(
                 'delivery_comment', any_language=True, default=EMPTY_STRING
             )
-            # if self.delivery_date is not None:
-            #     label = '%s %s%s' % (
-            #         self.delivery_date.strftime(settings.DJANGO_SETTINGS_DAY),
-            #         "%s " % comment if comment else EMPTY_STRING,
-            #         short_name
-            #     )
-            # else:
             label = '%s%s' % (comment, short_name)
         return mark_safe(label)
 

@@ -150,7 +150,7 @@ class Item(TranslatableModel):
         self.producer_unit_price = source.producer_unit_price
         self.producer_vat = source.producer_vat
         self.unit_deposit = source.unit_deposit
-        self.limit_order_quantity_to_stock= source.limit_order_quantity_to_stock
+        self.limit_order_quantity_to_stock = source.limit_order_quantity_to_stock
         self.stock = source.stock
         self.customer_minimum_order_quantity = source.customer_minimum_order_quantity
         self.customer_increment_order_quantity = source.customer_increment_order_quantity
@@ -376,29 +376,25 @@ class Item(TranslatableModel):
             display = "%s%s" % (qty_display, price_display)
             return display
 
-    def get_qty_display(self, is_quantity_invoiced=False):
-        if self.is_box:
-            # To avoid unicode error in email_offer.send_open_order
-            qty_display = BOX_UNICODE
-        else:
-            if is_quantity_invoiced and self.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                qty_display = self.get_display(
-                    qty=1,
-                    order_unit=PRODUCT_ORDER_UNIT_KG,
-                    for_customer=False,
-                    without_price_display=True
-                )
-            else:
-                qty_display = self.get_display(
-                    qty=1,
-                    order_unit=self.order_unit,
-                    for_customer=False,
-                    without_price_display=True
-                )
-        return qty_display
+    def get_customer_alert_order_quantity(self):
+        if self.limit_order_quantity_to_stock:
+            return "%s" % _("Current stock")
+        return self.customer_alert_order_quantity
 
-    def get_qty_and_price_display(self, is_quantity_invoiced=False, customer_price=True):
-        qty_display = self.get_qty_display(is_quantity_invoiced)
+    get_customer_alert_order_quantity.short_description = (_("Customer alert order quantity"))
+    get_customer_alert_order_quantity.allow_tags = False
+
+    def get_long_name_with_producer_price(self):
+        return self.get_long_name(customer_price=False)
+    get_long_name_with_producer_price.short_description = (_("Long name"))
+    get_long_name_with_producer_price.allow_tags = False
+    get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
+
+    def get_qty_display(self):
+        raise NotImplementedError
+
+    def get_qty_and_price_display(self, customer_price=True):
+        qty_display = self.get_qty_display()
         unit_price = self.get_unit_price(customer_price=customer_price)
         if len(qty_display) > 0:
             if self.unit_deposit.amount > DECIMAL_ZERO:
@@ -413,28 +409,8 @@ class Item(TranslatableModel):
             else:
                 return '%s' % unit_price
 
-    def get_customer_alert_order_quantity(self):
-        if self.limit_order_quantity_to_stock:
-            return "%s" % _("Current stock")
-        return self.customer_alert_order_quantity
-
-    get_customer_alert_order_quantity.short_description = (_("Customer alert order quantity"))
-    get_customer_alert_order_quantity.allow_tags = False
-
-    def get_order_name(self):
-        qty_display = self.get_qty_display()
-        if qty_display:
-            return '%s %s' % (self.long_name, qty_display)
-        return '%s' % self.long_name
-
-    def get_long_name_with_producer_price(self):
-        return self.get_long_name(customer_price=False)
-    get_long_name_with_producer_price.short_description = (_("Long name"))
-    get_long_name_with_producer_price.allow_tags = False
-    get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
-
-    def get_long_name(self, is_quantity_invoiced=False, customer_price=True, with_box_unicode=True):
-        qty_and_price_display = self.get_qty_and_price_display(is_quantity_invoiced, customer_price)
+    def get_long_name(self, customer_price=True):
+        qty_and_price_display = self.get_qty_and_price_display(customer_price)
         if qty_and_price_display:
             result = '%s %s' % (self.long_name, qty_and_price_display)
         else:
@@ -445,9 +421,9 @@ class Item(TranslatableModel):
     get_long_name.allow_tags = False
     get_long_name.admin_order_field = 'translations__long_name'
 
-    def get_long_name_with_producer(self, is_quantity_invoiced=False):
+    def get_long_name_with_producer(self):
         if self.id is not None:
-            return '%s, %s' % (self.producer.short_profile_name, self.get_long_name(is_quantity_invoiced=is_quantity_invoiced))
+            return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
         else:
             # Nedeed for django import export since django_import_export-0.4.5
             return 'N/A'
@@ -457,7 +433,7 @@ class Item(TranslatableModel):
     get_long_name_with_producer.admin_order_field = 'translations__long_name'
 
     def __str__(self):
-        return self.get_order_name()
+        return EMPTY_STRING
 
     class Meta:
         abstract = True

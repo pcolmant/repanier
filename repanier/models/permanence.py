@@ -23,7 +23,7 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice, ProducerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.picture.const import SIZE_L
@@ -119,15 +119,6 @@ class Permanence(TranslatableModel):
         verbose_name=_('Boxes'),
         blank=True
     )
-    # contracts = models.ManyToManyField(
-    #     'Contract',
-    #     verbose_name=_("Commitments"),
-    #     blank=True
-    # )
-    # When master contract is defined, this permanence is used to let customer place order to the contract
-    # This master contract will be the only one contract allowed for this permanence
-    # This permanence will not be showed into "admin/permanence_in_preparation" nor "admin/ermanence_done"
-    # but will be used in "admin/contract"
     contract = models.ForeignKey(
         'Contract',
         verbose_name=_("Commitment"),
@@ -217,22 +208,26 @@ class Permanence(TranslatableModel):
             )
 
             link = []
+            if self.contract and len(self.contract.producers.all()) > 0:
+                link_unicode = "{} ".format(LINK_UNICODE)
+            else:
+                link_unicode = EMPTY_STRING
             for p in self.producers.all().only("id"):
                 pi = ProducerInvoice.objects.filter(
                     producer_id=p.id, permanence_id=self.id
                 ).order_by('?').first()
                 if pi is not None:
                     if pi.status == PERMANENCE_OPENED:
-                        label = ('%s (%s) ' % (p.short_profile_name, pi.get_total_price_with_tax())).replace(
+                        label = ('%s%s (%s) ' % (link_unicode, p.short_profile_name, pi.get_total_price_with_tax())).replace(
                             ' ', '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                     else:
-                        label = ('%s (%s) %s' % (
+                        label = ('%s%s (%s) %s' % ( link_unicode,
                         p.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)).replace(' ',
                                                                                                     '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                 else:
-                    label = ('%s ' % (p.short_profile_name,)).replace(' ', '&nbsp;')
+                    label = ('%s%s ' % (link_unicode, p.short_profile_name,)).replace(' ', '&nbsp;')
                     offeritem_changelist_url = close_offeritem_changelist_url
                 link.append(
                     '<a href="%s?permanence=%s&producer=%d">%s</a>' % (
@@ -240,6 +235,10 @@ class Permanence(TranslatableModel):
             msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+            if self.contract and len(self.contract.producers.all()) > 0:
+                link_unicode = "{} ".format(LINK_UNICODE)
+            else:
+                link_unicode = EMPTY_STRING
             send_offeritem_changelist_url = urlresolvers.reverse(
                 'admin:repanier_offeritemsend_changelist',
             )
@@ -257,7 +256,7 @@ class Permanence(TranslatableModel):
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
-                    label = '%s (%s) %s' % (
+                    label = '%s%s (%s) %s' % ( link_unicode,
                     pi.producer.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)
                     link.append(
                         '<a href="%s?permanence=%d&producer=%d">&nbsp;%s</a>' % (
@@ -266,26 +265,26 @@ class Permanence(TranslatableModel):
                 else:
                     if pi.invoice_reference:
                         if pi.to_be_invoiced_balance != DECIMAL_ZERO or pi.total_price_with_tax != DECIMAL_ZERO:
-                            label = "%s (%s - %s)" % (
+                            label = "%s%s (%s - %s)" % (
+                                link_unicode,
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance,
                                 cap(pi.invoice_reference, 15)
                             )
                         else:
-                            label = "%s (%s)" % (
+                            label = "%s%s (%s)" % (
+                                link_unicode,
                                 pi.producer.short_profile_name,
                                 cap(pi.invoice_reference, 15)
                             )
                     else:
                         if pi.to_be_invoiced_balance != DECIMAL_ZERO or pi.total_price_with_tax != DECIMAL_ZERO:
-                            label = "%s (%s)" % (
+                            label = "%s%s (%s)" % (
+                                link_unicode,
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance
                             )
                         else:
-                            # label = "%s" % (
-                            #     pi.producer.short_profile_name
-                            # )
                             continue
                     # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                     # Such that they can be accessed by the producer and by the staff
@@ -682,7 +681,7 @@ class Permanence(TranslatableModel):
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO
             )
-            OfferItem.objects.filter(
+            OfferItemWoReceiver.objects.filter(
                 permanence_id=self.id
             ).update(
                 quantity_invoiced=DECIMAL_ZERO,
@@ -734,6 +733,14 @@ class Permanence(TranslatableModel):
                     else:
                         a_purchase.quantity_invoiced = a_purchase.quantity_ordered
             a_purchase.save()
+
+        if send_to_producer:
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=self.id,
+                order_unit=PRODUCT_ORDER_UNIT_PC_KG
+            ).order_by('?').update(
+                use_order_unit_converted=True
+            )
         self.save()
 
     def recalculate_profit(self):
@@ -818,7 +825,7 @@ class Permanence(TranslatableModel):
         assert self.status < PERMANENCE_SEND
         result = []
         for a_producer in self.producers.all():
-            current_products = list(OfferItem.objects.filter(
+            current_products = list(OfferItemWoReceiver.objects.filter(
                 is_active=True,
                 may_order=True,
                 order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
@@ -837,7 +844,7 @@ class Permanence(TranslatableModel):
                 "status"
             ).first()
             if previous_permanence is not None:
-                previous_products = list(OfferItem.objects.filter(
+                previous_products = list(OfferItemWoReceiver.objects.filter(
                     is_active=True,
                     may_order=True,
                     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
@@ -850,7 +857,7 @@ class Permanence(TranslatableModel):
             else:
                 new_products = current_products
 
-            qs = OfferItem.objects.filter(
+            qs = OfferItemWoReceiver.objects.filter(
                 permanence_id=self.id,
                 product__in=new_products,
                 translations__language_code=translation.get_language()

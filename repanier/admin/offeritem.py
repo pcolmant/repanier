@@ -37,11 +37,8 @@ class OfferItemClosedDataForm(forms.ModelForm):
 class OfferItemClosedAdmin(admin.ModelAdmin):
     form = OfferItemClosedDataForm
     search_fields = ('translations__long_name',)
-    list_display = ['department_for_customer', 'producer', 'get_long_name',
-                    'stock',
-                    'get_html_producer_qty_stock_invoiced',
-                    'add_2_stock']
-    list_display_links = ('get_long_name',)
+    list_display = ['get_html_long_name_with_producer',]
+    list_display_links = ('get_html_long_name_with_producer',)
     list_filter = (
         PurchaseFilterByProducerForThisPermanence,
         OfferItemFilter,
@@ -74,27 +71,27 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             self.list_editable = ('stock',)
             if producer.manage_replenishment:
                 if permanence_open:
-                    return ('department_for_customer', 'producer', 'get_long_name',
+                    return ('department_for_customer', 'get_html_long_name_with_producer',
                             'stock',
                             'get_html_producer_qty_stock_invoiced')
                 else:
-                    return ('department_for_customer', 'producer', 'get_long_name',
+                    return ('department_for_customer', 'get_html_long_name_with_producer',
                             'stock',
                             'get_html_producer_qty_stock_invoiced',
                             'add_2_stock')
             elif producer.represent_this_buyinggroup:
                 if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                    return ('department_for_customer', 'producer', 'get_long_name',
+                    return ('department_for_customer', 'get_html_long_name_with_producer',
                             'get_html_producer_qty_stock_invoiced')
                 else:
-                    return ('department_for_customer', 'producer', 'get_long_name',
+                    return ('department_for_customer', 'get_html_long_name_with_producer',
                             'stock',
                             'get_html_producer_qty_stock_invoiced')
             else:
-                return ('department_for_customer', 'producer', 'get_long_name',
+                return ('department_for_customer', 'get_html_long_name_with_producer',
                         'get_html_producer_qty_stock_invoiced')
         else:
-            return ('department_for_customer', 'producer', 'get_long_name',
+            return ('department_for_customer', 'get_html_long_name_with_producer',
                     'get_html_producer_qty_stock_invoiced')
 
     def get_form(self, request, offer_item=None, **kwargs):

@@ -142,7 +142,7 @@ class Configuration(TranslatableModel):
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
                                   default=EMPTY_STRING,
                                   blank=True),
-        offer_customer_mail=HTMLField(_("Offer customer mail"),
+        offer_customer_mail=HTMLField(_("Email content"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -158,7 +158,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        offer_producer_mail=HTMLField(_("Offer producer mail"),
+        offer_producer_mail=HTMLField(_("Email content"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -173,7 +173,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        order_customer_mail=HTMLField(_("Order customer mail"),
+        order_customer_mail=HTMLField(_("Email content"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -191,7 +191,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        cancel_order_customer_mail=HTMLField(_("Cancelled order customer mail"),
+        cancel_order_customer_mail=HTMLField(_("Email content"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -203,7 +203,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        order_staff_mail=HTMLField(_("Order staff mail"),
+        order_staff_mail=HTMLField(_("Email content"),
                                    help_text=EMPTY_STRING,
                                    configuration='CKEDITOR_SETTINGS_MODEL2',
                                    default=
@@ -220,7 +220,7 @@ class Configuration(TranslatableModel):
                                    {{ signature }}
                                    """,
                                    blank=True),
-        order_producer_mail=HTMLField(_("Order producer mail"),
+        order_producer_mail=HTMLField(_("Email content"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=
@@ -233,7 +233,7 @@ class Configuration(TranslatableModel):
                                       {{ signature }}
                                       """,
                                       blank=True),
-        invoice_customer_mail=HTMLField(_("Invoice customer mail"),
+        invoice_customer_mail=HTMLField(_("Email content"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
                                         default=
@@ -252,7 +252,7 @@ class Configuration(TranslatableModel):
                                         {{ signature }}
                                         """,
                                         blank=True),
-        invoice_producer_mail=HTMLField(_("Invoice producer mail"),
+        invoice_producer_mail=HTMLField(_("Email content"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
                                         default=

@@ -10,7 +10,7 @@ from repanier.fields.RepanierMoneyField import FormMoneyField
 
 
 class OpenAndSendOfferForm(forms.Form):
-    template_offer_customer_mail = forms.CharField(label=_("Offer customer mail"), widget=TextEditorWidget,
+    template_offer_customer_mail = forms.CharField(label=_("Email content"), widget=TextEditorWidget,
                                                    required=False)
     template_cancel_order_customer_mail = forms.CharField(
         label=_("If customers must confirm orderds, cancelled order customer mail"),
@@ -24,11 +24,11 @@ class OpenAndSendOfferForm(forms.Form):
 
 
 class CloseAndSendOrderForm(forms.Form):
-    template_order_customer_mail = forms.CharField(label=_("Offer customer mail"), widget=TextEditorWidget,
+    template_order_customer_mail = forms.CharField(label=_("Email content"), widget=TextEditorWidget,
                                                    required=False)
-    template_order_producer_mail = forms.CharField(label=_("Offer producer mail"), widget=TextEditorWidget,
+    template_order_producer_mail = forms.CharField(label=_("Email content"), widget=TextEditorWidget,
                                                    required=False)
-    template_order_staff_mail = forms.CharField(label=_("Offer staff mail"), widget=TextEditorWidget, required=False)
+    template_order_staff_mail = forms.CharField(label=_("Email content"), widget=TextEditorWidget, required=False)
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -47,10 +47,10 @@ class GeneratePermanenceForm(forms.Form):
 
 class InvoiceOrderForm(forms.Form):
     template_invoice_customer_mail = forms.CharField(
-        label=_("Invoice customer mail"), widget=TextEditorWidget,
+        label=_("Email content"), widget=TextEditorWidget,
                                                      required=False)
     template_invoice_producer_mail = forms.CharField(
-        label=_("Invoice producer mail"), widget=TextEditorWidget,
+        label=_("Email content"), widget=TextEditorWidget,
                                                      required=False)
 
     def __init__(self, *args, **kwargs):

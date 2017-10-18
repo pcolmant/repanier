@@ -126,12 +126,13 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             c = ws.cell(row=row_num, column=3)
                             if department_for_customer_save__short_name is not None:
                                 c.value = "%s - %s" % (
-                                    offer_item.get_long_name(is_quantity_invoiced=True),
+                                    offer_item.get_long_name(),
                                     department_for_customer_save__short_name
                                 )
                             else:
-                                c.value = "%s" % offer_item.get_long_name(is_quantity_invoiced=True)
+                                c.value = "%s" % offer_item.get_long_name()
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                            c.style.alignment.wrap_text = True
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=4)
                             unit_price = offer_item.customer_unit_price if customer_price else offer_item.producer_unit_price
@@ -377,6 +378,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 else:
                     c.value = product.get_long_name()
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                c.style.alignment.wrap_text = True
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=4)
                 unit_price = product.customer_unit_price if customer_price else product.producer_unit_price

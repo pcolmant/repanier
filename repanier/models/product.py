@@ -182,7 +182,7 @@ class Product(Item):
                         javascript,
                         color,
                         icon,
-                        one_date.strftime(settings.DJANGO_SETTINGS_DAY)
+                        one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)
                     )
                 contract_dates_array.append(
                     link
@@ -258,6 +258,18 @@ class Product(Item):
         )
         return link
 
+    def get_qty_display(self):
+        if self.is_box:
+            # To avoid unicode error in email_offer.send_open_order
+            qty_display = BOX_UNICODE
+        else:
+            qty_display = self.get_display(
+                qty=1,
+                order_unit=self.order_unit,
+                for_customer=False,
+                without_price_display=True
+            )
+        return qty_display
 
     def __str__(self):
         return super(Product, self).get_long_name_with_producer()

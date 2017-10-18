@@ -59,7 +59,7 @@ class CustomerForm(RepanierForm):
             id=self.request.user.id
         ).order_by('?')
         if qs.exists():
-            self.add_error('email1', _('The email is used by another customer'))
+            self.add_error('email1', _('The email %s is already used by another user.'))
         return email1
 
     def __init__(self, *args, **kwargs):

@@ -30,15 +30,12 @@ class OfferItem(Item):
                                    default=EMPTY_STRING, blank=True, null=True),
         cache_part_a=HTMLField(default=EMPTY_STRING, blank=True),
         cache_part_b=HTMLField(default=EMPTY_STRING, blank=True),
-        order_sort_order=models.IntegerField(
-            _("Customer sort order for optimization"),
-            default=0, db_index=True),
-        preparation_sort_order=models.IntegerField(
-            _("Preparation sort order for optimization"),
-            default=0, db_index=True),
-        producer_sort_order=models.IntegerField(
-            _("Producer sort order for optimization"),
-            default=0, db_index=True)
+        # Language dependant customer sort order for optimization
+        order_sort_order=models.IntegerField(default=0, db_index=True),
+        # Language dependant preparation sort order for optimization
+        preparation_sort_order=models.IntegerField(default=0, db_index=True),
+        # Language dependant producer sort order for optimization
+        producer_sort_order=models.IntegerField(default=0, db_index=True)
     )
     permanence = models.ForeignKey(
         'Permanence',
@@ -63,31 +60,28 @@ class OfferItem(Item):
         _("The resale price is set by the producer"),
         default=False)
 
-    # Calculated with Purchase
+    # Calculated with Purchase : Total producer purchase price vat included
     total_purchase_with_tax = ModelMoneyField(
         _("Producer amount invoiced"),
-        help_text=_('Total purchase amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
-    # Calculated with Purchase
+    # Calculated with Purchase : Total customer selling price vat included
     total_selling_with_tax = ModelMoneyField(
         _("Customer amount invoiced"),
-        help_text=_('Total selling amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
-    # Calculated with Purchase.
+    # Calculated with Purchase : Quantity invoiced to all customers
     # If Permanence.status < SEND this is the order quantity
     # During sending the orders to the producer this become the invoiced quantity
-    # via tools.recalculate_order_amount(..., send_to_producer=True)
+    # via permanence.recalculate_order_amount(..., send_to_producer=True)
     quantity_invoiced = models.DecimalField(
         _("Qty invoiced"),
-        help_text=_('Quantity invoiced to our customer'),
         max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+    use_order_unit_converted = models.BooleanField(default=False)
 
     may_order = models.BooleanField(_("May order"), default=True)
-
-    manage_replenishment = models.BooleanField(_("Manage stock"), default=False)
-    manage_production = models.BooleanField(_("Manage production"), default=False)
-    producer_pre_opening = models.BooleanField(_("Producer pre-opening"), default=False)
+    manage_replenishment = models.BooleanField(_("Manage replenishment"), default=False)
+    manage_production = models.BooleanField(default=False)
+    producer_pre_opening = models.BooleanField(_("Pre-open the orders"), default=False)
 
     add_2_stock = models.DecimalField(
         _("Additional"),
@@ -181,7 +175,6 @@ class OfferItem(Item):
                 ((self.producer_unit_price.amount + self.unit_deposit.amount) * invoiced_qty).quantize(TWO_DECIMALS))
         else:
             price = self.total_purchase_with_tax
-        # price = self.total_purchase_with_tax
         if price != DECIMAL_ZERO:
             return _("<b>%(price)s</b>") % {'price': price}
         return EMPTY_STRING
@@ -195,7 +188,7 @@ class OfferItem(Item):
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
 
     @cached_property
-    def get_permanences_dates(self):
+    def get_html_permanences_dates(self):
         if self.permanences_dates:
             all_dates_str = self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
             all_days = []
@@ -210,17 +203,84 @@ class OfferItem(Item):
                         new_line = EMPTY_STRING
                 else:
                     new_line = EMPTY_STRING
-                all_days.append("{}{}".format(new_line, one_date.strftime(settings.DJANGO_SETTINGS_DAY)))
+                all_days.append("{}{}".format(new_line, one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)))
             return mark_safe(", ".join(all_days))
         return EMPTY_STRING
 
+    @cached_property
+    def get_permanences_dates(self):
+        if self.permanences_dates:
+            all_dates_str = self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+            all_days = []
+            for one_date_str in all_dates_str:
+                one_date = parse_date(one_date_str)
+                all_days.append("{}".format(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)))
+            return ", ".join(all_days)
+        return EMPTY_STRING
+
+    def get_order_name(self):
+        qty_display = self.get_qty_display()
+        if qty_display:
+            return '%s %s' % (self.long_name, qty_display)
+        return '%s' % self.long_name
+
+    def get_qty_display(self):
+        if self.is_box:
+            # To avoid unicode error in email_offer.send_open_order
+            qty_display = BOX_UNICODE
+        else:
+            if self.use_order_unit_converted:
+                # The only conversion done in permanence concerns PRODUCT_ORDER_UNIT_PC_KG
+                # so we are sure that self.order_unit == PRODUCT_ORDER_UNIT_PC_KG
+                qty_display = self.get_display(
+                    qty=1,
+                    order_unit=PRODUCT_ORDER_UNIT_KG,
+                    for_customer=False,
+                    without_price_display=True
+                )
+            else:
+                qty_display = self.get_display(
+                    qty=1,
+                    order_unit=self.order_unit,
+                    for_customer=False,
+                    without_price_display=True
+                )
+        return qty_display
+
+    def get_long_name(self, customer_price=True):
+        if settings.DJANGO_SETTINGS_CONTRACT and self.permanences_dates_counter > 0:
+            return mark_safe("{}\n{}".format(
+                super(OfferItem, self).get_long_name(customer_price=customer_price),
+                self.get_permanences_dates
+            ))
+        else:
+            return super(OfferItem, self).get_long_name(customer_price=customer_price)
+
+    def get_long_name_with_producer(self, is_html=False):
+        if settings.DJANGO_SETTINGS_CONTRACT and self.permanences_dates_counter > 0:
+            new_line = "<br/>" if is_html else " : "
+            return "{}, {}{}{}".format(
+                self.producer.short_profile_name,
+                super(OfferItem, self).get_long_name(customer_price=True),
+                new_line,
+                self.get_permanences_dates
+            )
+        else:
+            return super(OfferItem, self).get_long_name_with_producer()
+
+    def get_html_long_name_with_producer(self):
+        return mark_safe(self.get_long_name_with_producer(is_html=True))
+
+    get_html_long_name_with_producer.short_description = (_("Offer items"))
+    get_html_long_name_with_producer.allow_tags = True
+    get_html_long_name_with_producer.admin_order_field = 'translations__long_name'
+
     def __str__(self):
-        return self.get_long_name_with_producer()
-        # return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
+        return self.get_str_display()
 
     class Meta:
-        verbose_name = _("Offer's item")
-        verbose_name_plural = _("Offer's items")
+        verbose_name = _("Offer item")
+        verbose_name_plural = _("Offer items")
         unique_together = ("permanence", "product", "permanences_dates")
         # index_together = [
         #     ["id", "order_unit"]
@@ -278,19 +338,19 @@ class OfferItemWoReceiver(OfferItem):
 
     class Meta:
         proxy = True
-        verbose_name = _("Offer's item")
-        verbose_name_plural = _("Offer's items")
+        verbose_name = _("Offer item")
+        verbose_name_plural = _("Offer items")
 
 
 @python_2_unicode_compatible
 class OfferItemSend(OfferItem):
     def __str__(self):
-        return self.display(is_quantity_invoiced=True)
+        return self.get_long_name_with_producer()
 
     class Meta:
         proxy = True
-        verbose_name = _("Offer's item")
-        verbose_name_plural = _("Offer's items")
+        verbose_name = _("Offer item")
+        verbose_name_plural = _("Offer items")
 
 
 @receiver(post_init, sender=OfferItemSend)
@@ -306,12 +366,12 @@ def offer_item_send_pre_save(sender, **kwargs):
 @python_2_unicode_compatible
 class OfferItemClosed(OfferItem):
     def __str__(self):
-        return self.display(is_quantity_invoiced=True)
+        return self.get_long_name_with_producer()
 
     class Meta:
         proxy = True
-        verbose_name = _("Offer's item")
-        verbose_name_plural = _("Offer's items")
+        verbose_name = _("Offer item")
+        verbose_name_plural = _("Offer items")
 
 
 @receiver(post_init, sender=OfferItemClosed)

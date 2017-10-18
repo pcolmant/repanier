@@ -80,8 +80,8 @@ class Producer(models.Model):
     )
     offer_filled = models.BooleanField(_("Offer filled"), default=False)
     invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
-    manage_replenishment = models.BooleanField(_("Manage stock"), default=False)
-    producer_pre_opening = models.BooleanField(_("Producer pre-opening"), default=False)
+    manage_replenishment = models.BooleanField(_("Manage replenishment"), default=False)
+    producer_pre_opening = models.BooleanField(_("Pre-open the orders"), default=False)
     producer_price_are_wo_vat = models.BooleanField(_("Producer price are wo vat"), default=False)
     sort_products_by_reference = models.BooleanField(_("Sort products by reference"), default=False)
 
