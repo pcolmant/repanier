@@ -55,7 +55,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     invoice = CustomerInvoice.objects.filter(
                         permanence=permanence, customer=customer
                     ).order_by('?').first()
-                    if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
+                    if invoice is not None and invoice.has_purchase:
                         customer.preparation_order = preparation_order
                         # customer.save(update_fields=['preparation_order'])
                         # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
@@ -64,7 +64,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         )
                         preparation_order += 1
                         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-                            confirmed = _("/!\ This order isn't confirmed")
+                            confirmed = "\n{}".format(_("/!\ This order isn't confirmed"))
                         else:
                             confirmed = EMPTY_STRING
                         row = [
@@ -77,7 +77,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                             ";".join(
                                 [customer.user.email, customer.email2, EMPTY_STRING]
                             ) if customer.email2 else ";".join(
-                                [customer.user.email, customer.email2]
+                                [customer.user.email, EMPTY_STRING]
                             )
                         ]
                         for col_num in range(len(row)):
@@ -87,7 +87,10 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             else:
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                                c.style.alignment.wrap_text = False
+                                if col_num == 0:
+                                    c.style.alignment.wrap_text = True
+                                else:
+                                    c.style.alignment.wrap_text = False
                             if row_num % 2 == 0:
                                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                         row_num += 1
@@ -109,7 +112,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                 invoice = CustomerInvoice.objects.filter(
                     permanence=permanence, customer=customer
                 ).order_by('?').first()
-                if invoice is not None and invoice.total_price_with_tax.amount != DECIMAL_ZERO:
+                if invoice is not None and invoice.has_purchase:
                     customer.preparation_order = preparation_order
                     # customer.save(update_fields=['preparation_order'])
                     # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
@@ -118,7 +121,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     )
                     preparation_order += 1
                     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-                        confirmed = _("/!\ This order isn't confirmed")
+                        confirmed = "\n{}".format(_("/!\ This order isn't confirmed"))
                     else:
                         confirmed = EMPTY_STRING
                     row = [
@@ -131,7 +134,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         ";".join(
                             [customer.user.email, customer.email2, EMPTY_STRING]
                         ) if customer.email2 else ";".join(
-                            [customer.user.email, customer.email2]
+                            [customer.user.email, EMPTY_STRING]
                         )
                     ]
                     for col_num in range(len(row)):
@@ -141,41 +144,50 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                         else:
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                            c.style.alignment.wrap_text = False
+                            if col_num == 0:
+                                c.style.alignment.wrap_text = True
+                            else:
+                                c.style.alignment.wrap_text = False
                         if row_num % 2 == 0:
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                     row_num += 1
 
-        for col_num in range(5):
-            c = ws.cell(row=row_num-1, column=col_num)
-            c.style.borders.bottom.border_style = Border.BORDER_THIN
-
-        c = ws.cell(row=row_num, column=0)
-        c.value = "-------"
-        c = ws.cell(row=row_num, column=1)
-        c.value = "%s" % (_('Permanence Board Member List'))
-        c.style.alignment.wrap_text = False
-        c.style.font.bold = True
-        c = ws.cell(row=row_num, column=2)
-        c.value = "-------"
-        row_num += 1
         # Permanence board info
         permanence_date_save = None
+        at_least_one = False
         next_permanence_set = Permanence.objects.filter(permanence_date__gte=permanence.permanence_date).order_by(
             "permanence_date")[:5]
         for next_permanence in next_permanence_set:
+
             for permanenceboard in PermanenceBoard.objects.filter(
                     permanence_id=next_permanence.id).order_by(
                 "permanence_role__tree_id",
                 "permanence_role__lft"
             ):
-                c = permanenceboard.customer
-                if c is not None:
+                customer = permanenceboard.customer
+                if customer is not None:
+                    if at_least_one == False:
+                        for col_num in range(6):
+                            c = ws.cell(row=row_num - 1, column=col_num)
+                            c.style.borders.top.border_style = Border.BORDER_THIN
+                            c.style.borders.bottom.border_style = Border.BORDER_THIN
+
+                        c = ws.cell(row=row_num, column=0)
+                        c.value = "-------"
+                        c = ws.cell(row=row_num, column=1)
+                        c.value = "%s" % (_('Permanence Board Member List'))
+                        c.style.alignment.wrap_text = False
+                        c.style.font.bold = True
+                        c = ws.cell(row=row_num, column=2)
+                        c.value = "-------"
+                        row_num += 1
+
+                    at_least_one = True
                     row = [
-                        (next_permanence.permanence_date, NumberFormat.FORMAT_DATE_DMYSLASH,),
-                        (c.long_basket_name, NumberFormat.FORMAT_TEXT,),
-                        (c.phone1, NumberFormat.FORMAT_TEXT,),
-                        (c.phone2, NumberFormat.FORMAT_TEXT,),
+                        (next_permanence.permanence_date, NumberFormat.FORMAT_DATE_DMYSLASH),
+                        (customer.long_basket_name, NumberFormat.FORMAT_TEXT),
+                        (customer.phone1, NumberFormat.FORMAT_TEXT),
+                        (customer.phone2, NumberFormat.FORMAT_TEXT),
                         (permanenceboard.permanence_role.short_name, NumberFormat.FORMAT_TEXT),
                     ]
                     for col_num in range(len(row)):
@@ -187,30 +199,38 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                             c.style.font.bold = True
                             permanence_date_save = next_permanence.permanence_date
                     row_num += 1
-            for col_num in range(5):
-                c = ws.cell(row=row_num, column=col_num)
-                c.style.borders.bottom.border_style = Border.BORDER_THIN
-            row_num += 1
-        c = ws.cell(row=row_num, column=0)
-        c.value = "-------"
-        c = ws.cell(row=row_num, column=1)
-        c.value = "%s" % (_('Staff Member List'))
-        c.style.alignment.wrap_text = False
-        c.style.font.bold = True
-        c = ws.cell(row=row_num, column=2)
-        c.value = "-------"
-        row_num += 1
+
+        at_least_one = False
+
         for staff in Staff.objects.filter(is_active=True):
-            c = staff.customer_responsible
-            if c is not None:
+            customer_responsible = staff.customer_responsible
+            if customer_responsible is not None:
+                if not at_least_one:
+                    for col_num in range(6):
+                        c = ws.cell(row=row_num, column=col_num)
+                        c.style.borders.top.border_style = Border.BORDER_THIN
+                        c.style.borders.bottom.border_style = Border.BORDER_THIN
+
+                    c = ws.cell(row=row_num, column=0)
+                    c.value = "-------"
+                    c = ws.cell(row=row_num, column=1)
+                    c.value = "%s" % (_('Staff Member List'))
+                    c.style.alignment.wrap_text = False
+                    c.style.font.bold = True
+                    c = ws.cell(row=row_num, column=2)
+                    c.value = "-------"
+                    row_num += 1
+
+                    at_least_one = True
+
                 staff_function = staff.safe_translation_getter(
                     'long_name', any_language=True, default=EMPTY_STRING
                 )
                 row = [
                     staff_function,
-                    c.long_basket_name,
-                    c.phone1,
-                    c.phone2
+                    customer_responsible.long_basket_name,
+                    customer_responsible.phone1,
+                    customer_responsible.phone2
                 ]
                 for col_num in range(len(row)):
                     c = ws.cell(row=row_num, column=col_num)
@@ -219,12 +239,13 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     c.style.alignment.wrap_text = True
                 row_num += 1
 
-        for col_num in range(5):
-            c = ws.cell(row=row_num-1, column=col_num)
-            c.style.borders.bottom.border_style = Border.BORDER_THIN
-
         if not group:
             # This is a private information which doesn't need to be give to customer's groups
+            for col_num in range(6):
+                c = ws.cell(row=row_num, column=col_num)
+                c.style.borders.top.border_style = Border.BORDER_THIN
+                c.style.borders.bottom.border_style = Border.BORDER_THIN
+
             c = ws.cell(row=row_num, column=0)
             c.value = "-------"
             c = ws.cell(row=row_num, column=1)
@@ -234,6 +255,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
             c = ws.cell(row=row_num, column=2)
             c.value = "-------"
             row_num += 1
+
             # Producer info
             for producer in Producer.objects.filter(permanence=permanence).order_by("short_profile_name"):
                 invoice = ProducerInvoice.objects.filter(
@@ -1418,8 +1440,8 @@ def generate_customer_xlsx(permanence, deliveries_id=None, customer=None, group=
         if wb is not None:
             # At least one order
             abstract_ws = wb.get_active_sheet()
-            ws_preparation_title = cap(slugify("%s" % _("Preparation")), 31)
-            ws_customer_title = cap(slugify("%s" % _('Customer check')), 31)
+            ws_preparation_title = cap("%s" % _("Preparation"), 31)
+            ws_customer_title = cap("%s" % _('Customer check'), 31)
             wb = export_customer_label(
                 permanence=permanence, deliveries_id=deliveries_id, wb=wb
             )

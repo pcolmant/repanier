@@ -225,7 +225,7 @@ def create__customer_action(year):
         # This is the detail of the invoice, i.e. sold products
         wb = None
         for customer in customer_qs:
-            wb = export_invoice(year=year, customer=customer, wb=wb, sheet_name=slugify(customer))
+            wb = export_invoice(year=year, customer=customer, wb=wb, sheet_name=customer)
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(

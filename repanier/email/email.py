@@ -75,7 +75,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     print("to : %s" % self.to)
                     print("cc : %s" % self.cc)
                     print("bcc : %s" % self.bcc)
-                    print("subject : %s" % slugify(self.subject))
+                    print("subject : %s" % self.subject)
                     email_send = True
                 else:
                     # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
@@ -140,7 +140,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     to = "to : %s" % self.to
                     cc = "cc : %s" % self.cc
                     bcc = "bcc : %s" % self.bcc
-                    subject = "subject : %s" % slugify(self.subject)
+                    subject = "subject : %s" % self.subject
                     print(from_email)
                     print(reply_to)
                     print(to)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import translation
@@ -19,7 +20,7 @@ from repanier.xlsx.import_tools import get_row, get_header
 
 
 def export_permanence_stock(permanence, deliveries_id=None, customer_price=False, wb=None, ws_customer_title=None):
-    if wb is not None:
+    if settings.DJANGO_SETTINGS_STOCK and wb is not None:
         yellowFill = Fill()
         yellowFill.start_color.index = 'FFEEEE11'
         yellowFill.end_color.index = 'FFEEEE11'
@@ -71,7 +72,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             deliveries_ws.append(ws_sc_name)
                             break
             else:
-                ws_sc_name = cap(slugify(ws_customer_title), 31)
+                ws_sc_name = cap(ws_customer_title, 31)
                 for sheet in wb.worksheets:
                     if ws_sc_name == sheet.title:
                         deliveries_ws.append(ws_sc_name)
@@ -464,6 +465,8 @@ def handle_uploaded_stock(request, producers, file_to_import, *args):
     wb = load_workbook(file_to_import)
     if wb is not None:
         ws = wb.get_sheet_by_name(cap(slugify("%s" % _('Current stock')), 31))
+        if ws is None:
+            ws = wb.get_sheet_by_name(cap("%s" % _('Current stock'), 31))
         if ws is not None:
             error, error_msg = import_producer_stock(
                 ws,

@@ -740,7 +740,6 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
                 offer_item.limit_order_quantity_to_stock = False
                 offer_item.manage_production = False
                 offer_item.producer_pre_opening = False
-                offer_item.manage_replenishment = False
             else:
                 if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                     offer_item.may_order = product.is_into_offer

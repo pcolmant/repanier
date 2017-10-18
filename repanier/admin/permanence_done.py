@@ -164,8 +164,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                slugify(_("Invoices")),
-                slugify(permanence)
+                _("Invoices"),
+                permanence
             )
             wb.save(response)
             return response
@@ -196,8 +196,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         first = True
         for permanence in valid_permanence_qs:
             if first:
-                wb = export_bank(permanence=permanence, wb=wb, sheet_name=slugify(permanence))
-            wb = export_invoice(permanence=permanence, wb=wb, sheet_name=slugify(permanence))
+                wb = export_bank(permanence=permanence, wb=wb, sheet_name=permanence)
+            wb = export_invoice(permanence=permanence, wb=wb, sheet_name=permanence)
             if first:
                 wb = export_permanence_stock(permanence=permanence, wb=wb, ws_customer_title=None)
                 first = False
@@ -205,7 +205,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             response = HttpResponse(
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                slugify(_("Accounting report")),
+                _("Accounting report"),
                 repanier.apps.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)

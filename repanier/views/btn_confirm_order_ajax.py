@@ -48,8 +48,8 @@ def btn_confirm_order_ajax(request):
     if not customer_invoice.exists():
         raise Http404
     filename = "{0}-{1}.xlsx".format(
-        slugify(_("Order")),
-        slugify(permanence)
+        _("Order"),
+        permanence
     )
     sender_email, sender_function, signature, cc_email_staff = get_signature(
         is_reply_to_order_email=True)

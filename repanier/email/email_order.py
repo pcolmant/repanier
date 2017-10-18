@@ -32,12 +32,12 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
         permanence = Permanence.objects.get(id=permanence_id)
         config = Configuration.objects.get(id=DECIMAL_ONE)
         filename = "{0}-{1}.xlsx".format(
-                        slugify(_("Order")),
-                        slugify(permanence)
+                        _("Order"),
+                        permanence
         )
         group_filename = "{0}-{1}.xlsx".format(
-            slugify(REPANIER_SETTINGS_GROUP_NAME),
-            slugify(filename)
+            REPANIER_SETTINGS_GROUP_NAME,
+            filename
         )
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
 

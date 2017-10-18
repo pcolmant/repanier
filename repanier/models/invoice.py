@@ -10,7 +10,7 @@ from django.db import transaction
 from django.db.models import F, Sum, Q
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
-from django.utils.text import slugify
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
@@ -155,6 +155,31 @@ class CustomerInvoice(Invoice):
     def get_total_tax(self):
         # round to 2 decimals
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
+
+    @cached_property
+    def has_purchase(self):
+        if self.total_price_with_tax.amount != DECIMAL_ZERO or self.is_order_confirm_send:
+            return True
+
+        from repanier.models.purchase import PurchaseWoReceiver
+
+        result = False
+        result_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.permanence_id,
+            producer_id=self.id
+        ).order_by('?').aggregate(
+            Sum('quantity_ordered'),
+            Sum('quantity_invoiced'),
+        )
+        if result_set["quantity_ordered__sum"] is not None:
+            sum_quantity_ordered = result_set["quantity_ordered__sum"]
+            if sum_quantity_ordered != DECIMAL_ZERO:
+                result = True
+        if result_set["quantity_invoiced__sum"] is not None:
+            sum_quantity_invoiced = result_set["quantity_invoiced__sum"]
+            if sum_quantity_invoiced != DECIMAL_ZERO:
+                result = True
+        return result
 
     @transaction.atomic
     def set_delivery(self, delivery):
@@ -623,8 +648,8 @@ class CustomerInvoice(Invoice):
             from repanier.models.purchase import Purchase
 
             filename = "{0}-{1}.xlsx".format(
-                slugify(_("Canceled order")),
-                slugify(permanence)
+                _("Canceled order"),
+                permanence
             )
             sender_email, sender_function, signature, cc_email_staff = get_signature(
                 is_reply_to_order_email=True)

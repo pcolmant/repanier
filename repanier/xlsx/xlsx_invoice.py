@@ -198,7 +198,6 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
         hide_column_deposit = True
 
         for purchase in purchase_set:
-            # print(slugify(purchase))
 
             qty = purchase.quantity_invoiced
 

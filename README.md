@@ -212,6 +212,7 @@ Set the system configuration of Repanier.
         DJANGO_SETTINGS_STATIC=static
         DJANGO_SETTINGS_IS_MINIMALIST=False
         DJANGO_SETTINGS_CONTRACT=True
+        DJANGO_SETTINGS_STOCK=True
         DJANGO_SETTINGS_BOX=True
         [ALLOWED_HOSTS]
         1:repanier.local

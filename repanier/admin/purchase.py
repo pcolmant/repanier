@@ -243,8 +243,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 if customer_invoice is not None:
                     if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
                         filename = "{0}-{1}.xlsx".format(
-                            slugify(_("Order")),
-                            slugify(permanence)
+                            _("Order"),
+                            permanence
                         )
                         sender_email, sender_function, signature, cc_email_staff = get_signature(
                             is_reply_to_order_email=True)

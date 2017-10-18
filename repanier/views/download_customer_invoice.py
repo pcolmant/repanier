@@ -35,12 +35,12 @@ def download_customer_invoice(request, customer_invoice_id):
             wb = export_invoice(
                 permanence=customer_invoice.permanence,
                 customer=customer_invoice.customer,
-                sheet_name=slugify(customer_invoice.permanence),
+                sheet_name=customer_invoice.permanence,
                 wb=None)
             response = HttpResponse(
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                slugify(_("Accounting report")),
+                _("Accounting report"),
                 REPANIER_SETTINGS_GROUP_NAME
             )
             if wb is not None:

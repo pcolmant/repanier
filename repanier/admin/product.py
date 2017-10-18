@@ -178,7 +178,7 @@ class ProductDataForm(TranslatableModelForm):
             customer_increment_order_quantity = self.cleaned_data.get("customer_increment_order_quantity", DECIMAL_ZERO)
             field_customer_alert_order_quantity_is_present = "customer_alert_order_quantity" in self.cleaned_data
             customer_alert_order_quantity = self.cleaned_data.get("customer_alert_order_quantity", LIMIT_ORDER_QTY_ITEM)
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            if not settings.DJANGO_SETTINGS_STOCK:
                 limit_order_quantity_to_stock = False
             else:
                 # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
@@ -373,13 +373,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         list_display += ['producer_unit_price']
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             list_display += ['get_customer_alert_order_quantity', ]
-        if producer is not None:
+        if settings.DJANGO_SETTINGS_STOCK and producer is not None:
             if producer.producer_pre_opening or producer.manage_replenishment:
                 list_display += ['stock', ]
                 list_editable += ['stock',]
-            elif not settings.DJANGO_SETTINGS_IS_MINIMALIST and producer.represent_this_buyinggroup:
-                list_display += ['stock', ]
-                list_editable += ['stock', ]
         self.list_editable = list_editable
         return list_display
 
@@ -400,6 +397,9 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             list_filter += [
                 ProductFilterByProductioMode,
+            ]
+        if settings.DJANGO_SETTINGS_STOCK:
+            list_filter += [
                 'limit_order_quantity_to_stock',
             ]
         return list_filter
@@ -426,11 +426,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 if 'is_into_offer__exact' in param:
                     is_into_offer_value = param['is_into_offer__exact']
         producer = producer_queryset.first()
-        producer_manage_replenishment = producer is not None and producer.manage_replenishment
+        producer_manage_replenishment = settings.DJANGO_SETTINGS_STOCK and producer is not None and producer.manage_replenishment
         producer_pre_opening = producer is not None and producer.producer_pre_opening
         producer_represent_this_buyinggroup = producer is not None and producer.represent_this_buyinggroup
         producer_resale_price_fixed = producer is not None and producer.is_resale_price_fixed
-        limit_order_quantity_to_stock = product is not None and product.limit_order_quantity_to_stock
+        limit_order_quantity_to_stock = settings.DJANGO_SETTINGS_STOCK and product is not None and product.limit_order_quantity_to_stock
         fields_basic = [
             ('producer', 'long_name', 'picture2'),
             'order_unit',

@@ -60,7 +60,7 @@ class Command(BaseCommand):
             os.makedirs(directory, 0o755)
         file_ = record.picture.file_ptr.file
         file_name, extension = os.path.splitext(rsplit(file_.name, os.sep, 1)[1])
-        safe_name = '{0}{1}'.format(slugify(file_name), extension)
+        safe_name = '{}{}'.format(slugify(file_name), extension)
         name = os.path.join(to_subdir, safe_name)
         if default_storage.exists(name):
             default_storage.delete(name)

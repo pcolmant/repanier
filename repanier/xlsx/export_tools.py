@@ -17,7 +17,7 @@ from repanier.tools import cap
 
 def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     title1 = "%s" % title1
-    worksheet.title = cap(slugify(title1), 31)
+    worksheet.title = cap(title1, 31)
     worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
     worksheet.page_setup.fitToPage = True
     worksheet.page_setup.fitToHeight = 0
@@ -103,7 +103,7 @@ def worksheet_set_header(worksheet, header):
 def get_validation_formula(wb=None, valid_values=None):
     if valid_values:
 
-        ws_dv_name = cap(slugify("%s" % (_("Data validation"))), 31)
+        ws_dv_name = cap("%s" % (_("Data validation")), 31)
         ws_dv = wb.get_sheet_by_name(ws_dv_name)
         if ws_dv is None:
             ws_dv = wb.create_sheet(index=0)

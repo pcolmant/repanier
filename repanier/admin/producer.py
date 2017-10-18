@@ -76,6 +76,10 @@ class ProducerResource(resources.ModelResource):
         """
         Override to add additional logic.
         """
+        if not settings.DJANGO_SETTINGS_STOCK:
+            if instance.manage_replenishment:
+                raise ValueError(
+                    _("Manage replenishment must be set to False because this option is not activated."))
         producer_qs = Producer.objects.filter(short_profile_name=instance.short_profile_name).order_by('?')
         if instance.id is not None:
             producer_qs = producer_qs.exclude(id=instance.id)
@@ -109,7 +113,7 @@ def create__producer_action(year):
         # This is the detail of the payment to the producer, i.e. received products
         wb = None
         for producer in producer_qs:
-            wb = export_invoice(year=year, producer=producer, wb=wb, sheet_name=slugify(producer))
+            wb = export_invoice(year=year, producer=producer, wb=wb, sheet_name=producer)
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
@@ -290,7 +294,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
-                slugify(_("Products"))
+                _("Products")
             )
             wb.save(response)
             return response
@@ -308,7 +312,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
-                slugify(_("Current stock"))
+                _("Current stock")
             )
             wb.save(response)
             return response
@@ -392,12 +396,17 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                     'is_resale_price_fixed',
                     'price_list_multiplier',
                     'minimum_order_value',
-                    'invoice_by_basket',
-                    'manage_replenishment',
+                    'invoice_by_basket'
+                ]
+                if settings.DJANGO_SETTINGS_STOCK:
+                    fields_advanced += [
+                        'manage_replenishment',
+                    ]
+                fields_advanced += [
                     'sort_products_by_reference',
                     'producer_pre_opening',
                     'reference_site',
-                    'web_services_activated',
+                    'web_services_activated'
                 ]
         fieldsets = (
             (None, {'fields': fields_basic}),
@@ -428,5 +437,5 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
 
     class Media:
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_STOCK:
             js = ('js/export_import_stock.js',)

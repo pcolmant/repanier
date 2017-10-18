@@ -50,7 +50,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
             return HttpResponse(data, content_type="application/json", status=403)
 
         file_name, extension = os.path.splitext(file_.name)
-        safe_name = '{0}{1}'.format(slugify(file_name), extension)
+        safe_name = '{}{}'.format(slugify(file_name), extension)
         name = os.path.join(upload_to or "tmp", safe_name)
 
         if default_storage.exists(name):

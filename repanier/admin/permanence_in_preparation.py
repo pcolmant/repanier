@@ -283,8 +283,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                slugify(_("Preview report")),
-                slugify(permanence)
+                _("Preview report"),
+                permanence
             )
             wb.save(response)
             return response
@@ -313,8 +313,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 response = HttpResponse(
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                    slugify(_("Customers")),
-                    slugify(permanence)
+                    _("Customers"),
+                    permanence
                 )
                 wb.save(response)
             return response
@@ -336,8 +336,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 response = HttpResponse(
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                    slugify(_("Customers")),
-                    slugify(permanence)
+                    _("Customers"),
+                    permanence
                 )
                 wb.save(response)
             return response
@@ -377,8 +377,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                slugify(_("Producers")),
-                slugify(permanence)
+                _("Producers"),
+                permanence
             )
             wb.save(response)
             return response
