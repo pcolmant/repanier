@@ -94,72 +94,15 @@ class LUTProductionModeAdmin(LUTAdmin):
     exclude = ('picture', 'description')
 
 
-# class LUTDeliveryPointDataForm(TranslatableModelForm):
-#     customer_responsible = forms.ModelChoiceField(
-#         Customer.objects.filter(is_group=True, is_active=True),
-#         label=_("customer_responsible"),
-#         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
-#         required=False)
-#
-    # def clean(self):
-    #     if any(self.errors):
-    #         # Don't bother validating the formset unless each form is valid on its own
-    #         return
-    #     customer_responsible = self.cleaned_data.get("customer_responsible", None)
-    #     if customer_responsible is not None:
-    #         for delivery_point in LUT_DeliveryPoint.objects.filter(
-    #                 customer_responsible=customer_responsible
-    #         ).order_by('?'):
-    #             if delivery_point.id != self.instance.id:
-    #                 self.add_error(
-    #                     "customer_responsible",
-    #                     _(
-    #                         'This customer is already responsible of another delivery point (%(delivery_point)s). A customer may be responsible of maximum one delivery point.') % {
-    #                         'delivery_point': delivery_point,})
-
-    # def save(self, *args, **kwargs):
-    #     instance = super(LUTDeliveryPointDataForm, self).save(*args, **kwargs)
-    #     if instance.id is not None:
-    #         instance.closed_group = len(self.cleaned_data['customers']) > 0
-    #         instance.customer_set = self.cleaned_data['customers']
-    #         self.instance.save()
-    #         if instance.closed_group and instance.customer_responsible is not None:
-    #             # If this is a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE
-    #             # Invoices are sent to the consumer responsible of the group who is
-    #             # also responsible for collecting the payments.
-    #             # The LUT_DeliveryPoint.price_list_multiplier will be used when invoicing the consumer responsible
-    #             # The link between the customer invoice and this customer responsible is made with
-    #             # CustomerInvoice.customer_charged
-    #             Customer.objects.filter(delivery_point_id=self.instance.id).update(price_list_multiplier=DECIMAL_ONE)
-    #
-    #     return instance
-
-    # class Meta:
-    #     model = LUT_DeliveryPoint
-    #     fields = "__all__"
-    #     exclude = ('description',)
-    #     widgets = {
-    #         'customer_responsible': apply_select2(forms.Select),
-    #     }
-
-
 class LUTDeliveryPointAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
-    # form = LUTDeliveryPointDataForm
 
     def get_fields(self, request, obj=None):
         fields = [
             'short_name',
             'is_active',
-            # 'customer_responsible',
-            # 'inform_customer_responsible',
-            # 'price_list_multiplier',
             ('transport', 'min_transport')
         ]
-        # if obj is not None:
-        #     fields += [
-        #         'customers'
-        #     ]
         return fields
 
     def get_queryset(self, request):

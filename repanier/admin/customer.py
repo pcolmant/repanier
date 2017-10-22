@@ -18,6 +18,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import XLS
@@ -68,22 +69,11 @@ class UserDataForm(forms.ModelForm):
                 qs = qs.exclude(id=self.instance.user_id)
             if qs.exists():
                 self.add_error(username_field_name, user_error2)
-        if self.instance.id is not None and "price_list_multiplier" in self.cleaned_data:
-            if self.instance.delivery_point is not None \
+        if self.instance.id is not None:
+            if "price_list_multiplier" in self.cleaned_data and self.instance.delivery_point is not None \
                     and self.instance.delivery_point.customer_responsible is not None \
                     and self.cleaned_data["price_list_multiplier"] != DECIMAL_ONE:
                 self.add_error('price_list_multiplier', _('If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE'))
-            # may_order = self.cleaned_data.get("may_order", False)
-            # if may_order:
-            #     delivery_point = LUT_DeliveryPoint.objects.filter(
-            #             customer_responsible_id=self.instance.id
-            #     ).order_by('?').first()
-            #     if delivery_point is not None:
-            #         self.add_error(
-            #             "may_order",
-            #             _(
-            #                 'This customer is responsible of the delivery point (%(delivery_point)s). A customer responsible of a delivery point may not pass order.') % {
-            #                 'delivery_point': delivery_point,})
             is_active = self.cleaned_data.get("is_active")
             if is_active is not None and not is_active:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
@@ -241,6 +231,17 @@ def create__customer_action(year):
 
 
 class CustomerWithUserDataForm(UserDataForm):
+    delivery_point = forms.ModelChoiceField(
+        LUT_DeliveryPoint.objects.filter(customer_responsible__isnull=False),
+        label=_("Group"),
+        widget=apply_select2(forms.Select),
+        required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
+        self.fields["delivery_point"].widget.can_add_related = False
+        self.fields["delivery_point"].widget.can_delete_related = False
+
     class Meta:
         widgets = {
             'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
@@ -320,6 +321,10 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             ('phone1', 'phone2', 'accept_phone_call_from_members'),
             'membership_fee_valid_until',
         ]
+        if settings.DJANGO_SETTINGS_GROUP:
+            fields_basic += [
+                "delivery_point"
+            ]
         if customer is not None:
             fields_basic += [
                 ('address', 'city', 'picture'),
@@ -410,7 +415,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(CustomerWithUserDataAdmin, self).get_queryset(request)
         qs = qs.filter(
-            is_group=False,
+            is_group=False
         )
         return qs
 
@@ -433,18 +438,18 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     _(' in addition to the %(surcharge)s%% personal surcharge on to the pricelist') % {
                         'surcharge': Decimal((customer.price_list_multiplier - DECIMAL_ONE) * 100).quantize(TWO_DECIMALS)
                     }
-            if customer.delivery_point.price_list_multiplier < DECIMAL_ONE:
+            if customer.delivery_point.customer_responsible.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
                         _('%(discount)s%% discount is granted to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
-                            'discount': Decimal((DECIMAL_ONE - customer.delivery_point.price_list_multiplier) * 100).quantize(TWO_DECIMALS),
+                            'discount': Decimal((DECIMAL_ONE - customer.delivery_point.customer_responsible.price_list_multiplier) * 100).quantize(TWO_DECIMALS),
                             'delivery_point': customer.delivery_point,
                             'customer_price': customer_price
                         }
                 )
-            elif customer.delivery_point.price_list_multiplier > DECIMAL_ONE:
+            elif customer.delivery_point.customer_responsible.price_list_multiplier > DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
                         _('%(surcharge)s%% surcharge is applied to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
-                            'surcharge': Decimal((customer.delivery_point.price_list_multiplier - DECIMAL_ONE) * 100).quantize(TWO_DECIMALS),
+                            'surcharge': Decimal((customer.delivery_point.customer_responsible.price_list_multiplier - DECIMAL_ONE) * 100).quantize(TWO_DECIMALS),
                             'delivery_point': customer.delivery_point,
                             'customer_price': customer_price
                         }

@@ -79,12 +79,6 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
         on_delete=models.PROTECT, blank=True, null=True, default=None)
     inform_customer_responsible = models.BooleanField(_("Inform customer responsible"), default=False)
-    # closed_group = models.BooleanField(_("with entitled customer"), default=False)
-    # price_list_multiplier = models.DecimalField(
-    #     _("Delivery point price list multiplier"),
-    #     help_text=_("This multiplier is applied once for groups with entitled customer."),
-    #     default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
-    #     validators=[MinValueValidator(0)])
     transport = ModelMoneyField(
         _("Delivery point transport"),
         # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),

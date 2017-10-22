@@ -342,7 +342,10 @@ class Customer(models.Model):
         return True
 
     def __str__(self):
-        return self.short_basket_name
+        if self.delivery_point is None:
+            return self.short_basket_name
+        else:
+            return "{} - {}".format(self.short_basket_name, self.delivery_point)
 
     class Meta:
         verbose_name = _("Customer")

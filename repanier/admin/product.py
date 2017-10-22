@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from os import sep as os_sep
+from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
@@ -33,11 +34,6 @@ from repanier.widget.select_admin_order_unit import SelectAdminOrderUnitWidget
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, TranslatedForeignKeyWidget, \
     DecimalBooleanWidget, ChoiceWidget, ThreeDecimalsWidget, TranslatedManyToManyWidget, TwoMoneysWidget
-
-try:
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import parse_qsl
 
 
 class ProductResource(resources.ModelResource):

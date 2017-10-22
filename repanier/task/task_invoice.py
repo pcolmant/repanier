@@ -129,7 +129,7 @@ def generate_invoice(permanence, payment_date):
             # Refresh in case of change in the admin
             delivery_point = LUT_DeliveryPoint.objects.filter(customer_responsible=customer_invoice.customer).order_by('?').first()
             if delivery_point is not None:
-                customer_invoice.price_list_multiplier = delivery_point.price_list_multiplier
+                customer_invoice.price_list_multiplier = delivery_point.customer_responsible.price_list_multiplier
                 customer_invoice.transport = delivery_point.transport
                 customer_invoice.min_transport = delivery_point.min_transport
 
