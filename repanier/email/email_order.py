@@ -75,18 +75,18 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                 order_staff_mail = config.safe_translation_getter(
                     'order_staff_mail', any_language=True, default=EMPTY_STRING
                 )
-                order_staff_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+                order_staff_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 board_composition, board_composition_and_description = get_board_composition(permanence.id)
 
                 template = Template(order_staff_mail)
                 context = TemplateContext({
-                    'permanence_link'                  : mark_safe('<a href="https://%s%s">%s</a>' % (
+                    'permanence_link'                  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'board_composition'                : mark_safe(board_composition),
                     'board_composition_and_description': mark_safe(board_composition_and_description),
                     'signature'                        : mark_safe(
-                        '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
                 email = RepanierEmail(
@@ -121,7 +121,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                 order_producer_mail = config.safe_translation_getter(
                     'order_producer_mail', any_language=True, default=EMPTY_STRING
                 )
-                order_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+                order_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 template = Template(order_producer_mail)
                 context = TemplateContext({
@@ -129,10 +129,10 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                     'long_profile_name': long_profile_name,
                     'order_empty'      : wb is None,
                     'duplicate'        : not (wb is None or producer.manage_replenishment),
-                    'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
+                    'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'signature'        : mark_safe(
-                        '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
 
@@ -146,7 +146,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                         order_producer_mail_subject + '<br/><br/>' + html_content
                     cc_email_staff = []
                     order_producer_mail_subject = _(
-                        '/!\ Mail not send to our producer %s because the minimum order value has not been reached.') % long_profile_name
+                        '/!\ Mail not send to our producer {} because the minimum order value has not been reached.').format(long_profile_name)
                 else:
                     to_email_producer = []
                     if producer.email:
@@ -219,7 +219,7 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
         order_customer_mail = config.safe_translation_getter(
             'order_customer_mail', any_language=True, default=EMPTY_STRING
         )
-        order_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+        order_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
         to_email_customer = [customer.user.email]
         if customer.email2:
@@ -233,9 +233,9 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
             'long_basket_name' : long_basket_name,
             'basket_name'      : customer.short_basket_name,
             'short_basket_name': customer.short_basket_name,
-            'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
+            'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                 settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-            'last_balance_link': mark_safe('<a href="https://%s%s">%s</a>' % (
+            'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                 settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), _("Group invoices"))),
             'last_balance'     : EMPTY_STRING,
             'order_amount'     : EMPTY_STRING,
@@ -243,7 +243,7 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
             'payment_needed'   : EMPTY_STRING,
             'delivery_point'   : delivery_point,
             'signature'        : mark_safe(
-                '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
         })
         html_content = template.render(context)
         email = RepanierEmail(
@@ -296,13 +296,13 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     order_customer_mail = config.safe_translation_getter(
                         'cancel_order_customer_mail', any_language=True, default=EMPTY_STRING
                     )
-                    order_customer_mail_subject = "%s - %s - %s" % (
+                    order_customer_mail_subject = "{} - {} - {}".format(
                         _('/!\ Order cancelled'), REPANIER_SETTINGS_GROUP_NAME, permanence)
                 else:
                     order_customer_mail = config.safe_translation_getter(
                         'order_customer_mail', any_language=True, default=EMPTY_STRING
                     )
-                    order_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+                    order_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                 template = Template(order_customer_mail)
                 context = TemplateContext({
@@ -310,9 +310,9 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     'long_basket_name' : long_basket_name,
                     'basket_name'      : customer.short_basket_name,
                     'short_basket_name': customer.short_basket_name,
-                    'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
+                    'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                    'last_balance_link': mark_safe('<a href="https://%s%s">%s</a>' % (
+                    'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), customer_last_balance)),
                     'last_balance'     : mark_safe(customer_last_balance),
                     'order_amount'     : mark_safe(customer_order_amount),
@@ -320,7 +320,7 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     'payment_needed'   : mark_safe(customer_payment_needed),
                     'delivery_point'   : delivery_point,
                     'signature'        : mark_safe(
-                        '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
                 email = RepanierEmail(

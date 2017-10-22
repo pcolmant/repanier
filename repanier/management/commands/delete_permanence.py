@@ -19,7 +19,7 @@ class Command(BaseCommand):
             # id__gte=11,
             # id__lte=16
         ).order_by('permanence_date'):
-            print("%s" % permanence)
+            print("{}".format(permanence))
             admin_delete(permanence_id=permanence.id)
             Permanence.objects.filter(id=permanence.id).delete()
 

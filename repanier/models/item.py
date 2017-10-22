@@ -6,7 +6,6 @@ from decimal import ROUND_HALF_UP, getcontext
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatableModel
@@ -21,7 +20,6 @@ from repanier.const import BOX_UNICODE, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, 
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
 
 
-@python_2_unicode_compatible
 class Item(TranslatableModel):
     producer = models.ForeignKey(
         'Producer',
@@ -196,14 +194,14 @@ class Item(TranslatableModel):
         else:
             unit_price = self.producer_unit_price
         if self.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
-            return "%s %s" % (unit_price, _("/ kg"))
+            return "{} {}".format(unit_price, _("/ kg"))
         elif self.order_unit == PRODUCT_ORDER_UNIT_LT:
-            return "%s %s" % (unit_price, _("/ l"))
+            return "{} {}".format(unit_price, _("/ l"))
         elif self.order_unit not in [PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT,
                                      PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
-            return "%s %s" % (unit_price, _("/ piece"))
+            return "{} {}".format(unit_price, _("/ piece"))
         else:
-            return "%s" % (unit_price,)
+            return "{}".format(unit_price)
 
     def get_reference_price(self, customer_price=True):
         if self.order_average_weight > DECIMAL_ZERO and self.order_average_weight != DECIMAL_ONE:
@@ -220,7 +218,7 @@ class Item(TranslatableModel):
                     reference_unit = _("/ l")
                 else:
                     reference_unit = _("/ pc")
-                return "%s %s" % (reference_price, reference_unit)
+                return "{} {}".format(reference_price, reference_unit)
             else:
                 return EMPTY_STRING
         else:
@@ -234,18 +232,18 @@ class Item(TranslatableModel):
             if qty == DECIMAL_ZERO:
                 unit = EMPTY_STRING
             elif for_customer and qty < 1:
-                unit = "%s" % (_('gr'))
+                unit = "{}".format(_('gr'))
                 magnitude = 1000
             else:
-                unit = "%s" % (_('kg'))
+                unit = "{}".format(_('kg'))
         elif order_unit == PRODUCT_ORDER_UNIT_LT:
             if qty == DECIMAL_ZERO:
                 unit = EMPTY_STRING
             elif for_customer and qty < 1:
-                unit = "%s" % (_('cl'))
+                unit = "{}".format(_('cl'))
                 magnitude = 100
             else:
-                unit = "%s" % (_('l'))
+                unit = "{}".format(_('l'))
         elif order_unit in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG]:
             # display_qty = not (order_average_weight == 1 and order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG)
             average_weight = self.order_average_weight
@@ -273,14 +271,14 @@ class Item(TranslatableModel):
                     unit = EMPTY_STRING
                 else:
                     if self.order_average_weight == 1 and order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
-                        unit = "%s%s %s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+                        unit = "{}{} {}".format(tilde, number_format(average_weight, decimal), average_weight_unit)
                     else:
-                        unit = "%s%s%s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+                        unit = "{}{}{}".format(tilde, number_format(average_weight, decimal), average_weight_unit)
             else:
                 if qty == DECIMAL_ZERO:
                     unit = EMPTY_STRING
                 else:
-                    unit = "%s%s%s" % (tilde, number_format(average_weight, decimal), average_weight_unit)
+                    unit = "{}{}{}".format(tilde, number_format(average_weight, decimal), average_weight_unit)
         elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
             display_qty = self.order_average_weight != 1
             average_weight = self.order_average_weight
@@ -303,14 +301,14 @@ class Item(TranslatableModel):
                     unit = EMPTY_STRING
                 else:
                     if display_qty:
-                        unit = "%s%s" % (number_format(average_weight, decimal), average_weight_unit)
+                        unit = "{}{}".format(number_format(average_weight, decimal), average_weight_unit)
                     else:
-                        unit = "%s %s" % (number_format(average_weight, decimal), average_weight_unit)
+                        unit = "{} {}".format(number_format(average_weight, decimal), average_weight_unit)
             else:
                 if qty == DECIMAL_ZERO:
                     unit = EMPTY_STRING
                 else:
-                    unit = "%s%s" % (number_format(average_weight, decimal), average_weight_unit)
+                    unit = "{}{}".format(number_format(average_weight, decimal), average_weight_unit)
         elif order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_PC:
             display_qty = self.order_average_weight != 1
             average_weight = self.order_average_weight
@@ -324,28 +322,28 @@ class Item(TranslatableModel):
                     else:
                         pc_pcs = _('pcs')
                     if display_qty:
-                        unit = "%s%s" % (number_format(average_weight, 0), pc_pcs)
+                        unit = "{}{}".format(number_format(average_weight, 0), pc_pcs)
                     else:
-                        unit = "%s %s" % (number_format(average_weight, 0), pc_pcs)
+                        unit = "{} {}".format(number_format(average_weight, 0), pc_pcs)
             else:
                 if average_weight == DECIMAL_ZERO:
                     unit = EMPTY_STRING
                 elif average_weight < 2:
-                    unit = '%s %s' % (number_format(average_weight, 0), _('pc'))
+                    unit = "{} {}".format(number_format(average_weight, 0), _('pc'))
                 else:
-                    unit = '%s %s' % (number_format(average_weight, 0), _('pcs'))
+                    unit = "{} {}".format(number_format(average_weight, 0), _('pcs'))
         else:
             if for_order_select:
                 if qty == DECIMAL_ZERO:
                     unit = EMPTY_STRING
                 elif qty < 2:
-                    unit = "%s" % (_('unit'))
+                    unit = "{}".format(_('unit'))
                 else:
-                    unit = "%s" % (_('units'))
+                    unit = "{}".format(_('units'))
             else:
                 unit = EMPTY_STRING
         if unit_price_amount is not None:
-            price_display = " = %s" % RepanierMoney(unit_price_amount * qty)
+            price_display = " = {}".format(RepanierMoney(unit_price_amount * qty))
         else:
             price_display = EMPTY_STRING
         if magnitude is not None:
@@ -360,34 +358,32 @@ class Item(TranslatableModel):
         if for_customer or for_order_select:
             if unit:
                 if display_qty:
-                    qty_display = "%s (%s)" % (number_format(qty, decimal), unit)
+                    qty_display = "{} ({})".format(number_format(qty, decimal), unit)
                 else:
-                    qty_display = "%s" % unit
+                    qty_display = "{}".format(unit)
             else:
-                qty_display = "%s" % number_format(qty, decimal)
+                qty_display = "{}".format(number_format(qty, decimal))
         else:
             if unit:
-                qty_display = "(%s)" % unit
+                qty_display = "({})".format(unit)
             else:
                 qty_display = EMPTY_STRING
         if without_price_display:
             return qty_display
         else:
-            display = "%s%s" % (qty_display, price_display)
+            display = "{}{}".format(qty_display, price_display)
             return display
 
     def get_customer_alert_order_quantity(self):
         if self.limit_order_quantity_to_stock:
-            return "%s" % _("Current stock")
+            return "{}".format(_("Current stock"))
         return self.customer_alert_order_quantity
 
     get_customer_alert_order_quantity.short_description = (_("Customer alert order quantity"))
-    get_customer_alert_order_quantity.allow_tags = False
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)
     get_long_name_with_producer_price.short_description = (_("Long name"))
-    get_long_name_with_producer_price.allow_tags = False
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 
     def get_qty_display(self):
@@ -398,32 +394,31 @@ class Item(TranslatableModel):
         unit_price = self.get_unit_price(customer_price=customer_price)
         if len(qty_display) > 0:
             if self.unit_deposit.amount > DECIMAL_ZERO:
-                return '%s; %s + ♻ %s' % (
+                return "{}; {} + ♻ {}".format(
                     qty_display, unit_price, self.unit_deposit)
             else:
-                return '%s; %s' % (qty_display, unit_price)
+                return "{}; {}".format(qty_display, unit_price)
         else:
             if self.unit_deposit.amount > DECIMAL_ZERO:
-                return '%s + ♻ %s' % (
+                return "{} + ♻ {}".format(
                     unit_price, self.unit_deposit)
             else:
-                return '%s' % unit_price
+                return "{}".format(unit_price)
 
     def get_long_name(self, customer_price=True):
         qty_and_price_display = self.get_qty_and_price_display(customer_price)
         if qty_and_price_display:
-            result = '%s %s' % (self.long_name, qty_and_price_display)
+            result = "{} {}".format(self.safe_translation_getter('long_name', any_language=True), qty_and_price_display)
         else:
-            result = '%s' % self.long_name
+            result = "{}".format(self.safe_translation_getter('long_name', any_language=True))
         return result
 
     get_long_name.short_description = (_("Long name"))
-    get_long_name.allow_tags = False
     get_long_name.admin_order_field = 'translations__long_name'
 
     def get_long_name_with_producer(self):
         if self.id is not None:
-            return '%s, %s' % (self.producer.short_profile_name, self.get_long_name())
+            return "{}, {}".format(self.producer.short_profile_name, self.get_long_name())
         else:
             # Nedeed for django import export since django_import_export-0.4.5
             return 'N/A'

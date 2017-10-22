@@ -16,7 +16,7 @@ from repanier.tools import cap
 
 
 def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
-    title1 = "%s" % title1
+    title1 = "{}".format(title1)
     worksheet.title = cap(title1, 31)
     worksheet.page_setup.paperSize = worksheet.PAPERSIZE_A4
     worksheet.page_setup.fitToPage = True
@@ -25,14 +25,9 @@ def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     worksheet.print_gridlines = True
     if add_print_title:
         worksheet.add_print_title(1, rows_or_cols='rows')
-        try:
-            # Python 2
-            worksheet.freeze_panes = 'A2'.encode("utf8")
-        except:
-            # Python 3
-            worksheet.freeze_panes = 'A2'
+        worksheet.freeze_panes = 'A2'
     worksheet.header_footer.left_header.text = Site.objects.get_current().name
-    worksheet.header_footer.left_footer.text = "%s" % (title2)
+    worksheet.header_footer.left_footer.text = "{}".format(title2)
     worksheet.header_footer.center_footer.text = title1
     worksheet.header_footer.right_footer.text = 'Page &[Page]/&[Pages]'
     orders_responsible = Staff.objects.filter(is_reply_to_order_email=True, is_active=True).order_by('?').first()
@@ -41,12 +36,12 @@ def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     if orders_responsible:
         c = orders_responsible.customer_responsible
         if c is not None:
-            s1 = "%s: %s, %s" % (_("Orders"), c.long_basket_name, c.phone1)
+            s1 = "{}: {}, {}".format(_("Orders"), c.long_basket_name, c.phone1)
     s2 = EMPTY_STRING
     if invoices_responsible:
         c = invoices_responsible.customer_responsible
         if c is not None:
-            s2 = "%s: %s, %s" % (_("Invoices"), c.long_basket_name, c.phone1)
+            s2 = "{}: {}, {}".format(_("Invoices"), c.long_basket_name, c.phone1)
     separator = chr(10) + " "
     worksheet.header_footer.right_header.text = separator.join((s1, s2))
     return worksheet
@@ -91,7 +86,7 @@ def new_landscape_a4_sheet(workbook, title1, title2, header=None, add_print_titl
 def worksheet_set_header(worksheet, header):
     for col_num in range(len(header)):
         c = worksheet.cell(row=0, column=col_num)
-        c.value = (header[col_num][ROW_TITLE]).encode("utf8")
+        c.value = "{}".format(header[col_num][ROW_TITLE])
         c.style.font.bold = True
         c.style.alignment.wrap_text = False
         c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -103,7 +98,7 @@ def worksheet_set_header(worksheet, header):
 def get_validation_formula(wb=None, valid_values=None):
     if valid_values:
 
-        ws_dv_name = cap("%s" % (_("Data validation")), 31)
+        ws_dv_name = cap("{}".format(_("Data validation")), 31)
         ws_dv = wb.get_sheet_by_name(ws_dv_name)
         if ws_dv is None:
             ws_dv = wb.create_sheet(index=0)
@@ -118,9 +113,9 @@ def get_validation_formula(wb=None, valid_values=None):
         row_num = 0
         for v in valid_values:
             c = ws_dv.cell(row=row_num, column=col_dv)
-            c.value = "%s" % (v)
+            c.value = "{}".format(v)
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             row_num += 1
-        return "'%s'!$%s$1:$%s$%s" % (ws_dv_name, col_letter_dv, col_letter_dv, row_num + 1)
+        return "'{}'!${}$1:${}${}".format(ws_dv_name, col_letter_dv, col_letter_dv, row_num + 1)
     else:
         return EMPTY_STRING

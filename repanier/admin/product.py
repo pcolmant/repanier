@@ -526,7 +526,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if producer is not None:
             # One folder by producer for clarity
             if hasattr(picture_field.widget, 'upload_to'):
-                picture_field.widget.upload_to = "%s%s%d" % ("product", os_sep, producer.id)
+                picture_field.widget.upload_to = "{}{}{}".format("product", os_sep, producer.id)
             if producer.represent_this_buyinggroup:
                 order_unit_choices = LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION
         order_unit_field.choices = order_unit_choices

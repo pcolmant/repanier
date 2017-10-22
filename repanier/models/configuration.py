@@ -17,7 +17,6 @@ from django.dispatch import receiver
 from django.template import Template
 from django.utils import timezone
 from django.utils import translation
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -29,7 +28,6 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.product import Product
 
 
-@python_2_unicode_compatible
 class Configuration(TranslatableModel):
     group_name = models.CharField(_("Group name"), max_length=50, default=EMPTY_STRING)
     test_mode = models.BooleanField(_("Test mode"), default=False)
@@ -270,31 +268,31 @@ class Configuration(TranslatableModel):
         try:
             template = Template(self.offer_customer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.offer_customer_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.offer_customer_mail, error_str)))
         try:
             template = Template(self.offer_producer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.offer_producer_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.offer_producer_mail, error_str)))
         try:
             template = Template(self.order_customer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.order_customer_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.order_customer_mail, error_str)))
         try:
             template = Template(self.order_staff_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.order_staff_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.order_staff_mail, error_str)))
         try:
             template = Template(self.order_producer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.order_producer_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.order_producer_mail, error_str)))
         try:
             template = Template(self.invoice_customer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.invoice_customer_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.invoice_customer_mail, error_str)))
         try:
             template = Template(self.invoice_producer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("%s : %s" % (self.invoice_producer_mail, error_str)))
+            raise ValidationError(mark_safe("{} : {}".format(self.invoice_producer_mail, error_str)))
 
     def __str__(self):
         return EMPTY_STRING
@@ -393,17 +391,17 @@ def configuration_post_save(sender, **kwargs):
         repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
         repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
         if config.currency == CURRENCY_LOC:
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = u'✿'
+            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "✿"
             repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = u'_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * "-"??_ ;_ @_ '
+            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * \"-\"??_ ;_ @_ "
         elif config.currency == CURRENCY_CHF:
             repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = 'Fr.'
             repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = '_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * "-"??_ ;_ @_ '
+            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * \"-\"??_ ;_ @_ "
         else:
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = u'€'
+            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "€"
             repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT = True
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = u'_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
+            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * \"-\"??_ ;_ @_ "
         if config.home_site is not None and len(config.home_site.strip()) == 0:
             repanier.apps.REPANIER_SETTINGS_HOME_SITE = "/"
         else:
@@ -429,7 +427,7 @@ def configuration_post_save(sender, **kwargs):
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:
             producer_buyinggroup = Producer.objects.create(
-                short_profile_name="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
+                short_profile_name="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
                 long_profile_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                 represent_this_buyinggroup=True
             )
@@ -449,7 +447,7 @@ def configuration_post_save(sender, **kwargs):
                 language_code = language["code"]
                 translation.activate(language_code)
                 membership_fee_product.set_current_language(language_code)
-                membership_fee_product.long_name = "%s" % (_("Membership fee"))
+                membership_fee_product.long_name = "{}".format(_("Membership fee"))
                 membership_fee_product.save()
             translation.activate(cur_language)
         repanier.apps.REPANIER_SETTINGS_GROUP_PRODUCER_ID = producer_buyinggroup.id
@@ -457,14 +455,14 @@ def configuration_post_save(sender, **kwargs):
         customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if customer_buyinggroup is None:
             user = User.objects.create_user(
-                username="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
-                email="%s%s" % (
+                username="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
+                email="{}{}".format(
                 repanier.apps.REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
                 password=uuid.uuid1().hex,
                 first_name=EMPTY_STRING, last_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
             customer_buyinggroup = Customer.objects.create(
                 user=user,
-                short_basket_name="z-%s" % repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
+                short_basket_name="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
                 long_basket_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
                 phone1='0499/96.64.32',
                 represent_this_buyinggroup=True
@@ -477,7 +475,6 @@ def configuration_post_save(sender, **kwargs):
         cache.clear()
 
 
-@python_2_unicode_compatible
 class Notification(Configuration):
 
     class Meta:

@@ -20,7 +20,7 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
                 if error:
                     if error_msg is None:
                         admin_ui.message_user(request,
-                                              _("Error when importing %s : Content not valid") % (file_to_import.name),
+                                              _("Error when importing {} : Content not valid").format(file_to_import.name),
                                               level=messages.WARNING
                                               )
                     else:
@@ -30,14 +30,14 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
                                               level=messages.ERROR
                                               )
                 else:
-                    admin_ui.message_user(request, _("Successfully imported %s.") % (file_to_import.name))
+                    admin_ui.message_user(request, _("Successfully imported {}.").foramt(file_to_import.name))
                     split_path = request.get_full_path().split('/')
                     if len(split_path) == 7:
                         return HttpResponseRedirect("/".join(split_path[:-2]))
             else:
                 admin_ui.message_user(request,
                                       _(
-                                          "Error when importing %s : File size must be <= 1 Mb and extension must be .xlsx") % (
+                                          "Error when importing {} : File size must be <= 1 Mb and extension must be .xlsx").format(
                                           file_to_import.name),
                                       level=messages.ERROR
                                       )

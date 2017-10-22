@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # Assume developement environment by default
     if project == 'repanier':
         project = 'mysite'
-    django_settings = "%s.common_settings" % project
+    django_settings = "{}.common_settings".format(project)
     os.environ.setdefault(os_environ, django_settings)
     if os.environ.get(os_environ) != django_settings:
         os.environ.pop(os_environ)

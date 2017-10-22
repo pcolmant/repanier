@@ -31,7 +31,7 @@ def like_ajax(request):
                 else:
                     # add a new like for a company
                     product.likes.add(user)
-                option_dict = {'id': ".btn_like%s" % offer_item_id, 'html': offer_item.get_like(user)}
+                option_dict = {'id': ".btn_like{}".format(offer_item_id), 'html': offer_item.get_like(user)}
                 to_json.append(option_dict)
                 return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
     raise Http404

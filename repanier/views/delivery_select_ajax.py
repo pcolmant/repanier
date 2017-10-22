@@ -71,9 +71,9 @@ def delivery_select_ajax(request):
                 to_json.append(option_dict)
         if not selected:
             if delivery_counter == 0:
-                label = "%s" % _('No delivery point is open for you. You can not place order.')
+                label = "{}".format(_('No delivery point is open for you. You can not place order.'))
             else:
-                label = "%s" % _('Please, select a delivery point')
+                label = "{}".format(_('Please, select a delivery point'))
             option_dict = {'value': -1, 'selected': 'selected',
                            'label': label}
             to_json.insert(0, option_dict)

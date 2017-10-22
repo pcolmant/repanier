@@ -30,13 +30,13 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
     if form.is_valid():
         size = sint(size)
         if size not in [SIZE_XS, SIZE_S, SIZE_M, SIZE_L]:
-            msg = "%s" % _('Wrong picture size.')
+            msg = "{}".format(_('Wrong picture size.'))
             data = json.dumps({'error': msg})
             return HttpResponse(data, content_type="application/json", status=403)
 
         disk = os.statvfs(settings.MEDIA_ROOT)
         if disk.f_blocks > 0 and ((disk.f_bfree + 1.0) / disk.f_blocks) < 0.2:
-            msg = "%s" % _('Please, contact the administrator of the webserver : There is not enough disk space.')
+            msg = "{}".format(_('Please, contact the administrator of the webserver : There is not enough disk space.'))
             data = json.dumps({'error': msg})
             return HttpResponse(data, content_type="application/json", status=403)
         file_ = form.cleaned_data['file']
@@ -45,7 +45,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
                        'image/gif']
 
         if file_.content_type not in image_types:
-            msg = "%s" % _('The system does not recognize the format.')
+            msg = "{}".format(_('The system does not recognize the format.'))
             data = json.dumps({'error': msg})
             return HttpResponse(data, content_type="application/json", status=403)
 
@@ -54,9 +54,9 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
         name = os.path.join(upload_to or "tmp", safe_name)
 
         if default_storage.exists(name):
-            msg = "%s" % _(
+            msg = "{}".format(_(
                  'A picture with the same file name already exist. This picture will not replace it.'
-            )
+            ))
             return HttpResponse(
                 json.dumps(
                     {'url'     : default_storage.url(name),
@@ -67,7 +67,7 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
         else:
             image = Image.open(file_)
             if image.size[0] > size or image.size[1] > size:
-                msg = "%s" % _('The file size is too big.')
+                msg = "{}".format(_('The file size is too big.'))
                 return HttpResponse(json.dumps({'error': msg}), content_type="application/json",
                                     status=403)
             file_name = default_storage.save(name, image.fp)

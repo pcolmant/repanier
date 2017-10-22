@@ -22,7 +22,7 @@ class PermanenceMenu(Menu):
         nodes = []
         master_id = -1
         node = NavigationNode(
-            "%s" % REPANIER_SETTINGS_PERMANENCES_NAME,
+            "{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
             "/",
             id=master_id,
             visible=True

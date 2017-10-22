@@ -1,7 +1,7 @@
 from django.contrib.staticfiles.storage import ManifestStaticFilesStorage
 from cms.utils.urlutils import static_with_version
 import cms
-__version__ = "/%s" % cms.__version__
+__version__ = "/{}".format(cms.__version__)
 
 class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
 

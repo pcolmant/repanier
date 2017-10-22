@@ -76,7 +76,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = ['get_permanence_admin_display',]
-    ordering = ('status', '-permanence_date')
+    ordering = ('status', '-permanence_date', 'id')
     actions = [
         'export_xlsx',
         'import_xlsx',
@@ -210,7 +210,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             )
             wb.save(response)
             return response
-        user_message = _("No invoice available for %(permanence)s.") % {'permanence': ', '.join("%s" % p for p in permanence_qs.all())}
+        user_message = _("No invoice available for %(permanence)s.") % {'permanence': ', '.join("{}".format(p) for p in permanence_qs.all())}
         user_message_level = messages.WARNING
         self.message_user(request, user_message, user_message_level)
         return
@@ -467,7 +467,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 'date'   : timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
                 'balance': RepanierMoney(123.45)
             }
-        customer_payment_needed = "%s %s %s (%s) %s \"%s\"." % (
+        customer_payment_needed = "{} {} {} ({}) {} \"{}\".".format(
             _('Please pay'),
             RepanierMoney(123.45),
             _('to the bank account number'),
@@ -479,14 +479,14 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'long_basket_name'   : _('Long name'),
             'basket_name'        : _('Short name'),
             'short_basket_name'  : _('Short name'),
-            'permanence_link'    : mark_safe('<a href=#">%s</a>' % permanence),
-            'last_balance_link'  : mark_safe('<a href="#">%s</a>' % customer_last_balance),
+            'permanence_link'    : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
+            'last_balance_link'  : mark_safe("<a href=\"#\">{}</a>".format(customer_last_balance)),
             'last_balance'       : customer_last_balance,
             'order_amount'       : mark_safe(customer_order_amount),
             'payment_needed'     : mark_safe(customer_payment_needed),
             'invoice_description': mark_safe(invoice_description),
             'signature'          : mark_safe(
-                '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
         })
         template_invoice_customer_mail = template.render(context)
 
@@ -500,9 +500,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         context = TemplateContext({
             'name'             : _('Long name'),
             'long_profile_name': _('Long name'),
-            'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
+            'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
             'signature'        : mark_safe(
-                '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
         })
         template_invoice_producer_mail = template.render(context)
 
@@ -569,7 +569,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def changelist_view(self, request, extra_context=None):
         # Important : Linked to the use of lambda in model verbose_name
         extra_context = extra_context or {}
-        # extra_context['module_name'] = "%s" % self.model._meta.verbose_name_plural()
+        # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
         # Finally I found the use of EMPTY_STRING nicer on the UI
         extra_context['module_name'] = EMPTY_STRING
         return super(PermanenceDoneAdmin, self).changelist_view(request, extra_context=extra_context)

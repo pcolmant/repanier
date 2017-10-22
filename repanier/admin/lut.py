@@ -83,10 +83,10 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
         if self.mptt_level_limit is not None:
             if position == "inside":
                 if target_instance.level >= self.mptt_level_limit:
-                    raise Exception(_(u'The maximum level for this model is %d' % self.mptt_level_limit))
+                    raise Exception(_("The maximum level for this model is {}".format(self.mptt_level_limit)))
             else:
                 if target_instance.level > self.mptt_level_limit:
-                    raise Exception(_(u'The maximum level for this model is %d' % self.mptt_level_limit))
+                    raise Exception(_("The maximum level for this model is {}".format(self.mptt_level_limit)))
         super(LUTAdmin, self).do_move(instance, position, target_instance)
 
 

@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
@@ -52,22 +53,20 @@ class BankAccount(models.Model):
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
-            return "<i>%s</i>" % (self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING)
+            return mark_safe("<i>{}</i>".format(self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING))
         else:
             return self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING
 
     get_bank_amount_in.short_description = (_("Bank amount in"))
-    get_bank_amount_in.allow_tags = True
     get_bank_amount_in.admin_order_field = 'bank_amount_in'
 
     def get_bank_amount_out(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
-            return "<i>%s</i>" % (self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING)
+            return mark_safe("<i>{}</i>".format(self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING))
         else:
             return self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING
 
     get_bank_amount_out.short_description = (_("Bank amount out"))
-    get_bank_amount_out.allow_tags = True
     get_bank_amount_out.admin_order_field = 'bank_amount_out'
 
     def get_producer(self):
@@ -78,9 +77,9 @@ class BankAccount(models.Model):
                 # This is a total, show it
                 from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
                 if self.operation_status == BANK_LATEST_TOTAL:
-                    return "<b>%s</b>" % "=== %s" % REPANIER_SETTINGS_GROUP_NAME
+                    return "<b>=== {}</b>".format(REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    return "<b>%s</b>" % "--- %s" % REPANIER_SETTINGS_GROUP_NAME
+                    return "<b>--- {}</b>".format(REPANIER_SETTINGS_GROUP_NAME)
             return EMPTY_STRING
 
     get_producer.short_description = (_("Producer"))
@@ -97,14 +96,14 @@ class BankAccount(models.Model):
                 if self.operation_status == BANK_LATEST_TOTAL:
 
                     if REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-                        return "<b>%s</b>" % REPANIER_SETTINGS_BANK_ACCOUNT
+                        return "<b>{}</b>".format(REPANIER_SETTINGS_BANK_ACCOUNT)
                     else:
-                        return "<b>%s</b>" % "=============="
+                        return "<b>{}</b>".format("==============")
                 else:
                     if REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-                        return "<b>%s</b>" % REPANIER_SETTINGS_BANK_ACCOUNT
+                        return "<b>{}</b>".format(REPANIER_SETTINGS_BANK_ACCOUNT)
                     else:
-                        return "<b>%s</b>" % "--------------"
+                        return "<b>{}</b>".format("--------------")
             return EMPTY_STRING
 
     get_customer.short_description = (_("Customer"))

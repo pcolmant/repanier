@@ -35,7 +35,7 @@ def send_pre_open_order(permanence_id):
         offer_description = permanence.safe_translation_getter(
             'offer_description', any_language=True, default=EMPTY_STRING
         )
-        offer_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+        offer_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
         template = Template(offer_producer_mail)
         producer_set = Producer.objects.filter(
@@ -48,18 +48,18 @@ def send_pre_open_order(permanence_id):
             context = TemplateContext({
                 'name'             : long_profile_name,
                 'long_profile_name': long_profile_name,
-                'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
+                'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0],
                     reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
                                                ),
                 'offer_description': mark_safe(offer_description),
                 'offer_link'       : mark_safe(
-                    '<a href="https://%s%s">%s</a>' % (
+                    "<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0],
                         reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
                 ),
                 'signature'        : mark_safe(
-                    '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)
+                    "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)
                 )
             })
             html_content = template.render(context)
@@ -80,7 +80,7 @@ def send_pre_open_order(permanence_id):
             email.send_email()
             send_sms(
                 sms_nr=producer.phone1,
-                sms_msg="%s : %s - %s" % (REPANIER_SETTINGS_GROUP_NAME,
+                sms_msg="{} : {} - {}".format(REPANIER_SETTINGS_GROUP_NAME,
                                           permanence, _("Pre-opening of orders")))
     translation.activate(cur_language)
 
@@ -112,7 +112,7 @@ def send_open_order(permanence_id):
             offer_customer_mail = config.safe_translation_getter(
                 'offer_customer_mail', any_language=True, default=EMPTY_STRING
             )
-            offer_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+            offer_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
             offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
             qs = OfferItem.objects.filter(
                 permanence_id=permanence_id, is_active=True,
@@ -121,8 +121,8 @@ def send_open_order(permanence_id):
             ).order_by(
                 "translations__order_sort_order"
             )
-            offer_detail = '<ul>%s</ul>' % ("".join('<li>%s, %s, %s</li>' % (
-                o.get_long_name(with_box_unicode=False),
+            offer_detail = "<ul>{}</ul>".format("".join("<li>{}, {}, {}</li>".format(
+                o.get_long_name(),
                 o.producer.short_profile_name,
                 o.email_offer_price_with_vat,
             )
@@ -130,14 +130,14 @@ def send_open_order(permanence_id):
                                                     ),)
             template = Template(offer_customer_mail)
             context = TemplateContext({
-                'permanence_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
+                'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                 'offer_description': mark_safe(offer_description),
                 'offer_detail'     : mark_safe(offer_detail),
                 'offer_recent_detail' : mark_safe(permanence.get_new_products),
                 'offer_producer'   : offer_producer,
                 'signature'        : mark_safe(
-                    '%s<br/>%s<br/>%s' % (signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                    "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
             })
             html_content = template.render(context)
             email = RepanierEmail(

@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
 from django.utils import timezone
 from django.utils import translation
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
@@ -131,16 +132,6 @@ class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
         return super(DeliveryBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-# class PermanenceInPreparationChangeList(ChangeList):
-#     def url_for_result(self, result):
-#         pk = getattr(result, self.pk_attname)
-#
-#         # YOU PROBABLY WANT TO CHANGE NEXT LINES!
-#         return reverse('admin:%s_%s_change' % (self.opts.app_label, "contract"), # self.opts.model_name),
-#                        args=(quote(pk),),
-#                        current_app=self.model_admin.admin_site.name)
-
-
 class PermanenceInPreparationForm(TranslatableModelForm):
     short_name = forms.CharField(
         label=_("Offer name"),
@@ -190,7 +181,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     list_display = (
         'get_permanence_admin_display',
     )
-    ordering = ('permanence_date', '-status', 'id')
+    ordering = ('-status', 'permanence_date', 'id')
     actions = [
         'export_xlsx_offer',
         'open_and_send_offer',
@@ -420,11 +411,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 context = TemplateContext({
                     'name'             : _('Long name'),
                     'long_profile_name': _('Long name'),
-                    'permanence_link'  : mark_safe('<a href="#">%s</a>' % _("Offers")),
+                    'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(_("Offers"))),
                     'offer_description': mark_safe(offer_description),
-                    'offer_link'       : mark_safe('<a href="#">%s</a>' % _("Offers")),
+                    'offer_link'       : mark_safe("<a href=\"#\">{}</a>".format(_("Offers"))),
                     'signature'        : mark_safe(
-                        '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                        "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
@@ -453,8 +444,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 ).order_by(
                     "translations__long_name"
                 )[:5]
-                offer_detail = '<ul>%s</ul>' % ("".join('<li>%s, %s</li>' % (
-                    p.get_long_name(with_box_unicode=False),
+                offer_detail = "<ul>{}</ul>".format("".join("<li>{}, {}</li>".format(
+                    p.get_long_name(),
                     p.producer.short_profile_name
                 )
                                                         for p in qs
@@ -464,9 +455,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     'offer_detail'       : offer_detail,
                     'offer_recent_detail': offer_detail,
                     'offer_producer'     : offer_producer,
-                    'permanence_link'    : mark_safe('<a href="#">%s</a>' % permanence),
+                    'permanence_link'    : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
                     'signature'          : mark_safe(
-                        '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                        "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
@@ -476,9 +467,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         'long_basket_name' : _('Long name'),
                         'basket_name'      : _('Short name'),
                         'short_basket_name': _('Short name'),
-                        'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
+                        'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
                         'signature'        : mark_safe(
-                            '%s<br/>%s<br/>%s' % (
+                            "{}<br/>{}<br/>{}".format(
                             signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                     })
                     template_cancel_order_mail.append(language_code)
@@ -666,10 +657,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             if bank_account_number is not None:
                 group_name = repanier.apps.REPANIER_SETTINGS_GROUP_NAME
                 if permanence.short_name:
-                    communication = "%s (%s)" % (_('Short name'), permanence.short_name)
+                    communication = "{} ({})".format(_('Short name'), permanence.short_name)
                 else:
                     communication = _('Short name')
-                customer_payment_needed = '<font color="#bd0926">%s</font>' % (
+                customer_payment_needed = "<font color=\"#bd0926\">{}</font>".format(
                     _(
                         'Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
                         'payment'      : RepanierMoney(123.45),
@@ -685,14 +676,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'long_basket_name' : _('Long name'),
                 'basket_name'      : _('Short name'),
                 'short_basket_name': _('Short name'),
-                'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
-                'last_balance'     : mark_safe('<a href="#">%s</a>' % customer_last_balance),
+                'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
+                'last_balance'     : mark_safe("<a href=\"#\">{}</a>".format(customer_last_balance)),
                 'order_amount'     : RepanierMoney(123.45),
                 'on_hold_movement' : mark_safe(customer_on_hold_movement),
                 'payment_needed'   : mark_safe(customer_payment_needed),
                 'delivery_point'   : _('Delivery point').upper(),
                 'signature'        : mark_safe(
-                    '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
 
             template_order_customer_mail.append(language_code)
@@ -704,9 +695,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'long_profile_name': _('Long name'),
                 'order_empty'      : False,
                 'duplicate'        : True,
-                'permanence_link'  : mark_safe('<a href=#">%s</a>' % permanence),
+                'permanence_link'  : format_html("<a href=\"#\">{}</a>", permanence),
                 'signature'        : mark_safe(
-                    '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
 
             template_order_producer_mail.append(language_code)
@@ -715,11 +706,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             board_composition, board_composition_and_description = get_board_composition(permanence.id)
             template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail)
             context = TemplateContext({
-                'permanence_link'                  : mark_safe('<a href=#">%s</a>' % permanence),
+                'permanence_link'                  : format_html("<a href=\"#\">{}</a>", permanence),
                 'board_composition'                : mark_safe(board_composition),
                 'board_composition_and_description': mark_safe(board_composition_and_description),
                 'signature'                        : mark_safe(
-                    '%s<br/>%s<br/>%s' % (signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
 
             template_order_staff_mail.append(language_code)
@@ -871,9 +862,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     if creation_counter == 0:
                         user_message = _("Nothing to do.")
                     elif creation_counter == 1:
-                        user_message = _("%d duplicate created.") % creation_counter
+                        user_message = _("{} duplicate created.").format(creation_counter)
                     else:
-                        user_message = _("%d duplicates created.") % creation_counter
+                        user_message = _("{} duplicates created.").format(creation_counter)
                     user_message_level = messages.INFO
                 else:
                     user_message = _("Action canceled by the system.")
@@ -917,14 +908,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if not settings.DJANGO_SETTINGS_ENV == "dev":
             del actions['delete_purchases']
         return actions
-
-    # def changelist_view(self, request, extra_context=None):
-    #     # Important : Linked to the use of lambda in model verbose_name
-    #     extra_context = extra_context or {}
-    #     # extra_context['module_name'] = "%s" % self.model._meta.verbose_name_plural()
-    #     # Finally I found the use of EMPTY_STRING nicer on the UI
-    #     extra_context['module_name'] = EMPTY_STRING
-    #     return super(PermanenceInPreparationAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def get_queryset(self, request):
         qs = super(PermanenceInPreparationAdmin, self).get_queryset(request)

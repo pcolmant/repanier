@@ -36,69 +36,72 @@ def repanier_user(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     if user.is_authenticated:
-        nodes = ["""
-            <li id="li_my_name" class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> %s %s<b class="caret"></b></a>
-            <ul class="dropdown-menu">
-            """ % (
-            _('Welkom'),
-            user.username or '<span id = "my_name"></ span>'
-        )]
-        customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
-        if customer_is_active:
+        if user.is_staff:
+            nodes = []
+        else:
+            nodes = ["""
+                <li id="li_my_name" class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {} {}<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                """.format(
+                _('Welkom'),
+                user.username or '<span id = "my_name"></ span>'
+            )]
+            customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
+            if customer_is_active:
 
-            nodes.append('<li><a href="%s">%s</a></li>' % (
-                reverse('send_mail_to_coordinators_view'),
-                _('Send mail to coordinators')
-            ))
-            if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-                nodes.append('<li><a href="%s">%s</a></li>' % (
-                    reverse('send_mail_to_all_members_view'),
-                    _('Send mail to all members')
+                nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                    reverse('send_mail_to_coordinators_view'),
+                    _('Send mail to coordinators')
                 ))
-                nodes.append('<li><a href="%s">%s</a></li>' % (
-                    reverse('who_is_who_view'),
-                    _('Who is who')
+                if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+                    nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                        reverse('send_mail_to_all_members_view'),
+                        _('Send mail to all members')
+                    ))
+                    nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                        reverse('who_is_who_view'),
+                        _('Who is who')
+                    ))
+                nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                    reverse('my_profile_view'),
+                    _('My profile')
                 ))
-            nodes.append('<li><a href="%s">%s</a></li>' % (
-                reverse('my_profile_view'),
-                _('My profile')
-            ))
-            if REPANIER_SETTINGS_INVOICE:
-                last_customer_invoice = CustomerInvoice.objects.filter(
-                    customer__user_id=request.user.id,
-                    invoice_sort_order__isnull=False) \
-                    .only("balance", "date_balance") \
-                    .order_by('-invoice_sort_order').first()
-                if last_customer_invoice is not None:
-                    if last_customer_invoice.balance < DECIMAL_ZERO:
-                        my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
-                            'balance': last_customer_invoice.balance,
-                            'date'   : last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                if REPANIER_SETTINGS_INVOICE:
+                    last_customer_invoice = CustomerInvoice.objects.filter(
+                        customer__user_id=request.user.id,
+                        invoice_sort_order__isnull=False) \
+                        .only("balance", "date_balance") \
+                        .order_by('-invoice_sort_order').first()
+                    if last_customer_invoice is not None:
+                        if last_customer_invoice.balance < DECIMAL_ZERO:
+                            my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
+                                'balance': last_customer_invoice.balance,
+                                'date'   : last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                        else:
+                            my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
+                                'balance': last_customer_invoice.balance,
+                                'date'   : last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
                     else:
-                        my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
-                            'balance': last_customer_invoice.balance,
-                            'date'   : last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
-                else:
-                    my_balance = _('My balance')
-                nodes.append('<li><a href="%s">%s</a></li>' % (
-                    reverse("customer_invoice_view", args=(0,)),
-                    my_balance
-                ))
-            nodes.append('<li class="divider"></li>')
-        nodes.append('<li><a href="%s">%s</a></li>' % (
-            reverse("logout_form"), _("Logout")
-        ))
-        nodes.append('</ul></li>')
-        p_permanence_id = sint(kwargs.get('permanence_id', 0))
-        if p_permanence_id > 0:
-            nodes.append('<li id="li_my_basket" style="display:none;" class="dropdown">')
-            nodes.append('<a href="%s?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>' %
-                reverse("order_view", args=(p_permanence_id,))
-            )
-            nodes.append('</li>')
+                        my_balance = _('My balance')
+                    nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                        reverse("customer_invoice_view", args=(0,)),
+                        my_balance
+                    ))
+                nodes.append('<li class="divider"></li>')
+            nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                reverse("logout_form"), _("Logout")
+            ))
+            nodes.append("</ul></li>")
+            p_permanence_id = sint(kwargs.get("permanence_id", 0))
+            if p_permanence_id > 0:
+                nodes.append("<li id=\"li_my_basket\" style=\"display:none;\" class=\"dropdown\">")
+                nodes.append("<a href=\"{}?is_basket=yes\" class=\"btn btn-info\"><span id=\"my_basket\"></span></a>".format(
+                    reverse("order_view", args=(p_permanence_id,)))
+                )
+                nodes.append('</li>')
     else:
-        nodes = ['<li class="dropdown"><a href="%s">%s</a></li>' % (
+        nodes = ["<li class=\"dropdown\"><a href=\"{}\">{}</a></li>".format(
                 reverse("login_form"),
                 _("Login")
         )]
@@ -126,7 +129,7 @@ def repanier_display_task(*args, **kwargs):
             if permanence_board.permanence_role.customers_may_register:
                 result = permanence_board.permanence_role
             else:
-                result = '<p><b>%s</b></p>' % (permanence_board.permanence_role,)
+                result = "<p><b>{}</b></p>".format(permanence_board.permanence_role)
     return mark_safe(result)
 
 

@@ -54,7 +54,7 @@ class UserDataForm(forms.ModelForm):
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)
             if qs.exists():
-                self.add_error('email', _('The email %s is already used by another user.') % email)
+                self.add_error('email', _('The email {} is already used by another user.').format(email))
             qs = user_model.objects.filter(username=username).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)
@@ -110,15 +110,15 @@ def create__group_action(year):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                "%s %s" % (_('Invoice'), year),
+                "{} {}".format(_('Invoice'), year),
                 repanier.apps.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
         return
 
-    name = "export_producer_%d" % (year,)
-    return (name, (action, name, _("Export purchases of %s") % (year,)))
+    name = "export_producer_{}".format(year)
+    return name, (action, name, _("Export purchases of {}").format(year))
 
 
 class GroupWithUserDataForm(UserDataForm):

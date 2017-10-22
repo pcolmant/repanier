@@ -68,8 +68,8 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         else:
                             confirmed = EMPTY_STRING
                         row = [
-                            "%d - %s" % (delivery_ref, delivery.get_delivery_display()),
-                            "  %d - %s%s" % (customer.preparation_order, customer.long_basket_name, confirmed),
+                            "{} - {}".format(delivery_ref, delivery.get_delivery_display()),
+                            "  {} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
                             customer.phone1,
                             customer.phone2,
                             invoice.total_price_with_tax.amount,
@@ -125,7 +125,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     else:
                         confirmed = EMPTY_STRING
                     row = [
-                        "%d - %s%s" % (customer.preparation_order, customer.long_basket_name, confirmed),
+                        "{} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
                         customer.long_basket_name,
                         customer.phone1,
                         customer.phone2,
@@ -175,7 +175,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         c = ws.cell(row=row_num, column=0)
                         c.value = "-------"
                         c = ws.cell(row=row_num, column=1)
-                        c.value = "%s" % (_('Permanence Board Member List'))
+                        c.value = "{}".format(_('Permanence Board Member List'))
                         c.style.alignment.wrap_text = False
                         c.style.font.bold = True
                         c = ws.cell(row=row_num, column=2)
@@ -192,7 +192,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     ]
                     for col_num in range(len(row)):
                         c = ws.cell(row=row_num, column=col_num)
-                        c.value = "%s" % (row[col_num][0])
+                        c.value = "{}".format(row[col_num][0])
                         c.style.number_format.format_code = row[col_num][1]
                         c.style.alignment.wrap_text = False
                         if permanence_date_save != next_permanence.permanence_date:
@@ -214,7 +214,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                     c = ws.cell(row=row_num, column=0)
                     c.value = "-------"
                     c = ws.cell(row=row_num, column=1)
-                    c.value = "%s" % (_('Staff Member List'))
+                    c.value = "{}".format(_('Staff Member List'))
                     c.style.alignment.wrap_text = False
                     c.style.font.bold = True
                     c = ws.cell(row=row_num, column=2)
@@ -249,7 +249,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
             c = ws.cell(row=row_num, column=0)
             c.value = "-------"
             c = ws.cell(row=row_num, column=1)
-            c.value = "%s" % (_('Producers'))
+            c.value = "{}".format(_('Producers'))
             c.style.alignment.wrap_text = False
             c.style.font.bold = True
             c = ws.cell(row=row_num, column=2)
@@ -312,7 +312,7 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
     out_of_basket = []
 
     for customer in customer_set:
-        customer_identifier = "%d - %s" % (customer.preparation_order, customer.short_basket_name)
+        customer_identifier = "{} - {}".format(customer.preparation_order, customer.short_basket_name)
         s = [placement_id for placement_id in list(Purchase.objects.filter(
             permanence_id=permanence.id,
             customer_id=customer.id
@@ -323,7 +323,7 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
         ).distinct(
             "offer_item__placement"
         ))]
-        placements = ", ".join(["%s" % dict_placement[placement_id] for placement_id in s])
+        placements = ", ".join(["{}".format(dict_placement[placement_id]) for placement_id in s])
         if PRODUCT_PLACEMENT_FREEZER in s:
             freezer += [customer_identifier]
         if PRODUCT_PLACEMENT_FRIDGE in s:
@@ -333,15 +333,15 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
 
         row_num = customer_label(customer_identifier, placements, row_num, ws)
 
-    placement_label = "[❄ %s ❄]" % dict_placement[PRODUCT_PLACEMENT_FRIDGE]
+    placement_label = "[❄ {} ❄]".format(dict_placement[PRODUCT_PLACEMENT_FRIDGE])
     for customer_identifier in fridge:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[❄❄❄ %s ❄❄❄]" % dict_placement[PRODUCT_PLACEMENT_FREEZER]
+    placement_label = "[❄❄❄ {} ❄❄❄]".format(dict_placement[PRODUCT_PLACEMENT_FREEZER])
     for customer_identifier in freezer:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[⏭ %s ⏭]" % dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET]
+    placement_label = "[⏭ {} ⏭]".format(dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET])
     for customer_identifier in out_of_basket:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
@@ -417,7 +417,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
     if producer is not None:
         wb, ws = new_landscape_a4_sheet(
             wb,
-            _("Preparation") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Preparation")),
+            _("Preparation") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Preparation")),
             permanence,
             header
         )
@@ -490,14 +490,14 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 c.value = producer_save.short_profile_name
                                 c = ws.cell(row=row_num, column=5)
                                 if department_for_customer_save__short_name is not None:
-                                    c.value = "%s - %s" % (
+                                    c.value = "{} - {}".format(
                                         purchase.get_long_name(), department_for_customer_save__short_name)
                                 else:
-                                    c.value = "%s" % purchase.get_long_name()
+                                    c.value = "{}".format(purchase.get_long_name())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c.style.alignment.wrap_text = True
                                 c = ws.cell(row=row_num, column=6)
-                                c.value = "%d - %s" % (customer_save.preparation_order, customer_save.short_basket_name)
+                                c.value = "{} - {}".format(customer_save.preparation_order, customer_save.short_basket_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=7)
                                 c.value = qty
@@ -509,31 +509,31 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                     None, None, yellowFill
                                 )
                                 c = ws.cell(row=row_num, column=8)
-                                c.value = "%s" % base_unit
+                                c.value = "{}".format(base_unit)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 customer_unit_price = purchase.get_customer_unit_price()
                                 if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                                     price_qty = qty * purchase.offer_item.order_average_weight
-                                    purchases_price_formula.append('ROUND(H%s*%s*%s,2)' % \
-                                                                   (row_num + 1,
+                                    purchases_price_formula.append("ROUND(H{}*{}*{},2)".format(
+                                                                   row_num + 1,
                                                                     purchase.offer_item.order_average_weight,
                                                                     customer_unit_price + purchase.offer_item.unit_deposit.amount))
                                 else:
                                     price_qty = qty
-                                    purchases_price_formula.append('ROUND(H%s*%s,2)' % \
-                                                                   (row_num + 1,
+                                    purchases_price_formula.append("ROUND(H{}*{},2)".format(
+                                                                    row_num + 1,
                                                                     customer_unit_price + purchase.offer_item.unit_deposit.amount))
                                 if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                                     c = ws.cell(row=row_num, column=9)
                                     if purchase.offer_item.wrapped:
-                                        c.value = "%s :" % repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                        c.value = "{} :".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
                                     else:
-                                        c.value = "%s" % (_('kg :'))
+                                        c.value = "{}".format(_('kg :'))
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 else:
                                     if purchase.offer_item.wrapped:
                                         c = ws.cell(row=row_num, column=9)
-                                        c.value = "%s :" % repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                        c.value = "{} :".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
                                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 purchases_price += (price_qty *
                                                     (customer_unit_price + purchase.offer_item.unit_deposit.amount)
@@ -548,7 +548,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                             purchase = next_purchase(purchases)
                     c = ws.cell(row=row_num - 1, column=10)
                     if len(purchases_price_formula) > 0:
-                        c.value = "=%s" % ("+".join(purchases_price_formula))
+                        c.value = "={}".format("+".join(purchases_price_formula))
                     else:
                         c.value = DECIMAL_ZERO
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
@@ -620,16 +620,16 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                         c.value = producer_save.short_profile_name
                                     c = ws.cell(row=row_num, column=5)
                                     if department_for_customer_save__short_name is not None:
-                                        c.value = "%s - %s" % (
+                                        c.value = "{} - {}".format(
                                             purchase.get_long_name(), department_for_customer_save__short_name)
                                     else:
-                                        c.value = "%s" % purchase.get_long_name()
+                                        c.value = "{}".format(purchase.get_long_name())
                                     c.style.alignment.wrap_text = True
                                     if count_offer_item != 0:
                                         c.style.font.color.index = 'FF939393'
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     c = ws.cell(row=row_num, column=6)
-                                    c.value = "%d - %s" % (purchase.customer.preparation_order, purchase.customer.short_basket_name)
+                                    c.value = "{} - {}".format(purchase.customer.preparation_order, purchase.customer.short_basket_name)
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     c = ws.cell(row=row_num, column=7)
                                     c.value = qty
@@ -641,19 +641,19 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                         None, None, yellowFill
                                     )
                                     c = ws.cell(row=row_num, column=8)
-                                    c.value = "%s" % base_unit
+                                    c.value = "{}".format(base_unit)
                                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                                         c = ws.cell(row=row_num, column=9)
                                         if offer_item_save.wrapped:
-                                            c.value = "%s :" % repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                            c.value = "{} :".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
                                         else:
-                                            c.value = "%s" % (_('kg :'))
+                                            c.value = "{}".format(_('kg :'))
                                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     else:
                                         if offer_item_save.wrapped:
                                             c = ws.cell(row=row_num, column=9)
-                                            c.value = "%s :" % repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                            c.value = "{} :".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
                                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                     purchases_quantity += qty
                                     count_offer_item += 1
@@ -666,7 +666,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 purchase = next_purchase(purchases)
                             if count_offer_item > 1:
                                 c = ws.cell(row=row_num - 1, column=10)
-                                c.value = '=SUM(H%s:H%s)' % (row_start_offer_item, row_num)
+                                c.value = "=SUM(H{}:H{})".format(row_start_offer_item, row_num)
                                 c.style.number_format.format_code = '#,##0.????'
                                 if not offer_item_save.wrapped and offer_item_save.order_unit in [PRODUCT_ORDER_UNIT_KG,
                                                                                                   PRODUCT_ORDER_UNIT_PC_KG]:
@@ -731,7 +731,7 @@ def export_producer_by_product(permanence, producer, wb=None):
     if offer_item:
         wb, ws = new_landscape_a4_sheet(
             wb,
-            "%s %s" % (producer.short_profile_name, _("by product")),
+            "{} {}".format(producer.short_profile_name, _("by product")),
             permanence,
             header
         )
@@ -777,7 +777,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 producer=True
                             )
                             c = ws.cell(row=row_num, column=0)
-                            c.value = "%d - %s" % (purchase.customer.preparation_order, purchase.customer.short_basket_name)
+                            c.value = "{} - {}".format(purchase.customer.preparation_order, purchase.customer.short_basket_name)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=1)
@@ -792,7 +792,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 None, None, yellowFill
                             )
                             c = ws.cell(row=row_num, column=2)
-                            c.value = "%s" % base_unit
+                            c.value = "{}".format(base_unit)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=3)
@@ -800,7 +800,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 offer_item.reference) < 36 else EMPTY_STRING
                             if not reference.isdigit():
                                 # Avoid display of exponent by Excel
-                                c.value = '[%s]' % reference
+                                c.value = "[{}]".format(reference)
                             else:
                                 c.value = reference
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -832,11 +832,11 @@ def export_producer_by_product(permanence, producer, wb=None):
                             c = ws.cell(row=row_num, column=7)
                             if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                                 price_qty = qty * offer_item.order_average_weight
-                                c.value = '=ROUND(B%s*%s*(F%s+G%s),2)' % (
+                                c.value = "=ROUND(B{}*{}*(F{}+G{}),2)".format(
                                 row_num + 1, offer_item.order_average_weight, row_num + 1, row_num + 1)
                             else:
                                 price_qty = qty
-                                c.value = '=ROUND(B%s*(F%s+G%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                                c.value = "=ROUND(B{}*(F{}+G{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                             purchase_price = (
                                 price_qty * (unit_price + unit_deposit)
                             ).quantize(TWO_DECIMALS)
@@ -880,7 +880,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             None, None, yellowFill
                         )
                         c = ws.cell(row=row_num, column=2)
-                        c.value = "%s" % base_unit
+                        c.value = "{}".format(base_unit)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=3)
@@ -888,7 +888,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             offer_item.reference) < 36 else EMPTY_STRING
                         if not reference.isdigit():
                             # Avoid display of exponent by Excel
-                            c.value = '[%s]' % reference
+                            c.value = "[{}]".format(reference)
                         else:
                             c.value = reference
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -916,11 +916,11 @@ def export_producer_by_product(permanence, producer, wb=None):
                         c = ws.cell(row=row_num, column=7)
                         if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                             price_qty = qty * offer_item.order_average_weight
-                            c.value = '=ROUND(B%s*%s*(F%s+G%s),2)' % (
+                            c.value = "=ROUND(B{}*{}*(F{}+G{}),2)".format(
                             row_num + 1, offer_item.order_average_weight, row_num + 1, row_num + 1)
                         else:
                             price_qty = qty
-                            c.value = '=ROUND(B%s*(F%s+G%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                            c.value = "=ROUND(B{}*(F{}+G{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                         purchase_price = (
                             price_qty * (unit_price + unit_deposit)
                         ).quantize(TWO_DECIMALS)
@@ -940,16 +940,16 @@ def export_producer_by_product(permanence, producer, wb=None):
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 if col_num == 4:
                     if producer.producer_price_are_wo_vat:
-                        c.value = "%s %s %s" % (
+                        c.value = "{} {} {}".format(
                             _("Total Price"), _("Wo tax"), department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else "---")
                     else:
-                        c.value = "%s %s %s" % (
+                        c.value = "{} {} {}".format(
                             _("Total Price"), _("w tax"), department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else "---")
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 if col_num == 7:
-                    formula = 'SUM(H%s:H%s)' % (row_start_department, row_num)
+                    formula = "SUM(H{}:H{})".format(row_start_department, row_num)
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
@@ -966,9 +966,9 @@ def export_producer_by_product(permanence, producer, wb=None):
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 1:
                 if producer.producer_price_are_wo_vat:
-                    c.value = "%s %s %s" % (_("Total Price"), _("wo tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                    c.value = "{} {} {}".format(_("Total Price"), _("wo tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    c.value = "%s %s %s" % (_("Total Price"), _("w tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                    c.value = "{} {} {}".format(_("Total Price"), _("w tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 7:
                 c.value = "=" + "+".join(formula_main_total)
@@ -1020,7 +1020,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
     if purchase:
         wb, ws = new_landscape_a4_sheet(
             wb,
-            "%s %s" % (producer.short_profile_name, _("by basket")),
+            "{} {}".format(producer.short_profile_name, _("by basket")),
             permanence,
             header
         )
@@ -1028,7 +1028,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
         while purchase is not None:
             customer_save = purchase.customer
             c = ws.cell(row=row_num, column=0)
-            c.value = "%d - %s" % (customer_save.preparation_order, customer_save.short_basket_name)
+            c.value = "{} - {}".format(customer_save.preparation_order, customer_save.short_basket_name)
             c.style.font.bold = True
             row_num += 1
             row_start_customer = row_num
@@ -1049,14 +1049,14 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c.style.font.bold = True
                     c = ws.cell(row=row_num, column=1)
-                    c.value = "%s" % base_unit
+                    c.value = "{}".format(base_unit)
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=2)
                     reference = offer_item_save.reference if len(offer_item_save.reference) < 36 else EMPTY_STRING
                     if not reference.isdigit():
                         # Avoid display of exponent by Excel
-                        c.value = '[%s]' % reference
+                        c.value = "[{}]".format(reference)
                     else:
                         c.value = reference
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -1084,10 +1084,10 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=6)
                     if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
-                        c.value = '=ROUND(A%s*%s*(E%s+F%s),2)' % (
+                        c.value = "=ROUND(A{}*{}*(E{}+F{}),2)".format(
                         row_num + 1, offer_item_save.order_average_weight, row_num + 1, row_num + 1)
                     else:
-                        c.value = '=ROUND(A%s*(E%s+F%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                        c.value = "=ROUND(A{}*(E{}+F{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     row_num += 1
@@ -1097,14 +1097,14 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 if col_num == 3:
                     if producer.producer_price_are_wo_vat:
-                        c.value = "%s %s %s" % (
+                        c.value = "{} {} {}".format(
                             _("Total Price"), _("wo tax"), customer_save.short_basket_name)
                     else:
-                        c.value = "%s %s %s" % (
+                        c.value = "{} {} {}".format(
                             _("Total Price"), _("w tax"), customer_save.short_basket_name)
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 if col_num == 6:
-                    formula = 'SUM(G%s:G%s)' % (row_start_customer, row_num)
+                    formula = "SUM(G{}:G{})".format(row_start_customer, row_num)
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
@@ -1115,9 +1115,9 @@ def export_producer_by_customer(permanence, producer, wb=None):
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 0:
                 if producer.producer_price_are_wo_vat:
-                    c.value = "%s %s %s" % (_("Total Price"), _("wo tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                    c.value = "{} {} {}".format(_("Total Price"), _("wo tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    c.value = "%s %s %s" % (_("Total Price"), _("w tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                    c.value = "{} {} {}".format(_("Total Price"), _("w tax"), repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 6:
                 c.value = "=" + "+".join(formula_main_total)
@@ -1236,7 +1236,7 @@ def export_customer_for_a_delivery(
         if deposit:
             wb, ws = new_portrait_a4_sheet(
                 wb,
-                _("Deposits") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Deposits")),
+                _("Deposits") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Deposits")),
                 permanence,
                 header
             )
@@ -1245,14 +1245,14 @@ def export_customer_for_a_delivery(
                 # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
                 wb, ws = new_portrait_a4_sheet(
                     wb,
-                    _("Customer check") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Customer check")),
+                    _("Customer check") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Customer check")),
                     permanence,
                     header
                 )
             else:
                 wb, ws = new_landscape_a4_sheet(
                     wb,
-                    _("Customer check") if delivery_id is None else "%d-%s" % (delivery_cpt, _("Customer check")),
+                    _("Customer check") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Customer check")),
                     permanence,
                     header
                 )
@@ -1268,7 +1268,7 @@ def export_customer_for_a_delivery(
             c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
             row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
-            ref_preparation_sheet = ws_preparation_title if delivery_id is None else "%d-%s" % (
+            ref_preparation_sheet = ws_preparation_title if delivery_id is None else "{}-{}".format(
             delivery_cpt, ws_preparation_title)
         else:
             ref_preparation_sheet = None
@@ -1309,9 +1309,9 @@ def export_customer_for_a_delivery(
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=4)
                         if department_for_customer_save__short_name is not None:
-                            c.value = "%s - %s" % (purchase.get_long_name(), department_for_customer_save__short_name)
+                            c.value = "{} - {}".format(purchase.get_long_name(), department_for_customer_save__short_name)
                         else:
-                            c.value = "%s" % purchase.get_long_name()
+                            c.value = "{}".format(purchase.get_long_name())
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.alignment.wrap_text = True
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -1319,8 +1319,9 @@ def export_customer_for_a_delivery(
                         if ref_preparation_sheet is None:
                             c.value = qty
                         else:
-                            c.value = "=SUMIF('%s'!A2:A5000,A%s,'%s'!H2:H5000)" % \
-                                      (ref_preparation_sheet, row_num + 1, ref_preparation_sheet)
+                            c.value = "=SUMIF('{}'!A2:A5000,A{},'{}'!H2:H5000)".format(
+                                      ref_preparation_sheet, row_num + 1, ref_preparation_sheet
+                            )
 
                         c.style.number_format.format_code = '#,##0.???'
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -1333,7 +1334,7 @@ def export_customer_for_a_delivery(
                                 None, None, yellowFill
                             )
                         c = ws.cell(row=row_num, column=6)
-                        c.value = "%s" % base_unit
+                        c.value = "{}".format(base_unit)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if purchase.is_box_content:
@@ -1355,11 +1356,11 @@ def export_customer_for_a_delivery(
                             c = ws.cell(row=row_num, column=9)
                             if offer_item_save.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                                 price_qty = qty * offer_item_save.order_average_weight
-                                c.value = '=ROUND(F%s*%s*(H%s+I%s),2)' % (
+                                c.value = "=ROUND(F{}*{}*(H{}+I{}),2)".format(
                                     row_num + 1, offer_item_save.order_average_weight, row_num + 1, row_num + 1)
                             else:
                                 price_qty = qty
-                                c.value = '=ROUND(F%s*(H%s+I%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                                c.value = "=ROUND(F{}*(H{}+I{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                             purchases_price = (
                                 price_qty * (customer_unit_price + unit_deposit)
                             ).quantize(TWO_DECIMALS)
@@ -1377,7 +1378,7 @@ def export_customer_for_a_delivery(
 
                         c = ws.cell(row=row_num, column=10)
                         if xlsx_formula:
-                            c.value = "%d - %s" % (purchase.customer.preparation_order, purchase.customer.short_basket_name)
+                            c.value = "{} - {}".format(purchase.customer.preparation_order, purchase.customer.short_basket_name)
                         else:
                             c.value = purchase.customer.long_basket_name
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -1399,13 +1400,13 @@ def export_customer_for_a_delivery(
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             c.style.font.bold = True
             c = ws.cell(row=row_num, column=8)
-            c.value = "%s %s" % (_("Total Price"), customer_save.long_basket_name)
+            c.value = "{} {}".format(_("Total Price"), customer_save.long_basket_name)
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             c.style.font.bold = True
             c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
             c = ws.cell(row=row_num, column=9)
             if xlsx_formula:
-                c.value = '=SUM(J%s:J%s)' % (row_start_customer, row_num)
+                c.value = "=SUM(J{}:J{})".format(row_start_customer, row_num)
             else:
                 c.value = total_price
             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
@@ -1440,8 +1441,8 @@ def generate_customer_xlsx(permanence, deliveries_id=None, customer=None, group=
         if wb is not None:
             # At least one order
             abstract_ws = wb.get_active_sheet()
-            ws_preparation_title = cap("%s" % _("Preparation"), 31)
-            ws_customer_title = cap("%s" % _('Customer check'), 31)
+            ws_preparation_title = cap("{}".format(_("Preparation")), 31)
+            ws_customer_title = cap("{}".format(_('Customer check')), 31)
             wb = export_customer_label(
                 permanence=permanence, deliveries_id=deliveries_id, wb=wb
             )

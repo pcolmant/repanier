@@ -115,7 +115,7 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
             field.initial = offer_item.product.offer_description
             field = form.fields["picture"]
             field.initial = offer_item.product.picture2
-            field.widget.upload_to = "%s%s%d" % ("product", os_sep, offer_item.producer_id)
+            field.widget.upload_to = "{}{}{}".format("product", os_sep, offer_item.producer_id)
             update = None
 
         return render(

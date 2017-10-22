@@ -59,7 +59,7 @@ class CustomerForm(RepanierForm):
             id=self.request.user.id
         ).order_by('?')
         if qs.exists():
-            self.add_error('email1', _('The email %s is already used by another user.'))
+            self.add_error('email1', _('The email {} is already used by another user.').format(email1))
         return email1
 
     def __init__(self, *args, **kwargs):
@@ -151,7 +151,7 @@ def my_profile_view(request):
         field = form.fields["picture"]
         field.initial = customer.picture
         if hasattr(field.widget, 'upload_to'):
-            field.widget.upload_to = "%s%s%d" % ("customer", os_sep, customer.id)
+            field.widget.upload_to = "{}{}{}".format("customer", os_sep, customer.id)
         field = form.fields["about_me"]
         field.initial = customer.about_me
 

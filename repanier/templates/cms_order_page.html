@@ -111,15 +111,15 @@
                 <div class="fixed">
         {#            q : {{ q }}<br/>#}
         {#            producer_id : {{ producer_id }}<br/>#}
-        {#            departementforcustomer_id : {{ departementforcustomer_id }}<br/>#}
+        {#            department_id : {{ department_id }}<br/>#}
         {#            box_id : {{ box_id }}<br/>#}
         {#            is_like : {{ is_like }}<br/>#}
         {#            is_basket : {{ is_basket }}<br/>#}
         {#            is_box : {{ is_box }}<br/>#}
-                    <form action="{% url "order_view" permanence_id %}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
+                    <form action="{% url "order_view" permanence_id %}?date={{ date_id }}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
                         {% csrf_token %}
                         <div class="input-group">
-                            {% if q != None %}
+                            {% if q %}
                                 <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
                             {% else %}
                                 <input type="search" autosave="repanier" class="form-control" placeholder="{% trans "Search" %}"
@@ -130,16 +130,29 @@
                             </div>
                         </div>
                         <input type="hidden" name="producer" value="{{ producer_id }}">
-                        <input type="hidden" name="departementforcustomer" value="{{ departementforcustomer_id }}">
+                        <input type="hidden" name="department" value="{{ department_id }}">
                         <input type="hidden" name="box" value="{{ box_id }}">
                         <input type="hidden" name="is_like" value="{{ is_like }}">
                         <input type="hidden" name="is_basket" value="{{ is_basket }}">
                     </form>
                     <br/>
+                    {% if all_dates %}
+                        <ul class="nav nav-stacked" id="sidebar">
+                            <li>
+                                <a href="{% url "order_view" permanence_id %}?date=all{% if q %}&q={{ q }}{% endif %}&producer={{ producer_id }}&department={{ department_id }}"{% if date_id == "all" %} class="bs-docs-sidebar-active"{% endif %}>{% trans "All dates" %}</a>
+                            </li>
+                            {%  for one_date in all_dates %}
+                                <li>
+                                    <a href="{% url "order_view" permanence_id %}?date={{ forloop.counter0 }}{% if q %}&q={{ q }}{% endif %}&producer={{ producer_id }}&department={{ department_id }}"{% if date_id == forloop.counter0 %} class="bs-docs-sidebar-active"{% endif %}>{{ one_date }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <br/>
+                    {% endif %}
                     {% block product_filter %}{% spaceless %}
                         <ul class="nav nav-stacked" id="sidebar">
                             <li>
-                                <a href="{% url "order_view" permanence_id %}" {% if not q and not is_like and departementforcustomer_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All products" %}</a>
+                                <a href="{% url "order_view" permanence_id %}?date={{ date_id }}" {% if not q and not is_like and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All products" %}</a>
                             </li>
                             <li>
                                 <a href="{% url "order_view" permanence_id %}?{% if not is_like %}is_like=yes{% endif %}{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My" %} <span class="glyphicon glyphicon-heart"></span></a>
@@ -152,39 +165,39 @@
                             {% endif %}
                             {% if producer_set %}
                                 <li>
-                                    <a href="{% url "order_view" permanence_id %}?departementforcustomer={{ departementforcustomer_id }}"
+                                    <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&department={{ department_id }}"
                                        {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
                                     <ul class="nav nav-stacked">
                                 {% for producer in producer_set.all %}
-                                    <li><a href="{% url "order_view" permanence_id %}?producer={{ producer.id|unlocalize }}&departementforcustomer={{ departementforcustomer_id }}"
+                                    <li><a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer.id|unlocalize }}&department={{ department_id }}"
                                            {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span><span id="order_closed{{ producer.id|unlocalize }}" class="text-warning"></span></a>
                                     </li>
                                 {% endfor %}
                                     </ul>
                                 </li>
                             {% endif %}
-                            {% if departementforcustomer_set %}
+                            {% if department_set %}
                                 <li>
-                                    <a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}"
-                                       {% if departementforcustomer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
+                                    <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer_id }}"
+                                       {% if department_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
                                     <ul class="nav nav-stacked">
-                                        {% for departementforcustomer in departementforcustomer_set.all %}
-                                            {% if departementforcustomer.level > 0 %}
-                                                {% ifchanged departementforcustomer.parent_id %}
-                                                {% if departementforcustomer.parent.level == 0 %}</ul>{% endif %}
-                                                <li><a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.parent_id|unlocalize }}"
-                                                       {% if departementforcustomer.parent_id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.parent.short_name }}</a>
+                                        {% for department in department_set.all %}
+                                            {% if department.level > 0 %}
+                                                {% ifchanged department.parent_id %}
+                                                {% if department.parent.level == 0 %}</ul>{% endif %}
+                                                <li><a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer_id }}&department={{ department.parent_id|unlocalize }}"
+                                                       {% if department.parent_id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.parent.short_name }}</a>
                                                 </li>
-                                                {% if departementforcustomer.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
+                                                {% if department.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                                                 {% endifchanged %}
                                                 <li>
-                                                    <a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
-                                                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                                                    <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer_id }}&department={{ department.id|unlocalize }}"
+                                                       {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name }}</a>
                                                 </li>
                                             {% else %}
                                                     </ul><li>
-                                                    <a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer.id|unlocalize }}"
-                                                       {% if departementforcustomer.id == departementforcustomer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ departementforcustomer.short_name }}</a>
+                                                    <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer_id }}&department={{ department.id|unlocalize }}"
+                                                       {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name }}</a>
                                                     </li><ul class="nav nav-stacked">
                                             {% endif %}
                                         {% endfor %}
@@ -511,7 +524,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script type="text/javascript">
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{% url "order_filter_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-default" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{% url "order_filter_view" permanence_id %}?date={{ date_id }}&producer={{ producer_id }}&department={{ department_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-default" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}
@@ -520,7 +533,7 @@
         {% addtoblock "lastjs" %}{% spaceless %}
             <script type="text/javascript">
             $(document).ready(function () {
-                $("#link_to_order_or_filter_view").html('<a href="{% url "order_view" permanence_id %}?producer={{ producer_id }}&departementforcustomer={{ departementforcustomer_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-default" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
+                $("#link_to_order_or_filter_view").html('<a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer_id }}&department={{ department_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-default" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
             });
             </script>
         {% endspaceless %}{% endaddtoblock %}

@@ -57,20 +57,20 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                 producers = Producer.objects.filter(
                     producerinvoice__permanence_id=permanence.id
                 ).distinct().iterator()
-                title1 = "%s-%s" % (customer.short_basket_name, permanence)
+                title1 = "{}-{}".format(customer.short_basket_name, permanence)
             else:
                 producers = Producer.objects.filter(
                     producerinvoice__permanence_id=permanence.id
                 ).distinct().iterator()
-                title1 = "%s" % permanence
+                title1 = "{}".format(permanence)
         else:
             producers = Producer.objects.filter(
                 producerinvoice__permanence__permanence_date__year=year
             ).distinct().iterator()
-            title1 = "%s-%d" % (customer.short_basket_name, year)
+            title1 = "{}-{}".format(customer.short_basket_name, year)
     else:
         producers = Producer.objects.filter(id=producer.id).iterator()
-        title1 = "%s-%d" % (producer.short_profile_name, year)
+        title1 = "{}-{}".format(producer.short_profile_name, year)
     producer = next_row(producers)
     if producer is not None:
         wb, ws = new_landscape_a4_sheet(
@@ -175,10 +175,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 count_purchase += 1
                                 c = ws.cell(row=row_num, column=4)
                                 if department_for_customer_save__short_name is not None:
-                                    c.value = "%s - %s" % (
+                                    c.value = "{} - {}".format(
                                         purchase.get_long_name(), department_for_customer_save__short_name)
                                 else:
-                                    c.value = "%s" % purchase.get_long_name()
+                                    c.value = "{}".format(purchase.get_long_name())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=5)
                                 c.value = customer_save.short_basket_name
@@ -204,7 +204,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.value = purchase.offer_item.unit_deposit.amount
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=9)
-                                c.value = '=ROUND(G%s*(H%s+I%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                                c.value = "=ROUND(G{}*(H{}+I{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                                 if year is None:
                                     purchase_price = (purchase.quantity_invoiced *
                                                       (purchase.get_producer_unit_price() +
@@ -223,7 +223,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     )
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=10)
-                                c.value = '=G%s*%s' % (row_num + 1, purchase.offer_item.customer_vat.amount)
+                                c.value = "=G{}*{}".format(row_num + 1, purchase.offer_item.customer_vat.amount)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=12)
                                 c.value = cap(purchase.comment, 100)
@@ -244,7 +244,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         count_permanence_purchase += count_purchase
                         if year is None and count_purchase > 1:
                             c = ws.cell(row=row_num -1, column=11)
-                            c.value = '=SUM(J%s:J%s)' % (row_start_purchase, row_num)
+                            c.value = "=SUM(J{}:J{})".format(row_start_purchase, row_num)
                             c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.font.color = Color(Color.BLUE)
                             ws.conditional_formatting.addCellIs(
@@ -259,19 +259,19 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         producer_price += purchases_price
                     if count_permanence_purchase > 0:
                         count_all_purchase += count_permanence_purchase
-                        purchase_price_producer_purchase = 'ROUND(SUM(J%s:J%s),2)' % (row_start_permanence, row_num)
+                        purchase_price_producer_purchase = "ROUND(SUM(J{}:J{}),2)".format(row_start_permanence, row_num)
                         purchase_price_all_purchase.append(purchase_price_producer_purchase)
-                        tax_producer_purchase = 'SUM(K%s:K%s)' % (row_start_permanence, row_num)
+                        tax_producer_purchase = "SUM(K{}:K{})".format(row_start_permanence, row_num)
                         tax_all_purchase.append(tax_producer_purchase)
 
                         row_num += 1
                         c = ws.cell(row=row_num, column=8)
-                        c.value = "%s : %s %s" % (_("Total"), producer_save.short_profile_name, permanence_save)
+                        c.value = "{} : {} {}".format(_("Total"), producer_save.short_profile_name, permanence_save)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.font.bold = True
                         c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
                         c = ws.cell(row=row_num, column=9)
-                        c.value = '=%s' % purchase_price_producer_purchase
+                        c.value = "={}".format(purchase_price_producer_purchase)
                         c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                         c.style.font.bold = True
                         if year is None:
@@ -281,7 +281,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 None, None, yellowFill
                             )
                         c = ws.cell(row=row_num, column=10)
-                        c.value = '=%s' % tax_producer_purchase
+                        c.value = "={}".format(tax_producer_purchase)
                         c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                         row_num += 1
                         for col_num in range(14):
@@ -383,10 +383,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     c.value = "B"
                                 c = ws.cell(row=row_num, column=4)
                                 if department_for_customer_save__short_name is not None:
-                                    c.value = "%s - %s" % (
+                                    c.value = "{} - {}".format(
                                         purchase.get_long_name(), department_for_customer_save__short_name)
                                 else:
-                                    c.value = "%s" % purchase.get_long_name()
+                                    c.value = "{}".format(purchase.get_long_name())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 if count_offer_item != 0:
                                     c.style.font.color.index = 'FF939393'
@@ -414,13 +414,13 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         None, None, yellowFill
                                     )
                                 else:
-                                    c.value = '=H%s' % (row_first_offer_item + 1)
+                                    c.value = "=H{}".format(row_first_offer_item + 1)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=8)
                                 c.value = purchase.offer_item.unit_deposit.amount
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=9)
-                                c.value = '=ROUND(G%s*(H%s+I%s),2)' % (row_num + 1, row_first_offer_item + 1, row_num + 1)
+                                c.value = "=ROUND(G{}*(H{}+I{}),2)".format(row_num + 1, row_first_offer_item + 1, row_num + 1)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 if year is None:
                                     offer_item_price = (purchase.quantity_invoiced *
@@ -439,7 +439,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                         None, None, yellowFill
                                     )
                                 c = ws.cell(row=row_num, column=10)
-                                c.value = '=G%s*%s' % (row_num + 1, purchase.offer_item.customer_vat.amount)
+                                c.value = "=G{}*{}".format(row_num + 1, purchase.offer_item.customer_vat.amount)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=12)
                                 c.value = cap(purchase.comment, 100)
@@ -466,7 +466,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     PRODUCT_ORDER_UNIT_LT
                                 ]:
                                     c = ws.cell(row=row_num - 1, column=11)
-                                    c.value = '=SUM(J%s:J%s)' % (row_start_offer_item, row_num)
+                                    c.value = "=SUM(J{}:J{})".format(row_start_offer_item, row_num)
                                     c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                     c.style.font.color = Color(Color.BLUE)
                                     ws.conditional_formatting.addCellIs(
@@ -482,19 +482,19 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
 
                     if count_permanence_purchase > 0:
                         count_all_purchase += count_permanence_purchase
-                        purchase_price_producer_purchase = 'ROUND(SUM(J%s:J%s),2)' % (row_start_permanence, row_num)
+                        purchase_price_producer_purchase = "ROUND(SUM(J{}:J{}),2)".format(row_start_permanence, row_num)
                         purchase_price_all_purchase.append(purchase_price_producer_purchase)
-                        tax_producer_purchase = 'SUM(K%s:K%s)' % (row_start_permanence, row_num)
+                        tax_producer_purchase = "SUM(K{}:K{})".format(row_start_permanence, row_num)
                         tax_all_purchase.append(tax_producer_purchase)
 
                         row_num += 1
                         c = ws.cell(row=row_num, column=8)
-                        c.value = "%s : %s %s" % (_("Total"), producer_save.short_profile_name, permanence_save)
+                        c.value = "{} : {} {}".format(_("Total"), producer_save.short_profile_name, permanence_save)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.font.bold = True
                         c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
                         c = ws.cell(row=row_num, column=9)
-                        c.value = '=%s' % purchase_price_producer_purchase
+                        c.value = "={}".format(purchase_price_producer_purchase)
                         c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                         c.style.font.bold = True
                         if year is None:
@@ -504,7 +504,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 None, None, yellowFill
                             )
                         c = ws.cell(row=row_num, column=10)
-                        c.value = '=%s' % tax_producer_purchase
+                        c.value = "={}".format(tax_producer_purchase)
                         c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                         row_num += 1
                         for col_num in range(14):
@@ -516,16 +516,16 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         if count_all_purchase > 0:
             row_num += 1
             c = ws.cell(row=row_num, column=8)
-            c.value = "%s : %s" % (_('Total'), title1)
+            c.value = "{} : {}".format(_('Total'), title1)
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             c.style.font.bold = True
             c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
             c = ws.cell(row=row_num, column=9)
-            c.value = '=%s' % "+".join(purchase_price_all_purchase)
+            c.value = "={}".format("+".join(purchase_price_all_purchase))
             c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
             c.style.font.bold = True
             c = ws.cell(row=row_num, column=10)
-            c.value = '=%s' % "+".join(tax_all_purchase)
+            c.value = "={}".format("+".join(tax_all_purchase))
             c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
             row_num += 1
             for col_num in range(14):
@@ -592,7 +592,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                         error = True
                         error_msg = _("Row %(row_num)d : No valid producer.") % {'row_num': row_num + 1}
                         break
-                    customer_name = "%s" % row[_('Customer')]
+                    customer_name = "{}".format(row[_('Customer')])
                     if customer_name in customer_2_id_dict:
                         customer_id = customer_2_id_dict[customer_name]
                         if customer_id != purchase.customer_id:
@@ -695,7 +695,7 @@ def import_purchase_sheet(worksheet, permanence=None,
 
     if import_counter == 0:
         error = True
-        error_msg = "%s" % _("Nothing to import.")
+        error_msg = "{}".format(_("Nothing to import."))
     # if not error:
     #     recalculate_order_amount(
     #         permanence_id=permanence.id,
@@ -723,16 +723,16 @@ def handle_uploaded_purchase(request, permanences, file_to_import, *args):
         permanence = permanences.first()
         if permanence is not None:
             if permanence.status == PERMANENCE_SEND:
-                ws = wb.get_sheet_by_name(cap(slugify("%s" % (permanence)), 31))
+                ws = wb.get_sheet_by_name(cap(slugify("{}".format(permanence)), 31))
                 if ws is None:
-                    ws = wb.get_sheet_by_name(cap("%s" % (permanence), 31))
+                    ws = wb.get_sheet_by_name(cap("{}".format(permanence), 31))
                 error, error_msg = import_purchase_sheet(
                     ws, permanence=permanence,
                     customer_2_id_dict=customer_2_id_dict,
                     producer_2_id_dict=producer_2_id_dict
                 )
                 if error:
-                    error_msg = cap("%s" % (permanence), 31) + " > " + error_msg
+                    error_msg = cap("{}".format(permanence), 31) + " > " + error_msg
             else:
                 error = True
                 error_msg = _("The permanence has already been invoiced.")

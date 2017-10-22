@@ -13,11 +13,11 @@ def admin_duplicate(queryset):
     user_message = _("The contract is duplicated.")
     user_message_level = messages.INFO
     contract_count = 0
-    long_name_postfix = "%s" % _(" (COPY)")
+    long_name_postfix = "{}".format(_(" (COPY)"))
     max_length = Product_Translation._meta.get_field('long_name').max_length - len(long_name_postfix)
     for contract in queryset:
         contract_count += 1
-        new_long_name = "%s%s" % (cap(contract.long_name, max_length), _(" (COPY)"))
+        new_long_name = "{}{}".format(cap(contract.long_name, max_length), _(" (COPY)"))
         old_product_production_mode = contract.production_mode.all()
         previous_contract_id = contract.id
         contract.id = None

@@ -6,7 +6,6 @@ from django.db import models
 from django.db.models import Sum
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
@@ -14,7 +13,6 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.product import Product, product_pre_save
 
 
-@python_2_unicode_compatible
 class Box(Product):
 
     def get_calculated_stock(self):
@@ -53,7 +51,7 @@ class Box(Product):
 
     def __str__(self):
         # return super(Box, self).display()
-        return '%s' % self.long_name
+        return "{}".format(self.safe_translation_getter('long_name', any_language=True))
 
     class Meta:
         proxy = True
@@ -79,7 +77,6 @@ def box_pre_save(sender, **kwargs):
     product_pre_save(sender, **kwargs)
 
 
-@python_2_unicode_compatible
 class BoxContent(models.Model):
     box = models.ForeignKey(
         'Box', verbose_name=_("Box"),

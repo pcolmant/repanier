@@ -5,7 +5,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
@@ -15,7 +14,6 @@ from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import LUT_PERMANENCE_STATUS, PERMANENCE_PLANNED, PERMANENCE_SEND, EMPTY_STRING
 
 
-@python_2_unicode_compatible
 class DeliveryBoard(TranslatableModel):
     translations = TranslatedFields(
         delivery_comment=models.CharField(_("Comment"), max_length=50, blank=True),
@@ -72,26 +70,26 @@ class DeliveryBoard(TranslatableModel):
             )
 
     def get_delivery_display(self, admin=False):
-        short_name = "%s" % self.delivery_point.safe_translation_getter(
+        short_name = "{}".format(self.delivery_point.safe_translation_getter(
             'short_name', any_language=True, default=EMPTY_STRING
-        )
+        ))
         if admin:
-            label = '<font color="green">%s</font>' % short_name
+            label = "<font color=\"green\">{}</font>".format(short_name)
         else:
             comment = self.safe_translation_getter(
                 'delivery_comment', any_language=True, default=EMPTY_STRING
             )
-            label = '%s%s' % (comment, short_name)
+            label = "{}{}".format(comment, short_name)
         return mark_safe(label)
 
     def get_delivery_status_display(self):
-        return "%s - %s" % (self, self.get_status_display())
+        return "{} - {}".format(self, self.get_status_display())
 
     def get_delivery_customer_display(self):
         if self.status != PERMANENCE_SEND:
-            return "%s - %s" % (self, self.get_status_display())
+            return "{} - {}".format(self, self.get_status_display())
         else:
-            return "%s - %s" % (self, _('Orders closed'))
+            return "{} - {}".format(self, _('Orders closed'))
 
     def __str__(self):
         return self.get_delivery_display()

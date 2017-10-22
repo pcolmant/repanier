@@ -8,7 +8,6 @@ from django.db.models import F
 from django.db.models.signals import pre_save, post_init
 from django.dispatch import receiver
 from django.utils.dateparse import parse_date
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
@@ -23,7 +22,6 @@ from repanier.models.invoice import ProducerInvoice
 from repanier.models.item import Item
 
 
-@python_2_unicode_compatible
 class OfferItem(Item):
     translations = TranslatedFields(
         long_name=models.CharField(_("Long name"), max_length=100,
@@ -184,13 +182,13 @@ class OfferItem(Item):
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
     def get_like(self, user):
-        return '<span class="glyphicon glyphicon-heart%s" onclick="like_ajax(%d);return false;"></span>' % (
+        return "<span class=\"glyphicon glyphicon-heart{}\" onclick=\"like_ajax({});return false;\"></span>".format(
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
 
     @cached_property
     def get_html_permanences_dates(self):
         if self.permanences_dates:
-            all_dates_str = self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+            all_dates_str = sorted(self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             all_days = []
             month_save = None
             for one_date_str in all_dates_str:
@@ -221,8 +219,8 @@ class OfferItem(Item):
     def get_order_name(self):
         qty_display = self.get_qty_display()
         if qty_display:
-            return '%s %s' % (self.long_name, qty_display)
-        return '%s' % self.long_name
+            return "{} {}".format(self.safe_translation_getter('long_name', any_language=True), qty_display)
+        return "{}".format(self.safe_translation_getter('long_name', any_language=True))
 
     def get_qty_display(self):
         if self.is_box:
@@ -331,7 +329,6 @@ def offer_item_pre_save(sender, **kwargs):
             offer_item.previous_unit_deposit = offer_item.unit_deposit.amount
 
 
-@python_2_unicode_compatible
 class OfferItemWoReceiver(OfferItem):
     def __str__(self):
         return EMPTY_STRING
@@ -342,7 +339,6 @@ class OfferItemWoReceiver(OfferItem):
         verbose_name_plural = _("Offer items")
 
 
-@python_2_unicode_compatible
 class OfferItemSend(OfferItem):
     def __str__(self):
         return self.get_long_name_with_producer()
@@ -363,7 +359,6 @@ def offer_item_send_pre_save(sender, **kwargs):
     offer_item_pre_save(sender, **kwargs)
 
 
-@python_2_unicode_compatible
 class OfferItemClosed(OfferItem):
     def __str__(self):
         return self.get_long_name_with_producer()

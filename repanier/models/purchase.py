@@ -7,7 +7,6 @@ from django.db import transaction
 from django.db.models import F
 from django.db.models.signals import post_init, pre_save
 from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
@@ -20,7 +19,6 @@ from repanier.models.permanence import Permanence
 from repanier.tools import cap
 
 
-@python_2_unicode_compatible
 class Purchase(models.Model):
     permanence = models.ForeignKey(
         'Permanence', verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME, on_delete=models.PROTECT,
@@ -200,7 +198,7 @@ class Purchase(models.Model):
     def set_comment(self, comment):
         if comment:
             if self.comment:
-                self.comment = cap("%s, %s" % (self.comment, comment), 100)
+                self.comment = cap("{}, {}".format(self.comment, comment), 100)
             else:
                 self.comment = cap(comment, 100)
 
@@ -419,7 +417,6 @@ def purchase_pre_save(sender, **kwargs):
     purchase.previous_selling_price = purchase.selling_price.amount
 
 
-@python_2_unicode_compatible
 class PurchaseWoReceiver(Purchase):
     def __str__(self):
         return EMPTY_STRING

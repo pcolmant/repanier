@@ -8,32 +8,20 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
 from django.db.models import F, Sum, Q
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.apps import DJANGO_IS_MIGRATION_RUNNING
 from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
-# from repanier.models.producer import Producer
-# from repanier.models.purchase import Purchase
 from repanier.tools import create_or_update_one_cart_item, get_signature
 
 
-def permanence_verbose_name():
-    if DJANGO_IS_MIGRATION_RUNNING:
-        return EMPTY_STRING
-    # from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
-    return _('Order') # lambda: "%s" % REPANIER_SETTINGS_PERMANENCE_NAME
-
-
-@python_2_unicode_compatible
 class Invoice(models.Model):
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=permanence_verbose_name(),
+        'Permanence', verbose_name=_('Order'),
         on_delete=models.PROTECT, db_index=True)
     status = models.CharField(
         max_length=3,
@@ -92,7 +80,6 @@ class Invoice(models.Model):
     class Meta:
         abstract = True
 
-@python_2_unicode_compatible
 class CustomerInvoice(Invoice):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("Customer"),
@@ -273,13 +260,13 @@ class CustomerInvoice(Invoice):
                         status=PERMANENCE_OPENED
                     ).order_by('?')
                 if qs.exists():
-                    label = "%s" % _('Please, select a delivery point')
+                    label = "{}".format(_('Please, select a delivery point'))
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id,
                         customer_id=self.customer_id).order_by('?').update(
                         status=PERMANENCE_OPENED)
                 else:
-                    label = "%s" % _('No delivery point is open for you. You can not place order.')
+                    label = "{}".format(_('No delivery point is open for you. You can not place order.'))
                     # IMPORTANT :
                     # 1 / This prohibit to place an order into the customer UI
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point
@@ -297,53 +284,59 @@ class CustomerInvoice(Invoice):
                 else:
                     transport = True
                     if self.min_transport.amount > DECIMAL_ZERO:
-                        msg_transport = "%s<br/>" % \
+                        msg_transport = "{}<br/>".format(
                                         _(
                                             'The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s.') % {
                                             'transport'    : self.transport,
                                             'min_transport': self.min_transport
-                                        }
+                                        })
                     else:
-                        msg_transport = "%s<br/>" % \
+                        msg_transport = "{}<br/>".format(
                                         _(
                                             'The shipping costs for this delivery point amount to %(transport)s.') % {
                                             'transport': self.transport,
-                                        }
+                                        })
                 if self.price_list_multiplier == DECIMAL_ONE:
                     msg_price = EMPTY_STRING
                 else:
                     if transport:
                         if self.price_list_multiplier > DECIMAL_ONE:
-                            msg_price = "%s<br/>" % \
+                            msg_price = "{}<br/>".format(
                                         _(
                                             'A price increase of %(increase)s %% of the total invoiced is due for this delivery point. This does not apply to the cost of transport which is fixed.') % {
                                             'increase': number_format(
                                                 (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
-                                        }
+                                        })
                         else:
-                            msg_price = "%s<br/>" % \
+                            msg_price = "{}<br/>".format(
                                         _(
                                             'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point. This does not apply to the cost of transport which is fixed.') % {
                                             'decrease': number_format(
                                                 (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
-                                        }
+                                        })
                     else:
                         if self.price_list_multiplier > DECIMAL_ONE:
-                            msg_price = "%s<br/>" % \
+                            msg_price = "{}<br/>".format(
                                         _(
                                             'A price increase of %(increase)s %% of the total invoiced is due for this delivery point.') % {
                                             'increase': number_format(
                                                 (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
-                                        }
+                                        })
                         else:
-                            msg_price = "%s<br/>" % \
+                            msg_price = "{}<br/>".format(
                                         _(
                                             'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point.') % {
                                             'decrease': number_format(
                                                 (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
-                                        }
+                                        })
 
-            msg_delivery = '%s<b><i><select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax(%d)" onchange="delivery_ajax(%d)" class="form-control"><option value="%d" selected>%s</option></select></i></b><br/>%s%s' % (
+            msg_delivery = """
+            {}<b><i>
+            <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onchange=\"delivery_ajax({})\" class=\"form-control\">
+            <option value=\"{}\" selected>{}</option>
+            </select>
+            </i></b><br/>{}{}
+            """.format(
                 _("Delivery point"),
                 delivery_id,
                 delivery_id,
@@ -367,13 +360,13 @@ class CustomerInvoice(Invoice):
                 <div class="row">
                 <div class="panel panel-default">
                 <div class="panel-heading">
-                %s
-                <p><font color="#51a351">%s</font><p/>
-                %s
+                {}
+                <p><font color="#51a351">{}</font><p/>
+                {}
                 </div>
                 </div>
                 </div>
-                 """ % (msg_delivery, msg_confirmation2, basket_message)
+                 """.format(msg_delivery, msg_confirmation2, basket_message)
             else:
                 msg_html = None
                 btn_disabled = EMPTY_STRING if permanence.status == PERMANENCE_OPENED else "disabled"
@@ -384,29 +377,29 @@ class CustomerInvoice(Invoice):
                             if (permanence.with_delivery_point and self.delivery is None) \
                                     or self.total_price_with_tax == DECIMAL_ZERO:
                                 btn_disabled = "disabled"
-                            msg_confirmation1 = '<font color="red">%s</font><br/>' % _(
-                                "/!\ Unconfirmed orders will be canceled.")
-                            msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;%s' % _(
-                                "Confirm this order and receive an email containing its summary.")
+                            msg_confirmation1 = "<font color=\"red\">{}</font><br/>".format(_(
+                                "/!\ Unconfirmed orders will be canceled."))
+                            msg_confirmation2 = "<span class=\"glyphicon glyphicon-floppy-disk\"></span>&nbsp;&nbsp;{}".format(_(
+                                "Confirm this order and receive an email containing its summary."))
                     else:
                         href = urlresolvers.reverse(
                             'order_view', args=(permanence.id,)
                         )
                         if self.status == PERMANENCE_OPENED:
-                            msg_confirmation1 = '<font color="red">%s</font><br/>' % _(
-                                "/!\ Unconfirmed orders will be canceled.")
+                            msg_confirmation1 = "<font color=\"red\">{}</font><br/>".format(_(
+                                "/!\ Unconfirmed orders will be canceled."))
                             msg_confirmation2 = _("Verify my order content before validating it.")
                             msg_html = """
                                 <div class="row">
                                 <div class="panel panel-default">
                                 <div class="panel-heading">
-                                %s
-                                %s
-                                <a href="%s?is_basket=yes" class="btn btn-info" %s>%s</a>
+                                {}
+                                {}
+                                <a href="{}?is_basket=yes" class="btn btn-info" {}>{}</a>
                                 </div>
                                 </div>
                                 </div>
-                                 """ % (msg_delivery, msg_confirmation1, href, btn_disabled, msg_confirmation2)
+                                 """.format(msg_delivery, msg_confirmation1, href, btn_disabled, msg_confirmation2)
                 else:
                     if is_basket:
                         msg_confirmation2 = _("Receive an email containing this order summary.")
@@ -415,11 +408,11 @@ class CustomerInvoice(Invoice):
                             <div class="row">
                             <div class="panel panel-default">
                             <div class="panel-heading">
-                            %s
+                            {}
                             </div>
                             </div>
                             </div>
-                             """ % msg_delivery
+                             """.format(msg_delivery)
                     else:
                         msg_html = EMPTY_STRING
                 if msg_html is None:
@@ -428,27 +421,27 @@ class CustomerInvoice(Invoice):
                         <div class="row">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                        %s
+                        {}
                         <div class="clearfix"></div>
-                        %s
+                        {}
                         </div>
                         </div>
                         </div>
-                         """ % (msg_delivery, basket_message)
+                         """.format(msg_delivery, basket_message)
                     else:
                         msg_html = """
                         <div class="row">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                        %s
-                        %s
-                        <button id="btn_confirm_order" class="btn btn-info" %s onclick="btn_receive_order_email();">%s</button>
+                        {}
+                        {}
+                        <button id="btn_confirm_order" class="btn btn-info" {} onclick="btn_receive_order_email();">{}</button>
                         <div class="clearfix"></div>
-                        %s
+                        {}
                         </div>
                         </div>
                         </div>
-                         """ % (msg_delivery, msg_confirmation1, btn_disabled, msg_confirmation2, basket_message)
+                         """.format(msg_delivery, msg_confirmation1, btn_disabled, msg_confirmation2, basket_message)
         if to_json is not None:
             option_dict = {'id': "#span_btn_confirm_order", 'html': msg_html}
             to_json.append(option_dict)
@@ -668,11 +661,11 @@ class CustomerInvoice(Invoice):
                     offer_item_id=a_purchase.offer_item_id,
                     q_order=DECIMAL_ZERO,
                     batch_job=True,
-                    comment=_("Cancelled qty : %s") % number_format(a_purchase.quantity_ordered, 4)
+                    comment=_("Cancelled qty : {}").format(number_format(a_purchase.quantity_ordered, 4))
                 )
 
     def __str__(self):
-        return '%s, %s' % (self.customer, self.permanence)
+        return "{}, {}".format(self.customer, self.permanence)
 
     class Meta:
         verbose_name = _("Customer invoice")
@@ -680,7 +673,6 @@ class CustomerInvoice(Invoice):
         unique_together = ("permanence", "customer",)
 
 
-@python_2_unicode_compatible
 class ProducerInvoice(Invoice):
     producer = models.ForeignKey(
         'Producer', verbose_name=_("Producer"),
@@ -739,17 +731,17 @@ class ProducerInvoice(Invoice):
                 ratio = 100
             else:
                 ratio *= 100
-            option_dict = {'id'  : "#order_procent%d" % a_producer.id,
-                           'html': "%s%%" % number_format(ratio, 0)}
+            option_dict = {'id'  : "#order_procent{}".format(a_producer.id),
+                           'html': "{}%%".format(number_format(ratio, 0))}
             to_json.append(option_dict)
         if self.status != PERMANENCE_OPENED:
-            option_dict = {'id'  : "#order_closed%d" % a_producer.id,
+            option_dict = {'id'  : "#order_closed{}".format(a_producer.id),
                            'html': '&nbsp;<span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>'}
             to_json.append(option_dict)
         return
 
     def __str__(self):
-        return '%s, %s' % (self.producer, self.permanence)
+        return "{}, {}".format(self.producer, self.permanence)
 
     class Meta:
         verbose_name = _("Producer invoice")
@@ -757,7 +749,6 @@ class ProducerInvoice(Invoice):
         unique_together = ("permanence", "producer",)
 
 
-@python_2_unicode_compatible
 class CustomerProducerInvoice(models.Model):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("Customer"),
@@ -766,7 +757,7 @@ class CustomerProducerInvoice(models.Model):
         'Producer', verbose_name=_("Producer"),
         on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=permanence_verbose_name(), on_delete=models.PROTECT,
+        'Permanence', verbose_name=_('Order'), on_delete=models.PROTECT,
         db_index=True)
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
@@ -789,16 +780,15 @@ class CustomerProducerInvoice(models.Model):
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
     def __str__(self):
-        return '%s, %s' % (self.producer, self.customer)
+        return "{}, {}".format(self.producer, self.customer)
 
     class Meta:
         unique_together = ("permanence", "customer", "producer",)
 
 
-@python_2_unicode_compatible
 class CustomerSend(CustomerProducerInvoice):
     def __str__(self):
-        return '%s, %s' % (self.producer, self.customer)
+        return "{}, {}".format(self.producer, self.customer)
 
     class Meta:
         proxy = True

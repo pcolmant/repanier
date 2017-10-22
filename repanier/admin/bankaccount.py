@@ -129,16 +129,16 @@ class CustomerModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         # Important "if obj.bank_account" and not "if obj.bank_account is not None"
         # to handle the case of empty string
-        bank_account1 = "-%s" % obj.bank_account1 if obj.bank_account1 else EMPTY_STRING
-        bank_account2 = "-%s" % obj.bank_account2 if obj.bank_account2 else EMPTY_STRING
-        return "%s%s%s" % (obj.short_basket_name, bank_account1, bank_account2)
+        bank_account1 = "-{}".format(obj.bank_account1 if obj.bank_account1 else EMPTY_STRING)
+        bank_account2 = "-{}".format(obj.bank_account2 if obj.bank_account2 else EMPTY_STRING)
+        return "{}{}{}".format(obj.short_basket_name, bank_account1, bank_account2)
 
 
 class ProducerModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         # Important "if obj.bank_account" and not "if obj.bank_account is not None"
-        bank_account = "-%s" % obj.bank_account if obj.bank_account else EMPTY_STRING
-        return "%s%s" % (obj.short_profile_name, bank_account)
+        bank_account = "-{}".format(obj.bank_account if obj.bank_account else EMPTY_STRING)
+        return "{}{}".format(obj.short_profile_name, bank_account)
 
 
 class BankAccountDataForm(forms.ModelForm):

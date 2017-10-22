@@ -62,7 +62,7 @@ class UserDataForm(forms.ModelForm):
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)
             if qs.exists():
-                self.add_error('email', _('The email %s is already used by another user.') % email)
+                self.add_error('email', _('The email {} is already used by another user.').format(email))
             qs = user_model.objects.filter(username=username).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)
@@ -181,10 +181,10 @@ class CustomerResource(resources.ModelResource):
         else:
             customer = None
         if user_email_qs.exists():
-            raise ValueError(_("The email %s is already used by another user.") % instance.user.email)
+            raise ValueError(_("The email {} is already used by another user.").format(instance.user.email))
         if user_username_qs.exists():
             raise ValueError(
-                _("The short_basket_name %s is already used by another user.") % instance.short_basket_name)
+                _("The short_basket_name {} is already used by another user.").format(instance.short_basket_name))
         if using_transactions or not dry_run:
             if instance.id is not None:
                 email = instance.user.email
@@ -229,15 +229,15 @@ def create__customer_action(year):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                "%s %s" % (_('Invoice'), year),
+                "{} {}".format(_('Invoice'), year),
                 repanier.apps.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
         return
 
-    name = "export_producer_%d" % (year,)
-    return (name, (action, name, _("Export purchases of %s") % (year,)))
+    name = "export_producer_{}".format(year)
+    return name, (action, name, _("Export purchases of {}").format(year))
 
 
 class CustomerWithUserDataForm(UserDataForm):
@@ -400,7 +400,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             # One folder by customer to avoid picture names conflicts
             picture_field = form.base_fields["picture"]
             if hasattr(picture_field.widget, 'upload_to'):
-                picture_field.widget.upload_to = "%s%s%d" % ("customer", os_sep, customer.id)
+                picture_field.widget.upload_to = "{}{}{}".format("customer", os_sep, customer.id)
         else:
             # Clean data displayed
             username_field.initial = EMPTY_STRING

@@ -66,7 +66,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
             deliveries_ws = []
             if deliveries_id is not None:
                 for delivery_cpt, delivery_id in enumerate(deliveries_id):
-                    ws_sc_name = cap('%d-%s' % (delivery_cpt, ws_customer_title), 31)
+                    ws_sc_name = cap("{}-{}".format(delivery_cpt, ws_customer_title), 31)
                     for sheet in wb.worksheets:
                         if ws_sc_name == sheet.title:
                             deliveries_ws.append(ws_sc_name)
@@ -105,7 +105,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                         if len(offer_item.reference) < 36:
                             if offer_item.reference.isdigit():
                                 # Avoid display of exponent by Excel
-                                offer_item_reference = '[%s]' % offer_item.reference
+                                offer_item_reference = "[{}]".format(offer_item.reference)
                             else:
                                 offer_item_reference = offer_item.reference
                             show_column_reference = True
@@ -126,12 +126,12 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=3)
                             if department_for_customer_save__short_name is not None:
-                                c.value = "%s - %s" % (
+                                c.value = "{} - {}".format(
                                     offer_item.get_long_name(),
                                     department_for_customer_save__short_name
                                 )
                             else:
-                                c.value = "%s" % offer_item.get_long_name()
+                                c.value = "{}".format(offer_item.get_long_name())
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.alignment.wrap_text = True
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -149,21 +149,18 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                                 c.value = asked
                             else:
                                 if len(deliveries_ws) > 0:
-                                    #     # Without any deleveriy point
-                                    #     sum_value = "SUMIF('%s'!B2:B5000,B%s,'%s'!F2:F5000)" % \
-                                    #         (ws_customer_title, row_num + 1, ws_customer_title)
-                                    # else:
-                                    sum_value = "+".join("SUMIF('%s'!B2:B5000,B%s,'%s'!F2:F5000)" % \
-                                                         (delivery_ws, row_num + 1, delivery_ws)
-                                                         for delivery_ws in deliveries_ws
-                                                         )
-                                    c.value = "=%s" % sum_value
+                                    sum_value = "+".join(
+                                        "SUMIF('{}'!B2:B5000,B{},'{}'!F2:F5000)".format(
+                                            delivery_ws, row_num + 1, delivery_ws
+                                        ) for delivery_ws in deliveries_ws
+                                    )
+                                    c.value = "={}".format(sum_value)
                                 else:
                                     c.value = DECIMAL_ZERO
                             c.style.number_format.format_code = '#,##0.???'
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=7)
-                            c.value = '=G%s-K%s+L%s' % (row_num + 1, row_num + 1, row_num + 1)
+                            c.value = "=G{}-K{}+L{}".format(row_num + 1, row_num + 1, row_num + 1)
                             if not show_column_qty_ordered:
                                 show_column_qty_ordered = (asked - min(asked, stock) + add_2_stock) > 0
                             c.style.number_format.format_code = '#,##0.???'
@@ -179,11 +176,11 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                                 None, None, yellowFill
                             )
                             c = ws.cell(row=row_num, column=9)
-                            c.value = '=ROUND(I%s*(E%s+F%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                            c.value = "=ROUND(I{}*(E{}+F{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=10)
-                            c.value = '=MIN(G%s,I%s)' % (row_num + 1, row_num + 1)
+                            c.value = "=MIN(G{},I{})".format(row_num + 1, row_num + 1)
                             c.style.number_format.format_code = '#,##0.???'
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=11)
@@ -199,31 +196,31 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             if not show_column_add2stock:
                                 show_column_add2stock = add_2_stock > 0
                             c = ws.cell(row=row_num, column=12)
-                            c.value = '=I%s-K%s+L%s' % (row_num + 1, row_num + 1, row_num + 1)
+                            c.value = "=I{}-K{}+L{}".format(row_num + 1, row_num + 1, row_num + 1)
                             c.style.number_format.format_code = '#,##0.???'
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c.style.font.bold = True
                             c = ws.cell(row=row_num, column=13)
-                            c.value = '=ROUND(M%s*(E%s+F%s),2)' % (row_num + 1, row_num + 1, row_num + 1)
+                            c.value = "=ROUND(M{}*(E{}+F{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             row_num += 1
                         offer_item = next_row(offer_items)
                 row_num += 1
                 c = ws.cell(row=row_num, column=3)
-                c.value = "%s %s" % (_("Total price"), producer_save.short_profile_name)
+                c.value = "{} {}".format(_("Total price"), producer_save.short_profile_name)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
                 c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
                 c = ws.cell(row=row_num, column=9)
-                formula = 'SUM(J%s:J%s)' % (row_start_producer, row_num)
-                c.value = '=' + formula
+                formula = "SUM(J{}:J{})".format(row_start_producer, row_num)
+                c.value = "=" + formula
                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                 c.style.font.bold = True
                 formula_main_total_a.append(formula)
                 c = ws.cell(row=row_num, column=13)
-                formula = 'SUM(N%s:N%s)' % (row_start_producer, row_num)
-                c.value = '=' + formula
+                formula = "SUM(N{}:N{})".format(row_start_producer, row_num)
+                c.value = "=" + formula
                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                 c.style.font.bold = True
                 formula_main_total_b.append(formula)
@@ -237,7 +234,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                     row_num += 2
 
             c = ws.cell(row=row_num, column=3)
-            c.value = "%s" % _("Total price")
+            c.value = "{}".format(_("Total price"))
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             c.style.font.bold = True
             c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
@@ -356,11 +353,11 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 c = ws.cell(row=row_num, column=0)
                 c.value = product.id
                 c = ws.cell(row=row_num, column=1)
-                c.value = "%s" % product.producer
+                c.value = "{}".format(product.producer)
                 if len(product.reference) < 36:
                     if product.reference.isdigit():
                         # Avoid display of exponent by Excel
-                        product_reference = '[%s]' % product.reference
+                        product_reference = "[{}]".format(product.reference)
                     else:
                         product_reference = product.reference
                     show_column_reference = True
@@ -372,7 +369,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=3)
                 if product.department_for_customer is not None:
-                    c.value = "%s - %s" % (
+                    c.value = "{} - {}".format(
                         product.get_long_name(),
                         product.department_for_customer.short_name
                     )
@@ -396,7 +393,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 c.style.font.color = Color(Color.BLUE)
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=7)
-                c.value = '=ROUND((E%s+F%s)*G%s,2)' % (row_num + 1, row_num + 1, row_num + 1)
+                c.value = "=ROUND((E{}+F{})*G{},2)".format(row_num + 1, row_num + 1, row_num + 1)
                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                 ws.conditional_formatting.addCellIs(
                     get_column_letter(8) + str(row_num + 1), 'notEqual',
@@ -409,13 +406,13 @@ def export_producer_stock(producers, customer_price=False, wb=None):
             product = next_row(products)
         row_num += 1
         c = ws.cell(row=row_num, column=4)
-        c.value = "%s" % (_("Total"),)
+        c.value = "{}".format(_("Total"),)
         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
         c.style.font.bold = True
         c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
         c = ws.cell(row=row_num, column=7)
-        formula = 'SUM(H%s:H%s)' % (2, row_num)
-        c.value = '=' + formula
+        formula = "SUM(H{}:H{})".format(2, row_num)
+        c.value = "=" + formula
         c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
         c.style.font.bold = True
 
@@ -464,14 +461,14 @@ def handle_uploaded_stock(request, producers, file_to_import, *args):
     error_msg = None
     wb = load_workbook(file_to_import)
     if wb is not None:
-        ws = wb.get_sheet_by_name(cap(slugify("%s" % _('Current stock')), 31))
+        ws = wb.get_sheet_by_name(cap(slugify("{}".format(_('Current stock'))), 31))
         if ws is None:
-            ws = wb.get_sheet_by_name(cap("%s" % _('Current stock'), 31))
+            ws = wb.get_sheet_by_name(cap("{}".format(_('Current stock')), 31))
         if ws is not None:
             error, error_msg = import_producer_stock(
                 ws,
                 producers=producers
             )
             if error:
-                error_msg = cap("%s" % _('Current stock'), 31) + " > " + error_msg
+                error_msg = cap("{}".format(_('Current stock')), 31) + " > " + error_msg
     return error, error_msg

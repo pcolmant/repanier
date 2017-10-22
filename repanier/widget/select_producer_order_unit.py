@@ -162,8 +162,8 @@ class SelectProducerOrderUnitWidget(forms.Select):
             stock_label = _('?')
             stock_addon = _('?')
             price_addon = _('?')
-        return '<li><a href="javascript:%s_select(\'%s\', \'%s\', \'%s\', \'%s\',' \
-               ' \'%s\', \'%s\', \'%s\')" data-value="%s"%s>%s</a></li>' % (
+        return "<li><a href=\"javascript:{}_select('{}', '{}', '{}', '{}'," \
+               " '{}', '{}', '{}')\" data-value=\"{}\"{}>{}</a></li>".format(
                    name, option_value, option_label, increment_order_quantity_label,
                    stock_label, increment_order_quantity_addon, stock_addon, price_addon,
                    escape(option_value), selected_html,
@@ -175,4 +175,4 @@ class SelectProducerOrderUnitWidget(forms.Select):
         output = []
         for option_value, option_label in chain(self.choices, choices):
             output.append(self.render_option2(selected_choices, option_value, option_label, name))
-        return u'\n'.join(output)
+        return "\n".join(output)

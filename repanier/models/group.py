@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.models import Customer
@@ -11,7 +10,6 @@ from repanier.models import Customer
 from repanier.models.customer import customer_pre_save, customer_post_delete
 
 
-@python_2_unicode_compatible
 class Group(Customer):
 
     class Meta:

@@ -89,9 +89,8 @@ class StaffWithUserDataAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
     item_label_field_name = 'title_for_admin'
     form = StaffWithUserDataForm
-    list_display = ('long_name', 'language_column', 'customer_responsible', 'get_customer_phone1')
+    list_display = ('long_name',)
     list_display_links = ('long_name',)
-    # list_filter = ('is_active',)
     list_select_related = ('customer_responsible',)
     list_per_page = 16
     list_max_show_all = 16
@@ -149,16 +148,16 @@ class StaffWithUserDataAdmin(LUTAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super(StaffWithUserDataAdmin, self).get_form(request, obj, **kwargs)
         email_field = form.base_fields['email']
-        if "customer_responsible" in form.base_fields:
-            customer_responsible_field = form.base_fields["customer_responsible"]
-            customer_responsible_field.widget.can_add_related = False
-            if obj:
-                customer_responsible_field.empty_label = None
-                customer_responsible_field.initial = obj.customer_responsible
-            else:
-                customer_responsible_field.queryset = Customer.objects.filter(is_active=True)
+        # if "customer_responsible" in form.base_fields:
+        #     customer_responsible_field = form.base_fields["customer_responsible"]
+        #     customer_responsible_field.widget.can_add_related = False
+        #     if obj is not None:
+        #         customer_responsible_field.empty_label = None
+        #         customer_responsible_field.initial = obj.customer_responsible
+        #     else:
+        #         customer_responsible_field.queryset = Customer.objects.filter(is_active=True)
 
-        if obj:
+        if obj is not None:
             user_model = get_user_model()
             user = user_model.objects.get(id=obj.user_id)
             email_field.initial = user.email
@@ -166,6 +165,13 @@ class StaffWithUserDataAdmin(LUTAdmin):
             # Clean data displayed
             email_field.initial = EMPTY_STRING
         return form
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "customer_responsible":
+            kwargs["queryset"] = Customer.objects.filter(is_active=True)
+            print("---------- {}".format(dir(kwargs["widget"])))
+        return super(StaffWithUserDataAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
 
     def save_model(self, request, staff, form, change):
         staff.user = form.user

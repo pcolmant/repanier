@@ -46,10 +46,10 @@ class CoordinatorsContactForm(RepanierForm):
                 sender_function = staff.safe_translation_getter(
                     'long_name', any_language=True, default=EMPTY_STRING
                 )
-                phone = " (%s)" % r.phone1 if r.phone1 else EMPTY_STRING
+                phone = " ({})".format(r.phone1 if r.phone1 else EMPTY_STRING)
                 name = r.long_basket_name if r.long_basket_name else r.short_basket_name
-                signature = "<b>%s</b> : %s%s" % (sender_function, name, phone)
-                choices.append(("%d" % staff.id, mark_safe(signature)))
+                signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
+                choices.append(("{}".format(staff.id), mark_safe(signature)))
         self.fields["staff"] = fields.MultipleChoiceField(
             label=EMPTY_STRING,
             choices=choices,

@@ -26,7 +26,7 @@ from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
 
 def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     # Detail of bank movements for a permanence
-    wb, ws = new_landscape_a4_sheet(wb, "%s %s" % (_('Dashboard'), sheet_name),
+    wb, ws = new_landscape_a4_sheet(wb, "{} {}".format(_('Dashboard'), sheet_name),
                                     permanence)
 
     row_num = 0
@@ -157,13 +157,13 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     c.value = initial_bank_amount
     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
     c = ws.cell(row=row_num, column=4)
-    formula = 'B%s+SUM(C%s:C%s)-SUM(D%s:D%s)' % (row_num + 1, 2, row_num - 1, 2, row_num - 1)
+    formula = "B{}+SUM(C{}:C{})-SUM(D{}:D{})".format(row_num + 1, 2, row_num - 1, 2, row_num - 1)
     c.value = '=' + formula
     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
     c = ws.cell(row=row_num, column=4)
-    formula = 'SUM(F%s:F%s)-SUM(F%s:F%s)' % (2, row_break, row_break + 2, row_num - 2)
+    formula = "SUM(F{}:F{})-SUM(F{}:F{})".format(2, row_break, row_break + 2, row_num - 2)
     c.value = '=' + formula
     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
@@ -272,7 +272,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
 
             for col_num in range(len(row)):
                 c = ws.cell(row=row_num, column=col_num)
-                c.value = "%s" % (row[col_num][ROW_VALUE])
+                c.value = "{}".format(row[col_num][ROW_VALUE])
                 c.style.number_format.format_code = row[col_num][ROW_FORMAT]
                 if row[col_num][ROW_BOX]:
                     c.style.borders.top.border_style = Border.BORDER_THIN
@@ -307,25 +307,25 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 c.style.borders.top.border_style = Border.BORDER_THIN
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 if col_num == 2:
-                    c.value = _("Total Price") + " " + sheet_name
+                    c.value = "{} {}".format(_("Total Price"), sheet_name)
                     c.style.font.bold = True
                 if col_num == 9:
-                    formula = 'SUM(J%s:J%s)' % (2, row_num)
+                    formula = "SUM(J{}:J{})".format(2, row_num)
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
                 if col_num == 10:
-                    formula = 'SUM(K%s:K%s)' % (2, row_num)
+                    formula = "SUM(K{}:K{})".format(2, row_num)
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
                 if col_num == 12:
-                    formula = 'SUM(M%s:M%s)' % (2, row_num)
+                    formula = "SUM(M{}:M{})".format(2, row_num)
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
                 if col_num == 13:
-                    formula = 'SUM(N%s:N%s)' % (2, row_num)
+                    formula = "SUM(N{}:N{})".format(2, row_num)
                     c.value = '=' + formula
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
@@ -429,7 +429,7 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
             error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
         if not error and import_counter == 0:
             error = True
-            error_msg = "%s" % _("Nothing to import.")
+            error_msg = "{}".format(_("Nothing to import."))
         if error:
             transaction.savepoint_rollback(sid)
         else:

@@ -11,7 +11,7 @@ import os
 
 os_environ = "DJANGO_SETTINGS_MODULE"
 project = os.path.split(os.path.abspath(os.path.dirname(__file__)))[-1]
-django_settings = "%s.common_settings" % project
+django_settings = "{}.common_settings".format(project)
 os.environ.setdefault(os_environ, django_settings)
 if os.environ.get(os_environ) != django_settings:
     os.environ.pop(os_environ)

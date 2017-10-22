@@ -31,8 +31,8 @@ class Command(BaseCommand):
         result = call("pg_dump -Fc -U " + db_user + " " + db_name + " | gzip", stdout=backup_file, shell=True)
         if result == 0:
             migrations_files = NamedTemporaryFile(prefix=db_name + '-mig.bak.', suffix='.gz')
-            repanier_path = "%s%s%s" % (os.path.dirname(settings.PROJECT_DIR), os.sep, "repanier")
-            result = call("cd %s && tar -zcf %s migrations%s*.py" % (repanier_path, migrations_files.name, os.sep),
+            repanier_path = "{}{}{}".format(os.path.dirname(settings.PROJECT_DIR), os.sep, "repanier")
+            result = call("cd {} && tar -zcf {} migrations{}*.py".format(repanier_path, migrations_files.name, os.sep),
                           stdout=migrations_files, shell=True)
 
             if result == 0:

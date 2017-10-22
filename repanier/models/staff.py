@@ -8,7 +8,6 @@ from django.db.models.signals import post_delete
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from mptt.fields import TreeForeignKey
@@ -33,7 +32,6 @@ class StaffManager(TreeManager, TranslatableManager):
         return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
-@python_2_unicode_compatible
 class Staff(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     user = models.OneToOneField(
@@ -78,14 +76,14 @@ class Staff(MPTTModel, TranslatableModel):
     def title_for_admin(self):
         if self.customer_responsible is not None:
             tester = _(" who is also tester ") if self.is_tester else EMPTY_STRING
-            return '%s : %s%s (%s)' % (
+            return "{} : {}{} ({})".format(
                 self.safe_translation_getter('long_name', any_language=True),
                 self.customer_responsible.long_basket_name,
                 tester,
                 self.customer_responsible.phone1
             )
         else:
-            return '%s' % self.safe_translation_getter('long_name', any_language=True)
+            return "{}".format(self.safe_translation_getter('long_name', any_language=True))
 
     objects = StaffManager()
 

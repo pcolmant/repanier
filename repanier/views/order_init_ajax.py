@@ -75,8 +75,8 @@ def order_init_ajax(request):
         if customer_invoice.delivery is not None:
             basket_message = EMPTY_STRING
         else:
-            basket_message = "%s" % (
-                _('The orders are closed.'),
+            basket_message = "{}".format(
+                _('The orders are closed.')
             )
     customer_invoice.my_order_confirmation(
         permanence=permanence,

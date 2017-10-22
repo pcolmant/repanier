@@ -55,7 +55,7 @@ class Command(BaseCommand):
                 offer_item.save()
 
     def move(self, record=None, to_subdir=None, size="M"):
-        directory = "%s/%s" % (settings.MEDIA_ROOT, to_subdir)
+        directory = "{}/{}".format(settings.MEDIA_ROOT, to_subdir)
         if not os.path.exists(directory):
             os.makedirs(directory, 0o755)
         file_ = record.picture.file_ptr.file

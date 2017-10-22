@@ -48,9 +48,9 @@ class RepanierEmail(EmailMultiAlternatives):
         email_send = False
         if not self.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
             self.reply_to = [self.from_email]
-            self.from_email = "%s <%s>" % (from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
+            self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
         else:
-            self.from_email = "%s <%s>" % (from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
+            self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
         self.body = strip_tags(self.html_content)
 
         if settings.DJANGO_SETTINGS_DEMO:
@@ -72,10 +72,10 @@ class RepanierEmail(EmailMultiAlternatives):
                     print('############################ test mode, without tester...')
             else:
                 if settings.DEBUG:
-                    print("to : %s" % self.to)
-                    print("cc : %s" % self.cc)
-                    print("bcc : %s" % self.bcc)
-                    print("subject : %s" % self.subject)
+                    print("to : {}".format(self.to))
+                    print("cc : {}".format(self.cc))
+                    print("bcc : {}".format(self.bcc))
+                    print("subject : {}".format(self.subject))
                     email_send = True
                 else:
                     # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
@@ -111,7 +111,7 @@ class RepanierEmail(EmailMultiAlternatives):
         self.alternatives = []
         if self.unsubscribe and customer is not None:
             self.attach_alternative(
-                "%s%s" % (self.html_content, customer.get_unsubscribe_mail_footer()),
+                "{}{}".format(self.html_content, customer.get_unsubscribe_mail_footer()),
                 "text/html"
             )
         else:
@@ -135,19 +135,19 @@ class RepanierEmail(EmailMultiAlternatives):
                 try:
                     print("################################## send_email")
                     # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
-                    from_email = "from_email : %s" % self.from_email
-                    reply_to = "reply_to : %s" % self.reply_to
-                    to = "to : %s" % self.to
-                    cc = "cc : %s" % self.cc
-                    bcc = "bcc : %s" % self.bcc
-                    subject = "subject : %s" % self.subject
+                    from_email = "from_email : {}".format(self.from_email)
+                    reply_to = "reply_to : {}".format(self.reply_to)
+                    to = "to : {}".format(self.to)
+                    cc = "cc : {}".format(self.cc)
+                    bcc = "bcc : {}".format(self.bcc)
+                    subject = "subject : {}".format(self.subject)
                     print(from_email)
                     print(reply_to)
                     print(to)
                     print(cc)
                     print(bcc)
                     print(subject)
-                    message = "%s\n%s\n%s\n%s\n%s\n%s" % (from_email, reply_to, to, cc, bcc, subject)
+                    message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to, cc, bcc, subject)
                     self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:
@@ -156,7 +156,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     time.sleep(1)
                     connection = mail.get_connection()
                     connection.open()
-                    mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
+                    mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
                     connection.close()
                 except Exception as error_str:
                     print("################################## send_email error")
@@ -164,7 +164,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     time.sleep(1)
                     connection = mail.get_connection()
                     connection.open()
-                    mail_admins("ERROR", "%s\n%s" % (message, error_str), connection=connection)
+                    mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
                     connection.close()
                 print("##################################")
                 if email_send and customer is not None:

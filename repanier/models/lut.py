@@ -5,7 +5,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from mptt.managers import TreeManager
@@ -32,7 +31,6 @@ class LUT_ProductionModeManager(TreeManager, TranslatableManager):
         return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
-@python_2_unicode_compatible
 class LUT_ProductionMode(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
@@ -69,7 +67,6 @@ class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
         return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
-@python_2_unicode_compatible
 class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
@@ -103,7 +100,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
 
     def __str__(self):
         if self.customer_responsible:
-            return "[%s] %s" % (_("Group"), self.customer_responsible.short_basket_name)
+            return "[{}] {}".format(_("Group"), self.customer_responsible.short_basket_name)
         else:
             return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
@@ -125,7 +122,6 @@ class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
         return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
-@python_2_unicode_compatible
 class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     is_active = models.BooleanField(_("Active"), default=True)
@@ -156,7 +152,6 @@ class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
         return self.queryset_class(self.model, using=self._db).order_by(self.tree_id_attr, self.left_attr)
 
 
-@python_2_unicode_compatible
 class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(

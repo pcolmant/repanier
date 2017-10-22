@@ -12,7 +12,6 @@ from django.db.models import Sum
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -28,7 +27,6 @@ from repanier.picture.fields import AjaxPictureField
 from repanier.tools import update_offer_item
 
 
-@python_2_unicode_compatible
 class Producer(models.Model):
     short_profile_name = models.CharField(
         _("Short name"), max_length=25, null=False, default=EMPTY_STRING,
@@ -117,44 +115,13 @@ class Producer(models.Model):
             changeproductslist_url = urlresolvers.reverse(
                 'admin:repanier_product_changelist',
             )
-            link = '<a href="%s?is_active__exact=1&producer=%s" class="btn addlink">&nbsp;%s</a>' \
-                   % (changeproductslist_url, str(self.id), _("Products"))
+            link = "<a href=\"{}?is_active__exact=1&producer={}\" class=\"btn addlink\">&nbsp;{}</a>".format(
+                changeproductslist_url, str(self.id), _("Products"))
             return link
         return EMPTY_STRING
 
     get_products.short_description = (_("Link to his products"))
     get_products.allow_tags = True
-
-    # def get_assemblies(self):
-    #     # This producer may have contrat's list
-    #     if self.is_active:
-    #         return_link = False
-    #         changeassemblieslist_url = is_into_offer = label = EMPTY_STRING
-    #
-    #         if settings.DJANGO_SETTINGS_CONTRACT:
-    #             label = _("Contracts")
-    #             is_into_offer = EMPTY_STRING
-    #             changeassemblieslist_url = urlresolvers.reverse(
-    #                 'admin:repanier_contract_changelist',
-    #             )
-    #             return_link = True
-    #         else:
-    #             if not settings.DJANGO_SETTINGS_IS_MINIMALIST and self.represent_this_buyinggroup:
-    #                 label = _("Boxes")
-    #                 is_into_offer = "&is_into_offer__exact=1"
-    #                 changeassemblieslist_url = urlresolvers.reverse(
-    #                     'admin:repanier_box_changelist',
-    #                 )
-    #                 return_link = True
-    #
-    #         if return_link:
-    #             link = '<a href="%s?is_active__exact=1%s&producer=%s" class="btn addlink">&nbsp;%s</a>' \
-    #                    % (changeassemblieslist_url, is_into_offer, str(self.id), label)
-    #             return link
-    #     return EMPTY_STRING
-    #
-    # get_assemblies.short_description = (_("Contracts")) if settings.DJANGO_SETTINGS_IS_MINIMALIST else (_("Assemblies"))
-    # get_assemblies.allow_tags = True
 
     def get_admin_date_balance(self):
         if self.id is not None:
@@ -236,7 +203,6 @@ class Producer(models.Model):
             payment_needed = result_set["total_selling_with_tax__sum"]
         else:
             payment_needed = DECIMAL_ZERO
-        # print("payment_needed (1) %f" % payment_needed)
         result_set = OfferItem.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
@@ -248,9 +214,7 @@ class Producer(models.Model):
         )
         if result_set["total_purchase_with_tax__sum"] is not None:
             payment_needed += result_set["total_purchase_with_tax__sum"]
-        # print("payment_needed (2) %f" % payment_needed)
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
-        # print("calculated_invoiced_balance %f" % calculated_invoiced_balance)
         if self.manage_replenishment:
             for offer_item in OfferItem.objects.filter(
                     is_active=True,
@@ -284,28 +248,28 @@ class Producer(models.Model):
             if balance.amount < 0:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:#298A08">%s</span>' % (-balance,)) + '</a>'
+                           "<span style=\"color:#298A08\">{}</span>".format(-balance)) + '</a>'
             elif balance.amount == 0:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:#32CD32">%s</span>' % (-balance,)) + '</a>'
+                           "<span style=\"color:#32CD32\">{}</span>".format(-balance)) + '</a>'
             elif balance.amount > 30:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:red">%s</span>' % (-balance,)) + '</a>'
+                           "<span style=\"color:red\">{}</span>".format(-balance)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:#696969">%s</span>' % (-balance,)) + '</a>'
+                           "<span style=\"color:#696969\">{}</span>".format(-balance)) + '</a>'
         else:
             if balance.amount < 0:
-                return '<span style="color:#298A08">%s</span>' % (-balance,)
+                return "<span style=\"color:#298A08\">{}</span>".format(-balance)
             elif balance.amount == 0:
-                return '<span style="color:#32CD32">%s</span>' % (-balance,)
+                return "<span style=\"color:#32CD32\">{}</span>".format(-balance)
             elif balance.amount > 30:
-                return '<span style="color:red">%s</span>' % (-balance,)
+                return "<span style=\"color:red\">{}</span>".format(-balance)
             else:
-                return '<span style="color:#696969">%s</span>' % (-balance,)
+                return "<span style=\"color:#696969\">{}</span>".format(-balance)
 
     get_balance.short_description = _("Balance")
     get_balance.allow_tags = True
@@ -317,19 +281,19 @@ class Producer(models.Model):
         ).order_by("-id").first()
         if producer_last_invoice is not None:
             if producer_last_invoice.total_price_with_tax < DECIMAL_ZERO:
-                return '<span style="color:#298A08">%s</span>' % (
+                return "<span style=\"color:#298A08\">{}</span>".format(
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax == DECIMAL_ZERO:
-                return '<span style="color:#32CD32">%s</span>' % (
+                return "<span style=\"color:#32CD32\">{}</span>".format(
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             elif producer_last_invoice.total_price_with_tax > 30:
-                return '<span style="color:red">%s</span>' % (
+                return "<span style=\"color:red\">{}</span>".format(
                     number_format(producer_last_invoice.total_price_with_tax, 2))
             else:
-                return '<span style="color:#696969">%s</span>' % (
+                return "<span style=\"color:#696969\">{}</span>".format(
                     number_format(producer_last_invoice.total_price_with_tax, 2))
         else:
-            return '<span style="color:#32CD32">%s</span>' % (number_format(0, 2))
+            return "<span style=\"color:#32CD32\">{}</span>".format(number_format(0, 2))
 
     get_last_invoice.short_description = _("Last invoice")
     get_last_invoice.allow_tags = True
@@ -366,7 +330,7 @@ class Producer(models.Model):
 
     def __str__(self):
         if self.producer_price_are_wo_vat:
-            return "%s %s" % (self.short_profile_name, _("wo tax"))
+            return "{} {}".format(self.short_profile_name, _("wo tax"))
         return self.short_profile_name
 
     class Meta:

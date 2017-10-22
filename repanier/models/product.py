@@ -9,7 +9,6 @@ from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -22,7 +21,6 @@ from repanier.models.item import Item
 from repanier.tools import clean_offer_item
 
 
-@python_2_unicode_compatible
 class Product(Item):
     long_name = TranslatedField()
     offer_description = TranslatedField()
@@ -62,7 +60,6 @@ class Product(Item):
             permanences_dates=EMPTY_STRING
         ).order_by('?')
         if not offer_item_qs.exists():
-            # print("Product.create : %s" % self)
             OfferItemWoReceiver.objects.create(
                 permanence_id=permanence.id,
                 product_id=self.id,
@@ -71,7 +68,6 @@ class Product(Item):
             )
             clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
         else:
-            # print("Product.get : %s" % self)
             offer_item = offer_item_qs.first()
             offer_item.is_active = True
             offer_item.contract = None
@@ -87,7 +83,6 @@ class Product(Item):
                     permanences_dates=EMPTY_STRING
                 ).order_by('?')
                 if not box_offer_item_qs.exists():
-                    # print("Product.create box content : %s" % box_content)
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
                         product_id=box_content.product_id,
@@ -97,7 +92,6 @@ class Product(Item):
                     )
                     clean_offer_item(permanence, box_offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                 else:
-                    # print("Product.get box content : %s" % box_content)
                     box_offer_item = box_offer_item_qs.first()
                     box_offer_item.is_active = True
                     box_offer_item.is_box_content = True
@@ -108,7 +102,8 @@ class Product(Item):
         return offer_item
 
     def get_is_into_offer(self, contract=None):
-        return mark_safe('<div id="is_into_offer_%d">{}</div>'.format(
+        return mark_safe("<div id=\"is_into_offer_{}\">{}</div>".format(
+            self.id,
             self.get_is_into_offer_html(contract)
         ))
 
@@ -248,7 +243,7 @@ class Product(Item):
             PRODUCT_ID=self.id
         )
         # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
-        link = '<div id="is_into_offer_%d"><a href="#" onclick="%s;return false;"%s>%s</a>%s%s</div>' % (
+        link = "<div id=\"is_into_offer_{}\"><a href=\"#\" onclick=\"{};return false;\"{}>{}</a>{}{}</div>".format(
             self.id,
             javascript,
             css_class,

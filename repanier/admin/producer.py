@@ -85,7 +85,7 @@ class ProducerResource(resources.ModelResource):
             producer_qs = producer_qs.exclude(id=instance.id)
         if producer_qs.exists():
             raise ValueError(
-                _("The short_basket_name %s is already used by another producer.") % instance.short_profile_name)
+                _("The short_basket_name {} is already used by another producer.").format(instance.short_profile_name))
 
     class Meta:
         model = Producer
@@ -117,22 +117,22 @@ def create__producer_action(year):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                "%s %s" % (_('Payment'), year),
+                "{} {}".format(_('Payment'), year),
                 repanier.apps.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
         return
 
-    name = "export_producer_%d" % (year,)
-    return (name, (action, name, _("Export purchases of %s") % (year,)))
+    name = "export_producer_{}".format(year)
+    return name, (action, name, _("Export purchases of {}").format(year))
 
 
 class ProducerDataForm(forms.ModelForm):
     from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
     permanences = forms.ModelMultipleChoiceField(
         Permanence.objects.filter(status=PERMANENCE_PLANNED),
-        label="%s" % REPANIER_SETTINGS_PERMANENCES_NAME,
+        label="{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
         widget=admin.widgets.FilteredSelectMultiple(repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False),
         required=False
     )

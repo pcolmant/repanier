@@ -27,11 +27,11 @@ def admin_duplicate(queryset):
     user_message = _("The box is duplicated.")
     user_message_level = messages.INFO
     box_count = 0
-    long_name_postfix = "%s" % _(" (COPY)")
+    long_name_postfix = "{}".format(_(" (COPY)"))
     max_length = Product_Translation._meta.get_field('long_name').max_length - len(long_name_postfix)
     for box in queryset:
         box_count += 1
-        new_long_name = "%s%s" % (cap(box.long_name, max_length), _(" (COPY)"))
+        new_long_name = "{}{}".format(cap(box.long_name, max_length), _(" (COPY)"))
         old_product_production_mode = box.production_mode.all()
         previous_box_id = box.id
         box.id = None

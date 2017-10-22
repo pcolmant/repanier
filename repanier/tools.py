@@ -4,18 +4,10 @@ from __future__ import unicode_literals
 import calendar
 import datetime
 import json
-
 from django.utils.datetime_safe import new_datetime, date
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
-
+from urllib.request import urlopen
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
@@ -33,35 +25,18 @@ from repanier.email.email import RepanierEmail
 from repanier import apps
 
 
-def ignore_exception(exception=Exception, default_val=0):
-    """Returns a decorator that ignores an exception raised by the function it
-    decorates.
-
-    Using it as a decorator:
-
-    @ignore_exception(ValueError)
-    def my_function():
-    pass
-
-    Using it as a function wrapper:
-
-    int_try_parse = ignore_exception(ValueError)(int)
-    """
-
-    def decorator(function):
-        def wrapper(*args, **kwargs):
-            try:
-                return function(*args, **kwargs)
-            except exception:
-                return default_val
-
-        return wrapper
-
-    return decorator
+def sboolean(str_val, default_val=False):
+    try:
+        return bool(str_val)
+    except:
+        return default_val
 
 
-sint = ignore_exception(ValueError)(int)
-sboolean = ignore_exception(ValueError)(bool)
+def sint(str_val, default_val=0):
+    try:
+        return int(str_val)
+    except:
+        return default_val
 
 
 def next_row(query_iterator):
@@ -88,8 +63,8 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
         if len(to) == 0:
             to = host_user
         # Avoid : string payload expected: <class 'django.utils.functional.__proxy__'>
-        subject = "%s" % _("Test from Repanier")
-        body = "%s" % _("The mail is correctly configured on your Repanier website")
+        subject = "{}".format(_("Test from Repanier"))
+        body = "{}".format(_("The mail is correctly configured on your Repanier website"))
         email = RepanierEmail(
             subject=subject,
             html_content=body,
@@ -114,7 +89,7 @@ def send_email_to_who(is_email_send, board=False):
     if not is_email_send:
         if board:
             if REPANIER_SETTINGS_TEST_MODE:
-                return True, _("This email will be sent to the following tester(s) : %s.") % ', '.join(emails_of_testers())
+                return True, _("This email will be sent to the following tester(s) : {}.").format(", ".join(emails_of_testers()))
             else:
                 if settings.DEBUG:
                     return False, _("No email will be sent.")
@@ -124,7 +99,7 @@ def send_email_to_who(is_email_send, board=False):
             return False, _("No email will be sent.")
     else:
         if REPANIER_SETTINGS_TEST_MODE:
-            return True, _("This email will be sent to the following tester(s) : %s.") % ', '.join(emails_of_testers())
+            return True, _("This email will be sent to the following tester(s) : {}.").format(", ".join(emails_of_testers()))
         else:
             if settings.DEBUG:
                 return False, _("No email will be sent.")
@@ -180,11 +155,11 @@ def get_signature(is_reply_to_order_email=False, is_reply_to_invoice_email=False
             r = staff.customer_responsible
             if r:
                 if r.long_basket_name:
-                    signature = "%s - %s" % (r.long_basket_name, r.phone1)
+                    signature = "{} - {}".format(r.long_basket_name, r.phone1)
                 else:
-                    signature = "%s - %s" % (r.short_basket_name, r.phone1)
+                    signature = "{} - {}".format(r.short_basket_name, r.phone1)
                 if r.phone2 and len(r.phone2.strip()) > 0:
-                    signature += " / %s" % (r.phone2,)
+                    signature += " / {}".format(r.phone2)
         elif staff.is_coordinator:
             cc_email_staff.append(staff.user.email)
 
@@ -207,14 +182,14 @@ def get_board_composition(permanence_id):
         c = permanenceboard.customer
         if c is not None:
             if c.phone2 is not None:
-                c_part = "<b>%s</b>, %s, %s" % (c.long_basket_name, c.phone1, c.phone2)
+                c_part = "<b>{}</b>, {}, {}".format(c.long_basket_name, c.phone1, c.phone2)
             else:
-                c_part = "<b>%s</b>, %s" % (c.long_basket_name, c.phone1)
-            member = "<b>%s</b> : %s, %s<br/>" % (r.short_name, c_part, c.user.email)
+                c_part = "<b>{}</b>, {}".format(c.long_basket_name, c.phone1)
+            member = "<b>{}</b> : {}, {}<br/>".format(r.short_name, c_part, c.user.email)
             board_composition += member
-            board_composition_and_description += "%s%s<br/>" % (member, r.description)
+            board_composition_and_description += "{}{}<br/>".format(member, r.description)
 
-    return board_composition, board_composition_and_description
+    return mark_safe(board_composition), mark_safe(board_composition_and_description)
 
 
 LENGTH_BY_PREFIX = [
@@ -238,7 +213,7 @@ def codepoint_length(first_byte):
 
 
 def cap_to_bytes_length(unicode_text, byte_limit):
-    utf8_bytes = unicode_text.encode("utf8")
+    utf8_bytes = unicode_text
     cut_index = 0
     while cut_index < len(utf8_bytes):
         step = codepoint_length(ord(utf8_bytes[cut_index]))
@@ -303,7 +278,7 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC):
                       PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
         unit = _("Piece(s) :")
     elif order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
-        unit = _("%s or kg :") % (apps.REPANIER_SETTINGS_CURRENCY_DISPLAY.decode('utf-8'),)
+        unit = _("{} or kg :").format(apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
     elif order_unit == PRODUCT_ORDER_UNIT_LT:
         unit = _("L :")
     else:
@@ -350,9 +325,9 @@ def payment_message(customer, permanence):
         }
     if customer.balance.amount != DECIMAL_ZERO:
         if customer.balance.amount < DECIMAL_ZERO:
-            balance = '<font color="#bd0926">%s</font>' % customer.balance
+            balance = "<font color=\"#bd0926\">{}</font>".format(customer.balance)
         else:
-            balance = '%s' % customer.balance
+            balance = "{}".format(customer.balance)
         customer_last_balance = \
             _('The balance of your account as of %(date)s is %(balance)s.') % {
                 'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
@@ -363,7 +338,7 @@ def payment_message(customer, permanence):
 
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
         customer_on_hold_movement = EMPTY_STRING
-        customer_payment_needed = '<font color="#51a351">%s</font>' % (
+        customer_payment_needed = '<font color="#51a351">{}</font>'.format(
             _('Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
                 'name': customer_invoice.customer_charged.long_basket_name
             }
@@ -384,11 +359,11 @@ def payment_message(customer, permanence):
         if bank_account_number is not None:
             if payment_needed.amount > DECIMAL_ZERO:
                 if permanence.short_name:
-                    communication = "%s (%s)" % (customer.short_basket_name, permanence.short_name)
+                    communication = "{} ({})".format(customer.short_basket_name, permanence.short_name)
                 else:
                     communication = customer.short_basket_name
                 group_name = apps.REPANIER_SETTINGS_GROUP_NAME
-                customer_payment_needed = '<br/><font color="#bd0926">%s</font>' % (
+                customer_payment_needed = '<br/><font color="#bd0926">{}</font>'.format(
                     _('Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
                         'payment': payment_needed,
                         'name': group_name,
@@ -399,7 +374,7 @@ def payment_message(customer, permanence):
 
             else:
                 if customer.balance.amount != DECIMAL_ZERO:
-                    customer_payment_needed = '<br/><font color="#51a351">%s.</font>' % (_('Your account balance is sufficient'))
+                    customer_payment_needed = '<br/><font color="#51a351">{}.</font>'.format(_('Your account balance is sufficient'))
                 else:
                     customer_payment_needed = EMPTY_STRING
         else:
@@ -410,7 +385,7 @@ def payment_message(customer, permanence):
 
 def display_selected_value(offer_item, quantity_ordered, is_open=True):
     option_dict = {
-        'id': "#offer_item%d" % offer_item.id,
+        'id': "#offer_item{}".format(offer_item.id),
     }
     if offer_item.may_order:
         if quantity_ordered <= DECIMAL_ZERO:
@@ -428,7 +403,7 @@ def display_selected_value(offer_item, quantity_ordered, is_open=True):
                     label = _("Sold out")
             else:
                 label = _("Closed")
-            option_dict["html"] = '<option value="0" selected>%s</option>' % label
+            option_dict["html"] = "<option value=\"0\" selected>{}</option>".format(label)
 
         else:
             unit_price_amount = offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
@@ -438,7 +413,7 @@ def display_selected_value(offer_item, quantity_ordered, is_open=True):
                 unit_price_amount=unit_price_amount,
                 for_order_select=True
             )
-            option_dict["html"] = '<option value="%d" selected>%s</option>' % (quantity_ordered, display)
+            option_dict["html"] = '<option value="{}" selected>{}</option>'.format(quantity_ordered, display)
     else:
         option_dict["html"] = EMPTY_STRING
     return option_dict
@@ -456,9 +431,10 @@ def display_selected_box_value(offer_item, quantity_ordered):
     else:
         qty_display = "---"
     option_dict = {
-        'id'  : "#box_offer_item%d" % offer_item.id,
-        'html': '<select id="box_offer_item%d" name="box_offer_item%d" disabled class="form-control"><option value="0" selected>☑ %s %s</option></select>' % \
-                (offer_item.id, offer_item.id, qty_display, BOX_UNICODE)
+        'id'  : "#box_offer_item{}".format(offer_item.id),
+        'html': "<select id=\"box_offer_item{}\" name=\"box_offer_item{}\" disabled class=\"form-control\"><option value=\"0\" selected>☑ {} {}</option></select>".format(
+                offer_item.id, offer_item.id, qty_display, BOX_UNICODE
+        )
     }
     return option_dict
 
@@ -667,16 +643,12 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
 
 def my_basket(is_order_confirm_send, order_amount, to_json):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-
     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not is_order_confirm_send:
         if order_amount.amount <= DECIMAL_ZERO:
             msg_confirm = EMPTY_STRING
         else:
-            msg_confirm = '<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span>'
-        msg_html = """
-        {order_amount}&nbsp;&nbsp;&nbsp;
-        {msg_confirm}
-            """.format(
+            msg_confirm = "<span class=\"glyphicon glyphicon-exclamation-sign\"></span>&nbsp;<span class=\"glyphicon glyphicon-floppy-remove\"></span>"
+        msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
             order_amount=order_amount,
             msg_confirm=msg_confirm
         )
@@ -702,10 +674,7 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
 
     option_dict = {'id': "#my_basket", 'html': msg_html}
     to_json.append(option_dict)
-    msg_html = """
-    {order_amount}&nbsp;&nbsp;&nbsp;
-    {msg_confirm}
-        """.format(
+    msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
             order_amount=order_amount,
             msg_confirm=msg_confirm
         )
@@ -897,7 +866,7 @@ def producer_web_services_activated(reference_site=None):
     if reference_site:
         try:
             web_services = urlopen(
-                '%s%s' % (reference_site, urlresolvers.reverse('version_rest')),
+                "{}{}".format(reference_site, urlresolvers.reverse('version_rest')),
                 timeout=0.5
             )
             version_rest = json.load(web_services)
@@ -924,30 +893,30 @@ def calc_basket_message(customer, permanence, status):
     if status == PERMANENCE_OPENED:
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             if permanence.with_delivery_point:
-                you_can_change = "<br/>%s" % (
-                    _("You can increase the order quantities as long as the orders are open for your delivery point."),
+                you_can_change = "<br/>{}".format(
+                    _("You can increase the order quantities as long as the orders are open for your delivery point.")
                 )
             else:
-                you_can_change = "<br/>%s" % (
-                    _("You can increase the order quantities as long as the orders are open."),
+                you_can_change = "<br/>{}".format(
+                    _("You can increase the order quantities as long as the orders are open.")
                 )
         else:
             if permanence.with_delivery_point:
-                you_can_change = "<br/>%s" % (
-                    _("You can change the order quantities as long as the orders are open for your delivery point."),
+                you_can_change = "<br/>{}".format(
+                    _("You can change the order quantities as long as the orders are open for your delivery point.")
                 )
             else:
-                you_can_change = "<br/>%s" % (
-                    _("You can change the order quantities as long as the orders are open."),
+                you_can_change = "<br/>{}".format(
+                    _("You can change the order quantities as long as the orders are open.")
                 )
     else:
         if permanence.with_delivery_point:
-            you_can_change = "<br/>%s" % (
-                _('The orders are closed for your delivery point.'),
+            you_can_change = "<br/>{}".format(
+                _('The orders are closed for your delivery point.')
             )
         else:
-            you_can_change = "<br/>%s" % (
-                _('The orders are closed.'),
+            you_can_change = "<br/>{}".format(
+                _('The orders are closed.')
             )
     invoice_msg = EMPTY_STRING
     payment_msg = EMPTY_STRING
@@ -955,15 +924,15 @@ def calc_basket_message(customer, permanence, status):
         customer, permanence)
     if apps.REPANIER_SETTINGS_INVOICE:
         if customer_last_balance:
-            invoice_msg = "<br/>%s %s" % (
+            invoice_msg = "<br/>{} {}".format(
                 customer_last_balance,
-                customer_on_hold_movement,
+                customer_on_hold_movement
             )
     if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-        payment_msg = "<br/>%s" % (
-            customer_payment_needed,
+        payment_msg = "<br/>{}".format(
+            customer_payment_needed
         )
-    basket_message = "%s%s%s%s" % (
+    basket_message = "{}{}{}{}".format(
         customer_order_amount,
         invoice_msg,
         payment_msg,

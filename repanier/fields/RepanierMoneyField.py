@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models.expressions import BaseExpression, Expression
 from django.forms import DecimalField, NumberInput
 from django.forms.utils import flatatt
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils.encoding import force_text
 from django.utils.html import format_html
 
 import repanier.apps
@@ -29,11 +29,10 @@ PYTHON2 = sys.version_info[0] == 2
 #
 #     def __str__(self):
 #         # Note: at least w/ Python 2.x, use __str__, not __unicode__.
-#         return "Cannot compare instances of RepanierMoney and %s" \
-#                % self.other.__class__.__name__
+#         return "Cannot compare instances of RepanierMoney and {}".format(
+#                % self.other.__class__.__name__)
 
 
-@python_2_unicode_compatible
 class RepanierMoney(object):
     def __init__(self, amount=DECIMAL_ZERO, decimal_places=2):
         if not isinstance(amount, Decimal):
@@ -46,7 +45,7 @@ class RepanierMoney(object):
         return float(self.amount)
 
     def __repr__(self):
-        return "%s %d" % (self.amount, self.decimal_places)
+        return "{} {}".format(self.amount, self.decimal_places)
 
     def __pos__(self):
         return RepanierMoney(amount=self.amount, decimal_places=self.decimal_places)
@@ -142,7 +141,7 @@ class RepanierMoney(object):
 
         # Suffix currency
         if repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            build(" %s" % repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
+            build(" {}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
 
         # Decimals
         for i in range(self.decimal_places):
@@ -170,8 +169,8 @@ class RepanierMoney(object):
 
         # Prefix currency
         if not repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            build("%s " % repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
-        return u''.join(reversed(result))
+            build("{}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
+        return "".join(reversed(result))
 
     def as_tuple(self):
         """Represents the number as a triple tuple.

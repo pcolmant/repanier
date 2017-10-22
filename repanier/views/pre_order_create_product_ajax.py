@@ -114,7 +114,7 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
             field = form.fields["offer_description"]
             field.initial = EMPTY_STRING
             field = form.fields["picture"]
-            field.widget.upload_to = "%s%s%d" % ("product", os_sep, producer.id)
+            field.widget.upload_to = "{}{}{}".format("product", os_sep, producer.id)
         return render(
             request,
             "repanier/pre_order_create_product_form.html",

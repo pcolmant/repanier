@@ -262,10 +262,10 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     user_message_level = messages.INFO
                     user_message = _('Nothing to confirm')
 
-            redirect_to = "%s?permanence=%s&customer=%s" % (
+            redirect_to = "{}?permanence={}&customer={}".format(
                 urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
         elif permanence_id is not None:
-            redirect_to = "%s?permanence=%s" % (
+            redirect_to = "{}?permanence={}".format(
                 urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
         else:
             redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
@@ -296,10 +296,10 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     user_message_level = messages.INFO
                     user_message = _('Nothing to unconfirm')
 
-            redirect_to = "%s?permanence=%s&customer=%s" % (
+            redirect_to = "{}?permanence={}&customer={}".format(
                 urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
         elif permanence_id is not None:
-            redirect_to = "%s?permanence=%s" % (
+            redirect_to = "{}?permanence={}".format(
                 urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
         else:
             redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
@@ -458,7 +458,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             qs = qs.exclude(
                                 id__in=purchased_product
                             )
-                        product_field.choices = [(o.id, "%s" % o) for o in qs.distinct()]
+                        product_field.choices = [(o.id, "{}".format(o)) for o in qs.distinct()]
                         if len(product_field.choices) == 0:
                             product_field.choices = [
                                 ('-2', _("No more product to add. Please update a product of previous screen"))]

@@ -38,19 +38,19 @@ def send_invoice(permanence_id):
                     invoice_producer_mail = config.safe_translation_getter(
                         'invoice_producer_mail', any_language=True, default=EMPTY_STRING
                     )
-                    invoice_producer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+                    invoice_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                     template = Template(invoice_producer_mail)
                     context = TemplateContext({
                         'name'             : long_profile_name,
                         'long_profile_name': long_profile_name,
                         'permanence_link'  : mark_safe(
-                            '<a href="https://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0],
+                            "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
                                                               reverse('producer_invoice_uuid_view',
                                                                       args=(0, producer.uuid)),
                                                               permanence)),
                         'signature'        : mark_safe(
-                            '%s<br/>%s<br/>%s' % (
+                            "{}<br/>{}<br/>{}".format(
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
                     html_content = template.render(context)
@@ -93,7 +93,7 @@ def send_invoice(permanence_id):
                     invoice_customer_mail = config.safe_translation_getter(
                         'invoice_customer_mail', any_language=True, default=EMPTY_STRING
                     )
-                    invoice_customer_mail_subject = "%s - %s" % (REPANIER_SETTINGS_GROUP_NAME, permanence)
+                    invoice_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
                     customer_last_balance, _, customer_payment_needed, customer_order_amount = payment_message(
                         customer, permanence)
                     template = Template(invoice_customer_mail)
@@ -103,10 +103,10 @@ def send_invoice(permanence_id):
                         'basket_name'        : customer.short_basket_name,
                         'short_basket_name'  : customer.short_basket_name,
                         'permanence_link'    : mark_safe(
-                            '<a href="https://%s%s">%s</a>' % (settings.ALLOWED_HOSTS[0],
+                            "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
                                                               reverse('order_view', args=(permanence.id,)),
                                                               permanence)),
-                        'last_balance_link'  : mark_safe('<a href="https://%s%s">%s</a>' % (
+                        'last_balance_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                             settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)),
                             customer_last_balance)),
                         'last_balance'       : mark_safe(customer_last_balance),
@@ -114,7 +114,7 @@ def send_invoice(permanence_id):
                         'payment_needed'     : mark_safe(customer_payment_needed),
                         'invoice_description': mark_safe(invoice_description),
                         'signature'          : mark_safe(
-                            '%s<br/>%s<br/>%s' % (
+                            "{}<br/>{}<br/>{}".format(
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
                     html_content = template.render(context)

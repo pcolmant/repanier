@@ -29,7 +29,7 @@ class OrderView(ListView):
         self.user = None
         self.first_page = False
         self.producer_id = 'all'
-        self.departementforcustomer_id = 'all'
+        self.department_id = 'all'
         self.box_id = 'all'
         self.is_box = False
         self.communication = 0
@@ -39,17 +39,32 @@ class OrderView(ListView):
         self.is_anonymous = True
         self.may_order = False
         self.permanence = None
+        self.all_dates = []
+        self.date_id = "all"
+        self.date_selected = None
 
     def get(self, request, *args, **kwargs):
         self.first_page = kwargs.get('page', True)
         permanence_id = sint(kwargs.get('permanence_id', 0))
         self.permanence = Permanence.objects.filter(id=permanence_id).only(
-            "id", "status", "permanence_date", "with_delivery_point"
+            "id", "status", "permanence_date", "with_delivery_point", "contract"
         ).order_by('?').first()
         permanence_ok_or_404(self.permanence)
         self.user = request.user
         self.is_basket = self.request.GET.get('is_basket', False)
         self.is_like = self.request.GET.get('is_like', False)
+        if self.permanence.contract is not None:
+            self.all_dates = self.permanence.contract.all_dates
+            len_all_dates = len(self.all_dates)
+            if len_all_dates < 2:
+                self.date_id = 'all'
+            else:
+                date_id = sint(self.request.GET.get('date'), -1)
+                if date_id < 0 or date_id >= len_all_dates:
+                    self.date_id = 'all'
+                else:
+                    self.date_id = date_id
+                    self.date_selected = self.all_dates[date_id]
         customer_may_order = Customer.objects.filter(user_id=self.user.id, is_active=True).order_by('?').exists()
         if self.user.is_anonymous or not customer_may_order:
             self.is_anonymous = True
@@ -63,20 +78,18 @@ class OrderView(ListView):
             self.producer_id = self.request.GET.get('producer', 'all')
             if self.producer_id != 'all':
                 self.producer_id = sint(self.producer_id)
-            self.departementforcustomer_id = self.request.GET.get('departementforcustomer', 'all')
-            if self.departementforcustomer_id != 'all':
-                self.departementforcustomer_id = sint(self.departementforcustomer_id)
+            self.department_id = self.request.GET.get('department', 'all')
+            if self.department_id != 'all':
+                self.department_id = sint(self.department_id)
             self.box_id = self.request.GET.get('box', 'all')
             if self.box_id != 'all':
                 self.box_id = sint(self.box_id)
                 self.is_box = True
                 # Do not display "all department" as selected
-                self.departementforcustomer_id = None
+                self.department_id = None
             self.communication = False
         else:
-
-            if self.producer_id == 'all' and self.departementforcustomer_id == 'all' \
-                    and not self.is_basket and 'page' not in request.GET:
+            if not self.is_basket and 'page' not in request.GET:
                 # This to let display a communication into a popup when the user is on the first order screen
                 self.communication = True
             else:
@@ -91,7 +104,9 @@ class OrderView(ListView):
         context['first_page'] = self.first_page
         context['permanence'] = self.permanence
         context['permanence_id'] = self.permanence.id
-
+        context["all_dates"] = self.all_dates
+        context["date_id"] = self.date_id
+        context["date_Selected"] = self.date_selected
         if self.first_page:
             if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                 producer_set = Producer.objects.filter(permanence=self.permanence.id).only("id", "short_profile_name")
@@ -99,21 +114,21 @@ class OrderView(ListView):
                 producer_set = None
             context['producer_set'] = producer_set
             if self.producer_id == 'all':
-                departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
+                department_set = LUT_DepartmentForCustomer.objects.filter(
                     offeritem__permanence_id=self.permanence.id,
                     offeritem__is_active=True,
                     offeritem__is_box=False) \
                     .order_by("tree_id", "lft") \
                     .distinct("id", "tree_id", "lft")
             else:
-                departementforcustomer_set = LUT_DepartmentForCustomer.objects.filter(
+                department_set = LUT_DepartmentForCustomer.objects.filter(
                     offeritem__producer_id=self.producer_id,
                     offeritem__permanence_id=self.permanence.id,
                     offeritem__is_active=True,
                     offeritem__is_box=False) \
                     .order_by("tree_id", "lft") \
                     .distinct("id", "tree_id", "lft")
-            context['departementforcustomer_set'] = departementforcustomer_set
+            context['department_set'] = department_set
             context['box_set'] = OfferItem.objects.filter(
                 permanence_id=self.permanence.id,
                 is_box=True,
@@ -139,7 +154,7 @@ class OrderView(ListView):
         # use of str() to avoid "12 345" when rendering the template
         context['producer_id'] = str(self.producer_id)
         # use of str() to avoid "12 345" when rendering the template
-        context['departementforcustomer_id'] = str(self.departementforcustomer_id)
+        context['department_id'] = str(self.department_id)
 
         context['box_id'] = str(self.box_id)
         context['is_box'] = "yes" if self.is_box else EMPTY_STRING
@@ -210,11 +225,13 @@ class OrderView(ListView):
                         translations__language_code=translation.get_language()
                     )
                 )
+                if isinstance(self.date_id, int):
+                    qs = qs.filter(permanences_dates__contains=self.all_dates[self.date_id].strftime("%Y-%m-%d"))
                 if self.producer_id != 'all':
                     qs = qs.filter(producer_id=self.producer_id)
-                if self.departementforcustomer_id != 'all':
+                if self.department_id != 'all':
                     department = LUT_DepartmentForCustomer.objects.filter(
-                        id=self.departementforcustomer_id
+                        id=self.department_id
                     ).order_by('?').only("lft", "rght", "tree_id").first()
                     if department is not None:
                         tmp_qs = qs.filter(department_for_customer__lft__gte=department.lft,
@@ -224,8 +241,8 @@ class OrderView(ListView):
                             # Restrict to this department only if no product exists in it
                             qs = tmp_qs
                         else:
-                            # otherwise, act like self.departementforcustomer_id == 'all'
-                            self.departementforcustomer_id = 'all'
+                            # otherwise, act like self.department_id == 'all'
+                            self.department_id = 'all'
             if self.q:
                 qs = qs.filter(
                     translations__long_name__icontains=self.q,

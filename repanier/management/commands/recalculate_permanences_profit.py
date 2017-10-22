@@ -13,7 +13,7 @@ class Command(BaseCommand):
             # id__in=[59, 58],
                 status__gte=PERMANENCE_CLOSED
         ).order_by('?'):
-            print ("%s %s" % (permanence.permanence_date, permanence.get_status_display()))
+            print ("{} {}".format(permanence.permanence_date, permanence.get_status_display()))
             # recalculate_order_amount(
             #     permanence_id=permanence.id,
             #     re_init=True

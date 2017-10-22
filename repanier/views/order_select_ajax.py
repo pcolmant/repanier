@@ -156,7 +156,7 @@ def order_select_ajax(request):
             to_json.append(option_dict)
         else:
             closed = _("Closed")
-            option_dict = {'value': '0', 'selected': 'selected', 'label': '%s' % closed}
+            option_dict = {'value': '0', 'selected': 'selected', 'label': "{}".format(closed)}
             to_json.append(option_dict)
 
     return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")

@@ -135,11 +135,11 @@ class TwoMoneysWidget(MoneysWidget):
 class TranslatedForeignKeyWidget(ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if value:
-            target = self.model.objects.filter(**{"translations__%s" % self.field: value}).order_by('?').first()
+            target = self.model.objects.filter(**{"translations__{}".format(self.field): value}).order_by('?').first()
             if target is not None:
                 return target
             else:
-                target = self.model.objects.create(**{"%s" % self.field: value})
+                target = self.model.objects.create(**{"{}".format(self.field): value})
                 return target
         else:
             return
@@ -148,8 +148,8 @@ class TranslatedForeignKeyWidget(ForeignKeyWidget):
 class ProducerNameWidget(ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if value:
-            value = ("%s" % value).strip()
-            target = self.model.objects.filter(**{"%s" % self.field: value}).order_by('?').first()
+            value = ("{}".format(value)).strip()
+            target = self.model.objects.filter(**{"{}".format(self.field): value}).order_by('?').first()
             if target is None:
                 target = self.model.objects.filter(**{"bank_account": value}).order_by('?').first()
             return target
@@ -160,8 +160,8 @@ class ProducerNameWidget(ForeignKeyWidget):
 class CustomerNameWidget(ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if value:
-            value = ("%s" % value).strip()
-            target = self.model.objects.filter(**{"%s" % self.field: value}).order_by('?').first()
+            value = ("{}".format(value)).strip()
+            target = self.model.objects.filter(**{"{}".format(self.field): value}).order_by('?').first()
             if target is None:
                 target = self.model.objects.filter(**{"bank_account1": value}).order_by('?').first()
                 if target is None:
@@ -179,9 +179,9 @@ class TranslatedManyToManyWidget(ManyToManyWidget):
         if value:
             array_values = value.split(self.separator)
             for v in array_values:
-                add_this = self.model.objects.filter(**{"translations__%s" % self.field: v}).order_by('?').first()
+                add_this = self.model.objects.filter(**{"translations__{}".format(self.field): v}).order_by('?').first()
                 if add_this is None:
-                    add_this = self.model.objects.create(**{"%s" % self.field: v})
+                    add_this = self.model.objects.create(**{"{}".format(self.field): v})
                 result.append(add_this)
         return result
 
@@ -211,7 +211,7 @@ class ChoiceWidget(CharWidget):
     def render(self, value, obj=None):
         if value is None:
             return EMPTY_STRING
-        return "%s" % self.lut_dict[value] if value else None
+        return "{}".format(self.lut_dict[value] if value else None)
 
 
 class OneToOneWidget(ForeignKeyWidget):

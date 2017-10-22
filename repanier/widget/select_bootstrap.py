@@ -53,7 +53,7 @@ class SelectBootstrapWidget(forms.Select):
             self.selected_choice = option_label
         else:
             selected_html = EMPTY_STRING
-        return '<li><a href="javascript:%s_select(\'%s\', \'%s\')" data-value="%s"%s>%s</a></li>' % (
+        return "<li><a href=\"javascript:{}_select('{}', '{}')\" data-value=\"{}\"{}>{}</a></li>".format(
             name, option_value, option_label,
             escape(option_value), selected_html,
             conditional_escape(force_text(option_label)))
@@ -64,4 +64,4 @@ class SelectBootstrapWidget(forms.Select):
         output = []
         for option_value, option_label in chain(self.choices, choices):
             output.append(self.render_option2(selected_choices, option_value, option_label, name))
-        return u'\n'.join(output)
+        return "\n".join(output)

@@ -15,10 +15,10 @@ from repanier.tools import next_row
 def export_customer_prices(producer_qs, wb=None, producer_prices=True):
     now = timezone.now()
     if producer_prices:
-        wb, ws = new_landscape_a4_sheet(wb, "%s" % _("Producer prices list"),
+        wb, ws = new_landscape_a4_sheet(wb, "{}".format(_("Producer prices list")),
                                         now.strftime(settings.DJANGO_SETTINGS_DATETIME))
     else:
-        wb, ws = new_landscape_a4_sheet(wb, "%s" % _("Customer prices list"),
+        wb, ws = new_landscape_a4_sheet(wb, "{}".format(_("Customer prices list")),
                                         now.strftime(settings.DJANGO_SETTINGS_DATETIME))
     row_num = 0
     products = Product.objects.filter(
@@ -56,7 +56,7 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
 
         for col_num in range(len(row)):
             c = ws.cell(row=row_num, column=col_num)
-            c.value = "%s" % (row[col_num][ROW_VALUE])
+            c.value = "{}".format(row[col_num][ROW_VALUE])
             c.style.number_format.format_code = row[col_num][ROW_FORMAT]
             if row[col_num][ROW_BOX]:
                 c.style.borders.top.border_style = Border.BORDER_THIN

@@ -3,15 +3,12 @@
 <html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
 <head>
 <title>{% block title %}{% endblock %}</title>
-{#<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">#}
-{#<link rel="stylesheet" href="{% static "css/custom.css" %}">#}
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
-{#<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">#}
-{#<link rel="stylesheet" href="{% static "css/custom.css" %}">#}
 {% block extrastyle %}{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
 <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 {% block extrahead %}{% endblock %}
+{% spaceless %}
 <style type="text/css">
 {#  vvvvvvvvv django cms admin style 1.2.6  #}
 label.translatable-field:before {color:red;content:"\2691\a0";}
@@ -110,6 +107,7 @@ div.recurrence-widget {width:100%;}
 }
 
 </style>
+{% endspaceless %}
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
 </head>
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
@@ -133,22 +131,17 @@ div.recurrence-widget {width:100%;}
         <br/><br/>
         {% endif %}
     {% endblock messages %}
-
     <!-- Content -->
     <div id="content" class="{% block coltype %}colM{% endblock %}">
         {% block pretitle %}{% endblock %}
-{#        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}#}
-
         {% block content %}
         {% block object-tools %}{% endblock %}
-
         {{ content }}
         {% endblock %}
         {% block sidebar %}{% endblock %}
         <br class="clear" />
     </div>
     <!-- END Content -->
-
     {% block footer %}<div id="footer"></div>{% endblock %}
 </div>
 <!-- END Container -->

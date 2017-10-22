@@ -13,7 +13,6 @@ from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -27,7 +26,6 @@ from repanier.picture.const import SIZE_S
 from repanier.picture.fields import AjaxPictureField
 
 
-@python_2_unicode_compatible
 class Customer(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
     login_attempt_counter = models.DecimalField(
@@ -180,22 +178,22 @@ class Customer(models.Model):
             if balance.amount >= 30:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:#32CD32">%s</span>' % (balance,)) + '</a>'
+                           "<span style=\"color:#32CD32\">{}</span>".format(balance)) + '</a>'
             elif balance.amount >= -10:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:#696969">%s</span>' % (balance,)) + '</a>'
+                           "<span style=\"color:#696969\">{}</span>".format(balance)) + '</a>'
             else:
                 return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
-                           '<span style="color:red">%s</span>' % (balance,)) + '</a>'
+                           "<span style=\"color:red\">{}</span>".format(balance)) + '</a>'
         else:
             if balance.amount >= 30:
-                return '<span style="color:#32CD32">%s</span>' % (balance,)
+                return "<span style=\"color:#32CD32\">{}</span>".format(balance)
             elif balance.amount >= -10:
-                return '<span style="color:#696969">%s</span>' % (balance,)
+                return "<span style=\"color:#696969\">{}</span>".format(balance)
             else:
-                return '<span style="color:red">%s</span>' % (balance,)
+                return "<span style=\"color:red\">{}</span>".format(balance)
 
     get_balance.short_description = _("Balance")
     get_balance.allow_tags = True
@@ -309,9 +307,9 @@ class Customer(models.Model):
         sent_to = ", ".join(to_email) if to_email is not None else EMPTY_STRING
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             msg_confirmation = _(
-                "Order confirmed. An email containing this order summary has been sent to %s.") % sent_to
+                "Order confirmed. An email containing this order summary has been sent to {}.").format(sent_to)
         else:
-            msg_confirmation = _("An email containing this order summary has been sent to %s.") % sent_to
+            msg_confirmation = _("An email containing this order summary has been sent to {}.").format(sent_to)
         return msg_confirmation
 
     @property
@@ -320,11 +318,11 @@ class Customer(models.Model):
                or (self.about_me is not None and len(self.about_me.strip()) > 1)
 
     def get_unsubscribe_mail_footer(self):
-        return '<br/><br/><hr/><br/><a href="%s">%s</a>' % (self._get_unsubscribe_link(), _("Unsubscribe to emails"))
+        return mark_safe("<br/><br/><hr/><br/><a href=\"{}\">{}</a>".format(self._get_unsubscribe_link(), _("Unsubscribe to emails")))
 
     def _get_unsubscribe_link(self):
         customer_id, token = self.make_token().split(":", 1)
-        return "https://%s%s" % (
+        return "https://{}{}".format(
             settings.ALLOWED_HOSTS[0],
             reverse(
                 'unsubscribe_view',
@@ -337,7 +335,7 @@ class Customer(models.Model):
 
     def check_token(self, token):
         try:
-            key = '%s:%s' % (self.id, token)
+            key = "{}:{}".format(self.id, token)
             TimestampSigner().unsign(key, max_age=60 * 60 * 48)  # Valid for 2 days
         except (BadSignature, SignatureExpired):
             return False
@@ -390,15 +388,9 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = None
     if not customer.is_active:
         customer.may_order = False
-    # if customer.is_group:
-    #     customer.may_order = False
-    #     customer.delivery_point = None
     if customer.price_list_multiplier <= DECIMAL_ZERO:
         customer.price_list_multiplier = DECIMAL_ONE
-    # if customer.delivery_point is not None and customer.delivery_point.customer_responsible is not None:
-        # If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE
-        # customer.price_list_multiplier = DECIMAL_ONE
-    customer.city = ("%s" % customer.city).upper()
+    customer.city = ("{}".format(customer.city).upper())
     customer.login_attempt_counter = DECIMAL_ZERO
     customer.valid_email = None
 

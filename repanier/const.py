@@ -12,7 +12,7 @@ COORDINATION_GROUP = "coordination"
 WEBMASTER_GROUP = "webmaster"
 DEMO_EMAIL = "repanier@no-spam.ws"
 
-EMPTY_STRING = ''
+EMPTY_STRING = ""
 ONE_YEAR = 365
 
 DECIMAL_ZERO = Decimal('0')

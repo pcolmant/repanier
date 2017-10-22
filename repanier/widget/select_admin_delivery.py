@@ -29,11 +29,11 @@ class SelectAdminDeliveryWidget(forms.Select):
         for option_value, option_label in self.choices:
             status = DeliveryBoard.objects.filter(id=option_value).order_by('?').only('status').first().status
             if status in [PERMANENCE_PLANNED, PERMANENCE_OPENED, PERMANENCE_CLOSED]:
-                case_show_hide += 'case "%d": ' % option_value
+                case_show_hide += "case \"{}\": ".format(option_value)
             elif status == PERMANENCE_SEND:
-                case_hide_show += 'case "%d": ' % option_value
+                case_hide_show += "case \"{}\": ".format(option_value)
             else:
-                case_show_show += 'case "%d": ' % option_value
+                case_show_show += "case \"{}\": ".format(option_value)
         output = """
 <select{final_attrs} onchange="{name}_select(this.value)">
     {options}

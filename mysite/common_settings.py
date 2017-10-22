@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_allowed_mail_extension():
-    allowed_mail_extension = "@%s" % DJANGO_SETTINGS_ALLOWED_HOSTS[0]
+    allowed_mail_extension = "@{}".format(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
     cut_index = len(DJANGO_SETTINGS_ALLOWED_HOSTS[0]) - 1
     point_counter = 0
     while cut_index >= 0:
         if DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index] == ".":
             point_counter += 1
             if point_counter == 2:
-                allowed_mail_extension = "@%s" % DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index + 1:]
+                allowed_mail_extension = "@{}".format(DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index + 1:])
                 break
         cut_index -= 1
     if allowed_mail_extension.endswith("local"):
@@ -38,18 +38,18 @@ def get_allowed_mail_extension():
 
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-logger.info("Python path is : %s" % sys.path)
+logger.info("Python path is : {}".format(sys.path))
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 PROJECT_PATH = os.path.split(PROJECT_DIR)[0]
 os.sys.path.insert(0, PROJECT_PATH)
 MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
-MEDIA_URL = "%s%s%s" % (os.sep, "media", os.sep)
+MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
 STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
 
 DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
 
 config = configparser.RawConfigParser(allow_no_value=True)
-conf_file_name = '%s%s%s.ini' % (
+conf_file_name = "{}{}{}.ini".format(
     PROJECT_DIR,
     os.sep,
     DJANGO_SETTINGS_SITE_NAME
@@ -57,10 +57,10 @@ conf_file_name = '%s%s%s.ini' % (
 try:
     # Open the file with the correct encoding
     with codecs.open(conf_file_name, 'r', encoding='utf-8') as f:
+        # TODO : Use parser.read_file() instead of readfp()
         config.readfp(f)
 except IOError:
-    logging.exception("Unable to open %s settings" % (conf_file_name,))
-    print ("Unable to open %s settings" % (conf_file_name,))
+    logging.exception("Unable to open {} settings".format(conf_file_name))
     raise SystemExit(-1)
 
 DJANGO_SETTINGS_ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
@@ -96,8 +96,8 @@ for name in config.options('ALLOWED_HOSTS'):
     if allowed_host.startswith("demo"):
         DJANGO_SETTINGS_DEMO = True
     DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
-logger.info("Settings loaded from %s" % (conf_file_name,))
-logger.info("Allowed hosts: %s" % DJANGO_SETTINGS_ALLOWED_HOSTS)
+logger.info("Settings loaded from {}".format(conf_file_name))
+logger.info("Allowed hosts: {}".format(DJANGO_SETTINGS_ALLOWED_HOSTS))
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
@@ -106,7 +106,7 @@ DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
 # If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
-STATIC_URL = "%s%s%s" % (os.sep, DJANGO_STATIC, os.sep)
+STATIC_URL = "{}{}{}".format(os.sep, DJANGO_STATIC, os.sep)
 
 if DJANGO_SETTINGS_SITE_NAME == 'mysite':
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
@@ -128,7 +128,7 @@ ADMINS = (
         DJANGO_SETTINGS_ADMIN_EMAIL
     ),
 )
-SERVER_EMAIL = "%s%s" % (DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
+SERVER_EMAIL = "{}{}".format(DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
 ######################
 
 DATABASES = {
@@ -159,11 +159,11 @@ DECIMAL_SEPARATOR = ','
 
 SITE_ID = 1
 ALLOWED_HOSTS = DJANGO_SETTINGS_ALLOWED_HOSTS
-ROOT_URLCONF = '%s.urls' % (DJANGO_SETTINGS_SITE_NAME,)
-WSGI_APPLICATION = '%s.wsgi.application' % (DJANGO_SETTINGS_SITE_NAME,)
+ROOT_URLCONF = "{}.urls".format(DJANGO_SETTINGS_SITE_NAME)
+WSGI_APPLICATION = "{}.wsgi.application".format(DJANGO_SETTINGS_SITE_NAME)
 EMAIL_SUBJECT_PREFIX = '[' + DJANGO_SETTINGS_ALLOWED_HOSTS[0] + ']'
 # DEFAULT_FROM_EMAIL Used by PASSWORD RESET
-DEFAULT_FROM_EMAIL = "no-reply%s" % DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION
+DEFAULT_FROM_EMAIL = "no-reply{}".format(DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
 
 USE_X_FORWARDED_HOST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -306,7 +306,7 @@ CKEDITOR_SETTINGS = {
     ],
     'forcePasteAsPlainText': 'true',
     'skin'                 : 'moono',
-    # 'stylesSet' : 'my_styles:%sjs/ckeditor-styles.js' % STATIC_URL,
+    # 'stylesSet' : 'my_styles:{}js/ckeditor-styles.js'.format(STATIC_URL),
     'format_tags'          : 'p;h4;h5;blockquote;mutted;success;info;danger;heart;pushpin',
     'format_blockquote'    : {'element': 'blockquote', 'name': 'Blockquote'},
     'format_heart'         : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
@@ -320,7 +320,7 @@ CKEDITOR_SETTINGS = {
     # format_p = { element: 'p', attributes: { 'class': 'normalPara' } };
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'} };
     # 'contentsCss' : '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
-    'contentsCss'          : '%sbootstrap/css/bootstrap.css' % STATIC_URL,
+    'contentsCss'          : '{}bootstrap/css/bootstrap.css'.format(STATIC_URL),
     # 'extraAllowedContent' : '*(*)',
     # 'extraAllowedContent' : 'iframe[*]',
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
@@ -349,7 +349,7 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'forcePasteAsPlainText': 'true',
     'skin'                 : 'moono',
     'format_tags'          : 'p;h4;h5',
-    'contentsCss'          : '%sbootstrap/css/bootstrap.css' % STATIC_URL,
+    'contentsCss'          : '{}bootstrap/css/bootstrap.css'.format(STATIC_URL),
     'removeFormatTags'     : 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities'        : False,
     'entities'             : False,

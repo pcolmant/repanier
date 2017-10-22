@@ -9,7 +9,6 @@ from django.core.cache import cache
 from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone, translation
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -31,50 +30,6 @@ from repanier.picture.fields import AjaxPictureField
 from repanier.tools import cap
 
 
-# from repanier.models.purchase import Purchase
-
-
-# def verbose_name():
-#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-#         return EMPTY_STRING
-#     return lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME
-#
-#
-# def verbose_name_plural():
-#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-#         return EMPTY_STRING
-#     return lambda: "%s" % repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME
-#
-#
-# def verbose_name_in_preparation():
-#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-#         return EMPTY_STRING
-#     return lambda: _("%(name)s in preparation list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-#
-#
-# def verbose_name_plural_in_preparation():
-#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-#         return EMPTY_STRING
-#     return lambda: _("%(name)s in preparation list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-#
-#
-# def verbose_name_done():
-#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-#         return EMPTY_STRING
-#     return lambda: _("%(name)s done list") % {
-#         'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME} if repanier.apps.REPANIER_SETTINGS_INVOICE else "%s" % _(
-#         "%(name)s archived list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-#
-#
-# def verbose_name_plural_done():
-#     if repanier.apps.DJANGO_IS_MIGRATION_RUNNING:
-#         return EMPTY_STRING
-#     return lambda: _("%(name)s done list") % {
-#         'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME} if repanier.apps.REPANIER_SETTINGS_INVOICE else "%s" % _(
-#         "%(name)s archived list") % {'name': repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME}
-
-
-@python_2_unicode_compatible
 class Permanence(TranslatableModel):
     translations = TranslatedFields(
         short_name=models.CharField(
@@ -184,7 +139,7 @@ class Permanence(TranslatableModel):
                 )
                 for p in self.contract.producers.all():
                     link.append(
-                        '<a href="%s?producer=%d&commitment=%d">&nbsp;%s&nbsp;%s</a>' % (
+                        "<a href=\"{}?producer={}&commitment={}\">&nbsp;{}&nbsp;{}</a>".format(
                             changelist_url, p.id, self.contract.id, LINK_UNICODE, p.short_profile_name.replace(" ", "&nbsp;"))
                     )
             elif len(self.producers.all()) > 0:
@@ -193,15 +148,15 @@ class Permanence(TranslatableModel):
                 )
                 for p in self.producers.all():
                     link.append(
-                        '<a href="%s?producer=%d">&nbsp;%s</a>' % (
+                        "<a href=\"{}?producer={}\">&nbsp;{}</a>".format(
                             changelist_url, p.id, p.short_profile_name.replace(" ", "&nbsp;"))
                     )
             if len(link) > 0:
-                msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
+                msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join(link))
             else:
-                msg_html = '<div class="wrap-text">%s</div>' % _("No offer")
+                msg_html = "<div class=\"wrap-text\">{}</div>".format(_("No offer"))
         elif self.status == PERMANENCE_PRE_OPEN:
-            msg_html = '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name.replace(" ", "&nbsp;") + " (" + p.phone1 + ")" for p in self.producers.all()])
+            msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join([p.short_profile_name.replace(" ", "&nbsp;") + " (" + p.phone1 + ")" for p in self.producers.all()]))
         elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
             close_offeritem_changelist_url = urlresolvers.reverse(
                 'admin:repanier_offeritemclosed_changelist',
@@ -218,21 +173,21 @@ class Permanence(TranslatableModel):
                 ).order_by('?').first()
                 if pi is not None:
                     if pi.status == PERMANENCE_OPENED:
-                        label = ('%s%s (%s) ' % (link_unicode, p.short_profile_name, pi.get_total_price_with_tax())).replace(
+                        label = ("{}{} ({}) ".format(link_unicode, p.short_profile_name, pi.get_total_price_with_tax())).replace(
                             ' ', '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                     else:
-                        label = ('%s%s (%s) %s' % ( link_unicode,
+                        label = ("{}{} ({}) {}".format( link_unicode,
                         p.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)).replace(' ',
                                                                                                     '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                 else:
-                    label = ('%s%s ' % (link_unicode, p.short_profile_name,)).replace(' ', '&nbsp;')
+                    label = ("{}{} ".format(link_unicode, p.short_profile_name,)).replace(' ', '&nbsp;')
                     offeritem_changelist_url = close_offeritem_changelist_url
                 link.append(
-                    '<a href="%s?permanence=%s&producer=%d">%s</a>' % (
+                    "<a href=\"{}?permanence={}&producer={}\">{}</a>".format(
                         offeritem_changelist_url, self.id, p.id, label))
-            msg_html = '<div class="wrap-text">%s</div>' % ", ".join(link)
+            msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join(link))
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             if self.contract and len(self.contract.producers.all()) > 0:
@@ -256,30 +211,30 @@ class Permanence(TranslatableModel):
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
-                    label = '%s%s (%s) %s' % ( link_unicode,
+                    label = "{}{} ({}) {}".format( link_unicode,
                     pi.producer.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)
                     link.append(
-                        '<a href="%s?permanence=%d&producer=%d">&nbsp;%s</a>' % (
+                        "<a href=\"{}?permanence={}&producer={}\">&nbsp;{}</a>".format(
                             changelist_url, self.id, pi.producer_id, label.replace(' ', '&nbsp;')
                         ))
                 else:
                     if pi.invoice_reference:
                         if pi.to_be_invoiced_balance != DECIMAL_ZERO or pi.total_price_with_tax != DECIMAL_ZERO:
-                            label = "%s%s (%s - %s)" % (
+                            label = "{}{} ({} - {})".format(
                                 link_unicode,
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance,
                                 cap(pi.invoice_reference, 15)
                             )
                         else:
-                            label = "%s%s (%s)" % (
+                            label = "{}{} ({})".format(
                                 link_unicode,
                                 pi.producer.short_profile_name,
                                 cap(pi.invoice_reference, 15)
                             )
                     else:
                         if pi.to_be_invoiced_balance != DECIMAL_ZERO or pi.total_price_with_tax != DECIMAL_ZERO:
-                            label = "%s%s (%s)" % (
+                            label = "{}{} ({})".format(
                                 link_unicode,
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance
@@ -289,36 +244,35 @@ class Permanence(TranslatableModel):
                     # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                     # Such that they can be accessed by the producer and by the staff
                     link.append(
-                        '<a href="%s?producer=%d" target="_blank">%s</a>'
-                        % (
+                        "<a href=\"{}?producer={}\" target=\"_blank\">{}</a>".format(
                             urlresolvers.reverse('producer_invoice_view', args=(pi.id,)),
                             pi.producer_id,
                             label.replace(' ', '&nbsp;')))
 
             producers = ", ".join(link)
             if at_least_one_permanence_send:
-                msg_html = '<div class="wrap-text">%s</div>' % producers
+                msg_html = "<div class=\"wrap-text\">{}</div>".format(producers)
             else:
                 msg_html = """
                     <div class="wrap-text"><button
-                    onclick="django.jQuery('#id_get_producers_%d').toggle();
-                        if(django.jQuery(this).html()=='%s'){
-                            django.jQuery(this).html('%s')
-                        }else{
-                            django.jQuery(this).html('%s')
-                        };
+                    onclick="django.jQuery('#id_get_producers_{}').toggle();
+                        if(django.jQuery(this).html()=='{}'){{
+                            django.jQuery(this).html('{}')
+                        }}else{{
+                            django.jQuery(this).html('{}')
+                        }};
                         return false;"
-                    >%s</button>
-                    <div id="id_get_producers_%d" style="display:none;">%s</div></div>
-                """ % (
+                    >{}</button>
+                    <div id="id_get_producers_{}" style="display:none;">{}</div></div>
+                """.format(
                     self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, producers
                 )
         else:
-            msg_html = '<div class="wrap-text">%s</div>' % ", ".join([p.short_profile_name
+            msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join([p.short_profile_name
                                    for p in
                                    Producer.objects.filter(
                                        producerinvoice__permanence_id=self.id).only(
-                                       'short_profile_name')])
+                                       'short_profile_name')]))
         return mark_safe(msg_html)
 
     get_producers.short_description = (_("Offers from"))
@@ -339,30 +293,23 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append("<br/><b>%s</b>" % ci.delivery.get_delivery_display())
+                        link.append("<br/><b>{}</b>".format(ci.delivery.get_delivery_display()))
                     else:
                         link.append("<br/><br/>--")
                 total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
                 # if ci.is_order_confirm_send:
-                label = '%s%s (%s) %s%s' % (
+                label = "{}{} ({}) {}{}".format(
                     "<b><i>" if ci.is_group else EMPTY_STRING,
                     ci.customer.short_basket_name,
                     "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
                     ci.get_is_order_confirm_send_display(),
                     "</i></b>" if ci.is_group else EMPTY_STRING,
                 )
-                # else:
-                #     label = '%s%s (%s) %s%s' % (
-                #         "<b><i>" if ci.is_group else EMPTY_STRING,
-                #         ci.customer.short_basket_name,
-                #         "-" if ci.is_group or total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
-                #         ci.get_is_order_confirm_send_display(),
-                #         "</i></b>" if ci.is_group else EMPTY_STRING,
-                #     )
                 # Important : no target="_blank"
                 link.append(
-                    '<a href="%s?permanence=%d&customer=%d">%s</a>'
-                    % (changelist_url, self.id, ci.customer_id, label.replace(' ', '&nbsp;')))
+                    "<a href=\"{}?permanence={}&customer={}\">{}</a>".format(
+                        changelist_url, self.id, ci.customer_id, label.replace(' ', '&nbsp;'))
+                )
             customers = ", ".join(link)
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             link = []
@@ -372,11 +319,11 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append("<br/><b>%s</b>" % ci.delivery.get_delivery_display())
+                        link.append("<br/><b>{}</b>".format(ci.delivery.get_delivery_display()))
                     else:
                         link.append("<br/><br/>--")
                 total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
-                label = "%s%s (%s) %s%s" % (
+                label = "{}{} ({}) {}{}".format(
                     "<b><i>" if ci.is_group else EMPTY_STRING,
                     ci.customer.short_basket_name,
                     "-" if total_price_with_tax == DECIMAL_ZERO else total_price_with_tax,
@@ -386,8 +333,7 @@ class Permanence(TranslatableModel):
                 # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                 # Such that they can be accessed by the customer and by the staff
                 link.append(
-                    '<a href="%s?customer=%d" target="_blank">%s</a>'
-                    % (
+                    "<a href=\"{}?customer={}\" target=\"_blank\">{}</a>".format(
                         urlresolvers.reverse('customer_invoice_view', args=(ci.id,)),
                         ci.customer_id,
                         label.replace(' ', '&nbsp;')
@@ -402,21 +348,21 @@ class Permanence(TranslatableModel):
         if len(customers) > 0:
             msg_html = """
                 <div class="wrap-text"><button
-                onclick="django.jQuery('#id_get_customers_%d').toggle();
-                    if(django.jQuery(this).html()=='%s'){
-                        django.jQuery(this).html('%s')
-                    }else{
-                        django.jQuery(this).html('%s')
-                    };
+                onclick="django.jQuery('#id_get_customers_{}').toggle();
+                    if(django.jQuery(this).html()=='{}'){{
+                        django.jQuery(this).html('{}')
+                    }}else{{
+                        django.jQuery(this).html('{}')
+                    }};
                     return false;"
-                >%s</button>
-                <div id="id_get_customers_%d" style="display:none;">%s</div></div>
-            """ % (
+                >{}</button>
+                <div id="id_get_customers_{}" style="display:none;">{}</div></div>
+            """.format(
                 self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, customers
             )
             return mark_safe(msg_html)
         else:
-            return mark_safe('<div class="wrap-text">%s</div>' % _("No purchase"))
+            return mark_safe("<div class=\"wrap-text\">{}</div>".format(_("No purchase")))
 
     get_customers.short_description = (_("Purchases by"))
     # get_customers.allow_tags = True
@@ -456,24 +402,23 @@ class Permanence(TranslatableModel):
             # At least one role is defined in the permanence board
             msg_html = """
                 <div class="wrap-text"><button
-                onclick="django.jQuery('#id_get_board_%d').toggle();
-                    if(django.jQuery(this).html()=='%s'){
-                        django.jQuery(this).html('%s')
-                    }else{
-                        django.jQuery(this).html('%s')
-                    };
+                onclick="django.jQuery('#id_get_board_{}').toggle();
+                    if(django.jQuery(this).html()=='{}'){{
+                        django.jQuery(this).html('{}')
+                    }}else{{
+                        django.jQuery(this).html('{}')
+                    }};
                     return false;"
-                >%s</button>
-                <div id="id_get_board_%d" style="display:none;">%s</div></div>
-            """ % (
+                >{}</button>
+                <div id="id_get_board_{}" style="display:none;">{}</div></div>
+            """.format(
                 self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, board
             )
             return mark_safe(msg_html)
         else:
-            return mark_safe('<div class="wrap-text">%s</div>' % _("No task"))
+            return mark_safe("<div class=\"wrap-text\">{}</div>".format(_("No task")))
 
     get_board.short_description = (_("Tasks"))
-    # get_board.allow_tags = True
 
     def set_status(self, new_status, all_producers=True, producers_id=None, update_payment_date=False,
                    payment_date=None, allow_downgrade=True):
@@ -865,13 +810,13 @@ class Permanence(TranslatableModel):
                 "translations__order_sort_order"
             )
             for o in qs:
-                result.append('<li>%s, %s, %s</li>' % (
-                    o.get_long_name(with_box_unicode=False),
+                result.append("<li>{}, {}, {}</li>".format(
+                    o.get_long_name(),
                     o.producer.short_profile_name,
                     o.email_offer_price_with_vat,
                 ))
         if result:
-            return mark_safe('<ul>%s</ul>' % "".join(result))
+            return mark_safe("<ul{}</ul>".format(EMPTY_STRING.join(result)))
         return EMPTY_STRING
 
     def get_full_status_display(self):
@@ -897,8 +842,8 @@ class Permanence(TranslatableModel):
                 if status != delivery.status:
                     status = delivery.status
                     status_counter += 1
-                    status_list.append("<b>%s</b>" % delivery.get_status_display())
-                status_list.append("- %s" % delivery.get_delivery_display(admin=True))
+                    status_list.append("<b>{}</b>".format(delivery.get_status_display()))
+                status_list.append("- {}".format(delivery.get_delivery_display(admin=True)))
             message = "<br/>".join(status_list)
         else:
             message = self.get_status_display()
@@ -911,26 +856,26 @@ class Permanence(TranslatableModel):
             self.gauge = (self.gauge + 1) % 4
             self.save(update_fields=['gauge'])
             msg_html = """
-                    <div class="wrap-text" id="id_get_status_%d">
+                    <div class="wrap-text" id="id_get_status_{}">
                     <script type="text/javascript">
-                        window.setTimeout(function(){
-                            django.jQuery.ajax({
-                                url: '%s',
+                        window.setTimeout(function(){{
+                            django.jQuery.ajax({{
+                                url: '{}',
                                 cache: false,
                                 async: false,
-                                success: function (result) {
-                                    django.jQuery("#id_get_status_%d").html(result);
-                                }
-                            });
-                        }, 500);
+                                success: function (result) {{
+                                    django.jQuery("#id_get_status_{}").html(result);
+                                }}
+                            }});
+                        }}, 500);
                     </script>
-                    %s %s</div>
-                """ % (
+                    {} {}</div>
+                """.format(
                 self.id, url, self.id, progress, message
             )
 
         else:
-            msg_html = '<div class="wrap-text">%s</div>' % message
+            msg_html = "<div class=\"wrap-text\">{}</div>".format(message)
         return mark_safe(msg_html)
 
     get_full_status_display.short_description = (_("Status"))
@@ -941,9 +886,9 @@ class Permanence(TranslatableModel):
             'short_name', any_language=True
         )
         if short_name:
-            permanence_display = "%s" % short_name
+            permanence_display = "{}".format(short_name)
         else:
-            permanence_display = '%s%s' % (
+            permanence_display = "{}{}".format(
                 repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME,
                 self.permanence_date.strftime(settings.DJANGO_SETTINGS_DATE)
             )
@@ -954,10 +899,10 @@ class Permanence(TranslatableModel):
             profit = self.total_selling_with_tax.amount - self.total_purchase_with_tax.amount
             # profit = self.total_selling_with_tax.amount - self.total_selling_vat.amount - self.total_purchase_with_tax.amount + self.total_purchase_vat.amount
             if profit != DECIMAL_ZERO:
-                return '%s<br/>%s<br/>💶&nbsp;%s' % (
+                return "{}<br/>{}<br/>💶&nbsp;{}".format(
                     self.get_permanence_display(), self.total_selling_with_tax, RepanierMoney(profit)
                 )
-            return '%s<br/>%s' % (
+            return "{}<br/>{}".format(
                 self.get_permanence_display(), self.total_selling_with_tax)
         else:
             return self.get_permanence_display()
@@ -980,9 +925,9 @@ class Permanence(TranslatableModel):
                 deliveries_count = 0
             if deliveries_count == 0:
                 if self.status != PERMANENCE_SEND:
-                    return "%s - %s" % (self.get_permanence_display(), self.get_status_display())
+                    return "{} - {}".format(self.get_permanence_display(), self.get_status_display())
                 else:
-                    return "%s - %s" % (self.get_permanence_display(), _('Orders closed'))
+                    return "{} - {}".format(self.get_permanence_display(), _('Orders closed'))
         return self.get_permanence_display()
 
     def __str__(self):

@@ -7,7 +7,6 @@ from django.db import models, transaction
 from django.db.models.signals import pre_save, post_init
 from django.dispatch import receiver
 from django.utils.dateparse import parse_date
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -20,7 +19,6 @@ from repanier.picture.fields import AjaxPictureField
 from repanier.tools import get_recurrence_dates, clean_offer_item
 
 
-@python_2_unicode_compatible
 class Contract(TranslatableModel):
     translations = TranslatedFields(
         long_name=models.CharField(
@@ -61,7 +59,6 @@ class Contract(TranslatableModel):
     def get_or_create_offer_item(self, permanence, reset_add_2_stock=False):
         from repanier.models.offeritem import OfferItemWoReceiver
 
-        # print("------------------ contract.get_or_create_offer_item")
         # In case of contract
         # -1, generate eventually several offer's items if dates are flexible
         # -2, boxes may not be used in contracts
@@ -71,7 +68,6 @@ class Contract(TranslatableModel):
             permanences_dates_counter__gt=0
         ).order_by('?'):
             if contract_content.flexible_dates:
-                # print("Flex dates")
                 all_dates_str = contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
                 for one_date_str in all_dates_str:
                     offer_item_qs = OfferItemWoReceiver.objects.filter(
@@ -80,7 +76,6 @@ class Contract(TranslatableModel):
                         permanences_dates=one_date_str
                     ).order_by('?')
                     if not offer_item_qs.exists():
-                        # print("Create 1 : %s at : %s" % (self, one_date_str))
                         OfferItemWoReceiver.objects.create(
                             permanence_id=permanence.id,
                             product_id=contract_content.product_id,
@@ -91,21 +86,18 @@ class Contract(TranslatableModel):
                         )
                         clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                     else:
-                        # print("Get : %s at : %s" % (self, one_date_str))
                         offer_item = offer_item_qs.first()
                         offer_item.contract_id = self.id
                         offer_item.is_active = True
                         offer_item.save(update_fields=["is_active", "contract_id"])
                         clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
             else:
-                # print("Fixed dates")
                 offer_item_qs = OfferItemWoReceiver.objects.filter(
                     permanence_id=permanence.id,
                     product_id=contract_content.product_id,
                     permanences_dates=contract_content.permanences_dates
                 ).order_by('?')
                 if not offer_item_qs.exists():
-                    # print("Create 2 : %s at : %s" % (self, contract_content.permanences_dates))
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
                         product_id=contract_content.product_id,
@@ -116,7 +108,6 @@ class Contract(TranslatableModel):
                     )
                     clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                 else:
-                    # print("Get : %s at : %s" % (self, contract_content.permanences_dates))
                     offer_item = offer_item_qs.first()
                     offer_item.contract_id = self.id
                     offer_item.is_active = True
@@ -132,11 +123,11 @@ class Contract(TranslatableModel):
             link = []
             for p in self.producers.all():
                 link.append(
-                    '<a href="%s?producer=%d&commitment=%d">&nbsp;%s&nbsp;%s</a>' % (
+                    "<a href=\"{}?producer={}&commitment={}\">&nbsp;{}&nbsp;{}</a>".format(
                         changelist_url, p.id, self.id, LINK_UNICODE, p.short_profile_name.replace(" ", "&nbsp;")))
-            return mark_safe('<div class="wrap-text">%s</div>' % ", ".join(link))
+            return mark_safe("<div class=\"wrap-text\">{}</div>".format(", ".join(link)))
         else:
-            return mark_safe('<div class="wrap-text">%s</div>' % _("No offer"))
+            return mark_safe("<div class=\"wrap-text\">{}</div>".format(_("No offer")))
 
     get_producers.short_description = (_("Offers from"))
 
@@ -148,13 +139,13 @@ class Contract(TranslatableModel):
     get_dates.allow_tags = True
 
     def get_contract_admin_display(self):
-        return "%s (%s)" % (self.long_name, self.dates_display)
+        return "{} ({})".format(self.safe_translation_getter('long_name', any_language=True), self.dates_display)
 
     get_contract_admin_display.short_description = _("Commitments")
     get_contract_admin_display.allow_tags = False
 
     def __str__(self):
-        return '%s' % self.long_name
+        return "{}".format(self.safe_translation_getter('long_name', any_language=True))
 
     class Meta:
         verbose_name = _("Commitment")
@@ -203,7 +194,6 @@ def contract_pre_save(sender, **kwargs):
                     contract_content.save()
 
 
-@python_2_unicode_compatible
 class ContractContent(models.Model):
     contract = models.ForeignKey(
         'Contract', verbose_name=_("Commitment"),
@@ -248,7 +238,7 @@ def contract_content_post_init(sender, **kwargs):
     contract_content.all_dates = []
     if contract_content.id is not None and contract_content.permanences_dates:
         # Splitting an empty string with a specified separator returns ['']
-        all_dates_str = contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+        all_dates_str = sorted(contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
         for one_date_str in all_dates_str:
             one_date = parse_date(one_date_str)
             contract_content.all_dates.append(one_date)

@@ -296,9 +296,6 @@ class BoxAdmin(TranslatableAdmin):
         form = super(BoxAdmin, self).get_form(request, box, **kwargs)
         producer_field = form.base_fields["producer"]
         picture_field = form.base_fields["picture2"]
-        # if hasattr(picture_field.widget, 'upload_to'):
-        #     picture_field.widget.upload_to = "%s%s%s" % ("product", os_sep, "box")
-        # return form
         vat_level_field = form.base_fields["vat_level"]
         producer_field.widget.can_add_related = False
         producer_field.widget.can_delete_related = False
