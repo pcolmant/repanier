@@ -1,14 +1,21 @@
 Repanier
 ========
 
+Repanier is a tool for local consumers groups (GAC, GASAP, AMAP, …) which helps
+organizing schedules, orders, membership and payments followup.
+
+  - [Documentation](https://repanier.be/fr/)
+  - [Survol](https://repanier.be/fr/documentation/survol/)
+  - [Demo access on demand](https://demo.repanier.be/fr/)
+
 Collective buying group management web site using Django CMS 3.4.41 / Bootstrap 3 / Python 3.5.
 
-- https://repanier.be/fr/documentation/survol/
+Licence : GPL v3
 
-- https://repanier.be/fr/
-- access to https://demo.repanier.be/fr/ on demand
+Who uses Repanier?
+------------------
 
-Active customers groups :
+Active customers groups:
 
 https://apero.repanier.be/fr/
 https://bloum.be/fr/
@@ -28,13 +35,11 @@ Active producers :
 https://commande.lebuisson.be/fr/
 https://saisonsvanbiervliet.be/fr/
 
-Licence : GPL v3
-
 Comment contribuer à Repanier?
 ------------------------------
 
   * En participant aux discussions entre utilisateurs et avec les développeur, lors des permanences, par téléphone ou par email, …
-  * [En utilisant les tickets](https://github.com/pcolmant/repanier/issues)
+  * [En utilisant les tickets](https://github.com/pcolmant/repanier/issues) pour discuter d'améliorations ou signaler des bugs.
   * [En envoyant un patch ou une demande de merge](https://guides.github.com/introduction/flow/)
 
 Comment tester Repanier?
@@ -44,27 +49,28 @@ Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'ap
 
 1. Clone du projet:
 
-   git clone https://github.com/pcolmant/repanier.git
+    git clone https://github.com/pcolmant/repanier.git
 
 2. Initialisation et activation de l'environnement de développement, installation des dépendances:
 
-   virtualenv -p python3 venv
-   . venv/bin/activate
-   pip install -r requirements/requirement.txt
+    virtualenv -p python3 venv
+    . venv/bin/activate
+    pip install -r requirements/requirement.txt
 
 3. Construction de la base de données et ajout des données factices:
 
-   ./manage.py migrate
-   ./manage.py loaddata fixtures/initial_users.yaml
+    ./manage.py migrate
+    ./manage.py loaddata fixtures/initial_users.yaml
 
 4. Démarrage de l'application:
 
-   ./manage.py runserver
+    ./manage.py runserver
 
 Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/ Pour s'authentifier comme administrateur vous pouvez utiliser: *admin* *secret*.
 
 How to setup repanier on Debian 9
 ---------------------------------
+
 
 Log into the terminal as "root" user
 
