@@ -14,7 +14,7 @@ from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.box import BoxContent
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.tools import cap
 
@@ -330,7 +330,7 @@ def purchase_pre_save(sender, **kwargs):
     if purchase.is_box_content:
         purchase.is_resale_price_fixed = True
         if delta_quantity != DECIMAL_ZERO:
-            OfferItem.objects.filter(id=purchase.offer_item_id).update(
+            OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F('quantity_invoiced') + delta_quantity,
             )
     else:
@@ -370,12 +370,12 @@ def purchase_pre_save(sender, **kwargs):
             delta_selling_vat = purchase.customer_vat.amount - purchase.previous_customer_vat
             delta_deposit = purchase.deposit.amount - purchase.previous_deposit
 
-            OfferItem.objects.filter(id=purchase.offer_item_id).update(
+            OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F('quantity_invoiced') + delta_quantity,
                 total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
                 total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price
             )
-            purchase.offer_item = OfferItem.objects.filter(
+            purchase.offer_item = OfferItemWoReceiver.objects.filter(
                 id=purchase.offer_item_id).order_by('?').first()
             CustomerInvoice.objects.filter(id=purchase.customer_invoice.id).update(
                 total_price_with_tax=F('total_price_with_tax') + delta_selling_price,

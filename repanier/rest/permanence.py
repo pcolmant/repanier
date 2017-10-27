@@ -4,7 +4,7 @@ from django.views.decorators.http import require_GET
 from rest_framework import serializers
 
 from repanier.const import PERMANENCE_OPENED
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.rest.view import JSONResponse
 
@@ -37,7 +37,7 @@ def permanences_rest(request):
 class OfferItemSerializer(serializers.Serializer):
 
     class Meta:
-        model = OfferItem
+        model = OfferItemWoReceiver
         fields = (
             'reference',
             'get_long_name',
@@ -51,7 +51,7 @@ class OfferItemSerializer(serializers.Serializer):
 @csrf_exempt
 @require_GET
 def permanence_producer_rest(request, permanence_id, producer_name):
-    offer_item = OfferItem.objects.filter(
+    offer_item = OfferItemWoReceiver.objects.filter(
         permanence_id=permanence_id,
         producer__short_profile_name=producer_name.decode('unicode-escape'),
         status=PERMANENCE_OPENED
@@ -67,7 +67,7 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
     Retrieve, update or delete a code snippet.
     """
     if request.method == 'GET':
-        offer_item = OfferItem.objects.filter(
+        offer_item = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
             producer__short_profile_name=producer_name.decode('unicode-escape'),
             reference=reference.decode('unicode-escape'),

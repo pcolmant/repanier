@@ -7,7 +7,7 @@ from django.utils import translation
 from django.views.generic import DetailView
 
 from repanier.const import PERMANENCE_PRE_OPEN
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 
@@ -52,7 +52,7 @@ class PreOrderView(DetailView):
         context = super(PreOrderView, self).get_context_data(**kwargs)
         permanence_pre_opened = self.get_object()
         if permanence_pre_opened is not None:
-            offer_item_set = OfferItem.objects.filter(
+            offer_item_set = OfferItemWoReceiver.objects.filter(
                 Q(
                     producer_id=self.producer,
                 # ) |

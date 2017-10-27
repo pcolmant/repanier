@@ -8,7 +8,7 @@
         {% trans "All informations bellow are visible to all members except your phone and email. You have the choice to specify if your phone and/or mail are visible to others members." %}
         <p>{% if membership_fee_valid_until %}<i>{% trans "Your membership fee is valid until" %} : <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
         {{ form.as_div }}
-        <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-default pull-right">{% trans "Update" %}</button></div>
+        <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Update" %}</button></div>
     </form>
     {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
     {% addtoblock "jshead" %}{{ form.media.js }}{% endaddtoblock %}

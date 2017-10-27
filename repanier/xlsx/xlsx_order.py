@@ -13,7 +13,7 @@ from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
@@ -564,7 +564,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
             else:
                 # Using quantity_for_preparation_sort_order the order is by customer__short_basket_name if the product
                 # is to be distributed by piece, otherwise by lower qty first.
-                for offer_item in OfferItem.objects.filter(
+                for offer_item in OfferItemWoReceiver.objects.filter(
                         permanence_id=permanence.id,
                         producer_id=producer.id,
                         translations__language_code=translation.get_language()
@@ -718,7 +718,7 @@ def export_producer_by_product(permanence, producer, wb=None):
     hide_column_short_basket_name = True
     hide_column_unit_deposit = True
     formula_main_total = []
-    offer_items = OfferItem.objects.filter(
+    offer_items = OfferItemWoReceiver.objects.filter(
         permanence_id=permanence.id,
         producer_id=producer.id,
         translations__language_code=translation.get_language(),

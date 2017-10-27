@@ -73,7 +73,7 @@ class RepanierSettings(AppConfig):
         from repanier.models.configuration import Configuration
         from repanier.models.lut import LUT_DepartmentForCustomer
         from repanier.models.product import Product
-        from repanier.models.offeritem import OfferItem
+        from repanier.models.offeritem import OfferItemWoReceiver
         from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
             INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP, PERMANENCE_SEND, \
             PRODUCT_ORDER_UNIT_PC_KG
@@ -109,7 +109,7 @@ class RepanierSettings(AppConfig):
             ).order_by('?').update(
                 limit_order_quantity_to_stock=True
             )
-            OfferItem.objects.filter(
+            OfferItemWoReceiver.objects.filter(
                 permanence__status__gte=PERMANENCE_SEND,
                 order_unit=PRODUCT_ORDER_UNIT_PC_KG
             ).order_by('?').update(

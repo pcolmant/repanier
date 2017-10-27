@@ -54,7 +54,7 @@ def order_select_ajax(request):
     ).order_by('?')
     if producer_invocie.exists():
         # The orders are opened for this producer and this permanence
-        if offer_item.is_active:
+        if offer_item.may_order:
             # This offer_item may be ordered
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id,

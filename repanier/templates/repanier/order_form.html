@@ -14,18 +14,29 @@
             <div class="infinite-container">
             {% for offer in offeritem_list %}
                 <div class="infinite-item">
-                {% if offer.picture %}
-                    {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                    <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="{{ product_thumbnail.url }}">
-                {% else %}
-                    <div class="col-sm-6 col-lg-3" data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="">
-                {% endif %}
+                <div class="col-sm-6 col-lg-3">
+                    {% if offer.picture %}
+                        {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="{{ product_thumbnail.url }}">
+                    {% else %}
+                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="">
+                    {% endif %}
                     {{ offer.cache_part_a | safe }}
+                        </div>
+                    {% if offer.permanences_dates %}
+                        {{ offer.cache_part_b | safe }}
+                        {% if may_order and not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}
+                    {% endif %}
                 </div>
                 <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
-                    {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
-                    {{ offer.cache_part_b | safe }}
-                    {% if may_order and not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}
+                    {% if offer.permanences_dates %}
+                        {% if offer.get_not_permanences_dates %}<div class="text-warning"><small>({{ offer.get_not_permanences_dates }})</small></div>{% endif %}
+                        {% if may_order %}{% repanier_select_offer_item offer_item=offer date=date_id %}{% endif %}
+                    {% else %}
+                        {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
+                        {{ offer.cache_part_b | safe }}
+                        {% if may_order and not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}
+                    {% endif %}
                 </div>
                 {% if offer.is_box %}
                     <div class="clearfix"></div>

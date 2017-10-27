@@ -8,7 +8,7 @@ from django.views.generic import DetailView
 from repanier.const import DECIMAL_ZERO
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.producer import Producer
 
 
@@ -34,7 +34,7 @@ class ProducerInvoiceView(DetailView):
             producer_invoice = self.get_object()
             bank_account_set = BankAccount.objects.filter(producer_invoice=producer_invoice).order_by("operation_date")
             context['bank_account_set'] = bank_account_set
-            offer_item_set = OfferItem.objects.filter(
+            offer_item_set = OfferItemWoReceiver.objects.filter(
                 permanence_id=producer_invoice.permanence_id,
                 producer_id=producer_invoice.producer_id,
                 translations__language_code=translation.get_language()

@@ -66,9 +66,11 @@
 <div class="modal-footer">
     <div class="form-group">
         {% if staff_responsibilities %}
-            <a href="{{ next }}" class="btn btn-info">{% trans "Continue as a customer." %}</a><a href="{% url "logout_form" %}" class="btn btn-info">{% trans "Logout" %}</a>
+            <a href="{{ next }}" class="btn btn-info">{% trans "Continue as a customer." %}</a>
+            <a href="{% url "logout_form" %}" class="btn btn-info">{% trans "Logout" %}</a>
         {% else %}
-            <button class="btn btn-default" type="submit">{% trans "Login" %}</button><a href="{% url "admin_password_reset" %}" class="btn btn-default">{% trans "Password reset" %}</a>
+            <button class="btn btn-info" type="submit">{% trans "Login" %}</button>
+            <a href="{% url "admin_password_reset" %}" class="btn btn-info">{% trans "Password reset" %}</a>
         {% endif %}
     </div>
 </div>

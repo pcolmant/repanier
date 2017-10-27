@@ -24,14 +24,14 @@ body {
 
 /* sidebar */
 .bs-docs-sidebar {
-    padding: 0px 0px 1px 20px;
+    padding: 0 0 1px 20px;
     margin-top: 1px;
     margin-bottom: 1px;
 }
 /* all links */
 .bs-docs-sidebar .nav > li > a {
     color: #3c3c3c;
-    padding-top: 0px;
+    padding-top: 0;
     font-weight: bold;
     border-left: 2px solid transparent;
 }

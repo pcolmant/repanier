@@ -9,6 +9,7 @@ from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -51,10 +52,11 @@ class Product(Item):
 
     @transaction.atomic()
     def get_or_create_offer_item(self, permanence, reset_add_2_stock=False):
-        from repanier.models.offeritem import OfferItemWoReceiver
+
+        from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
         from repanier.models.box import BoxContent
 
-        offer_item_qs = OfferItemWoReceiver.objects.filter(
+        offer_item_qs = OfferItem.objects.filter(
             permanence_id=permanence.id,
             product_id=self.id,
             permanences_dates=EMPTY_STRING
@@ -69,15 +71,17 @@ class Product(Item):
             clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
         else:
             offer_item = offer_item_qs.first()
-            offer_item.is_active = True
             offer_item.contract = None
-            offer_item.save(update_fields=["is_active", "contract"])
+            offer_item.permanences_dates_order = 0
+            if reset_add_2_stock:
+                offer_item.may_order = True
+            offer_item.save(update_fields=["contract", "may_order", "permanences_dates_order"])
         if self.is_box:
             # Add box products
             for box_content in BoxContent.objects.filter(
                 box=self.id
             ).order_by('?'):
-                box_offer_item_qs = OfferItemWoReceiver.objects.filter(
+                box_offer_item_qs = OfferItem.objects.filter(
                     permanence_id=permanence.id,
                     product_id=box_content.product_id,
                     permanences_dates=EMPTY_STRING
@@ -93,10 +97,12 @@ class Product(Item):
                     clean_offer_item(permanence, box_offer_item_qs, reset_add_2_stock=reset_add_2_stock)
                 else:
                     box_offer_item = box_offer_item_qs.first()
-                    box_offer_item.is_active = True
                     box_offer_item.is_box_content = True
                     box_offer_item.contract = None
-                    box_offer_item.save(update_fields=["is_box_content", "is_active", "contract"])
+                    box_offer_item.permanences_dates_order = 0
+                    if reset_add_2_stock:
+                        box_offer_item.may_order = True
+                    box_offer_item.save(update_fields=["is_box_content", "contract", "may_order", "permanences_dates_order"])
 
         offer_item = offer_item_qs.first()
         return offer_item
@@ -119,30 +125,28 @@ class Product(Item):
                     product=self,
                     contract=contract
                 ).order_by('?').first()
-            if contract_content is not None:
-                all_dates = contract_content.all_dates
-                is_into_offer = len(all_dates) > 0
+            if contract_content is not None and contract_content.permanences_dates is not None:
+                all_dates_str = sorted(contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+                is_into_offer = len(all_dates_str) > 0
                 flexible_dates = contract_content.flexible_dates
             else:
-                all_dates = []
+                all_dates_str = []
                 is_into_offer = False
                 flexible_dates = False
 
+            contract_all_dates_str = sorted(contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             contract_dates_array = []
             month_save = None
             selected_dates_counter = 0
-            # print(all_dates)
-            for one_date in contract.all_dates:
+            # print(all_dates_str)
+            for one_date_str in contract_all_dates_str:
+                one_date = parse_date(one_date_str)
                 if month_save != one_date.month:
                     month_save = one_date.month
-                    if month_save is not None:
-                        new_line = "<br/>"
-                    else:
-                        new_line = EMPTY_STRING
+                    new_line = "<br/>"
                 else:
                     new_line = EMPTY_STRING
                 # Important : linked to django.utils.dateparse.parse_date format
-                one_date_str = one_date.strftime("%Y-%m-%d")
                 switch_is_into_offer = urlresolvers.reverse(
                     'is_into_offer_content',
                     args=(self.id, contract.id, one_date_str)
@@ -163,7 +167,7 @@ class Product(Item):
                     LINK=switch_is_into_offer,
                     PRODUCT_ID=self.id
                 )
-                if one_date in all_dates:
+                if one_date_str in all_dates_str:
                     color = "green"
                     icon = " {}".format(_boolean_icon(True))
                     selected_dates_counter += 1

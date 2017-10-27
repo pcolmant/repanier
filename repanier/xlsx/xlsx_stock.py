@@ -13,7 +13,7 @@ from openpyxl.styles import Color
 import repanier.apps
 from repanier.xlsx.export_tools import *
 from repanier.const import *
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.tools import update_offer_item, next_row
 from repanier.xlsx.import_tools import get_row, get_header
@@ -42,7 +42,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
             (_("Final stock"), 10),
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
         ]
-        offer_items = OfferItem.objects.filter(
+        offer_items = OfferItemWoReceiver.objects.filter(
             Q(
                 permanence_id=permanence.id,
                 manage_replenishment=True,

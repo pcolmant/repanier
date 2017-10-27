@@ -10,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMANENCE_OPENED
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, display_selected_value, display_selected_box_value
@@ -201,58 +202,85 @@ def repanier_select_task(context, *args, **kwargs):
 def repanier_select_offer_item(context, *args, **kwargs):
     request = context['request']
     user = request.user
-    result = EMPTY_STRING
-    customer_may_order = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
-    if customer_may_order:
-        offer_item = kwargs.get('offer_item', None)
-        str_id = str(offer_item.id)
-        if offer_item.may_order:
-            purchase = PurchaseWoReceiver.objects.filter(
-                customer_id=user.customer,
-                offer_item_id=offer_item.id,
-                is_box_content=False
-            ).order_by('?').only('quantity_ordered').first()
-            if purchase is not None:
-                is_open = purchase.status == PERMANENCE_OPENED
-                option_dict = display_selected_value(
-                    offer_item,
-                    purchase.quantity_ordered,
-                    is_open=is_open
-                )
-            else:
-                is_open = ProducerInvoice.objects.filter(
-                    permanence__offeritem=offer_item.id,
-                    producer__offeritem=offer_item.id,
-                    status=PERMANENCE_OPENED
-                ).order_by('?').exists()
-                option_dict = display_selected_value(
-                    offer_item,
-                    DECIMAL_ZERO,
-                    is_open=is_open
-                )
-            if is_open:
-                result = '<select name="offer_item{str_id}" id="offer_item{str_id}" onchange="order_ajax({str_id})" onmouseover="show_select_order_list_ajax({str_id})" class="form-control">{option}</select>'.format(
-                    str_id=str_id,
-                    option=option_dict['html']
-                )
-            else:
-                result = '<select name="offer_item{str_id}" id="offer_item{str_id}" class="form-control">{option}</select>'.format(
-                    str_id=str_id,
-                    option=option_dict['html']
-                )
-        if offer_item.is_box_content:
-            box_purchase = PurchaseWoReceiver.objects.filter(
-                customer_id=user.customer,
-                offer_item_id=offer_item.id,
-                is_box_content=True
-            ).order_by('?').only('quantity_ordered').first()
-            if box_purchase is None:
-                quantity_ordered = DECIMAL_ZERO
-            else:
-                quantity_ordered = box_purchase.quantity_ordered
-            option_dict = display_selected_box_value(offer_item, quantity_ordered)
-            result = result + option_dict['html']
-    return mark_safe(result)
+    offer_item = kwargs.get('offer_item')
+    date = kwargs.get('date', EMPTY_STRING)
+    result = []
+    if offer_item.may_order:
+        # Important : offer_item.permanences_dates_order is used to
+        # group together offer item's of the same product of a contract
+        # with different purchases dates on the order form
+        # 0   : No group needed
+        # 1   : Master of a group
+        # > 1 : Displayed with the master of the group (filtered in order_class.py)
+        select_offer_item(offer_item, result, user)
+        if offer_item.permanences_dates_order == 1 and date == "all":
+            for sub_offer_item in OfferItemWoReceiver.objects.filter(
+                permanence_id=offer_item.permanence_id,
+                product_id=offer_item.product_id,
+                permanences_dates_order__gt=1
+            ).order_by("permanences_dates_order"):
+                select_offer_item(sub_offer_item, result, user)
+    if offer_item.is_box_content:
+        box_purchase = PurchaseWoReceiver.objects.filter(
+            customer_id=user.customer,
+            offer_item_id=offer_item.id,
+            is_box_content=True
+        ).order_by('?').only('quantity_ordered').first()
+        if box_purchase is None:
+            quantity_ordered = DECIMAL_ZERO
+        else:
+            quantity_ordered = box_purchase.quantity_ordered
+        option_dict = display_selected_box_value(offer_item, quantity_ordered)
+        result.append("<select id=\"box_offer_item{id}\" name=\"box_offer_item{id}\" disabled class=\"form-control\">{option}</select>".format(
+            result=result,
+            id=offer_item.id,
+            option=option_dict['html']
+        ))
+    return mark_safe(EMPTY_STRING.join(result))
+
+
+def select_offer_item(offer_item, result, user):
+    purchase = PurchaseWoReceiver.objects.filter(
+        customer_id=user.customer,
+        offer_item_id=offer_item.id,
+        is_box_content=False
+    ).order_by('?').only('quantity_ordered').first()
+    if purchase is not None:
+        is_open = purchase.status == PERMANENCE_OPENED
+        option_dict = display_selected_value(
+            offer_item,
+            purchase.quantity_ordered,
+            is_open=is_open
+        )
+    else:
+        is_open = ProducerInvoice.objects.filter(
+            permanence__offeritem=offer_item.id,
+            producer__offeritem=offer_item.id,
+            status=PERMANENCE_OPENED
+        ).order_by('?').exists()
+        option_dict = display_selected_value(
+            offer_item,
+            DECIMAL_ZERO,
+            is_open=is_open
+        )
+    if offer_item.permanences_dates_counter > 0:
+        permanences_date = offer_item.get_html_permanences_dates
+    else:
+        permanences_date = EMPTY_STRING
+    if is_open:
+        result.append(
+            "{dates}<select name=\"offer_item{id}\" id=\"offer_item{id}\" onchange=\"order_ajax({id})\" onmouseover=\"show_select_order_list_ajax({id})\" class=\"form-control\">{option}</select>".format(
+                dates=permanences_date,
+                id=offer_item.id,
+                option=option_dict['html']
+            ))
+    else:
+        result.append(
+            "{dates}<select name=\"offer_item{id}\" id=\"offer_item{id}\" class=\"form-control\">{option}</select>".format(
+                dates=permanences_date,
+                id=offer_item.id,
+                option=option_dict['html']
+            ))
 
 
 @register.simple_tag(takes_context=True)
@@ -264,7 +292,7 @@ def repanier_btn_like(context, *args, **kwargs):
     if customer_is_active:
         offer_item = kwargs.get('offer_item', None)
         str_id = str(offer_item.id)
-        result = '<br/><span class="btn_like{str_id}" style="cursor: pointer;">{html}</span>'.format(
+        result = "<br/><span class=\"btn_like{str_id}\" style=\"cursor: pointer;\">{html}</span>".format(
             str_id=str_id,
             html=offer_item.get_like(user)
         )

@@ -12,7 +12,7 @@ from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import *
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
 from repanier.const import *
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
 from repanier.tools import cap, next_row
@@ -579,7 +579,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                         error_msg = _("Row %(row_num)d : The given permanence doesn't own the given purchase id.") % {
                             'row_num': row_num + 1}
                         break
-                    offer_item = OfferItem.objects.filter(id=purchase.offer_item_id).order_by('?').first()
+                    offer_item = OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).order_by('?').first()
                     if offer_item is None:
                         error = True
                         error_msg = _("Row %(row_num)d : No offer_item corresponding to the given purchase id.") % {

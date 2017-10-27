@@ -44,7 +44,7 @@ def export_offer(permanence, wb=None):
             for contract_content in ContractContent.objects.prefetch_related(
                     "product", "product__producer", "product__department_for_customer").filter(
                 contract=permanence.contract,
-                permanences_dates_counter__gt=0
+                permanences_dates__isnull=False
             ):
                 product = contract_content.product
                 row_num = export_offer_row(

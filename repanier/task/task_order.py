@@ -66,125 +66,26 @@ def common_to_pre_open_and_open(permanence_id):
     permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
 
     if permanence.contract is not None:
-        print("common_to_pre_open_and_open -> contract is not None")
         permanence.contract.get_or_create_offer_item(permanence, reset_add_2_stock=True)
     else:
-        print("common_to_pre_open_and_open -> contract is None")
         # Create offer items which can be purchased depending on selection in the admin
         producers_in_this_permanence = Producer.objects.filter(
             permanence=permanence_id,
             is_active=True
         ).order_by('?').only("id")
         product_queryset = Product.objects.filter(
-            # Q(
             producer__in=producers_in_this_permanence,
             is_box=False,
             is_into_offer=True
-            # ) | Q(
-            #     is_box=True,
-            #     is_into_offer=True
-            # )
         ).order_by('?')
         for product in product_queryset:
             product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-            # if not OfferItem.objects.filter(
-            #     product_id=product.id,
-            #     permanence_id=permanence_id
-            # ).order_by('?').exists():
-            #     OfferItem.objects.create(
-            #         permanence_id=permanence_id,
-            #         product_id=product.id,
-            #         producer_id=product.producer_id,
-            #     )
         boxes_in_this_permanence = Box.objects.filter(
             permanence=permanence_id,
             is_active=True
         ).order_by('?').only("id")
         for box in boxes_in_this_permanence:
             box.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-    # Deactivate all offer item of this permanence
-    # OfferItem.objects.filter(
-    #     permanence_id=permanence_id
-    # ).order_by('?').update(
-    #     is_active=False, may_order=False,
-    #     is_box=False, is_box_content=False
-    # )
-    # Activate all offer item of this permanence
-    # OfferItem.objects.filter(
-    #     product__in=product_queryset,
-    #     permanence_id=permanence_id
-    # ).exclude(
-    #     order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
-    # ).order_by('?').update(is_active=True, may_order=True)
-    # OfferItem.objects.filter(
-    #     product__in=product_queryset,
-    #     permanence_id=permanence_id,
-    #     order_unit__in=[PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_TRANSPORTATION]
-    # ).order_by('?').update(is_active=True, may_order=False)
-    # Create box offer items which can be purchased depending on selection in the admin
-    # product_queryset = Product.objects.filter(
-    #     is_box=True,
-    #     is_into_offer=True
-    # ).order_by('?')
-    # for product in product_queryset:
-    #     offer_item = OfferItem.objects.filter(
-    #         product_id=product.id,
-    #         permanence_id=permanence_id
-    #     ).order_by('?').first()
-        # if offer_item is None:
-        #     OfferItem.objects.create(
-        #         permanence_id=permanence_id,
-        #         product_id=product.id,
-        #         producer_id=product.producer_id,
-        #         is_box=True,
-        #         is_box_content=False,
-        #         is_active=True,
-        #         may_order=True
-        #     )
-        # else:
-        #     offer_item.is_box = True
-        #     offer_item.is_box_content = False
-        #     offer_item.is_active = True
-        #     offer_item.may_order = True
-        #     offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
-        # for box_content in BoxContent.objects.filter(
-        #         box=product.id
-        # ).select_related(
-        #     "product__producer"
-        # ).order_by('?'):
-        #     box_offer_item = OfferItem.objects.filter(
-        #         product_id=box_content.product_id,
-        #         permanence_id=permanence_id
-        #     ).order_by('?').first()
-        #     if box_offer_item is None:
-        #         OfferItem.objects.create(
-        #             permanence_id=permanence_id,
-        #             product_id=box_content.product_id,
-        #             producer_id=box_content.product.producer_id,
-        #             is_box=False,
-        #             is_box_content=True,
-        #             is_active=True,
-        #             may_order=False
-        #         )
-        #     else:
-        #         box_offer_item.is_box = False
-        #         box_offer_item.is_box_content = True
-        #         box_offer_item.is_active = True
-        #         box_offer_item.may_order = False
-        #         box_offer_item.save(update_fields=["is_active", "may_order", "is_box", "is_box_content"])
-    # Activate purchased products even if not in selected in the admin
-    # but prohibit tthe customer to order it any more
-    # for offer_item in OfferItemWoReceiver.objects.filter(
-    #     purchase__permanence_id=permanence_id,
-    #     is_active=False,
-    #     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT
-    # ).order_by('?'):
-    #     offer_item.is_active = True
-    #     offer_item.may_order = False
-    #     offer_item.save(update_fields=["may_order", "is_active"])
-    # Create cache
-    # offer_item_qs = OfferItem.objects.filter(permanence_id=permanence_id).order_by('?')
-    # clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=True)
     # Calculate the sort order of the order display screen
     reorder_offer_items(permanence_id)
     # Calculate the Purchase 'sum' for each customer
@@ -226,15 +127,15 @@ def open_order(permanence_id, do_not_send_any_mail=False):
             # Deactivate offer item if the producer as not reacted to the pre opening
             OfferItemWoReceiver.objects.filter(
                 permanence_id=permanence_id,
-                is_active=True,
+                may_order=True,
                 producer_id=producer.id
-            ).update(is_active=False)
-    # 3 - Keep only producer with active non technical offer items
+            ).update(may_order=False)
+    # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
     for offer_item in OfferItemWoReceiver.objects.filter(
             permanence_id=permanence.id,
             # order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
-            is_active=True
+            may_order=True
     ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
 
@@ -255,32 +156,11 @@ def admin_back_to_scheduled(request, permanence):
             may_order=True
     ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
-    OfferItemWoReceiver.objects.filter(permanence_id=permanence.id).update(is_active=False)
+    OfferItemWoReceiver.objects.filter(permanence_id=permanence.id).update(may_order=False)
     permanence.set_status(PERMANENCE_PLANNED)
     user_message = _("The permanence is back to scheduled.")
     user_message_level = messages.INFO
     return user_message, user_message_level
-
-
-# def admin_undo_back_to_planned(request, permanence):
-#     user_message = _("Action canceled by the system.")
-#     user_message_level = messages.ERROR
-#     if PERMANENCE_PLANNED == permanence.status \
-#             and permanence.highest_status in [PERMANENCE_PRE_OPEN, PERMANENCE_OPENED]:
-#         OfferItem.objects.filter(permanence_id=permanence.id).update(is_active=True)
-#         permanence.producers.clear()
-#         for offer_item in OfferItem.objects.filter(
-#                 permanence_id=permanence.id
-#         ).order_by().distinct("producer_id"):
-#             permanence.producers.add(offer_item.producer_id)
-#         if permanence.highest_status == PERMANENCE_PRE_OPEN:
-#             permanence.set_status(PERMANENCE_PRE_OPEN)
-#             user_message = _("The permanence is back to pre-opened.")
-#         elif permanence.highest_status == PERMANENCE_OPENED:
-#             permanence.set_status(PERMANENCE_OPENED)
-#             user_message = _("The permanence is back to open.")
-#         user_message_level = messages.INFO
-#     return user_message, user_message_level
 
 
 def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
@@ -297,7 +177,6 @@ def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
         else:
             permanence.set_status(PERMANENCE_WAIT_FOR_PRE_OPEN)
             # pre_open_order(permanence.id)
-            # thread.start_new_thread(pre_open_order, (permanence.id,))
             t = threading.Thread(target=pre_open_order, args=(permanence.id,))
             t.start()
             user_message = _("The offers are being generated.")
@@ -305,7 +184,6 @@ def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
     else:
         permanence.set_status(PERMANENCE_WAIT_FOR_OPEN)
         # open_order(permanence.id)
-        # thread.start_new_thread(open_order, (permanence.id, do_not_send_any_mail))
         t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
         t.start()
         user_message = _("The offers are being generated.")
@@ -397,7 +275,7 @@ def close_order(permanence, all_producers, producers_id=None):
     # 1 - Round to multiple producer_order_by_quantity
     offer_item_qs = OfferItem.objects.filter(
         permanence_id=permanence.id,
-        is_active=True,
+        may_order=True,
         order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
         producer_order_by_quantity__gt=1,
         quantity_invoiced__gt=0
@@ -417,7 +295,7 @@ def close_order(permanence, all_producers, producers_id=None):
     # 2 - Add Transport
     offer_item_qs = OfferItem.objects.filter(
         permanence_id=permanence.id,
-        is_active=False,
+        may_order=False,
         order_unit=PRODUCT_ORDER_UNIT_TRANSPORTATION
     ).order_by('?')
     if not all_producers:

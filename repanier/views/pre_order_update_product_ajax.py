@@ -29,8 +29,6 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
     offer_item = get_object_or_404(OfferItem, id=offer_item_id)
     if offer_item.producer_id != producer.id:
         raise Http404
-    if not offer_item.is_active:
-        raise Http404
 
     permanence = offer_item.permanence
     if permanence.status == PERMANENCE_PRE_OPEN:

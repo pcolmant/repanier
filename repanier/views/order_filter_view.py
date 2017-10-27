@@ -2,18 +2,17 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.utils import translation
 from django.shortcuts import render
+from django.utils import translation
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 
-from repanier.models import Permanence
-from repanier.models.offeritem import OfferItem
-from repanier.models.producer import Producer
-from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.const import EMPTY_STRING
+from repanier.models import Permanence
+from repanier.models.lut import LUT_DepartmentForCustomer
+from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.producer import Producer
 from repanier.tools import permanence_ok_or_404, sint
 
 
@@ -76,7 +75,7 @@ def order_filter_view(request, permanence_id):
             'producer_id': producer_id,
             'department_set': department_set,
             'department_id': department_id,
-            'box_set':  OfferItem.objects.filter(
+            'box_set':  OfferItemWoReceiver.objects.filter(
                             permanence_id=permanence_id,
                             is_box=True,
                             is_active=True,

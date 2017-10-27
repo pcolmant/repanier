@@ -86,7 +86,7 @@ def generate_invoice(permanence, payment_date):
         ).order_by('?').update(
             permanence_id=new_permanence.id
         )
-        OfferItem.objects.filter(
+        OfferItemWoReceiver.objects.filter(
             permanence_id=permanence.id,
             producer_id__in=producers_to_move
         ).order_by('?').update(

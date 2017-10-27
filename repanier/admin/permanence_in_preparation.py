@@ -856,7 +856,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             form = GeneratePermanenceForm(request.POST)
             if form.is_valid():
                 recurrences = form.cleaned_data['recurrences']
-                dates, display = get_recurrence_dates(permanence.permanence_date, recurrences)
+                dates = get_recurrence_dates(permanence.permanence_date, recurrences)
                 if 1 <= len(dates) <= 55:
                     creation_counter = permanence.duplicate(dates)
                     if creation_counter == 0:

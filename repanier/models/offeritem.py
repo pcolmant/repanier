@@ -94,10 +94,21 @@ class OfferItem(Item):
         null=True, blank=True, default=None
     )
     permanences_dates = models.TextField(
-        _("Permanences dates"), null=True, blank=True, default=EMPTY_STRING)
+        null=True, blank=True, default=None)
+    # Opposite of permaneces_date used to know when the related product is not into offer
+    not_permanences_dates = models.TextField(
+        null=True, blank=True, default=None)
+    # Number of permanences where this product is placed.
+    # Used to compute the price during order phase
     permanences_dates_counter = models.IntegerField(
-        _("Permanences dates counter"),
         null=True, blank=True, default=1)
+    # Important : permanences_dates_order is used to
+    # group together offer item's of the same product of a contract
+    # with different purchases dates on the order form
+    # 0   : No group needed
+    # 1   : Master of a group
+    # > 1 : Displayed with the master of the group
+    permanences_dates_order = models.IntegerField(default=0)
 
     def get_vat_level(self):
         return self.get_vat_level_display()
@@ -186,19 +197,30 @@ class OfferItem(Item):
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
 
     @cached_property
+    def get_not_permanences_dates(self):
+        if self.not_permanences_dates is not None:
+            all_dates_str = sorted(self.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+            all_days = []
+            for one_date_str in all_dates_str:
+                one_date = parse_date(one_date_str)
+                all_days.append(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH))
+            return ", ".join(all_days)
+        return EMPTY_STRING
+
+    @cached_property
     def get_html_permanences_dates(self):
-        if self.permanences_dates:
+        if self.permanences_dates_counter > 0:
             all_dates_str = sorted(self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             all_days = []
             month_save = None
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
                 if month_save != one_date.month:
-                    month_save = one_date.month
                     if month_save is not None:
                         new_line = "<br/>"
                     else:
                         new_line = EMPTY_STRING
+                    month_save = one_date.month
                 else:
                     new_line = EMPTY_STRING
                 all_days.append("{}{}".format(new_line, one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)))
@@ -207,8 +229,8 @@ class OfferItem(Item):
 
     @cached_property
     def get_permanences_dates(self):
-        if self.permanences_dates:
-            all_dates_str = self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+        if self.permanences_dates_counter > 0:
+            all_dates_str = sorted(self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             all_days = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
@@ -246,7 +268,7 @@ class OfferItem(Item):
         return qty_display
 
     def get_long_name(self, customer_price=True):
-        if settings.DJANGO_SETTINGS_CONTRACT and self.permanences_dates_counter > 0:
+        if self.permanences_dates_counter > 0:
             return mark_safe("{}\n{}".format(
                 super(OfferItem, self).get_long_name(customer_price=customer_price),
                 self.get_permanences_dates
@@ -255,7 +277,7 @@ class OfferItem(Item):
             return super(OfferItem, self).get_long_name(customer_price=customer_price)
 
     def get_long_name_with_producer(self, is_html=False):
-        if settings.DJANGO_SETTINGS_CONTRACT and self.permanences_dates_counter > 0:
+        if self.permanences_dates_counter > 0:
             new_line = "<br/>" if is_html else " : "
             return "{}, {}{}{}".format(
                 self.producer.short_profile_name,
@@ -274,7 +296,7 @@ class OfferItem(Item):
     get_html_long_name_with_producer.admin_order_field = 'translations__long_name'
 
     def __str__(self):
-        return self.get_str_display()
+        return self.get_long_name_with_producer()
 
     class Meta:
         verbose_name = _("Offer item")

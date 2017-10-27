@@ -15,7 +15,7 @@
         {% endif %}
         {{ form.as_div }}
         {% if update != '2' %}
-            <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-default pull-right">{% trans "Send e-mail" %}</button></div>
+            <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Send e-mail" %}</button></div>
         {% endif %}
     </form>
     {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}

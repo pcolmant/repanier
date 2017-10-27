@@ -20,7 +20,7 @@ from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
@@ -190,7 +190,7 @@ class Producer(models.Model):
         bank_not_invoiced = self.get_bank_not_invoiced()
         # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
-        result_set = OfferItem.objects.filter(
+        result_set = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
             price_list_multiplier__lt=1
@@ -203,7 +203,7 @@ class Producer(models.Model):
             payment_needed = result_set["total_selling_with_tax__sum"]
         else:
             payment_needed = DECIMAL_ZERO
-        result_set = OfferItem.objects.filter(
+        result_set = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
             price_list_multiplier__gte=1,
@@ -216,7 +216,7 @@ class Producer(models.Model):
             payment_needed += result_set["total_purchase_with_tax__sum"]
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
         if self.manage_replenishment:
-            for offer_item in OfferItem.objects.filter(
+            for offer_item in OfferItemWoReceiver.objects.filter(
                     is_active=True,
                     permanence_id=permanence_id,
                     producer_id=self.id,

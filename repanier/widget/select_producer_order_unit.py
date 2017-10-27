@@ -27,8 +27,8 @@ class SelectProducerOrderUnitWidget(forms.Select):
             value = EMPTY_STRING
         output = """
 <div id="{name}_dropdown" class="btn-group pull-left btn-group-form">
-    <button id="{name}_button_label" class="btn btn-default dropdown-toggle{disabled}" type="button" data-toggle="dropdown">{label}</button>
-    <button class="btn btn-default dropdown-toggle{disabled}" type="button" data-toggle="dropdown"><span class="caret"></span></button>
+    <button id="{name}_button_label" class="btn btn-info dropdown-toggle{disabled}" type="button" data-toggle="dropdown">{label}</button>
+    <button class="btn btn-info dropdown-toggle{disabled}" type="button" data-toggle="dropdown"><span class="caret"></span></button>
     <ul class="dropdown-menu">{options}</ul>
     <input type="hidden" name="{name}" value="{value}" class="btn-group-value"/>
     <script type="text/javascript">

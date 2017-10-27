@@ -1,6 +1,8 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from urllib.parse import parse_qsl
+
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -10,7 +12,6 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.utils import translation
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 # from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
@@ -25,7 +26,7 @@ from repanier.email.email_order import export_order_2_1_customer
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
@@ -35,11 +36,6 @@ from repanier.widget.select_admin_permanence import SelectAdminPermanenceWidget
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, \
     ChoiceWidget, FourDecimalsWidget, TwoMoneysWidget, DateWidgetExcel
-
-try:
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import parse_qsl
 
 
 class PurchaseResource(resources.ModelResource):
@@ -418,7 +414,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 customer_field.queryset = Customer.objects \
                     .filter(id=customer_id)
                 product_field.empty_label = None
-                product_field.choices = [(o.id, str(o)) for o in OfferItem.objects.filter(
+                product_field.choices = [(o.id, str(o)) for o in OfferItemWoReceiver.objects.filter(
                     id=purchase.offer_item_id,
                     translations__language_code=translation.get_language()
                 ).order_by('translations__long_name')]

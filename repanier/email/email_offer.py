@@ -12,7 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.tools import *
@@ -114,7 +114,7 @@ def send_open_order(permanence_id):
             )
             offer_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
             offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
-            qs = OfferItem.objects.filter(
+            qs = OfferItemWoReceiver.objects.filter(
                 permanence_id=permanence_id, is_active=True,
                 order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
                 translations__language_code=language_code

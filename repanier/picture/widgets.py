@@ -258,7 +258,7 @@ class AjaxPictureWidget(widgets.TextInput):
                 </a>
                 <p id="{element_id}_file_remove" style="display:{display_picture}"><a id="{element_id}_file_remove" class="btn btn-danger" href="#remove">{remove}</a></p>
                 <input id="{element_id}_file_elem" type="file" style="display:none" accept="image/*"/>
-                <a href="#" id="{element_id}_file_elem_select" class="btn btn-default" style="display:{display_upload}"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+                <a href="#" id="{element_id}_file_elem_select" class="btn btn-info" style="display:{display_upload}"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
             """
         else:
             input_part = """

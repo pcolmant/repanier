@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import translation
@@ -10,7 +11,7 @@ from repanier.const import EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer
-from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.staff import Staff
@@ -54,7 +55,7 @@ class OrderView(ListView):
         self.is_basket = self.request.GET.get('is_basket', False)
         self.is_like = self.request.GET.get('is_like', False)
         if self.permanence.contract is not None:
-            self.all_dates = self.permanence.contract.all_dates
+            self.all_dates = sorted(self.permanence.contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             len_all_dates = len(self.all_dates)
             if len_all_dates < 2:
                 self.date_id = 'all'
@@ -129,7 +130,7 @@ class OrderView(ListView):
                     .order_by("tree_id", "lft") \
                     .distinct("id", "tree_id", "lft")
             context['department_set'] = department_set
-            context['box_set'] = OfferItem.objects.filter(
+            context['box_set'] = OfferItemWoReceiver.objects.filter(
                 permanence_id=self.permanence.id,
                 is_box=True,
                 is_active=True,
@@ -159,7 +160,7 @@ class OrderView(ListView):
         context['box_id'] = str(self.box_id)
         context['is_box'] = "yes" if self.is_box else EMPTY_STRING
         if self.is_box:
-            offer_item = get_object_or_404(OfferItem, id=self.box_id)
+            offer_item = get_object_or_404(OfferItemWoReceiver, id=self.box_id)
             context['box_description'] = html_box_content(offer_item, self.user)
         context['is_basket'] = "yes" if self.is_basket else EMPTY_STRING
         context['is_like'] = "yes" if self.is_like else EMPTY_STRING
@@ -175,28 +176,29 @@ class OrderView(ListView):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
         if self.is_anonymous and \
                 (not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM or self.is_basket or self.is_like):
-            return OfferItem.objects.none()
+            return OfferItemWoReceiver.objects.none()
         if self.is_box:
             offer_item = OfferItemWoReceiver.objects.filter(
                 id=self.box_id,
-                permanence_id=self.permanence.id, is_active=True,
+                permanence_id=self.permanence.id,
+                may_order=True
             ).only('product_id').order_by('?').first()
             if offer_item is not None and offer_item.product_id is not None:
                 box_id = offer_item.product_id
             else:
                 # A bot is back
-                return OfferItem.objects.none()
+                return OfferItemWoReceiver.objects.none()
             product_ids = BoxContent.objects.filter(
                 box_id=box_id
             ).only("product_id")
             qs = OfferItemWoReceiver.objects.filter(
                 Q(
-                    permanence_id=self.permanence.id, # is_active=True,
+                    permanence_id=self.permanence.id, may_order=True,
                     product=box_id,
                     translations__language_code=translation.get_language()
                 ) |
                 Q(
-                    permanence_id=self.permanence.id, # is_active=True,
+                    permanence_id=self.permanence.id, may_order=True,
                     product__box_content__in=product_ids,
                     translations__language_code=translation.get_language()
                 )
@@ -226,7 +228,9 @@ class OrderView(ListView):
                     )
                 )
                 if isinstance(self.date_id, int):
-                    qs = qs.filter(permanences_dates__contains=self.all_dates[self.date_id].strftime("%Y-%m-%d"))
+                    qs = qs.filter(permanences_dates__contains=self.all_dates[self.date_id])
+                elif settings.DJANGO_SETTINGS_CONTRACT:
+                    qs = qs.filter(permanences_dates_order__lte=1)
                 if self.producer_id != 'all':
                     qs = qs.filter(producer_id=self.producer_id)
                 if self.department_id != 'all':

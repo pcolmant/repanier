@@ -16,9 +16,9 @@ from repanier.const import PERMANENCE_OPENED, DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
-from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
+from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
-from repanier.models.purchase import Purchase, PurchaseWoReceiver
+from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import create_or_update_one_cart_item, sint, sboolean, display_selected_value, \
     calc_basket_message, my_basket, display_selected_box_value
 
@@ -27,7 +27,6 @@ from repanier.tools import create_or_update_one_cart_item, sint, sboolean, displ
 @require_GET
 @login_required
 def order_ajax(request):
-    print("icicicicicic xxx 1")
     if not request.is_ajax():
         raise Http404
     user = request.user
@@ -45,14 +44,12 @@ def order_ajax(request):
         status=PERMANENCE_OPENED).order_by('?')
     to_json = []
     if qs.exists():
-        print("icicicicicic xxx 2")
         qs = ProducerInvoice.objects.filter(
             permanence__offeritem=offer_item_id,
             producer__offeritem=offer_item_id,
             status=PERMANENCE_OPENED
         ).order_by('?')
         if qs.exists():
-            print("icicicicicic xxx 3")
             from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
                 REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
             purchase, updated = create_or_update_one_cart_item(
@@ -86,7 +83,7 @@ def order_ajax(request):
                 ).only(
                     "product_id"
                 ).order_by('?'):
-                    box_offer_item = OfferItem.objects.filter(
+                    box_offer_item = OfferItemWoReceiver.objects.filter(
                         product_id=content.product_id,
                         permanence_id=offer_item.permanence_id
                     ).order_by('?').first()
@@ -150,6 +147,4 @@ def order_ajax(request):
                 basket_message=basket_message,
                 to_json=to_json
             )
-            print("icicicicicic xxx 3")
-            print(to_json)
     return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")

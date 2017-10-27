@@ -4,10 +4,8 @@ from __future__ import unicode_literals
 import calendar
 import datetime
 import json
-from django.utils.datetime_safe import new_datetime, date
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from urllib.request import urlopen
+
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
@@ -17,12 +15,15 @@ from django.http import Http404
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils import translation
+from django.utils.datetime_safe import new_datetime
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from six import string_types
 
+from repanier import apps
 from repanier.const import *
 from repanier.email.email import RepanierEmail
-from repanier import apps
 
 
 def sboolean(str_val, default_val=False):
@@ -432,8 +433,8 @@ def display_selected_box_value(offer_item, quantity_ordered):
         qty_display = "---"
     option_dict = {
         'id'  : "#box_offer_item{}".format(offer_item.id),
-        'html': "<select id=\"box_offer_item{}\" name=\"box_offer_item{}\" disabled class=\"form-control\"><option value=\"0\" selected>☑ {} {}</option></select>".format(
-                offer_item.id, offer_item.id, qty_display, BOX_UNICODE
+        'html': "<option value=\"0\" selected>☑ {} {}</option>".format(
+                qty_display, BOX_UNICODE
         )
     }
     return option_dict
@@ -702,17 +703,16 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
 
         offer_item.may_order = False
         offer_item.manage_replenishment = False
-        if offer_item.is_active:
-            if offer_item.contract is not None:
-                offer_item.may_order = len(offer_item.permanences_dates) > 0
-                # No stock limit if this is a contract (ie a pre-order)
-                offer_item.limit_order_quantity_to_stock = False
-                offer_item.manage_production = False
-                offer_item.producer_pre_opening = False
-            else:
-                if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                    offer_item.may_order = product.is_into_offer
-                    offer_item.manage_replenishment = producer.manage_replenishment
+        if offer_item.contract is not None:
+            offer_item.may_order = len(offer_item.permanences_dates) > 0
+            # No stock limit if this is a contract (ie a pre-order)
+            offer_item.limit_order_quantity_to_stock = False
+            offer_item.manage_production = False
+            offer_item.producer_pre_opening = False
+        else:
+            if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+                offer_item.may_order = product.is_into_offer
+                offer_item.manage_replenishment = producer.manage_replenishment
 
         # The group must pay the VAT, so it's easier to allways have
         # offer_item with VAT included
@@ -759,25 +759,38 @@ def reorder_purchases(permanence_id):
 
 
 def reorder_offer_items(permanence_id):
-    from repanier.models.offeritem import OfferItem
-
+    from repanier.models.offeritem import OfferItemWoReceiver
     # calculate the sort order of the order display screen
     cur_language = translation.get_language()
-    offer_item_qs = OfferItem.objects.filter(permanence_id=permanence_id).order_by('?')
+    offer_item_qs = OfferItemWoReceiver.objects.filter(permanence_id=permanence_id).order_by('?')
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
         translation.activate(language_code)
         # customer order lists sort order
         i = 0
-        reorder_queryset = offer_item_qs.filter(
-            is_box=False,
-            translations__language_code=language_code
-        ).order_by(
-            "department_for_customer",
-            "translations__long_name",
-            "order_average_weight",
-            "producer__short_profile_name"
-        )
+        if settings.DJANGO_SETTINGS_CONTRACT:
+            reorder_queryset = offer_item_qs.filter(
+                is_box=False,
+                translations__language_code=language_code
+            ).order_by(
+                # "-permanences_dates_counter",
+                "department_for_customer",
+                "translations__long_name",
+                "order_average_weight",
+                "producer__short_profile_name",
+                "permanences_dates_order"
+            )
+        else:
+            reorder_queryset = offer_item_qs.filter(
+                is_box=False,
+                translations__language_code=language_code
+            ).order_by(
+                "department_for_customer",
+                "translations__long_name",
+                "order_average_weight",
+                "producer__short_profile_name",
+                "permanences_dates_order"
+            )
         for offer_item in reorder_queryset:
             offer_item.producer_sort_order = offer_item.order_sort_order = i
             offer_item.save_translations()
@@ -1032,7 +1045,4 @@ def get_recurrence_dates(first_date, recurrences):
     )
     for occurrence in occurrences:
         dates.append(occurrence.date())
-    return dates, '{} : {}'.format(
-        len(dates),
-        ", ".join(date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH) for date in dates)
-    )
+    return dates
