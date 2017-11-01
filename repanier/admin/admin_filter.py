@@ -1,6 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
-
 # Filters in the right sidebar of the change list page of the admin
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q

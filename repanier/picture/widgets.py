@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 import os
 
@@ -223,7 +222,7 @@ class AjaxPictureWidget(widgets.TextInput):
         self.bootstrap = kwargs.pop('bootstrap', False)
         super(AjaxPictureWidget, self).__init__(*args, **kwargs)
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         final_attrs = self.build_attrs(attrs)
         element_id = final_attrs.get('id')
 

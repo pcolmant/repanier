@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 import tablib
 from import_export.formats.base_formats import TablibFormat, XLSX_IMPORT

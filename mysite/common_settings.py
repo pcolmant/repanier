@@ -275,6 +275,9 @@ TEMPLATES = [
     },
 ]
 
+# TODO : Investigate why jref has added this. This cause admin pblm : the checkbox appear above the description.
+# FORM_RENDERER = 'djng.forms.renderers.DjangoAngularBootstrap3Templates'
+
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
 # CMS_PUBLIC_FOR = 'staff'
@@ -398,7 +401,7 @@ THUMBNAIL_OPTIMIZE_COMMAND = {
 THUMBNAIL_DEBUG = FILER_DEBUG
 
 ##################### Repanier
-AUTH_USER_MODEL = 'auth.User'
+# AUTH_USER_MODEL = 'auth.User'
 AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
 # ADMIN_LOGIN = 'pi'
 # ADMIN_PASSWORD = 'raspberry'

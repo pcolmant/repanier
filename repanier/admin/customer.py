@@ -1,6 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
-
 import uuid
 from collections import OrderedDict
 from decimal import Decimal

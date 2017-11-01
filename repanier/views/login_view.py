@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout)

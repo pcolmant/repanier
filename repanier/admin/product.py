@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 from os import sep as os_sep
 from urllib.parse import parse_qsl

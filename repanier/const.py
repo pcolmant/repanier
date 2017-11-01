@@ -1,6 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
-
 from decimal import *
 from django.utils.translation import ugettext_lazy as _
 from repanier.fields.RepanierMoneyField import RepanierMoney

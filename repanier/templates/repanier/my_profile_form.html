@@ -1,7 +1,13 @@
 {% extends 'cms_page.html' %}
 {% load static cms_tags sekizai_tags i18n l10n %}
 {% block sub_content %}
-    {% if update == "Ok" %}<p class="bg-success" style="color: #cec7c7"><strong>{% trans "Update done." %}</strong></p>{% endif %}
+    {% if update == "Ok" %}
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <strong>{% trans "Update done." %}</strong>
+          </div>
+        </div>
+    {% endif %}
     {% if update == "Nok" %}<div class="has-error"><span class="help-block"><strong>{% trans "Update not done." %}</strong></span></div>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}

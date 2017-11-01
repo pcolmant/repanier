@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 import datetime
 
@@ -108,7 +107,7 @@ class Customer(models.Model):
     is_group = models.BooleanField(_("Group"), default=False)
     may_order = models.BooleanField(_("May order"), default=True)
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
-    subscribe_to_email = models.BooleanField(_("Subscribe to email"), default=True)
+    subscribe_to_email = models.BooleanField(_("Agree to receive emails from this site"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     def get_admin_date_balance(self):

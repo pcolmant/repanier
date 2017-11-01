@@ -3,111 +3,13 @@
 <html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
 <head>
 <title>{% block title %}{% endblock %}</title>
+{#<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">#}
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
 {% block extrastyle %}{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
 <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 {% block extrahead %}{% endblock %}
-{% spaceless %}
-<style type="text/css">
-{#  vvvvvvvvv django cms admin style 1.2.6  #}
-label.translatable-field:before {color:red;content:"\2691\a0";}
-div.parler-language-tabs span.current:before {color:red;content:"\2691\a0";}
-.calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {width: initial !important;}
-table thead th {padding:0;vertical-align:middle !important;white-space:normal !important;}
-table tbody td {vertical-align:middle !important;white-space:nowrap !important;}
-table tbody th {vertical-align:middle !important;white-space: normal !important;}
-#change-history thead th,
-.change-list table thead th,
-.dashboard table thead th,
-.results table thead th,
-.tabular table thead th,
-#changelist table thead th {white-space: normal;}
-{##change-history tbody td,#}
-{##change-history tbody th,#}
-{#.change-list table tbody td,#}
-{#.change-list table tbody th,#}
-{#.dashboard table tbody td,#}
-{#.dashboard table tbody th,#}
-{#.results table tbody td,#}
-{#.results table tbody th,#}
-{#.tabular table tbody td,#}
-{#.tabular table tbody th {#}
-{#    line-height: normal !important;#}
-{#    vertical-align: middle !important;#}
-{#}#}
-.wrap-text {white-space: normal !important;}
-.module {width: 100%;white-space: normal;}
-form fieldset {width: 100%;white-space: nowrap;}
-body.cms-admin-sideframe .object-tools {margin-top:-42px; margin-right:75px; background:none !important;}
-body.cms-admin-sideframe #content {margin-top: 90px !important;}
-body.cms-admin-sideframe form input[type = text],form input[type = email],form input[type = password],form input[type = url] {font-size:14px;width:25em !important;max-width:none !important;border-radius:3px !important;background-color:#fff;-webkit-appearance:none;-moz-appearance:none;appearance:none}
-body.cms-admin-sideframe form input[type = number],form select {font-size: 14px;width: auto!important;max-width: none !important;border-radius: 3px !important;background-color: #fff;-webkit-appearance: none;-moz-appearance: none;appearance: none}
-body.cms-admin-sideframe form button {font-size:10px;max-width:none !important;border-radius:3px !important;background-color:#fff;-webkit-appearance:none;-moz-appearance: none;appearance:none}
-body.cms-admin-sideframe form textarea {font-size: 14px;width: 80em !important;max-width: none !important;border-radius: 3px !important;background-color: #fff;-webkit-appearance: none;-moz-appearance: none;appearance: none}
-.cms-pagetree-root{margin-top: -55px;}
-.cms-pagetree-header-cell{margin-top: -110px;padding-right: 100px;}
-#field-searchbar{width: 100% !important;}
-form label.aligned.btn, form label.btn{color: black !important;}
-/* filter*/
-#changelist-filter {position: relative !important; overflow-y: inherit !important;}
-.change-list #changelist.filtered .paginator {position: static !important;}
-{#.change-list #changelist.filtered .paginator {width: calc(100% - 233px) !important; position: static !important;}#}
-{#abbr, address, article, aside, audio, b, blockquote, body, canvas, caption, cite, code, dd, del, details, dfn, div, dl, dt, em, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, html, i, iframe, img, ins, kbd, label, legend, li, mark, menu, nav, object, ol, p, pre, q, samp, section, small, span, strong, sub, summary, sup, table, tbody, td, tfoot, th, thead, time, tr, ul, var, video {#}
-{#    line-height: inherit !important;#}
-{#}#}
-div, span, ul {line-height: inherit !important;}
-.select2-container.select2-container--default .select2-selection--single .select2-selection__rendered {font-size: 14px !important;}
-.change-list #changelist .actions select {width: auto !important;font-size: 14px;}
-{#.object-tools { position: inherit !important;}#}
-{#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}
-.submit-row {position:sticky;bottom:20px;}
-div.recurrence-widget {width:100%;}
-.change-list #changelist table tbody td, .change-list #changelist table tbody th {white-space: normal;}
-/* Bootstrap refresh animated */
-.gly-spin {
-  -webkit-animation: spin 2s infinite linear;
-  -moz-animation: spin 2s infinite linear;
-  -o-animation: spin 2s infinite linear;
-  animation: spin 2s infinite linear;
-}
-@-moz-keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-  }
-  100% {
-    -moz-transform: rotate(359deg);
-  }
-}
-@-webkit-keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(359deg);
-  }
-}
-@-o-keyframes spin {
-  0% {
-    -o-transform: rotate(0deg);
-  }
-  100% {
-    -o-transform: rotate(359deg);
-  }
-}
-@keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-
-</style>
-{% endspaceless %}
+<link rel="stylesheet" type="text/css" href="{% static "css/custom_admin.css" %}" />
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
 </head>
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"

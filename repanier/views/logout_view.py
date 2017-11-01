@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 from django.contrib.auth import (REDIRECT_FIELD_NAME, logout as auth_logout)
 from django.contrib.auth.signals import user_logged_out

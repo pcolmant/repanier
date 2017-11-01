@@ -1,6 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
-
 from cms.cms_toolbars import ADMIN_MENU_IDENTIFIER
 from cms.toolbar_base import CMSToolbar
 from cms.toolbar_pool import toolbar_pool

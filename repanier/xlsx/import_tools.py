@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer

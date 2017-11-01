@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
 import threading
 
@@ -27,8 +26,10 @@ from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidge
 class CoordinatorsContactForm(RepanierForm):
     staff = fields.MultipleChoiceField(
         label=EMPTY_STRING,
-        choices=[],
-        widget=CheckboxSelectMultipleWidget()
+        choices=(),
+        widget=CheckboxSelectMultipleWidget(
+            label=_("This message will only be sent to the member(s) of the management team that you select below:")
+        )
     )
     your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
@@ -50,12 +51,7 @@ class CoordinatorsContactForm(RepanierForm):
                 name = r.long_basket_name if r.long_basket_name else r.short_basket_name
                 signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
                 choices.append(("{}".format(staff.id), mark_safe(signature)))
-        self.fields["staff"] = fields.MultipleChoiceField(
-            label=EMPTY_STRING,
-            choices=choices,
-            widget=CheckboxSelectMultipleWidget()
-        )
-
+        self.fields["staff"].choices = choices
 
 class CoordinatorsContactValidationForm(NgFormValidationMixin, CoordinatorsContactForm):
     pass
@@ -94,9 +90,6 @@ def send_mail_to_coordinators_view(request):
                 email.widget.attrs['readonly'] = True
                 return render(request, "repanier/send_mail_to_coordinators.html",
                               {'form': form, 'update': '2'})
-            else:
-                return render(request, "repanier/send_mail_to_coordinators.html",
-                              {'form': form, 'update': '1'})
     else:
         form = CoordinatorsContactValidationForm()
 

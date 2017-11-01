@@ -1,36 +1,17 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
 
-import sys
 from decimal import *
 
 from django.conf import settings
 from django.db import models
+from django.db.models import NOT_PROVIDED
 from django.db.models.expressions import BaseExpression, Expression
-from django.forms import DecimalField, NumberInput
-from django.forms.utils import flatatt
-from django.utils.encoding import force_text
-from django.utils.html import format_html
+from django.forms import DecimalField
 
 import repanier.apps
+from repanier.widget.money import MoneyWidget
 
 DECIMAL_ZERO = Decimal('0')
-
-PYTHON2 = sys.version_info[0] == 2
-
-
-# class RepanierMoneyComparisonError(TypeError):
-#     # This exception was needed often enough to merit its own
-#     # Exception class.
-#
-#     def __init__(self, other):
-#         assert not isinstance(other, RepanierMoney)
-#         self.other = other
-#
-#     def __str__(self):
-#         # Note: at least w/ Python 2.x, use __str__, not __unicode__.
-#         return "Cannot compare instances of RepanierMoney and {}".format(
-#                % self.other.__class__.__name__)
 
 
 class RepanierMoney(object):
@@ -76,12 +57,6 @@ class RepanierMoney(object):
 
     def __abs__(self):
         return RepanierMoney(amount=abs(self.amount), decimal_places=self.decimal_places)
-
-    # def __bool__(self):
-    #     return bool(self.amount)
-    #
-    # if PYTHON2:
-    #     __nonzero__ = __bool__
 
     def __rmod__(self, other):
         """
@@ -173,10 +148,7 @@ class RepanierMoney(object):
         return "".join(reversed(result))
 
     def as_tuple(self):
-        """Represents the number as a triple tuple.
-
-        To show the internals exactly as they are.
-        """
+        # Important : used by /django/core/validators.py
         return self.amount.as_tuple()
 
 
@@ -214,9 +186,8 @@ class MoneyFieldProxy(object):
 
 class ModelMoneyField(models.DecimalField):
     def formfield(self, **kwargs):
-        defaults = {'form_class': FormMoneyField}
-        defaults.update(kwargs)
-        return super(ModelMoneyField, self).formfield(**defaults)
+        kwargs.update({'form_class': FormMoneyField})
+        return super(ModelMoneyField, self).formfield(**kwargs)
 
     def to_python(self, value):
         if isinstance(value, Expression):
@@ -234,28 +205,13 @@ class ModelMoneyField(models.DecimalField):
             value = value.amount
         return super(ModelMoneyField, self).get_db_prep_save(value, connection)
 
-    def contribute_to_class(self, cls, name):
-        super(ModelMoneyField, self).contribute_to_class(cls, name)
+    def contribute_to_class(self, cls, name, private_only=False, virtual_only=NOT_PROVIDED):
+        super(ModelMoneyField, self).contribute_to_class(cls, name, private_only=private_only, virtual_only=virtual_only)
         setattr(cls, self.name, MoneyFieldProxy(self))
 
 
-class MoneyInput(NumberInput):
-
-    def render(self, name, value, attrs=None):
-        if value is None:
-            value = ''
-        final_attrs = self.build_attrs(attrs, type=self.input_type, name=name)
-        if value != '':
-            # Only add the 'value' attribute if a value is non-empty.
-            final_attrs['value'] = force_text(self._format_value(value))
-        if repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            return format_html('<input{} />&nbsp;{}', flatatt(final_attrs), repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY)
-        else:
-            return format_html('{}&nbsp;<input{} />', repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, flatatt(final_attrs))
-
-
 class FormMoneyField(DecimalField):
-    widget = MoneyInput
+    widget = MoneyWidget
 
     def to_python(self, value):
         # Important : Do not validate if self.disabled
@@ -267,9 +223,3 @@ class FormMoneyField(DecimalField):
             return value.amount
         except:
             return value
-
-
-class RepanierMoneyWidget(NumberInput):
-
-    def format_value(value):
-        pass

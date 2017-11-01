@@ -1,7 +1,6 @@
 # -*- coding: utf-8
-from __future__ import unicode_literals
-
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.db.models import F, Q
@@ -12,21 +11,27 @@ from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE
 from repanier.models import Customer, Staff, Configuration
 
 
+UserModel = get_user_model()
+
 class RepanierCustomBackend(ModelBackend):
     user = None
 
     def __init__(self, *args, **kwargs):
         super(RepanierCustomBackend, self).__init__()
 
-    def authenticate(self, username=None, password=None, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        print("----- : {} {}".format(username, password))
         self.user = None
-        user_username = User.objects.filter(
+        user_username = UserModel.objects.filter(
             Q(
                 username__iexact=username[:150]
             ) | Q(
                 email__iexact=username
             )
         ).order_by('?').first()
+        print("----- username : {}".format(username))
+        print("----- password : {}".format(password))
+        print("----- : {}".format(user_username))
         is_admin = False
         staff = customer = None
         login_attempt_counter = DECIMAL_THREE
@@ -52,8 +57,11 @@ class RepanierCustomBackend(ModelBackend):
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
-        user_or_none = super(RepanierCustomBackend, self).authenticate(username, password)
-
+        print("----- username before call : {}".format(username))
+        print("----- password before call : {}".format(password))
+        user_or_none = super(RepanierCustomBackend, self).authenticate(request, username=username, password=password)
+        print("----- : {}".format(user_username.check_password(password)))
+        print("----- : {}".format(user_or_none))
         if user_or_none is None:
             # Failed to log in
             if login_attempt_counter < 20:
@@ -116,7 +124,7 @@ class RepanierCustomBackend(ModelBackend):
     def get_user(self, user_id):
         if self.user is not None and self.user.id == user_id:
             return self.user
-        user_or_none = User.objects.filter(pk=user_id).only("id", "is_superuser").order_by('?').first()
+        user_or_none = UserModel.objects.filter(pk=user_id).only("id", "is_superuser").order_by('?').first()
         if user_or_none is not None and not user_or_none.is_superuser:
             a = Customer.objects.filter(user_id=user_or_none.id).only("is_active").order_by('?').first()
             if a is not None:
