@@ -198,7 +198,7 @@ class OfferItem(Item):
     @cached_property
     def get_not_permanences_dates(self):
         if self.not_permanences_dates is not None:
-            all_dates_str = sorted(self.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+            all_dates_str = sorted(list(filter(None, self.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
@@ -209,7 +209,7 @@ class OfferItem(Item):
     @cached_property
     def get_html_permanences_dates(self):
         if self.permanences_dates_counter > 0:
-            all_dates_str = sorted(self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             month_save = None
             for one_date_str in all_dates_str:
@@ -229,8 +229,10 @@ class OfferItem(Item):
     @cached_property
     def get_permanences_dates(self):
         if self.permanences_dates_counter > 0:
-            all_dates_str = sorted(self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
+            # https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings
+            # -> list(filter(None, all_dates_str))
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
                 all_days.append("{}".format(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)))
@@ -266,23 +268,25 @@ class OfferItem(Item):
                 )
         return qty_display
 
-    def get_long_name(self, customer_price=True):
+    def get_long_name(self, customer_price=True, is_html=False):
         if self.permanences_dates_counter > 0:
-            return mark_safe("{}\n{}".format(
+            new_line = "<br/>" if is_html else "\n"
+            return "{}{}{}".format(
                 super(OfferItem, self).get_long_name(customer_price=customer_price),
+                new_line,
                 self.get_permanences_dates
-            ))
+            )
         else:
             return super(OfferItem, self).get_long_name(customer_price=customer_price)
 
+    def get_html_long_name(self):
+        return mark_safe(self.get_long_name(is_html=True))
+
     def get_long_name_with_producer(self, is_html=False):
         if self.permanences_dates_counter > 0:
-            new_line = "<br/>" if is_html else " : "
-            return "{}, {}{}{}".format(
+            return "{}, {}".format(
                 self.producer.short_profile_name,
-                super(OfferItem, self).get_long_name(customer_price=True),
-                new_line,
-                self.get_permanences_dates
+                self.get_long_name(customer_price=True, is_html=is_html)
             )
         else:
             return super(OfferItem, self).get_long_name_with_producer()
