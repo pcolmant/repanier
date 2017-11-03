@@ -1,23 +1,19 @@
 # -*- coding: utf-8
 
-from .const import SIZE_XS, SIZE_S, SIZE_M, SIZE_L
-from repanier.tools import sint
-
-try:
-    from StringIO import StringIO as IO
-except ImportError:
-    from io import BytesIO as IO
-import os
 import json
+import os
+
 from PIL import Image
-from django.core.files.storage import default_storage
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.http import HttpResponse
 from django.utils.text import slugify
-# from django.utils.translation import ugettext as _not_lazy
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
+
+from repanier.tools import sint
+from .const import SIZE_XS, SIZE_S, SIZE_M, SIZE_L
 from .forms import FileForm
 
 
@@ -25,8 +21,10 @@ from .forms import FileForm
 # @login_required
 @csrf_protect
 def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
+    print("ajax_picture")
     form = form_class(request.POST, request.FILES)
     if form.is_valid():
+        print("ajax_picture form is valid")
         size = sint(size)
         if size not in [SIZE_XS, SIZE_S, SIZE_M, SIZE_L]:
             msg = "{}".format(_('Wrong picture size.'))

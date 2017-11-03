@@ -23,9 +23,9 @@ from repanier.models.customer import Customer
 from repanier.models.lut import LUT_ProductionMode
 from repanier.models.staff import Staff
 from repanier.picture.const import SIZE_M
-from repanier.picture.widgets import AjaxPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
+from repanier.widget.picture import AjaxPictureWidget
 
 
 class AuthRepanierLoginForm(AuthenticationForm):

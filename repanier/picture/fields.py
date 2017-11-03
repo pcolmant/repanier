@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.core.files.storage import default_storage
-from django.db.models import Field
+from django.db.models import Field, NOT_PROVIDED
 from django.db.models.fields.files import FileDescriptor, FieldFile
 
 from repanier.const import EMPTY_STRING
-from repanier.picture.widgets import AjaxPictureWidget
+from repanier.widget.picture import AjaxPictureWidget
 
 
 class AjaxPictureField(Field):
@@ -24,8 +24,8 @@ class AjaxPictureField(Field):
         )
         super(AjaxPictureField, self).__init__(*args, **kwargs)
 
-    def contribute_to_class(self, cls, name, virtual_only=False):
-        super(AjaxPictureField, self).contribute_to_class(cls, name, virtual_only)
+    def contribute_to_class(self, cls, name, private_only=False, virtual_only=NOT_PROVIDED):
+        super(AjaxPictureField, self).contribute_to_class(cls, name, private_only=private_only, virtual_only=virtual_only)
         setattr(cls, self.name, self.descriptor_class(self))
 
     def get_prep_value(self, value):

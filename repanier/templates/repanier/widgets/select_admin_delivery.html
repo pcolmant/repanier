@@ -1,13 +1,14 @@
 {% load i18n %}
 {% spaceless %}
-<select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %} onchange="{{ widget.name }}_select(this.value)">{% for group_name, group_choices, group_index in widget.optgroups %}{% if group_name %}
+{% with id=widget.attrs.id name=widget.name %}
+<select name="{{ name }}"{% include "django/forms/widgets/attrs.html" %} onchange="{{ name }}_select(this.value)">{% for group_name, group_choices, group_index in widget.optgroups %}{% if group_name %}
   <optgroup label="{{ group_name }}">{% endif %}{% for option in group_choices %}
   {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
   </optgroup>{% endif %}{% endfor %}
 </select>
 <script type="text/javascript">
-    django.jQuery(document).ready(function() { {{ widget.name }}_select("{{ widget.value|first }}");});
-    function {{ widget.name }}_select(value) {
+    django.jQuery(document).ready(function() { {{ name }}_select("{{ widget.value|first }}");});
+    function {{ name }}_select(value) {
         (function($){
             switch (value) {
                 {{ case_show_show }}
@@ -26,4 +27,5 @@
         }(django.jQuery))
     }
 </script>
+{% endwith %}
 {% endspaceless %}

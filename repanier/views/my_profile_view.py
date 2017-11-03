@@ -2,9 +2,9 @@
 
 from os import sep as os_sep
 
-from django.forms import widgets
 from django.contrib.auth import (get_user_model)
 from django.contrib.auth.decorators import login_required
+from django.forms import widgets
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
@@ -12,12 +12,12 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from djng.forms import fields, NgFormValidationMixin
 
-from repanier.models.customer import Customer
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
+from repanier.models.customer import Customer
 from repanier.picture.const import SIZE_S
-from repanier.picture.widgets import AjaxPictureWidget
 from repanier.views.forms import RepanierForm
 from repanier.widget.checkbox import CheckboxWidget
+from repanier.widget.picture import AjaxPictureWidget
 
 
 class CustomerForm(RepanierForm):
