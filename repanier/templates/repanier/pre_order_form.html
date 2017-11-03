@@ -7,9 +7,8 @@
 <div class="container-repanier">
 <div class="container">
     {# {% debug %} #}
-    <div class="panel panel-success" data-toggle="modal" data-target="#productModal">
-        <div class="panel-heading">
-            <div class="row">
+    <div class="alert alert-default" data-toggle="modal" data-target="#productModal">
+        <div class="row">
             <div class="col-sm-8">
             <h4>{{ object }}</h4>
             </div>
@@ -19,26 +18,18 @@
             </div>
             <div class="row">
             <div class="col-sm-12">
-            <b>{% trans "To remove a product from your offer, set it's stock to zero. The customers will not be able to order it." %}</b></br>
-            <small>{{ object.get_producers | safe }}</small>
+            {% trans "To remove a product from your offer, set it's stock to zero. The customers will not be able to order it." %}<br>
             </div>
             </div>
-        </div>
     </div>
     <table class="table table-hover table-bordered" id="preOrderTable">
         <thead>
         <tr>
             <th>
-                {% trans "producer" %}
-            </th>
-            <th>
                 {% trans "Product" %}
             </th>
             <th>
-                {% trans "selling price" %} {% trans "wo tax" %}
-            </th>
-            <th>
-                {% trans "tax" %}
+                {% trans "VAT" %}
             </th>
             <th>
                 {% trans "Stock" %}
@@ -47,28 +38,15 @@
         </thead>
         <tbody>
         {% for offer_item in offer_item_set %}
-            {% if offer_item.producer_id == producer.id %}
-            <tr class="success" data-toggle="modal" data-id="{{ offer_item.id|unlocalize }}" data-target="#productModal">
-            {%  else %}
-            <tr>
-            {% endif %}
+            <tr data-toggle="modal" data-id="{{ offer_item.id|unlocalize }}" data-target="#productModal">
                 <td>
-                    {{ offer_item.producer.short_profile_name }}
-                </td>
-                <td>
-                    <span id="get_long_name">{{ offer_item.get_long_name | safe }}
+                    <span id="get_long_name">{{ offer_item.get_html_long_name }}
                         {% if offer_item.picture2 %}
                             <img class="img-responsive img-rounded"
                                  style="float:right; margin:5px; min-height:32px; min-width:32px; max-height:48px; max-width:48px;"
                                  src="{{ MEDIA_URL }}{{ offer_item.picture2 }}"/>
                         {% endif %}
                     </span>
-                </td>
-                <td align="right">
-                    <span id="producer_unit_price_wo_tax">{{ offer_item.producer_unit_price_wo_tax }}{% if offer_item.order_unit == '140' %}&nbsp;/&nbsp;({% trans "kg" %}){% endif %}
-                    {% if offer_item.unit_deposit > 0 %}
-                        <br/><span class="glyphicon glyphicon-plus"></span>{{ offer_item.unit_deposit }}<span class="glyphicon glyphicon-leaf"></span>
-                    {% endif %}</span>
                 </td>
                 <td>
                     <span id="get_vat_level_display">{{ offer_item.get_vat_level_display }}</span>
@@ -112,22 +90,6 @@
         var t_row = null;
         var getIdFromRow = null;
         $(document).ready(function () {
-            var lien = '{% url 'pre_order_name_ajax' producer.offer_uuid %}';
-            $.ajax({
-                url: lien,
-                cache: false,
-                async: false,
-                success: function (result) {
-                    $("#my_name").html(result);
-{#                    if (result === '{% trans "Anonymous" %}') {#}
-{#                        $("#connected").show();#}
-{#                        $("#not_connected").hide();#}
-{#                    }#}
-                },
-                error: function (result) {
-                    $("#my_name").html("{% trans "Retry5" %}");
-                }
-            });
             $(function () {
                 $('#productModal').modal({
                     keyboard: true,
@@ -139,11 +101,11 @@
                     var lien;
                     if( typeof getIdFromRow === 'undefined') {
                         // Create
-                        lien = '{% url 'pre_order_create_product_ajax' producer.offer_uuid object.id %}';
+                        lien = '{% url 'pre_order_create_product_ajax' offer_uuid object.id %}';
                     } else {
                         // Update
-                        t_row.attr('class', 'danger');
-                        lien = '{% url 'pre_order_update_product_ajax' producer.offer_uuid %}' + getIdFromRow + '/';
+                        t_row.addClass('info');
+                        lien = '{% url 'pre_order_update_product_ajax' offer_uuid %}' + getIdFromRow + '/';
                     }
                     $.ajax({
                         url: lien,
@@ -157,11 +119,12 @@
                         }
                     });
                 }).on('hidden.bs.modal', function () {
-                    if( typeof getIdFromRow === 'undefined') {
-                        // Create
-                    } else {
-                        // Update
-                        t_row.removeClass("danger").addClass("success").fadeIn('slow');
+                    if(t_row) {
+                        // Important : t_row is updated in case of creation
+                        t_row.removeClass("info");
+                        t_row.removeClass("active");
+                        t_row.fadeOut('fast').fadeIn('slow');
+                        t_row.fadeOut('fast').fadeIn('fast');
                     }
 
                 });
@@ -169,15 +132,4 @@
         });
     </script>
 {% endaddtoblock %}
-{% endblock %}
-{% block footer %}
-    <div class="hidden-xs">
-        <br/>
-    </div>
-    <div>
-    {{ producer.offer_uuid }}
-    </div>
-    <div class="hidden-xs">
-        <br/>
-    </div>
 {% endblock %}

@@ -122,9 +122,9 @@ def my_profile_view(request):
                 data["email2"] = customer.email2
                 form = CustomerValidationForm(data, request=request)
             return render(request, "repanier/my_profile_form.html",
-                          {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Ok'})
+                          {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': True})
         return render(request, "repanier/my_profile_form.html",
-                      {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': 'Nok'})
+                      {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': False})
     else:
         form = CustomerValidationForm()  # An unbound form
         field = form.fields["long_basket_name"]

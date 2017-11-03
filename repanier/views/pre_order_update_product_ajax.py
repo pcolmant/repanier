@@ -64,20 +64,20 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
                 product.production_mode.clear()
                 production_mode = form.cleaned_data.get('production_mode')
                 if production_mode is not None:
-                    product.production_mode.add(form.cleaned_data.get('production_mode'))
+                    product.production_mode.add(production_mode)
                 offer_item_qs = OfferItem.objects.filter(
                     id=offer_item.id
                 ).order_by('?')
                 clean_offer_item(permanence, offer_item_qs)
                 # Refresh offer_item
                 offer_item = get_object_or_404(OfferItem, id=offer_item_id)
-                update = '1'
+                update = True
             else:
-                update = None
+                update = False
         else:
             form = ProducerProductForm()  # An unbound form
             field = form.fields["long_name"]
-            field.initial = offer_item.long_name
+            field.initial = offer_item.safe_translation_getter('long_name', any_language=True)
             field = form.fields["production_mode"]
             field.initial = offer_item.product.production_mode.first()
             field = form.fields["order_unit"]

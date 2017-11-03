@@ -125,7 +125,7 @@ class Product(Item):
                     contract=contract
                 ).order_by('?').first()
             if contract_content is not None and contract_content.permanences_dates is not None:
-                all_dates_str = sorted(contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+                all_dates_str = sorted(list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
                 is_into_offer = len(all_dates_str) > 0
                 flexible_dates = contract_content.flexible_dates
             else:
@@ -133,7 +133,7 @@ class Product(Item):
                 is_into_offer = False
                 flexible_dates = False
 
-            contract_all_dates_str = sorted(contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+            contract_all_dates_str = sorted(list(filter(None, contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             contract_dates_array = []
             month_save = None
             selected_dates_counter = 0

@@ -15,6 +15,7 @@ class PreOrderView(DetailView):
     template_name = 'repanier/pre_order_form.html'
     model = Permanence
     producer = None
+    offer_uuid = None
 
     def get(self, request, *args, **kwargs):
         self.producer = None
@@ -31,10 +32,10 @@ class PreOrderView(DetailView):
             else:
                 raise Http404
         else:
-            offer_uuid = kwargs.get('offer_uuid', None)
-            if offer_uuid is not None:
+            self.offer_uuid = kwargs.get('offer_uuid', None)
+            if self.offer_uuid is not None:
                 producer = Producer.objects.filter(
-                    offer_uuid=offer_uuid
+                    offer_uuid=self.offer_uuid
                 ).order_by('?').only("id").first()
                 if producer is None:
                     raise Http404
@@ -52,12 +53,7 @@ class PreOrderView(DetailView):
         permanence_pre_opened = self.get_object()
         if permanence_pre_opened is not None:
             offer_item_set = OfferItemWoReceiver.objects.filter(
-                Q(
-                    producer_id=self.producer,
-                # ) |
-                # Q(
-                #     stock__gt=DECIMAL_ZERO,
-                ),
+                producer_id=self.producer,
                 permanence_id=permanence_pre_opened.id,
                 translations__language_code=translation.get_language(),
                 is_active=True
@@ -66,6 +62,7 @@ class PreOrderView(DetailView):
             ).distinct()
             context['offer_item_set'] = offer_item_set
             context['producer'] = self.producer
+            context['offer_uuid'] = self.offer_uuid
         return context
 
     def get_queryset(self):

@@ -98,8 +98,6 @@ urlpatterns = [
     url(r'^ajax/order-name/$', customer_name_ajax, name='order_name'),
     url(r'^ajax/home-info/$', home_info_ajax, name='home_info'),
     url(r'^ajax/order-info/$', order_info_ajax, name='order_info'),
-    url(r'^ajax/pre-order-name/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
-        producer_name_ajax, name='pre_order_name_ajax'),
     url(r'^ajax/order-init/$', order_init_ajax, name='order_init_ajax'),
     url(r'^ajax/order-select/$', order_select_ajax, name='order_select_ajax'),
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),

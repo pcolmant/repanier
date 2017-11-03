@@ -280,7 +280,6 @@ TEMPLATES = [
 
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
-# CMS_PUBLIC_FOR = 'staff'
 CMS_SHOW_START_DATE = False
 CMS_SHOW_END_DATE = False
 CMS_SEO_FIELDS = False
@@ -294,7 +293,7 @@ CKEDITOR_SETTINGS = {
         ['Undo', 'Redo'],
         ['cmsplugins', '-', 'ShowBlocks'],
         ['Format', ],
-        ['TextColor', 'BGColor', '-', 'PasteText'],
+        ['TextColor', 'BGColor', 'Smiley', '-', 'PasteText'],
         ['Maximize', ''],
         '/',
         ['Bold', 'Italic', 'Underline', '-', 'Subscript', 'Superscript', '-', 'RemoveFormat'],
@@ -304,29 +303,16 @@ CKEDITOR_SETTINGS = {
         ['Source']
     ],
     'toolbar_HTMLField'    : [
-        ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
+        ['Format', 'Bold', 'Italic', 'TextColor', 'Smiley', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
     ],
     'forcePasteAsPlainText': 'true',
     'skin'                 : 'moono',
-    # 'stylesSet' : 'my_styles:{}js/ckeditor-styles.js'.format(STATIC_URL),
-    'format_tags'          : 'p;h4;h5;blockquote;mutted;success;info;danger;heart;pushpin',
-    'format_blockquote'    : {'element': 'blockquote', 'name': 'Blockquote'},
-    'format_heart'         : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-heart-empty'}},
-    'format_infosign'      : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-info-sign'}},
-    'format_warningsign'   : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-warning-sign'}},
-    'format_pushpin'       : {'element': 'span', 'attributes': {'class': 'glyphicon glyphicon-pushpin'}},
-    'format_mutted'        : {'element': 'p', 'attributes': {'class': 'text-muted'}, 'name': 'Mutted'},
-    'format_success'       : {'element': 'p', 'attributes': {'class': 'bg-success'}, 'name': 'Success'},
-    'format_info'          : {'element': 'p', 'attributes': {'class': 'bg-info'}, 'name': 'Info'},
-    'format_danger'        : {'element': 'p', 'attributes': {'class': 'bg-danger'}, 'name': 'Danger'},
-    # format_p = { element: 'p', attributes: { 'class': 'normalPara' } };
-    # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'} };
-    # 'contentsCss' : '//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css',
+    # 'format_tags'          : 'p;h4;h5;test',
+    'format_tags'          : 'p;h2;h3;h4;h5',
+    # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
     'contentsCss'          : '{}bootstrap/css/bootstrap.css'.format(STATIC_URL),
-    # 'extraAllowedContent' : '*(*)',
-    # 'extraAllowedContent' : 'iframe[*]',
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
@@ -336,6 +322,7 @@ CKEDITOR_SETTINGS = {
     'enterMode'            : 2,
     # Do not dispaly the HTML Path below the edit window
     'removePlugins'        : 'elementspath',
+    # 'stylesSet' : 'my_styles:{}js/ckeditor-styles.js'.format(STATIC_URL),
     'stylesSet': format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config')),
 
 }
@@ -343,16 +330,13 @@ CKEDITOR_SETTINGS = {
 CKEDITOR_SETTINGS_MODEL2 = {
     'language'             : '{{ language }}',
     'toolbar_HTMLField'    : [
-        ['Format', 'Bold', 'Italic', 'TextColor', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
-        # ['Preview', 'Cut', 'Copy', 'PasteText', 'Image', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
+        ['Bold', 'Italic', 'TextColor', 'Smiley', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
-        # ['Maximize', '']
     ],
     'extraPlugins'         : 'simplebox',
     'forcePasteAsPlainText': 'true',
     'skin'                 : 'moono',
-    'format_tags'          : 'p;h4;h5',
     'contentsCss'          : '{}bootstrap/css/bootstrap.css'.format(STATIC_URL),
     'removeFormatTags'     : 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities'        : False,

@@ -89,7 +89,7 @@ def send_mail_to_coordinators_view(request):
                 email.initial = request.user.email
                 email.widget.attrs['readonly'] = True
                 return render(request, "repanier/send_mail_to_coordinators.html",
-                              {'form': form, 'update': '2'})
+                              {'form': form, 'send': True})
     else:
         form = CoordinatorsContactValidationForm()
 
@@ -97,4 +97,4 @@ def send_mail_to_coordinators_view(request):
         email.initial = request.user.email
         email.widget.attrs['readonly'] = True
 
-    return render(request, "repanier/send_mail_to_coordinators.html", {'form': form})
+    return render(request, "repanier/send_mail_to_coordinators.html", {'form': form, 'send': None})

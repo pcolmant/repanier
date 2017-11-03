@@ -118,13 +118,6 @@ class Item(TranslatableModel):
     is_active = models.BooleanField(_("Active"), default=True)
 
     @property
-    def producer_unit_price_wo_tax(self):
-        if self.producer_price_are_wo_vat:
-            return self.producer_unit_price
-        else:
-            return self.producer_unit_price - self.producer_vat
-
-    @property
     def email_offer_price_with_vat(self):
         offer_price = self.get_reference_price()
         if offer_price == EMPTY_STRING:

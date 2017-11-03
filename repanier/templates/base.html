@@ -91,7 +91,7 @@
           </ul>
           {# <!-- Right Nav Section --> #}
           <ul class="nav navbar-nav navbar-right">
-            {% repanier_user permanence_id=permanence_id %}
+            {% repanier_user permanence_id=permanence_id offer_uuid=offer_uuid %}
             {% repanier_display_languages as display_languages %}
             {% if display_languages %}
             <li class="dropdown">

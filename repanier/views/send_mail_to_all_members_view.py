@@ -85,7 +85,7 @@ def send_mail_to_all_members_view(request):
                 recipient.initial = _("All members who agree to show their email addresses to other members")
             recipient.widget.attrs['readonly'] = True
             return render(request, "repanier/send_mail_to_all_members.html",
-                          {'form': form, 'update': '2'})
+                          {'form': form, 'coordinator': is_coordinator, 'send': True})
     else:
         form = MembersContactValidationForm()  # An unbound form
         email = form.fields["your_email"]
@@ -99,4 +99,4 @@ def send_mail_to_all_members_view(request):
         recipient.widget.attrs['readonly'] = True
 
     return render(request, "repanier/send_mail_to_all_members.html",
-                  {'form': form, 'coordinator': is_coordinator})
+                  {'form': form, 'coordinator': is_coordinator, 'send': None})

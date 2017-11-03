@@ -102,11 +102,9 @@ def is_into_offer_content(request, product_id, contract_id, one_date_str):
                             contract_content.not_permanences_dates = not_permanences_dates
                             contract_content.save()
                     else:
-                        all_dates_str = contract_content.permanences_dates.split(
-                            settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+                        all_dates_str = list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
                         if contract_content.not_permanences_dates is not None:
-                            all_not_dates_str = contract_content.not_permanences_dates.split(
-                                settings.DJANGO_SETTINGS_DATES_SEPARATOR)
+                            all_not_dates_str = list(filter(None, contract_content.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
                         else:
                             all_not_dates_str = []
                         if one_date_str in all_dates_str:

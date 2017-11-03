@@ -11,13 +11,6 @@ class SelectAdminPermanenceWidget(forms.Select):
 
     def get_context(self, name, value, attrs):
         context = super(SelectAdminPermanenceWidget, self).get_context(name, value, attrs)
-        # print("name : {}".format(name))
-        # print("value : {}".format(value))
-        # print("attrs : {}".format(attrs))
-        # name: permanence
-        # value: 63
-        # attrs: {'id': 'id_permanence', 'disabled': True, 'required': True}
-        # print("choices : {}".format(self.choices))
         case_show_hide = 'case "0": '
         case_hide_show = 'case "0": '
         case_hide_hide = 'case "0": '

@@ -11,6 +11,7 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import sint, display_selected_value, display_selected_box_value
 
@@ -35,10 +36,9 @@ def repanier_user(context, *args, **kwargs):
 
     request = context["request"]
     user = request.user
+    nodes = []
     if user.is_authenticated:
-        if user.is_staff:
-            nodes = []
-        else:
+        if not user.is_staff:
             nodes = ["""
                 <li id="li_my_name" class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {} {}<b class="caret"></b></a>
@@ -101,10 +101,19 @@ def repanier_user(context, *args, **kwargs):
                 )
                 nodes.append('</li>')
     else:
-        nodes = ["<li class=\"dropdown\"><a href=\"{}\">{}</a></li>".format(
-                reverse("login_form"),
-                _("Login")
-        )]
+        p_offer_uuid = kwargs.get("offer_uuid", None)
+        if len(p_offer_uuid) == 36:
+            producer = Producer.objects.filter(offer_uuid=p_offer_uuid).only("long_profile_name").order_by('?').first()
+            if producer is not None:
+                nodes = ["<li><a href=\"#\">{} {}</a></li>".format(
+                    _('Welkom'),
+                    producer.long_profile_name
+                )]
+        else:
+            nodes = ["<li class=\"dropdown\"><a href=\"{}\">{}</a></li>".format(
+                    reverse("login_form"),
+                    _("Login")
+            )]
 
     return mark_safe("".join(nodes))
 

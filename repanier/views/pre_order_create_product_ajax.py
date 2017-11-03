@@ -80,6 +80,9 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
                     if production_mode is not None:
                         product.production_mode.add(form.cleaned_data.get('production_mode'))
                     offer_item = product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+                    update = True
+                else:
+                    update = False
         else:
             form = ProducerProductForm()  # An unbound form
             field = form.fields["long_name"]
@@ -102,10 +105,11 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
             field.initial = EMPTY_STRING
             field = form.fields["picture"]
             field.widget.upload_to = "{}{}{}".format("product", os_sep, producer.id)
+            update = None
         return render(
             request,
             "repanier/pre_order_create_product_form.html",
             {'form'    : form, 'permanence_id': permanence_id, 'offer_uuid': offer_uuid, 'offer_item': offer_item,
-             'producer': producer}
+             'producer': producer, 'update' : update}
         )
     raise Http404

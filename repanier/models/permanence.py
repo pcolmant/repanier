@@ -155,7 +155,13 @@ class Permanence(TranslatableModel):
             else:
                 msg_html = "<div class=\"wrap-text\">{}</div>".format(_("No offer"))
         elif self.status == PERMANENCE_PRE_OPEN:
-            msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join([p.short_profile_name.replace(" ", "&nbsp;") + " (" + p.phone1 + ")" for p in self.producers.all()]))
+            link = []
+            for p in self.producers.all():
+                if p.phone1 is not None:
+                    link.append("{} ({})".format(p.short_profile_name, p.phone1).replace(" ", "&nbsp;"))
+                else:
+                    link.append(p.short_profile_name.replace(" ", "&nbsp;"))
+            msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join(link))
         elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
             close_offeritem_changelist_url = urlresolvers.reverse(
                 'admin:repanier_offeritemclosed_changelist',

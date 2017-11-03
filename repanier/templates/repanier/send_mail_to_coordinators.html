@@ -1,17 +1,11 @@
 {% extends 'cms_page.html' %}
 {% load cms_tags sekizai_tags i18n l10n %}
 {% block sub_content %}
-    {% if update == '2' %}
-        <div class="panel panel-success">
-          <div class="panel-heading">
-            <strong>{% trans "The mail has been send" %}</strong>
-          </div>
-        </div>
-    {% endif %}
+    {% if send %}<div class="alert alert-success" role="alert">{% trans "The mail has been send" %}</div>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
         {{ form.as_div }}
-        {% if update != '2' %}
+        {% if not send %}
             <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Send e-mail" %}</button></div>
         {% endif %}
 
