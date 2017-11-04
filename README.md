@@ -1,32 +1,31 @@
 Repanier
 ========
 
-Collective buying group management web site using Django CMS 3.4.41 / Bootstrap 3 / Python 3.5.
+Collective buying group management web site using Django CMS 3.4.5 / Bootstrap 3 / Python 3.5.
 
 - https://repanier.be/fr/documentation/survol/
-
 - https://repanier.be/fr/
 - access to https://demo.repanier.be/fr/ on demand
 
 Active customers groups :
 
-https://apero.repanier.be/fr/
-https://commande.coopeco-supermarche.be/fr/
-https://commandes.gac-hamois.be/fr/
-https://exceptionnel.repanier.be/fr/
-https://gacmonssud.repanier.be/fr/
-https://lepanierlensois.repanier.be/fr/
-https://niveze.repanier.be/fr/
-https://pigal.repanier.be/
-https://ptidej.repanier.be/fr/
+- https://apero.repanier.be/fr/
+- https://commande.coopeco-supermarche.be/fr/
+- https://commandes.gac-hamois.be/fr/
+- https://exceptionnel.repanier.be/fr/
+- https://gacmonssud.repanier.be/fr/
+- https://lepanierlensois.repanier.be/fr/
+- https://niveze.repanier.be/fr/
+- https://pigal.repanier.be/
+- https://ptidej.repanier.be/fr/
 
 Active producer :
 
-https://commande.lebuisson.be/fr/
+- https://commande.lebuisson.be/fr/
 
 Licence : GPL v3
 
-Comment contribuer à Repanier?
+Howto contribute to Repanier ?
 ------------------------------
 
   * En participant aux discussions entre utilisateurs et avec les développeur, lors des permanences, par téléphone ou par email, …
