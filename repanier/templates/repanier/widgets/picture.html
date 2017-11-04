@@ -17,7 +17,7 @@
             <input id="{{ id }}_file_elem" type="file" style="display:none" accept="image/*"/>
             <button id="{{ id }}_file_elem_select" style="display:{{ repanier_display_upload }}">{% trans "Select a picture" %}</button>
         {% endif %}
-        <input id="{{ id }}" type="hidden" value="{file_path}" name="{{ name }}" />
+        <input id="{{ id }}" type="hidden" value="{{ repanier_file_path }}" name="{{ name }}" />
     </div>
     <script>
         var {{ id }}_jQuery;

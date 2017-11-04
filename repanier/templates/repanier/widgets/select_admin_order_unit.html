@@ -16,7 +16,7 @@
                     $("div.field-box.field-customer_minimum_order_quantity").show();
                     $("div.field-box.field-customer_increment_order_quantity").hide();
                     $("div.field-box.field-customer_alert_order_quantity").show();
-                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").hide();
                     $("div.form-row.field-customer_increment_order_quantity").hide();
                     $("div.form-row.field-customer_alert_order_quantity").show();
                     $("div.field-box.field-customer_unit_price").show();
@@ -108,19 +108,32 @@
                 case "110":
                     $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one piece" %}");
                     $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one piece" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum piece order quantity" %}");
+                    $("div.form-row.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum piece order quantity" %}");
                     break;
                 case "115":
                     $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one pack" %}");
                     $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one pack" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum pack order quantity" %}");
+                    $("div.form-row.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum pack order quantity" %}");
                     break;
                 case "120":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one kg" %}");
+                    $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one kg" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum kg order quantity" %}");
+                    $("div.form-row.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum kg order quantity" %}");
+                    break;
                 case "140":
                     $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one kg" %}");
                     $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one kg" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum piece order quantity" %}");
+                    $("div.form-row.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum piece order quantity" %}");
                     break;
                 case "150":
                     $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one l" %}");
                     $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one l" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum l order quantity" %}");
+                    $("div.form-row.field-customer_minimum_order_quantity label").html("{% trans "Customer minimum l order quantity" %}");
                     break;
                 case "300":
                     $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one deposit" %}");

@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.core import urlresolvers
 from django.db import models, transaction
-from django.db.models.signals import pre_save, post_init
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
@@ -147,15 +147,17 @@ class Contract(TranslatableModel):
 
     @cached_property
     def get_dates(self):
-        all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
-        all_dates = []
-        for one_date_str in all_dates_str:
-            one_date = parse_date(one_date_str)
-            all_dates.append(one_date)
-        return '{} : {}'.format(
-            len(all_dates),
-            ", ".join(date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH) for date in all_dates)
-        )
+        if self.permanences_dates is not None:
+            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates = []
+            for one_date_str in all_dates_str:
+                one_date = parse_date(one_date_str)
+                all_dates.append(one_date)
+            return '{} : {}'.format(
+                len(all_dates),
+                ", ".join(date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH) for date in all_dates)
+            )
+        return EMPTY_STRING
 
     get_dates.short_description = (_("Permanences"))
     get_dates.allow_tags = True
@@ -264,7 +266,7 @@ class ContractContent(models.Model):
 
     @property
     def get_permanences_dates(self):
-        if self.permanences_dates:
+        if self.permanences_dates is not None:
             all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             for one_date_str in all_dates_str:

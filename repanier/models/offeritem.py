@@ -208,7 +208,7 @@ class OfferItem(Item):
 
     @cached_property
     def get_html_permanences_dates(self):
-        if self.permanences_dates_counter > 0:
+        if self.permanences_dates is not None:
             all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             month_save = None
@@ -228,7 +228,7 @@ class OfferItem(Item):
 
     @cached_property
     def get_permanences_dates(self):
-        if self.permanences_dates_counter > 0:
+        if self.permanences_dates is not None:
             all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             # https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings

@@ -23,11 +23,12 @@ class AjaxPictureWidget(widgets.TextInput):
             'ajax_picture', args=(self.upload_to, self.size)
         )
         if value:
-            file_path = str(value)
+            context['repanier_file_path'] = file_path = str(value)
             context['repanier_display_picture'] = "inline"
             context['repanier_display_upload'] = "none"
             context['repanier_file_url'] = default_storage.url(file_path)
         else:
+            context['repanier_file_path'] = EMPTY_STRING
             context['repanier_display_picture'] = "none"
             context['repanier_display_upload'] = "inline"
             context['repanier_file_url'] = EMPTY_STRING

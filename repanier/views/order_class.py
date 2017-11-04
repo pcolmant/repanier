@@ -53,7 +53,7 @@ class OrderView(ListView):
         self.user = request.user
         self.is_basket = self.request.GET.get('is_basket', False)
         self.is_like = self.request.GET.get('is_like', False)
-        if self.permanence.contract is not None:
+        if self.permanence.contract is not None and self.permanence.contract.permanences_dates is not None:
             self.all_dates = sorted(self.permanence.contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             len_all_dates = len(self.all_dates)
             if len_all_dates < 2:

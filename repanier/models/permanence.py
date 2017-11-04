@@ -942,9 +942,9 @@ class Permanence(TranslatableModel):
         verbose_name = _('Order')
         verbose_name_plural = _('Orders')
 
-        # index_together = [
-        #     ["permanence_date"],
-        # ]
+        index_together = [
+            ["permanence_date"],
+        ]
 
 
 class PermanenceInPreparation(Permanence):

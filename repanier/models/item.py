@@ -46,7 +46,6 @@ class Item(TranslatableModel):
     )
     order_average_weight = models.DecimalField(
         _("Average weight"),
-        help_text=_('If useful, average order weight (eg : 0,1 Kg [i.e. 100 gr], 3 Kg)'),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
 
@@ -78,22 +77,18 @@ class Item(TranslatableModel):
         default=False)
     customer_minimum_order_quantity = models.DecimalField(
         _("Customer minimum order quantity"),
-        help_text=_('Minimum order qty (eg : 0,1 Kg [i.e. 100 gr], 1 piece, 3 Kg)'),
         default=DECIMAL_ONE, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     customer_increment_order_quantity = models.DecimalField(
         _("Customer increment order quantity"),
-        help_text=_('Increment order qty (eg : 0,05 Kg [i.e. 50max 1 piece, 3 Kg)'),
         default=DECIMAL_ONE, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     customer_alert_order_quantity = models.DecimalField(
         _("Customer alert order quantity"),
-        help_text=_('Maximum order qty before alerting the customer to check (eg : 1,5 Kg, 12 pieces, 9 Kg)'),
         default=LIMIT_ORDER_QTY_ITEM, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     producer_order_by_quantity = models.DecimalField(
         _("Producer order by quantity"),
-        help_text=_('1,5 Kg [i.e. 1500 gr], 1 piece, 3 Kg)'),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     placement = models.CharField(
@@ -367,7 +362,7 @@ class Item(TranslatableModel):
             return display
 
     def get_customer_alert_order_quantity(self):
-        if self.limit_order_quantity_to_stock:
+        if settings.DJANGO_SETTINGS_STOCK and self.limit_order_quantity_to_stock:
             return "{}".format(_("Current stock"))
         return self.customer_alert_order_quantity
 

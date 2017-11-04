@@ -132,8 +132,10 @@ class Product(Item):
                 all_dates_str = []
                 is_into_offer = False
                 flexible_dates = False
-
-            contract_all_dates_str = sorted(list(filter(None, contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            if contract.permanences_dates is not None:
+                contract_all_dates_str = sorted(list(filter(None, contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            else:
+                contract_all_dates_str = []
             contract_dates_array = []
             month_save = None
             selected_dates_counter = 0
@@ -300,32 +302,45 @@ def product_pre_save(sender, **kwargs):
     ]:
         # No VAT on those products
         product.vat_level = VAT_100
-
+    if product.order_unit not in [ PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
+                                   PRODUCT_ORDER_UNIT_LT ]:
+        product.wrapped = False
     product.recalculate_prices(
         producer.producer_price_are_wo_vat,
         producer.is_resale_price_fixed,
         producer.price_list_multiplier
     )
 
-    if producer.producer_pre_opening or producer.represent_this_buyinggroup:
-        product.producer_order_by_quantity = DECIMAL_ZERO
-        product.limit_order_quantity_to_stock = True
-        # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
-        product.is_into_offer = product.stock > DECIMAL_ZERO
-    elif not producer.manage_replenishment:
+    if settings.DJANGO_SETTINGS_STOCK:
+        if producer.producer_pre_opening or producer.represent_this_buyinggroup:
+            product.producer_order_by_quantity = DECIMAL_ZERO
+            product.limit_order_quantity_to_stock = True
+            # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
+            product.is_into_offer = product.stock > DECIMAL_ZERO
+        elif not producer.manage_replenishment:
+            product.limit_order_quantity_to_stock = False
+        if product.is_box:
+            product.limit_order_quantity_to_stock = True
+    else:
         product.limit_order_quantity_to_stock = False
-    if product.is_box:
-        product.limit_order_quantity_to_stock = True
-    if product.limit_order_quantity_to_stock:
-        product.customer_alert_order_quantity = min(999, product.stock)
-    elif settings.DJANGO_SETTINGS_IS_MINIMALIST:
-        product.customer_alert_order_quantity = LIMIT_ORDER_QTY_ITEM
     if product.customer_increment_order_quantity <= DECIMAL_ZERO:
         product.customer_increment_order_quantity = DECIMAL_ONE
     if product.customer_minimum_order_quantity <= DECIMAL_ZERO:
         product.customer_minimum_order_quantity = product.customer_increment_order_quantity
     if product.order_average_weight <= DECIMAL_ZERO:
         product.order_average_weight = DECIMAL_ONE
+    if product.limit_order_quantity_to_stock:
+        product.customer_alert_order_quantity = min(999, product.stock)
+    if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
+                                      PRODUCT_ORDER_UNIT_LT]:
+            if product.order_unit == PRODUCT_ORDER_UNIT_PC:
+                product.customer_minimum_order_quantity = DECIMAL_ONE
+            product.customer_alert_order_quantity = (
+            product.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM).quantize(THREE_DECIMALS)
+        else:
+            product.customer_alert_order_quantity = (product.customer_minimum_order_quantity + (
+                product.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1))).quantize(THREE_DECIMALS)
     if not product.reference:
         product.reference = uuid.uuid1()
     # Update stock of boxes containing this product

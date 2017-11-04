@@ -151,6 +151,8 @@ Create uwsgi my_web_site config
         harakiri = 360
     sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
 
+    sudo apt-get install python3-dev
+    sudo apt-get --reinstall install uwsgi-plugin-python3
     cd ~
     virtualenv --python=python3 venv
     cd venv
@@ -160,7 +162,6 @@ Create uwsgi my_web_site config
 
 Copy from gihub/pcolmant/repanier/requirements/requirement.txt to ~/pi/venv
 Then :
-
 
     pip install -r requirement.txt
 
