@@ -731,7 +731,7 @@ class ProducerInvoice(Invoice):
             else:
                 ratio *= 100
             option_dict = {'id'  : "#order_procent{}".format(a_producer.id),
-                           'html': "{}%%".format(number_format(ratio, 0))}
+                           'html': "{}%".format(number_format(ratio, 0))}
             to_json.append(option_dict)
         if self.status != PERMANENCE_OPENED:
             option_dict = {'id'  : "#order_closed{}".format(a_producer.id),
