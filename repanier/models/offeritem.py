@@ -356,7 +356,7 @@ def offer_item_pre_save(sender, **kwargs):
 
 class OfferItemWoReceiver(OfferItem):
     def __str__(self):
-        return EMPTY_STRING
+        return self.get_long_name_with_producer()
 
     class Meta:
         proxy = True

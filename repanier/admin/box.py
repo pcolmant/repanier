@@ -58,7 +58,7 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
 class BoxContentInlineForm(ModelForm):
     previous_product = forms.ModelChoiceField(
         Product.objects.none(), required=False)
-    if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+    if settings.DJANGO_SETTINGS_STOCK:
         stock = forms.DecimalField(
             label=_("Current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
         limit_order_quantity_to_stock = forms.BooleanField(
@@ -70,11 +70,11 @@ class BoxContentInlineForm(ModelForm):
         self.fields["product"].widget.can_delete_related = False
         if self.instance.id is not None:
             self.fields["previous_product"].initial = self.instance.product
-            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            if settings.DJANGO_SETTINGS_STOCK:
                 self.fields["stock"].initial = self.instance.product.stock
                 self.fields["limit_order_quantity_to_stock"].initial = self.instance.product.limit_order_quantity_to_stock
 
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_STOCK:
             self.fields["stock"].disabled = True
             self.fields["limit_order_quantity_to_stock"].disabled = True
 
@@ -89,7 +89,7 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
     formset = BoxContentInlineFormSet
     model = BoxContent
     ordering = ("product",)
-    if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+    if not settings.DJANGO_SETTINGS_STOCK:
         fields = ['product', 'content_quantity',
                   'get_calculated_customer_content_price']
     else:
@@ -146,7 +146,7 @@ class BoxForm(TranslatableModelForm):
         label=_("Calculated customer box price"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     calculated_box_deposit = forms.DecimalField(
         label=_("Calculated box deposit"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
-    if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+    if settings.DJANGO_SETTINGS_STOCK:
         calculated_stock = forms.DecimalField(
             label=_("Calculated current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
 
@@ -157,12 +157,12 @@ class BoxForm(TranslatableModelForm):
             box_price, box_deposit = box.get_calculated_price()
             self.fields["calculated_customer_box_price"].initial = box_price
             self.fields["calculated_box_deposit"].initial = box_deposit
-            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            if settings.DJANGO_SETTINGS_STOCK:
                 self.fields["calculated_stock"].initial = box.get_calculated_stock()
 
         self.fields["calculated_customer_box_price"].disabled = True
         self.fields["calculated_box_deposit"].disabled = True
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_STOCK:
             self.fields["calculated_stock"].disabled = True
 
 
@@ -218,7 +218,7 @@ class BoxAdmin(TranslatableAdmin):
             list_display += [
                 'language_column',
             ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_STOCK:
             self.list_editable = ('stock',)
             list_display += [
                 'stock',
@@ -259,7 +259,7 @@ class BoxAdmin(TranslatableAdmin):
     duplicate_box.short_description = _('Duplicate')
 
     def get_fieldsets(self, request, box=None):
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if not settings.DJANGO_SETTINGS_STOCK:
             fields_basic = [
                 ('producer', 'long_name', 'picture2'),
                 ('customer_unit_price', 'unit_deposit'),

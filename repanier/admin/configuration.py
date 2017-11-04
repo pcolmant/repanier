@@ -190,6 +190,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'close_wo_sending',
                 'display_who_is_who',
                 'invoice',
+                'how_to_register',
                 ('currency', 'vat_id'),
                 'sms_gateway_mail',
             ]

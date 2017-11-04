@@ -101,6 +101,18 @@ logger.info("Settings loaded from {}".format(conf_file_name))
 logger.info("Allowed hosts: {}".format(DJANGO_SETTINGS_ALLOWED_HOSTS))
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
+# Avoid impossible options
+if DJANGO_SETTINGS_IS_MINIMALIST:
+    if DJANGO_SETTINGS_STOCK:
+        logger.info("DJANGO_SETTINGS_STOCK has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
+        DJANGO_SETTINGS_STOCK = False
+    if DJANGO_SETTINGS_GROUP:
+        logger.info("DJANGO_SETTINGS_GROUP has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
+        DJANGO_SETTINGS_GROUP = False
+    if DJANGO_SETTINGS_BOX:
+        logger.info("DJANGO_SETTINGS_BOX has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
+        DJANGO_SETTINGS_BOX = False
+
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"

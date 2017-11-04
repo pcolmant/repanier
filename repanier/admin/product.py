@@ -270,7 +270,7 @@ class ProductDataForm(TranslatableModelForm):
         fields = "__all__"
         widgets = {
             'long_name'              : forms.TextInput(attrs={'style': "width:450px !important"}),
-            'order_unit'             : SelectAdminOrderUnitWidget(attrs={'style': "width:450px !important"}),
+            'order_unit'             : SelectAdminOrderUnitWidget(attrs={'style': "width:700px !important"}),
             'department_for_customer': apply_select2(forms.Select),
         }
 
@@ -289,7 +289,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 'translations__long_name',)
     search_fields = ('translations__long_name',)
     actions = [
-        # 'flip_flop_select_for_offer_status',
         'duplicate_product'
     ]
     _contract = None
@@ -309,12 +308,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def has_change_permission(self, request, obj=None):
         return self.has_add_permission(request)
-
-    # def flip_flop_select_for_offer_status(self, request, queryset):
-    #     task_product.flip_flop_is_into_offer(queryset)
-
-    # flip_flop_select_for_offer_status.short_description = _(
-    #     'flip_flop_select_for_offer_status for offer')
 
     def duplicate_product(self, request, queryset):
         if 'cancel' in request.POST:
@@ -368,10 +361,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         list_display += ['producer_unit_price']
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             list_display += ['get_customer_alert_order_quantity', ]
-        if settings.DJANGO_SETTINGS_STOCK and producer is not None:
-            if producer.producer_pre_opening or producer.manage_replenishment:
-                list_display += ['stock', ]
-                list_editable += ['stock',]
+            if settings.DJANGO_SETTINGS_STOCK and producer is not None:
+                if producer.producer_pre_opening or producer.manage_replenishment:
+                    list_display += ['stock', ]
+                    list_editable += ['stock',]
         self.list_editable = list_editable
         return list_display
 

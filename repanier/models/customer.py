@@ -390,7 +390,7 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = None
     if not customer.is_active:
         customer.may_order = False
-    if customer.price_list_multiplier <= DECIMAL_ZERO:
+    if customer.price_list_multiplier <= DECIMAL_ZERO or settings.DJANGO_SETTINGS_IS_MINIMALIST:
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = ("{}".format(customer.city).upper())
     customer.login_attempt_counter = DECIMAL_ZERO

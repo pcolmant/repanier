@@ -67,21 +67,13 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         if permanence.exists():
             permanence_open = True
         if producer is not None:
-            self.list_editable = ('stock',)
-            if producer.manage_replenishment:
-                if permanence_open:
-                    return ('department_for_customer', 'get_html_long_name_with_producer',
-                            'stock',
-                            'get_html_producer_qty_stock_invoiced')
-                else:
+            if settings.DJANGO_SETTINGS_STOCK:
+                self.list_editable = ('stock',)
+                if producer.manage_replenishment and not permanence_open:
                     return ('department_for_customer', 'get_html_long_name_with_producer',
                             'stock',
                             'get_html_producer_qty_stock_invoiced',
                             'add_2_stock')
-            elif producer.represent_this_buyinggroup:
-                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-                    return ('department_for_customer', 'get_html_long_name_with_producer',
-                            'get_html_producer_qty_stock_invoiced')
                 else:
                     return ('department_for_customer', 'get_html_long_name_with_producer',
                             'stock',
