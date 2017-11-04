@@ -44,7 +44,11 @@ body {
 /* active & hover links */
 .bs-docs-sidebar .nav > .active > a,
 .bs-docs-sidebar .nav > li > a:hover,
-.bs-docs-sidebar .nav > li > a:focus,
+.bs-docs-sidebar .nav > li > a:focus {
+    color: #51a351;
+    text-decoration: none;
+    background-color: transparent;
+}
 /* selected links */
 .bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
     color: #51a351;
