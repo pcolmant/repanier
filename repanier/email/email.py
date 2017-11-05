@@ -53,10 +53,17 @@ class RepanierEmail(EmailMultiAlternatives):
         self.body = strip_tags(self.html_content)
 
         if settings.DJANGO_SETTINGS_DEMO:
-            self.to = [DEMO_EMAIL]
-            self.cc = []
-            self.bcc = []
-            email_send = self._send_email_with_error_log(from_name=from_name)
+            if settings.DEBUG:
+                print("to : {}".format(self.to))
+                print("cc : {}".format(self.cc))
+                print("bcc : {}".format(self.bcc))
+                print("subject : {}".format(self.subject))
+                email_send = True
+            else:
+                self.to = [DEMO_EMAIL]
+                self.cc = []
+                self.bcc = []
+                email_send = self._send_email_with_error_log(from_name=from_name)
         else:
             from repanier.apps import REPANIER_SETTINGS_TEST_MODE
             if REPANIER_SETTINGS_TEST_MODE:

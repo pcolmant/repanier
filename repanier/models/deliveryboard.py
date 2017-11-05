@@ -72,13 +72,13 @@ class DeliveryBoard(TranslatableModel):
         short_name = "{}".format(self.delivery_point.safe_translation_getter(
             'short_name', any_language=True, default=EMPTY_STRING
         ))
+        comment = self.safe_translation_getter(
+            'delivery_comment', any_language=True, default=EMPTY_STRING
+        )
         if admin:
-            label = "<font color=\"green\">{}</font>".format(short_name)
+            label = "<font color=\"green\">{} {}</font>".format(comment, short_name)
         else:
-            comment = self.safe_translation_getter(
-                'delivery_comment', any_language=True, default=EMPTY_STRING
-            )
-            label = "{}{}".format(comment, short_name)
+            label = "{} {}".format(comment, short_name)
         return mark_safe(label)
 
     def get_delivery_status_display(self):

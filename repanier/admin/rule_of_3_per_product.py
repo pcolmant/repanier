@@ -16,6 +16,7 @@ from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanenc
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
+from repanier.models import LUT_DepartmentForCustomer
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
 from repanier.models.permanence import Permanence
@@ -186,9 +187,9 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     form = OfferItemSendDataForm
     inlines = [OfferItemPurchaseSendInline]
     search_fields = ('translations__long_name',)
-    list_display = ('department_for_customer', 'producer', 'get_long_name_with_producer_price',
+    list_display = ['department_for_customer', 'producer', 'get_long_name_with_producer_price',
                     'get_html_producer_qty_stock_invoiced',
-                    'get_html_producer_price_purchased')
+                    'get_html_producer_price_purchased']
     list_display_links = ('get_long_name_with_producer_price',)
     list_filter = (
         OfferItemSendFilterByPermanence,

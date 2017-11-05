@@ -112,7 +112,7 @@ class OfferItem(Item):
     def get_vat_level(self):
         return self.get_vat_level_display()
 
-    get_vat_level.short_description = EMPTY_STRING
+    get_vat_level.short_description = (_("VAT level"))
     get_vat_level.allow_tags = False
     get_vat_level.admin_order_field = 'vat_level'
 

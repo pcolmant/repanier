@@ -127,7 +127,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     list_max_show_all = 16
     inlines = [CustomerPurchaseSendInline]
     list_display = ('producer', 'customer', 'get_html_producer_price_purchased')
-    list_display_links = ('customer',)
+    list_display_links = ['customer',]
     search_fields = ('customer__short_basket_name',)
     ordering = ('customer',)
 

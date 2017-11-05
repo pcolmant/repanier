@@ -168,7 +168,6 @@ class StaffWithUserDataAdmin(LUTAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer_responsible":
             kwargs["queryset"] = Customer.objects.filter(is_active=True)
-            print("---------- {}".format(dir(kwargs["widget"])))
         return super(StaffWithUserDataAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
