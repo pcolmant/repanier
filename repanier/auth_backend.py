@@ -20,7 +20,6 @@ class RepanierCustomBackend(ModelBackend):
         super(RepanierCustomBackend, self).__init__()
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        print("----- : {} {}".format(username, password))
         self.user = None
         user_username = UserModel.objects.filter(
             Q(
@@ -29,9 +28,6 @@ class RepanierCustomBackend(ModelBackend):
                 email__iexact=username
             )
         ).order_by('?').first()
-        print("----- username : {}".format(username))
-        print("----- password : {}".format(password))
-        print("----- : {}".format(user_username))
         is_admin = False
         staff = customer = None
         login_attempt_counter = DECIMAL_THREE
@@ -57,11 +53,7 @@ class RepanierCustomBackend(ModelBackend):
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
-        print("----- username before call : {}".format(username))
-        print("----- password before call : {}".format(password))
         user_or_none = super(RepanierCustomBackend, self).authenticate(request, username=username, password=password)
-        print("----- : {}".format(user_username.check_password(password)))
-        print("----- : {}".format(user_or_none))
         if user_or_none is None:
             # Failed to log in
             if login_attempt_counter < 20:

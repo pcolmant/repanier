@@ -360,12 +360,6 @@ if settings.DJANGO_SETTINGS_DEMO and settings.DEBUG:
     def customer_post_init(sender, **kwargs):
         customer = kwargs["instance"]
         if customer.id is not None:
-            customer.previous_short_basket_name = customer.short_basket_name
-            customer.previous_long_basket_name = customer.long_basket_name
-            customer.previous_user_email = customer.user.email
-            customer.previous_email2 = customer.email2
-            customer.previous_phone1 = customer.phone1
-            customer.previous_phone2 = customer.phone2
             customer.short_basket_name = "User {}".format(customer.id)
             customer.long_basket_name = "Family {}".format(customer.id)
             customer.user.email = "ask.it@to.me"
@@ -377,14 +371,6 @@ if settings.DJANGO_SETTINGS_DEMO and settings.DEBUG:
 @receiver(pre_save, sender=Customer)
 def customer_pre_save(sender, **kwargs):
     customer = kwargs["instance"]
-    if settings.DJANGO_SETTINGS_DEMO and settings.DEBUG:
-        if customer.id is not None:
-            customer.short_basket_name =  customer.previous_short_basket_name
-            customer.long_basket_name = customer.previous_long_basket_name
-            customer.user.email = customer.previous_user_email
-            customer.email2 = customer.previous_email2
-            customer.phone1 = customer.previous_phone1
-            customer.phone2 = customer.previous_phone2
     if customer.represent_this_buyinggroup:
         # The buying group may not be de activated
         customer.is_active = True
