@@ -29,7 +29,7 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
                                               level=messages.ERROR
                                               )
                 else:
-                    admin_ui.message_user(request, _("Successfully imported {}.").foramt(file_to_import.name))
+                    admin_ui.message_user(request, _("Successfully imported {}.").format(file_to_import.name))
                     split_path = request.get_full_path().split('/')
                     if len(split_path) == 7:
                         return HttpResponseRedirect("/".join(split_path[:-2]))
