@@ -90,9 +90,9 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         """
         active_users = User.objects.filter(
             Q(
-                username__iexact=email[:150], is_active=True, is_staff=False
+                username__iexact=email[:150], is_active=True
             ) | Q(
-                email__iexact=email, is_active=True, is_staff=False
+                email__iexact=email, is_active=True
             )
         ).order_by('?')
         return (u for u in active_users if u.has_usable_password())

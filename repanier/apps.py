@@ -93,6 +93,7 @@ class RepanierSettings(AppConfig):
                     bank_account="BE99 9999 9999 9999",
                     currency=CURRENCY_EUR
                 )
+                config.init_email()
             config.save()
             # Purchase.objects.filter(customer_charged__isnull=True).update(
             #     customer_charged=F('customer_invoice__customer_charged')

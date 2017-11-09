@@ -197,7 +197,7 @@ class OfferItem(Item):
 
     @cached_property
     def get_not_permanences_dates(self):
-        if self.not_permanences_dates is not None:
+        if self.not_permanences_dates:
             all_dates_str = sorted(list(filter(None, self.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             for one_date_str in all_dates_str:
@@ -208,7 +208,7 @@ class OfferItem(Item):
 
     @cached_property
     def get_html_permanences_dates(self):
-        if self.permanences_dates is not None:
+        if self.permanences_dates:
             all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             month_save = None
@@ -228,7 +228,7 @@ class OfferItem(Item):
 
     @cached_property
     def get_permanences_dates(self):
-        if self.permanences_dates is not None:
+        if self.permanences_dates:
             all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             # https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings
@@ -269,7 +269,7 @@ class OfferItem(Item):
         return qty_display
 
     def get_long_name(self, customer_price=True, is_html=False):
-        if self.permanences_dates_counter > 0:
+        if self.permanences_dates:
             new_line = "<br/>" if is_html else "\n"
             return "{}{}{}".format(
                 super(OfferItem, self).get_long_name(customer_price=customer_price),
@@ -283,7 +283,7 @@ class OfferItem(Item):
         return mark_safe(self.get_long_name(is_html=True))
 
     def get_long_name_with_producer(self, is_html=False):
-        if self.permanences_dates_counter > 0:
+        if self.permanences_dates:
             return "{}, {}".format(
                 self.producer.short_profile_name,
                 self.get_long_name(customer_price=True, is_html=is_html)

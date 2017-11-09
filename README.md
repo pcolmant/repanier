@@ -85,7 +85,9 @@ Try to connect with a ssh client as user "pi" before closing the current session
     sudo dpkg-reconfigure locales
             -- select>>>> fr_BE.UTF-8  and/or other following your need
     sudo apt-get install python-virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
-
+    sudo apt-get install python3-dev
+    sudo apt-get install uwsgi-plugin-python3
+    
     sudo -u postgres psql
         CREATE USER db_user PASSWORD 'db_password';
         ALTER ROLE db_user WITH CREATEDB;
@@ -150,8 +152,6 @@ Create uwsgi my_web_site config
         harakiri = 360
     sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
 
-    sudo apt-get install python3-dev
-    sudo apt-get --reinstall install uwsgi-plugin-python3
     cd ~
     virtualenv --python=python3 venv
     cd venv

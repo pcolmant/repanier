@@ -86,8 +86,14 @@ class Staff(MPTTModel, TranslatableModel):
 
     objects = StaffManager()
 
+    def anonymize(self):
+        self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id)
+        self.user.first_name = EMPTY_STRING
+        self.user.last_name = self.safe_translation_getter('long_name', any_language=True)
+        self.user.save()
+
     def __str__(self):
-        return self.long_name
+        return self.safe_translation_getter('long_name', any_language=True)
 
     class Meta:
         verbose_name = _("Staff member")

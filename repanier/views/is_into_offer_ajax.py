@@ -51,14 +51,14 @@ def is_into_offer(request, product_id, contract_id):
                             else:
                                 contract_content.permanences_dates = contract.permanences_dates
                                 contract_content.not_permanences_dates = None
-                            contract_content.save()
+                            contract_content.save(update_fields=['permanences_dates', 'not_permanences_dates'])
                 else:
                     new_is_into_offer = not product.is_into_offer
                     if product.limit_order_quantity_to_stock:
                         if new_is_into_offer and product.stock <= DECIMAL_ZERO:
                             new_is_into_offer = False
-                    Product.objects.filter(id=product_id).update(is_into_offer=new_is_into_offer)
                     product.is_into_offer = new_is_into_offer
+                    product.save(update_fields=['is_into_offer'])
                 return HttpResponse(
                     product.get_is_into_offer_html(contract=contract, contract_content=contract_content))
     raise Http404
@@ -100,7 +100,7 @@ def is_into_offer_content(request, product_id, contract_id, one_date_str):
                         else:
                             contract_content.permanences_dates = one_date_str
                             contract_content.not_permanences_dates = not_permanences_dates
-                            contract_content.save()
+                            contract_content.save(update_fields=['permanences_dates', 'not_permanences_dates'])
                     else:
                         all_dates_str = list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
                         if contract_content.not_permanences_dates is not None:
@@ -123,7 +123,7 @@ def is_into_offer_content(request, product_id, contract_id, one_date_str):
                             not_permanences_dates = None
                         contract_content.permanences_dates = permanences_dates
                         contract_content.not_permanences_dates = not_permanences_dates
-                        contract_content.save()
+                        contract_content.save(update_fields=['permanences_dates', 'not_permanences_dates'])
 
                     return HttpResponse(product.get_is_into_offer_html(contract=contract,
                                                                    contract_content=contract_content))

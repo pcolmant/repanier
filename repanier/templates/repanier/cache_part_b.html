@@ -1,4 +1,4 @@
-{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags %}{% spaceless %}
 {% if offer.order_unit == "105" or offer.order_unit == "110" or offer.order_unit == "115" %}
     <h5><small><i><b>{{ offer.get_reference_price }}</b></i></small></h5>
 {% endif %}
@@ -14,3 +14,4 @@
          src="{{ MEDIA_URL }}{{ offer.picture2 }}" height="110" width="110"/>
     </span>
 {% endif %}
+{% endspaceless %}

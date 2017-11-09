@@ -13,6 +13,7 @@ from repanier.models import Customer, Staff, Configuration
 
 UserModel = get_user_model()
 
+
 class RepanierCustomBackend(ModelBackend):
     user = None
 
@@ -48,7 +49,6 @@ class RepanierCustomBackend(ModelBackend):
                         'login_attempt_counter'
                     ).first().login_attempt_counter
                 else:
-                    # TODO : Remove staff login
                     login_attempt_counter = staff.login_attempt_counter
             else:
                 login_attempt_counter = customer.login_attempt_counter

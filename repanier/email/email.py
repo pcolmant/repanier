@@ -63,7 +63,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 self.to = [DEMO_EMAIL]
                 self.cc = []
                 self.bcc = []
-                email_send = self._send_email_with_error_log(from_name=from_name)
+                email_send = self._send_email_with_error_log()
         else:
             from repanier.apps import REPANIER_SETTINGS_TEST_MODE
             if REPANIER_SETTINGS_TEST_MODE:
@@ -73,7 +73,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     # Send the mail only if there is at least one tester
                     self.cc = []
                     self.bcc = []
-                    email_send = self._send_email_with_error_log(from_name=from_name)
+                    email_send = self._send_email_with_error_log()
                 else:
                     print('############################ test mode, without tester...')
             else:
@@ -94,11 +94,11 @@ class RepanierEmail(EmailMultiAlternatives):
                     if len(send_email_to) >= 1:
                         for email_to in send_email_to:
                             self.to = [email_to]
-                            email_send &= self._send_email_with_error_log(from_name=from_name)
+                            email_send &= self._send_email_with_error_log()
                             time.sleep(1)
         return email_send
 
-    def _send_email_with_error_log(self, from_name=EMPTY_STRING):
+    def _send_email_with_error_log(self):
         email_to = self.to[0]
         if not self.test_connection:
             customer = self._get_customer(email_to)

@@ -33,7 +33,7 @@ class LUT_ProductionModeManager(TreeManager, TranslatableManager):
 class LUT_ProductionMode(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     picture2 = AjaxPictureField(
@@ -69,7 +69,7 @@ class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
 class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     is_active = models.BooleanField(_("Active"), default=True)
@@ -119,7 +119,7 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     is_active = models.BooleanField(_("Active"), default=True)
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
     objects = LUT_ProductionModeManager()
@@ -148,7 +148,7 @@ class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
 class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, db_index=True, unique=True, default=EMPTY_STRING),
+        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
         description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
     )
 

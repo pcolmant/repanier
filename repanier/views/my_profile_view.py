@@ -22,7 +22,9 @@ from repanier.widget.picture import AjaxPictureWidget
 
 class CustomerForm(RepanierForm):
     long_basket_name = fields.CharField(label=_("My name is"), max_length=100)
-
+    zero_waste = fields.BooleanField(
+        label=EMPTY_STRING, required=False
+    )
     email1 = fields.EmailField(label=_('My main email address, used to reset the password and connect to the site'))
     email2 = fields.EmailField(label=_('My secondary email address (does not allow to connect to the site)'), required=False)
     accept_mails_from_members = fields.BooleanField(
@@ -70,6 +72,8 @@ class CustomerForm(RepanierForm):
             label=_('My phone numbers are visible to all members'))
         self.fields["subscribe_to_email"].widget = CheckboxWidget(
             label=_('I agree to receive emails from this site. Even in case of refusal, the email to reset the password is always sent.'))
+        self.fields["zero_waste"].widget = CheckboxWidget(
+            label=_('Family zero waste'))
 
 
 class CustomerValidationForm(NgFormValidationMixin, CustomerForm):
@@ -107,6 +111,7 @@ def my_profile_view(request):
                 customer.address = form.cleaned_data.get('address')
                 customer.picture = form.cleaned_data.get('picture')
                 customer.about_me = form.cleaned_data.get('about_me')
+                customer.zero_waste = form.cleaned_data.get('zero_waste')
                 customer.save()
                 # Important : place this code after because form = CustomerForm(data, request=request) delete form.cleaned_data
                 email = form.cleaned_data.get('email1')
@@ -114,7 +119,7 @@ def my_profile_view(request):
                 user = user_model.objects.filter(email=email).order_by('?').first()
                 if user is None or user.email != email:
                     # user.email != email for case unsensitive SQL query
-                    customer.user.email = email.lower()
+                    customer.user.username = customer.user.email = email.lower()
                     customer.user.save()
                 # User feed back : Display email in lower case.
                 data = form.data.copy()
@@ -153,6 +158,8 @@ def my_profile_view(request):
             field.widget.upload_to = "{}{}{}".format("customer", os_sep, customer.id)
         field = form.fields["about_me"]
         field.initial = customer.about_me
+        field = form.fields["zero_waste"]
+        field.initial = customer.zero_waste
 
     return render(request, "repanier/my_profile_form.html",
                   {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': None})

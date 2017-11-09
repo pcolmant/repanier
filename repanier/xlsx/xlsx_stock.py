@@ -10,11 +10,11 @@ from openpyxl.style import Fill
 from openpyxl.styles import Color
 
 import repanier.apps
-from repanier.xlsx.export_tools import *
 from repanier.const import *
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.tools import update_offer_item, next_row
+from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_row, get_header
 
 
@@ -65,13 +65,13 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
             deliveries_ws = []
             if deliveries_id is not None:
                 for delivery_cpt, delivery_id in enumerate(deliveries_id):
-                    ws_sc_name = cap("{}-{}".format(delivery_cpt, ws_customer_title), 31)
+                    ws_sc_name = format_worksheet_title("{}-{}".format(delivery_cpt, ws_customer_title))
                     for sheet in wb.worksheets:
                         if ws_sc_name == sheet.title:
                             deliveries_ws.append(ws_sc_name)
                             break
             else:
-                ws_sc_name = cap(ws_customer_title, 31)
+                ws_sc_name = format_worksheet_title(ws_customer_title)
                 for sheet in wb.worksheets:
                     if ws_sc_name == sheet.title:
                         deliveries_ws.append(ws_sc_name)
@@ -149,7 +149,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
                             else:
                                 if len(deliveries_ws) > 0:
                                     sum_value = "+".join(
-                                        "SUMIF('{}'!B2:B5000,B{},'{}'!F2:F5000)".format(
+                                        "SUMIF('{}'!B:B,B{},'{}'!F:F)".format(
                                             delivery_ws, row_num + 1, delivery_ws
                                         ) for delivery_ws in deliveries_ws
                                     )
@@ -460,14 +460,12 @@ def handle_uploaded_stock(request, producers, file_to_import, *args):
     error_msg = None
     wb = load_workbook(file_to_import)
     if wb is not None:
-        ws = wb.get_sheet_by_name(cap(slugify("{}".format(_('Current stock'))), 31))
-        if ws is None:
-            ws = wb.get_sheet_by_name(cap("{}".format(_('Current stock')), 31))
+        ws = wb.get_sheet_by_name(format_worksheet_title(_('Current stock')))
         if ws is not None:
             error, error_msg = import_producer_stock(
                 ws,
                 producers=producers
             )
             if error:
-                error_msg = cap("{}".format(_('Current stock')), 31) + " > " + error_msg
+                error_msg = format_worksheet_title(_('Current stock')) + " > " + error_msg
     return error, error_msg

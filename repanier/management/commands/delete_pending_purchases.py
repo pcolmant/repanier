@@ -13,7 +13,7 @@ from django.utils import translation
 
 class Command(BaseCommand):
     args = '<none>'
-    help = 'Open pre opened orders'
+    help = 'Delete pending purchases'
 
     def handle(self, *args, **options):
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS

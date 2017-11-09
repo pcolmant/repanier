@@ -165,11 +165,11 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
             ):
                 customer = permanenceboard.customer
                 if customer is not None:
-                    if at_least_one == False:
+                    if not at_least_one:
                         for col_num in range(6):
-                            c = ws.cell(row=row_num - 1, column=col_num)
+                            c = ws.cell(row=row_num, column=col_num)
                             c.style.borders.top.border_style = Border.BORDER_THIN
-                            c.style.borders.bottom.border_style = Border.BORDER_THIN
+                            # c.style.borders.bottom.border_style = Border.BORDER_THIN
 
                         c = ws.cell(row=row_num, column=0)
                         c.value = "-------"
@@ -197,6 +197,9 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
                         if permanence_date_save != next_permanence.permanence_date:
                             c.style.font.bold = True
                             permanence_date_save = next_permanence.permanence_date
+                            for col_num in range(6):
+                                c = ws.cell(row=row_num, column=col_num)
+                                c.style.borders.top.border_style = Border.BORDER_THIN
                     row_num += 1
 
         at_least_one = False
@@ -776,7 +779,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 producer=True
                             )
                             c = ws.cell(row=row_num, column=0)
-                            c.value = "{} - {}".format(purchase.customer.preparation_order, purchase.customer.short_basket_name)
+                            c.value = purchase.customer.short_basket_name
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=1)
@@ -990,6 +993,11 @@ def export_producer_by_product(permanence, producer, wb=None):
 
 
 def export_producer_by_customer(permanence, producer, wb=None):
+    yellowFill = Fill()
+    yellowFill.start_color.index = 'FFEEEE11'
+    yellowFill.end_color.index = 'FFEEEE11'
+    yellowFill.fill_type = Fill.FILL_SOLID
+
     language_code = translation.get_language()
     translation.activate(producer.language)
 
@@ -1027,7 +1035,14 @@ def export_producer_by_customer(permanence, producer, wb=None):
         while purchase is not None:
             customer_save = purchase.customer
             c = ws.cell(row=row_num, column=0)
-            c.value = "{} - {}".format(customer_save.preparation_order, customer_save.short_basket_name)
+            if customer_save.zero_waste:
+                c.value = "{} --------------- {}".format(
+                    customer_save.short_basket_name,
+                    _("Zero waste")
+                )
+                c.style.fill = yellowFill
+            else:
+                c.value = customer_save.short_basket_name
             c.style.font.bold = True
             row_num += 1
             row_start_customer = row_num
@@ -1267,8 +1282,10 @@ def export_customer_for_a_delivery(
             c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
             row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
-            ref_preparation_sheet = ws_preparation_title if delivery_id is None else "{}-{}".format(
-            delivery_cpt, ws_preparation_title)
+            if delivery_id is None:
+                ref_preparation_sheet = format_worksheet_title(ws_preparation_title)
+            else:
+                ref_preparation_sheet = "{}-{}".format(delivery_cpt, ws_preparation_title)
         else:
             ref_preparation_sheet = None
         while purchase is not None:
@@ -1318,7 +1335,7 @@ def export_customer_for_a_delivery(
                         if ref_preparation_sheet is None:
                             c.value = qty
                         else:
-                            c.value = "=SUMIF('{}'!A2:A5000,A{},'{}'!H2:H5000)".format(
+                            c.value = "=SUMIF('{}'!A:A,A{},'{}'!H:H)".format(
                                       ref_preparation_sheet, row_num + 1, ref_preparation_sheet
                             )
 
@@ -1440,8 +1457,8 @@ def generate_customer_xlsx(permanence, deliveries_id=None, customer=None, group=
         if wb is not None:
             # At least one order
             abstract_ws = wb.get_active_sheet()
-            ws_preparation_title = cap("{}".format(_("Preparation")), 31)
-            ws_customer_title = cap("{}".format(_('Customer check')), 31)
+            ws_preparation_title = format_worksheet_title(_('Preparation'))
+            ws_customer_title = format_worksheet_title(_('Customer check'))
             wb = export_customer_label(
                 permanence=permanence, deliveries_id=deliveries_id, wb=wb
             )

@@ -111,14 +111,13 @@ class UserDataForm(forms.ModelForm):
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = username
+            user.username = user.email = email
             user.first_name = EMPTY_STRING
             user.last_name = username
-            user.email = email
             user.save()
         else:
             user = user_model.objects.create_user(
-                username=username, email=email, password=None,
+                username=email, email=email, password=None,
                 first_name=EMPTY_STRING, last_name=username)
         self.user = user
         return self.instance
@@ -153,6 +152,7 @@ class CustomerResource(resources.ModelResource):
     delivery_point = fields.Field(attribute='delivery_point',
                                   widget=TranslatedForeignKeyWidget(LUT_DeliveryPoint, field='short_name'))
     valid_email = fields.Field(attribute='valid_email', widget=DecimalBooleanWidget(), readonly=True)
+    zero_waste = fields.Field(attribute='zero_waste', widget=DecimalBooleanWidget(), readonly=True)
     date_joined = fields.Field(attribute='get_admin_date_joined', widget=CharWidget(), readonly=True)
 
     def before_save_instance(self, instance, using_transactions, dry_run):
@@ -198,7 +198,7 @@ class CustomerResource(resources.ModelResource):
             'date_balance', 'balance', 'price_list_multiplier',
             'membership_fee_valid_until', 'last_membership_fee', 'last_membership_fee_date',
             'participation', 'purchase', 'represent_this_buyinggroup', 'is_group', 'is_active', 'delivery_point',
-            'valid_email'
+            'zero_waste', 'valid_email'
         )
         export_order = fields
         import_id_fields = ('id',)
@@ -353,6 +353,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_advanced = [
                 'bank_account1',
                 'bank_account2',
+                'zero_waste',
                 'get_last_login',
                 'get_admin_date_joined',
                 'get_last_membership_fee',
@@ -367,6 +368,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_advanced = [
                 'bank_account1',
                 'bank_account2',
+                'zero_waste'
             ]
         fieldsets = (
             (None, {'fields': fields_basic}),

@@ -22,7 +22,7 @@ from repanier.models.customer import Customer
 def logout_view(request, next_page=None,
                 template_name='repanier/registration/logged_out.html',
                 redirect_field_name=REDIRECT_FIELD_NAME,
-                current_app=None, extra_context=None):
+                extra_context=None):
     """
     Logs out the user and displays 'You are logged out' message.
     """

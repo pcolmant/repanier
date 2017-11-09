@@ -104,8 +104,11 @@ class Customer(models.Model):
         verbose_name=_("Delivery point"),
         blank=True, null=True, default=None)
     is_active = models.BooleanField(_("Active"), default=True)
+    # This indicate that the user record data have been replaced with anonymous data in application of GDPR
+    is_anonymized = models.BooleanField(default=False)
     is_group = models.BooleanField(_("Group"), default=False)
     may_order = models.BooleanField(_("May order"), default=True)
+    zero_waste = models.BooleanField(_("Zero waste"), default=False)
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
     subscribe_to_email = models.BooleanField(_("Agree to receive emails from this site"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
@@ -340,6 +343,28 @@ class Customer(models.Model):
             return False
         return True
 
+    def anonymize(self):
+        if self.represent_this_buyinggroup:
+            return
+        self.short_basket_name = "{}-{}".format(_("BASKET"), self.id)
+        self.long_basket_name = "{} {}".format(_("Family"), self.id)
+        self.email2 = EMPTY_STRING
+        self.picture = EMPTY_STRING
+        self.phone1 = EMPTY_STRING
+        self.phone2 = EMPTY_STRING
+        self.bank_account1 = EMPTY_STRING
+        self.bank_account1 = EMPTY_STRING
+        self.vat_id = EMPTY_STRING
+        self.address = EMPTY_STRING
+        self.about_me = EMPTY_STRING
+        self.memo = EMPTY_STRING
+        self.user.username = self.user.email = "{}@repanier.be".format(self.short_basket_name)
+        self.user.first_name = EMPTY_STRING
+        self.user.last_name = self.short_basket_name
+        self.user.save()
+        self.is_anonymized = True
+        self.save()
+
     def __str__(self):
         if self.delivery_point is None:
             return self.short_basket_name
@@ -355,22 +380,10 @@ class Customer(models.Model):
         ]
 
 
-if settings.DJANGO_SETTINGS_DEMO and settings.DEBUG:
-    @receiver(post_init, sender=Customer)
-    def customer_post_init(sender, **kwargs):
-        customer = kwargs["instance"]
-        if customer.id is not None:
-            customer.short_basket_name = "User {}".format(customer.id)
-            customer.long_basket_name = "Family {}".format(customer.id)
-            customer.user.email = "ask.it@to.me"
-            customer.email2 = "ask.also.it@to.me"
-            customer.phone1 = "0499 96 64 32"
-            customer.phone2 = "0499 96 64 32"
-
-
 @receiver(pre_save, sender=Customer)
 def customer_pre_save(sender, **kwargs):
     customer = kwargs["instance"]
+
     if customer.represent_this_buyinggroup:
         # The buying group may not be de activated
         customer.is_active = True

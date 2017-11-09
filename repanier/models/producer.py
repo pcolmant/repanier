@@ -8,7 +8,7 @@ from django.core import urlresolvers
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_init
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.formats import number_format
@@ -104,6 +104,8 @@ class Producer(models.Model):
     represent_this_buyinggroup = models.BooleanField(
         _("Represent this buyinggroup"), default=False)
     is_active = models.BooleanField(_("Active"), default=True)
+    # This indicate that the user record data have been replaced with anonymous data in application of GDPR
+    is_anonymized = models.BooleanField(default=False)
 
     def get_negative_balance(self):
         return - self.balance
@@ -326,6 +328,24 @@ class Producer(models.Model):
             to_json.append(option_dict)
 
         return
+
+    def anonymize(self):
+        if self.represent_this_buyinggroup:
+            return
+        self.short_profile_name = "{}-{}".format(_("PRODUCER"), self.id)
+        self.long_profile_name = "{} {}".format(_("Producer"), self.id)
+        self.email = "{}@repanier.be".format(self.short_profile_name)
+        self.email2 = EMPTY_STRING
+        self.email3 = EMPTY_STRING
+        self.phone1 = EMPTY_STRING
+        self.phone2 = EMPTY_STRING
+        self.bank_account = EMPTY_STRING
+        self.vat_id = EMPTY_STRING
+        self.fax = EMPTY_STRING
+        self.address = EMPTY_STRING
+        self.memo = EMPTY_STRING
+        self.is_anonymized = True
+        self.save()
 
     def __str__(self):
         if self.producer_price_are_wo_vat:

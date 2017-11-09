@@ -1,4 +1,4 @@
-{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags %}{% spaceless %}
 {{ offer.producer.short_profile_name }}<br/>
 <small>{{ offer.department_for_customer.short_name }}</small><br/>
 {% if offer.picture2 %}
@@ -25,3 +25,4 @@
             <small> -</small>{% endif %}{% endif %}
     {% endif %}
 {% endfor %}
+{% endspaceless %}

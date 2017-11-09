@@ -24,7 +24,7 @@ from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, WEBMASTER_G
 def login_view(request, template_name='repanier/registration/login.html',
                redirect_field_name=REDIRECT_FIELD_NAME,
                authentication_form=AuthRepanierLoginForm,
-               current_app=None, extra_context=None):
+               extra_context=None):
     """
     Displays the login form and handles the login action.
     """

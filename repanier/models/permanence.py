@@ -584,7 +584,7 @@ class Permanence(TranslatableModel):
             new_permanence.set_current_language(language_code)
             self.set_current_language(language_code)
             try:
-                new_permanence.short_name = self.short_name
+                new_permanence.short_name = self.safe_translation_getter('short_name', any_language=True)
                 new_permanence.save()
             except TranslationDoesNotExist:
                 pass
@@ -814,14 +814,20 @@ class Permanence(TranslatableModel):
             ).order_by(
                 "translations__order_sort_order"
             )
+            department_for_customer_save = None
             for o in qs:
-                result.append("<li>{}, {}, {}</li>".format(
-                    o.get_long_name(),
-                    o.producer.short_profile_name,
-                    o.email_offer_price_with_vat,
+                if department_for_customer_save != o.department_for_customer:
+                    if department_for_customer_save is not None:
+                        result.append("</ul>")
+                    department_for_customer_save = o.department_for_customer
+                    result.append("<ul>{}".format(department_for_customer_save))
+                result.append("<li>{}</li>".format(
+                    o.get_long_name_with_producer(is_html=True)
                 ))
+            if department_for_customer_save is not None:
+                result.append("</ul>")
         if result:
-            return mark_safe("<ul{}</ul>".format(EMPTY_STRING.join(result)))
+            return mark_safe("<ul>{}</ul>".format(EMPTY_STRING.join(result)))
         return EMPTY_STRING
 
     def get_full_status_display(self):

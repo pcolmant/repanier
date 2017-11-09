@@ -289,7 +289,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 'translations__long_name',)
     search_fields = ('translations__long_name',)
     actions = [
-        'duplicate_product'
+        'duplicate_product',
+        'deselect_is_into_offer'
     ]
     _contract = None
 
@@ -308,6 +309,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def has_change_permission(self, request, obj=None):
         return self.has_add_permission(request)
+
+    def deselect_is_into_offer(self, request, queryset):
+        task_product.deselect_is_into_offer(queryset, self._contract)
+
+    deselect_is_into_offer.short_description = _('Remove selected products from the offer')
 
     def duplicate_product(self, request, queryset):
         if 'cancel' in request.POST:
@@ -574,6 +580,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def changelist_view(self, request, extra_context=None):
         # Important : Needed to pass contract to product.get_is_into_offer() in the list_display of 'get_is_into_offer'
+        # and in 'deselect_is_into_offer'
         if settings.DJANGO_SETTINGS_CONTRACT:
             contract_id = sint(request.GET.get('commitment', 0))
             contract = Contract.objects.filter(id=contract_id).order_by('?').first()

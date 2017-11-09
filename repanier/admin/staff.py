@@ -61,14 +61,14 @@ class UserDataForm(TranslatableModelForm):
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.email = email
+            user.username = user.email = email
             user.save()
         else:
             # Important : The username who is never used is uuid1 to avoid clash with customer username
             # The staff member login with his customer mail address
             # Linked with AuthRepanierPasswordResetForm.get_users
             user = user_model.objects.create_user(
-                username=uuid.uuid1().hex, email=email, password=None,
+                username=email, email=email, password=None,
                 first_name=EMPTY_STRING, last_name=EMPTY_STRING)
         self.user = user
         return self.instance

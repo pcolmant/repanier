@@ -375,7 +375,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 fields_advanced = [
                     'price_list_multiplier',
                     'minimum_order_value',
-                    'invoice_by_basket',
+                    'invoice_by_basket'
                 ]
         else:
             if producer is not None and producer.represent_this_buyinggroup:

@@ -10,6 +10,9 @@ import os
 # CREATE DATABASE ptidej OWNER pi;
 # gunzip ptidej-db.bak.XYZT.gz
 #  pg_restore  --username=pi --format=c --no-owner --dbname=ptidej ptidej-db.bak.XYZT
+from repanier.const import DECIMAL_ZERO
+from repanier.models.customer import Customer
+
 
 class Command(BaseCommand):
     args = '<none>'
@@ -47,3 +50,11 @@ class Command(BaseCommand):
                 email.attach_file(os.path.abspath(migrations_files.name),
                                   'application/zip')
                 email.send()
+                for customer in Customer.objects.filter(
+                    represent_this_buyinggroup=False,
+                    is_group=False,
+                    is_anonymized=False,
+                ).order_by('?'):
+                    if customer.get_purchase() <= 0 and customer.get_participation() <= 0 and customer.get_admin_balance().amount == DECIMAL_ZERO:
+                        customer.is_active = False
+                        customer.anonymize()
