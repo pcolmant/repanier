@@ -289,8 +289,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 'translations__long_name',)
     search_fields = ('translations__long_name',)
     actions = [
+        'deselect_is_into_offer',
         'duplicate_product',
-        'deselect_is_into_offer'
     ]
     _contract = None
 
