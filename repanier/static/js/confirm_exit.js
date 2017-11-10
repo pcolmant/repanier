@@ -2,7 +2,7 @@
     $(document).ready(function() {
         if(location.pathname.indexOf('change') <= -1) {
             var formmodified = false;
-            $('form *').change(function () {
+            $("input[type='number'] form").change(function () {
                 formmodified = true;
             });
             window.onbeforeunload = confirmExit;
