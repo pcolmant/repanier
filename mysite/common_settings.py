@@ -232,7 +232,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'easy_select2',
     'djng',
-    'recurrence'
+    'recurrence',
 )
 
 # https://docs.djangoproject.com/fr/1.9/ref/middleware/
@@ -254,6 +254,15 @@ MIDDLEWARE = (
     'cms.middleware.language.LanguageCookieMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
 )
+
+if DEBUG:
+    INSTALLED_APPS += (
+        'debug_toolbar',
+    )
+    INTERNAL_IPS = ['10.0.2.2',]
+    MIDDLEWARE = (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ) + MIDDLEWARE
 
 TEMPLATES = [
     {
