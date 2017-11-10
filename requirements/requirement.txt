@@ -35,3 +35,4 @@ psycopg2==2.7.3.2
 pyaml
 tablib==0.11.4
 uwsgi
+django-debug-toolbar
