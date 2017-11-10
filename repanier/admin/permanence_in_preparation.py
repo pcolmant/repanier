@@ -13,7 +13,6 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 from parler.forms import TranslatableModelForm
