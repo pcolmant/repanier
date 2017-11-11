@@ -53,11 +53,7 @@ def is_into_offer(request, product_id, contract_id):
                                 contract_content.not_permanences_dates = None
                             contract_content.save(update_fields=['permanences_dates', 'not_permanences_dates'])
                 else:
-                    new_is_into_offer = not product.is_into_offer
-                    if product.limit_order_quantity_to_stock:
-                        if new_is_into_offer and product.stock <= DECIMAL_ZERO:
-                            new_is_into_offer = False
-                    product.is_into_offer = new_is_into_offer
+                    product.is_into_offer = not product.is_into_offer
                     product.save(update_fields=['is_into_offer'])
                 return HttpResponse(
                     product.get_is_into_offer_html(contract=contract, contract_content=contract_content))
