@@ -142,7 +142,7 @@ class CustomerInvoice(Invoice):
         # round to 2 decimals
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
 
-    @cached_property
+    @property
     def has_purchase(self):
         if self.total_price_with_tax.amount != DECIMAL_ZERO or self.is_order_confirm_send:
             return True
@@ -152,7 +152,7 @@ class CustomerInvoice(Invoice):
         result = False
         result_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.permanence_id,
-            producer_id=self.id
+            customer_invoice_id=self.id
         ).order_by('?').aggregate(
             Sum('quantity_ordered'),
             Sum('quantity_invoiced'),
@@ -248,14 +248,14 @@ class CustomerInvoice(Invoice):
                             status=PERMANENCE_OPENED
                         ) | Q(
                             permanence_id=permanence.id,
-                            delivery_point__customer_responsible__isnull=False,
+                            delivery_point__customer_responsible__isnull=True,
                             status=PERMANENCE_OPENED
                         )
                     ).order_by('?')
                 else:
                     qs = DeliveryBoard.objects.filter(
                         permanence_id=permanence.id,
-                        delivery_point__customer_responsible__isnull=False,
+                        delivery_point__customer_responsible__isnull=True,
                         status=PERMANENCE_OPENED
                     ).order_by('?')
                 if qs.exists():
@@ -331,13 +331,12 @@ class CustomerInvoice(Invoice):
 
             msg_delivery = """
             {}<b><i>
-            <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onchange=\"delivery_ajax({})\" class=\"form-control\">
+            <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onchange=\"delivery_ajax()\" class=\"form-control\">
             <option value=\"{}\" selected>{}</option>
             </select>
             </i></b><br/>{}{}
             """.format(
                 _("Delivery point"),
-                delivery_id,
                 delivery_id,
                 delivery_id,
                 label,
@@ -374,7 +373,7 @@ class CustomerInvoice(Invoice):
                     if is_basket:
                         if self.status == PERMANENCE_OPENED:
                             if (permanence.with_delivery_point and self.delivery is None) \
-                                    or self.total_price_with_tax == DECIMAL_ZERO:
+                                    or not self.has_purchase:
                                 btn_disabled = "disabled"
                             msg_confirmation1 = "<font color=\"red\">{}</font><br/>".format(_(
                                 "/!\ Unconfirmed orders will be canceled."))
