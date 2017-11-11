@@ -1,6 +1,6 @@
 {% load i18n %}
 {% spaceless %}
-{% with id=widget.attrs.id name=widget.name %}
+{% with name=widget.name %}
 <select name="{{ name }}"{% include "django/forms/widgets/attrs.html" %} onchange="{{ name }}_select(this.value)">{% for group_name, group_choices, group_index in widget.optgroups %}{% if group_name %}
   <optgroup label="{{ group_name }}">{% endif %}{% for option in group_choices %}
   {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
