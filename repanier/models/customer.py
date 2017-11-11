@@ -369,7 +369,7 @@ class Customer(models.Model):
         if self.delivery_point is None:
             return self.short_basket_name
         else:
-            return "{} - {}".format(self.short_basket_name, self.delivery_point)
+            return "{} - {}".format(self.delivery_point, self.short_basket_name)
 
     class Meta:
         verbose_name = _("Customer")

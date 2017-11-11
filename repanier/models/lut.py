@@ -93,7 +93,8 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
 
     def __str__(self):
         if self.customer_responsible:
-            return "[{}] {}".format(_("Group"), self.customer_responsible.short_basket_name)
+            # return "[{}] {}".format(_("Group"), self.customer_responsible.short_basket_name)
+            return "[{}]".format(self.customer_responsible.short_basket_name)
         else:
             return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
