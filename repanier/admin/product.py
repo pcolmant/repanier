@@ -353,24 +353,17 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     duplicate_product.short_description = _('Duplicate')
 
     def get_list_display(self, request):
-        producer_id = sint(request.GET.get('producer', 0))
-        if producer_id != 0:
-            producer_queryset = Producer.objects.filter(id=producer_id).order_by('?')
-            producer = producer_queryset.first()
-        else:
-            producer = None
-
-        list_display = ['get_is_into_offer', '__str__',]
-        list_editable = ['producer_unit_price',]
+        list_display = ['get_is_into_offer', '__str__']
+        list_editable = ['producer_unit_price']
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            list_display += ['language_column',]
+            list_display += ['language_column']
         list_display += ['producer_unit_price']
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            list_display += ['get_customer_alert_order_quantity', ]
-            if settings.DJANGO_SETTINGS_STOCK and producer is not None:
-                if producer.producer_pre_opening or producer.manage_replenishment:
-                    list_display += ['stock', ]
-                    list_editable += ['stock',]
+        if settings.DJANGO_SETTINGS_STOCK:
+            list_display += ['stock']
+            list_editable += ['stock']
+        else:
+            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                list_display += ['get_customer_alert_order_quantity']
         self.list_editable = list_editable
         return list_display
 
