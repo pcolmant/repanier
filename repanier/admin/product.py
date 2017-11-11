@@ -375,7 +375,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         list_filter += [
             ProductFilterByProducer,
             ProductFilterByDepartmentForThisProducer,
-            # 'is_into_offer',
+            'is_into_offer',
             # 'is_active',
             'wrapped',
             ProductFilterByPlacement,
