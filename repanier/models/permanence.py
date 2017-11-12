@@ -818,9 +818,9 @@ class Permanence(TranslatableModel):
             for o in qs:
                 if department_for_customer_save != o.department_for_customer:
                     if department_for_customer_save is not None:
-                        result.append("</ul>")
+                        result.append("</ul></li>")
                     department_for_customer_save = o.department_for_customer
-                    result.append("<ul>{}".format(department_for_customer_save))
+                    result.append("<li>{}<ul>".format(department_for_customer_save))
                 result.append("<li>{}</li>".format(
                     o.get_long_name_with_producer(is_html=True)
                 ))
