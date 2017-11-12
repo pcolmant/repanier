@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import F
 from django.db.models.signals import post_init, pre_save
 from django.dispatch import receiver
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
@@ -107,7 +108,6 @@ class Purchase(models.Model):
             return (offer_item.customer_unit_price.amount * self.price_list_multiplier).quantize(TWO_DECIMALS)
 
     get_customer_unit_price.short_description = (_("Customer unit price"))
-    get_customer_unit_price.allow_tags = False
 
     def get_unit_deposit(self):
         return self.offer_item.unit_deposit.amount
@@ -131,7 +131,6 @@ class Purchase(models.Model):
         return self.selling_price
 
     get_selling_price.short_description = (_("Customer row price"))
-    get_selling_price.allow_tags = False
 
     def get_producer_unit_price(self):
         offer_item = self.offer_item
@@ -140,11 +139,10 @@ class Purchase(models.Model):
         return offer_item.producer_unit_price.amount
 
     get_producer_unit_price.short_description = (_("Producer unit price"))
-    get_producer_unit_price.allow_tags = False
 
     def get_html_producer_unit_price(self):
         if self.offer_item is not None:
-            return _("<b>%(price)s</b>") % {'price': self.get_producer_unit_price()}
+            return mark_safe(_("<b>%(price)s</b>") % {'price': self.get_producer_unit_price()})
         return EMPTY_STRING
 
     get_html_producer_unit_price.short_description = (_("Producer unit price"))
@@ -152,25 +150,22 @@ class Purchase(models.Model):
 
     def get_html_unit_deposit(self):
         if self.offer_item is not None:
-            return _("<b>%(price)s</b>") % {'price': self.offer_item.deposit}
+            return mark_safe(_("<b>%(price)s</b>") % {'price': self.offer_item.deposit})
         return EMPTY_STRING
 
     get_html_unit_deposit.short_description = (_("Deposit"))
-    get_html_unit_deposit.allow_tags = True
 
     def get_permanence_display(self):
         return self.permanence.get_permanence_display()
 
     get_permanence_display.short_description = (_("Permanence"))
-    get_permanence_display.allow_tags = False
 
     def get_delivery_display(self):
         if self.customer_invoice is not None and self.customer_invoice.delivery is not None:
-            return self.customer_invoice.delivery.get_delivery_display(admin=True)
+            return self.customer_invoice.delivery.get_delivery_display()
         return EMPTY_STRING
 
     get_delivery_display.short_description = (_("Delivery point"))
-    get_delivery_display.allow_tags = False
 
     def get_quantity(self):
         if self.status < PERMANENCE_WAIT_FOR_SEND:
@@ -179,7 +174,6 @@ class Purchase(models.Model):
             return self.quantity_invoiced
 
     get_quantity.short_description = (_("Quantity invoiced"))
-    get_quantity.allow_tags = False
 
     def get_producer_quantity(self):
         if self.status < PERMANENCE_WAIT_FOR_SEND:

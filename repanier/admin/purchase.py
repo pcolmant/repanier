@@ -138,7 +138,6 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         'get_permanence_display',
         'get_delivery_display',
         'customer',
-        # 'get_department_for_customer',
         'offer_item',
         'get_quantity',
         'get_selling_price',
