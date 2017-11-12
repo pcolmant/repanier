@@ -1020,7 +1020,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
         offer_item__translations__language_code=translation.get_language(),
     ).order_by(
         "customer__short_basket_name",
-        "offer_item__translations__preparation_sort_order"
+        "offer_item__translations__producer_sort_order"
     ).select_related("offer_item")
     purchases = purchase_set.iterator()
     purchase = next_row(purchases)
