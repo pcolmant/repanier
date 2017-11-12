@@ -162,7 +162,7 @@ class Purchase(models.Model):
 
     def get_delivery_display(self):
         if self.customer_invoice is not None and self.customer_invoice.delivery is not None:
-            return self.customer_invoice.delivery.get_delivery_display()
+            return self.customer_invoice.delivery.get_delivery_display(br=True)
         return EMPTY_STRING
 
     get_delivery_display.short_description = (_("Delivery point"))
