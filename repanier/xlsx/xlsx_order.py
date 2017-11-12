@@ -1293,6 +1293,7 @@ def export_customer_for_a_delivery(
             row_start_customer = row_num + 1
             first_purchase = True
             total_price = DECIMAL_ZERO
+            something_ordered = False
             while purchase is not None and customer_save.id == purchase.customer_id:
                 department_for_customer_save__id = offer_item_save.department_for_customer_id
                 department_for_customer_save__short_name = offer_item_save.department_for_customer.short_name \
@@ -1305,6 +1306,7 @@ def export_customer_for_a_delivery(
                         hide_column_producer = False
                     qty = purchase.get_producer_quantity()
                     if deposit or qty != DECIMAL_ZERO:
+                        something_ordered = True
                         base_unit = get_base_unit(
                             qty,
                             offer_item_save.order_unit,
@@ -1410,29 +1412,30 @@ def export_customer_for_a_delivery(
                 #     # Need Openpyxl 2.x
                 #     page_break = Break(id=row_number)  # create Break obj
                 #     ws.page_breaks.append(page_break)
-            row_num += 1
-            c = ws.cell(row=row_num, column=4)
-            c.value = group_label
-            c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            c.style.font.bold = True
-            c = ws.cell(row=row_num, column=8)
-            c.value = "{} {}".format(_("Total Price"), customer_save.long_basket_name)
-            c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-            c.style.font.bold = True
-            c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
-            c = ws.cell(row=row_num, column=9)
-            if xlsx_formula:
-                c.value = "=SUM(J{}:J{})".format(row_start_customer, row_num)
-            else:
-                c.value = total_price
-            c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-            c.style.font.bold = True
-            # Display a separator line between customers
-            row_num += 1
-            for col_num in range(11):
-                c = ws.cell(row=row_num, column=col_num)
-                c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
-            row_num += 2
+            if something_ordered:
+                row_num += 1
+                c = ws.cell(row=row_num, column=4)
+                c.value = group_label
+                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                c.style.font.bold = True
+                c = ws.cell(row=row_num, column=8)
+                c.value = "{} {}".format(_("Total Price"), customer_save.long_basket_name)
+                c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                c.style.font.bold = True
+                c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
+                c = ws.cell(row=row_num, column=9)
+                if xlsx_formula:
+                    c.value = "=SUM(J{}:J{})".format(row_start_customer, row_num)
+                else:
+                    c.value = total_price
+                c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                c.style.font.bold = True
+                # Display a separator line between customers
+                row_num += 1
+                for col_num in range(11):
+                    c = ws.cell(row=row_num, column=col_num)
+                    c.style.borders.bottom.border_style = Border.BORDER_MEDIUMDASHED
+                row_num += 2
 
         ws.column_dimensions[get_column_letter(1)].visible = False
         ws.column_dimensions[get_column_letter(2)].visible = False
