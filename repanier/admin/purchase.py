@@ -146,7 +146,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     list_select_related = ('permanence', 'customer')
     list_per_page = 16
     list_max_show_all = 16
-    ordering = ('customer', 'producer', 'offer_item')
+    ordering = ('customer', 'offer_item__translations__order_sort_order')
     list_filter = (
         PurchaseFilterByPermanence,
         PurchaseFilterByProducerForThisPermanence,
@@ -169,15 +169,13 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         permanence_id = request.GET.get('permanence', None)
         if permanence_id is not None:
-            return super(PurchaseAdmin, self).get_queryset(request) \
-                .filter(
+            return super(PurchaseAdmin, self).get_queryset(request).filter(
                 permanence=permanence_id,
                 offer_item__translations__language_code=translation.get_language(),
                 is_box_content=False
             ).distinct()
         else:
-            return super(PurchaseAdmin, self).get_queryset(request) \
-                .filter(
+            return super(PurchaseAdmin, self).get_queryset(request).filter(
                 offer_item__translations__language_code=translation.get_language(),
                 is_box_content=False
             ).distinct()
