@@ -279,7 +279,7 @@ class Purchase(models.Model):
     class Meta:
         verbose_name = _("Purchase")
         verbose_name_plural = _("Purchases")
-        ordering = ("permanence", "customer", "offer_item", "is_box_content")
+        # ordering = ("permanence", "customer", "offer_item", "is_box_content")
         unique_together = ("customer", "offer_item", "is_box_content")
         index_together = [
             ["permanence", "customer_invoice"]
