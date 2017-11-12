@@ -764,33 +764,20 @@ def reorder_offer_items(permanence_id):
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
         translation.activate(language_code)
-        # customer order lists sort order
+
         i = 0
-        if settings.DJANGO_SETTINGS_CONTRACT:
-            reorder_queryset = offer_item_qs.filter(
-                is_box=False,
-                translations__language_code=language_code
-            ).order_by(
-                # "-permanences_dates_counter",
-                "department_for_customer",
-                "translations__long_name",
-                "order_average_weight",
-                "producer__short_profile_name",
-                "permanences_dates_order"
-            )
-        else:
-            reorder_queryset = offer_item_qs.filter(
-                is_box=False,
-                translations__language_code=language_code
-            ).order_by(
-                "department_for_customer",
-                "translations__long_name",
-                "order_average_weight",
-                "producer__short_profile_name",
-                "permanences_dates_order"
-            )
+        reorder_queryset = offer_item_qs.filter(
+            is_box=False,
+            translations__language_code=language_code
+        ).order_by(
+            "department_for_customer",
+            "translations__long_name",
+            "order_average_weight",
+            "producer__short_profile_name",
+            "permanences_dates_order"
+        )
         for offer_item in reorder_queryset:
-            offer_item.producer_sort_order = offer_item.order_sort_order = i
+            offer_item.producer_sort_order = offer_item.order_sort_order = offer_item.preparation_sort_order = i
             offer_item.save_translations()
             if i < 9999:
                 i += 1
@@ -810,22 +797,6 @@ def reorder_offer_items(permanence_id):
             if i < 19999:
                 i += 1
         # preparation lists sort order
-        i = 0
-        reorder_queryset = offer_item_qs.filter(
-            is_box=False,
-            translations__language_code=language_code
-        ).order_by(
-            "department_for_customer",
-            # "department_for_customer__lft",
-            "translations__long_name",
-            "order_average_weight",
-            "producer__short_profile_name"
-        )
-        for offer_item in reorder_queryset:
-            offer_item.preparation_sort_order = i
-            offer_item.save_translations()
-            if i < 9999:
-                i += 1
         i = -9999
         reorder_queryset = offer_item_qs.filter(
             is_box=True,
@@ -839,9 +810,7 @@ def reorder_offer_items(permanence_id):
         # 'TranslatableQuerySet' object has no attribute 'desc'
         for offer_item in reorder_queryset:
             # display box on top
-            offer_item.order_sort_order = i
-            offer_item.producer_sort_order = i
-            offer_item.preparation_sort_order = i
+            offer_item.producer_sort_order = offer_item.order_sort_order = offer_item.preparation_sort_order = i
             offer_item.save_translations()
             if i < -1:
                 i += 1
