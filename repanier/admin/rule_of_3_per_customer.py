@@ -216,7 +216,10 @@ class CustomerSendAdmin(admin.ModelAdmin):
                     purchase.save_box()
         for purchase_form in formset:
             purchase_form_instance = purchase_form.instance
-            offer_item = purchase_form_instance.offer_item
+            try:
+                offer_item = purchase_form_instance.offer_item
+            except: #  RelatedObjectDoesNotExist:
+                offer_item = None
             if offer_item is None:
                 purchase_form.repanier_is_valid = False
             else:
