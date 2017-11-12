@@ -84,32 +84,42 @@ class ProductFilterByContract(SimpleListFilter):
 
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
     title = _("Departments")
-    parameter_name = 'department_for_customer'
-    template = 'admin/department_filter.html'
+    parameter_name = "department_for_customer"
+    template = "admin/department_filter.html"
 
     def lookups(self, request, model_admin):
-        producer_id = request.GET.get('producer')
+        producer_id = request.GET.get("producer")
         if producer_id:
-            inner_qs = Product.objects.filter(is_active=True, producer_id=producer_id).order_by().distinct(
-                'department_for_customer__id')
+            inner_qs = Product.objects.filter(producer_id=producer_id).order_by(
+                "department_for_customer").distinct(
+                "department_for_customer__id")
         else:
-            permanence_id = request.GET.get('permanence')
+            permanence_id = request.GET.get("permanence")
             if permanence_id:
-                inner_qs = Product.objects.filter(offeritem__permanence_id=permanence_id).order_by().distinct(
-                    'department_for_customer__id')
+                inner_qs = Product.objects.filter(offeritem__permanence_id=permanence_id).order_by(
+                    "department_for_customer").distinct(
+                    "department_for_customer__id")
             else:
-                inner_qs = Product.objects.filter(is_active=True).order_by().distinct(
-                    'department_for_customer__id')
+                inner_qs = Product.objects.all().order_by("department_for_customer").distinct(
+                    "department_for_customer__id")
 
         return [(d.id, d.short_name) for d in
-                LUT_DepartmentForCustomer.objects.filter(is_active=True, product__in=inner_qs)
+                LUT_DepartmentForCustomer.objects.filter(product__in=inner_qs)
                 ]
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(department_for_customer_id=self.value())
-        else:
-            return queryset
+            # When self.value() is not a valid filter value, Django display "all"
+            # in the admin UI filter and show nothing. This occurs when you change
+            # of producer and that this producer doesn't have such products.
+            # This is a way to avoid it
+            producer_id = request.GET.get("producer")
+            if Product.objects.filter(
+                    producer_id=producer_id,
+                    department_for_customer_id=self.value()
+            ).order_by("?").exists():
+                return queryset.filter(department_for_customer_id=self.value())
+        return queryset
 
 
 class ProductFilterByProductioMode(SimpleListFilter):
