@@ -7,7 +7,7 @@
         <h4>{{ producer.long_profile_name }}</h4>
         {% if object %}
         <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> {% trans "Previous balance" %} : {{ object.get_negative_previous_balance }}
-            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br/></h4>
+            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br></h4>
         {%  endif %}
         {% if offer_item_set %}
             <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% trans "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
@@ -24,9 +24,9 @@
                         {% trans "Shipping cost" %} : {{ object.delta_transport }}
                     {% endif %}
                 </small>
-                <br/>
+                <br>
                 {% if object.delta_price_with_tax != 0 %}
-                    {% if object.delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br/>
+                    {% if object.delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
                 {% endif %}
             {% endif %}
         {% endif %}
@@ -38,7 +38,7 @@
                 {% else %}
                     {% trans "Refund" %}
                 {% endif %} : {{ bank_account.bank_amount_in }}
-                <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+                <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
             {% endif %}
             {% if bank_account.bank_amount_out != 0 %}
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans "Refund" %} :
@@ -47,7 +47,7 @@
                 {% else %}
                     {% trans "Payment" %}
                 {% endif %} : {{ bank_account.bank_amount_out }}
-                <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br/>
+                <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
             {% endif %}
         {% endfor %}
         <div class="panel">
@@ -82,7 +82,7 @@
     </div>
     </center>
         {% if offer_item_set %}
-            <br/>
+            <br>
             <table class="table table-hover table-bordered">
                 <thead>
                 <tr>
@@ -133,7 +133,7 @@
     </div>
     </div>
     <div class="hidden-xs">
-        <br/>
+        <br>
     </div>
 {% addtoblock "lastjs" %}
     <script type="text/javascript">

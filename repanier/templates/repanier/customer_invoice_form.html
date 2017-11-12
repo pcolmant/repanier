@@ -13,7 +13,7 @@
                 <div class="col-lg-12">
                     <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
 {% trans "Previous balance" %} : {{ object.previous_balance }}
-<small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br/></h4>
+<small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br></h4>
                 </div>
             </div>
         {%  endif %}
@@ -94,7 +94,7 @@
                             {% trans "Payment" %}
                         {% endif %} : {{ bank_account.bank_amount_in }}
                         <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small>
-                        <br/>
+                        <br>
                     {% endif %}
                     {% if bank_account.bank_amount_out != 0 %}
                         <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% trans "Refund" %} :
@@ -104,7 +104,7 @@
                             {% trans "Refund" %}
                         {% endif %} : {{ bank_account.bank_amount_out }}
                         <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small>
-                        <br/>
+                        <br>
                     {% endif %}
                 </div>
             </div>
@@ -150,7 +150,7 @@
     {% if purchase_set %}
         <div class="container-fluid">
             <div class="row">
-                <br/>
+                <br>
                 <table class="table table-hover table-bordered">
                     <thead>
                     <tr>
@@ -237,7 +237,7 @@
     {% if purchase_by_other_set %}
         <div class="container-fluid">
             <div class="row">
-                <br/>
+                <br>
                 <table class="table table-hover table-bordered">
                     <thead>
                     <tr>

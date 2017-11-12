@@ -298,9 +298,9 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append("<br/><b>{}</b>".format(ci.delivery.get_delivery_display()))
+                        link.append("<br><b>{}</b>".format(ci.delivery.get_delivery_display()))
                     else:
-                        link.append("<br/><br/>--")
+                        link.append("<br><br>--")
                 total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
                 # if ci.is_order_confirm_send:
                 label = "{}{} ({}) {}{}".format(
@@ -324,9 +324,9 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append("<br/><b>{}</b>".format(ci.delivery.get_delivery_display()))
+                        link.append("<br><b>{}</b>".format(ci.delivery.get_delivery_display()))
                     else:
-                        link.append("<br/><br/>--")
+                        link.append("<br><br>--")
                 total_price_with_tax = ci.get_total_price_with_tax(customer_charged=True)
                 label = "{}{} ({}) {}{}".format(
                     "<b><i>" if ci.is_group else EMPTY_STRING,
@@ -400,7 +400,7 @@ class Permanence(TranslatableModel):
                     c_link = '&nbsp;->&nbsp;<a href="' + c_url + \
                              '" target="_blank">' + c.short_basket_name.replace(' ', '&nbsp;') + '</a>'
                 if not first_board:
-                    board += '<br/>'
+                    board += '<br>'
                 board += r_link + c_link
                 first_board = False
         if not first_board:
@@ -855,7 +855,7 @@ class Permanence(TranslatableModel):
                     status_counter += 1
                     status_list.append("<b>{}</b>".format(delivery.get_status_display()))
                 status_list.append("- {}".format(delivery.get_delivery_display(admin=True)))
-            message = "<br/>".join(status_list)
+            message = "<br>".join(status_list)
         else:
             message = self.get_status_display()
         if need_to_refresh_status:
@@ -910,10 +910,10 @@ class Permanence(TranslatableModel):
             profit = self.total_selling_with_tax.amount - self.total_purchase_with_tax.amount
             # profit = self.total_selling_with_tax.amount - self.total_selling_vat.amount - self.total_purchase_with_tax.amount + self.total_purchase_vat.amount
             if profit != DECIMAL_ZERO:
-                return "{}<br/>{}<br/>💶&nbsp;{}".format(
+                return "{}<br>{}<br>💶&nbsp;{}".format(
                     self.get_permanence_display(), self.total_selling_with_tax, RepanierMoney(profit)
                 )
-            return "{}<br/>{}".format(
+            return "{}<br>{}".format(
                 self.get_permanence_display(), self.total_selling_with_tax)
         else:
             return self.get_permanence_display()

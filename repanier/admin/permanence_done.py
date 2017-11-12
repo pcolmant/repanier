@@ -485,7 +485,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'payment_needed'     : mark_safe(customer_payment_needed),
             'invoice_description': mark_safe(invoice_description),
             'signature'          : mark_safe(
-                "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
         })
         template_invoice_customer_mail = template.render(context)
 
@@ -501,7 +501,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'long_profile_name': _('Long name'),
             'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
             'signature'        : mark_safe(
-                "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
         })
         template_invoice_producer_mail = template.render(context)
 

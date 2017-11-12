@@ -376,10 +376,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ProductFilterByProducer,
             ProductFilterByDepartmentForThisProducer,
             'is_into_offer',
-            # 'is_active',
             'wrapped',
             ProductFilterByPlacement,
-            ProductFilterByVatLevel
+            ProductFilterByVatLevel,
+            'is_active'
         ]
         if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
             list_filter += [

@@ -184,9 +184,9 @@ def get_board_composition(permanence_id):
                 c_part = "<b>{}</b>, {}, {}".format(c.long_basket_name, c.phone1, c.phone2)
             else:
                 c_part = "<b>{}</b>, {}".format(c.long_basket_name, c.phone1)
-            member = "<b>{}</b> : {}, {}<br/>".format(r.short_name, c_part, c.user.email)
+            member = "<b>{}</b> : {}, {}<br>".format(r.short_name, c_part, c.user.email)
             board_composition += member
-            board_composition_and_description += "{}{}<br/>".format(member, r.description)
+            board_composition_and_description += "{}{}<br>".format(member, r.description)
 
     return mark_safe(board_composition), mark_safe(board_composition_and_description)
 
@@ -362,7 +362,7 @@ def payment_message(customer, permanence):
                 else:
                     communication = customer.short_basket_name
                 group_name = apps.REPANIER_SETTINGS_GROUP_NAME
-                customer_payment_needed = '<br/><font color="#bd0926">{}</font>'.format(
+                customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
                     _('Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
                         'payment': payment_needed,
                         'name': group_name,
@@ -373,7 +373,7 @@ def payment_message(customer, permanence):
 
             else:
                 if customer.balance.amount != DECIMAL_ZERO:
-                    customer_payment_needed = '<br/><font color="#51a351">{}.</font>'.format(_('Your account balance is sufficient'))
+                    customer_payment_needed = '<br><font color="#51a351">{}.</font>'.format(_('Your account balance is sufficient'))
                 else:
                     customer_payment_needed = EMPTY_STRING
         else:
@@ -904,29 +904,29 @@ def calc_basket_message(customer, permanence, status):
     if status == PERMANENCE_OPENED:
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             if permanence.with_delivery_point:
-                you_can_change = "<br/>{}".format(
+                you_can_change = "<br>{}".format(
                     _("You can increase the order quantities as long as the orders are open for your delivery point.")
                 )
             else:
-                you_can_change = "<br/>{}".format(
+                you_can_change = "<br>{}".format(
                     _("You can increase the order quantities as long as the orders are open.")
                 )
         else:
             if permanence.with_delivery_point:
-                you_can_change = "<br/>{}".format(
+                you_can_change = "<br>{}".format(
                     _("You can change the order quantities as long as the orders are open for your delivery point.")
                 )
             else:
-                you_can_change = "<br/>{}".format(
+                you_can_change = "<br>{}".format(
                     _("You can change the order quantities as long as the orders are open.")
                 )
     else:
         if permanence.with_delivery_point:
-            you_can_change = "<br/>{}".format(
+            you_can_change = "<br>{}".format(
                 _('The orders are closed for your delivery point.')
             )
         else:
-            you_can_change = "<br/>{}".format(
+            you_can_change = "<br>{}".format(
                 _('The orders are closed.')
             )
     invoice_msg = EMPTY_STRING
@@ -935,12 +935,12 @@ def calc_basket_message(customer, permanence, status):
         customer, permanence)
     if apps.REPANIER_SETTINGS_INVOICE:
         if customer_last_balance:
-            invoice_msg = "<br/>{} {}".format(
+            invoice_msg = "<br>{} {}".format(
                 customer_last_balance,
                 customer_on_hold_movement
             )
     if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-        payment_msg = "<br/>{}".format(
+        payment_msg = "<br>{}".format(
             customer_payment_needed
         )
     basket_message = "{}{}{}{}".format(

@@ -4,7 +4,7 @@
 <div class="container-repanier">
 <div class="container">
     {% spaceless %}{% if permanenceboard_list %}
-        <br/>
+        <br>
         {% for permanenceboard in permanenceboard_list %}
             <form>
                 {% ifchanged permanenceboard.permanence %}
@@ -21,7 +21,7 @@
                             {% for producer in permanenceboard.permanence.producers.all %}
                                 {{ producer }}{% if not forloop.last %}, {% endif %}
                             {% endfor %}
-                        {% endif %}<br /><br />
+                        {% endif %}<br><br>
                     </div>
                 {% endifchanged %}
                 <div class="row">
@@ -32,7 +32,7 @@
                     </div>
                     <div class="col-md-5">
                         {% if user.is_authenticated %}{% repanier_select_task task_id=permanenceboard.id %}{%  endif %}
-                        <br/>
+                        <br>
                     </div>
                 </div>
             </form>

@@ -17,7 +17,7 @@
     <p>{% trans "You are now logged in as a customer." %}</p>
     <p><b>{% trans "Do you want to become:" %}</b></p>
     {% for staff_responsibility in staff_responsibilities %}
-        <a href="{% url "login_form" %}?as_id={{ staff_responsibility.id }}" class="btn btn-info">{{ staff_responsibility.long_name }}</a><br/>
+        <a href="{% url "login_form" %}?as_id={{ staff_responsibility.id }}" class="btn btn-info">{{ staff_responsibility.long_name }}</a><br>
     {% endfor %}
 {% else %}
         {% if form.non_field_errors %}
@@ -38,7 +38,7 @@
           </p>
         {% endif %}
         <input type="text" class="form-control" id="id_username" placeholder="{% trans "Username" %}" name="username">
-        <br/>
+        <br>
         <label for="id_password">{% trans "Password" %}</label>
         {% if form.password.errors %}
           <p class="text-danger">

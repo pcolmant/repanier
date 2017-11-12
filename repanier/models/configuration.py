@@ -217,83 +217,83 @@ class Configuration(TranslatableModel):
             self.set_current_language(language_code)
             try:
                 self.offer_customer_mail = """
-                    Bonjour,<br />
-                    <br />
-                    Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
-                    {% if offer_description %}{{ offer_description }}<br />
+                    Bonjour,<br>
+                    <br>
+                    Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br>
+                    {% if offer_description %}{{ offer_description }}<br>
                     {% endif %}
-                    {% if offer_recent_detail %}<br />Nouveauté(s) :<br />
-                    {{ offer_recent_detail }}{% endif %}<br />
-                    <br />
+                    {% if offer_recent_detail %}<br>Nouveauté(s) :<br>
+                    {{ offer_recent_detail }}{% endif %}<br>
+                    <br>
                     {{ signature }}
                     """
                 self.offer_producer_mail = """
-                    Cher/Chère {{ long_profile_name }},<br />
-                    <br />
-                    {% if offer_description != "" %}Voici l'annonce consommateur :<br />
-                    {{ offer_description }}<br />
-                    <br />
-                    {% endif %} Veuillez vérifier votre <strong>{{ offer_link }}</strong>.<br />
-                    <br />
+                    Cher/Chère {{ long_profile_name }},<br>
+                    <br>
+                    {% if offer_description != "" %}Voici l'annonce consommateur :<br>
+                    {{ offer_description }}<br>
+                    <br>
+                    {% endif %} Veuillez vérifier votre <strong>{{ offer_link }}</strong>.<br>
+                    <br>
                     {{ signature }}
                     """
                 self.order_customer_mail = """
-                    Bonjour {{ long_basket_name }},<br />
-                    <br />
-                    En pièce jointe vous trouverez le montant de votre panier {{ short_basket_name }} de la {{ permanence_link }}.<br />
-                    <br />
-                    {{ last_balance }}<br />
-                    {{ order_amount }}<br />
-                    {% if on_hold_movement %}{{ on_hold_movement }}<br />
-                    {% endif %} {% if payment_needed %}{{ payment_needed }}<br />
-                    {% endif %}<br />
-                    <br />
+                    Bonjour {{ long_basket_name }},<br>
+                    <br>
+                    En pièce jointe vous trouverez le montant de votre panier {{ short_basket_name }} de la {{ permanence_link }}.<br>
+                    <br>
+                    {{ last_balance }}<br>
+                    {{ order_amount }}<br>
+                    {% if on_hold_movement %}{{ on_hold_movement }}<br>
+                    {% endif %} {% if payment_needed %}{{ payment_needed }}<br>
+                    {% endif %}<br>
+                    <br>
                     {{ signature }}
                     """
                 self.cancel_order_customer_mail = """
-                    Bonjour {{ long_basket_name }},<br />
-                    <br />
-                    La commande ci-jointe de votre panier {{ short_basket_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br />
-                    <br />
+                    Bonjour {{ long_basket_name }},<br>
+                    <br>
+                    La commande ci-jointe de votre panier {{ short_basket_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
+                    <br>
                     {{ signature }}
                     """
                 self.order_staff_mail = """
-                    Cher/Chère membre de l'équipe de préparation,<br/>
-                    <br/>
-                    En pièce jointe vous trouverez la liste de préparation pour la {{ permanence_link }}.<br/>
-                    <br/>
-                    L'équipe de préparation est composée de :<br/>
-                    {{ board_composition_and_description }}<br/>
-                    <br/>
+                    Cher/Chère membre de l'équipe de préparation,<br>
+                    <br>
+                    En pièce jointe vous trouverez la liste de préparation pour la {{ permanence_link }}.<br>
+                    <br>
+                    L'équipe de préparation est composée de :<br>
+                    {{ board_composition_and_description }}<br>
+                    <br>
                     {{ signature }}
                     """
                 self.order_producer_mail = """
-                    Cher/Chère {{ name }},<br />
-                    <br />
-                    {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br />
-                    <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br />
-                    <br />
+                    Cher/Chère {{ name }},<br>
+                    <br>
+                    {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br>
+                    <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br>
+                    <br>
                     {{ signature }}
                     """
                 self.invoice_customer_mail = """
-                    Bonjour {{ name }},<br/>
-                    <br/>
-                    En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br/>
-                    <br/>
+                    Bonjour {{ name }},<br>
+                    <br>
+                    En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br>
+                    <br>
                     {{ invoice_description }}{% endif %}
-                    <br />
-                    {{ order_amount }}<br />
-                    {{ last_balance_link }}<br />
-                    {% if payment_needed %}{{ payment_needed }}<br />
-                    {% endif %}<br />
-                    <br />
+                    <br>
+                    {{ order_amount }}<br>
+                    {{ last_balance_link }}<br>
+                    {% if payment_needed %}{{ payment_needed }}<br>
+                    {% endif %}<br>
+                    <br>
                     {{ signature }}
                     """
                 self.invoice_producer_mail = """
-                    Cher/Chère {{ profile_name }},<br/>
-                    <br/>
-                    En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br/>
-                    <br/>
+                    Cher/Chère {{ profile_name }},<br>
+                    <br>
+                    En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br>
+                    <br>
                     {{ signature }}
                     """
                 self.save()

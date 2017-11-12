@@ -144,7 +144,7 @@ class Product(Item):
                 one_date = parse_date(one_date_str)
                 if month_save != one_date.month:
                     month_save = one_date.month
-                    new_line = "<br/>"
+                    new_line = "<br>"
                 else:
                     new_line = EMPTY_STRING
                 # Important : linked to django.utils.dateparse.parse_date format

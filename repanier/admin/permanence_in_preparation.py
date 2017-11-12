@@ -13,7 +13,9 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
+from easy_select2 import Select2
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 from parler.forms import TranslatableModelForm
 from parler.utils.context import switch_language
@@ -168,6 +170,16 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         fields = "__all__"
 
 
+# class RepanierActionForm(forms.Form):
+#     action = forms.ChoiceField(label=_('Action:'))
+#     select_across = forms.BooleanField(
+#         label='',
+#         required=False,
+#         initial=0,
+#         widget=forms.HiddenInput({'class': 'select-across'}),
+#     )
+
+
 class PermanenceInPreparationAdmin(TranslatableAdmin):
     form = PermanenceInPreparationForm
     # exclude = ['invoice_description']
@@ -180,6 +192,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         'get_permanence_admin_display',
     )
     ordering = ('-status', 'permanence_date', 'id')
+    # action_form = RepanierActionForm
     actions = [
         'export_xlsx_offer',
         'open_and_send_offer',
@@ -413,7 +426,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     'offer_description': mark_safe(offer_description),
                     'offer_link'       : mark_safe("<a href=\"#\">{}</a>".format(_("Offers"))),
                     'signature'        : mark_safe(
-                        "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                        "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
@@ -455,7 +468,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     'offer_producer'     : offer_producer,
                     'permanence_link'    : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
                     'signature'          : mark_safe(
-                        "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                        "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
@@ -467,7 +480,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         'short_basket_name': _('Short name'),
                         'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
                         'signature'        : mark_safe(
-                            "{}<br/>{}<br/>{}".format(
+                            "{}<br>{}<br>{}".format(
                             signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
                     })
                     template_cancel_order_mail.append(language_code)
@@ -488,9 +501,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             form = OpenAndSendOfferForm(
                 initial={
                     'template_offer_customer_mail'       : mark_safe(
-                        "<br/>==============<br/>".join(template_offer_mail)),
+                        "<br>==============<br>".join(template_offer_mail)),
                     'template_cancel_order_customer_mail': mark_safe(
-                        "<br/>==============<br/>".join(template_cancel_order_mail)),
+                        "<br>==============<br>".join(template_cancel_order_mail)),
                 }
             )
         return render(
@@ -681,7 +694,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'payment_needed'   : mark_safe(customer_payment_needed),
                 'delivery_point'   : _('Delivery point').upper(),
                 'signature'        : mark_safe(
-                    "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
 
             template_order_customer_mail.append(language_code)
@@ -695,7 +708,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'duplicate'        : True,
                 'permanence_link'  : format_html("<a href=\"#\">{}</a>", permanence),
                 'signature'        : mark_safe(
-                    "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
 
             template_order_producer_mail.append(language_code)
@@ -708,7 +721,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'board_composition'                : mark_safe(board_composition),
                 'board_composition_and_description': mark_safe(board_composition_and_description),
                 'signature'                        : mark_safe(
-                    "{}<br/>{}<br/>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
             })
 
             template_order_staff_mail.append(language_code)
@@ -729,10 +742,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         form = CloseAndSendOrderForm(
             initial={
                 'template_order_customer_mail': mark_safe(
-                    "<br/>==============<br/>".join(template_order_customer_mail)),
+                    "<br>==============<br>".join(template_order_customer_mail)),
                 'template_order_producer_mail': mark_safe(
-                    "<br/>==============<br/>".join(template_order_producer_mail)),
-                'template_order_staff_mail'   : mark_safe("<br/>==============<br/>".join(template_order_staff_mail)),
+                    "<br>==============<br>".join(template_order_producer_mail)),
+                'template_order_staff_mail'   : mark_safe("<br>==============<br>".join(template_order_staff_mail)),
             }
         )
         if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS or DeliveryBoard.objects.filter(

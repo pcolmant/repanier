@@ -300,7 +300,7 @@ def repanier_btn_like(context, *args, **kwargs):
     if customer_is_active:
         offer_item = kwargs.get('offer_item', None)
         str_id = str(offer_item.id)
-        result = "<br/><span class=\"btn_like{str_id}\" style=\"cursor: pointer;\">{html}</span>".format(
+        result = "<br><span class=\"btn_like{str_id}\" style=\"cursor: pointer;\">{html}</span>".format(
             str_id=str_id,
             html=offer_item.get_like(user)
         )

@@ -320,7 +320,7 @@ class Customer(models.Model):
                or (self.about_me is not None and len(self.about_me.strip()) > 1)
 
     def get_unsubscribe_mail_footer(self):
-        return mark_safe("<br/><br/><hr/><br/><a href=\"{}\">{}</a>".format(self._get_unsubscribe_link(), _("Unsubscribe to emails")))
+        return mark_safe("<br><br><hr/><br><a href=\"{}\">{}</a>".format(self._get_unsubscribe_link(), _("Unsubscribe to emails")))
 
     def _get_unsubscribe_link(self):
         customer_id, token = self.make_token().split(":", 1)

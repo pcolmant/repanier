@@ -58,7 +58,7 @@ def send_pre_open_order(permanence_id):
                         reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
                 ),
                 'signature'        : mark_safe(
-                    "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)
+                    "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)
                 )
             })
             html_content = template.render(context)
@@ -136,7 +136,7 @@ def send_open_order(permanence_id):
                 'offer_recent_detail' : mark_safe(permanence.get_new_products),
                 'offer_producer'   : offer_producer,
                 'signature'        : mark_safe(
-                    "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                    "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
             })
             html_content = template.render(context)
             email = RepanierEmail(

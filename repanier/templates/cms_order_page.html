@@ -50,7 +50,7 @@
             <div class="row">
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    {% trans "The ordering functionality is not activated in your account. <br/> If you wish to order, please contact the managers of your group." %}
+                    {% trans "The ordering functionality is not activated in your account. <br> If you wish to order, please contact the managers of your group." %}
                 </div>
             </div>
             </div>
@@ -109,13 +109,13 @@
         <div class="row">
             <div class="col-xs-11 col-sm-5 col-md-3 bs-docs-sidebar">
                 <div class="fixed">
-        {#            q : {{ q }}<br/>#}
-        {#            producer_id : {{ producer_id }}<br/>#}
-        {#            department_id : {{ department_id }}<br/>#}
-        {#            box_id : {{ box_id }}<br/>#}
-        {#            is_like : {{ is_like }}<br/>#}
-        {#            is_basket : {{ is_basket }}<br/>#}
-        {#            is_box : {{ is_box }}<br/>#}
+        {#            q : {{ q }}<br>#}
+        {#            producer_id : {{ producer_id }}<br>#}
+        {#            department_id : {{ department_id }}<br>#}
+        {#            box_id : {{ box_id }}<br>#}
+        {#            is_like : {{ is_like }}<br>#}
+        {#            is_basket : {{ is_basket }}<br>#}
+        {#            is_box : {{ is_box }}<br>#}
                     <form action="{% url "order_view" permanence_id %}?date={{ date_id }}" id="search_form" class="form-horizontal navbar-form" role="search" method="get">
                         {% csrf_token %}
                         <div class="input-group">
@@ -135,7 +135,7 @@
                         <input type="hidden" name="is_like" value="{{ is_like }}">
                         <input type="hidden" name="is_basket" value="{{ is_basket }}">
                     </form>
-                    <br/>
+                    <br>
                     {% if all_dates %}
                         <ul class="nav nav-stacked" id="sidebar">
                             <li>
@@ -147,7 +147,7 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                        <br/>
+                        <br>
                     {% endif %}
                     {% block product_filter %}{% spaceless %}
                         <ul class="nav nav-stacked" id="sidebar">
@@ -264,11 +264,11 @@
                         </div>
                         <div class="modal-body">
                 <span id="otherQtyDetails">
-                  {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br/>
-                  <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br/>
-                  <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.phone1 }}</b><br/>
+                  {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
+                  <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
+                  <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.phone1 }}</b><br>
                   <span class="glyphicon glyphicon-envelope"></span>  <a
-                        href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br/>
+                        href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br>
                 </span>
                         </div>
                         <div class="modal-footer">

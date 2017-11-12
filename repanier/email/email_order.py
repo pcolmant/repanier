@@ -85,7 +85,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                     'board_composition'                : mark_safe(board_composition),
                     'board_composition_and_description': mark_safe(board_composition_and_description),
                     'signature'                        : mark_safe(
-                        "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
                 email = RepanierEmail(
@@ -131,7 +131,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                     'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'signature'        : mark_safe(
-                        "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
 
@@ -142,7 +142,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                         and producer_invoice.total_price_with_tax < producer.minimum_order_value:
                     to_email_producer = cc_email_staff
                     html_content = \
-                        order_producer_mail_subject + '<br/><br/>' + html_content
+                        order_producer_mail_subject + '<br><br>' + html_content
                     cc_email_staff = []
                     order_producer_mail_subject = _(
                         '/!\ Mail not send to our producer {} because the minimum order value has not been reached.').format(long_profile_name)
@@ -242,7 +242,7 @@ def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id,
             'payment_needed'   : EMPTY_STRING,
             'delivery_point'   : delivery_point,
             'signature'        : mark_safe(
-                "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
         })
         html_content = template.render(context)
         email = RepanierEmail(
@@ -319,7 +319,7 @@ def export_order_2_1_customer(customer, filename, permanence, sender_email, send
                     'payment_needed'   : mark_safe(customer_payment_needed),
                     'delivery_point'   : delivery_point,
                     'signature'        : mark_safe(
-                        "{}<br/>{}<br/>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                 })
                 html_content = template.render(context)
                 email = RepanierEmail(

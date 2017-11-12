@@ -10,9 +10,9 @@
         {{ staff.customer_responsible.short_basket_name }}
     {% endif %}
     ({{ staff.customer_responsible.phone1 }})
-    <br/>
+    <br>
 {% endfor %}
-<br/>
+<br>
 <div class="row">
 <div class="col-xs-11 col-sm-5 col-md-3">
 <form id="search_form" class="form-horizontal" class="navbar-form" role="search" method="post">
@@ -31,7 +31,7 @@
 </form>
 </div>
 </div>
-<br/>
+<br>
         <p>{% trans "If you want to show information about you, then" %} <a href="{% url 'my_profile_view' %}">{% trans "update your profil" %}</a>.</p>
 <div class="panel-group" id="accordion">
         {% if coordinator %}
@@ -55,8 +55,8 @@
                 </div>
                 <div class="col-xs-10">
                 {% if customer.long_basket_name != customer.short_basket_name %} ({{customer.short_basket_name }}){% endif %}
-                {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me }}<br/>{% endif %}
-                {% trans "Phone" %} : {{ customer.phone1 }}{% if customer.phone2 %}, {{ customer.phone2 }}<br/>{% endif %}
+                {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me }}<br>{% endif %}
+                {% trans "Phone" %} : {{ customer.phone1 }}{% if customer.phone2 %}, {{ customer.phone2 }}<br>{% endif %}
                 {% trans "Email" %} : {{ customer.user.email }}{% if customer.email2 %}, {{ customer.email2 }}{% endif %}
                 </div>
             </div>
@@ -79,8 +79,8 @@
                     {% endif %}
                 </div>
                 <div class="col-xs-10">
-                    {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}<br/>{% endif %}
-                    {% if customer.accept_phone_call_from_members %}{% trans "Phone" %} : {{ customer.phone1 }}{% if customer.phone2 %}, {{ customer.phone2 }}{% endif %}<br/>{% endif %}
+                    {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}<br>{% endif %}
+                    {% if customer.accept_phone_call_from_members %}{% trans "Phone" %} : {{ customer.phone1 }}{% if customer.phone2 %}, {{ customer.phone2 }}{% endif %}<br>{% endif %}
                     {% if customer.accept_mails_from_members %}{% trans "Email" %} : {{ customer.user.email }}{% if customer.email2 %}, {{ customer.email2 }}{% endif %}{% endif %}
                 </div>
             </div>

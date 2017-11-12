@@ -49,7 +49,7 @@ def send_invoice(permanence_id):
                                                                       args=(0, producer.uuid)),
                                                               permanence)),
                         'signature'        : mark_safe(
-                            "{}<br/>{}<br/>{}".format(
+                            "{}<br>{}<br>{}".format(
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
                     html_content = template.render(context)
@@ -113,7 +113,7 @@ def send_invoice(permanence_id):
                         'payment_needed'     : mark_safe(customer_payment_needed),
                         'invoice_description': mark_safe(invoice_description),
                         'signature'          : mark_safe(
-                            "{}<br/>{}<br/>{}".format(
+                            "{}<br>{}<br>{}".format(
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
                     html_content = template.render(context)

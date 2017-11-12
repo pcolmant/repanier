@@ -283,14 +283,14 @@ class CustomerInvoice(Invoice):
                 else:
                     transport = True
                     if self.min_transport.amount > DECIMAL_ZERO:
-                        msg_transport = "{}<br/>".format(
+                        msg_transport = "{}<br>".format(
                                         _(
                                             'The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s.') % {
                                             'transport'    : self.transport,
                                             'min_transport': self.min_transport
                                         })
                     else:
-                        msg_transport = "{}<br/>".format(
+                        msg_transport = "{}<br>".format(
                                         _(
                                             'The shipping costs for this delivery point amount to %(transport)s.') % {
                                             'transport': self.transport,
@@ -300,14 +300,14 @@ class CustomerInvoice(Invoice):
                 else:
                     if transport:
                         if self.price_list_multiplier > DECIMAL_ONE:
-                            msg_price = "{}<br/>".format(
+                            msg_price = "{}<br>".format(
                                         _(
                                             'A price increase of %(increase)s %% of the total invoiced is due for this delivery point. This does not apply to the cost of transport which is fixed.') % {
                                             'increase': number_format(
                                                 (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
                                         })
                         else:
-                            msg_price = "{}<br/>".format(
+                            msg_price = "{}<br>".format(
                                         _(
                                             'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point. This does not apply to the cost of transport which is fixed.') % {
                                             'decrease': number_format(
@@ -315,14 +315,14 @@ class CustomerInvoice(Invoice):
                                         })
                     else:
                         if self.price_list_multiplier > DECIMAL_ONE:
-                            msg_price = "{}<br/>".format(
+                            msg_price = "{}<br>".format(
                                         _(
                                             'A price increase of %(increase)s %% of the total invoiced is due for this delivery point.') % {
                                             'increase': number_format(
                                                 (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
                                         })
                         else:
-                            msg_price = "{}<br/>".format(
+                            msg_price = "{}<br>".format(
                                         _(
                                             'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point.') % {
                                             'decrease': number_format(
@@ -334,7 +334,7 @@ class CustomerInvoice(Invoice):
             <select name=\"delivery\" id=\"delivery\" onmouseover=\"show_select_delivery_list_ajax({})\" onchange=\"delivery_ajax()\" class=\"form-control\">
             <option value=\"{}\" selected>{}</option>
             </select>
-            </i></b><br/>{}{}
+            </i></b><br>{}{}
             """.format(
                 _("Delivery point"),
                 delivery_id,
@@ -375,7 +375,7 @@ class CustomerInvoice(Invoice):
                             if (permanence.with_delivery_point and self.delivery is None) \
                                     or not self.has_purchase:
                                 btn_disabled = "disabled"
-                            msg_confirmation1 = "<font color=\"red\">{}</font><br/>".format(_(
+                            msg_confirmation1 = "<font color=\"red\">{}</font><br>".format(_(
                                 "/!\ Unconfirmed orders will be canceled."))
                             msg_confirmation2 = "<span class=\"glyphicon glyphicon-floppy-disk\"></span>&nbsp;&nbsp;{}".format(_(
                                 "Confirm this order and receive an email containing its summary."))
@@ -384,7 +384,7 @@ class CustomerInvoice(Invoice):
                             'order_view', args=(permanence.id,)
                         )
                         if self.status == PERMANENCE_OPENED:
-                            msg_confirmation1 = "<font color=\"red\">{}</font><br/>".format(_(
+                            msg_confirmation1 = "<font color=\"red\">{}</font><br>".format(_(
                                 "/!\ Unconfirmed orders will be canceled."))
                             msg_confirmation2 = _("Verify my order content before validating it.")
                             msg_html = """

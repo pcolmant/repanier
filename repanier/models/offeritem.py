@@ -216,7 +216,7 @@ class OfferItem(Item):
                 one_date = parse_date(one_date_str)
                 if month_save != one_date.month:
                     if month_save is not None:
-                        new_line = "<br/>"
+                        new_line = "<br>"
                     else:
                         new_line = EMPTY_STRING
                     month_save = one_date.month
@@ -270,7 +270,7 @@ class OfferItem(Item):
 
     def get_long_name(self, customer_price=True, is_html=False):
         if self.permanences_dates:
-            new_line = "<br/>" if is_html else "\n"
+            new_line = "<br>" if is_html else "\n"
             return "{}{}{}".format(
                 super(OfferItem, self).get_long_name(customer_price=customer_price),
                 new_line,

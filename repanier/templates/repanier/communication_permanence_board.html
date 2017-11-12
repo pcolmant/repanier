@@ -1,9 +1,9 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags thumbnail filer_tags filer_image_tags %}
-{% trans "Your are registered to the following task :" %}<br/>
+{% trans "Your are registered to the following task :" %}<br>
 {% for permanence_board in permanence_boards.all %}
     <h4>{{ permanence_board.permanence_role.short_name }}</h4>
-    <b>{{ permanence_board.permanence }}</b><br/>
-    {{ permanence_board.permanence_role.description | safe }}<br/>
+    <b>{{ permanence_board.permanence }}</b><br>
+    {{ permanence_board.permanence_role.description | safe }}<br>
 {% empty %}
-    <br/><b>{% trans "No task found." %}</b><br/><br/>{% trans "You participated in" %} <b>{{ count_activity}}</b> {% trans "permanence in the last 12 weeks." %}
+    <br><b>{% trans "No task found." %}</b><br><br>{% trans "You participated in" %} <b>{{ count_activity}}</b> {% trans "permanence in the last 12 weeks." %}
 {% endfor %}

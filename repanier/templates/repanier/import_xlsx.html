@@ -9,7 +9,7 @@
         <fieldset class="module aligned ">
         <div class="form-group">
             <b>{% trans "The importation concern :" %}</b> {% for object in queryset.all  %}{{ object }}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>{% if not forloop.last %}, {% endif %}{% endfor %}
-            <br/>
+            <br>
             <label for="id_file_to_import"><b>{% trans "File to import :"%}</b></label><input id="id_file_to_import" name="file_to_import" type="file" />
         </div>
         </fieldset>
