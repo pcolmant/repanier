@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-11-12 10:02+0100\n"
-"PO-Revision-Date: 2017-11-12 10:03+0100\n"
+"PO-Revision-Date: 2017-11-12 11:02+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -1499,29 +1499,29 @@ msgstr "Panier"
 #: const.py:112 const.py:128 const.py:146 const.py:160
 msgid "Bought per piece"
 msgstr ""
-"Conditionné à la pièce sans autre précision (déconseillé si le poids ou le "
-"litrage est disponible)"
+"Vendu à la pièce sans autre précision (déconseillé si le poids ou le litrage "
+"est disponible) : bouquet de thym, ..."
 
 #: const.py:113 const.py:129 const.py:147 const.py:161
 msgid "Bought per piece (price / kg)"
 msgstr ""
-"Conditionné en paquet/sac fermé : 250 gr. de beurre, sac de 5 kg de pomme de "
-"terre, ...."
+"Vendu conditionné en paquet/sac/ravier/... : 250 gr. de beurre, sac de 5 kg "
+"de pomme de terre, lasagne de 200 gr., ...."
 
 #: const.py:114 const.py:130 const.py:148 const.py:162
 msgid "Bought per piece (price / l)"
-msgstr "Conditionné en 'cubi' de 3 ℓ, bouteille de 75 cℓ, ..."
+msgstr "Vendu conditionné en 'cubi' de 3 ℓ, bouteille de 75 cℓ, ..."
 
 #: const.py:115 const.py:131 const.py:149 const.py:163
 msgid "Bought per piece (price / pc)"
 msgstr ""
-"Conditionné par pack sans poids ni volume : 6 œufs, 12 pads de café, "
+"Vendu conditionné en pack sans poids ni volume : 6 œufs, 12 pads de café, "
 "ballotin de 6 pralines, ..."
 
 #: const.py:116 const.py:132 const.py:150 const.py:164
 msgid "Bought per kg"
 msgstr ""
-"Vendu au poids (en kg) : légumes en vrac, fromages/viandes à la découpe, ,..."
+"Vendu au poids (en kg) : légumes en vrac, fromages/viandes à la découpe, ..."
 
 #: const.py:117 const.py:133 const.py:151 const.py:165
 msgid "Bought per piece, invoiced following the weight"
