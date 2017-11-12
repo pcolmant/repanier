@@ -854,7 +854,7 @@ class Permanence(TranslatableModel):
                     status = delivery.status
                     status_counter += 1
                     status_list.append("<b>{}</b>".format(delivery.get_status_display()))
-                status_list.append("- {}".format(delivery.get_delivery_display(admin=True)))
+                status_list.append("- {}".format(delivery.get_delivery_display(color=True)))
             message = "<br>".join(status_list)
         else:
             message = self.get_status_display()
