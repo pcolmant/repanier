@@ -12,7 +12,7 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.lut import LUT_DeliveryPoint
-from repanier.models.offeritem import OfferItem
+from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
