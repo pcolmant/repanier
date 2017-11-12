@@ -803,7 +803,7 @@ def reorder_offer_items(permanence_id):
             translations__language_code=language_code
         ).order_by(
             "customer_unit_price",
-            "department_for_customer__lft",
+            # "department_for_customer__lft",
             "unit_deposit",
             "translations__long_name"
         )
