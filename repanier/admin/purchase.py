@@ -212,8 +212,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super(PurchaseAdmin, self).get_urls()
         my_urls = [
-            url(r'^is_order_confirm_send/$', self.is_order_confirm_send),
-            url(r'^is_order_confirm_not_send/$', self.is_order_confirm_not_send),
+            url(r'^is_order_confirm_send/$', self.admin_site.admin_view(self.is_order_confirm_send)),
+            url(r'^is_order_confirm_not_send/$', self.admin_site.admin_view(self.is_order_confirm_not_send)),
             # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), {'packages': ('repanier',)}, name='javascript-catalog'),
             # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
         ]

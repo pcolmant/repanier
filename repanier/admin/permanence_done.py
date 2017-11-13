@@ -111,7 +111,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def get_urls(self):
         urls = super(PermanenceDoneAdmin, self).get_urls()
         my_urls = [
-            url(r'^import_invoice/$', self.add_delivery),
+            url(r'^import_invoice/$', self.admin_site.admin_view(self.add_delivery)),
         ]
         return my_urls + urls
 

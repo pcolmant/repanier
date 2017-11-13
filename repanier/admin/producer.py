@@ -283,8 +283,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super(ProducerAdmin, self).get_urls()
         my_urls = [
-            url(r'^export_stock/$', self.export_xlsx_stock),
-            url(r'^import_stock/$', self.import_xlsx_stock),
+            url(r'^export_stock/$', self.admin_site.admin_view(self.export_xlsx_stock)),
+            url(r'^import_stock/$', self.admin_site.admin_view(self.import_xlsx_stock)),
         ]
         return my_urls + urls
 
