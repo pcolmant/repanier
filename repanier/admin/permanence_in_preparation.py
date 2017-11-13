@@ -47,20 +47,20 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
     ordering = ("permanence_role__tree_id", "permanence_role__lft")
     fields = ['permanence_role', 'customer']
     extra = 0
-    has_add_or_delete_permission = None
+    _has_add_or_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if self.has_add_or_delete_permission is None:
+        if self._has_add_or_delete_permission is None:
             try:
                 parent_object = PermanenceInPreparation.objects.filter(id=request.resolver_match.args[0]).only(
                     "status").order_by('?').first()
                 if parent_object is not None and parent_object.status > PERMANENCE_PLANNED:
-                    self.has_add_or_delete_permission = False
+                    self._has_add_or_delete_permission = False
                 else:
-                    self.has_add_or_delete_permission = True
+                    self._has_add_or_delete_permission = True
             except:
-                self.has_add_or_delete_permission = True
-        return self.has_add_or_delete_permission
+                self._has_add_or_delete_permission = True
+        return self._has_add_or_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -90,26 +90,23 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
 class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
     model = DeliveryBoard
     ordering = ("id",)
-    # fields = ['delivery_date', 'delivery_comment', 'delivery_point', 'status', ]
     fields = ['delivery_comment', 'delivery_point', 'status', ]
     extra = 0
     readonly_fields = ['status', ]
-    has_add_or_delete_permission = None
+    _has_add_or_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if self.has_add_or_delete_permission is None:
+        if self._has_add_or_delete_permission is None:
             try:
-                parent_object = PermanenceInPreparation.objects.filter(
-                    id=request.resolver_match.args[0]
-                ).only(
-                    "highest_status").order_by('?').first()
-                if parent_object is not None and parent_object.highest_status > PERMANENCE_PLANNED:
-                    self.has_add_or_delete_permission = False
+                parent_object = PermanenceInPreparation.objects.filter(id=request.resolver_match.args[0]).only(
+                    "status").order_by('?').first()
+                if parent_object is not None and parent_object.status > PERMANENCE_PLANNED:
+                    self._has_add_or_delete_permission = False
                 else:
-                    self.has_add_or_delete_permission = True
+                    self._has_add_or_delete_permission = True
             except:
-                self.has_add_or_delete_permission = True
-        return self.has_add_or_delete_permission
+                self._has_add_or_delete_permission = True
+        return self._has_add_or_delete_permission
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -796,9 +793,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if Purchase.objects.filter(
-                permanence_id=permanence.id
-        ).exclude(
+        if not Purchase.objects.filter(
+            permanence_id=permanence.id,
             status__in=[PERMANENCE_PRE_OPEN, PERMANENCE_OPENED]
         ).order_by('?').exists():
             user_message = _("Action canceled by the system.")
