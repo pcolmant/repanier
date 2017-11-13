@@ -335,10 +335,11 @@ def close_order(permanence, all_producers, producers_id=None):
 
 
 def send_order(permanence, all_producers=True, producers_id=None, deliveries_id=None):
+
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
     # try:
-    email_order.email_order(permanence.id, all_producers, producers_id=producers_id, closed_deliveries_id=deliveries_id)
+    email_order.email_order(permanence.id, all_producers, producers_id=producers_id, deliveries_id=deliveries_id)
     # except Exception as error_str:
     #     print("################################## send_order")
     #     print(error_str)

@@ -662,7 +662,7 @@ class Permanence(TranslatableModel):
                 .filter(permanence_id=self.id) \
                 .order_by('?')
 
-        for a_purchase in purchase_set.select_related("offer_item"):
+        for a_purchase in purchase_set.select_related("offer_item", "customer_invoice"):
             # Recalculate the total_price_with_tax of ProducerInvoice,
             # the total_price_with_tax of CustomerInvoice,
             # the total_purchase_with_tax + total_selling_with_tax of CustomerProducerInvoice,
@@ -675,7 +675,7 @@ class Permanence(TranslatableModel):
                 a_purchase.previous_producer_vat = DECIMAL_ZERO
                 a_purchase.previous_customer_vat = DECIMAL_ZERO
                 a_purchase.previous_deposit = DECIMAL_ZERO
-                if send_to_producer:
+                if send_to_producer and a_purchase.status == PERMANENCE_WAIT_FOR_SEND:
                     offer_item = a_purchase.offer_item
                     if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                         a_purchase.quantity_invoiced = (a_purchase.quantity_ordered * offer_item.order_average_weight) \

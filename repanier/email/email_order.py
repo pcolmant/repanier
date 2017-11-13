@@ -18,7 +18,7 @@ from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 
-def email_order(permanence_id, all_producers=True, producers_id=None, closed_deliveries_id=None):
+def email_order(permanence_id, all_producers=True, producers_id=None, deliveries_id=None):
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, \
         REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER, \
@@ -40,11 +40,10 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
         )
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
 
-        if closed_deliveries_id:
-            # closed_deliveries_id is not empty list and not "None"
-            # all_producers is True
+        if deliveries_id:
+            # if closed deliveries_id is not empty list and not "None" then all_producers should be True
             all_producers = True
-            for delivery_id in closed_deliveries_id:
+            for delivery_id in deliveries_id:
                 delivery_board = DeliveryBoard.objects.filter(
                     id=delivery_id
                 ).exclude(
@@ -55,14 +54,14 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                     delivery_point = delivery_board.delivery_point
                     customer = delivery_point.customer_responsible
                     # Orders send to the preparation group
-                    export_order_2_1_group(config, customer, delivery_point, [delivery_id], filename, permanence,
+                    export_order_2_1_group(config, customer, delivery_point, delivery_id, filename, permanence,
                                            sender_email, sender_function, signature)
 
         if not all_producers:
             abstract_ws = None
         else:
             # Orders send to the preparation team
-            wb, abstract_ws = generate_customer_xlsx(permanence, deliveries_id=closed_deliveries_id)
+            wb, abstract_ws = generate_customer_xlsx(permanence, deliveries_id=deliveries_id)
             if wb is not None:
                 # At least one order
                 to_email_board = []
@@ -190,9 +189,9 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
                         customerinvoice__permanence_id=permanence.id,
                         language=language_code
                     ).order_by('?')
-                    if closed_deliveries_id is not None:
+                    if deliveries_id is not None:
                         customer_set = customer_set.filter(
-                            customerinvoice__delivery_id__in=closed_deliveries_id,
+                            customerinvoice__delivery_id__in=deliveries_id,
                         )
                     for customer in customer_set:
                         export_order_2_1_customer(
@@ -208,11 +207,11 @@ def email_order(permanence_id, all_producers=True, producers_id=None, closed_del
     translation.activate(cur_language)
 
 
-def export_order_2_1_group(config, customer, delivery_point, closed_delivery_id, filename, permanence, sender_email,
+def export_order_2_1_group(config, customer, delivery_point, delivery_id, filename, permanence, sender_email,
                            sender_function, signature):
     from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
 
-    wb = generate_customer_xlsx(permanence=permanence, deliveries_id=closed_delivery_id, group=True)[0]
+    wb = generate_customer_xlsx(permanence=permanence, deliveries_id=[delivery_id], group=True)[0]
     if wb is not None:
 
         order_customer_mail = config.safe_translation_getter(
