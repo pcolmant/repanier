@@ -8,7 +8,6 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
-from parler.models import TranslationDoesNotExist
 
 from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
 from repanier.models.permanence import Permanence

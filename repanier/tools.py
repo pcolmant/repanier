@@ -733,7 +733,7 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
                                                        {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
             offer_item.cache_part_b = render_to_string('repanier/cache_part_b.html',
                                                        {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
-            offer_item.save_translations()
+            offer_item.save_translation()
 
     translation.activate(cur_language)
 
@@ -778,7 +778,7 @@ def reorder_offer_items(permanence_id):
         )
         for offer_item in reorder_queryset:
             offer_item.producer_sort_order = offer_item.order_sort_order = offer_item.preparation_sort_order = i
-            offer_item.save_translations()
+            offer_item.save_translation()
             if i < 9999:
                 i += 1
         # producer lists sort order : sort by reference if needed, otherwise sort by order_sort_order
@@ -793,7 +793,7 @@ def reorder_offer_items(permanence_id):
         )
         for offer_item in reorder_queryset:
             offer_item.producer_sort_order = i
-            offer_item.save_translations()
+            offer_item.save_translation()
             if i < 19999:
                 i += 1
         # preparation lists sort order
@@ -811,7 +811,7 @@ def reorder_offer_items(permanence_id):
         for offer_item in reorder_queryset:
             # display box on top
             offer_item.producer_sort_order = offer_item.order_sort_order = offer_item.preparation_sort_order = i
-            offer_item.save_translations()
+            offer_item.save_translation()
             if i < -1:
                 i += 1
     translation.activate(cur_language)

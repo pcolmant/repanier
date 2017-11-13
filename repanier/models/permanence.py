@@ -569,7 +569,7 @@ class Permanence(TranslatableModel):
                         delivery_board.set_current_language(language_code)
                         try:
                             new_delivery_board.delivery_comment = delivery_board.delivery_comment
-                            new_delivery_board.save()
+                            new_delivery_board.save_translation()
                         except TranslationDoesNotExist:
                             pass
                     translation.activate(cur_language)
@@ -585,7 +585,7 @@ class Permanence(TranslatableModel):
             self.set_current_language(language_code)
             try:
                 new_permanence.short_name = self.safe_translation_getter('short_name', any_language=True)
-                new_permanence.save()
+                new_permanence.save_translation()
             except TranslationDoesNotExist:
                 pass
         translation.activate(cur_language)
@@ -831,25 +831,25 @@ class Permanence(TranslatableModel):
         return EMPTY_STRING
 
     def get_full_status_display(self):
-        need_to_refresh_status = self.status in [
+        from repanier.apps import REPANIER_SETTINGS_CLOSE_WO_SENDING
+        refresh_status = [
             PERMANENCE_WAIT_FOR_PRE_OPEN,
             PERMANENCE_WAIT_FOR_OPEN,
             PERMANENCE_WAIT_FOR_CLOSED,
             PERMANENCE_WAIT_FOR_SEND,
             PERMANENCE_WAIT_FOR_INVOICED
         ]
+        if not REPANIER_SETTINGS_CLOSE_WO_SENDING:
+            refresh_status += [
+                PERMANENCE_CLOSED
+            ]
+        need_to_refresh_status = self.status in refresh_status
         if self.with_delivery_point:
             status_list = []
             status = None
             status_counter = 0
             for delivery in DeliveryBoard.objects.filter(permanence_id=self.id).order_by("status", "id"):
-                need_to_refresh_status |= delivery.status in [
-                    PERMANENCE_WAIT_FOR_PRE_OPEN,
-                    PERMANENCE_WAIT_FOR_OPEN,
-                    PERMANENCE_WAIT_FOR_CLOSED,
-                    PERMANENCE_WAIT_FOR_SEND,
-                    PERMANENCE_WAIT_FOR_INVOICED
-                ]
+                need_to_refresh_status |= delivery.status in refresh_status
                 if status != delivery.status:
                     status = delivery.status
                     status_counter += 1
@@ -899,8 +899,9 @@ class Permanence(TranslatableModel):
         if short_name:
             permanence_display = "{}".format(short_name)
         else:
+            from repanier.apps import REPANIER_SETTINGS_PERMANENCE_ON_NAME
             permanence_display = "{}{}".format(
-                repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME,
+                REPANIER_SETTINGS_PERMANENCE_ON_NAME,
                 self.permanence_date.strftime(settings.DJANGO_SETTINGS_DATE)
             )
         return permanence_display

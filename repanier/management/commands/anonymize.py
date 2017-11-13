@@ -50,6 +50,6 @@ class Command(BaseCommand):
                 permanence_role.set_current_language(language_code)
                 try:
                     permanence_role.description = EMPTY_STRING
-                    permanence_role.save()
+                    permanence_role.save_translation()
                 except TranslationDoesNotExist:
                     pass
