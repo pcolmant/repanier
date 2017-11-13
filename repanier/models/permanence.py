@@ -569,7 +569,7 @@ class Permanence(TranslatableModel):
                         delivery_board.set_current_language(language_code)
                         try:
                             new_delivery_board.delivery_comment = delivery_board.delivery_comment
-                            new_delivery_board.save_translation()
+                            new_delivery_board.save_translations()
                         except TranslationDoesNotExist:
                             pass
                     translation.activate(cur_language)
@@ -585,7 +585,7 @@ class Permanence(TranslatableModel):
             self.set_current_language(language_code)
             try:
                 new_permanence.short_name = self.safe_translation_getter('short_name', any_language=True)
-                new_permanence.save_translation()
+                new_permanence.save_translations()
             except TranslationDoesNotExist:
                 pass
         translation.activate(cur_language)

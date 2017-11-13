@@ -296,7 +296,7 @@ class Configuration(TranslatableModel):
                     <br>
                     {{ signature }}
                     """
-                self.save_translation()
+                self.save_translations()
             except TranslationDoesNotExist:
                 pass
 
