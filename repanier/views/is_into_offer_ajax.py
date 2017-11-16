@@ -1,17 +1,14 @@
 # -*- coding: utf-8
 
-import datetime
-
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404
 from django.http import HttpResponse
-from django.utils.dateparse import parse_date
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import DECIMAL_ZERO, EMPTY_STRING
+from repanier.const import PRODUCT_ORDER_UNIT_DEPOSIT
 from repanier.models import Contract, ContractContent
 from repanier.models.product import Product
 from repanier.tools import sint
@@ -42,7 +39,8 @@ def is_into_offer(request, product_id, contract_id):
                             contract_content = ContractContent.objects.create(
                                 contract_id=contract_id,
                                 product_id=product_id,
-                                permanences_dates=contract.permanences_dates
+                                permanences_dates=contract.permanences_dates,
+                                flexible_dates=product.order_unit > PRODUCT_ORDER_UNIT_DEPOSIT
                             )
                         else:
                             if contract_content.permanences_dates is not None:
@@ -91,16 +89,19 @@ def is_into_offer_content(request, product_id, contract_id, one_date_str):
                                 contract_id=contract_id,
                                 product_id=product_id,
                                 permanences_dates=one_date_str,
-                                not_permanences_dates=not_permanences_dates
+                                not_permanences_dates=not_permanences_dates,
+                                flexible_dates=product.order_unit > PRODUCT_ORDER_UNIT_DEPOSIT
                             )
                         else:
                             contract_content.permanences_dates = one_date_str
                             contract_content.not_permanences_dates = not_permanences_dates
                             contract_content.save(update_fields=['permanences_dates', 'not_permanences_dates'])
                     else:
-                        all_dates_str = list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
+                        all_dates_str = list(filter(None, contract_content.permanences_dates.split(
+                            settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
                         if contract_content.not_permanences_dates is not None:
-                            all_not_dates_str = list(filter(None, contract_content.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
+                            all_not_dates_str = list(filter(None, contract_content.not_permanences_dates.split(
+                                settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
                         else:
                             all_not_dates_str = []
                         if one_date_str in all_dates_str:
@@ -122,5 +123,5 @@ def is_into_offer_content(request, product_id, contract_id, one_date_str):
                         contract_content.save(update_fields=['permanences_dates', 'not_permanences_dates'])
 
                     return HttpResponse(product.get_is_into_offer_html(contract=contract,
-                                                                   contract_content=contract_content))
+                                                                       contract_content=contract_content))
     raise Http404

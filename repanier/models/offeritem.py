@@ -19,6 +19,7 @@ from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.item import Item
+from repanier.tools import create_or_update_one_purchase
 
 
 class OfferItem(Item):
@@ -113,7 +114,6 @@ class OfferItem(Item):
         return self.get_vat_level_display()
 
     get_vat_level.short_description = (_("VAT level"))
-    get_vat_level.allow_tags = False
     get_vat_level.admin_order_field = 'vat_level'
 
     def get_producer_qty_stock_invoiced(self):
@@ -142,16 +142,15 @@ class OfferItem(Item):
             if taken_from_stock == DECIMAL_ZERO:
                 return EMPTY_STRING
             else:
-                return _("Stock %(stock)s") % {'stock': number_format(taken_from_stock, 4)}
+                return mark_safe(_("Stock %(stock)s") % {'stock': number_format(taken_from_stock, 4)})
         else:
             if taken_from_stock == DECIMAL_ZERO:
-                return _("<b>%(qty)s</b>") % {'qty': number_format(invoiced_qty, 4)}
+                return mark_safe(_("<b>%(qty)s</b>") % {'qty': number_format(invoiced_qty, 4)})
             else:
-                return _("<b>%(qty)s</b> + stock %(stock)s") % {'qty'  : number_format(invoiced_qty, 4),
-                                                                'stock': number_format(taken_from_stock, 4)}
+                return mark_safe(_("<b>%(qty)s</b> + stock %(stock)s") % {'qty': number_format(invoiced_qty, 4),
+                                                                          'stock': number_format(taken_from_stock, 4)})
 
     get_html_producer_qty_stock_invoiced.short_description = (_("Qty invoiced by the producer"))
-    get_html_producer_qty_stock_invoiced.allow_tags = True
     get_html_producer_qty_stock_invoiced.admin_order_field = 'quantity_invoiced'
 
     def get_producer_qty_invoiced(self):
@@ -167,9 +166,11 @@ class OfferItem(Item):
     def get_producer_row_price_invoiced(self):
         if self.manage_replenishment:
             if self.producer_unit_price.amount > self.customer_unit_price.amount:
-                return RepanierMoney((self.customer_unit_price.amount + self.unit_deposit.amount) * self.get_producer_qty_invoiced(), 2)
+                return RepanierMoney(
+                    (self.customer_unit_price.amount + self.unit_deposit.amount) * self.get_producer_qty_invoiced(), 2)
             else:
-                return RepanierMoney((self.producer_unit_price.amount + self.unit_deposit.amount) * self.get_producer_qty_invoiced(), 2)
+                return RepanierMoney(
+                    (self.producer_unit_price.amount + self.unit_deposit.amount) * self.get_producer_qty_invoiced(), 2)
         else:
             if self.producer_unit_price.amount > self.customer_unit_price.amount:
                 return self.total_selling_with_tax
@@ -198,7 +199,8 @@ class OfferItem(Item):
     @cached_property
     def get_not_permanences_dates(self):
         if self.not_permanences_dates:
-            all_dates_str = sorted(list(filter(None, self.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates_str = sorted(
+                list(filter(None, self.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
@@ -209,7 +211,8 @@ class OfferItem(Item):
     @cached_property
     def get_html_permanences_dates(self):
         if self.permanences_dates:
-            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates_str = sorted(
+                list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             month_save = None
             for one_date_str in all_dates_str:
@@ -229,7 +232,8 @@ class OfferItem(Item):
     @cached_property
     def get_permanences_dates(self):
         if self.permanences_dates:
-            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates_str = sorted(
+                list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             # https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings
             # -> list(filter(None, all_dates_str))
@@ -330,9 +334,9 @@ def offer_item_pre_save(sender, **kwargs):
                                   offer_item.price_list_multiplier)
     if offer_item.manage_replenishment:
         if (offer_item.previous_add_2_stock != offer_item.add_2_stock or
-            offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
-            offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
-        ):
+                    offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
+                    offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
+            ):
             previous_producer_price = ((offer_item.previous_producer_unit_price +
                                         offer_item.previous_unit_deposit) * offer_item.previous_add_2_stock)
             producer_price = ((offer_item.producer_unit_price.amount +

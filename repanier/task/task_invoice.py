@@ -136,44 +136,6 @@ def generate_invoice(permanence, payment_date):
         customer_invoice.calculate_and_save_delta_buyinggroup()
         customer_invoice.save()
 
-    if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0:
-        membership_fee_product = Product.objects.filter(
-            order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-            is_active=True
-        ).order_by('?').first()
-        membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
-        # Update the prices
-        membership_fee_product.save()
-
-        for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=permanence.id,
-            customer_charged_id=F('customer_id')
-        ).select_related("customer").order_by('?'):
-            # 4 - Add Membership fee Subscription
-            customer = customer_invoice.customer
-            if not customer.represent_this_buyinggroup:
-                # There is a membership fee
-                if customer.membership_fee_valid_until < today:
-                    membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(permanence)
-                    permanence.producers.add(membership_fee_offer_item.producer_id)
-                    create_or_update_one_purchase(
-                        customer.id,
-                        membership_fee_offer_item,
-                        q_order=1,
-                        permanence_date=permanence.permanence_date,
-                        batch_job=True,
-                        is_box_content=False
-                    )
-                    customer.membership_fee_valid_until = add_months(
-                        customer.membership_fee_valid_until,
-                        REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
-                    )
-                    # customer.save(update_fields=['membership_fee_valid_until', ])
-                    # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                    Customer.objects.filter(id=customer.id).order_by('?').update(
-                        membership_fee_valid_until=customer.membership_fee_valid_until
-                    )
-
     permanence.recalculate_profit()
     permanence.save()
 

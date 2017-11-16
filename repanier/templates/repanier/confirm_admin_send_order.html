@@ -3,237 +3,245 @@
 {% block content %}
     <link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">
     <link rel="stylesheet" href="{% static "css/custom.css" %}">
-<style type="text/css">
-.form-group input[type="checkbox"] {
-    display: none;
-}
-.form-group input[type="checkbox"] + .btn-group > label span {
-    width: 20px;
-}
-.form-group input[type="checkbox"] + .btn-group > label span:first-child {
-    display: none;
-}
-.form-group input[type="checkbox"] + .btn-group > label span:last-child {
-    display: inline-block;
-}
-.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
-    display: inline-block;
-}
-.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
-    display: none;
-}
-.colorgraph {
-  height: 5px;
-  border-top: 0;
-  background: #c4e17f;
-  border-radius: 5px;
-  background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
-  background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
-  background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
-  background-image: linear-gradient(to right, #c4e17f, #62c2e4);
-}
-</style>
-{#{% endaddtoblock %}#}
+    <style type="text/css">
+        .form-group input[type="checkbox"] {
+            display: none;
+        }
+
+        .form-group input[type="checkbox"] + .btn-group > label span {
+            width: 20px;
+        }
+
+        .form-group input[type="checkbox"] + .btn-group > label span:first-child {
+            display: none;
+        }
+
+        .form-group input[type="checkbox"] + .btn-group > label span:last-child {
+            display: inline-block;
+        }
+
+        .form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
+            display: inline-block;
+        }
+
+        .form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
+            display: none;
+        }
+
+        .colorgraph {
+            height: 5px;
+            border-top: 0;
+            background: #c4e17f;
+            border-radius: 5px;
+            background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
+            background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
+            background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
+            background-image: linear-gradient(to right, #c4e17f, #62c2e4);
+        }
+    </style>
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
-        <h6>{{ permanence }}{% if permanence.with_delivery_point %}, {% trans "send the orders of the following deviveries points" %} :{% endif %}</h6>
+        <h6>{{ permanence }}{% if only_deliveries %},
+            {% trans "send the orders of the following deviveries points" %} :{% endif %}</h6>
         <div class="submit-row">
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
+            </button>
         </div>
-{% if permanence.with_delivery_point %}
-        <fieldset class="module aligned ">
-        <div class="submit-row">
-<div class="form-group">
-    <input id="all-deliveries" name="all-deliveries" onClick="toggle_all_deliveries(this)" autocomplete="off" type="checkbox" checked>
-    <div class="btn-group">
-        <label for="all-deliveries" class="btn btn-primary btn-sm">
-            <span class="glyphicon glyphicon-ok"></span>
-            <span>&nbsp;</span>
-        </label>
-        <label for="all-deliveries" class="btn active btn-sm">
-            {% trans "Select all deliveries." %}
-        </label>
-    </div>
-</div>
-<hr class="colorgraph">
-            {% for delivery in deliveries %}
-<span class="form-group">
-    <input id="deliveries-{{ forloop.counter0 }}" name="deliveries" onClick="toggle_delivery(this)" value="{{ delivery.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
-    <div class="btn-group">
-        <label for="deliveries-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
-            <span class="glyphicon glyphicon-ok"></span>
-            <span>&nbsp;</span>
-        </label>
-        <label for="deliveries-{{ forloop.counter0 }}" class="btn active btn-xs">
-            {{ delivery }}
-        </label>
-    </div>
-</span>
-            {% endfor %}
-        </div>
-        </fieldset>
-{% else %}
-    <input id="all-deliveries" name="all-deliveries" autocomplete="off" type="hidden" value="on">
-{% endif %}
-{% if producer_invoices %}
-        <fieldset class="module aligned ">
-        <div class="submit-row">
-<div class="form-group">
-    <input id="all-producer-invoices" name="all-producer-invoices" onClick="toggle_all_producers(this)" autocomplete="off" type="checkbox" checked>
-    <div class="btn-group">
-        <label for="all-producer-invoices" class="btn btn-primary btn-sm">
-            <span class="glyphicon glyphicon-ok"></span>
-            <span>&nbsp;</span>
-        </label>
-        <label for="all-producer-invoices" class="btn active btn-sm">
-            {% trans "Select all producers." %}
-        </label>
-    </div>
-</div>
-<hr class="colorgraph">
-            {% for producer_invoice in producer_invoices %}
-<span class="form-group">
-    <input id="producer-invoices-{{ forloop.counter0 }}" name="producer-invoices" onClick="toggle_producer(this)" value="{{ producer_invoice.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
-    <div class="btn-group">
-        <label for="producer-invoices-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
-            <span class="glyphicon glyphicon-ok"></span>
-            <span>&nbsp;</span>
-        </label>
-        <label for="producer-invoices-{{ forloop.counter0 }}" class="btn active btn-xs">
-            {{ producer_invoice.producer }}
-        </label>
-    </div>
-</span>
-            {% endfor %}
-        </div>
-        </fieldset>
-{% else %}
-    <input id="all-producer-invoices" name="all-producer-invoices" autocomplete="off" type="hidden" value="on">
-{% endif %}
-    <div id="id_mail_to_customers">
-        <fieldset class="module aligned ">
-        <div class="submit-row">
-            <div class="field-box">
-                <h6>{% trans "order mail to customers" %} :</h6>
-            </div>
-            <div class="field-box">
-                <h6>{{ order_customer_email_will_be_sent_to }}</h6>
-            </div>
-        {% if order_customer_email_will_be_sent %}
-            <div class="field-box">
-                {% with id_for_label=form.template_order_customer_mail.id_for_label %}
-                    <div id="div_{{ id_for_label }}">
-                        <div class="controls col-xs-12">
+        {% if only_deliveries %}
+            <fieldset class="module aligned ">
+                <div class="submit-row">
+                    <div class="form-group">
+                        <input id="all-deliveries" name="all-deliveries" onClick="toggle_all_deliveries(this)"
+                               autocomplete="off" type="checkbox" checked>
+                        <div class="btn-group">
+                            <label for="all-deliveries" class="btn btn-primary btn-sm">
+                                <span class="glyphicon glyphicon-ok"></span>
+                                <span>&nbsp;</span>
+                            </label>
+                            <label for="all-deliveries" class="btn active btn-sm">
+                                {% trans "Select all deliveries." %}
+                            </label>
+                        </div>
+                    </div>
+                    <hr class="colorgraph">
+                    {% for delivery in deliveries %}
+                        <div class="form-group">
+                            <input id="deliveries-{{ forloop.counter0 }}" name="deliveries" onClick="toggle_delivery(this)"
+                                   value="{{ delivery.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
+                            <div class="btn-group">
+                                <label for="deliveries-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                    <span>&nbsp;</span>
+                                </label>
+                                <label for="deliveries-{{ forloop.counter0 }}" class="btn active btn-xs">
+                                    {{ delivery }}
+                                </label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
+        {% else %}
+            <fieldset class="module aligned ">
+                <div class="submit-row">
+                    <div class="form-group">
+                        <input id="all-producers" name="all-producers"
+                               onClick="toggle_all_producers(this)"
+                               autocomplete="off" type="checkbox" checked>
+                        <div class="btn-group">
+                            <label for="all-producers" class="btn btn-primary btn-sm">
+                                <span class="glyphicon glyphicon-ok"></span>
+                                <span>&nbsp;</span>
+                            </label>
+                            <label for="all-producers" class="btn active btn-sm">
+                                {% trans "Select all producers." %}
+                            </label>
+                        </div>
+                    </div>
+                    <hr class="colorgraph">
+                    {% for producer in producers %}
+                        <div class="form-group">
+                            <input id="producers-{{ forloop.counter0 }}" name="producers"
+                               {% if not must_confirm %}onClick="toggle_producer(this)"{% else %}disabled{% endif %}
+                               value="{{ producer.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
+                            <div class="btn-group">
+                                <label for="producer-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                    <span>&nbsp;</span>
+                                </label>
+                                <label for="producer-{{ forloop.counter0 }}" class="btn active btn-xs">
+                                    {{ producer }}
+                                </label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
+        {% endif %}
+        <div id="id_mail_to_customers">
+            <fieldset class="module aligned ">
+                <div class="submit-row">
+                    <div class="field-box">
+                        <h6>{% trans "order mail to customers" %} :</h6>
+                    </div>
+                    <div class="field-box">
+                        <h6>{{ order_customer_email_will_be_sent_to }}</h6>
+                    </div>
+                    {% if order_customer_email_will_be_sent %}
+                        <div class="field-box">
+                            {% with id_for_label=form.template_order_customer_mail.id_for_label %}
+                                <div id="div_{{ id_for_label }}">
+                                    <div class="controls col-xs-12">
                             <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
                                       name="template_order_customer_mail">{{ form.template_order_customer_mail.value }}</textarea>
-                            <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
-                            <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
-                            <script>
-                                CKEDITOR.replace("{{ id_for_label }}", {
-                                    language: 'fr',
-                                    forcePasteAsPlainText: true,
-                                    toolbar: [
-                                        ['Preview', 'Image', 'Source']
-                                    ],
-                                    contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
-                                    width: '100%',
-                                    height: '24em',
-                                    removePlugins: 'elementspath',
-                                    readOnly: true
-                                });
-                            </script>
+                                        <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                        <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                        <script>
+                                            CKEDITOR.replace("{{ id_for_label }}", {
+                                                language: 'fr',
+                                                forcePasteAsPlainText: true,
+                                                toolbar: [
+                                                    ['Preview', 'Image', 'Source']
+                                                ],
+                                                contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                                                width: '100%',
+                                                height: '24em',
+                                                removePlugins: 'elementspath',
+                                                readOnly: true
+                                            });
+                                        </script>
+                                    </div>
+                                </div>
+                            {% endwith %}
                         </div>
-                    </div>
-                {% endwith %}
-            </div>
-        {% endif %}
+                    {% endif %}
+                </div>
+            </fieldset>
         </div>
-        </fieldset>
-    </div>
         <fieldset class="module aligned ">
-        <div class="submit-row">
-            <div class="field-box">
-                <h6>{% trans "order mail to producers" %} :</h6>
-            </div>
-            <div class="field-box">
-                <h6>{{ order_producer_email_will_be_sent_to }}</h6>
-            </div>
-        {% if order_producer_email_will_be_sent %}
-            <div class="field-box">
-                {% with id_for_label=form.template_order_producer_mail.id_for_label %}
-                    <div id="div_{{ id_for_label }}">
-                        <div class="controls col-xs-12">
+            <div class="submit-row">
+                <div class="field-box">
+                    <h6>{% trans "order mail to producers" %} :</h6>
+                </div>
+                <div class="field-box">
+                    <h6>{{ order_producer_email_will_be_sent_to }}</h6>
+                </div>
+                {% if order_producer_email_will_be_sent %}
+                    <div class="field-box">
+                        {% with id_for_label=form.template_order_producer_mail.id_for_label %}
+                            <div id="div_{{ id_for_label }}">
+                                <div class="controls col-xs-12">
                             <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
                                       name="template_order_producer_mail">{{ form.template_order_producer_mail.value }}</textarea>
-                            <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
-                            <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
-                            <script>
-                                CKEDITOR.replace("{{ id_for_label }}", {
-                                    language: 'fr',
-                                    forcePasteAsPlainText: true,
-                                    toolbar: [
-                                        ['Preview', 'Image', 'Source']
-                                    ],
-                                    contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
-                                    width: '100%',
-                                    height: '24em',
-                                    removePlugins: 'elementspath',
-                                    readOnly: true
-                                });
-                            </script>
-                        </div>
+                                    <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                    <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                    <script>
+                                        CKEDITOR.replace("{{ id_for_label }}", {
+                                            language: 'fr',
+                                            forcePasteAsPlainText: true,
+                                            toolbar: [
+                                                ['Preview', 'Image', 'Source']
+                                            ],
+                                            contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                                            width: '100%',
+                                            height: '24em',
+                                            removePlugins: 'elementspath',
+                                            readOnly: true
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                        {% endwith %}
                     </div>
-                {% endwith %}
+                {% endif %}
             </div>
-        {% endif %}
-        </div>
         </fieldset>
-    <div id="id_mail_to_board">
-        <fieldset class="module aligned ">
-        <div class="submit-row">
-            <div class="field-box">
-                <h6>{% trans "order mail to board" %} :</h6>
-            </div>
-            <div class="field-box">
-                <h6>{{ order_board_email_will_be_sent_to }}</h6>
-            </div>
-        {% if order_board_email_will_be_sent %}
-            <div class="field-box">
-                {% with id_for_label=form.template_order_staff_mail.id_for_label %}
-                    <div id="div_{{ id_for_label }}">
-                        <div class="controls col-xs-12">
+        <div id="id_mail_to_board">
+            <fieldset class="module aligned ">
+                <div class="submit-row">
+                    <div class="field-box">
+                        <h6>{% trans "order mail to board" %} :</h6>
+                    </div>
+                    <div class="field-box">
+                        <h6>{{ order_board_email_will_be_sent_to }}</h6>
+                    </div>
+                    {% if order_board_email_will_be_sent %}
+                        <div class="field-box">
+                            {% with id_for_label=form.template_order_staff_mail.id_for_label %}
+                                <div id="div_{{ id_for_label }}">
+                                    <div class="controls col-xs-12">
                             <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
                                       name="template_order_staff_mail">{{ form.template_order_staff_mail.value }}</textarea>
-                            <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
-                            <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
-                            <script>
-                                CKEDITOR.replace("{{ id_for_label }}", {
-                                    language: 'fr',
-                                    forcePasteAsPlainText: true,
-                                    toolbar: [
-                                        ['Preview', 'Image', 'Source']
-                                    ],
-                                    contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
-                                    width: '100%',
-                                    height: '24em',
-                                    removePlugins: 'elementspath',
-                                    readOnly: true
-                                });
-                            </script>
+                                        <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                        <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                        <script>
+                                            CKEDITOR.replace("{{ id_for_label }}", {
+                                                language: 'fr',
+                                                forcePasteAsPlainText: true,
+                                                toolbar: [
+                                                    ['Preview', 'Image', 'Source']
+                                                ],
+                                                contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                                                width: '100%',
+                                                height: '24em',
+                                                removePlugins: 'elementspath',
+                                                readOnly: true
+                                            });
+                                        </script>
+                                    </div>
+                                </div>
+                            {% endwith %}
                         </div>
-                    </div>
-                {% endwith %}
-            </div>
-        {% endif %}
+                    {% endif %}
+                </div>
+            </fieldset>
         </div>
-        </fieldset>
-    </div>
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>
     </form>
-<script type="text/javascript">
+    <script type="text/javascript">
         function all_producers(all_checked) {
             if (all_checked) {
                 window.jQuery("#id_mail_to_board").show();
@@ -243,96 +251,104 @@
                 window.jQuery("#id_mail_to_customers").hide();
             }
         }
+
         function toggle_all(source, elementName) {
-          checkboxes = document.getElementsByName(elementName);
-          for(var i=0, n=checkboxes.length;i<n;i++) {
-            checkboxes[i].checked = source.checked;
-          }
-          return source.checked
+            checkboxes = document.getElementsByName(elementName);
+            for (var i = 0, n = checkboxes.length; i < n; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+            return source.checked
         }
+
         function toggle(source, elementName) {
-          source.checked != source.checked;
-          all_checked = true;
-          none_checked = true;
-          checkboxes = document.getElementsByName(elementName);
-          for(var i=0, n=checkboxes.length;i<n;i++) {
-              all_checked &= checkboxes[i].checked;
-              none_checked &= !checkboxes[i].checked
-          }
-          all_checkboxes = document.getElementsByName("all-" + elementName);
-          all_checkboxes[0].checked = all_checked;
-          return [none_checked, all_checked]
+            {#          source.checked != source.checked;#}
+            all_checked = true;
+            none_checked = true;
+            checkboxes = document.getElementsByName(elementName);
+            for (var i = 0, n = checkboxes.length; i < n; i++) {
+                all_checked &= checkboxes[i].checked;
+                none_checked &= !checkboxes[i].checked
+            }
+            all_checkboxes = document.getElementsByName("all-" + elementName);
+            all_checkboxes[0].checked = all_checked;
+            return [none_checked, all_checked]
         }
+
         function check_all(elementName) {
             all_checkboxes = document.getElementsByName("all-" + elementName);
             if (all_checkboxes && !all_checkboxes[0].checked) {
                 all_checkboxes[0].checked = true;
                 checkboxes = document.getElementsByName(elementName);
-                for(var i=0, n=checkboxes.length;i<n;i++) {
+                for (var i = 0, n = checkboxes.length; i < n; i++) {
                     checkboxes[i].checked = true;
                 }
             }
         }
+
         function uncheck_all(elementName) {
             all_checkboxes = document.getElementsByName("all-" + elementName);
             if (all_checkboxes) {
                 all_checkboxes[0].checked = false;
                 checkboxes = document.getElementsByName(elementName);
-                for(var i=0, n=checkboxes.length;i<n;i++) {
+                for (var i = 0, n = checkboxes.length; i < n; i++) {
                     checkboxes[i].checked = false;
                 }
             }
         }
+
         function toggle_all_deliveries(source) {
             all_checked = toggle_all(source, 'deliveries');
             if (all_checked) {
-                  checkboxes = document.getElementsByName('producer-invoices');
-                  one_checked = false;
-                  for(var i=0, n=checkboxes.length;i<n;i++) {
-                      one_checked |= checkboxes[i].checked
-                  }
-                  if (!one_checked) {
-                      check_all('producer-invoices')
-                  }
+                checkboxes = document.getElementsByName('producers');
+                one_checked = false;
+                for (var i = 0, n = checkboxes.length; i < n; i++) {
+                    one_checked |= checkboxes[i].checked
+                }
+                if (!one_checked) {
+                    check_all('producers')
+                }
             }
             else {
-                uncheck_all('producer-invoices')
+                uncheck_all('producers')
             }
         }
+
         function toggle_delivery(source) {
             checked = toggle(source, 'deliveries');
             none_checked = checked[0];
             if (none_checked) {
-                uncheck_all('producer-invoices');
+                uncheck_all('producers');
                 all_producers(false);
             }
             else {
                 all_checked = checked[1];
                 if (!all_checked) {
-                    check_all('producer-invoices');
+                    check_all('producers');
                     all_producers(true);
                 }
             }
         }
+
         function toggle_all_producers(source) {
-            all_checked = toggle_all(source, 'producer-invoices');
+            all_checked = toggle_all(source, 'producers');
             if (all_checked) {
-                  checkboxes = document.getElementsByName('deliveries');
-                  one_checked = false;
-                  for(var i=0, n=checkboxes.length;i<n;i++) {
-                      one_checked |= checkboxes[i].checked
-                  }
-                  if (!one_checked) {
-                      check_all('deliveries')
-                  }
+                checkboxes = document.getElementsByName('deliveries');
+                one_checked = false;
+                for (var i = 0, n = checkboxes.length; i < n; i++) {
+                    one_checked |= checkboxes[i].checked
+                }
+                if (!one_checked) {
+                    check_all('deliveries')
+                }
             }
             else {
                 uncheck_all('deliveries')
             }
             all_producers(all_checked);
         }
+
         function toggle_producer(source) {
-            checked = toggle(source, 'producer-invoices');
+            checked = toggle(source, 'producers');
             none_checked = checked[0];
             if (none_checked) {
                 uncheck_all('deliveries');
@@ -346,6 +362,5 @@
                 all_producers(all_checked);
             }
         }
-</script>
-    </div>
+    </script>
 {% endblock %}

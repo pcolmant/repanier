@@ -62,7 +62,6 @@ class Configuration(TranslatableModel):
     send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
     send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
     invoice = models.BooleanField(_("Activate invoice"), default=True)
-    close_wo_sending = models.BooleanField(_("Close wo sending"), default=False)
     display_anonymous_order_form = models.BooleanField(_("Display anonymous order form"), default=True)
     display_producer_on_order_form = models.BooleanField(_("Display producers on order form"), default=True)
     display_who_is_who = models.BooleanField(_("Display who is who"), default=True)
@@ -379,7 +378,6 @@ def configuration_post_save(sender, **kwargs):
         repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = config.send_invoice_mail_to_producer
         repanier.apps.REPANIER_SETTINGS_INVOICE = config.invoice
-        repanier.apps.REPANIER_SETTINGS_CLOSE_WO_SENDING = config.close_wo_sending
         repanier.apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
         repanier.apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM = config.display_producer_on_order_form
         repanier.apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who

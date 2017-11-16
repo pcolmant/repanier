@@ -1,12 +1,9 @@
 # -*- coding: utf-8
 
-from django.conf import settings
-from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields
 
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
@@ -38,35 +35,26 @@ class DeliveryBoard(TranslatableModel):
         verbose_name=_("Highest status")
     )
 
-    def set_status(self, new_status, all_producers=True, producers_id=None):
+    def set_status(self, new_status):
         from repanier.models.invoice import CustomerInvoice
-        from repanier.models.purchase import Purchase
+        from repanier.models.purchase import PurchaseWoReceiver
 
-        if all_producers:
-            now = timezone.now()
-            self.is_updated_on = now
-            self.status = new_status
-            if self.highest_status < new_status:
-                self.highest_status = new_status
-            self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-            CustomerInvoice.objects.filter(
-                delivery_id=self.id
-            ).order_by('?').update(
-                status=new_status
-            )
-            Purchase.objects.filter(
-                customer_invoice__delivery_id=self.id
-            ).order_by('?').update(
-                status=new_status)
-            menu_pool.clear()
-            cache.clear()
-        else:
-            Purchase.objects.filter(
-                customer_invoice__delivery_id=self.id,
-                producer__in=producers_id
-            ).order_by('?').update(
-                status=new_status
-            )
+        now = timezone.now()
+        self.is_updated_on = now
+        self.status = new_status
+        if self.highest_status < new_status:
+            self.highest_status = new_status
+        self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
+        CustomerInvoice.objects.filter(
+            delivery_id=self.id
+        ).order_by('?').update(
+            status=new_status
+        )
+        PurchaseWoReceiver.objects.filter(
+            customer_invoice__delivery_id=self.id
+        ).order_by('?').update(
+            status=new_status
+        )
 
     def get_delivery_display(self, br=False, color=False):
         short_name = "{}".format(self.delivery_point.safe_translation_getter(
@@ -98,3 +86,4 @@ class DeliveryBoard(TranslatableModel):
     class Meta:
         verbose_name = _("Delivery board")
         verbose_name_plural = _("Deliveries board")
+        ordering = ("id",)

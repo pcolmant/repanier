@@ -127,7 +127,7 @@ class PurchaseForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             'permanence': SelectAdminPermanenceWidget(),
-            'customer'  : Select2(select2attrs={'width': '450px'})
+            'customer': Select2(select2attrs={'width': '450px'})
         }
 
 
@@ -154,6 +154,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     list_display_links = ('offer_item',)
     search_fields = ('offer_item__translations__long_name',)
     actions = []
+
     # change_list_template = 'admin/purchase_change_list.html'
 
     def __init__(self, model, admin_site):
@@ -229,8 +230,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
             if permanence is not None and customer is not None:
                 customer_invoice = CustomerInvoice.objects.filter(
-                        customer_id=customer_id,
-                        permanence_id=permanence_id,
+                    customer_id=customer_id,
+                    permanence_id=permanence_id,
                 ).order_by('?').first()
                 if customer_invoice is not None:
                     if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
@@ -274,8 +275,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
             if permanence is not None and customer is not None:
                 customer_invoice = CustomerInvoice.objects.filter(
-                        customer_id=customer_id,
-                        permanence_id=permanence_id,
+                    customer_id=customer_id,
+                    permanence_id=permanence_id,
                 ).order_by('?').first()
                 if customer_invoice is not None \
                         and customer_invoice.status == PERMANENCE_OPENED \
@@ -384,9 +385,11 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                         delivery_field.initial = customer_invoice.first().delivery_id
                     elif delivery_id is not None:
                         delivery_field.initial = delivery_id
-                    delivery_field.choices = [(o.id, o.get_delivery_status_display()) for o in DeliveryBoard.objects.filter(
-                        permanence_id=permanence_id
-                    ).order_by("id")]
+                    delivery_field.choices = [
+                        (o.id, o.get_delivery_status_display()) for o in DeliveryBoard.objects.filter(
+                            permanence_id=permanence_id
+                        )
+                    ]
                 else:
                     delivery_field.required = False
                 permanence_field.empty_label = None
@@ -507,7 +510,6 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 purchase.offer_item = offer_item
                 purchase.status = status
                 purchase.producer = offer_item.producer
-                purchase.permanence_date = purchase.permanence.permanence_date
                 purchase.permanence.producers.add(offer_item.producer)
                 purchase.save()
                 purchase.save_box()

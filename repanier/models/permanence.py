@@ -5,7 +5,7 @@ import datetime
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Sum
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
@@ -15,9 +15,9 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
-import repanier.apps
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.models.product import Product
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice, ProducerInvoice
@@ -26,7 +26,7 @@ from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
-from repanier.tools import cap
+from repanier.tools import cap, create_or_update_one_purchase, add_months
 
 
 class Permanence(TranslatableModel):
@@ -139,7 +139,8 @@ class Permanence(TranslatableModel):
                 for p in self.contract.producers.all():
                     link.append(
                         "<a href=\"{}?producer={}&commitment={}\">&nbsp;{}&nbsp;{}</a>".format(
-                            changelist_url, p.id, self.contract.id, LINK_UNICODE, p.short_profile_name.replace(" ", "&nbsp;"))
+                            changelist_url, p.id, self.contract.id, LINK_UNICODE,
+                            p.short_profile_name.replace(" ", "&nbsp;"))
                     )
             elif len(self.producers.all()) > 0:
                 changelist_url = urlresolvers.reverse(
@@ -178,16 +179,19 @@ class Permanence(TranslatableModel):
                 ).order_by('?').first()
                 if pi is not None:
                     if pi.status == PERMANENCE_OPENED:
-                        label = ("{}{} ({}) ".format(link_unicode, p.short_profile_name, pi.get_total_price_with_tax())).replace(
+                        label = (
+                            "{}{} ({}) ".format(link_unicode, p.short_profile_name,
+                                                pi.get_total_price_with_tax())).replace(
                             ' ', '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                     else:
-                        label = ("{}{} ({}) {}".format( link_unicode,
-                        p.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)).replace(' ',
-                                                                                                    '&nbsp;')
+                        label = ("{}{} ({}) {}".format(link_unicode,
+                                                       p.short_profile_name, pi.get_total_price_with_tax(),
+                                                       LOCK_UNICODE)).replace(' ',
+                                                                              '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                 else:
-                    label = ("{}{} ".format(link_unicode, p.short_profile_name,)).replace(' ', '&nbsp;')
+                    label = ("{}{} ".format(link_unicode, p.short_profile_name, )).replace(' ', '&nbsp;')
                     offeritem_changelist_url = close_offeritem_changelist_url
                 link.append(
                     "<a href=\"{}?permanence={}&producer={}\">{}</a>".format(
@@ -216,8 +220,9 @@ class Permanence(TranslatableModel):
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
-                    label = "{}{} ({}) {}".format( link_unicode,
-                    pi.producer.short_profile_name, pi.get_total_price_with_tax(), LOCK_UNICODE)
+                    label = "{}{} ({}) {}".format(link_unicode,
+                                                  pi.producer.short_profile_name, pi.get_total_price_with_tax(),
+                                                  LOCK_UNICODE)
                     link.append(
                         "<a href=\"{}?permanence={}&producer={}\">&nbsp;{}</a>".format(
                             changelist_url, self.id, pi.producer_id, label.replace(' ', '&nbsp;')
@@ -274,14 +279,13 @@ class Permanence(TranslatableModel):
                 )
         else:
             msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join([p.short_profile_name
-                                   for p in
-                                   Producer.objects.filter(
-                                       producerinvoice__permanence_id=self.id).only(
-                                       'short_profile_name')]))
+                                                                             for p in
+                                                                             Producer.objects.filter(
+                                                                                 producerinvoice__permanence_id=self.id).only(
+                                                                                 'short_profile_name')]))
         return mark_safe(msg_html)
 
     get_producers.short_description = (_("Offers from"))
-    # get_producers.allow_tags = True
 
     @cached_property
     def get_customers(self):
@@ -294,7 +298,7 @@ class Permanence(TranslatableModel):
             link = []
             delivery_save = None
             for ci in CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
-                "customer").order_by('delivery', 'customer'):
+                    "customer").order_by('delivery', 'customer'):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
@@ -320,7 +324,7 @@ class Permanence(TranslatableModel):
             link = []
             delivery_save = None
             for ci in CustomerInvoice.objects.filter(permanence_id=self.id).select_related(
-                "customer").order_by('delivery', 'customer'):
+                    "customer").order_by('delivery', 'customer'):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
@@ -370,7 +374,6 @@ class Permanence(TranslatableModel):
             return mark_safe("<div class=\"wrap-text\">{}</div>".format(_("No purchase")))
 
     get_customers.short_description = (_("Purchases by"))
-    # get_customers.allow_tags = True
 
     @cached_property
     def get_board(self):
@@ -425,11 +428,78 @@ class Permanence(TranslatableModel):
 
     get_board.short_description = (_("Tasks"))
 
-    def set_status(self, new_status, all_producers=True, producers_id=None, update_payment_date=False,
-                   payment_date=None, allow_downgrade=True):
-        from repanier.models.purchase import Purchase
+    @transaction.atomic
+    def set_status(self, new_status,
+                   everything=True, producers_id=(), deliveries_id=(),
+                   update_payment_date=False,
+                   payment_date=None):
+        if new_status == PERMANENCE_WAIT_FOR_OPEN:
+            everything = True
+            all_producers = self.contract.producers.all() if self.contract else self.producers.all()
+            for a_producer in all_producers:
+                # Create ProducerInvoice to be able to close those producer on demand
+                if not ProducerInvoice.objects.filter(
+                        permanence_id=self.id,
+                        producer_id=a_producer.id
+                ).order_by('?').exists():
+                    ProducerInvoice.objects.create(
+                        permanence_id=self.id,
+                        producer_id=a_producer.id
+                    )
 
-        if all_producers:
+        if self.with_delivery_point:
+            qs = DeliveryBoard.objects.filter(
+                permanence_id=self.id
+            ).exclude(
+                status=new_status
+            ).order_by('?')
+            if not everything:
+                qs = qs.filter(id__in=deliveries_id)
+            for delivery_point in qs:
+                delivery_point.set_status(new_status)
+            if everything:
+                ProducerInvoice.objects.filter(
+                    permanence_id=self.id
+                ).order_by('?').update(
+                    status=new_status
+                )
+        else:
+            from repanier.models.purchase import PurchaseWoReceiver
+
+            if not everything:
+                PurchaseWoReceiver.objects.filter(
+                    permanence_id=self.id,
+                    producer_id__in=producers_id
+                ).order_by('?').update(
+                    status=new_status
+                )
+                ProducerInvoice.objects.filter(
+                    permanence_id=self.id,
+                    producer_id__in=producers_id
+                ).order_by('?').update(
+                    status=new_status
+                )
+            else:
+                PurchaseWoReceiver.objects.filter(
+                    permanence_id=self.id
+                ).exclude(
+                    status=new_status
+                ).order_by('?').update(
+                    status=new_status
+                )
+                ProducerInvoice.objects.filter(
+                    permanence_id=self.id
+                ).exclude(
+                    status=new_status
+                ).order_by('?').update(
+                    status=new_status
+                )
+                CustomerInvoice.objects.filter(
+                    permanence_id=self.id,
+                ).order_by('?').update(
+                    status=new_status
+                )
+        if everything:
             now = timezone.now().date()
             self.is_updated_on = now
             self.status = new_status
@@ -444,66 +514,118 @@ class Permanence(TranslatableModel):
                     update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
             else:
                 self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-            if new_status == PERMANENCE_WAIT_FOR_OPEN:
-                all_producers = self.contract.producers.all() if self.contract else self.producers.all()
-                for a_producer in all_producers:
-                    # Create ProducerInvoice to be able to close those producer on demand
-                    if not ProducerInvoice.objects.filter(
-                            permanence_id=self.id,
-                            producer_id=a_producer.id
-                    ).order_by('?').exists():
-                        ProducerInvoice.objects.create(
-                            permanence_id=self.id,
-                            producer_id=a_producer.id
-                        )
-
-            # self.with_delivery_point = DeliveryBoard.objects.filter(
-            #     permanence_id=self.id
-            # ).order_by('?').exists()
-            if self.with_delivery_point:
-                qs = DeliveryBoard.objects.filter(
-                    permanence_id=self.id
-                ).exclude(status=new_status).order_by('?')
-                for delivery_point in qs:
-                    if allow_downgrade or delivery_point.status < new_status:
-                        # --> or delivery_point.status < new_status -->
-                        # Set new status except if PERMANENCE_SEND, PERMANENCE_WAIT_FOR_SEND
-                        #  -> PERMANENCE_CLOSED, PERMANENCE_WAIT_FOR_CLOSED
-                        # This occur if directly sending order of a opened delivery point
-                        delivery_point.set_status(new_status)
-            CustomerInvoice.objects.filter(
-                permanence_id=self.id,
-                delivery__isnull=True
-            ).order_by('?').update(
-                status=new_status
-            )
-            Purchase.objects.filter(
-                permanence_id=self.id,
-                customer_invoice__delivery__isnull=True
-            ).order_by('?').update(
-                status=new_status)
-            ProducerInvoice.objects.filter(
-                permanence_id=self.id
-            ).order_by('?').update(
-                status=new_status
-            )
-            if update_payment_date:
-                if payment_date is None:
-                    self.payment_date = now
-                else:
-                    self.payment_date = payment_date
-                self.save(
-                    update_fields=['status', 'is_updated_on', 'highest_status', 'with_delivery_point', 'payment_date'])
-            else:
-                self.save(update_fields=['status', 'is_updated_on', 'highest_status', 'with_delivery_point'])
             menu_pool.clear()
             cache.clear()
-        else:
-            # /!\ If one delivery point has been closed, I may not close anymore by producer
-            Purchase.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by('?').update(
-                status=new_status)
-            ProducerInvoice.objects.filter(permanence_id=self.id, producer__in=producers_id).order_by(
-                '?').update(status=new_status)
+
+    @transaction.atomic
+    def close_order(self, everything, producers_id=(), deliveries_id=()):
+        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
+            REPANIER_SETTINGS_GROUP_CUSTOMER_ID, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
+            REPANIER_SETTINGS_MEMBERSHIP_FEE
+        getcontext().rounding = ROUND_HALF_UP
+        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+            # Cancel unconfirmed purchases whichever the producer is
+            customer_invoice_qs = CustomerInvoice.objects.filter(
+                permanence_id=self.id,
+                is_order_confirm_send=False,
+            ).order_by('?')
+            if self.with_delivery_point:
+                customer_invoice_qs = customer_invoice_qs.filter(delivery_id__in=deliveries_id)
+            for customer_invoice in customer_invoice_qs:
+                customer_invoice.cancel_if_unconfirmed(self)
+        # Add membership fee
+        if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0:
+            membership_fee_product = Product.objects.filter(
+                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+                is_active=True
+            ).order_by('?').first()
+            membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
+            # Update the prices
+            membership_fee_product.save()
+
+            for customer_invoice in CustomerInvoice.objects.filter(
+                    permanence_id=self.id,
+                    customer_charged_id=F('customer_id')
+            ).select_related("customer").order_by('?'):
+                customer = customer_invoice.customer
+                if not customer.represent_this_buyinggroup:
+                    # Should pay a membership fee
+                    if customer.membership_fee_valid_until < self.permanence_date:
+                        membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(self)
+                        self.producers.add(membership_fee_offer_item.producer_id)
+                        create_or_update_one_purchase(
+                            customer.id,
+                            membership_fee_offer_item,
+                            q_order=1,
+                            batch_job=True,
+                            is_box_content=False
+                        )
+                        membership_fee_valid_until = add_months(
+                            customer.membership_fee_valid_until,
+                            REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+                        )
+                        # customer.save(update_fields=['membership_fee_valid_until', ])
+                        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                        Customer.objects.filter(id=customer.id).order_by('?').update(
+                            membership_fee_valid_until=membership_fee_valid_until
+                        )
+        # Add deposit products to be able to return them
+        customer_qs = Customer.objects.filter(
+            may_order=True,
+            customerinvoice__permanence_id=self.id,
+            represent_this_buyinggroup=False
+        ).order_by('?')
+        if self.with_delivery_point:
+            customer_qs = customer_qs.filter(customerinvoice__delivery_id__in=deliveries_id)
+        for customer in customer_qs:
+            offer_item_qs = OfferItem.objects.filter(
+                permanence_id=self.id,
+                order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
+            ).order_by('?')
+            if not everything:
+                offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
+            for offer_item in offer_item_qs:
+                create_or_update_one_purchase(customer.id, offer_item, q_order=1,
+                                              batch_job=True,
+                                              is_box_content=False)
+                create_or_update_one_purchase(customer.id, offer_item, q_order=0,
+                                              batch_job=True,
+                                              is_box_content=False)
+        if everything or not self.with_delivery_point:
+            # Round to multiple producer_order_by_quantity
+            offer_item_qs = OfferItem.objects.filter(
+                permanence_id=self.id,
+                may_order=True,
+                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
+                producer_order_by_quantity__gt=1,
+                quantity_invoiced__gt=0
+            ).order_by('?')
+            if not everything:
+                offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
+            for offer_item in offer_item_qs:
+                # It's possible to round the ordered qty even If we do not manage stock
+                if offer_item.manage_replenishment:
+                    needed = (offer_item.quantity_invoiced - offer_item.stock)
+                else:
+                    needed = offer_item.quantity_invoiced
+                if needed > DECIMAL_ZERO:
+                    offer_item.add_2_stock = offer_item.producer_order_by_quantity - (
+                        needed % offer_item.producer_order_by_quantity)
+                    offer_item.save()
+            # Add Transport
+            offer_item_qs = OfferItem.objects.filter(
+                permanence_id=self.id,
+                order_unit=PRODUCT_ORDER_UNIT_TRANSPORTATION
+            ).order_by('?')
+            if not everything:
+                offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
+            for offer_item in offer_item_qs:
+                create_or_update_one_purchase(
+                    REPANIER_SETTINGS_GROUP_CUSTOMER_ID, offer_item, q_order=1,
+                    batch_job=True, is_box_content=False
+                )
+
+        self.set_status(PERMANENCE_CLOSED, everything=everything, producers_id=producers_id)
 
     def duplicate(self, dates):
         creation_counter = 0
@@ -638,10 +760,10 @@ class Permanence(TranslatableModel):
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO
             )
-            self.total_purchase_with_tax=DECIMAL_ZERO
-            self.total_selling_with_tax=DECIMAL_ZERO
-            self.total_purchase_vat=DECIMAL_ZERO
-            self.total_selling_vat=DECIMAL_ZERO
+            self.total_purchase_with_tax = DECIMAL_ZERO
+            self.total_selling_with_tax = DECIMAL_ZERO
+            self.total_purchase_vat = DECIMAL_ZERO
+            self.total_selling_vat = DECIMAL_ZERO
             for offer_item in OfferItem.objects.filter(
                     permanence_id=self.id,
                     is_active=True,
@@ -784,7 +906,7 @@ class Permanence(TranslatableModel):
             ).values_list(
                 'product', flat=True
             ).order_by('?'))
-            six_months_ago = timezone.now().date() - datetime.timedelta(days=6*30)
+            six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
             previous_permanence = Permanence.objects.filter(
                 status__gte=PERMANENCE_SEND,
                 producers=a_producer,
@@ -831,18 +953,14 @@ class Permanence(TranslatableModel):
         return EMPTY_STRING
 
     def get_full_status_display(self):
-        from repanier.apps import REPANIER_SETTINGS_CLOSE_WO_SENDING
         refresh_status = [
             PERMANENCE_WAIT_FOR_PRE_OPEN,
             PERMANENCE_WAIT_FOR_OPEN,
             PERMANENCE_WAIT_FOR_CLOSED,
+            PERMANENCE_CLOSED,
             PERMANENCE_WAIT_FOR_SEND,
             PERMANENCE_WAIT_FOR_INVOICED
         ]
-        if not REPANIER_SETTINGS_CLOSE_WO_SENDING:
-            refresh_status += [
-                PERMANENCE_CLOSED
-            ]
         need_to_refresh_status = self.status in refresh_status
         if self.with_delivery_point:
             status_list = []
@@ -863,7 +981,7 @@ class Permanence(TranslatableModel):
                 'display_status',
                 args=(self.id,)
             )
-            progress = "◤◥◢◣"[self.gauge] # "◴◷◶◵" "▛▜▟▙"
+            progress = "◤◥◢◣"[self.gauge]  # "◴◷◶◵" "▛▜▟▙"
             self.gauge = (self.gauge + 1) % 4
             self.save(update_fields=['gauge'])
             msg_html = """
@@ -890,7 +1008,6 @@ class Permanence(TranslatableModel):
         return mark_safe(msg_html)
 
     get_full_status_display.short_description = (_("Status"))
-    get_full_status_display.allow_tags = True
 
     def get_permanence_display(self):
         short_name = self.safe_translation_getter(
@@ -911,16 +1028,15 @@ class Permanence(TranslatableModel):
             profit = self.total_selling_with_tax.amount - self.total_purchase_with_tax.amount
             # profit = self.total_selling_with_tax.amount - self.total_selling_vat.amount - self.total_purchase_with_tax.amount + self.total_purchase_vat.amount
             if profit != DECIMAL_ZERO:
-                return "{}<br>{}<br>💶&nbsp;{}".format(
+                return mark_safe("{}<br>{}<br>💶&nbsp;{}".format(
                     self.get_permanence_display(), self.total_selling_with_tax, RepanierMoney(profit)
-                )
-            return "{}<br>{}".format(
-                self.get_permanence_display(), self.total_selling_with_tax)
+                ))
+            return mark_safe("{}<br>{}".format(
+                self.get_permanence_display(), self.total_selling_with_tax))
         else:
             return self.get_permanence_display()
 
     get_permanence_admin_display.short_description = _("Offers")
-    get_permanence_admin_display.allow_tags = True
 
     def get_permanence_customer_display(self, with_status=True):
         if with_status:
@@ -966,4 +1082,3 @@ class PermanenceDone(Permanence):
         proxy = True
         verbose_name = _('Billing offer')
         verbose_name_plural = _('Billing offers')
-

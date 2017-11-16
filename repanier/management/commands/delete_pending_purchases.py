@@ -45,7 +45,7 @@ class Command(BaseCommand):
                     id__in=recently_updated_customer_invoice_qs
                 ).distinct()
                 for customer_invoice in customer_invoice_qs:
-                    customer_invoice.delete_if_unconfirmed(permanence)
+                    customer_invoice.cancel_if_unconfirmed(permanence)
 
 
 

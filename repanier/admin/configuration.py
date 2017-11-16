@@ -187,7 +187,6 @@ class ConfigurationAdmin(TranslatableAdmin):
                 ('transport', 'min_transport'),
                 'group_label',
                 # 'page_break_on_customer_check',
-                'close_wo_sending',
                 'display_who_is_who',
                 'invoice',
                 'how_to_register',

@@ -285,10 +285,8 @@ def get_preparator_unit(order_unit=PRODUCT_ORDER_UNIT_PC):
     return unit
 
 
-def get_base_unit(qty=0, order_unit=PRODUCT_ORDER_UNIT_PC, status=None, producer=False):
-    if order_unit == PRODUCT_ORDER_UNIT_KG or (
-                        status >= PERMANENCE_SEND and order_unit == PRODUCT_ORDER_UNIT_PC_KG and not producer
-    ):
+def get_base_unit(qty=0, order_unit=PRODUCT_ORDER_UNIT_PC, status=None):
+    if order_unit == PRODUCT_ORDER_UNIT_KG:
         if qty == DECIMAL_ZERO:
             base_unit = EMPTY_STRING
         else:
@@ -440,7 +438,7 @@ def display_selected_box_value(offer_item, quantity_ordered):
 
 def create_or_update_one_purchase(
         customer_id, offer_item,
-        permanence_date=None, status=PERMANENCE_OPENED, q_order=None,
+        status=PERMANENCE_OPENED, q_order=None,
         batch_job=False, is_box_content=False, comment=EMPTY_STRING):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     from repanier.models.purchase import Purchase
@@ -456,11 +454,8 @@ def create_or_update_one_purchase(
     ).order_by('?').first()
     if batch_job:
         if purchase is None:
-            permanence_date = permanence_date or Permanence.objects.filter(
-                id=offer_item.permanence_id).only("permanence_date").order_by('?').first().permanence_date
             purchase = Purchase.objects.create(
                 permanence_id=offer_item.permanence_id,
-                permanence_date=permanence_date,
                 offer_item_id=offer_item.id,
                 producer_id=offer_item.producer_id,
                 customer_id=customer_id,
@@ -521,12 +516,8 @@ def create_or_update_one_purchase(
                 else:
                     return purchase, False
             else:
-                permanence = Permanence.objects.filter(id=offer_item.permanence_id) \
-                    .only("permanence_date") \
-                    .order_by('?').first()
                 purchase = Purchase.objects.create(
                     permanence_id=offer_item.permanence_id,
-                    permanence_date=permanence.permanence_date,
                     offer_item_id=offer_item.id,
                     producer_id=offer_item.producer_id,
                     customer_id=customer_id,

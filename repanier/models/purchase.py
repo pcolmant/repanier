@@ -28,7 +28,6 @@ class Purchase(models.Model):
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
         verbose_name=_("Invoice status"))
-    permanence_date = models.DateField(_("Permanence date"))
     offer_item = models.ForeignKey(
         'OfferItem', verbose_name=_("Offer item"), on_delete=models.PROTECT)
     producer = models.ForeignKey(

@@ -407,7 +407,6 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                         offer_item,
                         q_order=Decimal(row[_("Quantity")]),
                         status=PERMANENCE_SEND,
-                        permanence_date=permanence.permanence_date,
                         batch_job=True, is_box_content=False,
                         comment=row[_("Comment")]
                     )

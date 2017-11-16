@@ -633,8 +633,8 @@ class CustomerInvoice(Invoice):
             status=self.status
         )
 
-    def delete_if_unconfirmed(self, permanence):
-        if not self.is_order_confirm_send:
+    def cancel_if_unconfirmed(self, permanence):
+        if not self.is_order_confirm_send and self.has_purchase:
             from repanier.email.email_order import export_order_2_1_customer
             from repanier.models.purchase import Purchase
 
