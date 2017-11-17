@@ -1,11 +1,7 @@
 # -*- coding: utf-8
 
-import json
-
-from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
-from django.http import Http404
-from django.http import HttpResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
@@ -23,7 +19,7 @@ def like_ajax(request):
             offer_item = OfferItemWoReceiver.objects.filter(id=offer_item_id).order_by('?').first()
             if offer_item is not None and offer_item.product_id is not None:
                 product = offer_item.product
-                to_json = []
+                json_dict = {}
                 if product.likes.filter(id=user.id).exists():
                     # user has already liked this company
                     # remove like/user
@@ -31,13 +27,12 @@ def like_ajax(request):
                 else:
                     # add a new like for a company
                     product.likes.add(user)
+                like_html = offer_item.get_like_html(user)
                 if settings.DJANGO_SETTINGS_CONTRACT:
-                    like_html = offer_item.get_like(user)
-                    for offer_item in OfferItemWoReceiver.objects.filter(product_id=product.id).only("id").order_by('?'):
-                        option_dict = {'id': ".btn_like{}".format(offer_item.id), 'html': like_html}
-                        to_json.append(option_dict)
+                    for offer_item in OfferItemWoReceiver.objects.filter(product_id=product.id).only("id").order_by(
+                            '?'):
+                        json_dict[".btn_like{}".format(offer_item.id)] = like_html
                 else:
-                    option_dict = {'id': ".btn_like{}".format(offer_item_id), 'html': offer_item.get_like(user)}
-                    to_json.append(option_dict)
-                return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
+                    json_dict[".btn_like{}".format(offer_item.id)] = like_html
+                return JsonResponse(json_dict)
     raise Http404

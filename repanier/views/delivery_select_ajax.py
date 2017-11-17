@@ -1,21 +1,18 @@
 # -*- coding: utf-8
 
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
-from django.http import Http404
-from django.http import HttpResponse
+from django.http import Http404, JsonResponse
 from django.utils import translation
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED
+from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
 from repanier.models.customer import Customer
-from repanier.models.invoice import CustomerInvoice
 from repanier.models.deliveryboard import DeliveryBoard
+from repanier.models.invoice import CustomerInvoice
 from repanier.tools import sint
 
 
@@ -27,7 +24,7 @@ def delivery_select_ajax(request):
         raise Http404
     # construct a list which will contain all of the data for the response
     user = request.user
-    to_json = []
+    json_dict = {}
     customer = Customer.objects.filter(
         user_id=user.id, is_active=True, may_order=True) \
         .only("id", "language", "delivery_point").order_by('?').first()
@@ -53,30 +50,27 @@ def delivery_select_ajax(request):
                 permanence_id=permanence_id,
                 delivery_point__customer_responsible__isnull=True
             )
-        selected = False
+        is_selected = False
         delivery_counter = 0
+        html = EMPTY_STRING
         # IMPORTANT : Do not limit to delivery.status=PERMANENCE_OPENED to include potentialy closed
         # delivery already selected by the customer
         for delivery in qs:
             if customer_invoice is not None and delivery.id == customer_invoice.delivery_id:
-                option_dict = {'value': delivery.id, 'selected': 'selected',
-                               'label': delivery.get_delivery_customer_display()}
-                to_json.append(option_dict)
-                selected = True
+                is_selected = True
+                html += "<option value=\"{}\" selected>{}</option>".format(delivery.id,
+                                                                           delivery.get_delivery_customer_display())
             elif delivery.status == PERMANENCE_OPENED and customer_invoice.status == PERMANENCE_OPENED:
                 delivery_counter += 1
-                option_dict = {'value': delivery.id, 'selected': '',
-                               'label': delivery.get_delivery_customer_display()}
-                to_json.append(option_dict)
-        if not selected:
+                html += "<option value=\"{}\">{}</option>".format(delivery.id,
+                                                                  delivery.get_delivery_customer_display())
+        if not is_selected:
             if delivery_counter == 0:
                 label = "{}".format(_('No delivery point is open for you. You can not place order.'))
             else:
                 label = "{}".format(_('Please, select a delivery point'))
-            option_dict = {'value': -1, 'selected': 'selected',
-                           'label': label}
-            to_json.insert(0, option_dict)
+            html = "<option value=\"-1\" selected>{}</option>".format(label)
     else:
-        option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
-        to_json.append(option_dict)
-    return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
+        html = "<option value=\"0\" selected>---</option>"
+
+    return JsonResponse({"#delivery": mark_safe(html)})

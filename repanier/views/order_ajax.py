@@ -1,13 +1,9 @@
 # -*- coding: utf-8
 
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.core.serializers.json import DjangoJSONEncoder
-from django.http import Http404
-from django.http import HttpResponse
+from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext_lazy as _
+from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
@@ -18,8 +14,8 @@ from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import create_or_update_one_cart_item, sint, sboolean, display_selected_value, \
-    calc_basket_message, my_basket, display_selected_box_value
+from repanier.tools import create_or_update_one_cart_item, sint, sboolean, display_selected_value_html, \
+    calc_basket_message_html, my_basket, display_selected_box_value_html
 
 
 @never_cache
@@ -41,7 +37,7 @@ def order_ajax(request):
         permanence__offeritem=offer_item_id,
         customer_id=customer.id,
         status=PERMANENCE_OPENED).order_by('?')
-    to_json = []
+    json_dict = {}
     if qs.exists():
         qs = ProducerInvoice.objects.filter(
             permanence__offeritem=offer_item_id,
@@ -55,26 +51,18 @@ def order_ajax(request):
                 customer=customer,
                 offer_item_id=offer_item_id,
                 value_id=value_id,
-                is_basket=is_basket,
                 batch_job=False
             )
             offer_item = OfferItemWoReceiver.objects.filter(
                 id=offer_item_id
             ).order_by('?').first()
             if purchase is None:
-                if offer_item.is_box:
-                    sold_out = _("Sold out")
-                    option_dict = {
-                        'id'  : "#offer_item%d" % offer_item.id,
-                        'html': '<option value="0" selected>%s</option>' % sold_out
-                    }
-                else:
-                    option_dict = display_selected_value(offer_item, DECIMAL_ZERO, is_open=True)
-                to_json.append(option_dict)
+                json_dict["#offer_item{}".format(offer_item.id)] = display_selected_value_html(offer_item, DECIMAL_ZERO,
+                                                                                               is_open=True)
             else:
-                if offer_item is not None:
-                    option_dict = display_selected_value(offer_item, purchase.quantity_ordered, is_open=True)
-                    to_json.append(option_dict)
+                json_dict["#offer_item{}".format(offer_item.id)] = display_selected_value_html(offer_item,
+                                                                                               purchase.quantity_ordered,
+                                                                                               is_open=True)
             if updated and offer_item.is_box:
                 # update the content
                 for content in BoxContent.objects.filter(
@@ -94,30 +82,27 @@ def order_ajax(request):
                             is_box_content=False
                         ).order_by('?').only('quantity_ordered').first()
                         if purchase is not None:
-                            option_dict = display_selected_value(
+                            json_dict["#offer_item{}".format(box_offer_item.id)] = display_selected_value_html(
                                 box_offer_item,
                                 purchase.quantity_ordered,
                                 is_open=True
                             )
-                            to_json.append(option_dict)
                         box_purchase = PurchaseWoReceiver.objects.filter(
                             customer_id=customer.id,
                             offer_item_id=box_offer_item.id,
                             is_box_content=True
                         ).order_by('?').only('quantity_ordered').first()
                         if box_purchase is not None:
-                            option_dict = display_selected_box_value(
+                            json_dict["#box_offer_item{}".format(box_offer_item.id)] = display_selected_box_value_html(
                                 box_offer_item,
                                 box_purchase.quantity_ordered
                             )
-                            to_json.append(option_dict)
-
 
             if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                 producer_invoice = ProducerInvoice.objects.filter(
                     producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
                 ).only("total_price_with_tax").order_by('?').first()
-                producer_invoice.get_order_json(to_json)
+                json_dict.update(producer_invoice.get_order_json())
 
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id,
@@ -127,23 +112,21 @@ def order_ajax(request):
             if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
                 html = render_to_string(
                     'repanier/communication_confirm_order.html')
-                option_dict = {'id': "#communication", 'html': html}
-                to_json.append(option_dict)
+                json_dict["#communication"] = mark_safe(html)
             customer_invoice.save()
-            my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(),
-                      to_json)
+            json_dict.update(
+                my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
             permanence = Permanence.objects.filter(
                 id=offer_item.permanence_id
             ).order_by('?').first()
 
             if is_basket:
-                basket_message = calc_basket_message(customer, permanence, PERMANENCE_OPENED)
+                basket_message = calc_basket_message_html(customer, permanence, PERMANENCE_OPENED)
             else:
                 basket_message = EMPTY_STRING
-            customer_invoice.my_order_confirmation(
+            json_dict.update(customer_invoice.my_order_confirmation_html(
                 permanence=permanence,
                 is_basket=is_basket,
-                basket_message=basket_message,
-                to_json=to_json
-            )
-    return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
+                basket_message=basket_message
+            ))
+    return JsonResponse(json_dict)

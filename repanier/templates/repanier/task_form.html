@@ -50,13 +50,18 @@
                     cache: false,
                     async: true,
                     success: function (result) {
-                        if (result.indexOf("ok") !== 0) {
-                            $task.val($task.data('oldValue'));
-                        }
-                    },
-                    error: function (result) {
-                        $task.val($task.data('oldValue'));
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                     }
+{#                    success: function (result) {#}
+{#                        if (result.indexOf("ok") !== 0) {#}
+{#                            $task.val($task.data('oldValue'));#}
+{#                        }#}
+{#                    },#}
+{#                    error: function (result) {#}
+{#                        $task.val($task.data('oldValue'));#}
+{#                    }#}
                 });
             }
             $(document).ready(function () {

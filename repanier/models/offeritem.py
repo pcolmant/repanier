@@ -192,9 +192,9 @@ class OfferItem(Item):
     get_html_producer_price_purchased.allow_tags = True
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
-    def get_like(self, user):
-        return "<span class=\"glyphicon glyphicon-heart{}\" onclick=\"like_ajax({});return false;\"></span>".format(
-            EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id)
+    def get_like_html(self, user):
+        return mark_safe("<span class=\"glyphicon glyphicon-heart{}\" onclick=\"like_ajax({});return false;\"></span>".format(
+            EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id))
 
     @cached_property
     def get_not_permanences_dates(self):

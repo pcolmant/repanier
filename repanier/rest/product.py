@@ -1,11 +1,10 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 from rest_framework.fields import DecimalField
 
 from repanier.const import PRODUCT_ORDER_UNIT_DEPOSIT
 from repanier.models.product import Product
-from repanier.rest.view import JSONResponse
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -15,7 +14,7 @@ class ProductSerializer(serializers.ModelSerializer):
     customer_unit_price_amount = DecimalField(max_digits=8, decimal_places=2, source='customer_unit_price.amount',
                                               read_only=True)
     unit_deposit_amount = DecimalField(max_digits=8, decimal_places=2, source='unit_deposit.amount',
-                                              read_only=True)
+                                       read_only=True)
 
     class Meta:
         model = Product
@@ -54,7 +53,7 @@ def products_rest(request, producer_short_profile_name):
             producer__short_profile_name=producer_short_profile_name.decode('unicode-escape'),
             order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT)
         serializer = ProductSerializer(products, many=True)
-        return JSONResponse(serializer.data)
+        return JsonResponse(serializer.data)
     return HttpResponse(status=400)
 
 
@@ -71,5 +70,5 @@ def product_rest(request, producer_short_profile_name, reference):
         ).order_by('?').first()
         if product is not None:
             serializer = ProductSerializer(product)
-            return JSONResponse(serializer.data)
+            return JsonResponse(serializer.data)
     return HttpResponse(status=404)

@@ -13,7 +13,7 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import sint, display_selected_value, display_selected_box_value
+from repanier.tools import sint, display_selected_value_html, display_selected_box_value_html
 
 register = template.Library()
 
@@ -77,11 +77,11 @@ def repanier_user(context, *args, **kwargs):
                         if last_customer_invoice.balance < DECIMAL_ZERO:
                             my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
                                 'balance': last_customer_invoice.balance,
-                                'date'   : last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                                'date': last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
                         else:
                             my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
                                 'balance': last_customer_invoice.balance,
-                                'date'   : last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                                'date': last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
                     else:
                         my_balance = _('My balance')
                     nodes.append("<li><a href=\"{}\">{}</a></li>".format(
@@ -96,8 +96,9 @@ def repanier_user(context, *args, **kwargs):
             p_permanence_id = sint(kwargs.get("permanence_id", 0))
             if p_permanence_id > 0:
                 nodes.append("<li id=\"li_my_basket\" style=\"display:none;\" class=\"dropdown\">")
-                nodes.append("<a href=\"{}?is_basket=yes\" class=\"btn btn-info\"><span id=\"my_basket\"></span></a>".format(
-                    reverse("order_view", args=(p_permanence_id,)))
+                nodes.append(
+                    "<a href=\"{}?is_basket=yes\" class=\"btn btn-info\"><span id=\"my_basket\"></span></a>".format(
+                        reverse("order_view", args=(p_permanence_id,)))
                 )
                 nodes.append('</li>')
     else:
@@ -111,8 +112,8 @@ def repanier_user(context, *args, **kwargs):
                 )]
         else:
             nodes = ["<li class=\"dropdown\"><a href=\"{}\">{}</a></li>".format(
-                    reverse("login_form"),
-                    _("Login")
+                reverse("login_form"),
+                _("Login")
             )]
 
     return mark_safe("".join(nodes))
@@ -223,9 +224,9 @@ def repanier_select_offer_item(context, *args, **kwargs):
         select_offer_item(offer_item, result, user)
         if offer_item.permanences_dates_order == 1 and date == "all":
             for sub_offer_item in OfferItemWoReceiver.objects.filter(
-                permanence_id=offer_item.permanence_id,
-                product_id=offer_item.product_id,
-                permanences_dates_order__gt=1
+                    permanence_id=offer_item.permanence_id,
+                    product_id=offer_item.product_id,
+                    permanences_dates_order__gt=1
             ).order_by("permanences_dates_order"):
                 select_offer_item(sub_offer_item, result, user)
     if offer_item.is_box_content:
@@ -238,12 +239,13 @@ def repanier_select_offer_item(context, *args, **kwargs):
             quantity_ordered = DECIMAL_ZERO
         else:
             quantity_ordered = box_purchase.quantity_ordered
-        option_dict = display_selected_box_value(offer_item, quantity_ordered)
-        result.append("<select id=\"box_offer_item{id}\" name=\"box_offer_item{id}\" disabled class=\"form-control\">{option}</select>".format(
-            result=result,
-            id=offer_item.id,
-            option=option_dict['html']
-        ))
+        html = display_selected_box_value_html(offer_item, quantity_ordered)
+        result.append(
+            "<select id=\"box_offer_item{id}\" name=\"box_offer_item{id}\" disabled class=\"form-control\">{option}</select>".format(
+                result=result,
+                id=offer_item.id,
+                option=html
+            ))
     return mark_safe(EMPTY_STRING.join(result))
 
 
@@ -255,7 +257,7 @@ def select_offer_item(offer_item, result, user):
     ).order_by('?').only('quantity_ordered').first()
     if purchase is not None:
         is_open = purchase.status == PERMANENCE_OPENED
-        option_dict = display_selected_value(
+        html = display_selected_value_html(
             offer_item,
             purchase.quantity_ordered,
             is_open=is_open
@@ -266,7 +268,7 @@ def select_offer_item(offer_item, result, user):
             producer__offeritem=offer_item.id,
             status=PERMANENCE_OPENED
         ).order_by('?').exists()
-        option_dict = display_selected_value(
+        html = display_selected_value_html(
             offer_item,
             DECIMAL_ZERO,
             is_open=is_open
@@ -280,14 +282,14 @@ def select_offer_item(offer_item, result, user):
             "{dates}<select name=\"offer_item{id}\" id=\"offer_item{id}\" onchange=\"order_ajax({id})\" onmouseover=\"show_select_order_list_ajax({id})\" class=\"form-control\">{option}</select>".format(
                 dates=permanences_date,
                 id=offer_item.id,
-                option=option_dict['html']
+                option=html
             ))
     else:
         result.append(
             "{dates}<select name=\"offer_item{id}\" id=\"offer_item{id}\" class=\"form-control\">{option}</select>".format(
                 dates=permanences_date,
                 id=offer_item.id,
-                option=option_dict['html']
+                option=html
             ))
 
 
@@ -302,6 +304,6 @@ def repanier_btn_like(context, *args, **kwargs):
         str_id = str(offer_item.id)
         result = "<br><span class=\"btn_like{str_id}\" style=\"cursor: pointer;\">{html}</span>".format(
             str_id=str_id,
-            html=offer_item.get_like(user)
+            html=offer_item.get_like_html(user)
         )
     return mark_safe(result)

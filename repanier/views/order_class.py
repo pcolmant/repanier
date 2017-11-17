@@ -54,7 +54,8 @@ class OrderView(ListView):
         self.is_basket = self.request.GET.get('is_basket', False)
         self.is_like = self.request.GET.get('is_like', False)
         if self.permanence.contract is not None and self.permanence.contract.permanences_dates is not None:
-            self.all_dates = sorted(self.permanence.contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
+            self.all_dates = sorted(
+                self.permanence.contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))
             len_all_dates = len(self.all_dates)
             if len_all_dates < 2:
                 self.date_id = 'all'
@@ -98,7 +99,8 @@ class OrderView(ListView):
 
     def get_context_data(self, **kwargs):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
-            REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM, REPANIER_SETTINGS_CONFIG
+            REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM, REPANIER_SETTINGS_CONFIG, \
+            REPANIER_SETTINGS_NOTIFICATION
 
         context = super(OrderView, self).get_context_data(**kwargs)
         context['first_page'] = self.first_page
@@ -107,6 +109,9 @@ class OrderView(ListView):
         context["all_dates"] = self.all_dates
         context["date_id"] = self.date_id
         context["date_Selected"] = self.date_selected
+        context["notification"] = None if self.is_anonymous and \
+                                          not REPANIER_SETTINGS_NOTIFICATION.notification_is_public  else \
+            REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter('notification', any_language=True)
         if self.first_page:
             if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
                 producer_set = Producer.objects.filter(permanence=self.permanence.id).only("id", "short_profile_name")

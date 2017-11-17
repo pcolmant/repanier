@@ -1,10 +1,9 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import translation
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 
 from repanier.models.lut import LUT_DepartmentForCustomer
-from repanier.rest.view import JSONResponse
 
 
 class DepartmentForCustomerSerializer(serializers.ModelSerializer):
@@ -21,7 +20,7 @@ def departments_for_customers_rest(request):
     if request.method == 'GET':
         departments = LUT_DepartmentForCustomer.objects.filter(is_active=True)
         serializer = DepartmentForCustomerSerializer(departments, many=True)
-        return JSONResponse(serializer.data)
+        return JsonResponse(serializer.data)
     return HttpResponse(status=400)
 
 
@@ -38,5 +37,5 @@ def department_for_customer_rest(request, short_name):
         ).order_by('?').first()
         if department is not None:
             serializer = DepartmentForCustomerSerializer(department)
-            return JSONResponse(serializer.data)
+            return JsonResponse(serializer.data)
     return HttpResponse(status=404)

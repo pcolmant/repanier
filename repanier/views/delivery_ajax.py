@@ -1,13 +1,10 @@
 # -*- coding: utf-8
 
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
-from django.http import Http404
-from django.http import HttpResponse
+from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
@@ -45,7 +42,7 @@ def delivery_ajax(request):
     ).order_by('?').first()
     if customer_invoice is None:
         raise Http404
-    to_json = []
+    json_dict = {}
     # if (customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send) \
     #         or (customer_invoice.total_price_with_tax == DECIMAL_ZERO):
     #     customer_invoice.status = PERMANENCE_OPENED
@@ -87,8 +84,8 @@ def delivery_ajax(request):
 
             if customer_invoice.delivery is not None:
                 status_changed = customer_invoice.cancel_confirm_order()
-                my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(),
-                          to_json)
+                json_dict = my_basket(customer_invoice.is_order_confirm_send,
+                                      customer_invoice.get_total_price_with_tax())
             else:
                 status_changed = False
             customer_invoice.set_delivery(delivery)
@@ -96,14 +93,11 @@ def delivery_ajax(request):
             if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
                 html = render_to_string(
                     'repanier/communication_confirm_order.html')
-                option_dict = {'id': "#communication", 'html': html}
-                to_json.append(option_dict)
+                json_dict["#communication"] = mark_safe(html)
 
     is_basket = sboolean(request.GET.get('is_basket', False))
-    customer_invoice.my_order_confirmation(
+    json_dict.update(customer_invoice.my_order_confirmation_html(
         permanence=permanence,
-        is_basket=is_basket,
-        to_json=to_json
-    )
-    return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
-
+        is_basket=is_basket
+    ))
+    return JsonResponse(json_dict)

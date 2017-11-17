@@ -3,22 +3,21 @@
 
 {% block sub_content %}
     {% block notification %}
-        <div id="containerInfo" class="hidden-xs" style="display: none"></div>
-            {% addtoblock "lastjs" %}{% spaceless %}
-                <script type="text/javascript">
-                    $(document).ready(function () {
-                        lien = '{% url 'order_info' %}';
-                        $.ajax({
-                            url: lien,
-                            cache: false,
-                            async: false,
-                            success: function (result) {
-                                $("#containerInfo").html(result).show();
-                            }
-                        });
-                    });
-                </script>
-        {% endspaceless %}{% endaddtoblock %}
+        {% if notification %}
+        <div id="containerInfo" class="hidden-xs">
+            <div class="row">
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="col-md-12">
+                                {{ notification }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     {% endblock notification %}
     {% block login %}{% spaceless %}
         {% if user.is_anonymous %}
@@ -155,7 +154,7 @@
                                 <a href="{% url "order_view" permanence_id %}?date={{ date_id }}" {% if not q and not is_like and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All products" %}</a>
                             </li>
                             <li>
-                                <a href="{% url "order_view" permanence_id %}?{% if not is_like %}is_like=yes{% endif %}{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My" %} <span class="glyphicon glyphicon-heart"></span></a>
+                                <a href="{% url "order_view" permanence_id %}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My" %} <span class="glyphicon glyphicon-heart"></span></a>
                             </li>
                             {% if box_set %}
                                 {% for box in box_set.all %}
@@ -292,10 +291,15 @@
                         dataType: 'json',
                         async: true,
                         success: function (result) {
-                            $.each(result, function (key, val) {
-                                $(val.id).each(function( index ) { $( this ).html(val.html)});
-                            });
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                         }
+{#                        success: function (result) {#}
+{#                            $.each(result, function (key, val) {#}
+{#                                $(val.id).each(function( index ) { $( this ).html(val.html)});#}
+{#                            });#}
+{#                        }#}
                     });
                     $("#li_my_basket").show();
                     });
@@ -322,13 +326,18 @@
                                     cache: false,
                                     async: false,
                                     success: function (result) {
-                                        $('#orderModalLabel').html(getProductFromRow);
-                                        $('#orderDetails').html(result)
-                                    },
-                                    error: function (result) {
-                                        $('#orderModalLabel').html($('{% trans "Communication error" %}'));
-                                        $('#orderDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))
+                                        $.each(result, function (key, val) {
+                                            $(key).html(val);
+                                        });
                                     }
+{#                                    success: function (result) {#}
+{#                                        $('#orderModalLabel').html(getProductFromRow);#}
+{#                                        $('#orderDetails').html(result)#}
+{#                                    },#}
+{#                                    error: function (result) {#}
+{#                                        $('#orderModalLabel').html($('{% trans "Communication error" %}'));#}
+{#                                        $('#orderDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))#}
+{#                                    }#}
                                 });
                     });
                 });
@@ -349,16 +358,21 @@
                         dataType: 'json',
                         async: true,
                         success: function (result) {
-                            $.each(result, function (key, val) {
-                                if(val.id === '#communication') {
-                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
-                                    $('#communicationDetails').html(val.html);
-                                    $('#communicationModal').modal('show')
-                                } else {
-                                    $(val.id).each(function( index ) { $( this ).html(val.html)});
-                                }
-                            });
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                         }
+{#                        success: function (result) {#}
+{#                            $.each(result, function (key, val) {#}
+{#                                if(val.id === '#communication') {#}
+{#                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');#}
+{#                                    $('#communicationDetails').html(val.html);#}
+{#                                    $('#communicationModal').modal('show')#}
+{#                                } else {#}
+{#                                    $(val.id).each(function( index ) { $( this ).html(val.html)});#}
+{#                                }#}
+{#                            });#}
+{#                        }#}
                     });
                     $("#li_my_basket").show();
                     $('#btn_receive_email').on('click', function(event) {
@@ -383,22 +397,27 @@
                             async: true,
                             success: function (result) {
                                 $.each(result, function (key, val) {
-                                    if(val.id === '#communication') {
-                                        $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
-                                        $('#communicationDetails').html(val.html);
-                                        $('#communicationModal').modal('show')
-                                    } else {
-                                        if(val.id === '#error') {
-                                            offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
-                                        } else {
-                                            $(val.id).html(val.html);
-                                        }
-                                    }
+                                    $(key).html(val);
                                 });
-                            },
-                            error: function (result) {
-                                offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');
                             }
+{#                            success: function (result) {#}
+{#                                $.each(result, function (key, val) {#}
+{#                                    if(val.id === '#communication') {#}
+{#                                        $('#communicationModalLabel').html('{% trans "Personnal communication" %}');#}
+{#                                        $('#communicationDetails').html(val.html);#}
+{#                                        $('#communicationModal').modal('show')#}
+{#                                    } else {#}
+{#                                        if(val.id === '#error') {#}
+{#                                            offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');#}
+{#                                        } else {#}
+{#                                            $(val.id).html(val.html);#}
+{#                                        }#}
+{#                                    }#}
+{#                                });#}
+{#                            },#}
+{#                            error: function (result) {#}
+{#                                offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');#}
+{#                            }#}
                         });
                     }
                 }
@@ -412,20 +431,25 @@
                             dataType: 'json',
                             async: false,
                             success: function (result) {
-                                var selectOption = '';
                                 $.each(result, function (key, val) {
-                                    if (val.html) {
-                                        selectOption += val.html
-                                    } else {
-                                        if (val.selected === 'selected') {
-                                            selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                        } else {
-                                            selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
-                                        }
-                                    }
+                                    $(key).html(val);
                                 });
-                                document.getElementById('offer_item' + offer_item_id).innerHTML = selectOption;
                             }
+{#                            success: function (result) {#}
+{#                                var selectOption = '';#}
+{#                                $.each(result, function (key, val) {#}
+{#                                    if (val.html) {#}
+{#                                        selectOption += val.html#}
+{#                                    } else {#}
+{#                                        if (val.selected === 'selected') {#}
+{#                                            selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';#}
+{#                                        } else {#}
+{#                                            selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';#}
+{#                                        }#}
+{#                                    }#}
+{#                                });#}
+{#                                document.getElementById('offer_item' + offer_item_id).innerHTML = selectOption;#}
+{#                            }#}
                         });
                     }
                 }
@@ -439,23 +463,28 @@
                         cache: false,
                         async: true,
                         success: function (result) {
-                            $.each(result, function (key, val) {
-                                if(val.id === '#communication') {
-                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');
-                                    $('#communicationDetails').html(val.html);
-                                    $('#communicationModal').modal('show')
-                                } else {
-                                    if(val.id === '#error') {
-                                        offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');
-                                    } else {
-                                        $(val.id).html(val.html);
-                                    }
-                                }
-                            });
-                        },
-                        error: function (result) {
-                            delivery.html('<option value="0" selected>{% trans "retry" %}</option>');
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                         }
+{#                        success: function (result) {#}
+{#                            $.each(result, function (key, val) {#}
+{#                                if(val.id === '#communication') {#}
+{#                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');#}
+{#                                    $('#communicationDetails').html(val.html);#}
+{#                                    $('#communicationModal').modal('show')#}
+{#                                } else {#}
+{#                                    if(val.id === '#error') {#}
+{#                                        offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');#}
+{#                                    } else {#}
+{#                                        $(val.id).html(val.html);#}
+{#                                    }#}
+{#                                }#}
+{#                            });#}
+{#                        },#}
+{#                        error: function (result) {#}
+{#                            delivery.html('<option value="0" selected>{% trans "retry" %}</option>');#}
+{#                        }#}
                     });
                 }
                 function show_select_delivery_list_ajax(delivery_id) {
@@ -468,16 +497,21 @@
                             dataType: 'json',
                             async: false,
                             success: function (result) {
-                                var selectOption = '';
                                 $.each(result, function (key, val) {
-                                    if (val.selected === 'selected') {
-                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';
-                                    } else {
-                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';
-                                    }
+                                    $(key).html(val);
                                 });
-                                document.getElementById('delivery').innerHTML = selectOption;
                             }
+{#                            success: function (result) {#}
+{#                                var selectOption = '';#}
+{#                                $.each(result, function (key, val) {#}
+{#                                    if (val.selected === 'selected') {#}
+{#                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';#}
+{#                                    } else {#}
+{#                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';#}
+{#                                    }#}
+{#                                });#}
+{#                                document.getElementById('delivery').innerHTML = selectOption;#}
+{#                            }#}
                         });
                     }
                 }
@@ -492,13 +526,18 @@
                         cache: false,
                         async: true,
                         success: function (result) {
-                            $.each(result, function (key, val) {
-                                $(val.id).html(val.html);
-                            });
-                        },
-                        error: function (result) {
-                            receive_email.attr("disabled", false);
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                         }
+{#                        success: function (result) {#}
+{#                            $.each(result, function (key, val) {#}
+{#                                $(val.id).html(val.html);#}
+{#                            });#}
+{#                        },#}
+{#                        error: function (result) {#}
+{#                            receive_email.attr("disabled", false);#}
+{#                        }#}
                     });
                     saved_delivery_id = -1;
 
@@ -510,10 +549,15 @@
                         cache: false,
                         async: true,
                         success: function (result) {
-                            $.each(result, function (key, val) {
-                                $(val.id).each(function( index ) { $( this ).html(val.html)});
-                            });
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                         }
+{#                        success: function (result) {#}
+{#                            $.each(result, function (key, val) {#}
+{#                                $(val.id).each(function( index ) { $( this ).html(val.html)});#}
+{#                            });#}
+{#                        }#}
                     });
                 }
                 </script>

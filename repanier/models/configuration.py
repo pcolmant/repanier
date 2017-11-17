@@ -97,7 +97,6 @@ class Configuration(TranslatableModel):
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
-    notification_is_public = models.BooleanField(_("The notification is public"), default=False)
     email_is_custom = models.BooleanField(
         _("Email is customised"), default=False)
     email_host = models.CharField(
@@ -125,15 +124,10 @@ class Configuration(TranslatableModel):
         max_length=25, null=True, blank=True, default=EMPTY_STRING)
     translations = TranslatedFields(
         group_label=models.CharField(_("Group label"),
-                                    max_length=100,
-                                    default=EMPTY_STRING,
-                                    blank=True),
+                                     max_length=100,
+                                     default=EMPTY_STRING,
+                                     blank=True),
         how_to_register=HTMLField(_("How to register"),
-                                  help_text=EMPTY_STRING,
-                                  configuration='CKEDITOR_SETTINGS_MODEL2',
-                                  default=EMPTY_STRING,
-                                  blank=True),
-        notification=HTMLField(_("Notification"),
                                   help_text=EMPTY_STRING,
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
                                   default=EMPTY_STRING,
@@ -154,10 +148,10 @@ class Configuration(TranslatableModel):
                                       default=EMPTY_STRING,
                                       blank=True),
         cancel_order_customer_mail=HTMLField(_("Email content"),
-                                      help_text=EMPTY_STRING,
-                                      configuration='CKEDITOR_SETTINGS_MODEL2',
-                                      default=EMPTY_STRING,
-                                      blank=True),
+                                             help_text=EMPTY_STRING,
+                                             configuration='CKEDITOR_SETTINGS_MODEL2',
+                                             default=EMPTY_STRING,
+                                             blank=True),
         order_staff_mail=HTMLField(_("Email content"),
                                    help_text=EMPTY_STRING,
                                    configuration='CKEDITOR_SETTINGS_MODEL2',
@@ -300,7 +294,7 @@ class Configuration(TranslatableModel):
                 pass
 
     def __str__(self):
-        return EMPTY_STRING
+        return self.group_name
 
     class Meta:
         verbose_name = _("Configuration")
@@ -461,7 +455,7 @@ def configuration_post_save(sender, **kwargs):
             user = User.objects.create_user(
                 username="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
                 email="{}{}".format(
-                repanier.apps.REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                    repanier.apps.REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
                 password=uuid.uuid1().hex,
                 first_name=EMPTY_STRING, last_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
             customer_buyinggroup = Customer.objects.create(
@@ -477,14 +471,3 @@ def configuration_post_save(sender, **kwargs):
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)
         toolbar_pool.register(repanier.cms_toolbar.RepanierToolbar)
         cache.clear()
-
-
-class Notification(Configuration):
-
-    class Meta:
-        proxy = True
-        verbose_name = _("Notification")
-        verbose_name_plural = _("Notifications")
-
-    def __str__(self):
-        return EMPTY_STRING

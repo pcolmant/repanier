@@ -1,14 +1,12 @@
 # -*- coding: utf-8
 
 import datetime
-import json
 
 from django.contrib.auth.decorators import login_required
-from django.core.serializers.json import DjangoJSONEncoder
-from django.http import Http404
-from django.http import HttpResponse
+from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
@@ -16,12 +14,12 @@ from django.views.decorators.http import require_GET
 from repanier.const import DECIMAL_ZERO, PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_OPENED, \
     EMPTY_STRING
 from repanier.models.customer import Customer
-from repanier.models.permanence import Permanence
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
+from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
 from repanier.tools import sboolean, sint, \
-        calc_basket_message, permanence_ok_or_404, my_basket
+    calc_basket_message_html, permanence_ok_or_404, my_basket
 
 
 @never_cache
@@ -30,6 +28,9 @@ from repanier.tools import sboolean, sint, \
 def order_init_ajax(request):
     if not request.is_ajax():
         raise Http404
+    permanence_id = sint(request.GET.get('pe', 0))
+    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
+    permanence_ok_or_404(permanence)
     user = request.user
     customer = Customer.objects.filter(
         user_id=user.id, is_active=True
@@ -39,11 +40,6 @@ def order_init_ajax(request):
     ).order_by('?').first()
     if customer is None:
         raise Http404
-
-    permanence_id = sint(request.GET.get('pe', 0))
-    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-    permanence_ok_or_404(permanence)
-    to_json = []
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence.id,
         customer_id=customer.id
@@ -69,7 +65,7 @@ def order_init_ajax(request):
     else:
         status = customer_invoice.status
     if status <= PERMANENCE_OPENED:
-        basket_message = calc_basket_message(customer, permanence, status)
+        basket_message = calc_basket_message_html(customer, permanence, status)
     else:
         if customer_invoice.delivery is not None:
             basket_message = EMPTY_STRING
@@ -77,11 +73,10 @@ def order_init_ajax(request):
             basket_message = "{}".format(
                 _('The orders are closed.')
             )
-    customer_invoice.my_order_confirmation(
+    json_dict = customer_invoice.my_order_confirmation_html(
         permanence=permanence,
         is_basket=basket,
-        basket_message=basket_message,
-        to_json=to_json
+        basket_message=basket_message
     )
     if customer.may_order:
         if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
@@ -90,7 +85,7 @@ def order_init_ajax(request):
             ).only(
                 "total_price_with_tax", "status"
             ).order_by('?'):
-                producer_invoice.get_order_json(to_json)
+                json_dict.update(producer_invoice.get_order_json())
         communication = sboolean(request.GET.get('co', False))
         if communication \
                 and customer_invoice.total_price_with_tax == DECIMAL_ZERO \
@@ -118,7 +113,6 @@ def order_init_ajax(request):
                 html = render_to_string(
                     'repanier/communication_permanence_board.html',
                     {'permanence_boards': permanence_boards, 'count_activity': count_activity})
-                option_dict = {'id': "#communication", 'html': html}
-                to_json.append(option_dict)
-    my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax(), to_json)
-    return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
+                json_dict["#communication"] = mark_safe(html)
+    json_dict.update(my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
+    return JsonResponse(json_dict)

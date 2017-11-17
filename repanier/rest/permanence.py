@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from rest_framework import serializers
@@ -6,7 +6,6 @@ from rest_framework import serializers
 from repanier.const import PERMANENCE_OPENED
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
-from repanier.rest.view import JSONResponse
 
 
 class PermanenceSerializer(serializers.Serializer):
@@ -18,11 +17,11 @@ class PermanenceSerializer(serializers.Serializer):
 
     def to_representation(self, obj):
         return {
-            'id'         : obj.id,
-            'name'       : str(obj),
+            'id': obj.id,
+            'name': str(obj),
             'status_code': obj.status,
-            'status'     : obj.get_status_display(),
-            'producers'  : list(obj.producers.values_list('short_profile_name', flat=True))
+            'status': obj.get_status_display(),
+            'producers': list(obj.producers.values_list('short_profile_name', flat=True))
         }
 
 
@@ -31,11 +30,10 @@ class PermanenceSerializer(serializers.Serializer):
 def permanences_rest(request):
     permanences = Permanence.objects.filter(status=PERMANENCE_OPENED)
     serializer = PermanenceSerializer(permanences, many=True)
-    return JSONResponse(serializer.data)
+    return JsonResponse(serializer.data)
 
 
 class OfferItemSerializer(serializers.Serializer):
-
     class Meta:
         model = OfferItemWoReceiver
         fields = (
@@ -58,7 +56,7 @@ def permanence_producer_rest(request, permanence_id, producer_name):
     ).order_by('?')
     if offer_item.exists():
         serializer = OfferItemSerializer(offer_item, many=True)
-        return JSONResponse(serializer.data)
+        return JsonResponse(serializer.data)
 
 
 @csrf_exempt
@@ -75,5 +73,5 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
         ).order_by('?')
         if offer_item.exists():
             serializer = OfferItemSerializer(offer_item)
-            return JSONResponse(serializer.data)
+            return JsonResponse(serializer.data)
     return HttpResponse(status=404)

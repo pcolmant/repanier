@@ -320,13 +320,18 @@
                 dataType: 'json',
                 async: true,
                 success: function (result) {
-                    $.each(result, function (key, val) {
-                        $(val.id).html(val.html);
-                    });
-                },
-                error: function (result) {
-                    $("#basket_message").html("{% trans "Retry" %}");
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                 }
+{#                success: function (result) {#}
+{#                    $.each(result, function (key, val) {#}
+{#                        $(val.id).html(val.html);#}
+{#                    });#}
+{#                },#}
+{#                error: function (result) {#}
+{#                    $("#basket_message").html("{% trans "Retry" %}");#}
+{#                }#}
             });
         });
     </script>

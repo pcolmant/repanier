@@ -299,7 +299,7 @@ class Producer(models.Model):
     get_last_invoice.short_description = _("Last invoice")
     get_last_invoice.allow_tags = True
 
-    def get_on_hold_movement_json(self, to_json):
+    def get_on_hold_movement_html(self):
         bank_not_invoiced = self.get_bank_not_invoiced()
         order_not_invoiced = self.get_order_not_invoiced()
 
@@ -324,10 +324,9 @@ class Producer(models.Model):
                         'This balance does not take account of any unrecognized payments %(bank)s.') % {
                         'bank': bank_not_invoiced
                     }
-            option_dict = {'id': "#basket_message", 'html': mark_safe(producer_on_hold_movement)}
-            to_json.append(option_dict)
+            return mark_safe(producer_on_hold_movement)
 
-        return
+        return EMPTY_STRING
 
     def anonymize(self):
         if self.represent_this_buyinggroup:

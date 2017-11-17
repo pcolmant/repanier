@@ -4,9 +4,10 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.http import HttpResponse
 from django.utils import translation
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
@@ -17,7 +18,7 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import sint, display_selected_value
+from repanier.tools import sint, display_selected_value_html
 
 
 @never_cache
@@ -39,7 +40,6 @@ def order_select_ajax(request):
     ).order_by('?').first()
     if offer_item is None:
         raise Http404
-    to_json = []
     # Select one purchase
     purchase = PurchaseWoReceiver.objects.filter(
         customer_id=customer.id,
@@ -82,17 +82,20 @@ def order_select_ajax(request):
                         selected = "selected"
 
                     q_valid = q_min
+                    html = EMPTY_STRING
                     if q_valid <= q_alert:
                         if (status == PERMANENCE_OPENED or
                                 (status <= PERMANENCE_SEND and selected == "selected")):
-                            option_dict = {'value': '0', 'selected': selected, 'label': '---'}
-                            to_json.append(option_dict)
+                            html = "<option value=\"0\" {}>---</option>".format(
+                                selected
+                            )
                     else:
                         if (status == PERMANENCE_OPENED or
                                 (status <= PERMANENCE_SEND and selected == "selected")):
-                            sold_out = _("Sold out")
-                            option_dict = {'value': '0', 'selected': selected, 'label': sold_out}
-                            to_json.append(option_dict)
+                            html = "<option value=\"0\" {}>{}</option>".format(
+                                selected,
+                                _("Sold out")
+                            )
                     q_counter = 0  # Limit to avoid too long selection list
                     while q_valid <= q_alert and q_counter <= LIMIT_ORDER_QTY_ITEM:
                         q_select_id += 1
@@ -110,9 +113,11 @@ def order_select_ajax(request):
                                 unit_price_amount=a_price,
                                 for_order_select=True
                             )
-                            option_dict = {'value': str(q_select_id), 'selected': selected,
-                                           'label': display}
-                            to_json.append(option_dict)
+                            html += "<option value=\"{}\" {}>{}</option>".format(
+                                q_select_id,
+                                selected,
+                                display
+                            )
                         if q_valid < q_step:
                             # 1; 2; 4; 6; 8 ... q_min = 1; q_step = 2
                             # 0,5; 1; 2; 3 ... q_min = 0,5; q_step = 1
@@ -125,37 +130,32 @@ def order_select_ajax(request):
                     if not q_order_is_displayed:
                         # An custom order_qty > q_alert
                         q_select_id += 1
-                        selected = "selected"
                         display = offer_item.get_display(
                             qty=q_previous_order,
                             order_unit=offer_item.order_unit,
                             unit_price_amount=a_price,
                             for_order_select=True
                         )
-                        option_dict = {'value': str(q_select_id), 'selected': selected,
-                                       'label': display}
-                        to_json.append(option_dict)
+                        html = "<option value=\"{}\" selected>{}</option>".format(
+                            q_select_id,
+                            display
+                        )
                     if status == PERMANENCE_OPENED:
-                        # _not_lazy string are not placed in the "django.po"
-                        other = _("Other qty")
-                        option_dict = {'value': 'other_qty', 'selected': EMPTY_STRING, 'label': other}
-                        to_json.append(option_dict)
+                        html += "<option value=\"other_qty\">{}</option>".format(
+                            _("Other qty")
+                        )
                 else:
-                    option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
-                    to_json.append(option_dict)
+                    html = "<option value=\"0\" selected>---</option>"
             else:
-                option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
-                to_json.append(option_dict)
+                html = "<option value=\"0\" selected>---</option>"
         else:
-            option_dict = {'value': '0', 'selected': 'selected', 'label': '---'}
-            to_json.append(option_dict)
+            html = "<option value=\"0\" selected>---</option>"
     else:
         if purchase is not None and purchase.quantity_ordered != DECIMAL_ZERO:
-            option_dict = display_selected_value(offer_item, purchase.quantity_ordered, is_open=True)
-            to_json.append(option_dict)
+            html = display_selected_value_html(offer_item, purchase.quantity_ordered, is_open=True)
         else:
-            closed = _("Closed")
-            option_dict = {'value': '0', 'selected': 'selected', 'label': "{}".format(closed)}
-            to_json.append(option_dict)
+            html = "<option value=\"0\" selected>{}</option>".format(
+                _("Closed")
+            )
 
-    return HttpResponse(json.dumps(to_json, cls=DjangoJSONEncoder), content_type="application/json")
+    return JsonResponse({"#offer_item{}".format(offer_item.id): mark_safe(html)})

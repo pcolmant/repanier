@@ -44,6 +44,7 @@ REPANIER_SETTINGS_HOME_SITE = None
 REPANIER_SETTINGS_TRANSPORT = None
 REPANIER_SETTINGS_MIN_TRANSPORT = None
 DJANGO_IS_MIGRATION_RUNNING = 'makemigrations' in sys.argv or 'migrate' in sys.argv
+REPANIER_SETTINGS_NOTIFICATION = None
 
 
 class RepanierSettings(AppConfig):
@@ -68,6 +69,7 @@ class RepanierSettings(AppConfig):
                 print("waiting for database connection")
                 time.sleep(1)
         from repanier.models.configuration import Configuration
+        from repanier.models.notification import Notification
         from repanier.models.lut import LUT_DepartmentForCustomer
         from repanier.models.product import Product
         from repanier.models.offeritem import OfferItemWoReceiver
@@ -78,6 +80,10 @@ class RepanierSettings(AppConfig):
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
             translation.activate(settings.LANGUAGE_CODE)
+            notification = Notification.objects.filter(id=DECIMAL_ONE).first()
+            if notification is None:
+                Notification.objects.create()
+            notification.save()
             config = Configuration.objects.filter(id=DECIMAL_ONE).first()
             if config is None:
                 group_name = settings.ALLOWED_HOSTS[0]

@@ -144,11 +144,16 @@
                 cache: false,
                 async: false,
                 success: function (result) {
-                    $("#my_name").html(result);
-                },
-                error: function (result) {
-                    $("#my_name").html("{% trans "Retry5" %}");
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
                 }
+{#                success: function (result) {#}
+{#                    $("#my_name").html(result);#}
+{#                },#}
+{#                error: function (result) {#}
+{#                    $("#my_name").html("{% trans "Retry5" %}");#}
+{#                }#}
             });
         });
     </script>
@@ -164,13 +169,18 @@
             dataType: 'json',
             async: true,
             success: function (result) {
-                $.each(result, function (key, val) {
-                    $(val.id).html(val.html);
-                });
-            },
-            error: function (result) {
-                $("#basket_message").html("{% trans "Retry" %}");
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
             }
+{#            success: function (result) {#}
+{#                $.each(result, function (key, val) {#}
+{#                    $(val.id).html(val.html);#}
+{#                });#}
+{#            },#}
+{#            error: function (result) {#}
+{#                $("#basket_message").html("{% trans "Retry" %}");#}
+{#            }#}
         });
     });
 </script>

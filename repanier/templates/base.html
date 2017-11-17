@@ -125,9 +125,11 @@
                     $.ajax({
                         url: lien,
                         cache: false,
-                        async: false,
+                        async: true,
                         success: function (result) {
-                            $("#containerInfo").html(result).show();
+                                $.each(result, function (key, val) {
+                                    $(key).html(val).show();
+                                });
                         }
                     });
                 });

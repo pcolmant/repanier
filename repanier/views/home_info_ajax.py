@@ -1,7 +1,7 @@
 # -*- coding: utf-8
 
 from django.conf import settings
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
@@ -17,9 +17,9 @@ from repanier.models.permanence import Permanence
 @require_GET
 def home_info_ajax(request):
     if request.is_ajax():
-        from repanier.apps import REPANIER_SETTINGS_CONFIG
+        from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
         permanences = []
-        home_info = "&nbsp;"
+        html = EMPTY_STRING
         for permanence in Permanence.objects.filter(
                 status=PERMANENCE_OPENED) \
                 .only("id", "permanence_date", "with_delivery_point") \
@@ -64,12 +64,14 @@ def home_info_ajax(request):
             """.format(
                 permanences="".join(permanences)
             )
+        else:
+            home_info = EMPTY_STRING
 
-        notification = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+        notification = REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter(
             'notification', any_language=True, default=EMPTY_STRING)
         if notification:
-            if REPANIER_SETTINGS_CONFIG.notification_is_public or request.user.is_authenticated:
-                home_info = """
+            if REPANIER_SETTINGS_NOTIFICATION.notification_is_public or request.user.is_authenticated:
+                html = """
                 <div class="container">
                     <div class="row">
                         <div class="panel-group">
@@ -87,5 +89,5 @@ def home_info_ajax(request):
                     home_info=home_info
                 )
 
-        return HttpResponse(home_info)
+        return JsonResponse({"#containerInfo": mark_safe(html)})
     raise Http404

@@ -33,7 +33,6 @@ from repanier.views.my_profile_view import my_profile_view
 from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
 from repanier.views.order_filter_view import order_filter_view
-from repanier.views.order_info_ajax import order_info_ajax
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
 from repanier.views.pre_order_class import PreOrderView
@@ -97,7 +96,6 @@ urlpatterns = [
     url(r'^ajax/my-balance/$', my_balance_ajax, name='my_balance'),
     url(r'^ajax/order-name/$', customer_name_ajax, name='order_name'),
     url(r'^ajax/home-info/$', home_info_ajax, name='home_info'),
-    url(r'^ajax/order-info/$', order_info_ajax, name='order_info'),
     url(r'^ajax/order-init/$', order_init_ajax, name='order_init_ajax'),
     url(r'^ajax/order-select/$', order_select_ajax, name='order_select_ajax'),
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),

@@ -1,10 +1,9 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 from rest_framework.fields import DecimalField
 
 from repanier.models.producer import Producer
-from repanier.rest.view import JSONResponse
 
 
 class ProducerSerializer(serializers.ModelSerializer):
@@ -34,7 +33,7 @@ def producers_list(request):
     if request.method == 'GET':
         producers = Producer.objects.filter(is_active=True)
         serializer = ProducerSerializer(producers, many=True)
-        return JSONResponse(serializer.data)
+        return JsonResponse(serializer.data)
     return HttpResponse(status=400)
 
 
@@ -51,5 +50,5 @@ def producer_detail(request, short_profile_name):
         ).order_by('?').first()
         if producer is not None:
             serializer = ProducerSerializer(producer)
-            return JSONResponse(serializer.data)
+            return JsonResponse(serializer.data)
     return HttpResponse(status=404)

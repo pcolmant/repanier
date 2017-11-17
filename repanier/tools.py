@@ -380,27 +380,27 @@ def payment_message(customer, permanence):
     return customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount
 
 
-def display_selected_value(offer_item, quantity_ordered, is_open=True):
-    option_dict = {
-        'id': "#offer_item{}".format(offer_item.id),
-    }
-    if offer_item.may_order:
+def display_selected_value_html(offer_item, quantity_ordered, is_open=True):
+    if offer_item is not None and offer_item.may_order:
         if quantity_ordered <= DECIMAL_ZERO:
             if is_open:
-                q_min = offer_item.customer_minimum_order_quantity
-                if offer_item.limit_order_quantity_to_stock:
-                    q_alert = offer_item.stock - offer_item.quantity_invoiced
-                    if q_alert < DECIMAL_ZERO:
-                        q_alert = DECIMAL_ZERO
-                else:
-                    q_alert = offer_item.customer_alert_order_quantity
-                if q_min <= q_alert:
-                    label = "---"
-                else:
+                if offer_item.is_box:
                     label = _("Sold out")
+                else:
+                    q_min = offer_item.customer_minimum_order_quantity
+                    if offer_item.limit_order_quantity_to_stock:
+                        q_alert = offer_item.stock - offer_item.quantity_invoiced
+                        if q_alert < DECIMAL_ZERO:
+                            q_alert = DECIMAL_ZERO
+                    else:
+                        q_alert = offer_item.customer_alert_order_quantity
+                    if q_min <= q_alert:
+                        label = "---"
+                    else:
+                        label = _("Sold out")
             else:
                 label = _("Closed")
-            option_dict["html"] = "<option value=\"0\" selected>{}</option>".format(label)
+            html = "<option value=\"0\" selected>{}</option>".format(label)
 
         else:
             unit_price_amount = offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
@@ -410,13 +410,13 @@ def display_selected_value(offer_item, quantity_ordered, is_open=True):
                 unit_price_amount=unit_price_amount,
                 for_order_select=True
             )
-            option_dict["html"] = '<option value="{}" selected>{}</option>'.format(quantity_ordered, display)
+            html = "<option value=\"{}\" selected>{}</option>".format(quantity_ordered, display)
     else:
-        option_dict["html"] = EMPTY_STRING
-    return option_dict
+        html = EMPTY_STRING
+    return mark_safe(html)
 
 
-def display_selected_box_value(offer_item, quantity_ordered):
+def display_selected_box_value_html(offer_item, quantity_ordered):
     # Select one purchase
     if quantity_ordered > DECIMAL_ZERO:
         qty_display = offer_item.get_display(
@@ -427,13 +427,9 @@ def display_selected_box_value(offer_item, quantity_ordered):
         )
     else:
         qty_display = "---"
-    option_dict = {
-        'id'  : "#box_offer_item{}".format(offer_item.id),
-        'html': "<option value=\"0\" selected>☑ {} {}</option>".format(
+    return mark_safe("<option value=\"0\" selected>☑ {} {}</option>".format(
                 qty_display, BOX_UNICODE
-        )
-    }
-    return option_dict
+        ))
 
 
 def create_or_update_one_purchase(
@@ -533,13 +529,11 @@ def create_or_update_one_purchase(
 
 @transaction.atomic
 def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_id=None,
-                                   is_basket=False, batch_job=False, comment=EMPTY_STRING):
+                                   batch_job=False, comment=EMPTY_STRING):
     from repanier.models.box import BoxContent
     from repanier.models.offeritem import OfferItem
     from repanier.models.purchase import Purchase
 
-    # from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
-    to_json = []
     offer_item = OfferItem.objects.select_for_update(nowait=False) \
         .filter(id=offer_item_id, is_active=True, may_order=True) \
         .order_by('?').select_related("producer").first()
@@ -631,7 +625,7 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
             return purchase, False
 
 
-def my_basket(is_order_confirm_send, order_amount, to_json):
+def my_basket(is_order_confirm_send, order_amount):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not is_order_confirm_send:
         if order_amount.amount <= DECIMAL_ZERO:
@@ -661,15 +655,13 @@ def my_basket(is_order_confirm_send, order_amount, to_json):
             order_amount=order_amount,
             msg_confirm=msg_confirm
         )
-
-    option_dict = {'id': "#my_basket", 'html': msg_html}
-    to_json.append(option_dict)
+    json_dict = {"#my_basket": msg_html}
     msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
             order_amount=order_amount,
             msg_confirm=msg_confirm
         )
-    option_dict = {'id': "#prepared_amount_visible_xs", 'html': msg_html}
-    to_json.append(option_dict)
+    json_dict["#prepared_amount_visible_xs"] = msg_html
+    return json_dict
 
 
 def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
@@ -859,7 +851,7 @@ def add_months(sourcedate, months):
     return datetime.date(year, month, day)
 
 
-def calc_basket_message(customer, permanence, status):
+def calc_basket_message_html(customer, permanence, status):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     if status == PERMANENCE_OPENED:
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
@@ -909,7 +901,7 @@ def calc_basket_message(customer, permanence, status):
         payment_msg,
         you_can_change
     )
-    return basket_message
+    return mark_safe(basket_message)
 
 
 def html_box_content(offer_item, user):

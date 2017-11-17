@@ -9,6 +9,7 @@ from django.db import transaction
 from django.db.models import F, Sum, Q
 from django.utils.formats import number_format
 from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
@@ -229,8 +230,7 @@ class CustomerInvoice(Invoice):
                             delivery=delivery
                         )
 
-    def my_order_confirmation(self, permanence, is_basket=False,
-                              basket_message=EMPTY_STRING, to_json=None):
+    def my_order_confirmation_html(self, permanence, is_basket=False, basket_message=EMPTY_STRING):
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
 
         if permanence.with_delivery_point:
@@ -440,9 +440,7 @@ class CustomerInvoice(Invoice):
                         </div>
                         </div>
                          """.format(msg_delivery, msg_confirmation1, btn_disabled, msg_confirmation2, basket_message)
-        if to_json is not None:
-            option_dict = {'id': "#span_btn_confirm_order", 'html': msg_html}
-            to_json.append(option_dict)
+        return {"#span_btn_confirm_order" : mark_safe(msg_html)}
 
     @transaction.atomic
     def confirm_order(self):
@@ -721,22 +719,21 @@ class ProducerInvoice(Invoice):
     def get_total_deposit(self):
         return self.total_deposit + self.delta_stock_deposit
 
-    def get_order_json(self, to_json):
+    def get_order_json(self):
         a_producer = self.producer
+        json_dict = {}
         if a_producer.minimum_order_value.amount > DECIMAL_ZERO:
             ratio = self.total_price_with_tax.amount / a_producer.minimum_order_value.amount
             if ratio >= DECIMAL_ONE:
                 ratio = 100
             else:
                 ratio *= 100
-            option_dict = {'id'  : "#order_procent{}".format(a_producer.id),
-                           'html': "{}%".format(number_format(ratio, 0))}
-            to_json.append(option_dict)
+            json_dict["#order_procent{}".format(a_producer.id)] = "{}%".format(number_format(ratio, 0))
         if self.status != PERMANENCE_OPENED:
-            option_dict = {'id'  : "#order_closed{}".format(a_producer.id),
-                           'html': '&nbsp;<span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>'}
-            to_json.append(option_dict)
-        return
+            json_dict["#order_closed{}".format(a_producer.id)] = mark_safe(
+                "&nbsp;<span class=\"glyphicon glyphicon-ban-circle\" aria-hidden=\"true\"></span>"
+            )
+        return json_dict
 
     def __str__(self):
         return "{}, {}".format(self.producer, self.permanence)
