@@ -536,10 +536,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return
-            print("-------------------- all_producers : {}".format(all_producers))
-            print("-------------------- all_deliveries : {}".format(all_deliveries))
-            print("-------------------- deliveries_to_be_send : {}".format(deliveries_to_be_send))
-            print("-------------------- producers_to_be_send : {}".format(producers_to_be_send))
+            # print("-------------------- all_producers : {}".format(all_producers))
+            # print("-------------------- all_deliveries : {}".format(all_deliveries))
+            # print("-------------------- deliveries_to_be_send : {}".format(deliveries_to_be_send))
+            # print("-------------------- producers_to_be_send : {}".format(producers_to_be_send))
             user_message, user_message_level = task_order.admin_send(
                 permanence_id=permanence.id,
                 everything=all_producers or all_deliveries,
