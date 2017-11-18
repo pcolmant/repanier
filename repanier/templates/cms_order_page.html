@@ -235,21 +235,6 @@
             {#        Order Modal starts#}
             <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
                  aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                            <h4 class="modal-title" id="orderModalLabel"></h4>
-                        </div>
-                        <div class="modal-body">
-                            <span id="orderDetails"></span>
-                        </div>
-                        <div class="clearfix"></div>
-                        <div class="modal-footer">
-                            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
-                        </div>
-                    </div>
-                </div>
             </div>
             {#        Order modal ends#}
             {#        Other qty Modal starts#}
@@ -289,17 +274,11 @@
                         url: lien,
                         cache: false,
                         dataType: 'json',
-                        async: true,
                         success: function (result) {
                                 $.each(result, function (key, val) {
                                     $(key).html(val);
                                 });
                         }
-{#                        success: function (result) {#}
-{#                            $.each(result, function (key, val) {#}
-{#                                $(val.id).each(function( index ) { $( this ).html(val.html)});#}
-{#                            });#}
-{#                        }#}
                     });
                     $("#li_my_basket").show();
                     });
@@ -318,26 +297,16 @@
                     }).on('show.bs.modal', function (event) {
                         t_row=$(event.relatedTarget);
                         var getIdFromRow = t_row.data('id');
-                        var getProductFromRow = t_row.data('product');
                         var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
                         var content =
                                 $.ajax({
                                     url: lien,
                                     cache: false,
-                                    async: false,
                                     success: function (result) {
                                         $.each(result, function (key, val) {
                                             $(key).html(val);
                                         });
                                     }
-{#                                    success: function (result) {#}
-{#                                        $('#orderModalLabel').html(getProductFromRow);#}
-{#                                        $('#orderDetails').html(result)#}
-{#                                    },#}
-{#                                    error: function (result) {#}
-{#                                        $('#orderModalLabel').html($('{% trans "Communication error" %}'));#}
-{#                                        $('#orderDetails').html($('<b>{% trans "Please close this window and retry." %}</b>'))#}
-{#                                    }#}
                                 });
                     });
                 });
@@ -356,7 +325,6 @@
                         url: lien,
                         cache: false,
                         dataType: 'json',
-                        async: true,
                         success: function (result) {
                                 $.each(result, function (key, val) {
                                     $(key).html(val);
@@ -394,30 +362,11 @@
                         $.ajax({
                             url: lien,
                             cache: false,
-                            async: true,
                             success: function (result) {
                                 $.each(result, function (key, val) {
                                     $(key).html(val);
                                 });
                             }
-{#                            success: function (result) {#}
-{#                                $.each(result, function (key, val) {#}
-{#                                    if(val.id === '#communication') {#}
-{#                                        $('#communicationModalLabel').html('{% trans "Personnal communication" %}');#}
-{#                                        $('#communicationDetails').html(val.html);#}
-{#                                        $('#communicationModal').modal('show')#}
-{#                                    } else {#}
-{#                                        if(val.id === '#error') {#}
-{#                                            offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');#}
-{#                                        } else {#}
-{#                                            $(val.id).html(val.html);#}
-{#                                        }#}
-{#                                    }#}
-{#                                });#}
-{#                            },#}
-{#                            error: function (result) {#}
-{#                                offer_item.html('<option value="0" selected>{% trans "You may not order" %}</option>');#}
-{#                            }#}
                         });
                     }
                 }
@@ -435,21 +384,6 @@
                                     $(key).html(val);
                                 });
                             }
-{#                            success: function (result) {#}
-{#                                var selectOption = '';#}
-{#                                $.each(result, function (key, val) {#}
-{#                                    if (val.html) {#}
-{#                                        selectOption += val.html#}
-{#                                    } else {#}
-{#                                        if (val.selected === 'selected') {#}
-{#                                            selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';#}
-{#                                        } else {#}
-{#                                            selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';#}
-{#                                        }#}
-{#                                    }#}
-{#                                });#}
-{#                                document.getElementById('offer_item' + offer_item_id).innerHTML = selectOption;#}
-{#                            }#}
                         });
                     }
                 }
@@ -461,30 +395,11 @@
                     $.ajax({
                         url: lien,
                         cache: false,
-                        async: true,
                         success: function (result) {
                                 $.each(result, function (key, val) {
                                     $(key).html(val);
                                 });
                         }
-{#                        success: function (result) {#}
-{#                            $.each(result, function (key, val) {#}
-{#                                if(val.id === '#communication') {#}
-{#                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');#}
-{#                                    $('#communicationDetails').html(val.html);#}
-{#                                    $('#communicationModal').modal('show')#}
-{#                                } else {#}
-{#                                    if(val.id === '#error') {#}
-{#                                        offer_item.html('<option value="0" selected>{% trans "retry" %}</option>');#}
-{#                                    } else {#}
-{#                                        $(val.id).html(val.html);#}
-{#                                    }#}
-{#                                }#}
-{#                            });#}
-{#                        },#}
-{#                        error: function (result) {#}
-{#                            delivery.html('<option value="0" selected>{% trans "retry" %}</option>');#}
-{#                        }#}
                     });
                 }
                 function show_select_delivery_list_ajax(delivery_id) {
@@ -501,17 +416,6 @@
                                     $(key).html(val);
                                 });
                             }
-{#                            success: function (result) {#}
-{#                                var selectOption = '';#}
-{#                                $.each(result, function (key, val) {#}
-{#                                    if (val.selected === 'selected') {#}
-{#                                        selectOption += '<option value=\"' + val.value + '\" selected=\"selected\" >' + val.label + '</option>';#}
-{#                                    } else {#}
-{#                                        selectOption += '<option value=\"' + val.value + '\" >' + val.label + '</option>';#}
-{#                                    }#}
-{#                                });#}
-{#                                document.getElementById('delivery').innerHTML = selectOption;#}
-{#                            }#}
                         });
                     }
                 }
@@ -524,20 +428,11 @@
                     $.ajax({
                         url: lien,
                         cache: false,
-                        async: true,
                         success: function (result) {
                                 $.each(result, function (key, val) {
                                     $(key).html(val);
                                 });
                         }
-{#                        success: function (result) {#}
-{#                            $.each(result, function (key, val) {#}
-{#                                $(val.id).html(val.html);#}
-{#                            });#}
-{#                        },#}
-{#                        error: function (result) {#}
-{#                            receive_email.attr("disabled", false);#}
-{#                        }#}
                     });
                     saved_delivery_id = -1;
 
@@ -547,17 +442,11 @@
                     $.ajax({
                         url: lien,
                         cache: false,
-                        async: true,
                         success: function (result) {
                                 $.each(result, function (key, val) {
                                     $(key).html(val);
                                 });
                         }
-{#                        success: function (result) {#}
-{#                            $.each(result, function (key, val) {#}
-{#                                $(val.id).each(function( index ) { $( this ).html(val.html)});#}
-{#                            });#}
-{#                        }#}
                     });
                 }
                 </script>

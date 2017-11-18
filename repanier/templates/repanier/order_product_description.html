@@ -1,0 +1,42 @@
+{% load i18n l10n %}{% spaceless %}
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+            <h4 class="modal-title" id="orderModalLabel">{{ offer.get_html_long_name }}</h4>
+        </div>
+        <div class="modal-body">
+            {{ offer.producer.short_profile_name }}<br>
+            <small>{{ offer.department_for_customer.short_name }}</small><br>
+            {% if offer.picture2 %}
+                <img class="img-responsive img-thumbnail" style="float: left; margin: 5px;" alt="{{ offer.get_long_name }}"
+                     title="{{ offer.get_long_name }}" src="{{ MEDIA_URL }}{{ offer.picture2 }}"/>
+            {% endif %}
+            {% if offer.product.offer_description %}
+                {{ offer.product.offer_description | safe }}
+            {% else %}
+                {% trans "There is no more product's information" %}
+            {% endif %}
+            <br>
+            {% for production_mode in offer.product.production_mode.all %}
+                {% if production_mode.picture2 %}
+                    <img class="img-rounded" style="float: left; margin: 5px;" alt="{{ production_mode }}"
+                         title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="24" width="24"/>
+                    {% if production_mode.description %}<br>
+                        <small>{{ production_mode.description | safe }}</small>{% if not forloop.last %}<br>{% endif %}{% endif %}
+                {% else %}
+                    {{ production_mode }}
+                    {% if production_mode.description %}<br>
+                        <small>{{ production_mode.description | safe }}</small>{% if not forloop.last %}<br>{% endif %}{% else %}
+                    {% if not forloop.last %}
+                        <small> -</small>{% endif %}{% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="clearfix"></div>
+        <div class="modal-footer">
+            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+        </div>
+    </div>
+</div>
+{% endspaceless %}
