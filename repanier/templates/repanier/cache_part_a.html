@@ -12,11 +12,12 @@
     {% endif %}
 {% endfor %}
 {% if offer.picture2 and offer.permanences_dates %}
-    <br>
-    <span data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}"
-          data-product="{{ offer.long_name }}" data-picture="{{ MEDIA_URL }}{{ offer.picture2 }}">
-    <img class="img-thumbnail" style="margin-top: 5px;" alt="{{ offer.product }}" title="{{ offer.product }}"
-         src="{{ MEDIA_URL }}{{ offer.picture2 }}" height="110" width="110"/>
-    </span>
+    {% with order_nam=offer.get_order_name %}
+        <br>
+        <span data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}">
+        <img class="img-thumbnail" style="margin-top: 5px;" alt="{{ order_name }}" title="{{ order_name }}"
+             src="{{ MEDIA_URL }}{{ offer.picture2 }}" height="110" width="110"/>
+        </span>
+    {% endwith %}
 {% endif %}
 {% endspaceless %}
