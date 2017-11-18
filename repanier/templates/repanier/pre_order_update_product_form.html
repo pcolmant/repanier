@@ -199,7 +199,7 @@
                                 ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
                                 ['Maximize', '']
                             ],
-                            contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                            contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
                             width: '100%',
                             height: '8em',
                             removePlugins: 'elementspath'

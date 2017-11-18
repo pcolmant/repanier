@@ -90,6 +90,7 @@ DJANGO_SETTINGS_CONTRACT = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS
 DJANGO_SETTINGS_STOCK = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STOCK')
 DJANGO_SETTINGS_BOX = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_BOX')
 DJANGO_STATIC = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STATIC')
+DJANGO_SETTINGS_BOOTSTRAP_CSS = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_BOOTSTRAP_CSS')
 
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):
@@ -283,7 +284,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.messages.context_processors.messages',
                 'sekizai.context_processors.sekizai',
-                'cms.context_processors.cms_settings'
+                'cms.context_processors.cms_settings',
+                'repanier.context_processors.repanier_settings'
             ],
             'loaders'           : [
                 ('django.template.loaders.cached.Loader', [
@@ -333,7 +335,7 @@ CKEDITOR_SETTINGS = {
     # 'format_tags'          : 'p;h4;h5;test',
     'format_tags'          : 'p;h2;h3;h4;h5',
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
-    'contentsCss'          : '{}bootstrap/css/bootstrap.css'.format(STATIC_URL),
+    'contentsCss'          : '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
@@ -358,7 +360,7 @@ CKEDITOR_SETTINGS_MODEL2 = {
     'extraPlugins'         : 'simplebox',
     'forcePasteAsPlainText': 'true',
     'skin'                 : 'moono',
-    'contentsCss'          : '{}bootstrap/css/bootstrap.css'.format(STATIC_URL),
+    'contentsCss'          : '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
     'removeFormatTags'     : 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities'        : False,
     'entities'             : False,

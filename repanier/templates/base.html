@@ -1,5 +1,5 @@
-{% load cms_tags sekizai_tags menu_tags compress i18n l10n static repanier_tags %}{% spaceless %}
-{% addtoblock "css" %}<link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">{% endaddtoblock %}
+{% load cms_tags sekizai_tags menu_tags i18n l10n static repanier_tags %}
+{% addtoblock "css" %}{% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}<link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}{% endaddtoblock %}
 {% addtoblock "css" %}<link rel="stylesheet" href="{% static "css/custom.css" %}">{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
 {% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
@@ -12,8 +12,8 @@
     });
     </script>
 {% endspaceless %}{% endaddtoblock %}
-{% addtoblock "css" %}
-    <!-- django CMS toolbar adjustment -->
+{% addtoblock "css" %}{% spaceless %}
+{#    django CMS toolbar adjustment#}
     {% if request.toolbar %}
     <style>
     .cms-toolbar-expanded .navbar-custom {
@@ -21,8 +21,8 @@
     }
     </style>
     {% endif %}
-{% endaddtoblock %}
-{% endspaceless %}
+{% endspaceless %}{% endaddtoblock %}
+
 {%get_current_language as LANGUAGE_CODE%}
 <!DOCTYPE html>
 <html lang="{{LANGUAGE_CODE}}" ng-app="repanier">
@@ -35,13 +35,13 @@
     {% render_block "css"  %}
     {% render_block "jshead" %}
     <script type="text/javascript">
-      // ensuring django namespace is set correctly
+{#      ensuring django namespace is set correctly#}
       window.django = window.django || undefined;
-      // ensuring jQuery namespace is set correctly
+{#      ensuring jQuery namespace is set correctly#}
       window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
-      // ensuring Class namespace is set correctly
+{#      ensuring Class namespace is set correctly#}
       window.Class = window.Class || undefined;
-      // ensuring CMS namespace is set correctly
+{#      ensuring CMS namespace is set correctly#}
       var CMS = {
         '$': (typeof jQuery === 'function') ? jQuery : undefined,
         'Class': (typeof Class === 'function') ? Class : undefined,

@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -39,7 +39,6 @@ from repanier.views.pre_order_class import PreOrderView
 from repanier.views.pre_order_create_product_ajax import pre_order_create_product_ajax
 from repanier.views.pre_order_update_product_ajax import pre_order_update_product_ajax
 from repanier.views.producer_invoice_class import ProducerInvoiceView
-from repanier.views.producer_name_ajax import producer_name_ajax
 from repanier.views.send_mail_to_all_members_view import send_mail_to_all_members_view
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
 from repanier.views.task_class import PermanenceView
@@ -57,8 +56,8 @@ urlpatterns = [
             'post_reset_redirect': 'done/',
             # The form bellow is responsible of sending the recovery email
             'password_reset_form': AuthRepanierPasswordResetForm,
-            'template_name'      : 'repanier/registration/password_reset_form.html',
-            'from_email'         : settings.DEFAULT_FROM_EMAIL,
+            'template_name': 'repanier/registration/password_reset_form.html',
+            'from_email': settings.DEFAULT_FROM_EMAIL,
         },
         name='admin_password_reset'),
     url(r'^coordi/password_reset/done/$', auth_views.password_reset_done,
@@ -69,7 +68,7 @@ urlpatterns = [
     url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>.+)/$', auth_views.password_reset_confirm,
         {
             'set_password_form': AuthRepanierSetPasswordForm,
-            'template_name'    : 'repanier/registration/password_reset_confirm.html'
+            'template_name': 'repanier/registration/password_reset_confirm.html'
         },
         name='password_reset_confirm'),
     url(r'^reset/done/$', auth_views.password_reset_complete,
@@ -100,8 +99,10 @@ urlpatterns = [
     url(r'^ajax/order-select/$', order_select_ajax, name='order_select_ajax'),
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),
     url(r'^ajax/permanence/$', task_form_ajax, name='task_form_ajax'),
-    url(r'^ajax/customer-basket-message/(?P<pk>\d+)/$', customer_basket_message_form_ajax, name='customer_basket_message_form_ajax'),
-    url(r'^ajax/producer-basket-message/(?P<pk>\d+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
+    url(r'^ajax/customer-basket-message/(?P<pk>\d+)/$', customer_basket_message_form_ajax,
+        name='customer_basket_message_form_ajax'),
+    url(
+        r'^ajax/producer-basket-message/(?P<pk>\d+)/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         producer_basket_message_form_ajax, name='producer_basket_message_form_ajax'),
     url(r'^ajax/customer-product-description/$', customer_product_description_ajax,
         name='customer_product_description_ajax'),
@@ -154,6 +155,14 @@ urlpatterns = [
     url(r'^rest/product/(?P<producer_short_profile_name>.*)/(?P<reference>.*)/$', product_rest,
         name='product_rest'),
     url(r'^rest/version/$', version_rest, name='version_rest'),
-    url(r'^dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice, name='download_customer_invoice'),
+    url(r'^dowload-customer-invoice/(?P<customer_invoice_id>\d+)/$', download_customer_invoice,
+        name='download_customer_invoice'),
     url(r'^unsubscribe/(?P<customer_id>.*)/(?P<token>[\w.:\-_=]+)/$', unsubscribe_view, name='unsubscribe_view'),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns = [
+                      url(r'^__debug__/', include(debug_toolbar.urls)),
+                  ] + urlpatterns

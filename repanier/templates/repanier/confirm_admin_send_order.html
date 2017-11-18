@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags i18n l10n static %}
 {% block content %}
-    <link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">
+    {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}<link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}
     <link rel="stylesheet" href="{% static "css/custom.css" %}">
     <style type="text/css">
         .form-group input[type="checkbox"] {
@@ -145,7 +145,7 @@
                                                 toolbar: [
                                                     ['Preview', 'Image', 'Source']
                                                 ],
-                                                contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                                                contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
                                                 width: '100%',
                                                 height: '24em',
                                                 removePlugins: 'elementspath',
@@ -184,7 +184,7 @@
                                             toolbar: [
                                                 ['Preview', 'Image', 'Source']
                                             ],
-                                            contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                                            contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
                                             width: '100%',
                                             height: '24em',
                                             removePlugins: 'elementspath',
@@ -223,7 +223,7 @@
                                                 toolbar: [
                                                     ['Preview', 'Image', 'Source']
                                                 ],
-                                                contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
+                                                contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
                                                 width: '100%',
                                                 height: '24em',
                                                 removePlugins: 'elementspath',

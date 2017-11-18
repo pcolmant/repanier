@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
-{% load cms_tags menu_tags compress i18n l10n static %}
+{% load cms_tags menu_tags i18n l10n static %}
 {% block content %}
-    <link rel="stylesheet" href="{% static "bootstrap/css/bootstrap.css" %}">
+    {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}<link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}
     <link rel="stylesheet" href="{% static "css/custom.css" %}">
     <h4>{{ sub_title }}</h4>
     <p></p>
