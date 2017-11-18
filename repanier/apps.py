@@ -82,7 +82,7 @@ class RepanierSettings(AppConfig):
             translation.activate(settings.LANGUAGE_CODE)
             notification = Notification.objects.filter(id=DECIMAL_ONE).first()
             if notification is None:
-                Notification.objects.create()
+                notification = Notification.objects.create()
             notification.save()
             config = Configuration.objects.filter(id=DECIMAL_ONE).first()
             if config is None:
