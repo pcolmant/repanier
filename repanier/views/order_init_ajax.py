@@ -113,6 +113,6 @@ def order_init_ajax(request):
                 html = render_to_string(
                     'repanier/communication_permanence_board.html',
                     {'permanence_boards': permanence_boards, 'count_activity': count_activity})
-                json_dict["#communication"] = mark_safe(html)
+                json_dict["#communicationModal"] = mark_safe(html)
     json_dict.update(my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
     return JsonResponse(json_dict)

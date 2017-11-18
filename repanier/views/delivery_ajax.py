@@ -93,7 +93,7 @@ def delivery_ajax(request):
             if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
                 html = render_to_string(
                     'repanier/communication_confirm_order.html')
-                json_dict["#communication"] = mark_safe(html)
+                json_dict["#communicationModal"] = mark_safe(html)
 
     is_basket = sboolean(request.GET.get('is_basket', False))
     json_dict.update(customer_invoice.my_order_confirmation_html(

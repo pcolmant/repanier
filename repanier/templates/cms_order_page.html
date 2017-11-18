@@ -215,21 +215,6 @@
             {#        Communication Modal starts#}
             <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="communicationModalLabel"
                  aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-                            <h4 class="modal-title" id="communicationModalLabel"></h4>
-                        </div>
-                        <div class="modal-body">
-                            <span id="communicationDetails"></span>
-                        </div>
-                        <div class="clearfix"></div>
-                        <div class="modal-footer">
-                            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
-                        </div>
-                    </div>
-                </div>
             </div>
             {#        Communication modal ends#}
             {#        Order Modal starts#}
@@ -298,16 +283,15 @@
                         t_row=$(event.relatedTarget);
                         var getIdFromRow = t_row.data('id');
                         var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
-                        var content =
-                                $.ajax({
-                                    url: lien,
-                                    cache: false,
-                                    success: function (result) {
-                                        $.each(result, function (key, val) {
-                                            $(key).html(val);
-                                        });
-                                    }
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
                                 });
+                            }
+                        });
                     });
                 });
             </script>
@@ -326,21 +310,14 @@
                         cache: false,
                         dataType: 'json',
                         success: function (result) {
-                                $.each(result, function (key, val) {
+                            $.each(result, function (key, val) {
+                                if(key === "#communicationModal") {
+                                    $(key).html(val).modal('show');
+                                } else {
                                     $(key).html(val);
-                                });
+                                }
+                            });
                         }
-{#                        success: function (result) {#}
-{#                            $.each(result, function (key, val) {#}
-{#                                if(val.id === '#communication') {#}
-{#                                    $('#communicationModalLabel').html('{% trans "Personnal communication" %}');#}
-{#                                    $('#communicationDetails').html(val.html);#}
-{#                                    $('#communicationModal').modal('show')#}
-{#                                } else {#}
-{#                                    $(val.id).each(function( index ) { $( this ).html(val.html)});#}
-{#                                }#}
-{#                            });#}
-{#                        }#}
                     });
                     $("#li_my_basket").show();
                     $('#btn_receive_email').on('click', function(event) {
@@ -364,7 +341,11 @@
                             cache: false,
                             success: function (result) {
                                 $.each(result, function (key, val) {
-                                    $(key).html(val);
+                                    if(key === "#communicationModal") {
+                                        $(key).html(val).modal('show');
+                                    } else {
+                                        $(key).html(val);
+                                    }
                                 });
                             }
                         });
@@ -396,9 +377,13 @@
                         url: lien,
                         cache: false,
                         success: function (result) {
-                                $.each(result, function (key, val) {
+                            $.each(result, function (key, val) {
+                                if(key === "#communicationModal") {
+                                    $(key).html(val).modal('show');
+                                } else {
                                     $(key).html(val);
-                                });
+                                }
+                            });
                         }
                     });
                 }

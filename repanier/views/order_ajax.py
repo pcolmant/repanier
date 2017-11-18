@@ -112,7 +112,7 @@ def order_ajax(request):
             if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
                 html = render_to_string(
                     'repanier/communication_confirm_order.html')
-                json_dict["#communication"] = mark_safe(html)
+                json_dict["#communicationModal"] = mark_safe(html)
             customer_invoice.save()
             json_dict.update(
                 my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
