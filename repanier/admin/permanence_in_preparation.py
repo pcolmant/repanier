@@ -520,9 +520,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             return
         only_deliveries = permanence.with_delivery_point
         if 'apply' in request.POST:
-            all_deliveries = request.POST.get("all_deliveries", False)
+            # print("---------- request.POST : {}".format(request.POST))
+            all_deliveries = request.POST.get("all-deliveries", False)
             deliveries_to_be_send = request.POST.getlist("deliveries", [])
-            all_producers = request.POST.get("all_producers", False)
+            all_producers = request.POST.get("all-producers", False)
             producers_to_be_send = request.POST.getlist("producers", [])
             if only_deliveries:
                 if not all_deliveries and len(deliveries_to_be_send) == 0:

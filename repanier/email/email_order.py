@@ -18,7 +18,7 @@ from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 
-def email_order(permanence_id, all_producers=True, producers_id=None, deliveries_id=None):
+def email_order(permanence_id, everything=True, producers_id=None, deliveries_id=None):
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, \
         REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER, \
@@ -42,7 +42,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, deliveries
 
         if deliveries_id:
             # if closed deliveries_id is not empty list and not "None" then all_producers should be True
-            all_producers = True
+            everything = True
             for delivery_id in deliveries_id:
                 delivery_board = DeliveryBoard.objects.filter(
                     id=delivery_id
@@ -57,7 +57,7 @@ def email_order(permanence_id, all_producers=True, producers_id=None, deliveries
                     export_order_2_1_group(config, customer, delivery_point, delivery_id, filename, permanence,
                                            sender_email, sender_function, signature)
 
-        if not all_producers:
+        if not everything:
             abstract_ws = None
         else:
             # Orders send to the preparation team
@@ -172,16 +172,17 @@ def email_order(permanence_id, all_producers=True, producers_id=None, deliveries
 
                 email.send_email()
 
-        if all_producers:
+        if everything:
             # Orders send to our customers only if they don't have already received it
             # ==> customerinvoice__is_order_confirm_send=False
             #     customerinvoice__permanence_id=permanence.id
             if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER:
-                all_producers_closed = not (ProducerInvoice.objects.filter(
-                    permanence_id=permanence_id,
-                    status=PERMANENCE_OPENED
-                ).order_by('?').exists())
-                if all_producers_closed and not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                # all_producers_closed = not (ProducerInvoice.objects.filter(
+                #     permanence_id=permanence_id,
+                #     status=PERMANENCE_OPENED
+                # ).order_by('?').exists())
+                # if all_producers_closed and not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                if not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
                     # REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS -> Do not send cancelled orders
                     customer_set = Customer.objects.filter(
                         represent_this_buyinggroup=False,

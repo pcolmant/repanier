@@ -184,7 +184,7 @@
                                             toolbar: [
                                                 ['Preview', 'Image', 'Source']
                                             ],
-                                            contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
+                                            contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
                                             width: '100%',
                                             height: '24em',
                                             removePlugins: 'elementspath',
@@ -223,7 +223,7 @@
                                                 toolbar: [
                                                     ['Preview', 'Image', 'Source']
                                                 ],
-                                                contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
+                                                contentsCss: '{% static "bootstrap/css/bootstrap.css" %}',
                                                 width: '100%',
                                                 height: '24em',
                                                 removePlugins: 'elementspath',
@@ -261,7 +261,6 @@
         }
 
         function toggle(source, elementName) {
-            {#          source.checked != source.checked;#}
             all_checked = true;
             none_checked = true;
             checkboxes = document.getElementsByName(elementName);
@@ -274,91 +273,27 @@
             return [none_checked, all_checked]
         }
 
-        function check_all(elementName) {
-            all_checkboxes = document.getElementsByName("all-" + elementName);
-            if (all_checkboxes && !all_checkboxes[0].checked) {
-                all_checkboxes[0].checked = true;
-                checkboxes = document.getElementsByName(elementName);
-                for (var i = 0, n = checkboxes.length; i < n; i++) {
-                    checkboxes[i].checked = true;
-                }
-            }
-        }
-
-        function uncheck_all(elementName) {
-            all_checkboxes = document.getElementsByName("all-" + elementName);
-            if (all_checkboxes) {
-                all_checkboxes[0].checked = false;
-                checkboxes = document.getElementsByName(elementName);
-                for (var i = 0, n = checkboxes.length; i < n; i++) {
-                    checkboxes[i].checked = false;
-                }
-            }
-        }
-
         function toggle_all_deliveries(source) {
-            all_checked = toggle_all(source, 'deliveries');
-            if (all_checked) {
-                checkboxes = document.getElementsByName('producers');
-                one_checked = false;
-                for (var i = 0, n = checkboxes.length; i < n; i++) {
-                    one_checked |= checkboxes[i].checked
-                }
-                if (!one_checked) {
-                    check_all('producers')
-                }
-            }
-            else {
-                uncheck_all('producers')
-            }
+            toggle_all(source, 'deliveries');
         }
 
         function toggle_delivery(source) {
-            checked = toggle(source, 'deliveries');
-            none_checked = checked[0];
-            if (none_checked) {
-                uncheck_all('producers');
-                all_producers(false);
-            }
-            else {
-                all_checked = checked[1];
-                if (!all_checked) {
-                    check_all('producers');
-                    all_producers(true);
-                }
-            }
+            toggle(source, 'deliveries');
         }
 
         function toggle_all_producers(source) {
             all_checked = toggle_all(source, 'producers');
-            if (all_checked) {
-                checkboxes = document.getElementsByName('deliveries');
-                one_checked = false;
-                for (var i = 0, n = checkboxes.length; i < n; i++) {
-                    one_checked |= checkboxes[i].checked
-                }
-                if (!one_checked) {
-                    check_all('deliveries')
-                }
-            }
-            else {
-                uncheck_all('deliveries')
-            }
             all_producers(all_checked);
         }
 
         function toggle_producer(source) {
-            checked = toggle(source, 'producers');
+            toggle(source, 'producers');
             none_checked = checked[0];
             if (none_checked) {
-                uncheck_all('deliveries');
                 all_producers(false);
             }
             else {
                 all_checked = checked[1];
-                if (!all_checked) {
-                    check_all('deliveries')
-                }
                 all_producers(all_checked);
             }
         }

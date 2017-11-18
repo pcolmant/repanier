@@ -433,6 +433,13 @@ class Permanence(TranslatableModel):
                    everything=True, producers_id=(), deliveries_id=(),
                    update_payment_date=False,
                    payment_date=None):
+        # print("------------ status : {}".format(self.status))
+        # print("------------ new_status : {}".format(new_status))
+        # print("------------ everything : {}".format(everything))
+        # print("------------ producers_id : {}".format(producers_id))
+        # print("------------ deliveries_id : {}".format(deliveries_id))
+        # print("------------ update_payment_date : {}".format(update_payment_date))
+        # print("------------ payment_date : {}".format(payment_date))
         if new_status == PERMANENCE_WAIT_FOR_OPEN:
             everything = True
             all_producers = self.contract.producers.all() if self.contract else self.producers.all()
@@ -624,8 +631,6 @@ class Permanence(TranslatableModel):
                     REPANIER_SETTINGS_GROUP_CUSTOMER_ID, offer_item, q_order=1,
                     batch_job=True, is_box_content=False
                 )
-
-        self.set_status(PERMANENCE_CLOSED, everything=everything, producers_id=producers_id)
 
     def duplicate(self, dates):
         creation_counter = 0

@@ -206,6 +206,7 @@ def automatically_closed():
         something_to_close = True
     return something_to_close
 
+
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_full_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
 def close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
@@ -217,11 +218,13 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
     permanence.set_status(PERMANENCE_WAIT_FOR_CLOSED, everything=everything, producers_id=producers_id,
                           deliveries_id=deliveries_id)
     permanence.close_order(everything=everything, producers_id=producers_id, deliveries_id=deliveries_id)
+    permanence.set_status(PERMANENCE_CLOSED, everything=everything, producers_id=producers_id,
+                          deliveries_id=deliveries_id)
     permanence.set_status(PERMANENCE_WAIT_FOR_SEND, everything=everything, producers_id=producers_id,
                           deliveries_id=deliveries_id)
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
-    email_order.email_order(permanence.id, everything, producers_id=producers_id, deliveries_id=deliveries_id)
+    email_order.email_order(permanence.id, everything=everything, producers_id=producers_id, deliveries_id=deliveries_id)
     permanence.set_status(PERMANENCE_SEND, everything=everything, producers_id=producers_id,
                           deliveries_id=deliveries_id)
 
