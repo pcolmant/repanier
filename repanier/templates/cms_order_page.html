@@ -236,8 +236,7 @@
                   {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
                   <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
                   <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.phone1 }}</b><br>
-                  <span class="glyphicon glyphicon-envelope"></span>  <a
-                        href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br>
+                  <a href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br>
                 </span>
                         </div>
                         <div class="modal-footer">
