@@ -343,11 +343,15 @@ class Customer(models.Model):
             return False
         return True
 
-    def anonymize(self):
+    def anonymize(self, also_group=False):
         if self.represent_this_buyinggroup:
-            return
-        self.short_basket_name = "{}-{}".format(_("BASKET"), self.id)
-        self.long_basket_name = "{} {}".format(_("Family"), self.id)
+            if not also_group:
+                return
+            self.short_basket_name = "{}-{}".format(_("GROUP"), self.id)
+            self.long_basket_name = "{} {}".format(_("Group"), self.id)
+        else:
+            self.short_basket_name = "{}-{}".format(_("BASKET"), self.id)
+            self.long_basket_name = "{} {}".format(_("Family"), self.id)
         self.email2 = EMPTY_STRING
         self.picture = EMPTY_STRING
         self.phone1 = EMPTY_STRING
@@ -361,6 +365,7 @@ class Customer(models.Model):
         self.user.username = self.user.email = "{}@repanier.be".format(self.short_basket_name)
         self.user.first_name = EMPTY_STRING
         self.user.last_name = self.short_basket_name
+        self.user.set_password(None)
         self.user.save()
         self.is_anonymized = True
         self.save()

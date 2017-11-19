@@ -90,6 +90,7 @@ class Staff(MPTTModel, TranslatableModel):
         self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id)
         self.user.first_name = EMPTY_STRING
         self.user.last_name = self.safe_translation_getter('long_name', any_language=True)
+        self.user.set_password(None)
         self.user.save()
 
     def __str__(self):

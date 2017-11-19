@@ -328,11 +328,15 @@ class Producer(models.Model):
 
         return EMPTY_STRING
 
-    def anonymize(self):
+    def anonymize(self, also_group=False):
         if self.represent_this_buyinggroup:
-            return
-        self.short_profile_name = "{}-{}".format(_("PRODUCER"), self.id)
-        self.long_profile_name = "{} {}".format(_("Producer"), self.id)
+            if not also_group:
+                return
+            self.short_profile_name = "{}-{}".format(_("GROUP"), self.id)
+            self.long_profile_name = "{} {}".format(_("Group"), self.id)
+        else:
+            self.short_profile_name = "{}-{}".format(_("PRODUCER"), self.id)
+            self.long_profile_name = "{} {}".format(_("Producer"), self.id)
         self.email = "{}@repanier.be".format(self.short_profile_name)
         self.email2 = EMPTY_STRING
         self.email3 = EMPTY_STRING
@@ -343,6 +347,8 @@ class Producer(models.Model):
         self.fax = EMPTY_STRING
         self.address = EMPTY_STRING
         self.memo = EMPTY_STRING
+        self.uuid = uuid.uuid1()
+        self.offer_uuid = uuid.uuid1()
         self.is_anonymized = True
         self.save()
 
