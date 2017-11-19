@@ -117,7 +117,7 @@
     {% endspaceless %}{% endaddtoblock %}
     <a name="content"></a><section>
     {% if current_page.is_home %}
-        <div class="container-info" id="containerInfo" style="display: none"></div>
+        <div class="container-info" id="containerInfo">&nbsp;</div>
         {% addtoblock "lastjs" %}{% spaceless %}
             <script type="text/javascript">
                 $(document).ready(function () {
@@ -128,7 +128,7 @@
                         async: true,
                         success: function (result) {
                                 $.each(result, function (key, val) {
-                                    $(key).html(val).show();
+                                    $(key).html(val);
                                 });
                         }
                     });
