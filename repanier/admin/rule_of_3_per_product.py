@@ -91,7 +91,7 @@ class OfferItemPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer":
-            kwargs["queryset"] = Customer.objects.filter(is_active=True)
+            kwargs["queryset"] = Customer.objects.filter(may_order=True)
         return super(OfferItemPurchaseSendInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
