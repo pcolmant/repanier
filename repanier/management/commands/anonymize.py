@@ -6,6 +6,7 @@ from django.utils import translation
 from parler.models import TranslationDoesNotExist
 
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
+from repanier.models import BankAccount
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_PermanenceRole
@@ -59,7 +60,7 @@ class Command(BaseCommand):
                 except TranslationDoesNotExist:
                     pass
         for user in User.objects.filter(is_superuser=True):
-            str_id= str(user.id)
+            str_id = str(user.id)
             user.username = user.email = "{}@repanier.be".format(str_id)
             user.first_name = EMPTY_STRING
             user.last_name = str_id
@@ -67,5 +68,6 @@ class Command(BaseCommand):
             user.is_superuser = False
             user.set_password(None)
             user.save()
+        BankAccount.objects.filter(customer__isnull=False).oder_by('?').update(operation_comment=EMPTY_STRING)
         User.objects.create_user(username="admin", email="admin@repanier.be", password="admin",
-                first_name=EMPTY_STRING, last_name="admin", is_staff=True, is_superuser=True)
+                                 first_name=EMPTY_STRING, last_name="admin", is_staff=True, is_superuser=True)
