@@ -160,9 +160,9 @@ urlpatterns = [
     url(r'^unsubscribe/(?P<customer_id>.*)/(?P<token>[\w.:\-_=]+)/$', unsubscribe_view, name='unsubscribe_view'),
 ]
 
-if settings.DEBUG:
-    import debug_toolbar
-
-    urlpatterns = [
-                      url(r'^__debug__/', include(debug_toolbar.urls)),
-                  ] + urlpatterns
+# if settings.DEBUG:
+#     import debug_toolbar
+#
+#     urlpatterns = [
+#                       url(r'^__debug__/', include(debug_toolbar.urls)),
+#                   ] + urlpatterns
