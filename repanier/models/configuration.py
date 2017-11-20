@@ -65,6 +65,7 @@ class Configuration(TranslatableModel):
     display_anonymous_order_form = models.BooleanField(_("Display anonymous order form"), default=True)
     display_producer_on_order_form = models.BooleanField(_("Display producers on order form"), default=True)
     display_who_is_who = models.BooleanField(_("Display who is who"), default=True)
+    xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
         _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
@@ -375,6 +376,7 @@ def configuration_post_save(sender, **kwargs):
         repanier.apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
         repanier.apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM = config.display_producer_on_order_form
         repanier.apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
+        repanier.apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
         if config.bank_account is not None and len(config.bank_account.strip()) == 0:
             repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT = None
         else:

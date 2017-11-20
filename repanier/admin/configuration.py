@@ -189,6 +189,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                 # 'page_break_on_customer_check',
                 'display_who_is_who',
                 'invoice',
+                'xlsx_portrait',
                 'how_to_register',
                 ('currency', 'vat_id'),
                 'sms_gateway_mail',

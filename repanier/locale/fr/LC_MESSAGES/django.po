@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-18 19:51+0100\n"
-"PO-Revision-Date: 2017-11-19 09:01+0100\n"
+"POT-Creation-Date: 2017-11-20 09:25+0100\n"
+"PO-Revision-Date: 2017-11-20 18:16+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -60,7 +60,7 @@ msgid "Customers"
 msgstr "Consommateurs"
 
 #: admin/admin_filter.py:227 admin/admin_filter.py:248 apps.py:17
-#: models/configuration.py:342 models/contract.py:162
+#: models/configuration.py:343 models/contract.py:162
 msgid "Permanences"
 msgstr "Permanences"
 
@@ -250,32 +250,32 @@ msgstr "Créer un duplicata"
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
-#: admin/box.py:285 admin/configuration.py:203 admin/customer.py:375
+#: admin/box.py:285 admin/configuration.py:205 admin/customer.py:375
 #: admin/group.py:282 admin/producer.py:412 admin/product.py:501
 msgid "Advanced options"
 msgstr "Paramètres avancés"
 
-#: admin/configuration.py:16 models/configuration.py:86
+#: admin/configuration.py:16 models/configuration.py:87
 msgid "Home site"
 msgstr "Adresse (URL) associée au bouton \"Home\" du site de commande"
 
-#: admin/configuration.py:20 models/configuration.py:126
+#: admin/configuration.py:20 models/configuration.py:127
 msgid "Group label"
 msgstr "Label à mentionner sur les factures du groupe"
 
-#: admin/configuration.py:24 models/configuration.py:117
+#: admin/configuration.py:24 models/configuration.py:118
 msgid "Email host user"
 msgstr "Mail host user"
 
-#: admin/configuration.py:25 models/configuration.py:118
+#: admin/configuration.py:25 models/configuration.py:119
 msgid "For @gmail.com : username@gmail.com"
 msgstr "Exemple : LeCompteDeMonGroupe@gmail.com"
 
-#: admin/configuration.py:30 models/configuration.py:121
+#: admin/configuration.py:30 models/configuration.py:122
 msgid "Email host password"
 msgstr "Mail host password"
 
-#: admin/configuration.py:32 models/configuration.py:123
+#: admin/configuration.py:32 models/configuration.py:124
 msgid ""
 "For @gmail.com, you must generate an application password, see: https://"
 "security.google.com/settings/security/apppasswords"
@@ -283,11 +283,11 @@ msgstr ""
 "Pour @gmail.com, vous devez générer un mot de passe applicatif. Voir : "
 "https://security.google.com/settings/security/apppasswords"
 
-#: admin/configuration.py:36 models/configuration.py:73
+#: admin/configuration.py:36 models/configuration.py:74
 msgid "Sms gateway email"
 msgstr "✉ de passerelle SMS"
 
-#: admin/configuration.py:38 models/configuration.py:75
+#: admin/configuration.py:38 models/configuration.py:76
 msgid ""
 "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/"
 "apps/details?id=eu.apksoft.android.smsgateway"
@@ -431,11 +431,11 @@ msgstr ""
 "\"%(delivery_point)s\" est appliquée%(customer_price)s."
 
 #: admin/forms.py:13 admin/forms.py:27 admin/forms.py:29 admin/forms.py:31
-#: admin/forms.py:50 admin/forms.py:53 models/configuration.py:135
-#: models/configuration.py:140 models/configuration.py:145
-#: models/configuration.py:150 models/configuration.py:155
-#: models/configuration.py:160 models/configuration.py:165
-#: models/configuration.py:170
+#: admin/forms.py:50 admin/forms.py:53 models/configuration.py:136
+#: models/configuration.py:141 models/configuration.py:146
+#: models/configuration.py:151 models/configuration.py:156
+#: models/configuration.py:161 models/configuration.py:166
+#: models/configuration.py:171
 msgid "Email content"
 msgstr "Contenu du ✉"
 
@@ -490,7 +490,7 @@ msgstr ""
 msgid "Delivery point transport"
 msgstr "Frais de livraison"
 
-#: admin/group.py:146 models/configuration.py:96 models/invoice.py:116
+#: admin/group.py:146 models/configuration.py:97 models/invoice.py:116
 #: models/lut.py:87
 msgid "Minium order amount for free shipping cost"
 msgstr "Minimum pour éviter les frais"
@@ -980,7 +980,7 @@ msgid "Department"
 msgstr "Rayon"
 
 #: admin/purchase.py:239 const.py:273 email/email_order.py:34
-#: models/configuration.py:353 models/invoice.py:24 models/invoice.py:755
+#: models/configuration.py:354 models/invoice.py:24 models/invoice.py:755
 #: models/permanence.py:1070 views/btn_confirm_order_ajax.py:45
 msgid "Order"
 msgstr "Commande"
@@ -1073,236 +1073,236 @@ msgstr ""
 "Au moins un/e coordinateur/trice doit être renseigné/e au sein de l'équipe "
 "de gestion."
 
-#: apps.py:16 const.py:270 models/configuration.py:341 models/purchase.py:160
+#: apps.py:16 const.py:270 models/configuration.py:342 models/purchase.py:160
 #: xlsx/xlsx_invoice.py:208
 msgid "Permanence"
 msgstr "Permanence"
 
-#: apps.py:18 models/configuration.py:343
+#: apps.py:18 models/configuration.py:344
 msgid "Permanence on "
 msgstr "Permanence du "
 
-#: apps.py:188
+#: apps.py:189
 msgid "Vegetables"
 msgstr "Légume"
 
-#: apps.py:189
+#: apps.py:190
 msgid "Basket of vegetables"
 msgstr "Panier de légumes"
 
-#: apps.py:190
+#: apps.py:191
 msgid "Salads"
 msgstr "Salade"
 
-#: apps.py:191
+#: apps.py:192
 msgid "Tomatoes"
 msgstr "Tomate"
 
-#: apps.py:192
+#: apps.py:193
 msgid "Potatoes"
 msgstr "Pomme de terre"
 
-#: apps.py:193
+#: apps.py:194
 msgid "Greens"
 msgstr "Verdurette"
 
-#: apps.py:194
+#: apps.py:195
 msgid "Cabbage"
 msgstr "Chou"
 
-#: apps.py:195
+#: apps.py:196
 msgid "Fruits"
 msgstr "Fruit"
 
-#: apps.py:196
+#: apps.py:197
 msgid "Basket of fruits"
 msgstr "Panier de fruits"
 
-#: apps.py:197
+#: apps.py:198
 msgid "Apples"
 msgstr "Pomme"
 
-#: apps.py:198
+#: apps.py:199
 msgid "Pears"
 msgstr "Poire"
 
-#: apps.py:199
+#: apps.py:200
 msgid "Plums"
 msgstr "Prune"
 
-#: apps.py:200
+#: apps.py:201
 msgid "Bakery"
 msgstr "Boulangerie"
 
-#: apps.py:201
+#: apps.py:202
 msgid "Flour"
 msgstr "Farine"
 
-#: apps.py:202
+#: apps.py:203
 msgid "Bread"
 msgstr "Pain"
 
-#: apps.py:203
+#: apps.py:204
 msgid "Pastry"
 msgstr "Pâtisserie"
 
-#: apps.py:204
+#: apps.py:205
 msgid "Butchery"
 msgstr "Boucherie"
 
-#: apps.py:205
+#: apps.py:206
 msgid "Delicatessen"
 msgstr "Charcuterie"
 
-#: apps.py:206
+#: apps.py:207
 msgid "Chicken"
 msgstr "Volaille"
 
-#: apps.py:207
+#: apps.py:208
 msgid "Pork"
 msgstr "Porc"
 
-#: apps.py:208
+#: apps.py:209
 msgid "Beef"
 msgstr "Bœuf"
 
-#: apps.py:209
+#: apps.py:210
 msgid "Beef and pork"
 msgstr "Porc et bœuf"
 
-#: apps.py:210
+#: apps.py:211
 msgid "Veal"
 msgstr "Veau"
 
-#: apps.py:211
+#: apps.py:212
 msgid "Lamb"
 msgstr "Agneau"
 
-#: apps.py:212
+#: apps.py:213
 msgid "Grocery"
 msgstr "Epicerie"
 
-#: apps.py:213
+#: apps.py:214
 msgid "Takeaway"
 msgstr "Traiteur"
 
-#: apps.py:214
+#: apps.py:215
 msgid "Pasta"
 msgstr "Pâte"
 
-#: apps.py:215
+#: apps.py:216
 msgid "Chocolates"
 msgstr "Chocolat"
 
-#: apps.py:216
+#: apps.py:217
 msgid "Oils"
 msgstr "Huile"
 
-#: apps.py:217
+#: apps.py:218
 msgid "Eggs"
 msgstr "Œuf"
 
-#: apps.py:218
+#: apps.py:219
 msgid "Jams"
 msgstr "Confiture"
 
-#: apps.py:219
+#: apps.py:220
 msgid "Cookies"
 msgstr "Biscuit"
 
-#: apps.py:220
+#: apps.py:221
 msgid "Creamery"
 msgstr "Crèmerie"
 
-#: apps.py:221
+#: apps.py:222
 msgid "Dairy"
 msgstr "Laitage"
 
-#: apps.py:222
+#: apps.py:223
 msgid "Cow cheese"
 msgstr "Fromage de vache"
 
-#: apps.py:223
+#: apps.py:224
 msgid "Goat cheese"
 msgstr "Fromage de chèvre"
 
-#: apps.py:224
+#: apps.py:225
 msgid "Sheep cheese"
 msgstr "Fromage de brebis"
 
-#: apps.py:225
+#: apps.py:226
 msgid "Mixed cheese"
 msgstr "Fromage en mélange"
 
-#: apps.py:226
+#: apps.py:227
 msgid "Icecream"
 msgstr "Glace"
 
-#: apps.py:227
+#: apps.py:228
 msgid "Cup of icecream"
 msgstr "Glace en coupe"
 
-#: apps.py:228
+#: apps.py:229
 msgid "Icecream per liter"
 msgstr "Glace au ℓ"
 
-#: apps.py:229
+#: apps.py:230
 msgid "Icecream in frisco"
 msgstr "Glace en frisko"
 
-#: apps.py:230
+#: apps.py:231
 msgid "Icecream cake"
 msgstr "Gâteau de glace"
 
-#: apps.py:231
+#: apps.py:232
 msgid "Sorbet"
 msgstr "Sorbet"
 
-#: apps.py:232
+#: apps.py:233
 msgid "Cup of sorbet"
 msgstr "Sorbet en coupe"
 
-#: apps.py:233
+#: apps.py:234
 msgid "Sorbet per liter"
 msgstr "Sorbet au ℓ"
 
-#: apps.py:234
+#: apps.py:235
 msgid "Drink"
 msgstr "Boisson"
 
-#: apps.py:235
+#: apps.py:236
 msgid "Juices"
 msgstr "Jus"
 
-#: apps.py:236
+#: apps.py:237
 msgid "Coffees"
 msgstr "Café"
 
-#: apps.py:237
+#: apps.py:238
 msgid "Teas"
 msgstr "Thé"
 
-#: apps.py:238
+#: apps.py:239
 msgid "Herbal teas"
 msgstr "Infusion"
 
-#: apps.py:239
+#: apps.py:240
 msgid "Wines"
 msgstr "Vin"
 
-#: apps.py:240
+#: apps.py:241
 msgid "Aperitifs"
 msgstr "Apéritif"
 
-#: apps.py:241
+#: apps.py:242
 msgid "Liqueurs"
 msgstr "Liqueur"
 
-#: apps.py:242
+#: apps.py:243
 msgid "Hygiene"
 msgstr "Hygiène"
 
-#: apps.py:243 models/invoice.py:56 models/invoice.py:688 models/invoice.py:692
+#: apps.py:244 models/invoice.py:56 models/invoice.py:688 models/invoice.py:692
 #: models/item.py:65 models/purchase.py:84 models/purchase.py:155
 #: templates/repanier/customer_invoice_form.html:50
 #: templates/repanier/producer_invoice_form.html:20 views/forms.py:201
@@ -1312,11 +1312,11 @@ msgstr "Hygiène"
 msgid "Deposit"
 msgstr "Consigne"
 
-#: apps.py:244 const.py:122 const.py:138 const.py:170
+#: apps.py:245 const.py:122 const.py:138 const.py:170
 msgid "Subscription"
 msgstr "Souscription."
 
-#: apps.py:249 views/order_select_ajax.py:145
+#: apps.py:250 views/order_select_ajax.py:145
 msgid "Other qty"
 msgstr "Autre qté"
 
@@ -1344,7 +1344,7 @@ msgstr "Gérer"
 msgid "Parameters ..."
 msgstr "Paramètres ..."
 
-#: cms_toolbar.py:53 models/configuration.py:300
+#: cms_toolbar.py:53 models/configuration.py:301
 msgid "Configuration"
 msgstr "Configuration"
 
@@ -1584,19 +1584,19 @@ msgstr "Ceci est le prochain solde. Le système est en train de le calculer."
 msgid "This is the latest bank total"
 msgstr "Ceci est le dernier solde."
 
-#: const.py:271 models/configuration.py:345
+#: const.py:271 models/configuration.py:346
 msgid "Closure"
 msgstr "Clôture"
 
-#: const.py:272 models/configuration.py:349
+#: const.py:272 models/configuration.py:350
 msgid "Delivery"
 msgstr "Livraison"
 
-#: const.py:274 models/configuration.py:357
+#: const.py:274 models/configuration.py:358
 msgid "Opening"
 msgstr "Offre"
 
-#: const.py:275 models/configuration.py:361
+#: const.py:275 models/configuration.py:362
 msgid "Distribution"
 msgstr "Distribution"
 
@@ -1790,49 +1790,53 @@ msgstr ""
 msgid "Display who is who"
 msgstr "Afficher la liste des membres du groupe à tous les membres"
 
-#: models/configuration.py:68 models/producer.py:56
+#: models/configuration.py:68
+msgid "Always generate XLSX files in portrait mode"
+msgstr "Toujours générer les fichiers XLSX en mode portrait"
+
+#: models/configuration.py:69 models/producer.py:56
 msgid "Bank account"
 msgstr "Compte bancaire"
 
-#: models/configuration.py:70 models/customer.py:62 models/producer.py:58
+#: models/configuration.py:71 models/customer.py:62 models/producer.py:58
 msgid "VAT id"
 msgstr "Numéro de TVA"
 
-#: models/configuration.py:71
+#: models/configuration.py:72
 msgid "Page break on customer check"
 msgstr ""
 "Insérer un saut de page entre deux consommateurs dans la liste de contrôle "
 "des paniers"
 
-#: models/configuration.py:77
+#: models/configuration.py:78
 msgid "/!\\ Customers must confirm orders"
 msgstr "⚠ Les consommateurs doivent confirmer leur commande"
 
-#: models/configuration.py:79 models/configuration.py:448
+#: models/configuration.py:80 models/configuration.py:450
 msgid "Membership fee"
 msgstr "Cotisation"
 
-#: models/configuration.py:82
+#: models/configuration.py:83
 msgid "Membership fee duration"
 msgstr "Mois couverts"
 
-#: models/configuration.py:83
+#: models/configuration.py:84
 msgid "Number of month(s). 0 mean : no membership fee."
 msgstr ""
 "Nombre de mois couvert(s) par la cotisation. 0 signifie : pas de cotisation."
 
-#: models/configuration.py:91 templates/repanier/customer_invoice_form.html:57
+#: models/configuration.py:92 templates/repanier/customer_invoice_form.html:57
 #: templates/repanier/producer_invoice_form.html:24
 msgid "Shipping cost"
 msgstr "Frais"
 
-#: models/configuration.py:92
+#: models/configuration.py:93
 msgid "This amount is added to order less than min_transport."
 msgstr ""
 "Ces frais sont ajoutés aux commandes dont le minimum de commande n'est pas "
 "atteint."
 
-#: models/configuration.py:97 models/invoice.py:117
+#: models/configuration.py:98 models/invoice.py:117
 msgid "This is the minimum order amount to avoid shipping cost."
 msgstr ""
 "Minimum à commander pour éviter des frais (0 = les frais s'appliquent "
@@ -1840,15 +1844,15 @@ msgstr ""
 "dans le cas où le groupe possède un consommateur responsable. Sinon il est "
 "porte sur le total de chaque facture individuelle."
 
-#: models/configuration.py:101
+#: models/configuration.py:102
 msgid "Email is customised"
 msgstr "Utiliser la configuration ci-dessous pour envoyer des mails"
 
-#: models/configuration.py:103
+#: models/configuration.py:104
 msgid "Email host"
 msgstr "Mail host"
 
-#: models/configuration.py:104
+#: models/configuration.py:105
 msgid ""
 "For @gmail.com, see: https://mail.google.com/mail/u/0/#settings/fwdandpop "
 "and activate POP"
@@ -1859,70 +1863,70 @@ msgstr ""
 "google.com/mail/u/0/#settings/fwdandpop; (4) au besoin réactiver ce qui a "
 "été fait en (2)"
 
-#: models/configuration.py:107
+#: models/configuration.py:108
 msgid "Email port"
 msgstr "Mail port"
 
-#: models/configuration.py:108
+#: models/configuration.py:109
 msgid "Usually 587 for @gmail.com, otherwise 25"
 msgstr ""
 "Voir https://support.google.com/mail/answer/7104828 pour @gmail.com "
 "(normalement: 587 et activer TSL), sinon habituellement 25 et activer TSL"
 
-#: models/configuration.py:112
+#: models/configuration.py:113
 msgid "Email use tls"
 msgstr "Mail use TLS"
 
-#: models/configuration.py:113
+#: models/configuration.py:114
 msgid "TLS is used otherwise SSL is used"
 msgstr "TLS si coché, sinon SSL. TSL est plus sécurisé que SSL."
 
-#: models/configuration.py:130
+#: models/configuration.py:131
 msgid "How to register"
 msgstr "Message pour expliquer comment créer un compte \"consommateur\""
 
-#: models/configuration.py:301
+#: models/configuration.py:302
 msgid "Configurations"
 msgstr "Configuration"
 
-#: models/configuration.py:346
+#: models/configuration.py:347
 msgid "Closures"
 msgstr "Clôtures"
 
-#: models/configuration.py:347
+#: models/configuration.py:348
 msgid "Closure on "
 msgstr "Clôture du "
 
-#: models/configuration.py:350
+#: models/configuration.py:351
 msgid "Deliveries"
 msgstr "Livraisons"
 
-#: models/configuration.py:351
+#: models/configuration.py:352
 msgid "Delivery on "
 msgstr "Livraison du "
 
-#: models/configuration.py:354 models/permanence.py:1071
+#: models/configuration.py:355 models/permanence.py:1071
 #: xlsx/export_tools.py:41
 msgid "Orders"
 msgstr "Commandes"
 
-#: models/configuration.py:355
+#: models/configuration.py:356
 msgid "Order on "
 msgstr "Commande du "
 
-#: models/configuration.py:358
+#: models/configuration.py:359
 msgid "Openings"
 msgstr "Offres"
 
-#: models/configuration.py:359
+#: models/configuration.py:360
 msgid "Opening on "
 msgstr "Offre du "
 
-#: models/configuration.py:362
+#: models/configuration.py:363
 msgid "Distributions"
 msgstr "Distributions"
 
-#: models/configuration.py:363
+#: models/configuration.py:364
 msgid "Distribution on "
 msgstr "Distribution du "
 
@@ -4232,13 +4236,13 @@ msgstr ""
 "Ce message ne sera envoyé qu'au(x) membre(s) de l'équipe de gestion que vous "
 "sélectionnez ci-dessous :"
 
-#: xlsx/export_tools.py:96 xlsx/xlsx_purchase.py:37 xlsx/xlsx_purchase.py:565
+#: xlsx/export_tools.py:98 xlsx/xlsx_purchase.py:37 xlsx/xlsx_purchase.py:565
 #: xlsx/xlsx_purchase.py:569 xlsx/xlsx_stock.py:29 xlsx/xlsx_stock.py:319
 #: xlsx/xlsx_stock.py:436
 msgid "Id"
 msgstr "Id"
 
-#: xlsx/export_tools.py:103
+#: xlsx/export_tools.py:105
 msgid "Data validation"
 msgstr "Validation"
 
