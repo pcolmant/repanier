@@ -959,7 +959,6 @@ def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form
         # Doesn't exists ? Create one
         purchase = Purchase.objects.create(
             permanence=offer_item.permanence,
-            permanence_date=offer_item.permanence.permanence_date,
             offer_item=offer_item,
             producer=offer_item.producer,
             customer=customer,
