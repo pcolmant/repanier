@@ -317,8 +317,6 @@ def product_pre_save(sender, **kwargs):
             product.limit_order_quantity_to_stock = True
             # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
             product.is_into_offer = product.stock > DECIMAL_ZERO
-        elif not producer.manage_replenishment:
-            product.limit_order_quantity_to_stock = False
         if product.is_box:
             product.limit_order_quantity_to_stock = True
     else:

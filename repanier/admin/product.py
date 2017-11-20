@@ -413,11 +413,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 if 'is_into_offer__exact' in param:
                     is_into_offer_value = param['is_into_offer__exact']
         producer = producer_queryset.first()
-        # producer_manage_replenishment = settings.DJANGO_SETTINGS_STOCK and producer is not None and producer.manage_replenishment
-        # producer_pre_opening = producer is not None and producer.producer_pre_opening
-        # producer_represent_this_buyinggroup = producer is not None and producer.represent_this_buyinggroup
         producer_resale_price_fixed = producer is not None and producer.is_resale_price_fixed
-        # limit_order_quantity_to_stock = settings.DJANGO_SETTINGS_STOCK and product is not None and product.limit_order_quantity_to_stock
         fields_basic = [
             ('producer', 'long_name', 'picture2'),
             'order_unit',
@@ -432,12 +428,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             fields_basic += [
                 ('producer_unit_price', 'unit_deposit', 'order_average_weight'),
             ]
-        # if producer_pre_opening \
-        #         or (limit_order_quantity_to_stock and producer_manage_replenishment) \
-        #         or producer_represent_this_buyinggroup:
         if settings.DJANGO_SETTINGS_STOCK:
             fields_basic += [
-                ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'stock')
+                ('customer_minimum_order_quantity', 'customer_increment_order_quantity'),
+                'limit_order_quantity_to_stock',
+                'stock'
             ]
         else:
             if settings.DJANGO_SETTINGS_IS_MINIMALIST:
@@ -462,7 +457,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ]
             if settings.DJANGO_SETTINGS_STOCK:
                 fields_advanced_options = [
-                    ('limit_order_quantity_to_stock', 'producer_order_by_quantity'),
+                    'producer_order_by_quantity',
                     ('reference', 'vat_level'),
                     ('is_into_offer', 'is_active')
                 ]
@@ -471,29 +466,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     ('reference', 'vat_level'),
                     ('is_into_offer', 'is_active')
                 ]
-            # if producer_pre_opening or producer_represent_this_buyinggroup:
-            #     fields_advanced_options = [
-            #         ('reference', 'vat_level'),
-            #         ('is_into_offer', 'is_active')
-            #     ]
-            # elif limit_order_quantity_to_stock:
-            #     fields_advanced_options = [
-            #         ('limit_order_quantity_to_stock', 'producer_order_by_quantity'),
-            #         ('reference', 'vat_level'),
-            #         ('is_into_offer', 'is_active')
-            #     ]
-            # elif producer_manage_replenishment:
-            #     fields_advanced_options = [
-            #         ('stock', 'limit_order_quantity_to_stock', 'producer_order_by_quantity'),
-            #         ('reference', 'vat_level'),
-            #         ('is_into_offer', 'is_active')
-            #     ]
-            # else:
-            #     fields_advanced_options = [
-            #         ('producer_order_by_quantity'),
-            #         ('reference', 'vat_level'),
-            #         ('is_into_offer', 'is_active')
-            #     ]
 
         self.fieldsets = (
             (None, {'fields': fields_basic}),

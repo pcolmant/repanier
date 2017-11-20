@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-11-20 09:25+0100\n"
-"PO-Revision-Date: 2017-11-20 18:16+0100\n"
+"PO-Revision-Date: 2017-11-20 20:17+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -194,7 +194,7 @@ msgstr "Inventaire"
 
 #: admin/box.py:65 models/item.py:106
 msgid "Limit maximum order qty of the group to stock qty"
-msgstr "Limiter les ventes au stock disponible"
+msgstr "Limiter les ventes au stock d'inventaire"
 
 #: admin/box.py:146
 msgid "Calculated customer box price"

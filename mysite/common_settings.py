@@ -104,9 +104,6 @@ DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
 
 # Avoid impossible options
 if DJANGO_SETTINGS_IS_MINIMALIST:
-    if DJANGO_SETTINGS_STOCK:
-        logger.info("DJANGO_SETTINGS_STOCK has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
-        DJANGO_SETTINGS_STOCK = False
     if DJANGO_SETTINGS_GROUP:
         logger.info("DJANGO_SETTINGS_GROUP has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
         DJANGO_SETTINGS_GROUP = False
@@ -715,7 +712,8 @@ CMSPLUGIN_CASCADE = {
         'BootstrapButtonPlugin' : ('button_type', 'button_size', 'button_options', 'icon_font',),
         'TextLinkPlugin'        : ('link', 'target',),
     },
-    'exclude_hiding_plugin' : ('SegmentPlugin', 'Badge'),
+    # 'exclude_hiding_plugin' : ('SegmentPlugin', 'Badge'),
+    'exclude_hiding_plugin' : ('Badge'),
     'allow_plugin_hiding'   : True,
     'leaflet'               : {'default_position': {'lat': 50.0, 'lng': 12.0, 'zoom': 6}},
 }
