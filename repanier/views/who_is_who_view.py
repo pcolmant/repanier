@@ -26,13 +26,17 @@ def who_is_who_view(request):
     staff_list = Staff.objects.filter(
         is_active=True, is_contributor=False
     )
+    try:
+        is_coordinator = request.user.is_coordinator
+    except AttributeError:
+        is_coordinator = False
     return render(
         request,
         "repanier/who_is_who.html",
         {
             'staff_list': staff_list,
             'customer_list': customer_list,
-            'coordinator': request.user.is_coordinator,
+            'coordinator': is_coordinator,
             'q': q
         }
     )

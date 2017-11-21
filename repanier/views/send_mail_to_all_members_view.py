@@ -42,7 +42,10 @@ def send_mail_to_all_members_view(request):
     customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
     if not customer_is_active:
         raise Http404
-    is_coordinator = request.user.is_coordinator
+    try:
+        is_coordinator = request.user.is_coordinator
+    except AttributeError:
+        is_coordinator = False
     if request.method == 'POST':
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
         user_customer = Customer.objects.filter(
