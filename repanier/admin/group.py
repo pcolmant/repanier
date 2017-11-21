@@ -15,14 +15,14 @@ from django.utils.translation import ugettext_lazy as _
 from import_export.formats.base_formats import XLS
 
 import repanier.apps
-from repanier.models import LUT_DeliveryPoint
-from repanier.models import Customer
-from repanier.models.group import Group
-from repanier.const import REPANIER_MONEY_ZERO, DECIMAL_ZERO
+from repanier.const import EMPTY_STRING, DECIMAL_ONE
+from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormMoneyField
-from repanier.const import ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP, EMPTY_STRING, DECIMAL_ONE
-from repanier.xlsx.xlsx_invoice import export_invoice
+from repanier.models import Customer
+from repanier.models import LUT_DeliveryPoint
+from repanier.models.group import Group
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
+from repanier.xlsx.xlsx_invoice import export_invoice
 
 
 class UserDataForm(forms.ModelForm):
@@ -77,7 +77,7 @@ class UserDataForm(forms.ModelForm):
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
                 self.add_error('bank_account2', _('This bank account already belongs to another customer.'))
-        # return cleaned_data
+                # return cleaned_data
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -98,6 +98,7 @@ class UserDataForm(forms.ModelForm):
                 first_name=EMPTY_STRING, last_name=username)
         self.user = user
         return self.instance
+
 
 def create__group_action(year):
     def action(modeladmin, request, group_qs):
@@ -184,7 +185,7 @@ class GroupWithUserDataForm(UserDataForm):
     class Meta:
         widgets = {
             'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
-            'memo'   : Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
+            'memo': Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
         }
         model = Group
         fields = "__all__"
@@ -200,21 +201,18 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     )
     list_per_page = 16
     list_max_show_all = 16
-    _has_delete_permission = None
 
     def has_delete_permission(self, request, customer=None):
-        if self._has_delete_permission is None:
-            if request.user.groups.filter(
-                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]
-            ).exists() or request.user.is_superuser:
-                # Only a coordinator can delete
-                self._has_delete_permission = True
-            else:
-                self._has_delete_permission = False
-        return self._has_delete_permission
+        user = request.user
+        if user.is_coordinator:
+            return True
+        return False
 
     def has_add_permission(self, request):
-        return self.has_delete_permission(request)
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
+            return True
+        return False
 
     def has_change_permission(self, request, staff=None):
         return self.has_delete_permission(request)
@@ -353,4 +351,3 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         Returns available import formats.
         """
         return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
-

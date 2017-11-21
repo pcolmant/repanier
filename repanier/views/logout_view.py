@@ -1,8 +1,8 @@
 # -*- coding: utf-8
 
 from django.contrib.auth import (REDIRECT_FIELD_NAME, logout as auth_logout)
-from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.signals import user_logged_out
 from django.contrib.sites.shortcuts import get_current_site
 from django.dispatch import receiver
 from django.http import HttpResponseRedirect
@@ -45,9 +45,9 @@ def logout_view(request, next_page=None,
 
     current_site = get_current_site(request)
     context = {
-        'site'     : current_site,
+        'site': current_site,
         'site_name': current_site.name,
-        'title'    : _('Logged out')
+        'title': _('Logged out')
     }
     if extra_context is not None:
         context.update(extra_context)
@@ -58,6 +58,7 @@ def logout_view(request, next_page=None,
 def remove_staff_right(user, is_customer=False):
     is_customer = is_customer or Customer.objects.filter(user_id=user.id).exists()
     if is_customer and user.is_staff:
+        Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff=None)
         user.is_staff = False
         user.groups.clear()
         user.save()

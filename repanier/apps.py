@@ -74,8 +74,8 @@ class RepanierSettings(AppConfig):
         from repanier.models.lut import LUT_DepartmentForCustomer
         from repanier.models.product import Product
         from repanier.models.offeritem import OfferItemWoReceiver
-        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, ORDER_GROUP, \
-            INVOICE_GROUP, CONTRIBUTOR_GROUP, COORDINATION_GROUP, WEBMASTER_GROUP, PERMANENCE_SEND, \
+        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, WEBMASTER_GROUP, \
+            PERMANENCE_SEND, \
             PRODUCT_ORDER_UNIT_PC_KG
 
         try:
@@ -121,48 +121,6 @@ class RepanierSettings(AppConfig):
                 use_order_unit_converted=True
             )
             # Create groups with correct rights
-            order_group = Group.objects.filter(name=ORDER_GROUP).only('id').order_by('?').first()
-            if order_group is None:
-                order_group = Group.objects.create(name=ORDER_GROUP)
-            invoice_group = Group.objects.filter(name=INVOICE_GROUP).only('id').order_by('?').first()
-            if invoice_group is None:
-                invoice_group = Group.objects.create(name=INVOICE_GROUP)
-            contributor_group = Group.objects.filter(name=CONTRIBUTOR_GROUP).only('id').order_by('?').first()
-            if contributor_group is None:
-                contributor_group = Group.objects.create(name=CONTRIBUTOR_GROUP)
-            coordination_group = Group.objects.filter(name=COORDINATION_GROUP).only('id').order_by('?').first()
-            if coordination_group is None:
-                coordination_group = Group.objects.create(name=COORDINATION_GROUP)
-            content_types = ContentType.objects.exclude(
-                app_label__in=[
-                    'admin',
-                    # 'aldryn_bootstrap3',
-                    'auth',
-                    'cascade_dummy',
-                    'cms',
-                    'cmsplugin_cascade',
-                    'cmsplugin_filer_file',
-                    'cmsplugin_filer_folder',
-                    'cmsplugin_filer_image',
-                    'cmsplugin_filer_link',
-                    'cmsplugin_filer_video',
-                    'contenttypes',
-                    'djangocms_text_ckeditor',
-                    'easy_thumbnails',
-                    'filer'
-                    'menus',
-                    'reversion',
-                    'sessions',
-                    'sites',
-                ]
-            ).only('id').order_by('?')
-            permissions = Permission.objects.filter(
-                content_type__in=content_types
-            ).only('id').order_by('?')
-            order_group.permissions.set(permissions)
-            invoice_group.permissions.set(permissions)
-            coordination_group.permissions.set(permissions)
-            contributor_group.permissions.set(permissions)
             # WEBMASTER
             webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only('id').order_by('?').first()
             if webmaster_group is None:
@@ -174,7 +132,6 @@ class RepanierSettings(AppConfig):
                     'auth',
                     'contenttypes',
                     'menus',
-                    'repanier',
                     'reversion',
                     'sessions',
                     'sites',

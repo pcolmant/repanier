@@ -1,7 +1,5 @@
 # -*- coding: utf-8
 
-import uuid
-
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -10,7 +8,7 @@ from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm
 
 from repanier.const import EMPTY_STRING, \
-    COORDINATION_GROUP, ONE_LEVEL_DEPTH
+    ONE_LEVEL_DEPTH
 from repanier.models.customer import Customer
 from repanier.models.staff import Staff
 from repanier.views.logout_view import remove_staff_right
@@ -18,7 +16,7 @@ from .lut import LUTAdmin
 
 
 class UserDataForm(TranslatableModelForm):
-    email = forms.EmailField(label=_('Email'))
+    email = forms.EmailField(label=_('Email'), required=True)
     user = None
 
     def __init__(self, *args, **kwargs):
@@ -28,31 +26,35 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        # Check that the email is set
-        if not "email" in self.cleaned_data:
-            self.add_error('email', _('The given email must be set'))
-        else:
-            is_reply_to_order_email = self.cleaned_data["is_reply_to_order_email"]
-            is_reply_to_invoice_email = self.cleaned_data["is_reply_to_invoice_email"]
-            is_coordinator = self.cleaned_data["is_coordinator"]
-            if is_reply_to_order_email:
-                qs = Staff.objects.filter(is_reply_to_order_email=True).order_by('?')
-                if self.instance.id is not None:
-                    qs = qs.exclude(id=self.instance.id)
-                if qs.exists():
-                    self.add_error('is_reply_to_order_email', _('This flag is already set for another staff member'))
-            if is_reply_to_invoice_email:
-                qs = Staff.objects.filter(is_reply_to_invoice_email=True).order_by('?')
-                if self.instance.id is not None:
-                    qs = qs.exclude(id=self.instance.id)
-                if qs.exists():
-                    self.add_error('is_reply_to_invoice_email', _('This flag is already set for another staff member'))
-            if not is_coordinator:
-                qs = Staff.objects.filter(is_coordinator=True).order_by('?')
-                if self.instance.id is not None:
-                    qs = qs.exclude(id=self.instance.id)
-                if not qs.exists():
-                    self.add_error('is_coordinator', _('At least on coordinator must be set'))
+        is_reply_to_order_email = self.cleaned_data["is_reply_to_order_email"]
+        is_reply_to_invoice_email = self.cleaned_data["is_reply_to_invoice_email"]
+        is_coordinator = self.cleaned_data["is_coordinator"]
+        if is_reply_to_order_email:
+            qs = Staff.objects.filter(is_reply_to_order_email=True).order_by('?')
+            if self.instance.id is not None:
+                qs = qs.exclude(id=self.instance.id)
+            if qs.exists():
+                self.add_error('is_reply_to_order_email', _('This flag is already set for another staff member'))
+        if is_reply_to_invoice_email:
+            qs = Staff.objects.filter(is_reply_to_invoice_email=True).order_by('?')
+            if self.instance.id is not None:
+                qs = qs.exclude(id=self.instance.id)
+            if qs.exists():
+                self.add_error('is_reply_to_invoice_email', _('This flag is already set for another staff member'))
+        # Check that the email is not already used
+        email = self.cleaned_data["email"].lower()
+        user_model = get_user_model()
+        qs = user_model.objects.filter(email=email).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.user_id)
+        if qs.exists():
+            self.add_error('email', _('The email {} is already used by another user.').format(email))
+        if not is_coordinator:
+            qs = Staff.objects.filter(is_coordinator=True).order_by('?')
+            if self.instance.id is not None:
+                qs = qs.exclude(id=self.instance.id)
+            if not qs.exists():
+                self.add_error('is_coordinator', _('At least on coordinator must be set'))
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -96,13 +98,10 @@ class StaffWithUserDataAdmin(LUTAdmin):
     _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if self._has_delete_permission is None:
-            if request.user.groups.filter(name=COORDINATION_GROUP).exists() or request.user.is_superuser:
-                # Only a coordinator can delete
-                self._has_delete_permission = True
-            else:
-                self._has_delete_permission = False
-        return self._has_delete_permission
+        user = request.user
+        if user.is_coordinator:
+            return True
+        return False
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -169,7 +168,6 @@ class StaffWithUserDataAdmin(LUTAdmin):
         if db_field.name == "customer_responsible":
             kwargs["queryset"] = Customer.objects.filter(is_active=True)
         return super(StaffWithUserDataAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
 
     def save_model(self, request, staff, form, change):
         staff.user = form.user

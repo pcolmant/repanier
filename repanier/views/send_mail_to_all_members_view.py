@@ -2,8 +2,8 @@
 
 import threading
 
-from django.forms import widgets
 from django.contrib.auth.decorators import login_required
+from django.forms import widgets
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.html import strip_tags
@@ -15,7 +15,6 @@ from djng.forms import fields, NgFormValidationMixin
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.views.forms import RepanierForm
-from repanier.tools import check_if_is_coordinator
 
 
 class MembersContactForm(RepanierForm):
@@ -43,7 +42,7 @@ def send_mail_to_all_members_view(request):
     customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
     if not customer_is_active:
         raise Http404
-    is_coordinator = check_if_is_coordinator(request)
+    is_coordinator = request.user.is_coordinator
     if request.method == 'POST':
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
         user_customer = Customer.objects.filter(

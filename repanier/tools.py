@@ -977,10 +977,6 @@ def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form
     return purchase
 
 
-def check_if_is_coordinator(request):
-    return request.user.is_superuser or request.user.groups.filter(name=COORDINATION_GROUP).exists()
-
-
 def get_recurrence_dates(first_date, recurrences):
     dates = []
     d_start = first_date

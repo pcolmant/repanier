@@ -272,8 +272,8 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
             return True
         return False
 

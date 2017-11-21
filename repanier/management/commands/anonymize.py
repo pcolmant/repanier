@@ -68,6 +68,6 @@ class Command(BaseCommand):
             user.is_superuser = False
             user.set_password(None)
             user.save()
-        BankAccount.objects.filter(customer__isnull=False).oder_by('?').update(operation_comment=EMPTY_STRING)
+        BankAccount.objects.filter(customer__isnull=False).order_by('?').update(operation_comment=EMPTY_STRING)
         User.objects.create_user(username="admin", email="admin@repanier.be", password="admin",
                                  first_name=EMPTY_STRING, last_name="admin", is_staff=True, is_superuser=True)

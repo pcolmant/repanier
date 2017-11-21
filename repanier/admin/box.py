@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-from os import sep as os_sep
 
 from django import forms
 from django.conf import settings
@@ -16,10 +15,9 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 import repanier.apps
-from repanier.models import Producer
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
-from repanier.const import DECIMAL_ZERO, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, PERMANENCE_PLANNED, PERMANENCE_CLOSED, DECIMAL_MAX_STOCK
+from repanier.const import DECIMAL_ZERO, PERMANENCE_PLANNED, DECIMAL_MAX_STOCK
+from repanier.models import Producer
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
@@ -45,14 +43,14 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
                     else:
                         products.add(product)
 
-    # def get_queryset(self):
-    #     return self.queryset.filter(
-    #         product__translations__language_code=translation.get_language()
-    #     ).order_by(
-    #         "product__producer__short_profile_name",
-    #         "product__translations__long_name",
-    #         "product__order_average_weight",
-    #     )
+                        # def get_queryset(self):
+                        #     return self.queryset.filter(
+                        #         product__translations__language_code=translation.get_language()
+                        #     ).order_by(
+                        #         "product__producer__short_profile_name",
+                        #         "product__translations__long_name",
+                        #         "product__order_average_weight",
+                        #     )
 
 
 class BoxContentInlineForm(ModelForm):
@@ -72,7 +70,8 @@ class BoxContentInlineForm(ModelForm):
             self.fields["previous_product"].initial = self.instance.product
             if settings.DJANGO_SETTINGS_STOCK:
                 self.fields["stock"].initial = self.instance.product.stock
-                self.fields["limit_order_quantity_to_stock"].initial = self.instance.product.limit_order_quantity_to_stock
+                self.fields[
+                    "limit_order_quantity_to_stock"].initial = self.instance.product.limit_order_quantity_to_stock
 
         if settings.DJANGO_SETTINGS_STOCK:
             self.fields["stock"].disabled = True
@@ -111,8 +110,8 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
                 ).only(
                     "id").order_by('?').first()
                 if parent_object is not None and OfferItemWoReceiver.objects.filter(
-                    product=parent_object.id,
-                    permanence__status__gt=PERMANENCE_PLANNED
+                        product=parent_object.id,
+                        permanence__status__gt=PERMANENCE_PLANNED
                 ).order_by('?').exists():
                     self._has_delete_permission = False
                 else:
@@ -186,23 +185,19 @@ class BoxAdmin(TranslatableAdmin):
         'translations__long_name',
     )
     list_filter = (
-       'is_into_offer',
-       'is_active'
+        'is_into_offer',
+        'is_active'
     )
     actions = [
         'flip_flop_select_for_offer_status',
         'duplicate_box'
     ]
-    _has_delete_permission = None
 
     def has_delete_permission(self, request, box=None):
-        if self._has_delete_permission is None:
-            if request.user.groups.filter(
-                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-                self._has_delete_permission = True
-            else:
-                self._has_delete_permission = False
-        return self._has_delete_permission
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
+            return True
+        return False
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -250,10 +245,10 @@ class BoxAdmin(TranslatableAdmin):
         return render(
             request,
             'repanier/confirm_admin_duplicate_box.html', {
-                'sub_title'           : _("Please, confirm the action : duplicate box"),
+                'sub_title': _("Please, confirm the action : duplicate box"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                'action'              : 'duplicate_box',
-                'product'             : box,
+                'action': 'duplicate_box',
+                'product': box,
             })
 
     duplicate_box.short_description = _('Duplicate')

@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from repanier.const import COORDINATION_GROUP, EMPTY_STRING
+from repanier.const import EMPTY_STRING
 from repanier.models.configuration import Configuration
 from repanier.models.producer import Producer
 from repanier.tools import send_test_email
@@ -50,7 +50,8 @@ class ConfigurationDataForm(TranslatableModelForm):
                 'send_abstract_order_mail_to_customer',
                 _('The abstract can only be send if the order is also send to customer'))
         send_order_mail_to_producer = self.cleaned_data["send_order_mail_to_producer"]
-        send_abstract_order_mail_to_producer = self.cleaned_data.get("send_abstract_order_mail_to_producer", EMPTY_STRING)
+        send_abstract_order_mail_to_producer = self.cleaned_data.get("send_abstract_order_mail_to_producer",
+                                                                     EMPTY_STRING)
         if send_abstract_order_mail_to_producer and not send_order_mail_to_producer:
             self.add_error(
                 'send_abstract_order_mail_to_customer',
@@ -98,7 +99,8 @@ class ConfigurationAdmin(TranslatableAdmin):
 
     def has_change_permission(self, request, obj=None):
         # Only a coordinator has this permission
-        if request.user.is_superuser or request.user.groups.filter(name=COORDINATION_GROUP).exists():
+        user = request.user
+        if user.is_coordinator:
             return True
         return False
 
@@ -125,7 +127,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                 fieldsets += [
                     (_('Pre-opening mails'), {
                         'classes': ('collapse',),
-                        'fields' :
+                        'fields':
                             (
                                 'offer_producer_mail',
                             ),
@@ -134,17 +136,17 @@ class ConfigurationAdmin(TranslatableAdmin):
         fieldsets += [
             (_('Opening mails'), {
                 'classes': ('collapse',),
-                'fields' :
+                'fields':
                     (
                         'send_opening_mail_to_customer', 'offer_customer_mail',
                     ),
             }),
-            ]
+        ]
         if settings.DJANGO_SETTINGS_IS_MINIMALIST:
             fieldsets += [
                 (_('Ordering mails'), {
                     'classes': ('collapse',),
-                    'fields' :
+                    'fields':
                         (
                             'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer',
                             'order_customer_mail',
@@ -157,7 +159,7 @@ class ConfigurationAdmin(TranslatableAdmin):
             fieldsets += [
                 (_('Ordering mails'), {
                     'classes': ('collapse',),
-                    'fields' :
+                    'fields':
                         (
                             'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer',
                             'order_customer_mail',
@@ -169,7 +171,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                 }),
                 (_('Invoicing mails'), {
                     'classes': ('collapse',),
-                    'fields' :
+                    'fields':
                         (
                             'send_invoice_mail_to_customer', 'invoice_customer_mail',
                             'send_invoice_mail_to_producer', 'invoice_producer_mail',
@@ -203,7 +205,7 @@ class ConfigurationAdmin(TranslatableAdmin):
         fieldsets += [
             (_('Advanced options'), {
                 'classes': ('collapse',),
-                'fields' : fields,
+                'fields': fields,
             }),
         ]
         return fieldsets

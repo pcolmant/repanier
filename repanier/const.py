@@ -3,10 +3,6 @@ from decimal import *
 from django.utils.translation import ugettext_lazy as _
 from repanier.fields.RepanierMoneyField import RepanierMoney
 
-ORDER_GROUP = "order"
-INVOICE_GROUP = "invoice"
-CONTRIBUTOR_GROUP = "contributor"
-COORDINATION_GROUP = "coordination"
 WEBMASTER_GROUP = "webmaster"
 DEMO_EMAIL = "repanier@no-spam.ws"
 

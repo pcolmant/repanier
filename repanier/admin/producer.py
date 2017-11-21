@@ -261,8 +261,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     # change_list_template = 'admin/producer_change_list.html'
 
     def has_delete_permission(self, request, producer=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
             if producer is not None:
                 if producer.represent_this_buyinggroup:
                     # I can't delete the producer representing the buying group
@@ -271,9 +271,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP,
-                          CONTRIBUTOR_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator or user.is_contributor:
             return True
         return False
 

@@ -2,8 +2,6 @@
 
 from parler.admin import TranslatableAdmin
 
-from repanier.const import COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP
-
 
 class NotificationAdmin(TranslatableAdmin):
     def has_delete_permission(self, request, obj=None):
@@ -12,12 +10,12 @@ class NotificationAdmin(TranslatableAdmin):
 
     def has_add_permission(self, request):
         # Nobody even a superadmin
-        # There is only one configuration record created at application start
+        # There is only one notification record created at application start
         return False
 
     def has_change_permission(self, request, obj=None):
-        # Only a coordinator has this permission
-        if request.user.is_superuser or request.user.groups.filter(name__in=[COORDINATION_GROUP, ORDER_GROUP, INVOICE_GROUP]).exists():
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
             return True
         return False
 

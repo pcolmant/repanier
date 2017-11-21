@@ -12,10 +12,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 
-from repanier.views.forms import AuthRepanierLoginForm
+from repanier.const import EMPTY_STRING, WEBMASTER_GROUP
+from repanier.models.customer import Customer
 from repanier.models.staff import Staff
-from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, WEBMASTER_GROUP, CONTRIBUTOR_GROUP, \
-    COORDINATION_GROUP
+from repanier.views.forms import AuthRepanierLoginForm
 
 
 @sensitive_post_parameters()
@@ -35,12 +35,12 @@ def login_view(request, template_name='repanier/registration/login.html',
     how_to_register = EMPTY_STRING
 
     if request.method == "GET" and request.user.is_authenticated:
-        as_id = request.GET.get('as_id', None)
+        as_staff_id = request.GET.get('as_id', None)
         if request.user.is_staff:
             as_staff = None
         else:
             as_staff = Staff.objects.filter(
-                id=as_id,
+                id=as_staff_id,
                 customer_responsible_id=request.user.customer.id,
                 is_active=True
             ).order_by('?').first()
@@ -50,24 +50,25 @@ def login_view(request, template_name='repanier/registration/login.html',
 
         if as_staff is not None:
             user = request.user
+            Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff_id=as_staff_id)
             auth_logout(request)
             user.is_staff = True
             user.groups.clear()
-            if as_staff.is_reply_to_order_email:
-                group_id = Group.objects.filter(name=ORDER_GROUP).first()
-                user.groups.add(group_id)
-            if as_staff.is_reply_to_invoice_email:
-                group_id = Group.objects.filter(name=INVOICE_GROUP).first()
-                user.groups.add(group_id)
+            # if as_staff.is_reply_to_order_email:
+            #     group_id = Group.objects.filter(name=ORDER_GROUP).first()
+            #     user.groups.add(group_id)
+            # if as_staff.is_reply_to_invoice_email:
+            #     group_id = Group.objects.filter(name=INVOICE_GROUP).first()
+            #     user.groups.add(group_id)
             if as_staff.is_webmaster:
                 group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
                 user.groups.add(group_id)
-            if as_staff.is_contributor:
-                group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
-                user.groups.add(group_id)
-            if as_staff.is_coordinator:
-                group_id = Group.objects.filter(name=COORDINATION_GROUP).first()
-                user.groups.add(group_id)
+            # if as_staff.is_contributor:
+            #     group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
+            #     user.groups.add(group_id)
+            # if as_staff.is_coordinator:
+            #     group_id = Group.objects.filter(name=COORDINATION_GROUP).first()
+            #     user.groups.add(group_id)
             user.save()
             auth_login(request, user)
         return HttpResponseRedirect(redirect_to)
@@ -107,11 +108,11 @@ def login_view(request, template_name='repanier/registration/login.html',
     current_site = get_current_site(request)
 
     context = {
-        'form'             : form,
+        'form': form,
         redirect_field_name: redirect_to,
-        'site'             : current_site,
-        'site_name'        : current_site.name,
-        'how_to_register'  : how_to_register,
+        'site': current_site,
+        'site_name': current_site.name,
+        'how_to_register': how_to_register,
         'staff_responsibilities': staff_responsibilities
     }
     if extra_context is not None:

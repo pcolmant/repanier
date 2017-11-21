@@ -274,7 +274,8 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
-        if request.user.groups.filter(name__in=[COORDINATION_GROUP, INVOICE_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_invoice or user.is_coordinator:
             return True
         return False
 

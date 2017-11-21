@@ -2,9 +2,7 @@
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
 from django.contrib.admin import TabularInline
-from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
 from easy_select2 import apply_select2
@@ -12,35 +10,32 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
-from repanier.const import PERMANENCE_CLOSED, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, DECIMAL_ONE, ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
+from repanier.const import PERMANENCE_CLOSED, ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
 from repanier.models.customer import Customer
-from repanier.models.lut import LUT_DeliveryPoint
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 
 
 class LUTDataForm(TranslatableModelForm):
-
     def __init__(self, *args, **kwargs):
         super(LUTDataForm, self).__init__(*args, **kwargs)
 
-    # def clean(self):
-    #     if any(self.errors):
-    #         # Don't bother validating the formset unless each form is valid on its own
-    #         return
-    #
-    #     parent = self.cleaned_data["parent"]
-    #     if parent is not None:
-    #         # Get model name
-    #         # str(type(self.instance)) = "<class 'repanier.models.lut.LUT_DepartmentForCustomer'>"
-    #         # .rsplit('.', 1)[1][:-2] --> "LUT_DepartmentForCustomer"
-    #         admin_model_name = str(type(self.instance)).rsplit('.', 1)[1][:-2]
-    #         admin_model = apps.get_model("repanier", admin_model_name)
-    #         if admin_model.objects.filter(**{"translations__short_name": parent, "level__gt": 0}).order_by('?').exists():
-    #             self.add_error(
-    #                 'parent',
-    #                 _('Only two levels are allowed.'))
+        # def clean(self):
+        #     if any(self.errors):
+        #         # Don't bother validating the formset unless each form is valid on its own
+        #         return
+        #
+        #     parent = self.cleaned_data["parent"]
+        #     if parent is not None:
+        #         # Get model name
+        #         # str(type(self.instance)) = "<class 'repanier.models.lut.LUT_DepartmentForCustomer'>"
+        #         # .rsplit('.', 1)[1][:-2] --> "LUT_DepartmentForCustomer"
+        #         admin_model_name = str(type(self.instance)).rsplit('.', 1)[1][:-2]
+        #         admin_model = apps.get_model("repanier", admin_model_name)
+        #         if admin_model.objects.filter(**{"translations__short_name": parent, "level__gt": 0}).order_by('?').exists():
+        #             self.add_error(
+        #                 'parent',
+        #                 _('Only two levels are allowed.'))
 
 
 class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
@@ -50,16 +45,12 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
     mptt_level_indent = 20
     mptt_indent_field = "short_name"
     mptt_level_limit = None
-    _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if self._has_delete_permission is None:
-            if request.user.groups.filter(
-                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
-                self._has_delete_permission = True
-            else:
-                self._has_delete_permission = False
-        return self._has_delete_permission
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
+            return True
+        return False
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -132,7 +123,7 @@ class PermanenceBoardInlineForm(forms.ModelForm):
     class Meta:
         widgets = {
             'permanence': apply_select2(forms.Select),
-            'customer'  : apply_select2(forms.Select),
+            'customer': apply_select2(forms.Select),
         }
 
 

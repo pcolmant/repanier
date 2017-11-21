@@ -16,23 +16,14 @@ class RepanierToolbar(CMSToolbar):
         if settings.DJANGO_SETTINGS_DEMO:
             self.toolbar.get_or_create_menu("demo-menu", _('Demo ({})').format(DEMO_EMAIL))
         user = self.request.user
-        is_in_order_group = False
-        is_in_invoice_group = False
-        if user.is_superuser or user.groups.filter(
-                name=COORDINATION_GROUP).exists():
+        if user.is_coordinator:
             display_all_but_configuration = True
             display_configuration = True
-            is_in_order_group = True
-            is_in_invoice_group = True
         else:
-            if user.groups.filter(name=ORDER_GROUP).exists():
-                is_in_order_group=True
-            if user.groups.filter(name=INVOICE_GROUP).exists():
-                is_in_invoice_group=True
-            if is_in_order_group or is_in_invoice_group:
+            if user.is_order or user.is_invoice:
                 display_all_but_configuration = True
                 display_configuration = False
-            elif user.groups.filter(name=CONTRIBUTOR_GROUP).exists():
+            elif user.is_contributor:
                 display_all_but_configuration = False
                 display_configuration = False
             else:
@@ -90,11 +81,11 @@ class RepanierToolbar(CMSToolbar):
                 position += 1
                 url = "{}?is_active__exact=1".format(reverse('admin:repanier_contract_changelist'))
                 admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
-            if is_in_order_group:
+            if user.is_coordinator or user.is_order:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')
                 admin_menu.add_sideframe_item(_("Offers in preparation"), url=url, position=position)
-            if is_in_invoice_group:
+            if user.is_invoice:
                 if REPANIER_SETTINGS_INVOICE:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')

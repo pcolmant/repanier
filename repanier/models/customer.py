@@ -104,6 +104,9 @@ class Customer(models.Model):
         verbose_name=_("Delivery point"),
         blank=True, null=True, default=None)
     is_active = models.BooleanField(_("Active"), default=True)
+    as_staff = models.ForeignKey(
+        'Staff',
+        blank=True, null=True, default=None)
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR
     is_anonymized = models.BooleanField(default=False)
     is_group = models.BooleanField(_("Group"), default=False)
@@ -347,10 +350,10 @@ class Customer(models.Model):
         if self.represent_this_buyinggroup:
             if not also_group:
                 return
-            self.short_basket_name = "{}-{}".format(_("GROUP"), self.id)
+            self.short_basket_name = "{}-{}".format(_("GROUP"), self.id).lower()
             self.long_basket_name = "{} {}".format(_("Group"), self.id)
         else:
-            self.short_basket_name = "{}-{}".format(_("BASKET"), self.id)
+            self.short_basket_name = "{}-{}".format(_("BASKET"), self.id).lower()
             self.long_basket_name = "{} {}".format(_("Family"), self.id)
         self.email2 = EMPTY_STRING
         self.picture = EMPTY_STRING

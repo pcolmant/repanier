@@ -9,7 +9,6 @@ from django.views.decorators.csrf import csrf_protect
 
 from repanier.models.customer import Customer
 from repanier.models.staff import Staff
-from repanier.tools import check_if_is_coordinator
 
 
 @login_required()
@@ -27,14 +26,13 @@ def who_is_who_view(request):
     staff_list = Staff.objects.filter(
         is_active=True, is_contributor=False
     )
-    is_coordinator = check_if_is_coordinator(request)
     return render(
         request,
         "repanier/who_is_who.html",
         {
             'staff_list': staff_list,
             'customer_list': customer_list,
-            'coordinator': is_coordinator,
+            'coordinator': request.user.is_coordinator,
             'q': q
         }
     )

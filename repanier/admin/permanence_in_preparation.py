@@ -188,16 +188,15 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         'send_order',
         'generate_permanence'
     ]
-    _has_delete_permission = None
 
     # def get_changelist(self, request, **kwargs):
     #     return PermanenceInPreparationChangeList
 
     def has_delete_permission(self, request, obj=None):
-        if self._has_delete_permission is None:
-            self._has_delete_permission = request.user.groups.filter(
-                name__in=[ORDER_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser
-        return self._has_delete_permission
+        user = request.user
+        if user.is_order or user.is_coordinator:
+            return True
+        return False
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)

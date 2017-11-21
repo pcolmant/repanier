@@ -46,10 +46,12 @@ class Staff(MPTTModel, TranslatableModel):
         function_description=HTMLField(_("Function description"), configuration='CKEDITOR_SETTINGS_MODEL2',
                                        blank=True, default=EMPTY_STRING),
     )
-    is_reply_to_order_email = models.BooleanField(_("Responsible for orders; this contact is used to transmit offers and orders"),
-                                                  default=False)
-    is_reply_to_invoice_email = models.BooleanField(_("Responsible for invoices; this contact is used to transmit invoices"),
-                                                    default=False)
+    is_reply_to_order_email = models.BooleanField(
+        _("Responsible for orders; this contact is used to transmit offers and orders"),
+        default=False)
+    is_reply_to_invoice_email = models.BooleanField(
+        _("Responsible for invoices; this contact is used to transmit invoices"),
+        default=False)
     is_contributor = models.BooleanField(_("Producer referent"),
                                          default=False)
     is_webmaster = models.BooleanField(_("Webmaster"),
@@ -57,7 +59,7 @@ class Staff(MPTTModel, TranslatableModel):
     is_coordinator = models.BooleanField(_("Coordonnateur"),
                                          default=False)
     is_tester = models.BooleanField(_("Tester"),
-                                         default=False)
+                                    default=False)
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None)
     is_active = models.BooleanField(_("Active"), default=True)
@@ -87,7 +89,7 @@ class Staff(MPTTModel, TranslatableModel):
     objects = StaffManager()
 
     def anonymize(self):
-        self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id)
+        self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id).lower()
         self.user.first_name = EMPTY_STRING
         self.user.last_name = self.safe_translation_getter('long_name', any_language=True)
         self.user.set_password(None)
@@ -113,20 +115,8 @@ def staff_post_save(sender, **kwargs):
     if staff.id is not None:
         user = staff.user
         user.groups.clear()
-        if staff.is_reply_to_order_email:
-            group_id = Group.objects.filter(name=ORDER_GROUP).first()
-            user.groups.add(group_id)
-        if staff.is_reply_to_invoice_email:
-            group_id = Group.objects.filter(name=INVOICE_GROUP).first()
-            user.groups.add(group_id)
         if staff.is_webmaster:
             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
-            user.groups.add(group_id)
-        if staff.is_contributor:
-            group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
-            user.groups.add(group_id)
-        if staff.is_coordinator:
-            group_id = Group.objects.filter(name=COORDINATION_GROUP).first()
             user.groups.add(group_id)
 
 

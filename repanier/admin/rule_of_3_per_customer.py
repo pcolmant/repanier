@@ -126,7 +126,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     list_per_page = 16
     list_max_show_all = 16
     inlines = [CustomerPurchaseSendInline]
-    list_display = ('producer', 'customer', 'get_html_producer_price_purchased')
+    list_display = ['producer', 'customer', 'get_html_producer_price_purchased']
     list_display_links = ['customer',]
     search_fields = ('customer__short_basket_name',)
     ordering = ('customer',)
@@ -168,8 +168,8 @@ class CustomerSendAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
             return True
         return False
 

@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanence, \
     ProductFilterByDepartmentForThisProducer, OfferItemFilter
-from repanier.const import PERMANENCE_CLOSED, PERMANENCE_OPENED, ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP
+from repanier.const import PERMANENCE_CLOSED
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
@@ -36,7 +36,7 @@ class OfferItemClosedDataForm(forms.ModelForm):
 class OfferItemClosedAdmin(admin.ModelAdmin):
     form = OfferItemClosedDataForm
     search_fields = ('translations__long_name',)
-    list_display = ['get_html_long_name_with_producer',]
+    list_display = ['get_html_long_name_with_producer', ]
     list_display_links = ('get_html_long_name_with_producer',)
     list_filter = (
         PurchaseFilterByProducerForThisPermanence,
@@ -134,8 +134,8 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        if request.user.groups.filter(
-                name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
             return True
         return False
 

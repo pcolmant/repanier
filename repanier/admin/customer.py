@@ -14,7 +14,6 @@ from django.db.models import Q
 from django.forms import Textarea
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
@@ -23,8 +22,7 @@ from import_export.formats.base_formats import XLS
 from import_export.widgets import CharWidget
 
 import repanier.apps
-from repanier.const import EMPTY_STRING, ORDER_GROUP, INVOICE_GROUP, \
-    COORDINATION_GROUP, DECIMAL_ONE, TWO_DECIMALS
+from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
@@ -34,7 +32,7 @@ from repanier.xlsx.xlsx_invoice import export_invoice
 
 
 class UserDataForm(forms.ModelForm):
-    email = forms.EmailField(label=_('Email'))
+    email = forms.EmailField(label=_('Email'), required=True)
     user = None
 
     def __init__(self, *args, **kwargs):
@@ -52,26 +50,24 @@ class UserDataForm(forms.ModelForm):
         if not username:
             self.add_error(username_field_name, user_error1)
         # Check that the email is set
-        if not "email" in self.cleaned_data:
-            self.add_error('email', _('The given email must be set'))
-        else:
-            email = self.cleaned_data["email"]
-            user_model = get_user_model()
-            qs = user_model.objects.filter(email=email, is_staff=False).order_by('?')
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.user_id)
-            if qs.exists():
-                self.add_error('email', _('The email {} is already used by another user.').format(email))
-            qs = user_model.objects.filter(username=username).order_by('?')
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.user_id)
-            if qs.exists():
-                self.add_error(username_field_name, user_error2)
+        email = self.cleaned_data["email"].lower()
+        user_model = get_user_model()
+        qs = user_model.objects.filter(email=email).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.user_id)
+        if qs.exists():
+            self.add_error('email', _('The email {} is already used by another user.').format(email))
+        qs = user_model.objects.filter(username=username).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.user_id)
+        if qs.exists():
+            self.add_error(username_field_name, user_error2)
         if self.instance.id is not None:
             if "price_list_multiplier" in self.cleaned_data and self.instance.delivery_point is not None \
                     and self.instance.delivery_point.customer_responsible is not None \
                     and self.cleaned_data["price_list_multiplier"] != DECIMAL_ONE:
-                self.add_error('price_list_multiplier', _('If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE'))
+                self.add_error('price_list_multiplier', _(
+                    'If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE'))
             is_active = self.cleaned_data.get("is_active")
             if is_active is not None and not is_active:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
@@ -82,7 +78,7 @@ class UserDataForm(forms.ModelForm):
                         "is_active",
                         _(
                             'This customer is responsible of the delivery point (%(delivery_point)s). A customer responsible of a delivery point must be active.') % {
-                            'delivery_point': delivery_point,})
+                            'delivery_point': delivery_point, })
         bank_account1 = self.cleaned_data["bank_account1"]
         if bank_account1:
             qs = Customer.objects.filter(
@@ -101,7 +97,7 @@ class UserDataForm(forms.ModelForm):
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
                 self.add_error('bank_account2', _('This bank account already belongs to another customer.'))
-        # return cleaned_data
+                # return cleaned_data
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -243,7 +239,7 @@ class CustomerWithUserDataForm(UserDataForm):
     class Meta:
         widgets = {
             'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
-            'memo'   : Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
+            'memo': Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
         }
         model = Customer
         fields = "__all__"
@@ -261,18 +257,12 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     list_per_page = 16
     list_max_show_all = 16
-    _has_delete_permission = None
 
     def has_delete_permission(self, request, customer=None):
-        if self._has_delete_permission is None:
-            if request.user.groups.filter(
-                    name__in=[ORDER_GROUP, INVOICE_GROUP, COORDINATION_GROUP]
-            ).exists() or request.user.is_superuser:
-                # Only a coordinator can delete
-                self._has_delete_permission = True
-            else:
-                self._has_delete_permission = False
-        return self._has_delete_permission
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator:
+            return True
+        return False
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -349,7 +339,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     'subscribe_to_email',
                     ('get_admin_balance', 'get_admin_date_balance'),
                     ('may_order', 'is_active'),
-            ]
+                ]
             fields_advanced = [
                 'bank_account1',
                 'bank_account2',
@@ -436,24 +426,31 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             elif customer.price_list_multiplier > DECIMAL_ONE:
                 customer_price = \
                     _(' in addition to the %(surcharge)s%% personal surcharge on to the pricelist') % {
-                        'surcharge': Decimal((customer.price_list_multiplier - DECIMAL_ONE) * 100).quantize(TWO_DECIMALS)
+                        'surcharge': Decimal((customer.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
+                            TWO_DECIMALS)
                     }
             if customer.delivery_point.customer_responsible.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
-                        _('%(discount)s%% discount is granted to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
-                            'discount': Decimal((DECIMAL_ONE - customer.delivery_point.customer_responsible.price_list_multiplier) * 100).quantize(TWO_DECIMALS),
-                            'delivery_point': customer.delivery_point,
-                            'customer_price': customer_price
-                        }
-                )
+                                     _(
+                                         '%(discount)s%% discount is granted to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
+                                         'discount': Decimal((
+                                                             DECIMAL_ONE - customer.delivery_point.customer_responsible.price_list_multiplier) * 100).quantize(
+                                             TWO_DECIMALS),
+                                         'delivery_point': customer.delivery_point,
+                                         'customer_price': customer_price
+                                     }
+                                     )
             elif customer.delivery_point.customer_responsible.price_list_multiplier > DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
-                        _('%(surcharge)s%% surcharge is applied to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
-                            'surcharge': Decimal((customer.delivery_point.customer_responsible.price_list_multiplier - DECIMAL_ONE) * 100).quantize(TWO_DECIMALS),
-                            'delivery_point': customer.delivery_point,
-                            'customer_price': customer_price
-                        }
-                )
+                                     _(
+                                         '%(surcharge)s%% surcharge is applied to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
+                                         'surcharge': Decimal((
+                                                              customer.delivery_point.customer_responsible.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
+                                             TWO_DECIMALS),
+                                         'delivery_point': customer.delivery_point,
+                                         'customer_price': customer_price
+                                     }
+                                     )
 
     def get_import_formats(self):
         """

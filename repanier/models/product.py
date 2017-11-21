@@ -364,5 +364,4 @@ class Product_Translation(TranslatedFieldsModel):
 
     class Meta:
         unique_together = ('language_code', 'master')
-        verbose_name = _("Product translation")
 

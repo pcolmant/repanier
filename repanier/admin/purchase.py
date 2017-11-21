@@ -195,18 +195,16 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         if permanence_id is not None:
             if Permanence.objects.filter(id=permanence_id, status__gt=PERMANENCE_SEND).order_by('?').exists():
                 return False
-            if request.user.groups.filter(
-                    name__in=[COORDINATION_GROUP, INVOICE_GROUP, ORDER_GROUP,
-                              CONTRIBUTOR_GROUP]).exists() or request.user.is_superuser:
+            user = request.user
+            if user.is_order or user.is_invoice or user.is_coordinator or user.is_contributor:
                 return True
         return False
 
     def has_change_permission(self, request, purchase=None):
         if purchase is not None and purchase.status > PERMANENCE_SEND:
             return False
-        if request.user.groups.filter(
-                name__in=[COORDINATION_GROUP, INVOICE_GROUP, ORDER_GROUP,
-                          CONTRIBUTOR_GROUP]).exists() or request.user.is_superuser:
+        user = request.user
+        if user.is_order or user.is_invoice or user.is_coordinator or user.is_contributor:
             return True
         return False
 

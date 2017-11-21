@@ -2,14 +2,12 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import User
 from django.db.models import F, Q
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE
 from repanier.models import Customer, Staff, Configuration
-
 
 UserModel = get_user_model()
 
@@ -116,19 +114,47 @@ class RepanierCustomBackend(ModelBackend):
     def get_user(self, user_id):
         if self.user is not None and self.user.id == user_id:
             return self.user
-        user_or_none = UserModel.objects.filter(pk=user_id).only("id", "is_superuser").order_by('?').first()
-        if user_or_none is not None and not user_or_none.is_superuser:
-            a = Customer.objects.filter(user_id=user_or_none.id).only("is_active").order_by('?').first()
-            if a is not None:
-                if not a.is_active:
-                    user_or_none = None
-            else:
-                a = Staff.objects.filter(user_id=user_or_none.id).only("is_active").order_by('?').first()
+        user_or_none = UserModel.objects.filter(pk=user_id).only("id", "password", "is_staff", "is_superuser").order_by(
+            '?').first()
+        if user_or_none is not None:
+            if not user_or_none.is_superuser:
+                a = Customer.objects.filter(user_id=user_or_none.id).only("is_active", "as_staff").order_by('?').first()
                 if a is not None:
                     if not a.is_active:
                         user_or_none = None
+                    elif a.as_staff is not None:
+                        a = Staff.objects.filter(id=a.as_staff_id).only(
+                            "is_active", "is_reply_to_order_email", "is_reply_to_invoice_email",
+                            "is_contributor", "is_coordinator"
+                        ).order_by('?').first()
+                        if a is not None:
+                            if not a.is_active:
+                                user_or_none = None
+                            else:
+                                user_or_none.is_order = a.is_reply_to_order_email
+                                user_or_none.is_invoice = a.is_reply_to_invoice_email
+                                user_or_none.is_contributor = a.is_contributor
+                                user_or_none.is_coordinator = a.is_coordinator
+
                 else:
-                    user_or_none = None
+                    a = Staff.objects.filter(user_id=user_or_none.id).only(
+                        "is_active", "is_reply_to_order_email", "is_reply_to_invoice_email",
+                        "is_contributor", "is_coordinator"
+                    ).order_by('?').first()
+                    if a is not None:
+                        if not a.is_active:
+                            user_or_none = None
+                        else:
+                            user_or_none.is_order = a.is_reply_to_order_email
+                            user_or_none.is_invoice = a.is_reply_to_invoice_email
+                            user_or_none.is_contributor = a.is_contributor
+                            user_or_none.is_coordinator = a.is_coordinator
+                    else:
+                        user_or_none = None
+            else:
+                user_or_none.is_order = True
+                user_or_none.is_invoice = True
+                user_or_none.is_contributor = True
+                user_or_none.is_coordinator = True
         self.user = user_or_none
         return user_or_none
-
