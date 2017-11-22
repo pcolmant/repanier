@@ -57,7 +57,8 @@ class ProductResource(resources.ModelResource):
                                                  widget=ThreeDecimalsWidget())
     wrapped = fields.Field(attribute='wrapped', widget=DecimalBooleanWidget())
     stock = fields.Field(attribute='stock', widget=ThreeDecimalsWidget())
-    limit_order_quantity_to_stock = fields.Field(attribute='limit_order_quantity_to_stock', widget=DecimalBooleanWidget(), readonly=False)
+    limit_order_quantity_to_stock = fields.Field(attribute='limit_order_quantity_to_stock',
+                                                 widget=DecimalBooleanWidget(), readonly=False)
     producer_order_by_quantity = fields.Field(attribute='producer_order_by_quantity', widget=ThreeDecimalsWidget())
     label = fields.Field(attribute='production_mode',
                          widget=TranslatedManyToManyWidget(LUT_ProductionMode, separator="; ", field='short_name'))
@@ -154,6 +155,23 @@ class ProductDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
+
+        producer = self.cleaned_data.get("producer", None)
+        if producer is None:
+            self.add_error(
+                'producer',
+                _('Please select first a producer in the filter of previous screen'))
+        else:
+            reference = self.cleaned_data.get("reference", EMPTY_STRING)
+            if reference:
+                qs = Product.objects.filter(reference=reference, producer_id=producer.id).order_by('?')
+                if self.instance.id is not None:
+                    qs = qs.exclude(id=self.instance.id)
+                if qs.exists():
+                    self.add_error(
+                        "reference",
+                        _('The reference is already used by %(product)s') % {'product': qs.first()})
+
         order_unit = self.cleaned_data.get("order_unit", PRODUCT_ORDER_UNIT_PC)
         if order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
             producer_unit_price = self.cleaned_data["producer_unit_price"]
@@ -179,6 +197,17 @@ class ProductDataForm(TranslatableModelForm):
                 # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
                 # if the pre-opening of offer is activated fro this producer.
                 limit_order_quantity_to_stock = self.cleaned_data.get("limit_order_quantity_to_stock", True)
+                if not limit_order_quantity_to_stock and producer is not None:
+                    if producer.represent_this_buyinggroup:
+                        self.add_error(
+                            'limit_order_quantity_to_stock',
+                            _(
+                                'You must limit the order quantity to the stock because the producer represent this buyinggroup.'))
+                    if producer.producer_pre_opening:
+                        self.add_error(
+                            'limit_order_quantity_to_stock',
+                            _(
+                                'You must limit the order quantity to the stock because you pre open the orders for this producer.'))
 
             if order_unit in [
                 PRODUCT_ORDER_UNIT_PC,
@@ -219,7 +248,7 @@ class ProductDataForm(TranslatableModelForm):
                 if customer_increment_order_quantity <= customer_minimum_order_quantity:
                     if customer_minimum_order_quantity != customer_alert_order_quantity:
                         order_qty_item = (
-                                         customer_alert_order_quantity - customer_minimum_order_quantity) / customer_increment_order_quantity
+                                             customer_alert_order_quantity - customer_minimum_order_quantity) / customer_increment_order_quantity
                         q_max = customer_minimum_order_quantity + int(
                             order_qty_item) * customer_increment_order_quantity
                         if order_qty_item > (LIMIT_ORDER_QTY_ITEM - 1):
@@ -238,7 +267,7 @@ class ProductDataForm(TranslatableModelForm):
                             'customer_alert_order_quantity',
                             _(
                                 'This alert quantity will generate more than %(qty_item)d choices for the customer into the order form.') % {
-                                'qty_item': LIMIT_ORDER_QTY_ITEM,})
+                                'qty_item': LIMIT_ORDER_QTY_ITEM, })
                     elif customer_alert_order_quantity < customer_minimum_order_quantity:
                         self.add_error(
                             'customer_alert_order_quantity',
@@ -249,28 +278,12 @@ class ProductDataForm(TranslatableModelForm):
                             _('This alert quantity is not reachable. %(q_max)s is the best lower choice.') % {
                                 'q_max': number_format(q_max, 3)})
 
-            producer = self.cleaned_data.get("producer", None)
-            if producer is None:
-                self.add_error(
-                    'producer',
-                    _('Please select first a producer in the filter of previous screen'))
-            else:
-                reference = self.cleaned_data.get("reference", EMPTY_STRING)
-                if reference:
-                    qs = Product.objects.filter(reference=reference, producer_id=producer.id).order_by('?')
-                    if self.instance.id is not None:
-                        qs = qs.exclude(id=self.instance.id)
-                    if qs.exists():
-                        self.add_error(
-                            "reference",
-                            _('The reference is already used by %(product)s') % {'product': qs.first()})
-
     class Meta:
         model = Product
         fields = "__all__"
         widgets = {
-            'long_name'              : forms.TextInput(attrs={'style': "width:450px !important"}),
-            'order_unit'             : SelectAdminOrderUnitWidget(attrs={'style': "width:700px !important"}),
+            'long_name': forms.TextInput(attrs={'style': "width:450px !important"}),
+            'order_unit': SelectAdminOrderUnitWidget(attrs={'style': "width:700px !important"}),
             'department_for_customer': apply_select2(forms.Select),
         }
 
@@ -342,11 +355,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return render(
             request,
             'repanier/confirm_admin_duplicate_product.html', {
-                'sub_title'           : _("Please, confirm the action : duplicate product"),
+                'sub_title': _("Please, confirm the action : duplicate product"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                'action'              : 'duplicate_product',
-                'product'             : product,
-                'producers'           : Producer.objects.filter(is_active=True)
+                'action': 'duplicate_product',
+                'product': product,
+                'producers': Producer.objects.filter(is_active=True)
             })
 
     duplicate_product.short_description = _('Duplicate')
@@ -439,7 +452,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 fields_basic += ['customer_minimum_order_quantity', 'customer_increment_order_quantity']
             else:
                 fields_basic += [
-                    ('customer_minimum_order_quantity', 'customer_increment_order_quantity', 'customer_alert_order_quantity')
+                    ('customer_minimum_order_quantity', 'customer_increment_order_quantity',
+                     'customer_alert_order_quantity')
                 ]
         fields_advanced_descriptions = [
             ('department_for_customer', 'placement'),
