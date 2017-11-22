@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-21 19:24+0100\n"
-"PO-Revision-Date: 2017-11-20 20:17+0100\n"
+"POT-Creation-Date: 2017-11-22 08:37+0100\n"
+"PO-Revision-Date: 2017-11-22 08:38+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -64,7 +64,7 @@ msgstr "Consommateurs"
 msgid "Permanences"
 msgstr "Permanences"
 
-#: admin/admin_filter.py:269 admin/producer.py:295 models/producer.py:120
+#: admin/admin_filter.py:269 admin/producer.py:294 models/producer.py:120
 #: models/product.py:279
 msgid "Products"
 msgstr "Produits"
@@ -185,7 +185,7 @@ msgstr ""
 msgid "Duplicate product are not allowed."
 msgstr "Le même produit ne peut pas être sélectionné deux fois."
 
-#: admin/box.py:61 admin/producer.py:313 models/item.py:102 models/item.py:366
+#: admin/box.py:61 admin/producer.py:312 models/item.py:102 models/item.py:366
 #: xlsx/xlsx_stock.py:325 xlsx/xlsx_stock.py:332 xlsx/xlsx_stock.py:333
 #: xlsx/xlsx_stock.py:438 xlsx/xlsx_stock.py:439 xlsx/xlsx_stock.py:463
 #: xlsx/xlsx_stock.py:470
@@ -250,8 +250,8 @@ msgstr "Créer un duplicata"
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
-#: admin/box.py:280 admin/configuration.py:206 admin/customer.py:365
-#: admin/group.py:280 admin/producer.py:411 admin/product.py:472
+#: admin/box.py:280 admin/configuration.py:206 admin/customer.py:368
+#: admin/group.py:280 admin/producer.py:410 admin/product.py:472
 msgid "Advanced options"
 msgstr "Paramètres avancés"
 
@@ -327,7 +327,7 @@ msgstr "✉ mails de transmission des commandes"
 msgid "Invoicing mails"
 msgstr "✉ mails de facturation des commandes"
 
-#: admin/customer.py:35 admin/customer.py:279 admin/group.py:29
+#: admin/customer.py:35 admin/customer.py:282 admin/group.py:29
 #: admin/group.py:226 admin/staff.py:19 models/producer.py:36
 #: templates/repanier/who_is_who.html:60 templates/repanier/who_is_who.html:84
 #: xlsx/xlsx_order.py:44 xlsx/xlsx_order.py:103
@@ -390,25 +390,25 @@ msgstr "Exporter la liste de produits achetés en {}"
 msgid "Group"
 msgstr "Groupe"
 
-#: admin/customer.py:288 admin/group.py:235
+#: admin/customer.py:291 admin/group.py:235
 msgid "Last login"
 msgstr "Dernière connexion"
 
-#: admin/customer.py:423
+#: admin/customer.py:426
 #, python-format
 msgid ""
 " in addition to the %(discount)s%% personal discount rate on to the pricelist"
 msgstr ""
 " en + de la réduction personnelle de %(discount)s%% accordée sur le tarif"
 
-#: admin/customer.py:428
+#: admin/customer.py:431
 #, python-format
 msgid ""
 " in addition to the %(surcharge)s%% personal surcharge on to the pricelist"
 msgstr ""
 " en + de la surcharge personnelle de %(surcharge)s%% appliquée sur le tarif"
 
-#: admin/customer.py:435
+#: admin/customer.py:438
 #, python-format
 msgid ""
 "%(discount)s%% discount is granted to consumer invoices when delivered to "
@@ -417,7 +417,7 @@ msgstr ""
 "Une réduction de %(discount)s%% sur les factures avec livraison "
 "\"%(delivery_point)s\" est accordée%(customer_price)s."
 
-#: admin/customer.py:446
+#: admin/customer.py:449
 #, python-format
 msgid ""
 "%(surcharge)s%% surcharge is applied to consumer invoices when delivered to "
@@ -843,16 +843,16 @@ msgstr ""
 msgid "The given short_profile_name is used by another producer."
 msgstr "Ce nom abrégé est déjà attribué à un autre producteur."
 
-#: admin/producer.py:303
+#: admin/producer.py:302
 msgid ""
 "Export products of selected producer(s) as XSLX file at customer's prices"
 msgstr "Exporter le tarif consommateur"
 
-#: admin/producer.py:320
+#: admin/producer.py:319
 msgid "Export stock"
 msgstr "Exporter le stock"
 
-#: admin/producer.py:324 admin/producer.py:327
+#: admin/producer.py:323 admin/producer.py:326
 msgid "Import stock"
 msgstr "Importer, mettre à jour le stock"
 
@@ -1662,10 +1662,6 @@ msgstr "Mis à jour le"
 msgid "Bank account transaction"
 msgstr "Mouvement de compte"
 
-#: models/bankaccount.py:133 models/customer.py:99 models/producer.py:103
-msgid "Initial balance"
-msgstr "Solde initial"
-
 #: models/box.py:48 models/box.py:57 models/box.py:81
 msgid "Box"
 msgstr "Composition"
@@ -1812,7 +1808,7 @@ msgstr ""
 msgid "/!\\ Customers must confirm orders"
 msgstr "⚠ Les consommateurs doivent confirmer leur commande"
 
-#: models/configuration.py:80 models/configuration.py:450
+#: models/configuration.py:80 models/configuration.py:453
 msgid "Membership fee"
 msgstr "Cotisation"
 
@@ -1929,6 +1925,14 @@ msgstr "Distributions"
 #: models/configuration.py:364
 msgid "Distribution on "
 msgstr "Distribution du "
+
+#: models/configuration.py:419 models/configuration.py:428
+msgid "Account opening"
+msgstr "Ouverture du compte"
+
+#: models/configuration.py:479 models/customer.py:99 models/producer.py:103
+msgid "Initial balance"
+msgstr "Solde initial"
 
 #: models/contract.py:29
 msgid "First permanence date"
@@ -4273,13 +4277,13 @@ msgstr "Sujet"
 msgid "Message"
 msgstr "Message"
 
-#: views/send_mail_to_all_members_view.py:82
-#: views/send_mail_to_all_members_view.py:95
+#: views/send_mail_to_all_members_view.py:85
+#: views/send_mail_to_all_members_view.py:98
 msgid "All members as coordinator"
 msgstr "Tous les membres en tant que coordinateur/trice"
 
-#: views/send_mail_to_all_members_view.py:84
-#: views/send_mail_to_all_members_view.py:97
+#: views/send_mail_to_all_members_view.py:87
+#: views/send_mail_to_all_members_view.py:100
 msgid "All members who agree to show their email addresses to other members"
 msgstr ""
 "Tous le membres qui acceptent de montrer leurs adresses mails aux autres "

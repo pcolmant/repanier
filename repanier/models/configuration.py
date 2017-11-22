@@ -408,13 +408,15 @@ def configuration_post_save(sender, **kwargs):
             repanier.apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
         repanier.apps.REPANIER_SETTINGS_TRANSPORT = config.transport
         repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT = config.min_transport
+
         bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
         if bank_account is None:
             # If not latest total exists, create it with operation date before all movements
             bank_account = BankAccount.objects.all().order_by("operation_date").first()
             if bank_account is None:
                 BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
-                                           operation_date=timezone.now().date())
+                                           operation_date=timezone.now().date(),
+                                           operation_comment=_("Account opening"))
             else:
                 if bank_account.producer is None and bank_account.customer is None:
                     bank_account.operation_status = BANK_LATEST_TOTAL
@@ -422,7 +424,8 @@ def configuration_post_save(sender, **kwargs):
                 else:
                     BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
                                                operation_date=bank_account.operation_date + datetime.timedelta(
-                                                   days=-1))
+                                                   days=-1),
+                                               operation_comment=_("Account opening"))
 
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:
@@ -432,6 +435,7 @@ def configuration_post_save(sender, **kwargs):
                 represent_this_buyinggroup=True
             )
         if producer_buyinggroup is not None:
+            # Create this to also prevent the deletion of the producer representing the buying group
             membership_fee_product = Product.objects.filter(
                 order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                 is_active=True
@@ -468,6 +472,12 @@ def configuration_post_save(sender, **kwargs):
                 represent_this_buyinggroup=True
             )
         repanier.apps.REPANIER_SETTINGS_GROUP_CUSTOMER_ID = customer_buyinggroup.id
+
+        if not BankAccount.objects.filter(customer=customer_buyinggroup).order_by('?').exists():
+            # Create this to also prevent the deletion of the customer representing the buying group
+            BankAccount.objects.create(operation_date=timezone.now().date(),
+                                       customer=customer_buyinggroup,
+                                       operation_comment=_("Initial balance"))
 
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)

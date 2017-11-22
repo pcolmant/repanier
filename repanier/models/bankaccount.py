@@ -119,17 +119,3 @@ class BankAccount(models.Model):
             ['producer_invoice', 'operation_date', 'operation_date', 'id'],
             ['permanence', 'customer', 'producer', 'operation_date', 'id'],
         ]
-
-
-@receiver(pre_save, sender=BankAccount)
-def bank_account_pre_save(sender, **kwargs):
-    bank_account = kwargs["instance"]
-    if bank_account.producer is None and bank_account.customer is None:
-        initial_balance = BankAccount.objects.filter(
-            producer__isnull=True, customer__isnull=True).order_by('?').first()
-        if initial_balance is None:
-            bank_account.operation_status = BANK_LATEST_TOTAL
-            bank_account.permanence = None
-            bank_account.operation_comment = _("Initial balance")
-            bank_account.producer_invoice = None
-            bank_account.customer_invoice = None

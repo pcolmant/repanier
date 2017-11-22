@@ -10,7 +10,6 @@ from django.db.models import Q
 from django.forms import Textarea
 from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
@@ -215,7 +214,8 @@ class ProducerDataForm(forms.ModelForm):
         if invoice_by_basket and self.instance.id is not None:
             if BoxContent.objects.filter(product__producer_id=self.instance.id).exists():
                 self.add_error('invoice_by_basket',
-                               _("Some products of this producer are in a box. This implies that this producer cannot invoice by basket."))
+                               _(
+                                   "Some products of this producer are in a box. This implies that this producer cannot invoice by basket."))
         short_profile_name = self.cleaned_data["short_profile_name"]
         qs = Producer.objects.filter(short_profile_name=short_profile_name).order_by('?')
         if self.instance.id is not None:
@@ -242,7 +242,7 @@ class ProducerDataForm(forms.ModelForm):
     class Meta:
         widgets = {
             'address': Textarea(attrs={'rows': 4, 'cols': 80, 'style': 'height: 5em; width: 30em;'}),
-            'memo'   : Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
+            'memo': Textarea(attrs={'rows': 4, 'cols': 160, 'style': 'height: 5em; width: 60em;'}),
         }
         model = Producer
         fields = "__all__"
@@ -258,26 +258,20 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     actions = [
         'export_xlsx_customer_prices',
     ]
+
     # change_list_template = 'admin/producer_change_list.html'
 
     def has_delete_permission(self, request, producer=None):
-        user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator:
-            if producer is not None:
-                if producer.represent_this_buyinggroup:
-                    # I can't delete the producer representing the buying group
-                    return False
-            return True
-        return False
-
-    def has_add_permission(self, request):
         user = request.user
         if user.is_order or user.is_invoice or user.is_coordinator or user.is_contributor:
             return True
         return False
 
+    def has_add_permission(self, request):
+        return self.has_delete_permission(request)
+
     def has_change_permission(self, request, obj=None):
-        return self.has_add_permission(request)
+        return self.has_delete_permission(request)
 
     def get_urls(self):
         urls = super(ProducerAdmin, self).get_urls()

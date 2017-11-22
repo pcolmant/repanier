@@ -434,7 +434,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                                      _(
                                          '%(discount)s%% discount is granted to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
                                          'discount': Decimal((
-                                                             DECIMAL_ONE - customer.delivery_point.customer_responsible.price_list_multiplier) * 100).quantize(
+                                                                 DECIMAL_ONE - customer.delivery_point.customer_responsible.price_list_multiplier) * 100).quantize(
                                              TWO_DECIMALS),
                                          'delivery_point': customer.delivery_point,
                                          'customer_price': customer_price
@@ -445,7 +445,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                                      _(
                                          '%(surcharge)s%% surcharge is applied to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
                                          'surcharge': Decimal((
-                                                              customer.delivery_point.customer_responsible.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
+                                                                  customer.delivery_point.customer_responsible.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
                                              TWO_DECIMALS),
                                          'delivery_point': customer.delivery_point,
                                          'customer_price': customer_price

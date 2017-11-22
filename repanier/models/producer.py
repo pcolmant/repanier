@@ -8,7 +8,7 @@ from django.core import urlresolvers
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
-from django.db.models.signals import pre_save, post_save, post_init
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.formats import number_format
@@ -224,7 +224,7 @@ class Producer(models.Model):
                     manage_replenishment=True,
             ).order_by('?'):
                 invoiced_qty, taken_from_stock, customer_qty = offer_item.get_producer_qty_stock_invoiced()
-                if offer_item.price_list_multiplier < DECIMAL_ONE: # or offer_item.is_resale_price_fixed:
+                if offer_item.price_list_multiplier < DECIMAL_ONE:  # or offer_item.is_resale_price_fixed:
                     unit_price = offer_item.customer_unit_price.amount
                 else:
                     unit_price = offer_item.producer_unit_price.amount
@@ -315,7 +315,7 @@ class Producer(models.Model):
                         _(
                             'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
                         % {
-                            'bank'       : bank_not_invoiced,
+                            'bank': bank_not_invoiced,
                             'other_order': order_not_invoiced
                         }
             else:
@@ -388,6 +388,7 @@ def producer_pre_save(sender, **kwargs):
         producer.uuid = uuid.uuid1()
     if producer.bank_account is not None and len(producer.bank_account.strip()) == 0:
         producer.bank_account = None
+
 
 @receiver(post_save, sender=Producer)
 def producer_post_save(sender, **kwargs):
