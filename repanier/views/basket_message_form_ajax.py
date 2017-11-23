@@ -19,7 +19,7 @@ def customer_basket_message_form_ajax(request, pk):
             customer = Customer.objects.filter(id=pk).order_by('?').first()
         else:
             customer = request.user.customer
-        json = {"#basket_message", customer.get_on_hold_movement_html()}
+        json = {"#basket_message": customer.get_on_hold_movement_html()}
         return JsonResponse(json)
     raise Http404
 
@@ -34,6 +34,6 @@ def producer_basket_message_form_ajax(request, pk, uuid):
         producer = Producer.objects.filter(id=pk, uuid=uuid).order_by('?').first()
         if producer is None:
             raise Http404
-        json = {"#basket_message", producer.get_on_hold_movement_html()}
+        json = {"#basket_message": producer.get_on_hold_movement_html()}
         return JsonResponse(json)
     raise Http404
