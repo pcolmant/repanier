@@ -1,5 +1,7 @@
 # -*- coding: utf-8
 
+from urllib.parse import parse_qsl
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -15,19 +17,14 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 import repanier.apps
-from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
-from repanier.const import DECIMAL_ZERO, PERMANENCE_PLANNED, DECIMAL_MAX_STOCK
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
+from repanier.const import DECIMAL_ZERO, PERMANENCE_PLANNED, DECIMAL_MAX_STOCK, PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
 from repanier.models import Producer
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.task import task_box
 from repanier.tools import update_offer_item
-
-try:
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import parse_qsl
 
 
 class BoxContentInlineFormSet(BaseInlineFormSet):
@@ -42,15 +39,6 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
                         raise forms.ValidationError(_('Duplicate product are not allowed.'))
                     else:
                         products.add(product)
-
-                        # def get_queryset(self):
-                        #     return self.queryset.filter(
-                        #         product__translations__language_code=translation.get_language()
-                        #     ).order_by(
-                        #         "product__producer__short_profile_name",
-                        #         "product__translations__long_name",
-                        #         "product__order_average_weight",
-                        #     )
 
 
 class BoxContentInlineForm(ModelForm):
@@ -83,7 +71,7 @@ class BoxContentInlineForm(ModelForm):
         }
 
 
-class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
+class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
     form = BoxContentInlineForm
     formset = BoxContentInlineFormSet
     model = BoxContent
@@ -127,16 +115,25 @@ class BoxContentInline(ForeignKeyCacheMixin, TabularInline):
         if db_field.name == "product":
             kwargs["queryset"] = Product.objects.filter(
                 is_active=True,
+                order_unit__lt=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                 # A box may not include another box
                 is_box=False,
                 # We can't make any composition with producer preparing baskets on basis of our order.
                 producer__invoice_by_basket=False,
                 translations__language_code=translation.get_language()
-            ).order_by(
+            ).select_related("producer").prefetch_related("translations").order_by(
                 "producer__short_profile_name",
                 "translations__long_name",
                 "order_average_weight",
             )
+            # kwargs["queryset"] = qs
+            # formfield = super(BoxContentInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+            # # Optimize to not execute the query on each row
+            # choices = []
+            # for product in qs:
+            #     choices.append((product.id, str(product)))
+            # formfield.choices = choices
+            # return formfield
         return super(BoxContentInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 

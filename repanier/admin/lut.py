@@ -9,7 +9,7 @@ from easy_select2 import apply_select2
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import PERMANENCE_CLOSED, ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
 from repanier.models.customer import Customer
 from repanier.models.permanence import Permanence
@@ -127,7 +127,7 @@ class PermanenceBoardInlineForm(forms.ModelForm):
         }
 
 
-class PermanenceBoardInline(ForeignKeyCacheMixin, TabularInline):
+class PermanenceBoardInline(InlineForeignKeyCacheMixin, TabularInline):
     mptt_level_limit = ONE_LEVEL_DEPTH
     form = PermanenceBoardInlineForm
 

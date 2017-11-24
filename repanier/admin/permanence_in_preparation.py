@@ -19,7 +19,7 @@ from parler.forms import TranslatableModelForm
 from parler.utils.context import switch_language
 
 import repanier.apps
-from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
@@ -39,7 +39,7 @@ from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
 
 
-class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
+class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     model = PermanenceBoard
     ordering = ("permanence_role__tree_id", "permanence_role__lft")
     fields = ['permanence_role', 'customer']
@@ -84,7 +84,7 @@ class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
         return super(PermanenceBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class DeliveryBoardInline(ForeignKeyCacheMixin, TranslatableTabularInline):
+class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline):
     model = DeliveryBoard
     ordering = ("id",)
     fields = ['delivery_comment', 'delivery_point', 'status', ]

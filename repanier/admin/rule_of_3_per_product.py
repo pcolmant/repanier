@@ -13,7 +13,7 @@ from easy_select2 import Select2
 
 from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanence, \
     ProductFilterByDepartmentForThisProducer, OfferItemFilter, OfferItemSendFilterByPermanence
-from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
 from repanier.models import LUT_DepartmentForCustomer
@@ -77,7 +77,7 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
         }
 
 
-class OfferItemPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
+class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     form = OfferItemPurchaseSendInlineForm
     formset = OfferItemPurchaseSendInlineFormSet
     model = Purchase

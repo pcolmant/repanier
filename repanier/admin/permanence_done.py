@@ -17,7 +17,7 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 import repanier.apps
-from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm, ImportXlsxForm, \
     ImportInvoiceForm
 from repanier.const import *
@@ -37,7 +37,7 @@ from repanier.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchas
 from repanier.xlsx.xlsx_stock import export_permanence_stock
 
 
-class PermanenceBoardInline(ForeignKeyCacheMixin, admin.TabularInline):
+class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
 
     model = PermanenceBoard
     ordering = ("permanence_role__tree_id", "permanence_role__lft")

@@ -8,7 +8,7 @@ from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 
-from repanier.admin.fkey_choice_cache_mixin import ForeignKeyCacheMixin
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.models.customer import Customer
@@ -58,7 +58,7 @@ class CustomerPurchaseSendInlineForm(forms.ModelForm):
         }
 
 
-class CustomerPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
+class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     form = CustomerPurchaseSendInlineForm
     formset = CustomerPurchaseSendInlineFormSet
     model = Purchase
@@ -85,7 +85,11 @@ class CustomerPurchaseSendInline(ForeignKeyCacheMixin, admin.TabularInline):
                 producer_id=self.parent_object.producer_id,
                 permanence_id=self.parent_object.permanence_id,
                 translations__language_code=translation.get_language()
-            ).order_by("translations__preparation_sort_order", ).distinct()
+            ).select_related(
+                "producer"
+            ).prefetch_related(
+                "translations"
+            ).order_by("translations__preparation_sort_order").distinct()
         return super(CustomerPurchaseSendInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
