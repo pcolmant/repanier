@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+from django.core.cache import cache
 
 
 class InlineForeignKeyCacheMixin(object):
@@ -8,9 +9,15 @@ class InlineForeignKeyCacheMixin(object):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         formfield = super(InlineForeignKeyCacheMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-        # Optimize to not execute the query on each row
-        choices = []
-        for obj in kwargs["queryset"]:
-            choices.append((obj.id, str(obj)))
-        formfield.choices = choices
+        cache_key = "repanier_field{}".format(db_field.name)
+        cache_value = cache.get(cache_key)
+        if cache_value is not None:
+            formfield.choices = cache_value
+        else:
+            # Optimize to not execute the query on each row
+            choices = []
+            for obj in kwargs["queryset"]:
+                choices.append((obj.id, str(obj)))
+            formfield.choices = choices
+            cache.set(cache_key, choices, 300)
         return formfield
