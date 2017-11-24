@@ -465,9 +465,9 @@ CACHES = {
     'default': {
         'BACKEND' : 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
-        'TIMEOUT' : 300,
+        'TIMEOUT' : 3000,
         'OPTIONS' : {
-            'MAX_ENTRIES'   : 1000,
+            'MAX_ENTRIES'   : 10000,
             'CULL_FREQUENCY': 3
         }
     }
@@ -513,7 +513,7 @@ if DJANGO_SETTINGS_LOGGING:
                 'class'  : 'django.utils.log.AdminEmailHandler'
             },
             'console'    : {
-                # 'level': 'INFO',
+                'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
             },
         },
@@ -524,7 +524,7 @@ if DJANGO_SETTINGS_LOGGING:
                 'propagate': True,
             },
             'django.db.backends': {
-                'level'   : 'ERROR',
+                'level'   : 'DEBUG',
                 'handlers': ['console'],
             },
         }
