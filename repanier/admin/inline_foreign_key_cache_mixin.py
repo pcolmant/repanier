@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 from django.core.cache import cache
+from django.utils.translation import ugettext_lazy as _
 
 
 class InlineForeignKeyCacheMixin(object):
@@ -15,7 +16,7 @@ class InlineForeignKeyCacheMixin(object):
             formfield.choices = cache_value
         else:
             # Optimize to not execute the query on each row
-            choices = []
+            choices = [(None, _('---------'))]
             for obj in kwargs["queryset"]:
                 choices.append((obj.id, str(obj)))
             formfield.choices = choices
