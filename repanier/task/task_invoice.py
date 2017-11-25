@@ -24,7 +24,6 @@ from repanier.tools import *
 @transaction.atomic
 def generate_invoice(permanence, payment_date):
     getcontext().rounding = ROUND_HALF_UP
-    from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
     today = timezone.now().date()
     bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
     producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
@@ -120,14 +119,15 @@ def generate_invoice(permanence, payment_date):
         new_permanence.recalculate_order_amount(re_init=True)
 
     for customer_invoice in CustomerInvoice.objects.filter(
-        permanence_id=permanence.id,
-        customer_id=F('customer_charged_id')
+            permanence_id=permanence.id,
+            customer_id=F('customer_charged_id')
     ).order_by('?'):
         # Need to calculate delta_price_with_tax, delta_vat and delta_transport
         # Important : A customer may only be responsible of one and only one delivery point
         if customer_invoice.is_group:
             # Refresh in case of change in the admin
-            delivery_point = LUT_DeliveryPoint.objects.filter(customer_responsible=customer_invoice.customer).order_by('?').first()
+            delivery_point = LUT_DeliveryPoint.objects.filter(customer_responsible=customer_invoice.customer).order_by(
+                '?').first()
             if delivery_point is not None:
                 customer_invoice.price_list_multiplier = delivery_point.customer_responsible.price_list_multiplier
                 customer_invoice.transport = delivery_point.transport
@@ -140,7 +140,7 @@ def generate_invoice(permanence, payment_date):
     permanence.save()
 
     for customer_invoice in CustomerInvoice.objects.filter(
-        permanence_id=permanence.id
+            permanence_id=permanence.id
     ):
         customer_invoice.balance = customer_invoice.previous_balance = customer_invoice.customer.balance
         customer_invoice.date_previous_balance = customer_invoice.customer.date_balance
@@ -174,14 +174,14 @@ def generate_invoice(permanence, payment_date):
     ).order_by('?'):
         invoiced_qty, taken_from_stock, customer_qty = offer_item.get_producer_qty_stock_invoiced()
         if taken_from_stock != DECIMAL_ZERO:
-            if offer_item.price_list_multiplier < DECIMAL_ONE: # or offer_item.is_resale_price_fixed:
+            if offer_item.price_list_multiplier < DECIMAL_ONE:  # or offer_item.is_resale_price_fixed:
                 unit_price = offer_item.customer_unit_price.amount
                 unit_vat = offer_item.customer_vat.amount
             else:
                 unit_price = offer_item.producer_unit_price.amount
                 unit_vat = offer_item.producer_vat.amount
             delta_price_with_tax = ((unit_price +
-                               offer_item.unit_deposit.amount) * taken_from_stock).quantize(TWO_DECIMALS)
+                                     offer_item.unit_deposit.amount) * taken_from_stock).quantize(TWO_DECIMALS)
             delta_vat = unit_vat * taken_from_stock
             delta_deposit = offer_item.unit_deposit.amount * taken_from_stock
             producer_invoice = ProducerInvoice.objects.get(
@@ -290,7 +290,7 @@ def generate_invoice(permanence, payment_date):
         )
 
     for customer_invoice in CustomerInvoice.objects.filter(
-        permanence_id=permanence.id,
+            permanence_id=permanence.id,
     ).exclude(
         customer_id=customer_buyinggroup.id,
         delta_transport=DECIMAL_ZERO
@@ -324,13 +324,12 @@ def generate_invoice(permanence, payment_date):
     # Calculate new current balance : Bank
     for bank_account in BankAccount.objects.select_for_update().filter(
 
-        customer_invoice__isnull=True,
-        producer_invoice__isnull=True,
-        operation_status__in=[BANK_PROFIT, BANK_TAX],
-        customer_id=customer_buyinggroup.id,
-        operation_date__lte=payment_date
+            customer_invoice__isnull=True,
+            producer_invoice__isnull=True,
+            operation_status__in=[BANK_PROFIT, BANK_TAX],
+            customer_id=customer_buyinggroup.id,
+            operation_date__lte=payment_date
     ).order_by('?'):
-
         # --> This bank movement is not a real entry
         # It will not be counted into the customer_buyinggroup bank movements twice
         Customer.objects.filter(
@@ -471,6 +470,7 @@ def generate_archive(permanence):
 def cancel_delivery(permanence):
     permanence.set_status(PERMANENCE_CANCELLED)
 
+
 @transaction.atomic
 def cancel_invoice(permanence):
     if permanence.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
@@ -549,10 +549,9 @@ def cancel_invoice(permanence):
                 invoice_sort_order=None
             )
 
-
             for producer_invoice in ProducerInvoice.objects.filter(
                     permanence_id=permanence.id
-            ).order_by('?'): # .distinct("id"):
+            ).order_by('?'):  # .distinct("id"):
                 producer = producer_invoice.producer
                 producer.balance = producer_invoice.previous_balance
                 producer.date_balance = producer_invoice.date_previous_balance
@@ -579,7 +578,7 @@ def cancel_invoice(permanence):
                     BANK_PROFIT,
                     BANK_TAX,
                     BANK_MEMBERSHIP_FEE,
-                    BANK_COMPENSATION # BANK_COMPENSATION may occurs in previous release of Repanier
+                    BANK_COMPENSATION  # BANK_COMPENSATION may occurs in previous release of Repanier
                 ]
             ).order_by('?').delete()
         # # Recover all producers in case of ...
@@ -597,7 +596,7 @@ def cancel_invoice(permanence):
 @transaction.atomic
 def cancel_archive(permanence):
     if BankAccount.objects.filter(
-        operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
+            operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
     ).order_by('?').exists():
         # old archive
         cancel_invoice(permanence)
@@ -620,7 +619,12 @@ def admin_cancel(permanence):
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
                 else:
-                    user_message = _("The selected invoice is not the latest invoice.")
+                    user_message = (
+                    _("You mus first cancel the invoices of {} whose date is {}.").format(
+                        latest_total.permanence,
+                        latest_total.permanence.permanence_date.strftime(
+                        settings.DJANGO_SETTINGS_DATE))
+                    )
                     user_message_level = messages.ERROR
             else:
                 user_message = _("The selected invoice is not the latest invoice.")
@@ -630,9 +634,9 @@ def admin_cancel(permanence):
             user_message_level = messages.INFO
             permanence.set_status(PERMANENCE_SEND)
     elif permanence.status in [PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED]:
-            cancel_archive(permanence)
-            user_message = _("The selected invoice has been restored.")
-            user_message_level = messages.INFO
+        cancel_archive(permanence)
+        user_message = _("The selected invoice has been restored.")
+        user_message_level = messages.INFO
     else:
         user_message = _("The status of %(permanence)s prohibit you to cancel invoices.") % {
             'permanence': permanence}
