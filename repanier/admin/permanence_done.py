@@ -36,7 +36,6 @@ from repanier.xlsx.xlsx_stock import export_permanence_stock
 
 
 class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
-
     model = PermanenceBoard
     ordering = ("permanence_role__tree_id", "permanence_role__lft")
     fields = ['permanence_role', 'customer']
@@ -46,17 +45,19 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         if db_field.name == "customer":
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
         if db_field.name == "permanence_role":
-            kwargs["queryset"] = LUT_PermanenceRole.objects.filter(is_active=True, rght=F('lft') + 1).order_by("tree_id", "lft")
+            kwargs["queryset"] = LUT_PermanenceRole.objects.filter(is_active=True, rght=F('lft') + 1).order_by(
+                "tree_id", "lft")
         return super(PermanenceBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class PermanenceDoneForm(TranslatableModelForm):
     short_name = forms.CharField(label=_("Offer name"),
-                                  widget=forms.TextInput(attrs={'style': "width:100% !important"}))
+                                 widget=forms.TextInput(attrs={'style': "width:100% !important"}))
 
     class Meta:
         model = PermanenceDone
         fields = "__all__"
+
 
 class PermanenceDoneAdmin(TranslatableAdmin):
     form = PermanenceDoneForm
@@ -72,7 +73,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     list_max_show_all = 10
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
-    list_display = ['get_permanence_admin_display',]
+    list_display = ['get_permanence_admin_display', ]
     ordering = ('status', '-permanence_date', 'id')
     actions = [
         'export_xlsx',
@@ -142,9 +143,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         return render(request, 'repanier/confirm_admin_action.html', {
-            'sub_title'           : _("Please, confirm the action : cancel delivery"),
-            'action'              : 'cancel_delivery',
-            'permanence'          : permanence,
+            'sub_title': _("Please, confirm the action : cancel delivery"),
+            'action': 'cancel_delivery',
+            'permanence': permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
@@ -207,7 +208,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             )
             wb.save(response)
             return response
-        user_message = _("No invoice available for %(permanence)s.") % {'permanence': ', '.join("{}".format(p) for p in permanence_qs.all())}
+        user_message = _("No invoice available for %(permanence)s.") % {
+            'permanence': ', '.join("{}".format(p) for p in permanence_qs.all())}
         user_message_level = messages.WARNING
         self.message_user(request, user_message, user_message_level)
         return
@@ -284,7 +286,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                 producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
                                 producer_invoice.invoice_reference = None
                                 producer_invoice.to_be_paid = False
-                            producer_invoice.delta_vat=DECIMAL_ZERO
+                            producer_invoice.delta_vat = DECIMAL_ZERO
                             producer_invoice.delta_deposit = DECIMAL_ZERO
                             producer_invoice.delta_price_with_tax = DECIMAL_ZERO
                             producer_invoice.save(
@@ -324,8 +326,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         else:
             producer_invoiced = []
             for producer_invoice in ProducerInvoice.objects.filter(
-                permanence_id=permanence.id,
-                invoice_sort_order__isnull=True,
+                    permanence_id=permanence.id,
+                    invoice_sort_order__isnull=True,
             ).order_by("producer").select_related("producer"):
                 producer = producer_invoice.producer
                 if not producer.represent_this_buyinggroup:
@@ -342,11 +344,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     'to_be_invoiced_balance'
                 ])
                 producer_invoiced.append({
-                    'selected'                   : True,
-                    'short_profile_name'         : producer_invoice.producer.short_profile_name,
+                    'selected': True,
+                    'short_profile_name': producer_invoice.producer.short_profile_name,
                     'calculated_invoiced_balance': producer_invoice.calculated_invoiced_balance,
-                    'to_be_invoiced_balance'     : producer_invoice.to_be_invoiced_balance,
-                    'invoice_reference'          : producer_invoice.invoice_reference
+                    'to_be_invoiced_balance': producer_invoice.to_be_invoiced_balance,
+                    'invoice_reference': producer_invoice.invoice_reference
                 })
             if permanence.payment_date is not None:
                 # In this case we have also, permanence.status > PERMANENCE_SEND
@@ -357,12 +359,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             producer_invoiced_formset = ProducerInvoicedFormSet(initial=producer_invoiced)
 
         return render(request, 'repanier/confirm_admin_invoice.html', {
-            'sub_title'                : _("Please, confirm the action : generate the invoices"),
-            'action'                   : 'generate_invoices',
-            'permanence'               : permanence,
-            'permanence_form'          : permanence_form,
+            'sub_title': _("Please, confirm the action : generate the invoices"),
+            'action': 'generate_invoices',
+            'permanence': permanence,
+            'permanence_form': permanence_form,
             'producer_invoiced_formset': producer_invoiced_formset,
-            'action_checkbox_name'     : admin.ACTION_CHECKBOX_NAME,
+            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
     generate_invoices.short_description = _('Generate invoices')
@@ -392,22 +394,23 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         return render(request, 'repanier/confirm_admin_action.html', {
-            'sub_title'           : _("Please, confirm the action : generate archive"),
-            'action'              : 'generate_archive',
-            'permanence'          : permanence,
+            'sub_title': _("Please, confirm the action : generate archive"),
+            'action': 'generate_archive',
+            'permanence': permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
     generate_archive.short_description = _('Archive')
 
-    def cancel_invoice_or_archive_or_cancelled(self,request, permanence_qs, action):
+    def cancel_invoice_or_archive_or_cancelled(self, request, permanence_qs, action):
         if 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
-        if permanence is None or permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED]:
+        if permanence is None or permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED,
+                                                           PERMANENCE_CANCELLED]:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
@@ -418,12 +421,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         return render(request, 'repanier/confirm_admin_action.html', {
-            'sub_title'           : _(
+            'sub_title': _(
                 "Please, confirm the action : cancel the invoices") if permanence.status == PERMANENCE_INVOICED else _(
                 "Please, confirm the action : cancel the archiving") if permanence.status == PERMANENCE_ARCHIVED else _(
                 "Please, confirm the action : restore the delivery"),
-            'action'              : action,
-            'permanence'          : permanence,
+            'action': action,
+            'permanence': permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
@@ -456,12 +459,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_invoice_email=True)
         # TODO : Align on tools.payment_message
         customer_order_amount = \
-                _('The amount of your order is %(amount)s.') % {
-                    'amount': RepanierMoney(123.45)
-                }
+            _('The amount of your order is %(amount)s.') % {
+                'amount': RepanierMoney(123.45)
+            }
         customer_last_balance = \
             _('The balance of your account as of %(date)s is %(balance)s.') % {
-                'date'   : timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
+                'date': timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
                 'balance': RepanierMoney(123.45)
             }
         customer_payment_needed = "{} {} {} ({}) {} \"{}\".".format(
@@ -472,17 +475,17 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             _('with communication'),
             _('Short name'))
         context = TemplateContext({
-            'name'               : _('Long name'),
-            'long_basket_name'   : _('Long name'),
-            'basket_name'        : _('Short name'),
-            'short_basket_name'  : _('Short name'),
-            'permanence_link'    : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-            'last_balance_link'  : mark_safe("<a href=\"#\">{}</a>".format(customer_last_balance)),
-            'last_balance'       : customer_last_balance,
-            'order_amount'       : mark_safe(customer_order_amount),
-            'payment_needed'     : mark_safe(customer_payment_needed),
+            'name': _('Long name'),
+            'long_basket_name': _('Long name'),
+            'basket_name': _('Short name'),
+            'short_basket_name': _('Short name'),
+            'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
+            'last_balance_link': mark_safe("<a href=\"#\">{}</a>".format(customer_last_balance)),
+            'last_balance': customer_last_balance,
+            'order_amount': mark_safe(customer_order_amount),
+            'payment_needed': mark_safe(customer_payment_needed),
             'invoice_description': mark_safe(invoice_description),
-            'signature'          : mark_safe(
+            'signature': mark_safe(
                 "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
         })
         template_invoice_customer_mail = template.render(context)
@@ -493,12 +496,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
         template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail)
 
-
         context = TemplateContext({
-            'name'             : _('Long name'),
+            'name': _('Long name'),
             'long_profile_name': _('Long name'),
-            'permanence_link'  : mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-            'signature'        : mark_safe(
+            'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
+            'signature': mark_safe(
                 "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
         })
         template_invoice_producer_mail = template.render(context)
@@ -524,16 +526,16 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         return render(
             request,
             'repanier/confirm_admin_send_invoice.html', {
-                'sub_title'                             : _("Please, confirm the action : send invoices"),
-                'action_checkbox_name'                  : admin.ACTION_CHECKBOX_NAME,
-                'action'                                : 'send_invoices',
-                'permanence'                            : permanence,
-                'form'                                  : form,
-                'invoice_customer_email_will_be_sent'   : invoice_customer_email_will_be_sent,
+                'sub_title': _("Please, confirm the action : send invoices"),
+                'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                'action': 'send_invoices',
+                'permanence': permanence,
+                'form': form,
+                'invoice_customer_email_will_be_sent': invoice_customer_email_will_be_sent,
                 'invoice_customer_email_will_be_sent_to': invoice_customer_email_will_be_sent_to,
-                'invoice_producer_email_will_be_sent'   : invoice_producer_email_will_be_sent,
+                'invoice_producer_email_will_be_sent': invoice_producer_email_will_be_sent,
                 'invoice_producer_email_will_be_sent_to': invoice_producer_email_will_be_sent_to
-        })
+            })
 
     send_invoices.short_description = _('Send invoices')
 
