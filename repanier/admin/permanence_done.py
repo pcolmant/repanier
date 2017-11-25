@@ -11,15 +11,14 @@ from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
 from django.utils import timezone
 from django.utils.safestring import mark_safe
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 import repanier.apps
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, PermanenceInvoicedForm, ImportXlsxForm, \
     ImportInvoiceForm
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models.bankaccount import BankAccount
@@ -28,7 +27,6 @@ from repanier.models.invoice import ProducerInvoice
 from repanier.models.lut import LUT_PermanenceRole
 from repanier.models.permanence import PermanenceDone
 from repanier.models.permanenceboard import PermanenceBoard
-from repanier.models.purchase import Purchase
 from repanier.task import task_invoice
 from repanier.tools import send_email_to_who, get_signature
 from repanier.xlsx.views import import_xslx_view
