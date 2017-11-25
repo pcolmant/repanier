@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-22 14:30+0100\n"
-"PO-Revision-Date: 2017-11-22 19:27+0100\n"
+"POT-Creation-Date: 2017-11-25 08:50+0100\n"
+"PO-Revision-Date: 2017-11-25 08:51+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -181,38 +181,38 @@ msgstr ""
 "La date du mouvement doit être supérieure ou égale à la date du dernier "
 "solde."
 
-#: admin/box.py:42
+#: admin/box.py:39
 msgid "Duplicate product are not allowed."
 msgstr "Le même produit ne peut pas être sélectionné deux fois."
 
-#: admin/box.py:61 admin/producer.py:307 models/item.py:102 models/item.py:366
+#: admin/box.py:49 admin/producer.py:307 models/item.py:102 models/item.py:366
 #: xlsx/xlsx_stock.py:325 xlsx/xlsx_stock.py:332 xlsx/xlsx_stock.py:333
 #: xlsx/xlsx_stock.py:438 xlsx/xlsx_stock.py:439 xlsx/xlsx_stock.py:463
 #: xlsx/xlsx_stock.py:470
 msgid "Current stock"
 msgstr "Inventaire"
 
-#: admin/box.py:63 models/item.py:106
+#: admin/box.py:51 models/item.py:106
 msgid "Limit maximum order qty of the group to stock qty"
 msgstr "Limiter les ventes au stock d'inventaire"
 
-#: admin/box.py:145
+#: admin/box.py:142
 msgid "Calculated customer box price"
 msgstr "Tarif consommateur à l'unité calculé"
 
-#: admin/box.py:147
+#: admin/box.py:144
 msgid "Calculated box deposit"
 msgstr "Consigne calculée"
 
-#: admin/box.py:150
+#: admin/box.py:147
 msgid "Calculated current stock"
 msgstr "Inventaire calculé"
 
-#: admin/box.py:227
+#: admin/box.py:224
 msgid "flip_flop_select_for_offer_status for offer"
 msgstr "✔ en offre  ↔ ✘ pas en offre"
 
-#: admin/box.py:231 admin/permanence_done.py:126 admin/permanence_done.py:226
+#: admin/box.py:228 admin/permanence_done.py:126 admin/permanence_done.py:226
 #: admin/permanence_done.py:374 admin/permanence_done.py:407
 #: admin/permanence_done.py:444 admin/permanence_in_preparation.py:282
 #: admin/permanence_in_preparation.py:344
@@ -223,7 +223,7 @@ msgstr "✔ en offre  ↔ ✘ pas en offre"
 msgid "Action canceled by the user."
 msgstr "Action annulée par l'utilisateur."
 
-#: admin/box.py:237 admin/permanence_done.py:134 admin/permanence_done.py:158
+#: admin/box.py:234 admin/permanence_done.py:134 admin/permanence_done.py:158
 #: admin/permanence_done.py:179 admin/permanence_done.py:232
 #: admin/permanence_done.py:383 admin/permanence_done.py:413
 #: admin/permanence_done.py:450 admin/permanence_in_preparation.py:262
@@ -238,19 +238,19 @@ msgstr "Action annulée par l'utilisateur."
 msgid "Action canceled by the system."
 msgstr "Action annulée par Repanier."
 
-#: admin/box.py:248
+#: admin/box.py:245
 msgid "Please, confirm the action : duplicate box"
 msgstr "Veuillez confirmer votre demande de duplication d'une composition."
 
-#: admin/box.py:254 admin/permanence_in_preparation.py:765 admin/product.py:365
+#: admin/box.py:251 admin/permanence_in_preparation.py:765 admin/product.py:365
 msgid "Duplicate"
 msgstr "Créer un duplicata"
 
-#: admin/box.py:279 admin/product.py:485
+#: admin/box.py:276 admin/product.py:485
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
-#: admin/box.py:280 admin/configuration.py:206 admin/customer.py:365
+#: admin/box.py:277 admin/configuration.py:206 admin/customer.py:365
 #: admin/group.py:280 admin/producer.py:405 admin/product.py:486
 msgid "Advanced options"
 msgstr "Paramètres avancés"
@@ -1033,18 +1033,18 @@ msgstr ""
 msgid "Duplicate offer_items are not allowed."
 msgstr "Le même produit ne peut pas être sélectionné deux fois."
 
-#: admin/rule_of_3_per_customer.py:103 admin/rule_of_3_per_product.py:104
+#: admin/rule_of_3_per_customer.py:107 admin/rule_of_3_per_product.py:104
 #: models/invoice.py:759 models/invoice.py:773 models/offeritem.py:63
 #: models/offeritem.py:191
 msgid "Producer amount invoiced"
 msgstr "Facturé par le producteur"
 
-#: admin/rule_of_3_per_customer.py:105 models/invoice.py:764
+#: admin/rule_of_3_per_customer.py:109 models/invoice.py:764
 #: models/offeritem.py:67
 msgid "Customer amount invoiced"
 msgstr "Facturé au consommateur TVAC"
 
-#: admin/rule_of_3_per_customer.py:107 admin/rule_of_3_per_product.py:106
+#: admin/rule_of_3_per_customer.py:111 admin/rule_of_3_per_product.py:106
 msgid "Apply rule of three"
 msgstr "Appliquer la règle de 3"
 
@@ -2026,7 +2026,7 @@ msgstr "Adresse"
 msgid "City"
 msgstr "Localité"
 
-#: models/customer.py:68 views/my_profile_view.py:51
+#: models/customer.py:68 views/me_view.py:47 views/my_profile_view.py:51
 msgid "About me"
 msgstr "A propos de moi"
 
@@ -2112,7 +2112,7 @@ msgstr "Date de la dernière cotisation"
 msgid "Participation"
 msgstr "Participation"
 
-#: models/customer.py:302 models/purchase.py:273 models/purchase.py:418
+#: models/customer.py:302 models/purchase.py:272 models/purchase.py:417
 #: xlsx/xlsx_order.py:391 xlsx/xlsx_order.py:1163
 msgid "Purchase"
 msgstr "Achat"
@@ -2808,7 +2808,7 @@ msgstr "Prix consommateur de la ligne"
 msgid "Consumer prices are set by the producer"
 msgstr "Les prix de vente consommateur sont imposés par le producteur"
 
-#: models/purchase.py:274 models/purchase.py:419
+#: models/purchase.py:273 models/purchase.py:418
 #: templates/repanier/customer_invoice_form.html:24
 #: templates/repanier/customer_invoice_form.html:43
 #: templates/repanier/producer_invoice_form.html:13
@@ -2954,28 +2954,32 @@ msgstr "TVA à recevoir des contributions"
 msgid "Transport"
 msgstr "Transport"
 
-#: task/task_invoice.py:620 task/task_invoice.py:629
+#: task/task_invoice.py:619 task/task_invoice.py:633
 msgid "The selected invoice has been canceled."
 msgstr "La facture a été annulée."
 
-#: task/task_invoice.py:623 task/task_invoice.py:626
+#: task/task_invoice.py:623
+msgid "You mus first cancel the invoices of {} whose date is {}."
+msgstr "Vous devez d'abord annuler les factures de {} dont la date est {}."
+
+#: task/task_invoice.py:630
 msgid "The selected invoice is not the latest invoice."
 msgstr ""
 "La permanence sélectionnée n'étant pas la dernière permanence facturée, "
 "l'annulation de ses factures ne peut avoir lieu."
 
-#: task/task_invoice.py:634
+#: task/task_invoice.py:638
 msgid "The selected invoice has been restored."
 msgstr "L'archivage a été annulé."
 
-#: task/task_invoice.py:637
+#: task/task_invoice.py:641
 #, python-format
 msgid "The status of %(permanence)s prohibit you to cancel invoices."
 msgstr ""
 "Le status de la %(permanence)s n'est pas compatible avec l'action de "
 "suppression des factures."
 
-#: task/task_invoice.py:649
+#: task/task_invoice.py:653
 msgid ""
 "Emails containing the invoices will be send to the customers and the "
 "producers."
@@ -2983,7 +2987,7 @@ msgstr ""
 "Des ✉ reprenant le détail facturé en pièce jointe sont en train d'être "
 "envoyés vers les consommateurs et les producteurs."
 
-#: task/task_invoice.py:652
+#: task/task_invoice.py:656
 #, python-format
 msgid "The status of %(permanence)s prohibit you to send invoices."
 msgstr ""
@@ -3052,28 +3056,29 @@ msgstr ""
 msgid "Your role in the group does not allow you to perform this action."
 msgstr "Votre rôle dans le groupe ne vous permet pas d'effectuer cette action."
 
-#: templates/admin/actions.html:4 templates/admin/actions_test.html:27
+#: templates/admin/actions.html:27 templates/admin/actions_test.html:27
 msgid "Run the selected action"
 msgstr "Exécuter l'action sélectionnée"
 
-#: templates/admin/actions.html:4 templates/admin/actions_test.html:27
+#: templates/admin/actions.html:27 templates/admin/actions_test.html:27
 msgid "Go"
 msgstr "Envoyer"
 
-#: templates/admin/actions.html:12 templates/admin/actions_test.html:35
+#: templates/admin/actions.html:35 templates/admin/actions_test.html:35
 msgid "Click here to select the objects across all pages"
 msgstr "Cliquez ici pour sélectionner la liste complète"
 
-#: templates/admin/actions.html:12 templates/admin/actions_test.html:35
+#: templates/admin/actions.html:35 templates/admin/actions_test.html:35
 #, python-format
 msgid "Select all %(total_count)s %(module_name)s"
 msgstr "Sélectionner l'entièreté des %(total_count)s %(module_name)s"
 
-#: templates/admin/actions.html:14 templates/admin/actions_test.html:37
+#: templates/admin/actions.html:37 templates/admin/actions_test.html:37
 msgid "Clear selection"
 msgstr "Annuler la sélection"
 
-#: templates/admin/base.html:22
+#: templates/admin/base.html:22 templates/admin/base_1.2.6.html:108
+#: templates/admin/base_pblm_sekizai.html:68
 #: templates/repanier/pre_order_create_product_form.html:222
 msgid "Add"
 msgstr "Ajouter"
@@ -3136,7 +3141,7 @@ msgstr ""
 #: templates/admin/delete_confirmation.html:41
 #: templates/admin/delete_selected_confirmation.html:46
 #: templates/repanier/confirm_admin_action.html:13
-#: templates/repanier/confirm_admin_close_order.html:49
+#: templates/repanier/confirm_admin_close_order.html:43
 #: templates/repanier/confirm_admin_duplicate_box.html:12
 #: templates/repanier/confirm_admin_duplicate_product.html:12
 #: templates/repanier/confirm_admin_export_customer_order.html:42
@@ -3240,11 +3245,11 @@ msgstr "Tous les produits"
 msgid "My"
 msgstr "Mes"
 
-#: templates/cms_order_page.html:168
+#: templates/cms_order_page.html:168 templates/repanier/cache_part_d.html:9
 msgid "All producers"
 msgstr "Tous les producteurs"
 
-#: templates/cms_order_page.html:181
+#: templates/cms_order_page.html:181 templates/repanier/cache_part_d.html:23
 msgid "All departments"
 msgstr "Tous les rayons"
 
@@ -3274,10 +3279,39 @@ msgstr "Filtre"
 msgid "Tree view"
 msgstr "Arboresence"
 
+#: templates/repanier/cache_part_d.html:5
+msgid " P "
+msgstr " P "
+
+#: templates/repanier/cache_part_d.html:19
+msgid " D "
+msgstr " R "
+
 #: templates/repanier/cache_part_e.html:11
 #: templates/repanier/order_product_description.html:18
 msgid "There is no more product's information"
 msgstr "Il n'y a pas d'autre information sur ce produit."
+
+#: templates/repanier/communication.html:2
+#: templates/repanier/communication_permanence_board.html:9
+msgid "Your are registered to the following task :"
+msgstr ""
+"Vous êtes inscrit(e)s pour les tâches suivantes au tableau des "
+"permanenciers :"
+
+#: templates/repanier/communication.html:8
+#: templates/repanier/communication_permanence_board.html:15
+msgid "No task found."
+msgstr "Pas de participation aux permanences à venir trouvée."
+
+#: templates/repanier/communication.html:8
+msgid "You where participating to"
+msgstr "Vous avez participé à"
+
+#: templates/repanier/communication.html:8
+#: templates/repanier/communication_permanence_board.html:15
+msgid "permanence in the last 12 weeks."
+msgstr "permanence(s) au cours des 12 dernières semaines."
 
 #: templates/repanier/communication_confirm_order.html:6
 #: templates/repanier/communication_permanence_board.html:6
@@ -3298,26 +3332,12 @@ msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
 "longtemps que les commandes sont ouvertes."
 
-#: templates/repanier/communication_permanence_board.html:9
-msgid "Your are registered to the following task :"
-msgstr ""
-"Vous êtes inscrit(e)s pour les tâches suivantes au tableau des "
-"permanenciers :"
-
-#: templates/repanier/communication_permanence_board.html:15
-msgid "No task found."
-msgstr "Pas de participation aux permanences à venir trouvée."
-
 #: templates/repanier/communication_permanence_board.html:15
 msgid "You participated in"
 msgstr "Vous avez participé à"
 
-#: templates/repanier/communication_permanence_board.html:15
-msgid "permanence in the last 12 weeks."
-msgstr "permanence(s) au cours des 12 dernières semaines."
-
 #: templates/repanier/confirm_admin_action.html:12
-#: templates/repanier/confirm_admin_close_order.html:48
+#: templates/repanier/confirm_admin_close_order.html:42
 #: templates/repanier/confirm_admin_duplicate_box.html:11
 #: templates/repanier/confirm_admin_duplicate_product.html:11
 #: templates/repanier/confirm_admin_export_customer_order.html:41
@@ -3335,23 +3355,23 @@ msgstr "Non, je veux annuler cette action"
 msgid "Done"
 msgstr "Terminé"
 
-#: templates/repanier/confirm_admin_close_order.html:46
+#: templates/repanier/confirm_admin_close_order.html:40
 msgid "close the orders of the following deviveries points"
 msgstr "clôture des commandes des points de livraisons sélectionnés"
 
-#: templates/repanier/confirm_admin_close_order.html:65
+#: templates/repanier/confirm_admin_close_order.html:56
 #: templates/repanier/confirm_admin_export_customer_order.html:55
 #: templates/repanier/confirm_admin_send_order.html:64
 msgid "Select all deliveries."
 msgstr "Tous les points de livraisons"
 
-#: templates/repanier/confirm_admin_close_order.html:100
+#: templates/repanier/confirm_admin_close_order.html:91
 #: templates/repanier/confirm_admin_invoice.html:91
 #: templates/repanier/confirm_admin_send_order.html:99
 msgid "Select all producers."
 msgstr "Tous les producteurs"
 
-#: templates/repanier/confirm_admin_close_order.html:126 tools.py:94
+#: templates/repanier/confirm_admin_close_order.html:118 tools.py:94
 #: tools.py:98 tools.py:104
 msgid "No email will be sent."
 msgstr "Aucun ✉ ne sera envoyé."
@@ -3515,12 +3535,21 @@ msgstr "Fichier à importer :"
 msgid "Execute the import"
 msgstr "Effectuer l'importation"
 
-#: templates/repanier/my_profile_form.html:4
+#: templates/repanier/me_form.html:4 templates/repanier/my_profile_form.html:4
 #: templates/repanier/pre_order_update_product_form.html:6
 msgid "Update done."
 msgstr "Mise à jour effectuée."
 
-#: templates/repanier/my_profile_form.html:7
+#: templates/repanier/me_form.html:5
+msgid "Update not done."
+msgstr "Veuillez corriger les erreurs ci-dessous :"
+
+#: templates/repanier/me_form.html:8 templates/repanier/my_profile_form.html:10
+#: templates/repanier/pre_order_update_product_form.html:232
+msgid "Update"
+msgstr "Mettre à jour"
+
+#: templates/repanier/me_form.html:9 templates/repanier/my_profile_form.html:7
 msgid ""
 "All informations bellow are visible to all members except your phone and "
 "email. You have the choice to specify if your phone and/or mail are visible "
@@ -3531,14 +3560,9 @@ msgstr ""
 "adresse.<br>Vous avez le choix de spécifier si vos ✆ et ✉ sont visibles des "
 "autres membres."
 
-#: templates/repanier/my_profile_form.html:8
+#: templates/repanier/me_form.html:10 templates/repanier/my_profile_form.html:8
 msgid "Your membership fee is valid until"
 msgstr "Vous êtes en ordre de cotisation jusqu'au"
-
-#: templates/repanier/my_profile_form.html:10
-#: templates/repanier/pre_order_update_product_form.html:232
-msgid "Update"
-msgstr "Mettre à jour"
 
 #: templates/repanier/order_form.html:60
 msgid "Loading..."
@@ -4152,6 +4176,52 @@ msgstr "Taxe"
 msgid "Logged out"
 msgstr "Déconnecté"
 
+#: views/me_view.py:25
+msgid "Your name"
+msgstr "Je m'appelle"
+
+#: views/me_view.py:27
+msgid "Your main email, used for password recovery and login"
+msgstr ""
+"Mon adresse email principale, utilisée pour récupérer le mot de passe et se "
+"connecter au site"
+
+#: views/me_view.py:28
+msgid "Your secondary email"
+msgstr "Mon ✉ mail secondaire (ne permet pas de se connecter au site)"
+
+#: views/me_view.py:33
+msgid "Your main phone"
+msgstr "Mon numéro de téléphone principal"
+
+#: views/me_view.py:34
+msgid "Your secondary phone"
+msgstr "Mon numéro de téléphone secondaire"
+
+#: views/me_view.py:39
+msgid "Your city"
+msgstr "Ma localité"
+
+#: views/me_view.py:40
+msgid "address"
+msgstr "Adresse"
+
+#: views/me_view.py:43
+msgid "picture"
+msgstr "Photo"
+
+#: views/me_view.py:54
+msgid "The given email is used by another user"
+msgstr "L'e-mail est utilisé par un autre consommateur"
+
+#: views/me_view.py:61
+msgid "My emails are visible to all members"
+msgstr "Mes adresses mails sont visibles à l'ensemble des membres"
+
+#: views/me_view.py:63
+msgid "My phones numbers are visible to all members"
+msgstr "Mes numéros de téléphones sont visibles à l'ensemble des membres"
+
 #: views/my_profile_view.py:24
 msgid "My name is"
 msgstr "Je m'appelle"
@@ -4539,53 +4609,6 @@ msgstr "Contrôle du stock"
 #, python-format
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
-
-#~ msgid " P "
-#~ msgstr " P "
-
-#~ msgid " D "
-#~ msgstr " R "
-
-#~ msgid "You where participating to"
-#~ msgstr "Vous avez participé à"
-
-#~ msgid "Update not done."
-#~ msgstr "Veuillez corriger les erreurs ci-dessous :"
-
-#~ msgid "Your name"
-#~ msgstr "Je m'appelle"
-
-#~ msgid "Your main email, used for password recovery and login"
-#~ msgstr ""
-#~ "Mon adresse email principale, utilisée pour récupérer le mot de passe et "
-#~ "se connecter au site"
-
-#~ msgid "Your secondary email"
-#~ msgstr "Mon ✉ mail secondaire (ne permet pas de se connecter au site)"
-
-#~ msgid "Your main phone"
-#~ msgstr "Mon numéro de téléphone principal"
-
-#~ msgid "Your secondary phone"
-#~ msgstr "Mon numéro de téléphone secondaire"
-
-#~ msgid "Your city"
-#~ msgstr "Ma localité"
-
-#~ msgid "address"
-#~ msgstr "Adresse"
-
-#~ msgid "picture"
-#~ msgstr "Photo"
-
-#~ msgid "The given email is used by another user"
-#~ msgstr "L'e-mail est utilisé par un autre consommateur"
-
-#~ msgid "My emails are visible to all members"
-#~ msgstr "Mes adresses mails sont visibles à l'ensemble des membres"
-
-#~ msgid "My phones numbers are visible to all members"
-#~ msgstr "Mes numéros de téléphones sont visibles à l'ensemble des membres"
 
 #~ msgid "Product translation"
 #~ msgstr "Produits"
