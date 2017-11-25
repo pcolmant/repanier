@@ -796,7 +796,5 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if change and ('permanence_date' in form.changed_data):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date)
-            Purchase.objects.filter(permanence_id=permanence.id).update(
-                permanence_date=permanence.permanence_date)
         super(PermanenceInPreparationAdmin, self).save_model(
             request, permanence, form, change)

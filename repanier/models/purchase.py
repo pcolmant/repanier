@@ -249,7 +249,6 @@ class Purchase(models.Model):
                 if content_purchase is None:
                     content_purchase = Purchase.objects.create(
                         permanence=self.permanence,
-                        permanence_date=self.permanence.permanence_date,
                         offer_item=content_offer_item,
                         producer=self.producer,
                         customer=self.customer,
