@@ -16,7 +16,7 @@ class InlineForeignKeyCacheMixin(object):
             formfield.choices = cache_value
         else:
             # Optimize to not execute the query on each row
-            choices = [(0, _('---------'))]
+            choices = [(None, _('---------'))]
             for obj in kwargs["queryset"]:
                 choices.append((obj.id, str(obj)))
             formfield.choices = choices
