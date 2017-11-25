@@ -24,7 +24,6 @@ from repanier.tools import *
 @transaction.atomic
 def generate_invoice(permanence, payment_date):
     getcontext().rounding = ROUND_HALF_UP
-    today = timezone.now().date()
     bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
     producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
     customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
@@ -472,158 +471,123 @@ def cancel_delivery(permanence):
 
 
 @transaction.atomic
-def cancel_invoice(permanence):
-    if permanence.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
-        last_bank_account_total = BankAccount.objects.filter(
-            operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
-        ).order_by('?').first()
-        if last_bank_account_total is not None:
-            # This is the last permanence invoiced
-            getcontext().rounding = ROUND_HALF_UP
-            # Historical : bo compatibility
-            # permanence_id is not NULL and t.customer_id is NULL and t.producer_invoice_id is NULL
-            BankAccount.objects.filter(
-                operation_status='100',
-                permanence__isnull=False,
-                customer__isnull=True,
-                producer_invoice__isnull=True,
-                producer__isnull=False
-            ).delete()
-            # Historical : eo compatibility
-            CustomerInvoice.objects.filter(
-                permanence_id=permanence.id,
-            ).update(
-                bank_amount_in=DECIMAL_ZERO,
-                bank_amount_out=DECIMAL_ZERO,
-                balance=F('previous_balance'),
-                date_balance=F('date_previous_balance'),
-                invoice_sort_order=None
-            )
+def cancel_invoice(permanence, last_bank_account_total):
+    getcontext().rounding = ROUND_HALF_UP
+    CustomerInvoice.objects.filter(
+        permanence_id=permanence.id,
+    ).update(
+        bank_amount_in=DECIMAL_ZERO,
+        bank_amount_out=DECIMAL_ZERO,
+        balance=F('previous_balance'),
+        date_balance=F('date_previous_balance'),
+        invoice_sort_order=None
+    )
+    for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=permanence.id).order_by('?'):
+        # customer = customer_invoice.customer
+        # customer.balance = customer_invoice.previous_balance
+        # customer.date_balance = customer_invoice.date_previous_balance
+        # customer.save(update_fields=['balance', 'date_balance'])
+        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+        Customer.objects.filter(id=customer_invoice.customer_id).order_by('?').update(
+            balance=customer_invoice.previous_balance,
+            date_balance=customer_invoice.date_previous_balance
+        )
+        BankAccount.objects.filter(
+            customer_invoice_id=customer_invoice.id
+        ).update(
+            customer_invoice=None
+        )
+    ProducerInvoice.objects.filter(
+        permanence_id=permanence.id,
+        producer__represent_this_buyinggroup=False
+    ).update(
+        bank_amount_in=DECIMAL_ZERO,
+        bank_amount_out=DECIMAL_ZERO,
+        delta_price_with_tax=DECIMAL_ZERO,
+        delta_vat=DECIMAL_ZERO,
+        delta_transport=DECIMAL_ZERO,
+        delta_deposit=DECIMAL_ZERO,
+        delta_stock_with_tax=DECIMAL_ZERO,
+        delta_stock_vat=DECIMAL_ZERO,
+        delta_stock_deposit=DECIMAL_ZERO,
+        balance=F('previous_balance'),
+        date_balance=F('date_previous_balance'),
+        invoice_sort_order=None
+    )
+    # Important : Restore delta from delivery points added into invoice.confirm_order()
+    ProducerInvoice.objects.filter(
+        permanence_id=permanence.id,
+        producer__represent_this_buyinggroup=True
+    ).update(
+        bank_amount_in=DECIMAL_ZERO,
+        bank_amount_out=DECIMAL_ZERO,
+        delta_stock_with_tax=DECIMAL_ZERO,
+        delta_stock_vat=DECIMAL_ZERO,
+        delta_stock_deposit=DECIMAL_ZERO,
+        balance=F('previous_balance'),
+        date_balance=F('date_previous_balance'),
+        invoice_sort_order=None
+    )
 
-            for customer_invoice in CustomerInvoice.objects.filter(
-                    permanence_id=permanence.id).order_by():
-                # customer = customer_invoice.customer
-                # customer.balance = customer_invoice.previous_balance
-                # customer.date_balance = customer_invoice.date_previous_balance
-                # customer.save(update_fields=['balance', 'date_balance'])
-                # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                Customer.objects.filter(id=customer_invoice.customer_id).order_by('?').update(
-                    balance=customer_invoice.previous_balance,
-                    date_balance=customer_invoice.date_previous_balance
-                )
-                BankAccount.objects.all().filter(
-                    customer_invoice_id=customer_invoice.id
-                ).update(
-                    customer_invoice=None
-                )
-            ProducerInvoice.objects.filter(
-                permanence_id=permanence.id
-            ).exclude(
-                producer__represent_this_buyinggroup=True
-            ).update(
-                bank_amount_in=DECIMAL_ZERO,
-                bank_amount_out=DECIMAL_ZERO,
-                delta_price_with_tax=DECIMAL_ZERO,
-                delta_vat=DECIMAL_ZERO,
-                delta_transport=DECIMAL_ZERO,
-                delta_deposit=DECIMAL_ZERO,
-                delta_stock_with_tax=DECIMAL_ZERO,
-                delta_stock_vat=DECIMAL_ZERO,
-                delta_stock_deposit=DECIMAL_ZERO,
-                balance=F('previous_balance'),
-                date_balance=F('date_previous_balance'),
-                invoice_sort_order=None
-            )
-            # Important : Restore delta from delivery points added into invoice.confirm_order()
-            ProducerInvoice.objects.filter(
-                permanence_id=permanence.id,
-                producer__represent_this_buyinggroup=True
-            ).update(
-                bank_amount_in=DECIMAL_ZERO,
-                bank_amount_out=DECIMAL_ZERO,
-                delta_stock_with_tax=DECIMAL_ZERO,
-                delta_stock_vat=DECIMAL_ZERO,
-                delta_stock_deposit=DECIMAL_ZERO,
-                balance=F('previous_balance'),
-                date_balance=F('date_previous_balance'),
-                invoice_sort_order=None
-            )
-
-            for producer_invoice in ProducerInvoice.objects.filter(
-                    permanence_id=permanence.id
-            ).order_by('?'):  # .distinct("id"):
-                producer = producer_invoice.producer
-                producer.balance = producer_invoice.previous_balance
-                producer.date_balance = producer_invoice.date_previous_balance
-                producer.save(update_fields=['balance', 'date_balance'])
-                BankAccount.objects.all().filter(
-                    producer_invoice_id=producer_invoice.id
-                ).update(
-                    producer_invoice=None
-                )
-            # IMPORTANT : Do not update stock when canceling
-            last_bank_account_total.delete()
-            bank_account = BankAccount.objects.filter(
-                customer=None,
-                producer=None).order_by('-id').first()
-            if bank_account is not None:
-                bank_account.operation_status = BANK_LATEST_TOTAL
-                bank_account.save()
-            # Delete also all payments recorded to producers, bank profit, bank tax
-            # Delete also all compensation recorded to producers
-            BankAccount.objects.filter(
-                permanence_id=permanence.id,
-                operation_status__in=[
-                    BANK_CALCULATED_INVOICE,
-                    BANK_PROFIT,
-                    BANK_TAX,
-                    BANK_MEMBERSHIP_FEE,
-                    BANK_COMPENSATION  # BANK_COMPENSATION may occurs in previous release of Repanier
-                ]
-            ).order_by('?').delete()
-        # # Recover all producers in case of ...
-        # permanence.producers.clear()
-        # for purchase in Purchase.objects.filter(
-        #         permanence_id=permanence.id
-        # ).order_by().distinct("producer_id"):
-        #     permanence.producers.add(purchase.producer_id)
-        Permanence.objects.filter(
-            id=permanence.id
-        ).update(invoice_sort_order=None)
-        permanence.set_status(PERMANENCE_SEND)
-
-
-@transaction.atomic
-def cancel_archive(permanence):
-    if BankAccount.objects.filter(
-            operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
-    ).order_by('?').exists():
-        # old archive
-        cancel_invoice(permanence)
-    else:
-        permanence.set_status(PERMANENCE_SEND, allow_downgrade=True)
+    for producer_invoice in ProducerInvoice.objects.filter(
+            permanence_id=permanence.id
+    ).order_by('?'):
+        Producer.objects.filter(id=producer_invoice.producer_id).order_by('?').update(
+            balance=producer_invoice.previous_balance,
+            date_balance=producer_invoice.date_previous_balance
+        )
+        BankAccount.objects.all().filter(
+            producer_invoice_id=producer_invoice.id
+        ).update(
+            producer_invoice=None
+        )
+    # IMPORTANT : Do not update stock when canceling
+    last_bank_account_total.delete()
+    bank_account = BankAccount.objects.filter(
+        customer=None,
+        producer=None).order_by('-id').first()
+    if bank_account is not None:
+        bank_account.operation_status = BANK_LATEST_TOTAL
+        bank_account.save()
+    # Delete also all payments recorded to producers, bank profit, bank tax
+    # Delete also all compensation recorded to producers
+    BankAccount.objects.filter(
+        permanence_id=permanence.id,
+        operation_status__in=[
+            BANK_CALCULATED_INVOICE,
+            BANK_PROFIT,
+            BANK_TAX,
+            BANK_MEMBERSHIP_FEE,
+            BANK_COMPENSATION  # BANK_COMPENSATION may occurs in previous release of Repanier
+        ]
+    ).order_by('?').delete()
+    Permanence.objects.filter(
+        id=permanence.id
+    ).update(invoice_sort_order=None)
+    permanence.set_status(PERMANENCE_SEND)
 
 
 def admin_cancel(permanence):
     if permanence.status == PERMANENCE_INVOICED:
-        latest_total = BankAccount.objects.filter(
+        last_bank_account_total = BankAccount.objects.filter(
             operation_status=BANK_LATEST_TOTAL).only(
             "permanence"
         ).first()
-        if latest_total is not None:
-            last_permanence_invoiced_id = latest_total.permanence_id
+        if last_bank_account_total is not None:
+            last_permanence_invoiced_id = last_bank_account_total.permanence_id
             if last_permanence_invoiced_id is not None:
                 if last_permanence_invoiced_id == permanence.id:
                     # This is well the latest closed permanence. The invoices can be cancelled without damages.
-                    cancel_invoice(permanence)
+                    cancel_invoice(permanence, last_bank_account_total)
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
                 else:
                     user_message = (
-                    _("You mus first cancel the invoices of {} whose date is {}.").format(
-                        latest_total.permanence,
-                        latest_total.permanence.permanence_date.strftime(
-                        settings.DJANGO_SETTINGS_DATE))
+                        _("You mus first cancel the invoices of {} whose date is {}.").format(
+                            last_bank_account_total.permanence,
+                            last_bank_account_total.permanence.permanence_date.strftime(
+                                settings.DJANGO_SETTINGS_DATE))
                     )
                     user_message_level = messages.ERROR
             else:
@@ -634,7 +598,7 @@ def admin_cancel(permanence):
             user_message_level = messages.INFO
             permanence.set_status(PERMANENCE_SEND)
     elif permanence.status in [PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED]:
-        cancel_archive(permanence)
+        permanence.set_status(PERMANENCE_SEND)
         user_message = _("The selected invoice has been restored.")
         user_message_level = messages.INFO
     else:
@@ -647,7 +611,6 @@ def admin_cancel(permanence):
 
 def admin_send(permanence):
     if permanence.status == PERMANENCE_INVOICED:
-        # thread.start_new_thread(email_invoice.send_invoice, (permanence.id,))
         t = threading.Thread(target=email_invoice.send_invoice, args=(permanence.id,))
         t.start()
         user_message = _("Emails containing the invoices will be send to the customers and the producers.")
