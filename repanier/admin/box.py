@@ -126,14 +126,6 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                 "translations__long_name",
                 "order_average_weight",
             )
-            # kwargs["queryset"] = qs
-            # formfield = super(BoxContentInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
-            # # Optimize to not execute the query on each row
-            # choices = []
-            # for product in qs:
-            #     choices.append((product.id, str(product)))
-            # formfield.choices = choices
-            # return formfield
         return super(BoxContentInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
