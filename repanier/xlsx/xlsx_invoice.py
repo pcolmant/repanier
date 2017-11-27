@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from openpyxl import load_workbook
@@ -38,7 +39,13 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     if bank_account is None:
         # Permanence not invoiced yet : Nothing to do
         return wb
-    customer_set = Customer.objects.filter(customerinvoice__isnull=False).distinct()
+    customer_set = Customer.objects.filter(
+        Q(
+            customerinvoice__isnull=False, is_anonymized=False
+        ) | Q(
+            customerinvoice__permanence_id=permanence.id
+        )
+    ).distinct()
     for customer in customer_set:
         bank_amount_in = bank_amount_out = DECIMAL_ZERO
         prepared = DECIMAL_ZERO
