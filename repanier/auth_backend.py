@@ -135,6 +135,9 @@ class RepanierCustomBackend(ModelBackend):
                                 user_or_none.is_invoice = a.is_reply_to_invoice_email
                                 user_or_none.is_contributor = a.is_contributor
                                 user_or_none.is_coordinator = a.is_coordinator
+                                user_or_none.is_customer = False
+                    else:
+                        user_or_none.is_customer = True
 
                 else:
                     a = Staff.objects.filter(user_id=user_or_none.id).only(
@@ -149,6 +152,7 @@ class RepanierCustomBackend(ModelBackend):
                             user_or_none.is_invoice = a.is_reply_to_invoice_email
                             user_or_none.is_contributor = a.is_contributor
                             user_or_none.is_coordinator = a.is_coordinator
+                            user_or_none.is_customer = False
                     else:
                         user_or_none = None
             else:
@@ -156,5 +160,6 @@ class RepanierCustomBackend(ModelBackend):
                 user_or_none.is_invoice = True
                 user_or_none.is_contributor = True
                 user_or_none.is_coordinator = True
+                user_or_none.is_customer = False
         self.user = user_or_none
         return user_or_none
