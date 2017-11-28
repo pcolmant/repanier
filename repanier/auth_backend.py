@@ -118,7 +118,7 @@ class RepanierCustomBackend(ModelBackend):
             '?').first()
         if user_or_none is not None:
             if not user_or_none.is_superuser:
-                a = Customer.objects.filter(user_id=user_or_none.id).only("is_active", "as_staff").order_by('?').first()
+                a = Customer.objects.filter(user_id=user_or_none.id).only("is_active", "as_staff", "subscribe_to_email").order_by('?').first()
                 if a is not None:
                     if not a.is_active:
                         user_or_none = None
@@ -136,8 +136,10 @@ class RepanierCustomBackend(ModelBackend):
                                 user_or_none.is_contributor = a.is_contributor
                                 user_or_none.is_coordinator = a.is_coordinator
                                 user_or_none.is_customer = False
+                                user_or_none.subscribe_to_email = True
                     else:
                         user_or_none.is_customer = True
+                        user_or_none.subscribe_to_email = a.subscribe_to_email
 
                 else:
                     a = Staff.objects.filter(user_id=user_or_none.id).only(
@@ -153,6 +155,7 @@ class RepanierCustomBackend(ModelBackend):
                             user_or_none.is_contributor = a.is_contributor
                             user_or_none.is_coordinator = a.is_coordinator
                             user_or_none.is_customer = False
+                            user_or_none.subscribe_to_email = True
                     else:
                         user_or_none = None
             else:
@@ -161,5 +164,6 @@ class RepanierCustomBackend(ModelBackend):
                 user_or_none.is_contributor = True
                 user_or_none.is_coordinator = True
                 user_or_none.is_customer = False
+                user_or_none.subscribe_to_email = True
         self.user = user_or_none
         return user_or_none
