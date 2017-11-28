@@ -135,9 +135,13 @@ class RepanierCustomBackend(ModelBackend):
                                 user_or_none.is_invoice = a.is_reply_to_invoice_email
                                 user_or_none.is_contributor = a.is_contributor
                                 user_or_none.is_coordinator = a.is_coordinator
-                                user_or_none.is_customer = False
+                                user_or_none.is_customer = True
                                 user_or_none.subscribe_to_email = True
                     else:
+                        user_or_none.is_order = False
+                        user_or_none.is_invoice = False
+                        user_or_none.is_contributor = False
+                        user_or_none.is_coordinator = False
                         user_or_none.is_customer = True
                         user_or_none.subscribe_to_email = a.subscribe_to_email
 
