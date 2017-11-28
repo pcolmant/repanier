@@ -47,18 +47,17 @@ def repanier_user(context, *args, **kwargs):
                 _('Welkom'),
                 user.username or '<span id = "my_name"></ span>'
             )]
-            customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
-            if customer_is_active:
-
+            if user.is_customer:
                 nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                     reverse('send_mail_to_coordinators_view'),
                     _('Send mail to coordinators')
                 ))
                 if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-                    nodes.append("<li><a href=\"{}\">{}</a></li>".format(
-                        reverse('send_mail_to_all_members_view'),
-                        _('Send mail to all members')
-                    ))
+                    if user.subscribe_to_email:
+                        nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                            reverse('send_mail_to_all_members_view'),
+                            _('Send mail to all members')
+                        ))
                     nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                         reverse('who_is_who_view'),
                         _('Who is who')
