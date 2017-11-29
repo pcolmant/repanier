@@ -19,7 +19,6 @@ class RepanierCustomBackend(ModelBackend):
         super(RepanierCustomBackend, self).__init__()
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        self.user = None
         user_username = UserModel.objects.filter(
             Q(
                 username__iexact=username[:150]
@@ -51,8 +50,8 @@ class RepanierCustomBackend(ModelBackend):
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
-        user_or_none = super(RepanierCustomBackend, self).authenticate(request, username=username, password=password)
-        if user_or_none is None:
+        user = super(RepanierCustomBackend, self).authenticate(request, username=username, password=password)
+        if user is None:
             # Failed to log in
             if login_attempt_counter < 20:
                 # Do not increment indefinitely
@@ -108,9 +107,8 @@ class RepanierCustomBackend(ModelBackend):
                             login_attempt_counter=DECIMAL_ZERO
                         )
 
-        if user_or_none is not None:
-            self.user = self.get_user(user_or_none.id)
-            return self.user
+                self.user = self.get_user(user.id)
+                return self.user
 
     def get_user(self, user_id):
         if self.user is not None and self.user.id == user_id:
