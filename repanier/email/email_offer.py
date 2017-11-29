@@ -6,7 +6,6 @@ from django.template import Template, Context as TemplateContext
 # OK, i got the solution:
 # from decimal import *
 # is the "bad One" this lib has a Context object too. Thanks for anyone reading!
-from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.models.configuration import Configuration
@@ -45,19 +44,19 @@ def send_pre_open_order(permanence_id):
             long_profile_name = producer.long_profile_name \
                 if producer.long_profile_name is not None else producer.short_profile_name
             context = TemplateContext({
-                'name'             : long_profile_name,
+                'name': long_profile_name,
                 'long_profile_name': long_profile_name,
-                'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
+                'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0],
                     reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
-                                               ),
+                ),
                 'offer_description': mark_safe(offer_description),
-                'offer_link'       : mark_safe(
+                'offer_link': mark_safe(
                     "<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0],
                         reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
                 ),
-                'signature'        : mark_safe(
+                'signature': mark_safe(
                     "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)
                 )
             })
@@ -80,7 +79,7 @@ def send_pre_open_order(permanence_id):
             send_sms(
                 sms_nr=producer.phone1,
                 sms_msg="{} : {} - {}".format(REPANIER_SETTINGS_GROUP_NAME,
-                                          permanence, _("Pre-opening of orders")))
+                                              permanence, _("Pre-opening of orders")))
     translation.activate(cur_language)
 
 
@@ -125,17 +124,17 @@ def send_open_order(permanence_id):
                 o.producer.short_profile_name,
                 o.email_offer_price_with_vat,
             )
-                                                    for o in qs
-                                                    ),)
+                                                        for o in qs
+                                                        ), )
             template = Template(offer_customer_mail)
             context = TemplateContext({
-                'permanence_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
+                'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                 'offer_description': mark_safe(offer_description),
-                'offer_detail'     : mark_safe(offer_detail),
-                'offer_recent_detail' : mark_safe(permanence.get_new_products),
-                'offer_producer'   : offer_producer,
-                'signature'        : mark_safe(
+                'offer_detail': mark_safe(offer_detail),
+                'offer_recent_detail': mark_safe(permanence.get_new_products),
+                'offer_producer': offer_producer,
+                'signature': mark_safe(
                     "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
             })
             html_content = template.render(context)
@@ -143,7 +142,8 @@ def send_open_order(permanence_id):
                 subject=offer_customer_mail_subject,
                 html_content=html_content,
                 from_email=sender_email,
-                bcc=list(set(to_email_staff) | set(to_email_customer))
+                bcc=list(set(to_email_staff) | set(to_email_customer)),
+                show_customer_may_unsubscribe=True
             )
             email.send_email()
         translation.activate(cur_language)

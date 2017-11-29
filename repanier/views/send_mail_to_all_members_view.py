@@ -39,27 +39,19 @@ def send_mail_to_all_members_view(request):
     if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
         raise Http404
     user = request.user
-    customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
-    if not customer_is_active:
-        raise Http404
-    try:
-        is_coordinator = request.user.is_coordinator
-    except AttributeError:
-        is_coordinator = False
-    if request.method == 'POST':
+    if request.method == 'POST' and user.customer_id is not None:
         form = MembersContactValidationForm(request.POST)  # A form bound to the POST data
-        user_customer = Customer.objects.filter(
-            id=request.user.customer.id,
-            is_active=True
-        ).order_by('?').first()
-        if form.is_valid() and user_customer is not None:  # All validation rules pass
+        if form.is_valid():  # All validation rules pass
+            user_customer = Customer.objects.filter(
+                id=user.customer_id
+            ).order_by('?').first()
             to_email_customer = []
             qs = Customer.objects.filter(
                 is_active=True,
                 represent_this_buyinggroup=False,
                 subscribe_to_email=True,
                 user__last_login__isnull=False)
-            if not is_coordinator:
+            if not user.is_coordinator:
                 qs = qs.filter(accept_mails_from_members=True)
             for customer in qs:
                 if customer.user_id != request.user.id:
@@ -71,34 +63,33 @@ def send_mail_to_all_members_view(request):
                 strip_tags(form.cleaned_data.get('subject')),
                 html_content=strip_tags(form.cleaned_data.get('message')),
                 from_email=request.user.email,
-                cc=to_email_customer
+                cc=to_email_customer,
+                show_customer_may_unsubscribe=True
             )
-            # send_email(email=email, from_name=user_customer.long_basket_name)
-            # thread.start_new_thread(send_email,(email, user_customer.long_basket_name, True))
             t = threading.Thread(target=email.send_email, args=(email, user_customer.long_basket_name))
             t.start()
             email = form.fields["your_email"]
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True
             recipient = form.fields["recipient"]
-            if is_coordinator:
+            if user.is_coordinator:
                 recipient.initial = _("All members as coordinator")
             else:
                 recipient.initial = _("All members who agree to show their email addresses to other members")
             recipient.widget.attrs['readonly'] = True
             return render(request, "repanier/send_mail_to_all_members.html",
-                          {'form': form, 'coordinator': is_coordinator, 'send': True})
+                          {'form': form, 'coordinator': user.is_coordinator, 'send': True})
     else:
         form = MembersContactValidationForm()  # An unbound form
         email = form.fields["your_email"]
         email.initial = request.user.email
         email.widget.attrs['readonly'] = True
         recipient = form.fields["recipient"]
-        if is_coordinator:
+        if user.is_coordinator:
             recipient.initial = _("All members as coordinator")
         else:
             recipient.initial = _("All members who agree to show their email addresses to other members")
         recipient.widget.attrs['readonly'] = True
 
     return render(request, "repanier/send_mail_to_all_members.html",
-                  {'form': form, 'coordinator': is_coordinator, 'send': None})
+                  {'form': form, 'coordinator': user.is_coordinator, 'send': None})

@@ -2,7 +2,6 @@
 
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
-from django.utils.safestring import mark_safe
 
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
@@ -32,7 +31,7 @@ def send_invoice(permanence_id):
                 long_profile_name = producer.long_profile_name \
                     if producer.long_profile_name is not None else producer.short_profile_name
                 if Purchase.objects.filter(
-                    permanence_id=permanence.id, producer_id=producer.id
+                        permanence_id=permanence.id, producer_id=producer.id
                 ).order_by('?').exists():
                     invoice_producer_mail = config.safe_translation_getter(
                         'invoice_producer_mail', any_language=True, default=EMPTY_STRING
@@ -41,14 +40,14 @@ def send_invoice(permanence_id):
 
                     template = Template(invoice_producer_mail)
                     context = TemplateContext({
-                        'name'             : long_profile_name,
+                        'name': long_profile_name,
                         'long_profile_name': long_profile_name,
-                        'permanence_link'  : mark_safe(
+                        'permanence_link': mark_safe(
                             "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
-                                                              reverse('producer_invoice_uuid_view',
-                                                                      args=(0, producer.uuid)),
-                                                              permanence)),
-                        'signature'        : mark_safe(
+                                                                     reverse('producer_invoice_uuid_view',
+                                                                             args=(0, producer.uuid)),
+                                                                     permanence)),
+                        'signature': mark_safe(
                             "{}<br>{}<br>{}".format(
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
@@ -75,15 +74,15 @@ def send_invoice(permanence_id):
                 'invoice_description', any_language=True, default=EMPTY_STRING
             )
             for customer in Customer.objects.filter(
-                customerinvoice__permanence_id=permanence.id,
-                customerinvoice__customer_charged_id=F('customer_id'),
-                represent_this_buyinggroup=False,
-                language=language_code
+                    customerinvoice__permanence_id=permanence.id,
+                    customerinvoice__customer_charged_id=F('customer_id'),
+                    represent_this_buyinggroup=False,
+                    language=language_code
             ).order_by('?'):
                 long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
                 if Purchase.objects.filter(
-                    permanence_id=permanence.id,
-                    customer_invoice__customer_charged_id=customer.id
+                        permanence_id=permanence.id,
+                        customer_invoice__customer_charged_id=customer.id
                 ).order_by('?').exists():
                     to_email_customer = [customer.user.email]
                     if customer.email2 is not None and len(customer.email2.strip()) > 0:
@@ -97,22 +96,22 @@ def send_invoice(permanence_id):
                         customer, permanence)
                     template = Template(invoice_customer_mail)
                     context = TemplateContext({
-                        'name'               : long_basket_name,
-                        'long_basket_name'   : long_basket_name,
-                        'basket_name'        : customer.short_basket_name,
-                        'short_basket_name'  : customer.short_basket_name,
-                        'permanence_link'    : mark_safe(
+                        'name': long_basket_name,
+                        'long_basket_name': long_basket_name,
+                        'basket_name': customer.short_basket_name,
+                        'short_basket_name': customer.short_basket_name,
+                        'permanence_link': mark_safe(
                             "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
-                                                              reverse('order_view', args=(permanence.id,)),
-                                                              permanence)),
-                        'last_balance_link'  : mark_safe("<a href=\"https://{}{}\">{}</a>".format(
+                                                                     reverse('order_view', args=(permanence.id,)),
+                                                                     permanence)),
+                        'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                             settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)),
                             customer_last_balance)),
-                        'last_balance'       : mark_safe(customer_last_balance),
-                        'order_amount'       : mark_safe(customer_order_amount),
-                        'payment_needed'     : mark_safe(customer_payment_needed),
+                        'last_balance': mark_safe(customer_last_balance),
+                        'order_amount': mark_safe(customer_order_amount),
+                        'payment_needed': mark_safe(customer_payment_needed),
                         'invoice_description': mark_safe(invoice_description),
-                        'signature'          : mark_safe(
+                        'signature': mark_safe(
                             "{}<br>{}<br>{}".format(
                                 signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
                     })
@@ -121,7 +120,8 @@ def send_invoice(permanence_id):
                         subject=invoice_customer_mail_subject,
                         html_content=html_content,
                         from_email=sender_email,
-                        to=to_email_customer
+                        to=to_email_customer,
+                        show_customer_may_unsubscribe=True
                     )
                     email.send_email()
     translation.activate(cur_language)

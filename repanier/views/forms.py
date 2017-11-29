@@ -23,9 +23,9 @@ from repanier.models.customer import Customer
 from repanier.models.lut import LUT_ProductionMode
 from repanier.models.staff import Staff
 from repanier.picture.const import SIZE_M
+from repanier.widget.picture import AjaxPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
-from repanier.widget.picture import AjaxPictureWidget
 
 
 class AuthRepanierLoginForm(AuthenticationForm):
@@ -70,7 +70,8 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
             html_content=html_content,
             from_email=from_email,
             to=[to_email],
-            unsubscribe=False
+            show_customer_may_unsubscribe=False,
+            send_even_if_unsubscribed=True
         )
         # if html_email_template_name is not None:
         #     html_email = loader.render_to_string(html_email_template_name, context)
@@ -148,11 +149,11 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
             site_name = current_site.name
             domain = current_site.domain
             context = {
-                'email'    : self.user.email,
-                'domain'   : domain,
+                'email': self.user.email,
+                'domain': domain,
                 'site_name': site_name,
-                'user'     : self.user,
-                'protocol' : 'https' if use_https else 'http',
+                'user': self.user,
+                'protocol': 'https' if use_https else 'http',
             }
             self.send_mail('repanier/registration/password_reset_done_subject.txt',
                            'repanier/registration/password_reset_done_email.html',

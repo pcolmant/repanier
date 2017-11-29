@@ -2,10 +2,9 @@
 
 import threading
 
-from django.forms import widgets
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.forms import widgets
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.html import strip_tags
@@ -17,7 +16,6 @@ from djng.forms import fields, NgFormValidationMixin
 
 from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
-from repanier.models.customer import Customer
 from repanier.models.staff import Staff
 from repanier.views.forms import RepanierForm
 from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidget
@@ -39,8 +37,8 @@ class CoordinatorsContactForm(RepanierForm):
         super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
         choices = []
         for staff in Staff.objects.filter(
-            is_active=True, is_contributor=False,
-            translations__language_code=translation.get_language()
+                is_active=True, is_contributor=False,
+                translations__language_code=translation.get_language()
         ):
             r = staff.customer_responsible
             if r is not None:
@@ -53,6 +51,7 @@ class CoordinatorsContactForm(RepanierForm):
                 choices.append(("{}".format(staff.id), mark_safe(signature)))
         self.fields["staff"].choices = choices
 
+
 class CoordinatorsContactValidationForm(NgFormValidationMixin, CoordinatorsContactForm):
     pass
 
@@ -61,16 +60,15 @@ class CoordinatorsContactValidationForm(NgFormValidationMixin, CoordinatorsConta
 @csrf_protect
 @never_cache
 def send_mail_to_coordinators_view(request):
-    user=request.user
-    customer_is_active = Customer.objects.filter(user_id=user.id, is_active=True).order_by('?').exists()
-    if not customer_is_active:
-        raise Http404
     if request.method == 'POST':
         form = CoordinatorsContactValidationForm(request.POST)
         if form.is_valid():
             to_email_staff = []
             selected_staff_members = form.cleaned_data.get('staff')
-            for staff in Staff.objects.filter(is_active=True, is_contributor=False, id__in=selected_staff_members).order_by('?'):
+            for staff in Staff.objects.filter(
+                    is_active=True, is_contributor=False,
+                    id__in=selected_staff_members
+            ).order_by('?'):
                 to_email_staff.append(staff.user.email)
 
             if to_email_staff:
@@ -80,9 +78,10 @@ def send_mail_to_coordinators_view(request):
                     html_content=strip_tags(form.cleaned_data.get('message')),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=to_email_customer,
-                    cc=to_email_staff
+                    cc=to_email_staff,
+                    show_customer_may_unsubscribe=False,
+                    send_even_if_unsubscribed=True
                 )
-                # email.send_email()
                 t = threading.Thread(target=email.send_email)
                 t.start()
                 email = form.fields["your_email"]

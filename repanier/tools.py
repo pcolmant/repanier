@@ -88,7 +88,8 @@ def send_email_to_who(is_email_send, board=False):
     if not is_email_send:
         if board:
             if REPANIER_SETTINGS_TEST_MODE:
-                return True, _("This email will be sent to the following tester(s) : {}.").format(", ".join(emails_of_testers()))
+                return True, _("This email will be sent to the following tester(s) : {}.").format(
+                    ", ".join(emails_of_testers()))
             else:
                 if settings.DEBUG:
                     return False, _("No email will be sent.")
@@ -98,7 +99,8 @@ def send_email_to_who(is_email_send, board=False):
             return False, _("No email will be sent.")
     else:
         if REPANIER_SETTINGS_TEST_MODE:
-            return True, _("This email will be sent to the following tester(s) : {}.").format(", ".join(emails_of_testers()))
+            return True, _("This email will be sent to the following tester(s) : {}.").format(
+                ", ".join(emails_of_testers()))
         else:
             if settings.DEBUG:
                 return False, _("No email will be sent.")
@@ -128,8 +130,7 @@ def send_sms(sms_nr=None, sms_msg=None):
                     valid_nr,
                     html_content=sms_msg,
                     from_email="no-reply@repanier.be",
-                    to=[apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ],
-                    unsubscribe=False
+                    to=[apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ]
                 )
                 email.send_email()
     except:
@@ -327,7 +328,7 @@ def payment_message(customer, permanence):
             balance = "{}".format(customer.balance)
         customer_last_balance = \
             _('The balance of your account as of %(date)s is %(balance)s.') % {
-                'date'   : customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
+                'date': customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
                 'balance': balance
             }
     else:
@@ -336,7 +337,8 @@ def payment_message(customer, permanence):
     if customer_invoice.customer_id != customer_invoice.customer_charged_id:
         customer_on_hold_movement = EMPTY_STRING
         customer_payment_needed = '<font color="#51a351">{}</font>'.format(
-            _('Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
+            _(
+                'Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
                 'name': customer_invoice.customer_charged.long_basket_name
             }
         )
@@ -361,7 +363,8 @@ def payment_message(customer, permanence):
                     communication = customer.short_basket_name
                 group_name = apps.REPANIER_SETTINGS_GROUP_NAME
                 customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
-                    _('Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
+                    _(
+                        'Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
                         'payment': payment_needed,
                         'name': group_name,
                         'number': bank_account_number,
@@ -371,7 +374,8 @@ def payment_message(customer, permanence):
 
             else:
                 if customer.balance.amount != DECIMAL_ZERO:
-                    customer_payment_needed = '<br><font color="#51a351">{}.</font>'.format(_('Your account balance is sufficient'))
+                    customer_payment_needed = '<br><font color="#51a351">{}.</font>'.format(
+                        _('Your account balance is sufficient'))
                 else:
                     customer_payment_needed = EMPTY_STRING
         else:
@@ -428,8 +432,8 @@ def display_selected_box_value_html(offer_item, quantity_ordered):
     else:
         qty_display = "---"
     return mark_safe("<option value=\"0\" selected>☑ {} {}</option>".format(
-                qty_display, BOX_UNICODE
-        ))
+        qty_display, BOX_UNICODE
+    ))
 
 
 def create_or_update_one_purchase(
@@ -438,7 +442,6 @@ def create_or_update_one_purchase(
         batch_job=False, is_box_content=False, comment=EMPTY_STRING):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     from repanier.models.purchase import Purchase
-    from repanier.models.permanence import Permanence
     from repanier.models.invoice import CustomerInvoice
     # The batch_job flag is used because we need to forbid
     # customers to add purchases during the close_orders_async or other batch_job process
@@ -527,6 +530,7 @@ def create_or_update_one_purchase(
         else:
             return purchase, False
 
+
 @transaction.atomic
 def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_id=None,
                                    batch_job=False, comment=EMPTY_STRING):
@@ -577,7 +581,7 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                 sid = transaction.savepoint()
                 # This code executes inside a transaction.
                 for content in BoxContent.objects.filter(
-                    box=offer_item.product_id
+                        box=offer_item.product_id
                 ).only(
                     "product_id", "content_quantity"
                 ).order_by('?'):
@@ -657,9 +661,9 @@ def my_basket(is_order_confirm_send, order_amount):
         )
     json_dict = {"#my_basket": msg_html}
     msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
-            order_amount=order_amount,
-            msg_confirm=msg_confirm
-        )
+        order_amount=order_amount,
+        msg_confirm=msg_confirm
+    )
     json_dict["#prepared_amount_visible_xs"] = msg_html
     return json_dict
 

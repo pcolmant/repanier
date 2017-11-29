@@ -1,24 +1,24 @@
 # -*- coding: utf-8
 
+import datetime
+import time
 from smtplib import SMTPRecipientsRefused, SMTPAuthenticationError
 
-import time
-import datetime
 from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives, mail_admins
-from django.utils.html import strip_tags
-from django.utils.text import slugify
+from django.db.models import Q
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 from repanier.const import DEMO_EMAIL, EMPTY_STRING
 
 
 class RepanierEmail(EmailMultiAlternatives):
-
     def __init__(self, *args, **kwargs):
         self.html_content = kwargs.pop('html_content', None)
-        self.unsubscribe = kwargs.pop('unsubscribe', True)
+        self.show_customer_may_unsubscribe = kwargs.pop('show_customer_may_unsubscribe', True)
+        self.send_even_if_unsubscribed = kwargs.pop('send_even_if_unsubscribed', False)
         self.test_connection = kwargs.pop('test_connection', None)
         super(RepanierEmail, self).__init__(*args, **kwargs)
         self._set_connection_param()
@@ -47,9 +47,7 @@ class RepanierEmail(EmailMultiAlternatives):
         email_send = False
         if not self.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
             self.reply_to = [self.from_email]
-            self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
-        else:
-            self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
+        self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
         self.body = strip_tags(self.html_content)
 
         if settings.DJANGO_SETTINGS_DEMO:
@@ -106,6 +104,8 @@ class RepanierEmail(EmailMultiAlternatives):
                 if customer.user.last_login is None:
                     # Do not spam someone who has never logged in
                     return False
+                elif not self.send_even_if_unsubscribed and not customer.subscribe_to_email:
+                    return False
                 else:
                     max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=426)
                     if customer.user.last_login < max_2_years_in_the_past:
@@ -115,7 +115,7 @@ class RepanierEmail(EmailMultiAlternatives):
             customer = None
 
         self.alternatives = []
-        if self.unsubscribe and customer is not None:
+        if customer is not None and self.show_customer_may_unsubscribe:
             self.attach_alternative(
                 "{}{}".format(self.html_content, customer.get_unsubscribe_mail_footer()),
                 "text/html"
@@ -193,16 +193,12 @@ class RepanierEmail(EmailMultiAlternatives):
 
         # try to find a customer based on user__email or customer__email2
         customer = Customer.objects.filter(
-            user__email=email_address,
-            subscribe_to_email=True,
+            Q(
+                user__email=email_address
+            ) | Q(
+                email2=email_address
+            )
         ).exclude(
             valid_email=False,
         ).order_by('?').first()
-        if customer is None:
-            customer = Customer.objects.filter(
-                email2=email_address,
-                subscribe_to_email=True,
-            ).exclude(
-                valid_email=False
-            ).order_by('?').first()
         return customer
