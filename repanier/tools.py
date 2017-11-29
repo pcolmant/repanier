@@ -148,6 +148,7 @@ def get_signature(is_reply_to_order_email=False, is_reply_to_invoice_email=False
         if (is_reply_to_order_email and staff.is_reply_to_order_email) \
                 or (is_reply_to_invoice_email and staff.is_reply_to_invoice_email):
             cc_email_staff.append(staff.user.email)
+            cc_email_staff.append(staff.customer_responsible.user.email)
             sender_email = staff.user.email
             sender_function = staff.safe_translation_getter(
                 'long_name', any_language=True, default=EMPTY_STRING
@@ -161,7 +162,7 @@ def get_signature(is_reply_to_order_email=False, is_reply_to_invoice_email=False
                 if r.phone2 and len(r.phone2.strip()) > 0:
                     signature += " / {}".format(r.phone2)
         elif staff.is_coordinator:
-            cc_email_staff.append(staff.user.email)
+            cc_email_staff.append(staff.customer_responsible.user.email)
 
     if sender_email is None:
         sender_email = settings.DEFAULT_FROM_EMAIL
