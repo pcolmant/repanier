@@ -16,6 +16,8 @@ class RepanierToolbar(CMSToolbar):
         if settings.DJANGO_SETTINGS_DEMO:
             self.toolbar.get_or_create_menu("demo-menu", _('Demo ({})').format(DEMO_EMAIL))
         user = self.request.user
+        if user.is_anonymous:
+            return
         if user.is_coordinator:
             display_all_but_configuration = True
             display_configuration = True
