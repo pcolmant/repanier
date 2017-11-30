@@ -154,7 +154,7 @@ class RepanierCustomBackend(ModelBackend):
 
                 else:
                     staff = Staff.objects.filter(user_id=user_or_none.id).only(
-                        "id",
+                        "id", "customer_responsible_id",
                         "is_active", "is_reply_to_order_email", "is_reply_to_invoice_email",
                         "is_contributor", "is_coordinator"
                     ).order_by('?').first()
@@ -167,7 +167,7 @@ class RepanierCustomBackend(ModelBackend):
                             user_or_none.is_contributor = staff.is_contributor
                             user_or_none.is_coordinator = staff.is_coordinator
                             user_or_none.is_customer = False
-                            user_or_none.customer_id = customer.id
+                            user_or_none.customer_id = staff.customer_responsible_id
                             user_or_none.staff_id = staff.id
                             user_or_none.subscribe_to_email = True
                     else:
