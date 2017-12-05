@@ -87,6 +87,7 @@ Try to connect with a ssh client as user "pi" before closing the current session
     sudo apt-get install virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
     sudo apt-get install python3-dev
     sudo apt-get install uwsgi-plugin-python3
+    sudo apt-get install git
     
     sudo -u postgres psql
         CREATE USER db_user PASSWORD 'db_password';
