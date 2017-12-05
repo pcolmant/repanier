@@ -100,6 +100,7 @@ Create a python virtual environment whose name is 'venv'
     virtualenv --python=python3 venv
     cd venv
     source bin/activate
+    git clone https://github.com/pcolmant/repanier.git
 
 Copy from gihub/pcolmant/repanier/requirements/requirement.txt to ~/pi/venv
 Then :
