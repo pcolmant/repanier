@@ -175,8 +175,6 @@ Install Repanier
     cp ~/venv/repanier/mysite/common_settings.py ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/urls.py ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/wsgi.py ~/venv/my_repanier/my_repanier/
-    
-    cp ~/venv/repanier/mysite/ ~/venv/my_repanier/my_repanier/
     cp -R ~/venv/repanier/repanier/locale/ ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/manage.py ~/venv/my_repanier/
     cp -R ~/venv/repanier/repanier/ ~/venv/my_repanier/
