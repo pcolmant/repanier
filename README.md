@@ -152,7 +152,7 @@ Set the system configuration of Repanier.
         DJANGO_SETTINGS_CACHE=/var/tmp/django-cache
         DJANGO_SETTINGS_SESSION=/var/tmp/django-session
         DJANGO_SETTINGS_COUNTRY=be
-        DJANGO_SETTINGS_STATIC=static
+        DJANGO_SETTINGS_STATIC=static : TO BE DELETED
         DJANGO_SETTINGS_BOOTSTRAP_CSS=bootstrap.css
         DJANGO_SETTINGS_IS_MINIMALIST=False
         DJANGO_SETTINGS_GROUP=True
@@ -166,10 +166,7 @@ Set the system configuration of Repanier.
 Install Repanier
 
     cd ~/venv/my_web_site/my_web_site/
-    mkdir media
-    cd media
-    mkdir public
-    cd ..
+    mkdir media/public -p
     sudo chgrp -R www-data media
     sudo chmod -R g+w media
     # now : copy from gihub/pcolmant/repanier/mysite/media/... to ~/venv/my_web_site/my_web_site/media/
