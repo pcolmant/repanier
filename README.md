@@ -111,6 +111,8 @@ Then :
     pip install -r repanier/requirement/requirement.txt
 
 Create the django project whose name is for example my_web_site
+Be careful do not use "repanier" as project name because it's already used 
+for the application.
 
     django-admin.py startproject my_web_site
 
@@ -172,16 +174,13 @@ Install Repanier
     cp ~/venv/repanier/repanier/static/favicon.ico ~/venv/my_repanier/my_repanier/media/
     cp ~/venv/repanier/repanier/locale/ ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/common_settings.py ~/venv/my_repanier/my_repanier/
-    # replace urls.py
     cp ~/venv/repanier/mysite/urls.py ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/wsgi.py ~/venv/my_repanier/my_repanier/
+    
     cp ~/venv/repanier/mysite/ ~/venv/my_repanier/my_repanier/
-
-    # now : copy from gihub/pcolmant/repanier/mysite/... to ~/venv/my_web_site/my_web_site/
-    #            locale (all the directory and subdirectories content)
-    # now : copy from gihub/pcolmant/repanier to ~/venv/my_web_site/
-    #            manage.py
-    #            repanier (all the directory and subdirectories content)
+    cp -R ~/venv/repanier/repanier/locale/ ~/venv/my_repanier/my_repanier/
+    cp ~/venv/repanier/manage.py ~/venv/my_repanier/
+    cp -R ~/venv/repanier/repanier/ ~/venv/my_repanier/
 
 
 Finalize the django configuration
