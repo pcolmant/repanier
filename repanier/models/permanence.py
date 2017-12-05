@@ -2,6 +2,7 @@
 
 import datetime
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
@@ -26,7 +27,7 @@ from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
-from repanier.tools import cap, create_or_update_one_purchase, add_months
+from repanier.tools import cap, create_or_update_one_purchase
 
 
 class Permanence(TranslatableModel):
@@ -567,10 +568,13 @@ class Permanence(TranslatableModel):
                             batch_job=True,
                             is_box_content=False
                         )
-                        membership_fee_valid_until = add_months(
-                            customer.membership_fee_valid_until,
-                            REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+                        membership_fee_valid_until = customer.membership_fee_valid_until + relativedelta(
+                            months=REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
                         )
+                        today = timezone.now().date()
+                        if membership_fee_valid_until < today:
+                            # For or occasional customer
+                            membership_fee_valid_until = today
                         # customer.save(update_fields=['membership_fee_valid_until', ])
                         # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
                         Customer.objects.filter(id=customer.id).order_by('?').update(

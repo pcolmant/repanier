@@ -13,6 +13,7 @@ from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
+from repanier.models.staff import Staff
 from repanier.tools import *
 
 
@@ -29,7 +30,8 @@ def send_pre_open_order(permanence_id):
             'offer_producer_mail', any_language=True, default=EMPTY_STRING
         )
 
-        sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
+        staff = Staff.get_order_responsible()
+
         offer_description = permanence.safe_translation_getter(
             'offer_description', any_language=True, default=EMPTY_STRING
         )
@@ -56,9 +58,7 @@ def send_pre_open_order(permanence_id):
                         settings.ALLOWED_HOSTS[0],
                         reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
                 ),
-                'signature': mark_safe(
-                    "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME)
-                )
+                'signature': staff.get_html_signature
             })
             html_content = template.render(context)
             to_email_producer = []
@@ -71,9 +71,10 @@ def send_pre_open_order(permanence_id):
             email = RepanierEmail(
                 subject=offer_producer_mail_subject,
                 html_content=html_content,
-                from_email=sender_email,
+                from_email=staff.get_from_email,
+                reply_to=staff.get_reply_to_email,
                 to=to_email_producer,
-                cc=cc_email_staff
+                cc=staff.get_to_email
             )
             email.send_email()
             send_sms(
@@ -93,7 +94,9 @@ def send_open_order(permanence_id):
             translation.activate(language_code)
             permanence = Permanence.objects.get(id=permanence_id)
             config = Configuration.objects.get(id=DECIMAL_ONE)
-            sender_email, sender_function, signature, to_email_staff = get_signature(is_reply_to_order_email=True)
+
+            staff = Staff.get_order_responsible()
+
             to_email_customer = []
             for customer in Customer.objects.filter(
                     is_active=True,
@@ -134,15 +137,15 @@ def send_open_order(permanence_id):
                 'offer_detail': mark_safe(offer_detail),
                 'offer_recent_detail': mark_safe(permanence.get_new_products),
                 'offer_producer': offer_producer,
-                'signature': mark_safe(
-                    "{}<br>{}<br>{}".format(signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                'signature': staff.get_html_signature
             })
             html_content = template.render(context)
             email = RepanierEmail(
                 subject=offer_customer_mail_subject,
                 html_content=html_content,
-                from_email=sender_email,
-                bcc=list(set(to_email_staff) | set(to_email_customer)),
+                from_email=staff.get_from_email,
+                reply_to=staff.get_reply_to_email,
+                bcc=list(set(staff.get_to_email) | set(to_email_customer)),
                 show_customer_may_unsubscribe=True
             )
             email.send_email()

@@ -12,7 +12,8 @@ from repanier.email.email_order import export_order_2_1_customer
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence import Permanence
-from repanier.tools import sint, get_signature, my_basket, calc_basket_message_html
+from repanier.models.staff import Staff
+from repanier.tools import sint, my_basket, calc_basket_message_html
 
 
 @never_cache
@@ -45,12 +46,9 @@ def btn_confirm_order_ajax(request):
         _("Order"),
         permanence
     )
-    sender_email, sender_function, signature, cc_email_staff = get_signature(
-        is_reply_to_order_email=True)
-    export_order_2_1_customer(
-        customer, filename, permanence, sender_email,
-        sender_function, signature
-    )
+    staff = Staff.get_order_responsible()
+
+    export_order_2_1_customer(customer, filename, permanence, staff)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,
         customer_id=customer.id

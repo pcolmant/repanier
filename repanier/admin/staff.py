@@ -1,8 +1,10 @@
 # -*- coding: utf-8
+import uuid
 
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm
@@ -16,7 +18,7 @@ from .lut import LUTAdmin
 
 
 class UserDataForm(TranslatableModelForm):
-    email = forms.EmailField(label=_('Email'), required=True)
+    email = forms.EmailField(label=_('Email'), required=False)
     user = None
 
     def __init__(self, *args, **kwargs):
@@ -43,12 +45,14 @@ class UserDataForm(TranslatableModelForm):
                 self.add_error('is_reply_to_invoice_email', _('This flag is already set for another staff member'))
         # Check that the email is not already used
         email = self.cleaned_data["email"].lower()
-        user_model = get_user_model()
-        qs = user_model.objects.filter(email=email).order_by('?')
-        if self.instance.id is not None:
-            qs = qs.exclude(id=self.instance.user_id)
-        if qs.exists():
-            self.add_error('email', _('The email {} is already used by another user.').format(email))
+        if email:
+            # self.add_error('email', _('This field is required.'))
+            user_model = get_user_model()
+            qs = user_model.objects.filter(email=email).order_by('?')
+            if self.instance.id is not None:
+                qs = qs.exclude(id=self.instance.user_id)
+            if qs.exists():
+                self.add_error('email', _('The email {} is already used by another user.').format(email))
         if not is_coordinator:
             qs = Staff.objects.filter(is_coordinator=True).order_by('?')
             if self.instance.id is not None:
@@ -63,14 +67,15 @@ class UserDataForm(TranslatableModelForm):
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = user.email = email
+            user.email = email
             user.save()
         else:
             # Important : The username who is never used is uuid1 to avoid clash with customer username
             # The staff member login with his customer mail address
             # Linked with AuthRepanierPasswordResetForm.get_users
             user = user_model.objects.create_user(
-                username=email, email=email, password=None,
+                username=email or "{}@repanier.be".format(uuid.uuid1()),
+                email=email, password=None,
                 first_name=EMPTY_STRING, last_name=EMPTY_STRING)
         self.user = user
         return self.instance

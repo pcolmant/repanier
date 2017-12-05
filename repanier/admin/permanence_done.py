@@ -27,8 +27,9 @@ from repanier.models.invoice import ProducerInvoice
 from repanier.models.lut import LUT_PermanenceRole
 from repanier.models.permanence import PermanenceDone
 from repanier.models.permanenceboard import PermanenceBoard
+from repanier.models.staff import Staff
 from repanier.task import task_invoice
-from repanier.tools import send_email_to_who, get_signature
+from repanier.tools import send_email_to_who
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.xlsx_invoice import export_bank, export_invoice, handle_uploaded_invoice
 from repanier.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchase
@@ -456,7 +457,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         invoice_description = permanence.safe_translation_getter(
             'invoice_description', any_language=True, default=EMPTY_STRING
         )
-        sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_invoice_email=True)
+        staff = Staff.get_invoice_responsible()
+
         # TODO : Align on tools.payment_message
         customer_order_amount = \
             _('The amount of your order is %(amount)s.') % {
@@ -485,8 +487,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'order_amount': mark_safe(customer_order_amount),
             'payment_needed': mark_safe(customer_payment_needed),
             'invoice_description': mark_safe(invoice_description),
-            'signature': mark_safe(
-                "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+            'signature': staff.get_html_signature,
         })
         template_invoice_customer_mail = template.render(context)
 
@@ -500,8 +501,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'name': _('Long name'),
             'long_profile_name': _('Long name'),
             'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-            'signature': mark_safe(
-                "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+            'signature': staff.get_html_signature,
         })
         template_invoice_producer_mail = template.render(context)
 

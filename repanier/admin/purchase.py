@@ -29,7 +29,8 @@ from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
-from repanier.tools import sint, get_signature
+from repanier.models.staff import Staff
+from repanier.tools import sint
 from repanier.widget.select_admin_delivery import SelectAdminDeliveryWidget
 from repanier.widget.select_admin_permanence import SelectAdminPermanenceWidget
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
@@ -237,11 +238,10 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             _("Order"),
                             permanence
                         )
-                        sender_email, sender_function, signature, cc_email_staff = get_signature(
-                            is_reply_to_order_email=True)
+                        staff = Staff.get_order_responsible()
+
                         export_order_2_1_customer(
-                            customer, filename, permanence, sender_email,
-                            sender_function, signature)
+                            customer, filename, permanence, staff)
                         user_message_level = messages.INFO
                         user_message = customer.my_order_confirmation_email_send_to()
                     else:

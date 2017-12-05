@@ -8,7 +8,6 @@ from django.db import models
 from django.db import transaction
 from django.db.models import F, Sum, Q
 from django.utils.formats import number_format
-from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -16,7 +15,8 @@ from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
-from repanier.tools import create_or_update_one_cart_item, get_signature
+from repanier.models.staff import Staff
+from repanier.tools import create_or_update_one_cart_item
 
 
 class Invoice(models.Model):
@@ -80,6 +80,7 @@ class Invoice(models.Model):
     class Meta:
         abstract = True
 
+
 class CustomerInvoice(Invoice):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("Customer"),
@@ -104,7 +105,8 @@ class CustomerInvoice(Invoice):
         default=None, blank=True, null=True, db_index=True)
     price_list_multiplier = models.DecimalField(
         _("Delivery point price list multiplier"),
-        help_text=_("This multiplier is applied once for groups with entitled customer or at each customer invoice for open groups."),
+        help_text=_(
+            "This multiplier is applied once for groups with entitled customer or at each customer invoice for open groups."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])
     transport = ModelMoneyField(
@@ -134,7 +136,7 @@ class CustomerInvoice(Invoice):
             if self.status < PERMANENCE_INVOICED or not customer_charged:
                 return self.total_price_with_tax
             else:
-                return self.customer_charged # if self.total_price_with_tax != DECIMAL_ZERO else RepanierMoney()
+                return self.customer_charged  # if self.total_price_with_tax != DECIMAL_ZERO else RepanierMoney()
 
     def get_total_price_wo_tax(self):
         return self.get_total_price_with_tax() - self.get_total_tax()
@@ -284,50 +286,50 @@ class CustomerInvoice(Invoice):
                     transport = True
                     if self.min_transport.amount > DECIMAL_ZERO:
                         msg_transport = "{}<br>".format(
-                                        _(
-                                            'The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s.') % {
-                                            'transport'    : self.transport,
-                                            'min_transport': self.min_transport
-                                        })
+                            _(
+                                'The shipping costs for this delivery point amount to %(transport)s for orders of less than %(min_transport)s.') % {
+                                'transport': self.transport,
+                                'min_transport': self.min_transport
+                            })
                     else:
                         msg_transport = "{}<br>".format(
-                                        _(
-                                            'The shipping costs for this delivery point amount to %(transport)s.') % {
-                                            'transport': self.transport,
-                                        })
+                            _(
+                                'The shipping costs for this delivery point amount to %(transport)s.') % {
+                                'transport': self.transport,
+                            })
                 if self.price_list_multiplier == DECIMAL_ONE:
                     msg_price = EMPTY_STRING
                 else:
                     if transport:
                         if self.price_list_multiplier > DECIMAL_ONE:
                             msg_price = "{}<br>".format(
-                                        _(
-                                            'A price increase of %(increase)s %% of the total invoiced is due for this delivery point. This does not apply to the cost of transport which is fixed.') % {
-                                            'increase': number_format(
-                                                (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
-                                        })
+                                _(
+                                    'A price increase of %(increase)s %% of the total invoiced is due for this delivery point. This does not apply to the cost of transport which is fixed.') % {
+                                    'increase': number_format(
+                                        (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
+                                })
                         else:
                             msg_price = "{}<br>".format(
-                                        _(
-                                            'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point. This does not apply to the cost of transport which is fixed.') % {
-                                            'decrease': number_format(
-                                                (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
-                                        })
+                                _(
+                                    'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point. This does not apply to the cost of transport which is fixed.') % {
+                                    'decrease': number_format(
+                                        (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
+                                })
                     else:
                         if self.price_list_multiplier > DECIMAL_ONE:
                             msg_price = "{}<br>".format(
-                                        _(
-                                            'A price increase of %(increase)s %% of the total invoiced is due for this delivery point.') % {
-                                            'increase': number_format(
-                                                (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
-                                        })
+                                _(
+                                    'A price increase of %(increase)s %% of the total invoiced is due for this delivery point.') % {
+                                    'increase': number_format(
+                                        (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
+                                })
                         else:
                             msg_price = "{}<br>".format(
-                                        _(
-                                            'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point.') % {
-                                            'decrease': number_format(
-                                                (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
-                                        })
+                                _(
+                                    'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point.') % {
+                                    'decrease': number_format(
+                                        (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
+                                })
 
             msg_delivery = """
             {}<b><i>
@@ -377,8 +379,9 @@ class CustomerInvoice(Invoice):
                                 btn_disabled = "disabled"
                             msg_confirmation1 = "<span style=\"color: red; \">{}</span><br>".format(_(
                                 "/!\ Unconfirmed orders will be canceled."))
-                            msg_confirmation2 = "<span class=\"glyphicon glyphicon-floppy-disk\"></span>&nbsp;&nbsp;{}".format(_(
-                                "Confirm this order and receive an email containing its summary."))
+                            msg_confirmation2 = "<span class=\"glyphicon glyphicon-floppy-disk\"></span>&nbsp;&nbsp;{}".format(
+                                _(
+                                    "Confirm this order and receive an email containing its summary."))
                     else:
                         href = urlresolvers.reverse(
                             'order_view', args=(permanence.id,)
@@ -440,7 +443,7 @@ class CustomerInvoice(Invoice):
                         </div>
                         </div>
                          """.format(msg_delivery, msg_confirmation1, btn_disabled, msg_confirmation2, basket_message)
-        return {"#span_btn_confirm_order" : mark_safe(msg_html)}
+        return {"#span_btn_confirm_order": mark_safe(msg_html)}
 
     @transaction.atomic
     def confirm_order(self):
@@ -524,14 +527,14 @@ class CustomerInvoice(Invoice):
 
                 total_price_with_tax_wo_deposit = total_price_with_tax - total_deposit
                 self.delta_price_with_tax.amount = -(
-                    total_price_with_tax_wo_deposit - (
+                        total_price_with_tax_wo_deposit - (
                         total_price_with_tax_wo_deposit * self.price_list_multiplier
-                    ).quantize(TWO_DECIMALS)
+                ).quantize(TWO_DECIMALS)
                 )
                 self.delta_vat.amount = -(
-                    total_vat - (
+                        total_vat - (
                         total_vat * self.price_list_multiplier
-                    ).quantize(FOUR_DECIMALS)
+                ).quantize(FOUR_DECIMALS)
                 )
 
             result_set = Purchase.objects.filter(
@@ -640,11 +643,11 @@ class CustomerInvoice(Invoice):
                 _("Canceled order"),
                 permanence
             )
-            sender_email, sender_function, signature, cc_email_staff = get_signature(
-                is_reply_to_order_email=True)
+
+            staff = Staff.get_order_responsible()
+
             export_order_2_1_customer(
-                self.customer, filename, permanence, sender_email,
-                sender_function, signature,
+                self.customer, filename, permanence, staff,
                 cancel_order=True
             )
             purchase_qs = Purchase.objects.filter(

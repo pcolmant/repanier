@@ -22,20 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_allowed_mail_extension():
-    allowed_mail_extension = "@{}".format(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
-    cut_index = len(DJANGO_SETTINGS_ALLOWED_HOSTS[0]) - 1
-    point_counter = 0
-    while cut_index >= 0:
-        if DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index] == ".":
-            point_counter += 1
-            if point_counter == 2:
-                allowed_mail_extension = "@{}".format(DJANGO_SETTINGS_ALLOWED_HOSTS[0][cut_index + 1:])
-                break
-        cut_index -= 1
-    if allowed_mail_extension.endswith("local"):
+    try:
+        composant = DJANGO_SETTINGS_ALLOWED_HOSTS[0].split(".")
+        if composant[-1] == "local":
+            allowed_mail_extension = "@repanier.be"
+        else:
+            allowed_mail_extension = "@{}.{}".format(DJANGO_SETTINGS_ALLOWED_HOSTS[0], composant[-2], composant[-1])
+    except:
         allowed_mail_extension = "@repanier.be"
     return allowed_mail_extension
-
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 logger.info("Python path is : {}".format(sys.path))

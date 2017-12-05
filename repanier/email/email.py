@@ -45,8 +45,6 @@ class RepanierEmail(EmailMultiAlternatives):
         from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
 
         email_send = False
-        if not self.from_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-            self.reply_to = [self.from_email]
         self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
         self.body = strip_tags(self.html_content)
 

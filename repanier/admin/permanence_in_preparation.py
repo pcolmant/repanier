@@ -19,8 +19,8 @@ from parler.forms import TranslatableModelForm
 from parler.utils.context import switch_language
 
 import repanier.apps
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
+from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models import Contract
@@ -33,8 +33,9 @@ from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
+from repanier.models.staff import Staff
 from repanier.task import task_order
-from repanier.tools import send_email_to_who, get_signature, get_board_composition, get_recurrence_dates
+from repanier.tools import send_email_to_who, get_board_composition, get_recurrence_dates
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
 
@@ -396,7 +397,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
                 with switch_language(repanier.apps.REPANIER_SETTINGS_CONFIG, language_code):
                     template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.offer_producer_mail)
-                sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
+
+                staff = Staff.get_order_responsible()
+
                 with switch_language(permanence, language_code):
                     offer_description = permanence.safe_translation_getter(
                         'offer_description', any_language=True, default=EMPTY_STRING
@@ -407,9 +410,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(_("Offers"))),
                     'offer_description': mark_safe(offer_description),
                     'offer_link': mark_safe("<a href=\"#\">{}</a>".format(_("Offers"))),
-                    'signature': mark_safe(
-                        "{}<br>{}<br>{}".format(signature, sender_function,
-                                                repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    'signature': staff.get_html_signature,
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
@@ -425,7 +426,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
                 with switch_language(repanier.apps.REPANIER_SETTINGS_CONFIG, language_code):
                     template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail)
-                sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
+
+                staff = Staff.get_order_responsible()
+
                 with switch_language(permanence, language_code):
                     offer_description = permanence.safe_translation_getter(
                         'offer_description', any_language=True, default=EMPTY_STRING
@@ -450,9 +453,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     'offer_recent_detail': offer_detail,
                     'offer_producer': offer_producer,
                     'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-                    'signature': mark_safe(
-                        "{}<br>{}<br>{}".format(signature, sender_function,
-                                                repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                    'signature': staff.get_html_signature,
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
@@ -558,7 +559,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             translation.activate(language_code)
 
             template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail)
-            sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_order_email=True)
+
+            staff = Staff.get_order_responsible()
+
             customer_last_balance = \
                 _('The balance of your account as of %(date)s is %(balance)s.') % {
                     'date': timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
@@ -601,8 +604,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'on_hold_movement': mark_safe(customer_on_hold_movement),
                 'payment_needed': mark_safe(customer_payment_needed),
                 'delivery_point': _('Delivery point').upper(),
-                'signature': mark_safe(
-                    "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                'signature': staff.get_html_signature,
             })
 
             template_order_customer_mail.append(language_code)

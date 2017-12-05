@@ -7,6 +7,8 @@ from django.db.models.signals import post_delete
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from mptt.fields import TreeForeignKey
@@ -37,7 +39,7 @@ class Staff(MPTTModel, TranslatableModel):
         settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
-        on_delete=models.PROTECT, blank=True, null=True, default=None)
+        on_delete=models.PROTECT)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
@@ -64,14 +66,98 @@ class Staff(MPTTModel, TranslatableModel):
         _("Password reset on"), null=True, blank=True, default=None)
     is_active = models.BooleanField(_("Active"), default=True)
 
+    @classmethod
+    def get_order_responsible(cls):
+        return cls.objects.filter(is_active=True, is_reply_to_order_email=True).order_by('?').first()
+
+    @classmethod
+    def get_invoice_responsible(cls):
+        return cls.objects.filter(is_active=True, is_reply_to_invoice_email=True).order_by('?').first()
+
     def get_customer_phone1(self):
         try:
             return self.customer_responsible.phone1
         except:
             return "----"
-
     get_customer_phone1.short_description = (_("Phone1"))
-    get_customer_phone1.allow_tags = False
+
+    @cached_property
+    def get_html_signature(self):
+        from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+
+        function_name = self.safe_translation_getter(
+            'long_name', any_language=True, default=EMPTY_STRING
+        )
+        customer = self.customer_responsible
+        customer_name = customer.long_basket_name or customer.short_basket_name
+        customer_phone = []
+        if customer.phone1:
+            customer_phone.append(customer.phone1)
+        if customer.phone2:
+            customer_phone.append(customer.phone2)
+        customer_phone_str = " / ".join(customer_phone)
+        if customer_phone_str:
+            customer_contact_info = "{} - {}".format(customer_name, customer_phone_str)
+        else:
+            customer_contact_info = customer_name
+        html_signature = mark_safe(
+            "{}<br>{}<br>{}".format(
+                customer_contact_info, function_name, REPANIER_SETTINGS_GROUP_NAME
+            )
+        )
+        return html_signature
+
+    @cached_property
+    def get_from_email(self):
+        if settings.DJANGO_SETTINGS_DEMO:
+            from_email = "no-reply@repanier.be"
+        else:
+            from repanier.apps import REPANIER_SETTINGS_CONFIG
+            config = REPANIER_SETTINGS_CONFIG
+            if config.email_is_custom:
+                from_email = config.email_host_user
+            else:
+                staff_email = self.user.email
+                if staff_email:
+                    if staff_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+                        from_email = staff_email
+                    else:
+                        # The mail address of the staff member doesn't end with an allowed mail extension,
+                        # set a generic one
+                        from_email = "no-reply@repanier.be"
+                else:
+                    # No specific mail address for the staff member,
+                    # set a generic one
+                    from_email = "no-reply@repanier.be"
+        return from_email
+
+    @cached_property
+    def get_reply_to_email(self):
+        if settings.DJANGO_SETTINGS_DEMO:
+            reply_to_email = "no-reply@repanier.be"
+        else:
+            from repanier.apps import REPANIER_SETTINGS_CONFIG
+            config = REPANIER_SETTINGS_CONFIG
+            if config.email_is_custom:
+                reply_to_email = config.email_host_user
+            else:
+                staff_email = self.user.email
+                if staff_email:
+                    reply_to_email = staff_email
+                else:
+                    # No specific mail address for the staff member,
+                    # use the customer responsible email
+                    reply_to_email = self.customer_responsible.user.email
+        return reply_to_email
+
+    @cached_property
+    def get_to_email(self):
+        if self.user.email:
+            return [self.user.email, self.customer_responsible.user.email]
+        else:
+            # No specific mail address for the staff member,
+            # use only the customer responsible email
+            return [self.customer_responsible.user.email]
 
     @property
     def title_for_admin(self):

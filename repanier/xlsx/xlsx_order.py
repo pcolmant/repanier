@@ -16,7 +16,6 @@ from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
-from repanier.models.staff import Staff
 from repanier.tools import get_base_unit, next_row
 from repanier.xlsx.export_tools import *
 from .xlsx_stock import export_permanence_stock
@@ -473,8 +472,7 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 base_unit = get_base_unit(
                                     qty,
                                     purchase.offer_item.order_unit,
-                                    purchase.status,
-                                    producer=True
+                                    purchase.status
                                 )
                                 c = ws.cell(row=row_num, column=0)
                                 c.value = purchase.id

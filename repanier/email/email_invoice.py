@@ -8,6 +8,7 @@ from repanier.models.customer import Customer
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
+from repanier.models.staff import Staff
 from repanier.tools import *
 
 
@@ -20,7 +21,9 @@ def send_invoice(permanence_id):
         translation.activate(language_code)
         permanence = Permanence.objects.get(id=permanence_id)
         config = Configuration.objects.get(id=DECIMAL_ONE)
-        sender_email, sender_function, signature, cc_email_staff = get_signature(is_reply_to_invoice_email=True)
+
+        staff = Staff.get_invoice_responsible()
+
         if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER:
             # To the producer we speak of "payment".
             # This is the detail of the payment to the producer, i.e. received products
@@ -47,9 +50,7 @@ def send_invoice(permanence_id):
                                                                      reverse('producer_invoice_uuid_view',
                                                                              args=(0, producer.uuid)),
                                                                      permanence)),
-                        'signature': mark_safe(
-                            "{}<br>{}<br>{}".format(
-                                signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        'signature': staff.get_html_signature
                     })
                     html_content = template.render(context)
                     to_email_producer = []
@@ -62,8 +63,9 @@ def send_invoice(permanence_id):
                     email = RepanierEmail(
                         subject=invoice_producer_mail_subject,
                         html_content=html_content,
-                        from_email=sender_email,
-                        to=to_email_producer
+                        from_email=staff.get_from_email,
+                        to=to_email_producer,
+                        reply_to=staff.get_reply_to
                     )
                     email.send_email()
 
@@ -111,15 +113,13 @@ def send_invoice(permanence_id):
                         'order_amount': mark_safe(customer_order_amount),
                         'payment_needed': mark_safe(customer_payment_needed),
                         'invoice_description': mark_safe(invoice_description),
-                        'signature': mark_safe(
-                            "{}<br>{}<br>{}".format(
-                                signature, sender_function, REPANIER_SETTINGS_GROUP_NAME))
+                        'signature': staff.get_html_signature
                     })
                     html_content = template.render(context)
                     email = RepanierEmail(
                         subject=invoice_customer_mail_subject,
                         html_content=html_content,
-                        from_email=sender_email,
+                        from_email=staff.get_from_email,
                         to=to_email_customer,
                         show_customer_may_unsubscribe=True
                     )

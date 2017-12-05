@@ -4,6 +4,7 @@ import datetime
 import json
 from urllib.request import urlopen
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
@@ -122,51 +123,24 @@ def send_sms(sms_nr=None, sms_msg=None):
                 if '0' <= sms_nr[i] <= '9':
                     valid_nr += sms_nr[i]
                 i += 1
-            if len(valid_nr) == 10 \
-                    and apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL is not None \
-                    and len(apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL) > 0:
-                # Send SMS with free gateway : Sms Gateway - Android.
-                email = RepanierEmail(
-                    valid_nr,
-                    html_content=sms_msg,
-                    from_email="no-reply@repanier.be",
-                    to=[apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ]
-                )
-                email.send_email()
+            if len(valid_nr) == 10:
+                from repanier.apps import REPANIER_SETTINGS_CONFIG, REPANIER_SETTINGS_SMS_GATEWAY_MAIL
+                if REPANIER_SETTINGS_SMS_GATEWAY_MAIL:
+                    config = REPANIER_SETTINGS_CONFIG
+                    if config.email_is_custom:
+                        from_email = config.email_host_user
+                    else:
+                        from_email = "no-reply{}".format(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
+                    # Send SMS with free gateway : Sms Gateway - Android.
+                    email = RepanierEmail(
+                        valid_nr,
+                        html_content=sms_msg,
+                        from_email=from_email,
+                        to=[apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ]
+                    )
+                    email.send_email()
     except:
         pass
-
-
-def get_signature(is_reply_to_order_email=False, is_reply_to_invoice_email=False):
-    from repanier.models.staff import Staff
-
-    sender_email = None
-    sender_function = EMPTY_STRING
-    signature = EMPTY_STRING
-    cc_email_staff = []
-    for staff in Staff.objects.filter(is_active=True).order_by('?'):
-        if (is_reply_to_order_email and staff.is_reply_to_order_email) \
-                or (is_reply_to_invoice_email and staff.is_reply_to_invoice_email):
-            cc_email_staff.append(staff.user.email)
-            cc_email_staff.append(staff.customer_responsible.user.email)
-            sender_email = staff.user.email
-            sender_function = staff.safe_translation_getter(
-                'long_name', any_language=True, default=EMPTY_STRING
-            )
-            r = staff.customer_responsible
-            if r:
-                if r.long_basket_name:
-                    signature = "{} - {}".format(r.long_basket_name, r.phone1)
-                else:
-                    signature = "{} - {}".format(r.short_basket_name, r.phone1)
-                if r.phone2 and len(r.phone2.strip()) > 0:
-                    signature += " / {}".format(r.phone2)
-        elif staff.is_coordinator:
-            cc_email_staff.append(staff.customer_responsible.user.email)
-
-    if sender_email is None:
-        sender_email = settings.DEFAULT_FROM_EMAIL
-    return sender_email, sender_function, signature, cc_email_staff
 
 
 def get_board_composition(permanence_id):
@@ -242,7 +216,7 @@ def permanence_ok_or_404(permanence):
     if permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
         if permanence.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             if permanence.permanence_date < (
-                        timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)
+                    timezone.now() - datetime.timedelta(weeks=LIMIT_DISPLAYED_PERMANENCE)
             ).date():
                 raise Http404
         else:
@@ -844,16 +818,6 @@ def producer_web_services_activated(reference_site=None):
         except:
             pass
     return web_services_activated, "Repanier", web_service_version
-
-
-def add_months(sourcedate, months):
-    # months must be an integer
-    months = int(months)
-    month = sourcedate.month - 1 + months
-    year = int(sourcedate.year + month / 12)
-    month = month % 12 + 1
-    day = min(sourcedate.day, calendar.monthrange(year, month)[1])
-    return datetime.date(year, month, day)
 
 
 def calc_basket_message_html(customer, permanence, status):
