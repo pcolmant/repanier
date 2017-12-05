@@ -84,7 +84,7 @@ Try to connect with a ssh client as user "pi" before closing the current session
 
     sudo dpkg-reconfigure locales
             -- select>>>> fr_BE.UTF-8  and/or other following your need
-    sudo apt-get install python-virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
+    sudo apt-get install virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential
     sudo apt-get install python3-dev
     sudo apt-get install uwsgi-plugin-python3
     
