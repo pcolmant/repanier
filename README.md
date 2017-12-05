@@ -162,22 +162,23 @@ Set the system configuration of Repanier.
         [ALLOWED_HOSTS]
         1:repanier.local
 
-
 Install Repanier
 
     cd ~/venv/my_web_site/my_web_site/
     mkdir media/public -p
     sudo chgrp -R www-data media
     sudo chmod -R g+w media
-    # now : copy from gihub/pcolmant/repanier/mysite/media/... to ~/venv/my_web_site/my_web_site/media/
-    #            favicon.ico
-    #            robot.txt
+    cp ~/venv/repanier/repanier/static/robots.txt ~/venv/my_repanier/my_repanier/media/
+    cp ~/venv/repanier/repanier/static/favicon.ico ~/venv/my_repanier/my_repanier/media/
+    cp ~/venv/repanier/repanier/locale/ ~/venv/my_repanier/my_repanier/
+    cp ~/venv/repanier/mysite/common_settings.py ~/venv/my_repanier/my_repanier/
+    # replace urls.py
+    cp ~/venv/repanier/mysite/urls.py ~/venv/my_repanier/my_repanier/
+    cp ~/venv/repanier/mysite/wsgi.py ~/venv/my_repanier/my_repanier/
+    cp ~/venv/repanier/mysite/ ~/venv/my_repanier/my_repanier/
+
     # now : copy from gihub/pcolmant/repanier/mysite/... to ~/venv/my_web_site/my_web_site/
     #            locale (all the directory and subdirectories content)
-    #            my_web_site.ini
-    #            common_settings.py
-    #            urls.py
-    #            wsgi.py
     # now : copy from gihub/pcolmant/repanier to ~/venv/my_web_site/
     #            manage.py
     #            repanier (all the directory and subdirectories content)
