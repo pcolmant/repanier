@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import os
+from subprocess import call
+
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand
-from subprocess import call
-import os
 
 # sudo -u postgres psql
 # CREATE DATABASE ptidej OWNER pi;
@@ -15,13 +16,13 @@ from repanier.models.customer import Customer
 
 
 class Command(BaseCommand):
-    args = '<none>'
-    help = 'Backup the db and send it by mail to the admin'
+    args = "<none>"
+    help = "Backup the db and send it by mail to the admin"
 
     def handle(self, *args, **options):
-        db_name = settings.DATABASES['default']['NAME']
-        db_user = settings.DATABASES['default']['USER']
-        backup_file = NamedTemporaryFile(prefix=db_name + '-db.bak.', suffix='.gz')
+        db_name = settings.DJANGO_SETTINGS_DATABASE_NAME
+        db_user = settings.DJANGO_SETTINGS_DATABASE_USER
+        backup_file = NamedTemporaryFile(prefix="{}-db.bak.".format(db_name), suffix='.gz')
         # pg_dump  -Fc -U pi _8_dev_gassines -f db.bak
 
         # sudo /etc/init.d/postgresql restart
@@ -31,17 +32,17 @@ class Command(BaseCommand):
         # \q
         # pg_restore  --username=pi --format=c --no-owner --dbname=_8_dev_gassines db.bak
 
-        result = call("pg_dump -Fc -U " + db_user + " " + db_name + " | gzip", stdout=backup_file, shell=True)
+        result = call("pg_dump -Fc -U {} {} | gzip".format(db_user, db_name), stdout=backup_file, shell=True)
         if result == 0:
-            migrations_files = NamedTemporaryFile(prefix=db_name + '-mig.bak.', suffix='.gz')
+            migrations_files = NamedTemporaryFile(prefix="{}-mig.bak.".format(db_name), suffix='.gz')
             repanier_path = "{}{}{}".format(os.path.dirname(settings.PROJECT_DIR), os.sep, "repanier")
             result = call("cd {} && tar -zcf {} migrations{}*.py".format(repanier_path, migrations_files.name, os.sep),
                           stdout=migrations_files, shell=True)
 
             if result == 0:
                 email = EmailMultiAlternatives(
-                    subject="Backup " + db_name,
-                    body="Backup of the DB : " + db_name,
+                    subject="Backup {}".format(db_name),
+                    body="Backup of the DB : {}".format(db_name),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[v for k, v in settings.ADMINS]
                 )
@@ -51,10 +52,10 @@ class Command(BaseCommand):
                                   'application/zip')
                 email.send()
                 for customer in Customer.objects.filter(
-                    represent_this_buyinggroup=False,
-                    subscribe_to_email=False,
-                    is_group=False,
-                    is_anonymized=False,
+                        represent_this_buyinggroup=False,
+                        subscribe_to_email=False,
+                        is_group=False,
+                        is_anonymized=False,
                 ).order_by('?'):
                     if customer.get_purchase() <= 0 and customer.get_participation() <= 0 and customer.get_admin_balance().amount == DECIMAL_ZERO:
                         customer.is_active = False

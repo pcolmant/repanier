@@ -180,9 +180,9 @@ def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
             user_message_level = messages.INFO
     else:
         permanence.set_status(PERMANENCE_WAIT_FOR_OPEN)
-        # open_order(permanence.id)
-        t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
-        t.start()
+        open_order(permanence.id, do_not_send_any_mail)
+        # t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
+        # t.start()
         user_message = _("The offers are being generated.")
         user_message_level = messages.INFO
     return user_message, user_message_level

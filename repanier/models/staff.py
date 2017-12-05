@@ -39,7 +39,7 @@ class Staff(MPTTModel, TranslatableModel):
         settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
-        on_delete=models.PROTECT)
+        on_delete=models.PROTECT, null=True, default=None)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
@@ -148,7 +148,7 @@ class Staff(MPTTModel, TranslatableModel):
                     # No specific mail address for the staff member,
                     # use the customer responsible email
                     reply_to_email = self.customer_responsible.user.email
-        return reply_to_email
+        return [reply_to_email]
 
     @cached_property
     def get_to_email(self):

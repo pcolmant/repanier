@@ -322,7 +322,7 @@ class Customer(models.Model):
         return self.picture or self.accept_mails_from_members or self.accept_phone_call_from_members \
                or (self.about_me is not None and len(self.about_me.strip()) > 1)
 
-    def get_unsubscribe_mail_footer(self):
+    def get_html_unsubscribe_mail_footer(self):
         return mark_safe("<br><br><hr/><br><a href=\"{}\">{}</a>".format(self._get_unsubscribe_link(), _("Unsubscribe to emails")))
 
     def _get_unsubscribe_link(self):

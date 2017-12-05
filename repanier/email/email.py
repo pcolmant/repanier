@@ -64,9 +64,12 @@ class RepanierEmail(EmailMultiAlternatives):
             from repanier.apps import REPANIER_SETTINGS_TEST_MODE
             if REPANIER_SETTINGS_TEST_MODE:
                 from repanier.tools import emails_of_testers
-                self.to = emails_of_testers()
-                if len(self.to) > 0:
+                to_email = emails_of_testers()
+                if len(to_email) > 0:
                     # Send the mail only if there is at least one tester
+                    self.body = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc, self.body)
+                    self.html_content = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc, self.html_content)
+                    self.to = to_email
                     self.cc = []
                     self.bcc = []
                     email_send = self._send_email_with_error_log()
@@ -115,7 +118,7 @@ class RepanierEmail(EmailMultiAlternatives):
         self.alternatives = []
         if customer is not None and self.show_customer_may_unsubscribe:
             self.attach_alternative(
-                "{}{}".format(self.html_content, customer.get_unsubscribe_mail_footer()),
+                "{}{}".format(self.html_content, customer.get_html_unsubscribe_mail_footer()),
                 "text/html"
             )
         else:
@@ -141,17 +144,17 @@ class RepanierEmail(EmailMultiAlternatives):
                     # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
                     from_email = "from_email : {}".format(self.from_email)
                     reply_to = "reply_to : {}".format(self.reply_to)
-                    to = "to : {}".format(self.to)
-                    cc = "cc : {}".format(self.cc)
-                    bcc = "bcc : {}".format(self.bcc)
+                    to_email = "to : {}".format(self.to)
+                    cc_email = "cc : {}".format(self.cc)
+                    bcc_email = "bcc : {}".format(self.bcc)
                     subject = "subject : {}".format(self.subject)
                     print(from_email)
                     print(reply_to)
-                    print(to)
-                    print(cc)
-                    print(bcc)
+                    print(to_email)
+                    print(cc_email)
+                    print(bcc_email)
                     print(subject)
-                    message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to, cc, bcc, subject)
+                    message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email, subject)
                     self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:

@@ -464,9 +464,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         'basket_name': _('Short name'),
                         'short_basket_name': _('Short name'),
                         'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-                        'signature': mark_safe(
-                            "{}<br>{}<br>{}".format(
-                                signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                        'signature': staff.get_html_signature,
                     })
                     template_cancel_order_mail.append(language_code)
                     template_cancel_order_mail.append(template.render(context))
