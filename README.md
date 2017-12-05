@@ -75,7 +75,7 @@ Log into the terminal as "root" user
     usermod -a -G sshusers pi
     nano /etc/ssh/sshd_config
         PermitRootLogin no
-        AllowGroups sshusers   <<--- add this line
+        AllowGroups sshusers   <<--- Attention do not forget to add this line
     service sshd restart
 
 
