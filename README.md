@@ -100,12 +100,15 @@ Create a python virtual environment whose name is 'venv'
     virtualenv --python=python3 venv
     cd venv
     source bin/activate
+
+Copy the git project into the virtual environment
+
     git clone https://github.com/pcolmant/repanier.git
 
 Copy from gihub/pcolmant/repanier/requirements/requirement.txt to ~/pi/venv
 Then :
 
-    pip install -r requirement.txt
+    pip install -r repanier/requirement/requirement.txt
 
 Create the django project my_web_site
 
