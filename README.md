@@ -101,62 +101,6 @@ Create a python virtual environment whose name is 'venv'
     source bin/activate
     cd ~/pi/venv
 
-Create nginx my_web_site config
-
-    sudo nano /etc/nginx/sites-available/my_web_site
-        server {
-            listen 80;
-            server_name repanier.local;
-
-            access_log /var/log/nginx/my_web_site_access.log;
-            error_log /var/log/nginx/my_web_site_error.log;
-            client_max_body_size 3M;
-            location /media/ {
-                alias /home/pi/venv/my_web_site/my_web_site/media/public/;
-            }
-
-            location /static/ {
-                alias /home/pi/venv/my_web_site/my_web_site/collect-static/;
-            }
-
-            location /favicon.ico {
-                alias /home/pi/venv/my_web_site/my_web_site/collect-static/favicon.ico;
-            }
-
-            location /robots.txt {
-                alias /home/pi/venv/my_web_site/my_web_site/collect-static/robots.txt;
-            }
-            location / {
-                include		uwsgi_params;
-                uwsgi_param HTTP_X_FORWARDED_HOST $server_name:9000;
-                uwsgi_pass 	unix:///tmp/my_web_site.sock;
-                uwsgi_read_timeout 600s;
-                uwsgi_send_timeout 60s;
-                uwsgi_connect_timeout 60s;
-            }
-        }
-
-    sudo ln -s /etc/nginx/sites-available/my_web_site /etc/nginx/sites-enabled/my_web_site
-    sudo rm /etc/nginx/sites-enabled/default
-
-Create uwsgi my_web_site config
-
-    sudo nano /etc/uwsgi/apps-available/my_web_site.ini
-        [uwsgi]
-        vhost = true
-        plugins = python35
-        socket = /tmp/my_web_site.sock
-        master = true
-        enable-threads = true
-        processes = 1
-        thread = 2
-        buffer-size = 8192
-        wsgi-file = /home/pi/venv/my_web_site/my_web_site/wsgi.py
-        virtualenv = /home/pi/venv/
-        chdir = /home/pi/venv/my_web_site/
-        harakiri = 360
-    sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
-
 Copy from gihub/pcolmant/repanier/requirements/requirement.txt to ~/pi/venv
 Then :
 
@@ -216,7 +160,6 @@ Set the system configuration of Repanier.
 
 Install Repanier
 
-
     cd ~/venv/my_web_site/my_web_site/
     mkdir media
     cd media
@@ -246,6 +189,62 @@ Finalize the django configuration
     python manage.py migrate
     python manage.py createsuperuser
     sudo rm -rf /var/tmp/django-cache/*
+
+Create nginx my_web_site config
+
+    sudo nano /etc/nginx/sites-available/my_web_site
+        server {
+            listen 80;
+            server_name repanier.local;
+
+            access_log /var/log/nginx/my_web_site_access.log;
+            error_log /var/log/nginx/my_web_site_error.log;
+            client_max_body_size 3M;
+            location /media/ {
+                alias /home/pi/venv/my_web_site/my_web_site/media/public/;
+            }
+
+            location /static/ {
+                alias /home/pi/venv/my_web_site/my_web_site/collect-static/;
+            }
+
+            location /favicon.ico {
+                alias /home/pi/venv/my_web_site/my_web_site/collect-static/favicon.ico;
+            }
+
+            location /robots.txt {
+                alias /home/pi/venv/my_web_site/my_web_site/collect-static/robots.txt;
+            }
+            location / {
+                include		uwsgi_params;
+                uwsgi_param HTTP_X_FORWARDED_HOST $server_name:9000;
+                uwsgi_pass 	unix:///tmp/my_web_site.sock;
+                uwsgi_read_timeout 600s;
+                uwsgi_send_timeout 60s;
+                uwsgi_connect_timeout 60s;
+            }
+        }
+
+    sudo ln -s /etc/nginx/sites-available/my_web_site /etc/nginx/sites-enabled/my_web_site
+    sudo rm /etc/nginx/sites-enabled/default
+
+Create uwsgi my_web_site config
+
+    sudo nano /etc/uwsgi/apps-available/my_web_site.ini
+        [uwsgi]
+        vhost = true
+        plugins = python35
+        socket = /tmp/my_web_site.sock
+        master = true
+        enable-threads = true
+        processes = 1
+        thread = 2
+        buffer-size = 8192
+        wsgi-file = /home/pi/venv/my_web_site/my_web_site/wsgi.py
+        virtualenv = /home/pi/venv/
+        chdir = /home/pi/venv/my_web_site/
+        harakiri = 360
+    sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
 
 Start Repanier
 
