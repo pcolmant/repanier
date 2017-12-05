@@ -93,8 +93,15 @@ Try to connect with a ssh client as user "pi" before closing the current session
         ALTER ROLE db_user WITH CREATEDB;
         CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
 
-Create nginx my_web_site config
+Create a python virtual environment whose name is 'venv'
 
+    cd ~
+    virtualenv --python=python3 venv
+    cd venv
+    source bin/activate
+    cd ~/pi/venv
+
+Create nginx my_web_site config
 
     sudo nano /etc/nginx/sites-available/my_web_site
         server {
@@ -132,9 +139,7 @@ Create nginx my_web_site config
     sudo ln -s /etc/nginx/sites-available/my_web_site /etc/nginx/sites-enabled/my_web_site
     sudo rm /etc/nginx/sites-enabled/default
 
-
 Create uwsgi my_web_site config
-
 
     sudo nano /etc/uwsgi/apps-available/my_web_site.ini
         [uwsgi]
@@ -151,13 +156,6 @@ Create uwsgi my_web_site config
         chdir = /home/pi/venv/my_web_site/
         harakiri = 360
     sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
-
-    cd ~
-    virtualenv --python=python3 venv
-    cd venv
-    source bin/activate
-    cd ~/pi/venv
-
 
 Copy from gihub/pcolmant/repanier/requirements/requirement.txt to ~/pi/venv
 Then :
