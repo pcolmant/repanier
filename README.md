@@ -182,7 +182,6 @@ Install Repanier
 
 Finalize the django configuration
 
-
     python manage.py collectstatic
     python manage.py makemigrations repanier
     python manage.py migrate
