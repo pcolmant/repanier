@@ -110,20 +110,17 @@ Then :
 
     pip install -r repanier/requirement/requirement.txt
 
-Create the django project my_web_site
-
+Create the django project whose name is for example my_web_site
 
     django-admin.py startproject my_web_site
     # ----------------- Create django cache directory
     mkdir /var/tmp/django-cache
     sudo chgrp www-data /var/tmp/django-cache
     sudo chmod g+w /var/tmp/django-cache
-    sudo rm -rf /var/tmp/django-cache/*
     # ----------------- Create django file session directory
+    mkdir /var/tmp/django-session
     sudo chgrp www-data /var/tmp/django-session
     sudo chmod g+w /var/tmp/django-session
-    sudo rm -rf /var/tmp/django-session/*
-
 
 Set the system configuration of Repanier.
 
