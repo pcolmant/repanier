@@ -113,6 +113,11 @@ Then :
 Create the django project whose name is for example my_web_site
 
     django-admin.py startproject my_web_site
+
+Create cache and session directory used as temporary cache by the repanier 
+django configuration. 
+By the way, Django offers other cache and session management possibilities.
+
     # ----------------- Create django cache directory
     mkdir /var/tmp/django-cache
     sudo chgrp www-data /var/tmp/django-cache
@@ -123,7 +128,6 @@ Create the django project whose name is for example my_web_site
     sudo chmod g+w /var/tmp/django-session
 
 Set the system configuration of Repanier.
-
 
     nano ~/venv/my_web_site/my_web_site/my_web_site.ini
         [DJANGO_SETTINGS]
