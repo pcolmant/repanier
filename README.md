@@ -172,7 +172,6 @@ Install Repanier
     sudo chmod -R g+w media
     cp ~/venv/repanier/repanier/static/robots.txt ~/venv/my_repanier/my_repanier/media/
     cp ~/venv/repanier/repanier/static/favicon.ico ~/venv/my_repanier/my_repanier/media/
-    cp ~/venv/repanier/repanier/locale/ ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/common_settings.py ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/urls.py ~/venv/my_repanier/my_repanier/
     cp ~/venv/repanier/mysite/wsgi.py ~/venv/my_repanier/my_repanier/
