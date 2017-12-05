@@ -110,11 +110,11 @@ Then :
 
     pip install -r repanier/requirement/requirement.txt
 
-Create the django project whose name is for example my_web_site
+Create the django project whose name is for example my_repanier
 Be careful do not use "repanier" as project name because it's already used 
 for the application.
 
-    django-admin.py startproject my_web_site
+    django-admin.py startproject my_repanier
 
 Create cache and session directory used as temporary cache by the repanier 
 django configuration. 
@@ -131,7 +131,7 @@ By the way, Django offers other cache and session management possibilities.
 
 Set the system configuration of Repanier.
 
-    nano ~/venv/my_web_site/my_web_site/my_web_site.ini
+    nano ~/venv/my_repanier/my_repanier/my_repanier.ini
         [DJANGO_SETTINGS]
         DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@gmail.com
         DJANGO_SETTINGS_ADMIN_NAME=repanier
@@ -166,7 +166,7 @@ Set the system configuration of Repanier.
 
 Install Repanier
 
-    cd ~/venv/my_web_site/my_web_site/
+    cd ~/venv/my_repanier/my_repanier/
     mkdir media/public -p
     sudo chgrp -R www-data media
     sudo chmod -R g+w media
@@ -188,63 +188,64 @@ Finalize the django configuration
     python manage.py createsuperuser
     sudo rm -rf /var/tmp/django-cache/*
 
-Create nginx my_web_site config
+Create nginx my_repanier config
 
-    sudo nano /etc/nginx/sites-available/my_web_site
+    sudo nano /etc/nginx/sites-available/my_repanier
         server {
             listen 80;
             server_name repanier.local;
 
-            access_log /var/log/nginx/my_web_site_access.log;
-            error_log /var/log/nginx/my_web_site_error.log;
+            access_log /var/log/nginx/my_repanier_access.log;
+            error_log /var/log/nginx/my_repanier_error.log;
             client_max_body_size 3M;
             location /media/ {
-                alias /home/pi/venv/my_web_site/my_web_site/media/public/;
+                alias /home/pi/venv/my_repanier/my_repanier/media/public/;
             }
 
             location /static/ {
-                alias /home/pi/venv/my_web_site/my_web_site/collect-static/;
+                alias /home/pi/venv/my_repanier/my_repanier/collect-static/;
             }
 
             location /favicon.ico {
-                alias /home/pi/venv/my_web_site/my_web_site/collect-static/favicon.ico;
+                alias /home/pi/venv/my_repanier/my_repanier/collect-static/favicon.ico;
             }
 
             location /robots.txt {
-                alias /home/pi/venv/my_web_site/my_web_site/collect-static/robots.txt;
+                alias /home/pi/venv/my_repanier/my_repanier/collect-static/robots.txt;
             }
             location / {
                 include		uwsgi_params;
                 uwsgi_param HTTP_X_FORWARDED_HOST $server_name:9000;
-                uwsgi_pass 	unix:///tmp/my_web_site.sock;
+                uwsgi_pass 	unix:///tmp/my_repanier.sock;
                 uwsgi_read_timeout 600s;
                 uwsgi_send_timeout 60s;
                 uwsgi_connect_timeout 60s;
             }
         }
 
-    sudo ln -s /etc/nginx/sites-available/my_web_site /etc/nginx/sites-enabled/my_web_site
+    sudo ln -s /etc/nginx/sites-available/my_repanier /etc/nginx/sites-enabled/my_repanier
     sudo rm /etc/nginx/sites-enabled/default
 
-Create uwsgi my_web_site config
+Create uwsgi my_repanier config
 
-    sudo nano /etc/uwsgi/apps-available/my_web_site.ini
+    sudo nano /etc/uwsgi/apps-available/my_repanier.ini
         [uwsgi]
         vhost = true
         plugins = python35
-        socket = /tmp/my_web_site.sock
+        socket = /tmp/my_repanier.sock
         master = true
         enable-threads = true
         processes = 1
         thread = 2
         buffer-size = 8192
-        wsgi-file = /home/pi/venv/my_web_site/my_web_site/wsgi.py
+        wsgi-file = /home/pi/venv/my_repanier/my_repanier/wsgi.py
         virtualenv = /home/pi/venv/
-        chdir = /home/pi/venv/my_web_site/
+        chdir = /home/pi/venv/my_repanier/
         harakiri = 360
-    sudo ln -s /etc/uwsgi/apps-available/my_web_site.ini /etc/uwsgi/apps-enabled/my_web_site.ini
+        
+    sudo ln -s /etc/uwsgi/apps-available/my_repanier.ini /etc/uwsgi/apps-enabled/my_repanier.ini
 
 Start Repanier
 
-    sudo /etc/init.d/uwsgi restart
-    sudo /etc/init.d/nginx restart
+    sudo service uwsgi restart
+    sudo service nginx restart
