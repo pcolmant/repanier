@@ -69,7 +69,7 @@ def send_mail_to_coordinators_view(request):
                     is_active=True, is_contributor=False,
                     id__in=selected_staff_members
             ).order_by('?'):
-                to_email_staff.append(staff.customer_responsible.user.email)
+                to_email_staff = list(set(to_email_staff + staff.get_to_email))
 
             if to_email_staff:
                 to_email_customer = [request.user.email]

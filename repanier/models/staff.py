@@ -39,7 +39,7 @@ class Staff(MPTTModel, TranslatableModel):
         settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
-        on_delete=models.PROTECT, null=True, default=None)
+        on_delete=models.PROTECT, blank=True, null=True, default=None)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
@@ -88,81 +88,74 @@ class Staff(MPTTModel, TranslatableModel):
         function_name = self.safe_translation_getter(
             'long_name', any_language=True, default=EMPTY_STRING
         )
-        customer = self.customer_responsible
-        customer_name = customer.long_basket_name or customer.short_basket_name
-        customer_phone = []
-        if customer.phone1:
-            customer_phone.append(customer.phone1)
-        if customer.phone2:
-            customer_phone.append(customer.phone2)
-        customer_phone_str = " / ".join(customer_phone)
-        if customer_phone_str:
-            customer_contact_info = "{} - {}".format(customer_name, customer_phone_str)
-        else:
-            customer_contact_info = customer_name
-        html_signature = mark_safe(
-            "{}<br>{}<br>{}".format(
-                customer_contact_info, function_name, REPANIER_SETTINGS_GROUP_NAME
+        if self.customer_responsible is not None:
+            customer = self.customer_responsible
+            customer_name = customer.long_basket_name or customer.short_basket_name
+            customer_phone = []
+            if customer.phone1:
+                customer_phone.append(customer.phone1)
+            if customer.phone2:
+                customer_phone.append(customer.phone2)
+            customer_phone_str = " / ".join(customer_phone)
+            if customer_phone_str:
+                customer_contact_info = "{} - {}".format(customer_name, customer_phone_str)
+            else:
+                customer_contact_info = customer_name
+            html_signature = mark_safe(
+                "{}<br>{}<br>{}".format(
+                    customer_contact_info, function_name, REPANIER_SETTINGS_GROUP_NAME
+                )
             )
-        )
+        else:
+            html_signature = mark_safe(
+                "{}<br>{}".format(
+                    function_name, REPANIER_SETTINGS_GROUP_NAME
+                )
+            )
         return html_signature
 
     @cached_property
     def get_from_email(self):
-        if settings.DJANGO_SETTINGS_DEMO:
-            from_email = "no-reply@repanier.be"
+        from repanier.apps import REPANIER_SETTINGS_CONFIG
+        config = REPANIER_SETTINGS_CONFIG
+        if config.email_is_custom:
+            from_email = config.email_host_user
         else:
-            from repanier.apps import REPANIER_SETTINGS_CONFIG
-            config = REPANIER_SETTINGS_CONFIG
-            if config.email_is_custom:
-                from_email = config.email_host_user
-            else:
-                staff_email = self.user.email
-                if staff_email:
-                    if staff_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
-                        from_email = staff_email
-                    else:
-                        # The mail address of the staff member doesn't end with an allowed mail extension,
-                        # set a generic one
-                        from_email = "no-reply@repanier.be"
+            staff_email = self.user.email
+            if staff_email:
+                if staff_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+                    from_email = staff_email
                 else:
-                    # No specific mail address for the staff member,
+                    # The mail address of the staff member doesn't end with an allowed mail extension,
                     # set a generic one
                     from_email = "no-reply@repanier.be"
+            else:
+                # No specific mail address for the staff member,
+                # set a generic one
+                from_email = "no-reply@repanier.be"
         return from_email
 
     @cached_property
     def get_reply_to_email(self):
-        if settings.DJANGO_SETTINGS_DEMO:
-            reply_to_email = "no-reply@repanier.be"
-        else:
-            from repanier.apps import REPANIER_SETTINGS_CONFIG
-            config = REPANIER_SETTINGS_CONFIG
-            if config.email_is_custom:
-                reply_to_email = config.email_host_user
-            else:
-                staff_email = self.user.email
-                if staff_email:
-                    reply_to_email = staff_email
-                else:
-                    # No specific mail address for the staff member,
-                    # use the customer responsible email
-                    reply_to_email = self.customer_responsible.user.email
-        return [reply_to_email]
+        reply_to_email = []
+        from repanier.apps import REPANIER_SETTINGS_CONFIG
+        config = REPANIER_SETTINGS_CONFIG
+        if config.email_is_custom:
+            reply_to_email += [config.email_host_user]
+        if self.customer_responsible is not None:
+            reply_to_email += [self.customer_responsible.user.email]
+        if self.user.email:
+            reply_to_email += [self.user.email]
+        return reply_to_email
 
     @cached_property
     def get_to_email(self):
-        if self.user.email:
-            return [self.user.email, self.customer_responsible.user.email]
-        else:
-            # No specific mail address for the staff member,
-            # use only the customer responsible email
-            return [self.customer_responsible.user.email]
+        return self.get_reply_to_email
 
     @property
     def title_for_admin(self):
+        tester = _(" who is also tester ") if self.is_tester else EMPTY_STRING
         if self.customer_responsible is not None:
-            tester = _(" who is also tester ") if self.is_tester else EMPTY_STRING
             return "{} : {}{} ({})".format(
                 self.safe_translation_getter('long_name', any_language=True),
                 self.customer_responsible.long_basket_name,
@@ -170,7 +163,10 @@ class Staff(MPTTModel, TranslatableModel):
                 self.customer_responsible.phone1
             )
         else:
-            return "{}".format(self.safe_translation_getter('long_name', any_language=True))
+            return "{}{}".format(
+                self.safe_translation_getter('long_name', any_language=True),
+                tester
+            )
 
     objects = StaffManager()
 

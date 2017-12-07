@@ -17,18 +17,20 @@ from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
 
-def email_order(permanence_id, everything=True, producers_id=None, deliveries_id=None):
+def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
+
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, \
         REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER, \
         REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER, \
-        REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+        REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
+        REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
         translation.activate(language_code)
         permanence = Permanence.objects.get(id=permanence_id)
-        config = Configuration.objects.get(id=DECIMAL_ONE)
+        config = REPANIER_SETTINGS_CONFIG
         filename = "{0}-{1}.xlsx".format(
             _("Order"),
             permanence
@@ -39,22 +41,13 @@ def email_order(permanence_id, everything=True, producers_id=None, deliveries_id
         )
         staff = Staff.get_order_responsible()
 
-        if deliveries_id:
+        if len(deliveries_id) > 0:
             # if closed deliveries_id is not empty list and not "None" then all_producers should be True
             everything = True
             for delivery_id in deliveries_id:
-                delivery_board = DeliveryBoard.objects.filter(
-                    id=delivery_id
-                ).exclude(
-                    delivery_point__customer_responsible=None
-                ).order_by('?').first()
-                if delivery_board is not None:
                     # Send a recap of the orders to the responsible
-                    delivery_point = delivery_board.delivery_point
-                    customer = delivery_point.customer_responsible
-                    # Orders send to the preparation group
                     export_order_2_1_group(
-                        config, customer, delivery_point, delivery_id, filename,
+                        config, delivery_id, filename,
                         permanence,
                         staff
                     )
@@ -116,7 +109,7 @@ def email_order(permanence_id, everything=True, producers_id=None, deliveries_id
                 permanence=permanence,
                 language=language_code,
             ).order_by('?')
-            if producers_id:
+            if len(producers_id) > 0:
                 producer_set = producer_set.filter(id__in=producers_id)
             for producer in producer_set:
                 long_profile_name = producer.long_profile_name if producer.long_profile_name is not None else producer.short_profile_name
@@ -197,7 +190,7 @@ def email_order(permanence_id, everything=True, producers_id=None, deliveries_id
                         customerinvoice__permanence_id=permanence.id,
                         language=language_code
                     ).order_by('?')
-                    if deliveries_id is not None:
+                    if len(deliveries_id) > 0:
                         customer_set = customer_set.filter(
                             customerinvoice__delivery_id__in=deliveries_id,
                         )
@@ -217,8 +210,18 @@ def email_order(permanence_id, everything=True, producers_id=None, deliveries_id
     translation.activate(cur_language)
 
 
-def export_order_2_1_group(config, customer, delivery_point, delivery_id, filename, permanence, staff):
+def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
+    delivery_board = DeliveryBoard.objects.filter(
+        id=delivery_id
+    ).exclude(
+        delivery_point__customer_responsible=None
+    ).order_by('?').first()
+    if delivery_board is None:
+        return
+
     from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+    delivery_point = delivery_board.delivery_point
+    customer_responsible = delivery_point.customer_responsible
 
     wb = generate_customer_xlsx(permanence=permanence, deliveries_id=[delivery_id], group=True)[0]
     if wb is not None:
@@ -228,18 +231,18 @@ def export_order_2_1_group(config, customer, delivery_point, delivery_id, filena
         )
         order_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
-        to_email_customer = [customer.user.email]
-        if customer.email2:
-            to_email_customer.append(customer.email2)
+        to_email_customer = [customer_responsible.user.email]
+        if customer_responsible.email2:
+            to_email_customer.append(customer_responsible.email2)
 
-        long_basket_name = customer.long_basket_name if customer.long_basket_name is not None else customer.short_basket_name
+        long_basket_name = customer_responsible.long_basket_name or str(customer_responsible)
 
         template = Template(order_customer_mail)
         context = TemplateContext({
             'name': long_basket_name,
-            'long_basket_name': long_basket_name,
-            'basket_name': customer.short_basket_name,
-            'short_basket_name': customer.short_basket_name,
+            'long_basket_name': long_basket_name, # deprecated
+            'basket_name': str(customer_responsible),
+            'short_basket_name': str(customer_responsible), # deprecated
             'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                 settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
             'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
@@ -272,8 +275,9 @@ def export_order_2_1_customer(customer, filename, permanence, staff,
     from repanier.apps import REPANIER_SETTINGS_SEND_CANCEL_ORDER_MAIL_TO_CUSTOMER, \
         REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER, \
-        REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER
-    config = Configuration.objects.get(id=DECIMAL_ONE)
+        REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER, REPANIER_SETTINGS_CONFIG
+
+    config = REPANIER_SETTINGS_CONFIG
     if (cancel_order and REPANIER_SETTINGS_SEND_CANCEL_ORDER_MAIL_TO_CUSTOMER) \
             or REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER:
         customer_invoice = CustomerInvoice.objects.filter(permanence_id=permanence.id,

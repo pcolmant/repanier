@@ -14,13 +14,14 @@ from repanier.tools import *
 
 def send_invoice(permanence_id):
     from repanier.apps import REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER, \
-        REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
+        REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER, \
+        REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
         translation.activate(language_code)
         permanence = Permanence.objects.get(id=permanence_id)
-        config = Configuration.objects.get(id=DECIMAL_ONE)
+        config = REPANIER_SETTINGS_CONFIG
 
         staff = Staff.get_invoice_responsible()
 

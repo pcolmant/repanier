@@ -3,13 +3,14 @@
 {% block sub_content %}
 <div class="col-md-12">
 {% for staff in staff_list %}
-    <b>{{ staff.long_name }}</b> :
-    {% if staff.customer_responsible.long_basket_name %}
-        {{ staff.customer_responsible.long_basket_name }}
-    {% else %}
-        {{ staff.customer_responsible.short_basket_name }}
+    <b>{{ staff.long_name }}</b>{% if staff.customer_responsible %} :
+        {% if staff.customer_responsible.long_basket_name %}
+            {{ staff.customer_responsible.long_basket_name }}
+        {% else %}
+            {{ staff.customer_responsible.short_basket_name }}
+        {% endif %}
+        ({{ staff.customer_responsible.phone1 }})
     {% endif %}
-    ({{ staff.customer_responsible.phone1 }})
     <br>
 {% endfor %}
 <br>

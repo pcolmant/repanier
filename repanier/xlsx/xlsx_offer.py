@@ -49,7 +49,7 @@ def export_offer(permanence, wb=None):
                 row_num = export_offer_row(
                     product, row_num, ws,
                     permanences_dates=contract_content.get_permanences_dates,
-                flexible_dates = contract_content.flexible_dates
+                    flexible_dates=contract_content.flexible_dates
                 )
 
     elif permanence.status == PERMANENCE_OPENED:

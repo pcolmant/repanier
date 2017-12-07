@@ -18,7 +18,7 @@ from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_row, get_header
 
 
-def export_permanence_stock(permanence, deliveries_id=None, customer_price=False, wb=None, ws_customer_title=None):
+def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, wb=None, ws_customer_title=None):
     if settings.DJANGO_SETTINGS_STOCK and wb is not None:
         yellowFill = Fill()
         yellowFill.start_color.index = 'FFEEEE11'
@@ -63,7 +63,7 @@ def export_permanence_stock(permanence, deliveries_id=None, customer_price=False
         if offer_item is not None:
             # Check if there are deliveries_ws
             deliveries_ws = []
-            if deliveries_id is not None:
+            if len(deliveries_id) > 0:
                 for delivery_cpt, delivery_id in enumerate(deliveries_id):
                     ws_sc_name = format_worksheet_title("{}-{}".format(delivery_cpt, ws_customer_title))
                     for sheet in wb.worksheets:

@@ -186,7 +186,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         # 'undo_back_to_planned',
         'export_xlsx_customer_order',
         'export_xlsx_producer_order',
-        'send_order',
+        'close_and_send_order',
         'generate_permanence'
     ]
 
@@ -293,7 +293,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if not permanence.with_delivery_point:
             # Perform the action directly. Do not ask to select any delivery point.
             response = None
-            wb = generate_customer_xlsx(permanence, deliveries_id=None)[0]
+            wb = generate_customer_xlsx(permanence)[0]
             if wb is not None:
                 response = HttpResponse(
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -314,7 +314,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     # Also display order without delivery point -> The customer has not selected it yet
                     # deliveries_to_be_exported.append(None)
             else:
-                deliveries_to_be_exported = None
+                deliveries_to_be_exported = ()
             response = None
             wb = generate_customer_xlsx(permanence, deliveries_id=deliveries_to_be_exported)[0]
             if wb is not None:
@@ -504,7 +504,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     open_and_send_offer.short_description = _('Open and send offers')
 
-    def send_order(self, request, queryset):
+    def close_and_send_order(self, request, queryset):
         if 'cancel' in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
@@ -539,7 +539,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             # print("-------------------- all_deliveries : {}".format(all_deliveries))
             # print("-------------------- deliveries_to_be_send : {}".format(deliveries_to_be_send))
             # print("-------------------- producers_to_be_send : {}".format(producers_to_be_send))
-            user_message, user_message_level = task_order.admin_send(
+            user_message, user_message_level = task_order.admin_close_and_send_order(
                 permanence_id=permanence.id,
                 everything=all_producers or all_deliveries,
                 producers_id=producers_to_be_send,
@@ -615,8 +615,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'order_empty': False,
                 'duplicate': True,
                 'permanence_link': format_html("<a href=\"#\">{}</a>", permanence),
-                'signature': mark_safe(
-                    "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                'signature': staff.get_html_signature,
             })
 
             template_order_producer_mail.append(language_code)
@@ -628,8 +627,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'permanence_link': format_html("<a href=\"#\">{}</a>", permanence),
                 'board_composition': mark_safe(board_composition),
                 'board_composition_and_description': mark_safe(board_composition_and_description),
-                'signature': mark_safe(
-                    "{}<br>{}<br>{}".format(signature, sender_function, repanier.apps.REPANIER_SETTINGS_GROUP_NAME)),
+                'signature': staff.get_html_signature,
             })
 
             template_order_staff_mail.append(language_code)
@@ -675,7 +673,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'repanier/confirm_admin_send_order.html', {
                 'sub_title': _("Please, confirm the action : send orders"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                'action': 'send_order',
+                'action': 'close_and_send_order',
                 'permanence': permanence,
                 'only_deliveries': only_deliveries,
                 'deliveries': deliveries,
@@ -689,7 +687,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'order_board_email_will_be_sent_to': order_board_email_will_be_sent_to
             })
 
-    send_order.short_description = _('Send orders2')
+    close_and_send_order.short_description = _('Send orders2')
 
     def back_to_scheduled(self, request, queryset):
         if 'cancel' in request.POST:

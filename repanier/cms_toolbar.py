@@ -41,7 +41,6 @@ class RepanierToolbar(CMSToolbar):
             )
             # add_sideframe_item
             if display_configuration:
-                # config = Configuration.objects.filter(id=DECIMAL_ONE).only('id').first()
                 url = reverse('admin:repanier_configuration_change', args=(1,))
                 office_menu.add_sideframe_item(_('Configuration'), url=url)
             url = reverse('admin:repanier_notification_change', args=(1,))

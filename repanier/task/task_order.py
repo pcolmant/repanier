@@ -229,11 +229,11 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
                           deliveries_id=deliveries_id)
 
 
-def admin_send(permanence_id, everything=True, producers_id=(), deliveries_id=()):
-    # close_and_send_order(permanence_id, everything, producers_id, deliveries_id)
-    t = threading.Thread(target=close_and_send_order,
-                         args=(permanence_id, everything, producers_id, deliveries_id))
-    t.start()
+def admin_close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
+    close_and_send_order(permanence_id, everything, producers_id, deliveries_id)
+    # t = threading.Thread(target=close_and_send_order,
+    #                      args=(permanence_id, everything, producers_id, deliveries_id))
+    # t.start()
     user_message = _("The orders are being send.")
     user_message_level = messages.INFO
     return user_message, user_message_level

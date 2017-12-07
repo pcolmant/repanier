@@ -53,7 +53,7 @@ def emails_of_testers():
     tester_qs = Staff.objects.filter(is_tester=True, is_active=True).order_by("id")
     testers = []
     for tester in tester_qs:
-        testers.append(tester.user.email)
+        testers += tester.get_to_email
     return list(set(testers))
 
 

@@ -26,14 +26,14 @@ def next_purchase(purchases):
     return purchase
 
 
-def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
+def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
     if permanence is not None:
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
         row_num = 1
         # Customer info
         Customer.objects.all().update(preparation_order=0)
         preparation_order = 1
-        if deliveries_id is not None:
+        if len(deliveries_id) > 0:
             header = [
                 (_('Delivery point'), 20),
                 (_('Family'), 35),
@@ -292,7 +292,7 @@ def export_abstract(permanence, deliveries_id=None, group=False, wb=None):
     return
 
 
-def export_customer_label(permanence, deliveries_id=None, wb=None):
+def export_customer_label(permanence, deliveries_id=(), wb=None):
     # Customer label
     wb, ws = new_portrait_a4_sheet(wb, _('Label'), permanence, add_print_title=False)
     row_num = 0
@@ -304,7 +304,7 @@ def export_customer_label(permanence, deliveries_id=None, wb=None):
         'preparation_order'
     )
 
-    if deliveries_id is not None:
+    if len(deliveries_id) > 0:
         customer_set = customer_set.filter(customerinvoice__delivery_id__in=deliveries_id)
 
     dict_placement = dict(LUT_PRODUCT_PLACEMENT)
@@ -380,7 +380,7 @@ def customer_label(customer_identifier, placements, row_num, ws):
     return row_num
 
 
-def export_preparation(permanence, deliveries_id=None, wb=None):
+def export_preparation(permanence, deliveries_id=(), wb=None):
     yellowFill = Fill()
     yellowFill.start_color.index = 'FFEEEE11'
     yellowFill.end_color.index = 'FFEEEE11'
@@ -399,7 +399,7 @@ def export_preparation(permanence, deliveries_id=None, wb=None):
         (_("Prepared"), 22),
         (_("To distribute"), 10),
     ]
-    if deliveries_id is None:
+    if len(deliveries_id) == 0:
         return export_preparation_for_a_delivery(0, None, header, permanence, wb, yellowFill)
     else:
         for delivery_ref, delivery_id in enumerate(deliveries_id):
@@ -1148,7 +1148,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
 def export_customer(
         permanence=None,
         customer=None,
-        deliveries_id=None,
+        deliveries_id=(),
         deposit=False,
         xlsx_formula=True,
         wb=None, ws_preparation_title=None):
@@ -1170,7 +1170,7 @@ def export_customer(
         (_("Total Price"), 12),
         (_("Basket"), 20),
     ]
-    if deliveries_id is None:
+    if len(deliveries_id) == 0:
         return export_customer_for_a_delivery(
             customer, 0, None, deposit, header, permanence, wb,
             ws_preparation_title, yellowFill, xlsx_formula
@@ -1187,6 +1187,8 @@ def export_customer(
 def export_customer_for_a_delivery(
         customer, delivery_cpt, delivery_id, deposit, header, permanence, wb, ws_preparation_title,
         yellowFill, xlsx_formula):
+    from repanier.apps import REPANIER_SETTINGS_CONFIG
+
     language_code = translation.get_language()
     if customer is not None:
         translation.activate(customer.language)
@@ -1244,7 +1246,7 @@ def export_customer_for_a_delivery(
     purchases = purchase_set.iterator()
     purchase = next_purchase(purchases)
     if purchase is not None:
-        config = Configuration.objects.get(id=DECIMAL_ONE)
+        config = REPANIER_SETTINGS_CONFIG
         group_label = config.group_label
         if deposit:
             wb, ws = new_portrait_a4_sheet(
@@ -1447,7 +1449,7 @@ def export_customer_for_a_delivery(
     return wb
 
 
-def generate_customer_xlsx(permanence, deliveries_id=None, customer=None, group=False):
+def generate_customer_xlsx(permanence, deliveries_id=(), customer=None, group=False):
     if customer is not None:
         wb = export_customer(
             permanence=permanence, customer=customer, xlsx_formula=False, wb=None

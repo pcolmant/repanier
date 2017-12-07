@@ -183,6 +183,8 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
 def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=None, sheet_name=EMPTY_STRING):
     # Detail of what has been prepared
+    from repanier.apps import REPANIER_SETTINGS_CONFIG
+
     hide_producer_prices = False
     hide_customer_prices = False
     purchase_set = Purchase.objects.all()
@@ -336,7 +338,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     c.style.font.bold = True
             if customer is not None:
-                config = Configuration.objects.get(id=DECIMAL_ONE)
+                config = REPANIER_SETTINGS_CONFIG
                 group_label = config.group_label
                 if group_label:
                     row_num += 1
