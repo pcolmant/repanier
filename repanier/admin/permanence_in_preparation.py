@@ -168,7 +168,6 @@ class PermanenceInPreparationForm(TranslatableModelForm):
 
 class PermanenceInPreparationAdmin(TranslatableAdmin):
     form = PermanenceInPreparationForm
-    # exclude = ['invoice_description']
     list_per_page = 10
     list_max_show_all = 10
     filter_horizontal = ('producers', 'boxes')
@@ -183,7 +182,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         'export_xlsx_offer',
         'open_and_send_offer',
         'back_to_scheduled',
-        # 'undo_back_to_planned',
         'export_xlsx_customer_order',
         'export_xlsx_producer_order',
         'close_and_send_order',
@@ -518,7 +516,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             return
         only_deliveries = permanence.with_delivery_point
         if 'apply' in request.POST:
-            # print("---------- request.POST : {}".format(request.POST))
             all_deliveries = request.POST.get("all-deliveries", False)
             deliveries_to_be_send = request.POST.getlist("deliveries", [])
             all_producers = request.POST.get("all-producers", False)
@@ -535,10 +532,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return
-            # print("-------------------- all_producers : {}".format(all_producers))
-            # print("-------------------- all_deliveries : {}".format(all_deliveries))
-            # print("-------------------- deliveries_to_be_send : {}".format(deliveries_to_be_send))
-            # print("-------------------- producers_to_be_send : {}".format(producers_to_be_send))
             user_message, user_message_level = task_order.admin_close_and_send_order(
                 permanence_id=permanence.id,
                 everything=all_producers or all_deliveries,
@@ -696,10 +689,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if not Purchase.objects.filter(
-                permanence_id=permanence.id,
-                status__in=[PERMANENCE_PRE_OPEN, PERMANENCE_OPENED]
-        ).order_by('?').exists():
+        if permanence is None or permanence.status != PERMANENCE_OPENED:
             user_message = _("Action canceled by the system.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
