@@ -160,14 +160,13 @@ class ProducerDataForm(forms.ModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        if settings.DJANGO_SETTINGS_ENV != "dev":
-            reference_site = self.cleaned_data["reference_site"]
-            for allowed_host in settings.ALLOWED_HOSTS:
-                if reference_site.endswith(allowed_host):
-                    self.add_error(
-                        'reference_site',
-                        _("The reference site may not be your site."))
-                    break
+        reference_site = self.cleaned_data["reference_site"]
+        for allowed_host in settings.ALLOWED_HOSTS:
+            if reference_site.endswith(allowed_host):
+                self.add_error(
+                    'reference_site',
+                    _("The reference site may not be your site."))
+                break
         invoice_by_basket = self.cleaned_data["invoice_by_basket"]
         if "price_list_multiplier" in self.cleaned_data:
             price_list_multiplier = self.cleaned_data["price_list_multiplier"]
