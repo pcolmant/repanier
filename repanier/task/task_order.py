@@ -180,9 +180,9 @@ def admin_open_and_send(request, permanence, do_not_send_any_mail=False):
             user_message_level = messages.INFO
     else:
         permanence.set_status(PERMANENCE_WAIT_FOR_OPEN)
-        open_order(permanence.id, do_not_send_any_mail)
-        # t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
-        # t.start()
+        # open_order(permanence.id, do_not_send_any_mail)
+        t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
+        t.start()
         user_message = _("The offers are being generated.")
         user_message_level = messages.INFO
     return user_message, user_message_level
@@ -230,10 +230,10 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
 
 
 def admin_close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
-    close_and_send_order(permanence_id, everything, producers_id, deliveries_id)
-    # t = threading.Thread(target=close_and_send_order,
-    #                      args=(permanence_id, everything, producers_id, deliveries_id))
-    # t.start()
+    # close_and_send_order(permanence_id, everything, producers_id, deliveries_id)
+    t = threading.Thread(target=close_and_send_order,
+                         args=(permanence_id, everything, producers_id, deliveries_id))
+    t.start()
     user_message = _("The orders are being send.")
     user_message_level = messages.INFO
     return user_message, user_message_level
