@@ -6,7 +6,7 @@
         {% csrf_token %}
         {{ form.as_div }}
         {% if not send %}
-            <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Send e-mail" %}</button></div>
+            <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Send email" %}</button></div>
         {% endif %}
 
     </form>

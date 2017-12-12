@@ -4,7 +4,9 @@
     {% if update %}<div class="alert alert-success" role="alert">{% trans "Update done." %}</div>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
-        {% trans "All informations bellow are visible to all members except your phone and email. You have the choice to specify if your phone and/or mail are visible to others members." %}
+        {% if display_who_is_who %}
+        {% trans "All the information below is visible in the &quot;who&#39;s who&quot; except your phone numbers and email addresses for which you must validate your agreement." %}
+        {% endif %}
         <p>{% if membership_fee_valid_until %}<i>{% trans "Your membership fee is valid until" %} : <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
         {{ form.as_div }}
         {% if not update %}<div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Update" %}</button></div>{% endif %}

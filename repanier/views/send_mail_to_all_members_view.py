@@ -18,7 +18,10 @@ from repanier.views.forms import RepanierForm
 
 
 class MembersContactForm(RepanierForm):
-    recipient = fields.CharField(label=_('Recipient(s)'))
+    recipient = fields.CharField(
+        label=_('Recipient(s)'),
+        initial=_("All members who agree to receive unsolicited mails from this site")
+    )
     your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
     message = fields.CharField(label=_('Message'), widget=widgets.Textarea)
@@ -50,14 +53,13 @@ def send_mail_to_all_members_view(request):
                 is_active=True,
                 represent_this_buyinggroup=False,
                 subscribe_to_email=True,
-                user__last_login__isnull=False)
-            if not user.is_coordinator:
-                qs = qs.filter(accept_mails_from_members=True)
+                user__last_login__isnull=False,
+                valid_email=True)
             for customer in qs:
                 if customer.user_id != request.user.id:
                     to_email_customer.append(customer.user.email)
-                    if customer.email2:
-                        to_email_customer.append(customer.email2)
+                    # if customer.email2:
+                    #     to_email_customer.append(customer.email2)
             to_email_customer.append(request.user.email)
             email = RepanierEmail(
                 strip_tags(form.cleaned_data.get('subject')),
@@ -72,10 +74,6 @@ def send_mail_to_all_members_view(request):
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True
             recipient = form.fields["recipient"]
-            if user.is_coordinator:
-                recipient.initial = _("All members as coordinator")
-            else:
-                recipient.initial = _("All members who agree to show their email addresses to other members")
             recipient.widget.attrs['readonly'] = True
             return render(request, "repanier/send_mail_to_all_members.html",
                           {'form': form, 'coordinator': user.is_coordinator, 'send': True})
@@ -85,10 +83,6 @@ def send_mail_to_all_members_view(request):
         email.initial = request.user.email
         email.widget.attrs['readonly'] = True
         recipient = form.fields["recipient"]
-        if user.is_coordinator:
-            recipient.initial = _("All members as coordinator")
-        else:
-            recipient.initial = _("All members who agree to show their email addresses to other members")
         recipient.widget.attrs['readonly'] = True
 
     return render(request, "repanier/send_mail_to_all_members.html",

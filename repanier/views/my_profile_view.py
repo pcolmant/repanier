@@ -4,7 +4,7 @@ from os import sep as os_sep
 
 from django.contrib.auth import (get_user_model)
 from django.contrib.auth.decorators import login_required
-from django.forms import widgets
+from django.forms import widgets, HiddenInput
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
@@ -26,30 +26,30 @@ class CustomerForm(RepanierForm):
         label=EMPTY_STRING, required=False
     )
     email1 = fields.EmailField(label=_('My main email address, used to reset the password and connect to the site'))
-    email2 = fields.EmailField(label=_('My secondary email address (does not allow to connect to the site)'), required=False)
-    accept_mails_from_members = fields.BooleanField(
+    email2 = fields.EmailField(label=_('My secondary email address (does not allow to connect to the site)'),
+                               required=False)
+    show_mails_to_members = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
-    subscribe_to_email  = fields.BooleanField(
+    subscribe_to_email = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
 
     phone1 = fields.CharField(label=_('My main phone number'), max_length=25)
     phone2 = fields.CharField(label=_('My secondary phone number'), max_length=25, required=False)
-
-    accept_phone_call_from_members = fields.BooleanField(
+    show_phones_to_members = fields.BooleanField(
         label=EMPTY_STRING, required=False
     )
     city = fields.CharField(label=_('My city'), max_length=50, required=False)
     address = fields.CharField(label=_('My address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
-                              required=False)
+                               required=False)
     picture = fields.CharField(
         label=_("My picture"),
         widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
     about_me = fields.CharField(label=_('About me'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
-                              required=False)
+                                required=False)
 
     def clean_email1(self):
         email1 = self.cleaned_data["email1"]
@@ -64,14 +64,20 @@ class CustomerForm(RepanierForm):
         return email1
 
     def __init__(self, *args, **kwargs):
+        from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+
         self.request = kwargs.pop('request', None)
         super(CustomerForm, self).__init__(*args, **kwargs)
-        self.fields["accept_mails_from_members"].widget = CheckboxWidget(
-            label=_('My email addresses are visible to all members'))
-        self.fields["accept_phone_call_from_members"].widget = CheckboxWidget(
-            label=_('My phone numbers are visible to all members'))
+        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+            self.fields["show_mails_to_members"].widget = CheckboxWidget(
+                label=_("I agree to show my email addresses in the \"who's who\""))
+            self.fields["show_phones_to_members"].widget = CheckboxWidget(
+                label=_("I agree to show my phone numbers in the \"who's who\""))
+        else:
+            self.fields["show_mails_to_members"].widget = HiddenInput()
+            self.fields["show_phones_to_members"].widget = HiddenInput()
         self.fields["subscribe_to_email"].widget = CheckboxWidget(
-            label=_('I agree to receive emails from this site. Even in case of refusal, the email to reset the password is always sent.'))
+            label=_('I agree to receive unsolicited mails from this site'))
         self.fields["zero_waste"].widget = CheckboxWidget(
             label=_('Family zero waste'))
 
@@ -89,7 +95,7 @@ def my_profile_view(request):
     if not customer_is_active:
         raise Http404
     customer = request.user.customer
-    from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE
+    from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE, REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
     if REPANIER_SETTINGS_MEMBERSHIP_FEE > DECIMAL_ZERO:
         membership_fee_valid_until = customer.membership_fee_valid_until
     else:
@@ -103,9 +109,9 @@ def my_profile_view(request):
                 customer.long_basket_name = form.cleaned_data.get('long_basket_name')
                 customer.phone1 = form.cleaned_data.get('phone1')
                 customer.phone2 = form.cleaned_data.get('phone2')
-                customer.accept_phone_call_from_members = form.cleaned_data.get('accept_phone_call_from_members')
                 customer.email2 = form.cleaned_data.get('email2').lower()
-                customer.accept_mails_from_members = form.cleaned_data.get('accept_mails_from_members')
+                customer.show_phones_to_members = form.cleaned_data.get('show_phones_to_members')
+                customer.show_mails_to_members = form.cleaned_data.get('show_mails_to_members')
                 customer.subscribe_to_email = form.cleaned_data.get('subscribe_to_email')
                 customer.city = form.cleaned_data.get('city')
                 customer.address = form.cleaned_data.get('address')
@@ -127,9 +133,19 @@ def my_profile_view(request):
                 data["email2"] = customer.email2
                 form = CustomerValidationForm(data, request=request)
             return render(request, "repanier/my_profile_form.html",
-                          {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': True})
+                          {
+                              'form': form,
+                              'membership_fee_valid_until': membership_fee_valid_until,
+                              'display_who_is_who': REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
+                              'update': True
+                          })
         return render(request, "repanier/my_profile_form.html",
-                      {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': False})
+                      {
+                          'form': form,
+                          'membership_fee_valid_until': membership_fee_valid_until,
+                          'display_who_is_who': REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
+                          'update': False
+                      })
     else:
         form = CustomerValidationForm()  # An unbound form
         field = form.fields["long_basket_name"]
@@ -138,14 +154,14 @@ def my_profile_view(request):
         field.initial = customer.phone1
         field = form.fields["phone2"]
         field.initial = customer.phone2
-        field = form.fields["accept_phone_call_from_members"]
-        field.initial = customer.accept_phone_call_from_members
         field = form.fields["email1"]
         field.initial = request.user.email
         field = form.fields["email2"]
         field.initial = customer.email2
-        field = form.fields["accept_mails_from_members"]
-        field.initial = customer.accept_mails_from_members
+        field = form.fields["show_phones_to_members"]
+        field.initial = customer.show_phones_to_members
+        field = form.fields["show_mails_to_members"]
+        field.initial = customer.show_mails_to_members
         field = form.fields["subscribe_to_email"]
         field.initial = customer.subscribe_to_email
         field = form.fields["city"]
@@ -162,4 +178,8 @@ def my_profile_view(request):
         field.initial = customer.zero_waste
 
     return render(request, "repanier/my_profile_form.html",
-                  {'form': form, 'membership_fee_valid_until': membership_fee_valid_until, 'update': None})
+                  {
+                      'form': form,
+                      'membership_fee_valid_until': membership_fee_valid_until,
+                      'display_who_is_who': REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
+                      'update': None})

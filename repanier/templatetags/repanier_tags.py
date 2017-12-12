@@ -60,7 +60,7 @@ def repanier_user(context, *args, **kwargs):
                         ))
                     nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                         reverse('who_is_who_view'),
-                        _('Who is who')
+                        _("Who's who")
                     ))
                 nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                     reverse('my_profile_view'),

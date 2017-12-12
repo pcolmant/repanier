@@ -68,9 +68,9 @@ class Customer(models.Model):
         _("About me"), null=True, blank=True, default=EMPTY_STRING)
     memo = models.TextField(
         _("Memo"), null=True, blank=True, default=EMPTY_STRING)
-    accept_mails_from_members = models.BooleanField(
+    show_mails_to_members = models.BooleanField(
         _("Show my mail to other members"), default=False)
-    accept_phone_call_from_members = models.BooleanField(
+    show_phones_to_members = models.BooleanField(
         _("Show my phone to other members"), default=False)
     membership_fee_valid_until = models.DateField(
         _("Membership fee valid until"),
@@ -113,7 +113,7 @@ class Customer(models.Model):
     may_order = models.BooleanField(_("May order"), default=True)
     zero_waste = models.BooleanField(_("Zero waste"), default=False)
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
-    subscribe_to_email = models.BooleanField(_("Agree to receive emails from this site"), default=True)
+    subscribe_to_email = models.BooleanField(_("Agree to receive unsolicited mails from this site"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     def get_admin_date_balance(self):
@@ -319,21 +319,29 @@ class Customer(models.Model):
 
     @property
     def who_is_who_display(self):
-        return self.picture or self.accept_mails_from_members or self.accept_phone_call_from_members \
+        return self.picture or self.show_mails_to_members or self.show_phones_to_members \
                or (self.about_me is not None and len(self.about_me.strip()) > 1)
 
     def get_html_unsubscribe_mail_footer(self):
-        return mark_safe("<br><br><hr/><br><a href=\"{}\">{}</a>".format(self._get_unsubscribe_link(), _("Unsubscribe to emails")))
+        return mark_safe(
+            "<br><br><hr/><br><a href=\"{}\">{}</a>".format(
+                self._get_unsubscribe_link(),
+                _("Stop receiving unsolicited mails from {}").format(self._get_unsubscribe_site())
+            )
+        )
 
     def _get_unsubscribe_link(self):
         customer_id, token = self.make_token().split(":", 1)
         return "https://{}{}".format(
-            settings.ALLOWED_HOSTS[0],
+            self._get_unsubscribe_site(),
             reverse(
                 'unsubscribe_view',
                 kwargs={'customer_id': customer_id, 'token': token, }
             )
         )
+
+    def _get_unsubscribe_site(self):
+        return settings.ALLOWED_HOSTS[0]
 
     def make_token(self):
         return TimestampSigner().sign(self.id)
@@ -392,6 +400,13 @@ class Customer(models.Model):
 def customer_pre_save(sender, **kwargs):
     customer = kwargs["instance"]
 
+    if customer.is_anonymized:
+        customer.is_active = False
+        customer.may_order = False
+        customer.valid_email = False
+        customer.subscribe_to_email = False
+        customer.show_mails_to_members = False
+        customer.show_phones_to_members = False
     if customer.represent_this_buyinggroup:
         # The buying group may not be de activated
         customer.is_active = True

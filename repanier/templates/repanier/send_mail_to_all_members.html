@@ -4,18 +4,9 @@
     {% if send %}<div class="alert alert-success" role="alert">{% trans "The mail has been send" %}</div>{% endif %}
     <form name="{{ form.form_name }}" method="post" action="." validate>
         {% csrf_token %}
-        {% if coordinator %}
-            <div class="bg-danger">
-            <blockquote><small>
-            {% trans "This message will be send to all members as coordinator." %}
-            </small></blockquote>
-            </div>
-        {% else %}
-            {% trans "This message will be send only to members who accept to show they email." %}
-        {% endif %}
         {{ form.as_div }}
         {% if not sent %}
-            <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Send e-mail" %}</button></div>
+            <div class="form-group form-sticky-update-button"><button type="submit" ng-disabled="{{ form.form_name }}.$invalid" class="btn btn-info pull-right">{% trans "Send email" %}</button></div>
         {% endif %}
     </form>
     {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}

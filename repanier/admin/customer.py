@@ -305,8 +305,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_fieldsets(self, request, customer=None):
         fields_basic = [
             ('short_basket_name', 'long_basket_name', 'language'),
-            ('email', 'email2', 'accept_mails_from_members'),
-            ('phone1', 'phone2', 'accept_phone_call_from_members'),
+            ('email', 'email2', 'show_mails_to_members'),
+            ('phone1', 'phone2', 'show_phones_to_members'),
             'membership_fee_valid_until',
         ]
         if settings.DJANGO_SETTINGS_GROUP:

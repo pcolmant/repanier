@@ -64,7 +64,7 @@ class Configuration(TranslatableModel):
     invoice = models.BooleanField(_("Activate invoice"), default=True)
     display_anonymous_order_form = models.BooleanField(_("Display anonymous order form"), default=True)
     display_producer_on_order_form = models.BooleanField(_("Display producers on order form"), default=True)
-    display_who_is_who = models.BooleanField(_("Display who is who"), default=True)
+    display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
     xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
