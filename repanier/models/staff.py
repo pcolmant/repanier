@@ -118,7 +118,7 @@ class Staff(MPTTModel, TranslatableModel):
     def get_from_email(self):
         from repanier.apps import REPANIER_SETTINGS_CONFIG
         config = REPANIER_SETTINGS_CONFIG
-        if config.email_is_custom:
+        if config.email_is_custom and config.email_host_user:
             from_email = config.email_host_user
         else:
             staff_email = self.user.email
@@ -128,24 +128,26 @@ class Staff(MPTTModel, TranslatableModel):
                 else:
                     # The mail address of the staff member doesn't end with an allowed mail extension,
                     # set a generic one
-                    from_email = "no-reply@repanier.be"
+                    from_email = settings.DEFAULT_FROM_EMAIL
             else:
                 # No specific mail address for the staff member,
                 # set a generic one
-                from_email = "no-reply@repanier.be"
+                from_email = settings.DEFAULT_FROM_EMAIL
         return from_email
 
     @cached_property
     def get_reply_to_email(self):
-        reply_to_email = []
-        from repanier.apps import REPANIER_SETTINGS_CONFIG
-        config = REPANIER_SETTINGS_CONFIG
-        if config.email_is_custom:
-            reply_to_email += [config.email_host_user]
-        if self.customer_responsible is not None:
-            reply_to_email += [self.customer_responsible.user.email]
         if self.user.email:
-            reply_to_email += [self.user.email]
+            reply_to_email = [self.user.email]
+        elif self.customer_responsible is not None:
+            reply_to_email = [self.customer_responsible.user.email]
+        else:
+            from repanier.apps import REPANIER_SETTINGS_CONFIG
+            config = REPANIER_SETTINGS_CONFIG
+            if config.email_is_custom and config.email_host_user:
+                reply_to_email = [config.email_host_user]
+            else:
+                reply_to_email = settings.DEFAULT_FROM_EMAIL
         return reply_to_email
 
     @cached_property
