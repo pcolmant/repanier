@@ -130,7 +130,7 @@ def send_sms(sms_nr=None, sms_msg=None):
                     if config.email_is_custom:
                         from_email = config.email_host_user
                     else:
-                        from_email = "no-reply{}".format(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
+                        from_email = settings.DEFAULT_FROM_EMAIL
                     # Send SMS with free gateway : Sms Gateway - Android.
                     email = RepanierEmail(
                         valid_nr,
