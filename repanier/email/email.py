@@ -68,7 +68,8 @@ class RepanierEmail(EmailMultiAlternatives):
                 if len(to_email) > 0:
                     # Send the mail only if there is at least one tester
                     self.body = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc, self.body)
-                    self.html_content = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc, self.html_content)
+                    self.html_content = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc,
+                                                                                      self.html_content)
                     self.to = to_email
                     self.cc = []
                     self.bcc = []
@@ -102,12 +103,9 @@ class RepanierEmail(EmailMultiAlternatives):
         if not self.test_connection:
             customer = self._get_customer(email_to)
             if customer is not None:
-                if customer.user.last_login is None:
-                    # Do not spam someone who has never logged in
+                if not self.send_even_if_unsubscribed and not customer.subscribe_to_email:
                     return False
-                elif not self.send_even_if_unsubscribed and not customer.subscribe_to_email:
-                    return False
-                else:
+                elif customer.user.last_login is not None:
                     max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=426)
                     if customer.user.last_login < max_2_years_in_the_past:
                         # Do not spam someone who has never logged in since more than 1 year and 2 months
@@ -154,7 +152,8 @@ class RepanierEmail(EmailMultiAlternatives):
                     print(cc_email)
                     print(bcc_email)
                     print(subject)
-                    message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email, subject)
+                    message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
+                                                              subject)
                     self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:
