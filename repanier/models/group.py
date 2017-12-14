@@ -4,13 +4,10 @@ from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models import Customer
-# from repanier.models.purchase import Purchase
-from repanier.models.customer import customer_pre_save, customer_post_delete
+from repanier.models.customer import Customer, customer_pre_save, customer_post_delete
 
 
 class Group(Customer):
-
     class Meta:
         proxy = True
         verbose_name = _("Group")
@@ -30,6 +27,6 @@ def group_pre_save(sender, **kwargs):
     #     set min transport
 
 
-@receiver(post_delete, sender=Customer)
+@receiver(post_delete, sender=Group)
 def group_post_delete(sender, **kwargs):
     customer_post_delete(sender, **kwargs)

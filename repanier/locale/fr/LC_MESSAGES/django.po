@@ -7,15 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-12 09:04+0100\n"
-"PO-Revision-Date: 2017-12-12 18:03+0100\n"
+"POT-Creation-Date: 2017-12-13 18:14+0100\n"
+"PO-Revision-Date: 2017-12-13 18:39+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.0.4\n"
+"X-Generator: Poedit 2.0.5\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #: admin/admin_filter.py:20 admin/admin_filter.py:52 admin/admin_filter.py:206
@@ -645,7 +645,7 @@ msgstr "avec comme communication"
 #: admin/permanence_in_preparation.py:607 models/contract.py:24
 #: models/customer.py:38 models/item.py:373 models/item.py:403
 #: models/item.py:413 models/offeritem.py:27 models/producer.py:34
-#: models/product.py:362 models/staff.py:47 views/forms.py:177
+#: models/product.py:362 models/staff.py:47 views/forms.py:178
 #: views/pre_order_create_product_ajax.py:39
 #: views/pre_order_create_product_ajax.py:89 xlsx/xlsx_product.py:48
 msgid "Long name"
@@ -1326,7 +1326,7 @@ msgstr "Hygiène"
 #: apps.py:201 models/invoice.py:56 models/invoice.py:691 models/invoice.py:695
 #: models/item.py:65 models/purchase.py:84 models/purchase.py:155
 #: templates/repanier/customer_invoice_form.html:50
-#: templates/repanier/producer_invoice_form.html:20 views/forms.py:202
+#: templates/repanier/producer_invoice_form.html:20 views/forms.py:203
 #: xlsx/xlsx_invoice.py:227 xlsx/xlsx_invoice.py:404 xlsx/xlsx_offer.py:85
 #: xlsx/xlsx_order.py:715 xlsx/xlsx_order.py:1009 xlsx/xlsx_order.py:1169
 #: xlsx/xlsx_purchase.py:44 xlsx/xlsx_stock.py:34 xlsx/xlsx_stock.py:324
@@ -1640,8 +1640,8 @@ msgstr "Pré-ouverture des commandes"
 
 #: email/email_order.py:145
 msgid ""
-"/!\\ Mail not send to our producer {} because the minimum order value has "
-"not been reached."
+"⚠ Mail not send to our producer {} because the minimum order value has not "
+"been reached."
 msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
@@ -1651,7 +1651,7 @@ msgid "Group invoices"
 msgstr "Factures du groupe"
 
 #: email/email_order.py:313
-msgid "/!\\ Order cancelled"
+msgid "⚠ Order cancelled"
 msgstr "⚠ Commande annulée"
 
 #: models/bankaccount.py:25
@@ -1826,8 +1826,8 @@ msgstr ""
 "des paniers"
 
 #: models/configuration.py:78
-msgid "/!\\ Customers must confirm orders"
-msgstr "⚠ Les consommateurs doivent confirmer leur commande"
+msgid "⚠ Customers must confirm orders"
+msgstr "⚠ Les consommateurs doivent confirmer leur commandes"
 
 #: models/configuration.py:80 models/configuration.py:454
 msgid "Membership fee"
@@ -1965,7 +1965,7 @@ msgstr "Date de la première permanence"
 
 #: models/contract.py:50 models/customer.py:48 models/item.py:34
 #: models/lut.py:40 models/permanence.py:125 models/producer.py:47
-#: views/forms.py:214
+#: views/forms.py:215
 msgid "Picture"
 msgstr "Photo"
 
@@ -2133,7 +2133,7 @@ msgstr "Un ✉ récapitulatif de la commande a été envoyé à {}."
 
 #: models/customer.py:329
 msgid "Stop receiving unsolicited mails from {}"
-msgstr "Arrêter de recevoir des mails non sollicités provenant de ce site"
+msgstr "Arrêter de recevoir des mails non sollicités provenant de {}"
 
 #: models/customer.py:361 models/producer.py:335
 msgid "GROUP"
@@ -2302,7 +2302,7 @@ msgstr ""
 
 #: models/invoice.py:381 models/invoice.py:391
 #: templates/repanier/communication_confirm_order.html:11
-msgid "/!\\ Unconfirmed orders will be canceled."
+msgid "⚠ Unconfirmed orders will be canceled."
 msgstr "⚠ Les commandes non confirmées sont annulées."
 
 #: models/invoice.py:384
@@ -2369,7 +2369,7 @@ msgstr "<b>%(price)s</b>"
 msgid "Reference"
 msgstr "Référence"
 
-#: models/item.py:45 views/forms.py:179
+#: models/item.py:45 views/forms.py:180
 msgid "Order unit"
 msgstr "Mode de passation"
 
@@ -2378,7 +2378,7 @@ msgid "Average weight"
 msgstr "Poids/contenance moyen(ne)"
 
 #: models/item.py:53 models/purchase.py:140 models/purchase.py:147
-#: views/forms.py:199 xlsx/xlsx_invoice.py:237 xlsx/xlsx_offer.py:80
+#: views/forms.py:200 xlsx/xlsx_invoice.py:237 xlsx/xlsx_offer.py:80
 #: xlsx/xlsx_purchase.py:43 xlsx/xlsx_purchase.py:632 xlsx/xlsx_stock.py:33
 #: xlsx/xlsx_stock.py:323
 msgid "Producer unit price"
@@ -2476,7 +2476,7 @@ msgstr "unités"
 msgid "Description"
 msgstr "Description"
 
-#: models/lut.py:52 models/product.py:29 views/forms.py:189
+#: models/lut.py:52 models/product.py:29 views/forms.py:190
 msgid "Production mode"
 msgstr "Labels"
 
@@ -2609,7 +2609,7 @@ msgstr "Produits en offre"
 msgid "Offer item"
 msgstr "Produit en offre"
 
-#: models/permanence.py:40 views/forms.py:217
+#: models/permanence.py:40 views/forms.py:218
 msgid "Offer description"
 msgstr "Message accompagnant l'offre"
 
@@ -2857,19 +2857,19 @@ msgstr "Coordonnateur/trice"
 msgid "Tester"
 msgstr "Testeur"
 
-#: models/staff.py:157
-msgid " who is also tester "
+#: models/staff.py:159
+msgid " 💡 who is also tester "
 msgstr " 💡 qui est aussi un testeur "
 
-#: models/staff.py:174
+#: models/staff.py:176
 msgid "STAFF"
 msgstr "RESPONSABLE"
 
-#: models/staff.py:184
+#: models/staff.py:186
 msgid "Staff member"
 msgstr "Responsable"
 
-#: models/staff.py:185
+#: models/staff.py:187
 msgid "Staff members"
 msgstr "Responsables"
 
@@ -3527,7 +3527,7 @@ msgstr "Effectuer l'importation"
 msgid "Update done."
 msgstr "Mise à jour effectuée."
 
-#: templates/repanier/my_profile_form.html:7
+#: templates/repanier/my_profile_form.html:8
 msgid ""
 "All the information below is visible in the &quot;who&#39;s who&quot; except "
 "your phone numbers and email addresses for which you must validate your "
@@ -3537,11 +3537,11 @@ msgstr ""
 "qui&quot; excepté vos numéros de téléphones et vos adresses mail pour "
 "lesquels vous devez valider votre accord."
 
-#: templates/repanier/my_profile_form.html:8
+#: templates/repanier/my_profile_form.html:10
 msgid "Your membership fee is valid until"
 msgstr "Vous êtes en ordre de cotisation jusqu'au"
 
-#: templates/repanier/my_profile_form.html:10
+#: templates/repanier/my_profile_form.html:12
 #: templates/repanier/pre_order_update_product_form.html:232
 msgid "Update"
 msgstr "Mettre à jour"
@@ -3601,7 +3601,7 @@ msgstr ""
 #: templates/repanier/widgets/select_producer_order_unit.html:37
 #: templates/repanier/widgets/select_producer_order_unit.html:47
 #: templates/repanier/widgets/select_producer_order_unit.html:57
-#: views/forms.py:205
+#: views/forms.py:206
 msgid "Stock"
 msgstr "Stock"
 
@@ -4136,7 +4136,7 @@ msgstr "Anonyme"
 msgid "Validation code"
 msgstr "Code de validation"
 
-#: views/forms.py:208 xlsx/xlsx_purchase.py:46
+#: views/forms.py:209 xlsx/xlsx_purchase.py:46
 msgid "Tax"
 msgstr "Taxe"
 
@@ -4160,11 +4160,11 @@ msgid "My secondary email address (does not allow to connect to the site)"
 msgstr ""
 "Mon adresse mail secondaire (ne permet pas de se connecter sur le site)"
 
-#: views/my_profile_view.py:37
+#: views/my_profile_view.py:38
 msgid "My main phone number"
 msgstr "Mon numéro de téléphone principal"
 
-#: views/my_profile_view.py:38
+#: views/my_profile_view.py:39
 msgid "My secondary phone number"
 msgstr "Mon numéro de téléphone secondaire"
 
@@ -4180,19 +4180,19 @@ msgstr "Mon adresse"
 msgid "My picture"
 msgstr "Ma photo"
 
-#: views/my_profile_view.py:70
+#: views/my_profile_view.py:73
 msgid "I agree to show my email addresses in the \"who's who\""
 msgstr "J'acceptes de montrer mes adresses mail dans le \"qui est qui\""
 
-#: views/my_profile_view.py:72
+#: views/my_profile_view.py:75
 msgid "I agree to show my phone numbers in the \"who's who\""
 msgstr "J'accepte de montrer mes numéros de téléphone dans le \"qui est qui\""
 
-#: views/my_profile_view.py:74
+#: views/my_profile_view.py:80
 msgid "I agree to receive unsolicited mails from this site"
 msgstr "J'accepte de recevoir de mails non sollicités provenant de ce site"
 
-#: views/my_profile_view.py:76
+#: views/my_profile_view.py:82
 msgid "Family zero waste"
 msgstr "Famille zéro déchet"
 
@@ -4369,7 +4369,7 @@ msgid "Total with vat"
 msgstr "Total avec TVA"
 
 #: xlsx/xlsx_order.py:65 xlsx/xlsx_order.py:122
-msgid "/!\\ This order isn't confirmed"
+msgid "⚠ This order isn't confirmed"
 msgstr "⚠ Cette commande n'est pas confirmée"
 
 #: xlsx/xlsx_order.py:176

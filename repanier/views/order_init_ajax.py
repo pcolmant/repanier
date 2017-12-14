@@ -19,7 +19,7 @@ from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
 from repanier.tools import sboolean, sint, \
-    calc_basket_message_html, permanence_ok_or_404, my_basket
+    permanence_ok_or_404, my_basket, get_html_basket_message
 
 
 @never_cache
@@ -65,7 +65,7 @@ def order_init_ajax(request):
     else:
         status = customer_invoice.status
     if status <= PERMANENCE_OPENED:
-        basket_message = calc_basket_message_html(customer, permanence, status)
+        basket_message = get_html_basket_message(customer, permanence, status)
     else:
         if customer_invoice.delivery is not None:
             basket_message = EMPTY_STRING
@@ -73,7 +73,7 @@ def order_init_ajax(request):
             basket_message = "{}".format(
                 _('The orders are closed.')
             )
-    json_dict = customer_invoice.my_order_confirmation_html(
+    json_dict = customer_invoice.get_html_my_order_confirmation(
         permanence=permanence,
         is_basket=basket,
         basket_message=basket_message

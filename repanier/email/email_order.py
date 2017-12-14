@@ -142,7 +142,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                         order_producer_mail_subject, html_content
                     )
                     order_producer_mail_subject = _(
-                        '/!\ Mail not send to our producer {} because the minimum order value has not been reached.').format(
+                        '⚠ Mail not send to our producer {} because the minimum order value has not been reached.').format(
                         long_profile_name)
                 else:
                     to_email_producer = []
@@ -310,7 +310,7 @@ def export_order_2_1_customer(customer, filename, permanence, staff,
                         'cancel_order_customer_mail', any_language=True, default=EMPTY_STRING
                     )
                     order_customer_mail_subject = "{} - {} - {}".format(
-                        _('/!\ Order cancelled'), REPANIER_SETTINGS_GROUP_NAME, permanence)
+                        _('⚠ Order cancelled'), REPANIER_SETTINGS_GROUP_NAME, permanence)
                 else:
                     order_customer_mail = config.safe_translation_getter(
                         'order_customer_mail', any_language=True, default=EMPTY_STRING

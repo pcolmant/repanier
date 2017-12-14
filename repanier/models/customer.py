@@ -8,14 +8,13 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q, Sum
-from django.db.models.signals import post_delete, pre_save, post_init
+from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-# from repanier.models.purchase import Purchase
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
@@ -204,7 +203,8 @@ class Customer(models.Model):
     get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
 
-    def get_on_hold_movement_html(self, bank_not_invoiced=None, order_not_invoiced=None, total_price_with_tax=REPANIER_MONEY_ZERO):
+    def get_html_on_hold_movement(self, bank_not_invoiced=None, order_not_invoiced=None,
+                                  total_price_with_tax=REPANIER_MONEY_ZERO):
         from repanier.apps import REPANIER_SETTINGS_INVOICE
         if REPANIER_SETTINGS_INVOICE:
             bank_not_invoiced = bank_not_invoiced if bank_not_invoiced is not None else self.get_bank_not_invoiced()
@@ -226,7 +226,7 @@ class Customer(models.Model):
                         _(
                             'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
                         % {
-                            'bank'       : bank_not_invoiced,
+                            'bank': bank_not_invoiced,
                             'other_order': other_order_not_invoiced
                         }
             else:
@@ -450,4 +450,5 @@ def customer_pre_save(sender, **kwargs):
 def customer_post_delete(sender, **kwargs):
     customer = kwargs["instance"]
     user = customer.user
-    user.delete()
+    if user is not None and user.id is not None:
+        user.delete()

@@ -27,7 +27,7 @@ def get_allowed_mail_extension():
         if composant[-1] == "local":
             allowed_mail_extension = "@repanier.be"
         else:
-            allowed_mail_extension = "@{}.{}".format(DJANGO_SETTINGS_ALLOWED_HOSTS[0], composant[-2], composant[-1])
+            allowed_mail_extension = "@{}.{}".format(composant[-2], composant[-1])
     except:
         allowed_mail_extension = "@repanier.be"
     return allowed_mail_extension

@@ -96,7 +96,6 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
                 email__iexact=email, is_active=True
             )
         ).order_by('?')
-        # return (u for u in active_users if u.has_usable_password())
         return active_users.all()
 
 

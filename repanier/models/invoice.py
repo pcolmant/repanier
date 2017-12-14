@@ -232,7 +232,7 @@ class CustomerInvoice(Invoice):
                             delivery=delivery
                         )
 
-    def my_order_confirmation_html(self, permanence, is_basket=False, basket_message=EMPTY_STRING):
+    def get_html_my_order_confirmation(self, permanence, is_basket=False, basket_message=EMPTY_STRING):
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
 
         if permanence.with_delivery_point:
@@ -378,7 +378,7 @@ class CustomerInvoice(Invoice):
                                     or not self.has_purchase:
                                 btn_disabled = "disabled"
                             msg_confirmation1 = "<span style=\"color: red; \">{}</span><br>".format(_(
-                                "/!\ Unconfirmed orders will be canceled."))
+                                "⚠ Unconfirmed orders will be canceled."))
                             msg_confirmation2 = "<span class=\"glyphicon glyphicon-floppy-disk\"></span>&nbsp;&nbsp;{}".format(
                                 _(
                                     "Confirm this order and receive an email containing its summary."))
@@ -388,7 +388,7 @@ class CustomerInvoice(Invoice):
                         )
                         if self.status == PERMANENCE_OPENED:
                             msg_confirmation1 = "<span style=\"color: red; \">{}</span><br>".format(_(
-                                "/!\ Unconfirmed orders will be canceled."))
+                                "⚠ Unconfirmed orders will be canceled."))
                             msg_confirmation2 = _("Verify my order content before validating it.")
                             msg_html = """
                                 <div class="row">
@@ -770,7 +770,7 @@ class CustomerProducerInvoice(models.Model):
 
     def get_html_producer_price_purchased(self):
         if self.total_purchase_with_tax != DECIMAL_ZERO:
-            return _("<b>%(price)s</b>") % {'price': self.total_purchase_with_tax}
+            return mark_safe(_("<b>%(price)s</b>") % {'price': self.total_purchase_with_tax})
         return EMPTY_STRING
 
     get_html_producer_price_purchased.short_description = (_("Producer amount invoiced"))

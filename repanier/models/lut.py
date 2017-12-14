@@ -11,8 +11,8 @@ from mptt.models import MPTTModel, TreeForeignKey
 from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 
-from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.const import *
+from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.picture.const import SIZE_XS
 from repanier.picture.fields import AjaxPictureField
 
@@ -34,7 +34,8 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
+                              default=EMPTY_STRING),
     )
     picture2 = AjaxPictureField(
         verbose_name=_("Picture"),
@@ -70,13 +71,14 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
+                              default=EMPTY_STRING),
     )
     is_active = models.BooleanField(_("Active"), default=True)
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
         help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
-        on_delete=models.PROTECT, blank=True, null=True, default=None)
+        blank=True, null=True, default=None)
     inform_customer_responsible = models.BooleanField(_("Inform customer responsible"), default=False)
     transport = ModelMoneyField(
         _("Delivery point transport"),
@@ -120,7 +122,8 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     is_active = models.BooleanField(_("Active"), default=True)
     translations = TranslatedFields(
         short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
+                              default=EMPTY_STRING),
     )
     objects = LUT_ProductionModeManager()
 
@@ -149,10 +152,12 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
         short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING),
+        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
+                              default=EMPTY_STRING),
     )
 
-    is_counted_as_participation = models.BooleanField(_("This task constitutes a participation in the activities of the group"), default=True)
+    is_counted_as_participation = models.BooleanField(
+        _("This task constitutes a participation in the activities of the group"), default=True)
     customers_may_register = models.BooleanField(_("Consumers can register for this task"), default=True)
     is_active = models.BooleanField(_("Active"), default=True)
     objects = LUT_ProductionModeManager()

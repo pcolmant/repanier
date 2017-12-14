@@ -13,7 +13,7 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import sint, display_selected_value_html, display_selected_box_value_html
+from repanier.tools import sint, get_html_selected_value, get_html_selected_box_value
 
 register = template.Library()
 
@@ -238,7 +238,7 @@ def repanier_select_offer_item(context, *args, **kwargs):
             quantity_ordered = DECIMAL_ZERO
         else:
             quantity_ordered = box_purchase.quantity_ordered
-        html = display_selected_box_value_html(offer_item, quantity_ordered)
+        html = get_html_selected_box_value(offer_item, quantity_ordered)
         result.append(
             "<select id=\"box_offer_item{id}\" name=\"box_offer_item{id}\" disabled class=\"form-control\">{option}</select>".format(
                 result=result,
@@ -256,7 +256,7 @@ def select_offer_item(offer_item, result, user):
     ).order_by('?').only('quantity_ordered').first()
     if purchase is not None:
         is_open = purchase.status == PERMANENCE_OPENED
-        html = display_selected_value_html(
+        html = get_html_selected_value(
             offer_item,
             purchase.quantity_ordered,
             is_open=is_open
@@ -267,7 +267,7 @@ def select_offer_item(offer_item, result, user):
             producer__offeritem=offer_item.id,
             status=PERMANENCE_OPENED
         ).order_by('?').exists()
-        html = display_selected_value_html(
+        html = get_html_selected_value(
             offer_item,
             DECIMAL_ZERO,
             is_open=is_open
@@ -303,6 +303,6 @@ def repanier_btn_like(context, *args, **kwargs):
         str_id = str(offer_item.id)
         result = "<br><span class=\"btn_like{str_id}\" style=\"cursor: pointer;\">{html}</span>".format(
             str_id=str_id,
-            html=offer_item.get_like_html(user)
+            html=offer_item.get_html_like(user)
         )
     return mark_safe(result)

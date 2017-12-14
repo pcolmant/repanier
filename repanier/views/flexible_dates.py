@@ -48,5 +48,5 @@ def flexible_dates(request, product_id, contract_id):
                         #     contract_content.all_dates = contract.all_dates
                         #     contract_content.save()
                 return HttpResponse(
-                    product.get_is_into_offer_html(contract=contract, contract_content=contract_content))
+                    product.get_html_is_into_offer(contract=contract, contract_content=contract_content))
     raise Http404

@@ -365,7 +365,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     duplicate_product.short_description = _('Duplicate')
 
     def get_list_display(self, request):
-        list_display = ['get_is_into_offer', '__str__']
+        list_display = ['get_html_is_into_offer', '__str__']
         list_editable = ['producer_unit_price']
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ['language_column']
@@ -567,11 +567,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         self._contract = contract
         return super(ProductAdmin, self).changelist_view(request, extra_context=extra_context)
 
-    def get_is_into_offer(self, product):
-        return product.get_is_into_offer(self._contract)
+    def get_html_is_into_offer(self, product):
+        return product.get_html_admin_is_into_offer(self._contract)
 
-    get_is_into_offer.short_description = (_("In offer"))
-    get_is_into_offer.allow_tags = True
+    get_html_is_into_offer.short_description = (_("In offer"))
 
     def save_model(self, request, product, form, change):
         super(ProductAdmin, self).save_model(

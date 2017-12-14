@@ -321,7 +321,7 @@ def payment_message(customer, permanence):
         bank_not_invoiced = customer.get_bank_not_invoiced()
         order_not_invoiced = customer.get_order_not_invoiced()
 
-        customer_on_hold_movement = customer.get_on_hold_movement_html(
+        customer_on_hold_movement = customer.get_html_on_hold_movement(
             bank_not_invoiced, order_not_invoiced, total_price_with_tax
         )
         if REPANIER_SETTINGS_INVOICE:
@@ -359,7 +359,7 @@ def payment_message(customer, permanence):
     return customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount
 
 
-def display_selected_value_html(offer_item, quantity_ordered, is_open=True):
+def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
     if offer_item is not None and offer_item.may_order:
         if quantity_ordered <= DECIMAL_ZERO:
             if is_open:
@@ -395,7 +395,7 @@ def display_selected_value_html(offer_item, quantity_ordered, is_open=True):
     return mark_safe(html)
 
 
-def display_selected_box_value_html(offer_item, quantity_ordered):
+def get_html_selected_box_value(offer_item, quantity_ordered):
     # Select one purchase
     if quantity_ordered > DECIMAL_ZERO:
         qty_display = offer_item.get_display(
@@ -820,7 +820,7 @@ def producer_web_services_activated(reference_site=None):
     return web_services_activated, "Repanier", web_service_version
 
 
-def calc_basket_message_html(customer, permanence, status):
+def get_html_basket_message(customer, permanence, status):
     from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     if status == PERMANENCE_OPENED:
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:

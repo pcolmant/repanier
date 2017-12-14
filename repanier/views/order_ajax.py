@@ -14,8 +14,8 @@ from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import create_or_update_one_cart_item, sint, sboolean, display_selected_value_html, \
-    calc_basket_message_html, my_basket, display_selected_box_value_html
+from repanier.tools import create_or_update_one_cart_item, sint, sboolean, my_basket, get_html_selected_value, \
+    get_html_selected_box_value, get_html_basket_message
 
 
 @never_cache
@@ -57,10 +57,10 @@ def order_ajax(request):
                 id=offer_item_id
             ).order_by('?').first()
             if purchase is None:
-                json_dict["#offer_item{}".format(offer_item.id)] = display_selected_value_html(offer_item, DECIMAL_ZERO,
+                json_dict["#offer_item{}".format(offer_item.id)] = get_html_selected_value(offer_item, DECIMAL_ZERO,
                                                                                                is_open=True)
             else:
-                json_dict["#offer_item{}".format(offer_item.id)] = display_selected_value_html(offer_item,
+                json_dict["#offer_item{}".format(offer_item.id)] = get_html_selected_value(offer_item,
                                                                                                purchase.quantity_ordered,
                                                                                                is_open=True)
             if updated and offer_item.is_box:
@@ -82,7 +82,7 @@ def order_ajax(request):
                             is_box_content=False
                         ).order_by('?').only('quantity_ordered').first()
                         if purchase is not None:
-                            json_dict["#offer_item{}".format(box_offer_item.id)] = display_selected_value_html(
+                            json_dict["#offer_item{}".format(box_offer_item.id)] = get_html_selected_value(
                                 box_offer_item,
                                 purchase.quantity_ordered,
                                 is_open=True
@@ -93,7 +93,7 @@ def order_ajax(request):
                             is_box_content=True
                         ).order_by('?').only('quantity_ordered').first()
                         if box_purchase is not None:
-                            json_dict["#box_offer_item{}".format(box_offer_item.id)] = display_selected_box_value_html(
+                            json_dict["#box_offer_item{}".format(box_offer_item.id)] = get_html_selected_box_value(
                                 box_offer_item,
                                 box_purchase.quantity_ordered
                             )
@@ -121,10 +121,10 @@ def order_ajax(request):
             ).order_by('?').first()
 
             if is_basket:
-                basket_message = calc_basket_message_html(customer, permanence, PERMANENCE_OPENED)
+                basket_message = get_html_basket_message(customer, permanence, PERMANENCE_OPENED)
             else:
                 basket_message = EMPTY_STRING
-            json_dict.update(customer_invoice.my_order_confirmation_html(
+            json_dict.update(customer_invoice.get_html_my_order_confirmatio(
                 permanence=permanence,
                 is_basket=is_basket,
                 basket_message=basket_message

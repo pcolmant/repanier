@@ -62,7 +62,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         )
                         preparation_order += 1
                         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-                            confirmed = "\n{}".format(_("/!\ This order isn't confirmed"))
+                            confirmed = "\n{}".format(_("⚠ This order isn't confirmed"))
                         else:
                             confirmed = EMPTY_STRING
                         row = [
@@ -119,7 +119,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     )
                     preparation_order += 1
                     if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
-                        confirmed = "\n{}".format(_("/!\ This order isn't confirmed"))
+                        confirmed = "\n{}".format(_("⚠ This order isn't confirmed"))
                     else:
                         confirmed = EMPTY_STRING
                     row = [

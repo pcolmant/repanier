@@ -106,15 +106,15 @@ class Product(Item):
         offer_item = offer_item_qs.first()
         return offer_item
 
-    def get_is_into_offer(self, contract=None):
+    def get_html_admin_is_into_offer(self, contract=None):
         return mark_safe("<div id=\"is_into_offer_{}\">{}</div>".format(
             self.id,
-            self.get_is_into_offer_html(contract)
+            self.get_html_is_into_offer(contract)
         ))
 
-    get_is_into_offer.short_description = (_("In offer"))
+    get_html_admin_is_into_offer.short_description = (_("In offer"))
 
-    def get_is_into_offer_html(self, contract=None, contract_content=None):
+    def get_html_is_into_offer(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
         css_class = ' class = "btn"'
         if contract is not None or contract_content is not None:

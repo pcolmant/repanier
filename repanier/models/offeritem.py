@@ -185,14 +185,13 @@ class OfferItem(Item):
         else:
             price = self.total_purchase_with_tax
         if price != DECIMAL_ZERO:
-            return _("<b>%(price)s</b>") % {'price': price}
+            return mark_safe(_("<b>%(price)s</b>") % {'price': price})
         return EMPTY_STRING
 
     get_html_producer_price_purchased.short_description = (_("Producer amount invoiced"))
-    get_html_producer_price_purchased.allow_tags = True
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
-    def get_like_html(self, user):
+    def get_html_like(self, user):
         return mark_safe("<span class=\"glyphicon glyphicon-heart{}\" onclick=\"like_ajax({});return false;\"></span>".format(
             EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id))
 

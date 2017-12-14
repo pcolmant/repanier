@@ -27,7 +27,7 @@ def like_ajax(request):
                 else:
                     # add a new like for a company
                     product.likes.add(user)
-                like_html = offer_item.get_like_html(user)
+                like_html = offer_item.get_html_like(user)
                 if settings.DJANGO_SETTINGS_CONTRACT:
                     for offer_item in OfferItemWoReceiver.objects.filter(product_id=product.id).only("id").order_by(
                             '?'):

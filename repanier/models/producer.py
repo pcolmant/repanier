@@ -299,7 +299,7 @@ class Producer(models.Model):
     get_last_invoice.short_description = _("Last invoice")
     get_last_invoice.allow_tags = True
 
-    def get_on_hold_movement_html(self):
+    def get_html_on_hold_movement(self):
         bank_not_invoiced = self.get_bank_not_invoiced()
         order_not_invoiced = self.get_order_not_invoiced()
 

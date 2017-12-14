@@ -96,7 +96,7 @@ def delivery_ajax(request):
                 json_dict["#communicationModal"] = mark_safe(html)
 
     is_basket = sboolean(request.GET.get('is_basket', False))
-    json_dict.update(customer_invoice.my_order_confirmation_html(
+    json_dict.update(customer_invoice.get_html_my_order_confirmation(
         permanence=permanence,
         is_basket=is_basket
     ))

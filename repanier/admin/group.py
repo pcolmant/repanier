@@ -87,14 +87,14 @@ class UserDataForm(forms.ModelForm):
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = username
+            user.username = user.email = email
             user.first_name = EMPTY_STRING
             user.last_name = username
-            user.email = email
+
             user.save()
         else:
             user = user_model.objects.create_user(
-                username=username, email=email, password=None,
+                username=email, email=email, password=None,
                 first_name=EMPTY_STRING, last_name=username)
         self.user = user
         return self.instance
@@ -315,7 +315,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return qs
 
     def save_model(self, request, group, form, change):
-        # group.user = form.user
+        group.user = form.user
         form.user.is_staff = False
         form.user.is_active = group.is_active
         form.user.save()

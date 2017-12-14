@@ -1,11 +1,7 @@
 # -*- coding: utf-8
 
-import json
-
 from django.contrib.auth.decorators import login_required
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import Http404, JsonResponse
-from django.http import HttpResponse
 from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
@@ -18,7 +14,7 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import sint, display_selected_value_html
+from repanier.tools import sint, get_html_selected_value
 
 
 @never_cache
@@ -152,7 +148,7 @@ def order_select_ajax(request):
             html = "<option value=\"0\" selected>---</option>"
     else:
         if purchase is not None and purchase.quantity_ordered != DECIMAL_ZERO:
-            html = display_selected_value_html(offer_item, purchase.quantity_ordered, is_open=True)
+            html = get_html_selected_value(offer_item, purchase.quantity_ordered, is_open=True)
         else:
             html = "<option value=\"0\" selected>{}</option>".format(
                 _("Closed")

@@ -13,7 +13,7 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.staff import Staff
-from repanier.tools import sint, my_basket, calc_basket_message_html
+from repanier.tools import sint, my_basket, get_html_basket_message
 
 
 @never_cache
@@ -60,12 +60,12 @@ def btn_confirm_order_ajax(request):
         status = customer_invoice.delivery.status
     else:
         status = customer_invoice.status
-    basket_message = calc_basket_message_html(
+    basket_message = get_html_basket_message(
         customer,
         permanence,
         status
     )
-    json_dict.update(customer_invoice.my_order_confirmation_html(
+    json_dict.update(customer_invoice.get_html_my_order_confirmation(
         permanence=permanence,
         is_basket=True,
         basket_message=basket_message

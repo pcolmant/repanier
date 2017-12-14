@@ -75,7 +75,7 @@ class Configuration(TranslatableModel):
         help_text=_(
             "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
         max_length=50, null=True, blank=True, default=EMPTY_STRING)
-    customers_must_confirm_orders = models.BooleanField(_("/!\ Customers must confirm orders"), default=False)
+    customers_must_confirm_orders = models.BooleanField(_("⚠ Customers must confirm orders"), default=False)
     membership_fee = ModelMoneyField(
         _("Membership fee"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
