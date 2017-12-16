@@ -303,30 +303,26 @@ class CustomerInvoice(Invoice):
                     if transport:
                         if self.price_list_multiplier > DECIMAL_ONE:
                             msg_price = "{}<br>".format(
-                                _(
-                                    'A price increase of %(increase)s %% of the total invoiced is due for this delivery point. This does not apply to the cost of transport which is fixed.') % {
+                                _('In addition, a surcharge of %(increase)s %% is applied to the billed total. It does not apply to deposits or fees.') % {
                                     'increase': number_format(
                                         (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
                                 })
                         else:
                             msg_price = "{}<br>".format(
-                                _(
-                                    'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point. This does not apply to the cost of transport which is fixed.') % {
+                                _('In addition a reduction of %(decrease)s %% is applied to the billed total. It does not apply to deposits or fees.') % {
                                     'decrease': number_format(
                                         (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
                                 })
                     else:
                         if self.price_list_multiplier > DECIMAL_ONE:
                             msg_price = "{}<br>".format(
-                                _(
-                                    'A price increase of %(increase)s %% of the total invoiced is due for this delivery point.') % {
+                                _('For this delivery point, an overload of %(increase)s %% is applied to the billed total (out of deposit).') % {
                                     'increase': number_format(
                                         (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
                                 })
                         else:
                             msg_price = "{}<br>".format(
-                                _(
-                                    'A price decrease of %(decrease)s %% of the total invoiced is given for this delivery point.') % {
+                                _('For this delivery point, a reduction of %(decrease)s %% is applied to the invoiced total (out of deposit).') % {
                                     'decrease': number_format(
                                         (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
                                 })

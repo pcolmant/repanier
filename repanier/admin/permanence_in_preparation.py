@@ -274,7 +274,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             return
 
-    export_xlsx_offer.short_description = _("1 --- Check the offer before opening")
+    export_xlsx_offer.short_description = _("1 --- Check offer before opening")
 
     def export_xlsx_customer_order(self, request, queryset):
         if 'cancel' in request.POST:
@@ -500,7 +500,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'email_will_be_sent_to': email_will_be_sent_to
             })
 
-    open_and_send_offer.short_description = _('Open and send offers')
+    open_and_send_offer.short_description = _('2 --- Open orders')
 
     def close_and_send_order(self, request, queryset):
         if 'cancel' in request.POST:
@@ -680,7 +680,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'order_board_email_will_be_sent_to': order_board_email_will_be_sent_to
             })
 
-    close_and_send_order.short_description = _('Send orders2')
+    close_and_send_order.short_description = _('3 --- Close and transmit orders')
 
     def back_to_scheduled(self, request, queryset):
         if 'cancel' in request.POST:

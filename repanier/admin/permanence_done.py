@@ -171,7 +171,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         else:
             return
 
-    export_xlsx.short_description = _("Export orders prepared as XSLX file")
+    export_xlsx.short_description = _("1 --- Export billing preparation list")
 
     def import_xlsx(self, request, permanence_qs):
         permanence = permanence_qs.first()
@@ -185,7 +185,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             handle_uploaded_purchase, action='import_xlsx', form_klass=ImportXlsxForm
         )
 
-    import_xlsx.short_description = _("Import orders prepared from a XLSX file")
+    import_xlsx.short_description = _("2 --- Import, update billing preparation list")
 
     def preview_invoices(self, request, permanence_qs):
         valid_permanence_qs = permanence_qs.filter(
@@ -215,7 +215,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         self.message_user(request, user_message, user_message_level)
         return
 
-    preview_invoices.short_description = _("Preview invoices before sending them by email")
+    preview_invoices.short_description = _("4 --- Export accounting report")
 
     def generate_invoices(self, request, permanence_qs):
         if 'done' in request.POST:
@@ -368,7 +368,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
         })
 
-    generate_invoices.short_description = _('Generate invoices')
+    generate_invoices.short_description = _('3 --- Generate invoices')
 
     def generate_archive(self, request, permanence_qs):
         if 'cancel' in request.POST:
@@ -537,7 +537,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 'invoice_producer_email_will_be_sent_to': invoice_producer_email_will_be_sent_to
             })
 
-    send_invoices.short_description = _('Send invoices')
+    send_invoices.short_description = _('5 --- Send invoices')
 
     def get_actions(self, request):
         actions = super(PermanenceDoneAdmin, self).get_actions(request)
