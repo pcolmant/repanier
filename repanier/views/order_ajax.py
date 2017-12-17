@@ -124,7 +124,7 @@ def order_ajax(request):
                 basket_message = get_html_basket_message(customer, permanence, PERMANENCE_OPENED)
             else:
                 basket_message = EMPTY_STRING
-            json_dict.update(customer_invoice.get_html_my_order_confirmatio(
+            json_dict.update(customer_invoice.get_html_my_order_confirmation(
                 permanence=permanence,
                 is_basket=is_basket,
                 basket_message=basket_message
