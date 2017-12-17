@@ -87,7 +87,7 @@ class Purchase(models.Model):
         validators=[MinValueValidator(0)])
 
     price_list_multiplier = models.DecimalField(
-        _("Customer price list multiplier"),
+        _("Coefficient applied to the producer tariff to calculate the consumer tariff"),
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])

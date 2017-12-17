@@ -84,7 +84,7 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
         return False
 
 
-def send_email_to_who(is_email_send, board=False):
+def send_email_to_who(is_email_send=True, board=False):
     from repanier.apps import REPANIER_SETTINGS_TEST_MODE
     if not is_email_send:
         if board:

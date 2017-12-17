@@ -137,7 +137,7 @@ def open_order(permanence_id, do_not_send_any_mail=False):
         permanence.producers.add(offer_item.producer_id)
 
     # try:
-    if repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER and not do_not_send_any_mail:
+    if not do_not_send_any_mail:
         email_offer.send_open_order(permanence_id)
     permanence.set_status(PERMANENCE_OPENED)
     # except Exception as error_str:

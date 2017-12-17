@@ -82,7 +82,7 @@ class Customer(models.Model):
     # At this stage, the link between the customer invoice and this customer responsible is made with
     # CustomerInvoice.customer_charged
     price_list_multiplier = models.DecimalField(
-        _("Customer price list multiplier"),
+        _("Coefficient applied to the producer tariff to calculate the consumer tariff"),
         help_text=_("This multiplier is applied to each product ordered by this customer."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])

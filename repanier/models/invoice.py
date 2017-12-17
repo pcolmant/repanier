@@ -103,7 +103,7 @@ class CustomerInvoice(Invoice):
         _("Invoice sort order"),
         default=None, blank=True, null=True, db_index=True)
     price_list_multiplier = models.DecimalField(
-        _("Delivery point price list multiplier"),
+        _("Delivery point coefficient applied to the producer tariff to calculate the consumer tariff"),
         help_text=_(
             "This multiplier is applied once for groups with entitled customer or at each customer invoice for open groups."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,

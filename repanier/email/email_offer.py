@@ -85,68 +85,66 @@ def send_pre_open_order(permanence_id):
 
 
 def send_open_order(permanence_id):
-    from repanier.apps import REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER, \
-        REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_CONFIG
-    if REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER:
-        cur_language = translation.get_language()
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            translation.activate(language_code)
-            permanence = Permanence.objects.get(id=permanence_id)
-            config = REPANIER_SETTINGS_CONFIG
+    from repanier.apps import REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_CONFIG
+    cur_language = translation.get_language()
+    for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+        language_code = language["code"]
+        translation.activate(language_code)
+        permanence = Permanence.objects.get(id=permanence_id)
+        config = REPANIER_SETTINGS_CONFIG
 
-            staff = Staff.get_order_responsible()
+        staff = Staff.get_order_responsible()
 
-            to_email_customer = []
-            for customer in Customer.objects.filter(
-                    is_active=True,
-                    represent_this_buyinggroup=False,
-                    may_order=True,
-                    language=language_code
-            ).order_by('?'):
-                to_email_customer.append(customer.user.email)
-                if customer.email2 is not None and len(customer.email2.strip()) > 0:
-                    to_email_customer.append(customer.email2)
-            offer_description = permanence.safe_translation_getter(
-                'offer_description', any_language=True, default=EMPTY_STRING
-            )
-            offer_customer_mail = config.safe_translation_getter(
-                'offer_customer_mail', any_language=True, default=EMPTY_STRING
-            )
-            offer_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
-            offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
-            qs = OfferItemWoReceiver.objects.filter(
-                permanence_id=permanence_id, is_active=True,
-                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
-                translations__language_code=language_code
-            ).order_by(
-                "translations__order_sort_order"
-            )
-            offer_detail = "<ul>{}</ul>".format("".join("<li>{}, {}, {}</li>".format(
-                o.get_long_name(),
-                o.producer.short_profile_name,
-                o.email_offer_price_with_vat,
-            )
-                                                        for o in qs
-                                                        ), )
-            template = Template(offer_customer_mail)
-            context = TemplateContext({
-                'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                    settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                'offer_description': mark_safe(offer_description),
-                'offer_detail': mark_safe(offer_detail),
-                'offer_recent_detail': mark_safe(permanence.get_new_products),
-                'offer_producer': offer_producer,
-                'signature': staff.get_html_signature
-            })
-            html_content = template.render(context)
-            email = RepanierEmail(
-                subject=offer_customer_mail_subject,
-                html_content=html_content,
-                from_email=staff.get_from_email,
-                reply_to=staff.get_reply_to_email,
-                bcc=list(set(staff.get_to_email) | set(to_email_customer)),
-                show_customer_may_unsubscribe=True
-            )
-            email.send_email()
-        translation.activate(cur_language)
+        to_email_customer = []
+        for customer in Customer.objects.filter(
+                is_active=True,
+                represent_this_buyinggroup=False,
+                may_order=True,
+                language=language_code
+        ).order_by('?'):
+            to_email_customer.append(customer.user.email)
+            if customer.email2 is not None and len(customer.email2.strip()) > 0:
+                to_email_customer.append(customer.email2)
+        offer_description = permanence.safe_translation_getter(
+            'offer_description', any_language=True, default=EMPTY_STRING
+        )
+        offer_customer_mail = config.safe_translation_getter(
+            'offer_customer_mail', any_language=True, default=EMPTY_STRING
+        )
+        offer_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
+        offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
+        qs = OfferItemWoReceiver.objects.filter(
+            permanence_id=permanence_id, is_active=True,
+            order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+            translations__language_code=language_code
+        ).order_by(
+            "translations__order_sort_order"
+        )
+        offer_detail = "<ul>{}</ul>".format("".join("<li>{}, {}, {}</li>".format(
+            o.get_long_name(),
+            o.producer.short_profile_name,
+            o.email_offer_price_with_vat,
+        )
+                                                    for o in qs
+                                                    ), )
+        template = Template(offer_customer_mail)
+        context = TemplateContext({
+            'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
+                settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+            'offer_description': mark_safe(offer_description),
+            'offer_detail': mark_safe(offer_detail),
+            'offer_recent_detail': mark_safe(permanence.get_new_products),
+            'offer_producer': offer_producer,
+            'signature': staff.get_html_signature
+        })
+        html_content = template.render(context)
+        email = RepanierEmail(
+            subject=offer_customer_mail_subject,
+            html_content=html_content,
+            from_email=staff.get_from_email,
+            reply_to=staff.get_reply_to_email,
+            bcc=list(set(staff.get_to_email) | set(to_email_customer)),
+            show_customer_may_unsubscribe=True
+        )
+        email.send_email()
+    translation.activate(cur_language)

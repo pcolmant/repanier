@@ -467,9 +467,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     template_cancel_order_mail.append(language_code)
                     template_cancel_order_mail.append(template.render(context))
             translation.activate(cur_language)
-            email_will_be_sent, email_will_be_sent_to = send_email_to_who(
-                repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER
-            )
+            email_will_be_sent, email_will_be_sent_to = send_email_to_who()
         if 'apply' in request.POST or 'apply-wo-mail' in request.POST:
             form = OpenAndSendOfferForm(request.POST)
             if form.is_valid():
@@ -628,12 +626,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
         translation.activate(cur_language)
 
-        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = send_email_to_who(
-            repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER
-        )
-        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = send_email_to_who(
-            repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER
-        )
+        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = send_email_to_who()
+        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = send_email_to_who()
         order_board_email_will_be_sent, order_board_email_will_be_sent_to = send_email_to_who(
             repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, board=True
         )

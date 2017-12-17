@@ -50,7 +50,7 @@ class OfferItem(Item):
 
     producer_price_are_wo_vat = models.BooleanField(_("Producer price are without vat"), default=False)
     price_list_multiplier = models.DecimalField(
-        _("Price list multiplier"),
+        _("Coefficient applied to the producer tariff to calculate the consumer tariff"),
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=4,
         validators=[MinValueValidator(0)])

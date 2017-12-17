@@ -43,19 +43,6 @@ class ConfigurationDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        send_order_mail_to_customer = self.cleaned_data["send_order_mail_to_customer"]
-        send_abstract_order_mail_to_customer = self.cleaned_data["send_abstract_order_mail_to_customer"]
-        if send_abstract_order_mail_to_customer and not send_order_mail_to_customer:
-            self.add_error(
-                'send_abstract_order_mail_to_customer',
-                _('The abstract can only be send if the order is also send to customer'))
-        send_order_mail_to_producer = self.cleaned_data["send_order_mail_to_producer"]
-        send_abstract_order_mail_to_producer = self.cleaned_data.get("send_abstract_order_mail_to_producer",
-                                                                     EMPTY_STRING)
-        if send_abstract_order_mail_to_producer and not send_order_mail_to_producer:
-            self.add_error(
-                'send_abstract_order_mail_to_customer',
-                _('The abstract can only be send if the order is also send to producer'))
         if not settings.DJANGO_SETTINGS_DEMO:
             email_is_custom = self.cleaned_data["email_is_custom"]
             if email_is_custom:
@@ -138,7 +125,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'classes': ('collapse',),
                 'fields':
                     (
-                        'send_opening_mail_to_customer', 'offer_customer_mail',
+                        'offer_customer_mail',
                     ),
             }),
         ]
@@ -148,9 +135,9 @@ class ConfigurationAdmin(TranslatableAdmin):
                     'classes': ('collapse',),
                     'fields':
                         (
-                            'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer',
+                            'send_abstract_order_mail_to_customer',
                             'order_customer_mail',
-                            'send_order_mail_to_producer', 'order_producer_mail',
+                            'order_producer_mail',
                             'send_order_mail_to_board', 'order_staff_mail',
                         ),
                 }),
@@ -161,10 +148,10 @@ class ConfigurationAdmin(TranslatableAdmin):
                     'classes': ('collapse',),
                     'fields':
                         (
-                            'send_order_mail_to_customer', 'send_abstract_order_mail_to_customer',
+                            'send_abstract_order_mail_to_customer',
                             'order_customer_mail',
-                            'send_cancel_order_mail_to_customer', 'cancel_order_customer_mail',
-                            'send_order_mail_to_producer', 'send_abstract_order_mail_to_producer',
+                            'cancel_order_customer_mail',
+                            'send_abstract_order_mail_to_producer',
                             'order_producer_mail',
                             'send_order_mail_to_board', 'order_staff_mail',
                         ),

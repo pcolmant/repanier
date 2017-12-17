@@ -83,7 +83,7 @@ class Producer(models.Model):
     sort_products_by_reference = models.BooleanField(_("Sort products by reference"), default=False)
 
     price_list_multiplier = models.DecimalField(
-        _("Price list multiplier"),
+        _("Coefficient applied to the producer tariff to calculate the consumer tariff"),
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])

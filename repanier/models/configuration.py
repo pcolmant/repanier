@@ -50,15 +50,11 @@ class Configuration(TranslatableModel):
         help_text=_("0 mean : never display a pop up."),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0,
         validators=[MinValueValidator(0)])
-    send_opening_mail_to_customer = models.BooleanField(_("Send opening mail to customers"), default=True)
     send_abstract_order_mail_to_customer = models.BooleanField(_("Send abstract order mail to customers"),
                                                                default=False)
-    send_order_mail_to_customer = models.BooleanField(_("Send order mail to customers"), default=True)
-    send_cancel_order_mail_to_customer = models.BooleanField(_("Send cancel order mail to customers"), default=True)
     send_abstract_order_mail_to_producer = models.BooleanField(_("Send abstract order mail to producers"),
                                                                default=False)
-    send_order_mail_to_producer = models.BooleanField(_("Send order mail to producers"), default=True)
-    send_order_mail_to_board = models.BooleanField(_("Send order mail to board"), default=True)
+    send_order_mail_to_board = models.BooleanField(_("Send an order distribution email to members registered for a task"), default=True)
     send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
     send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
     invoice = models.BooleanField(_("Enable accounting module"), default=True)
@@ -133,7 +129,7 @@ class Configuration(TranslatableModel):
                                   configuration='CKEDITOR_SETTINGS_MODEL2',
                                   default=EMPTY_STRING,
                                   blank=True),
-        offer_customer_mail=HTMLField(_("Email content"),
+        offer_customer_mail=HTMLField(_("Contents of the order opening email sent to consumers authorized to order"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=EMPTY_STRING,
@@ -143,32 +139,32 @@ class Configuration(TranslatableModel):
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=EMPTY_STRING,
                                       blank=True),
-        order_customer_mail=HTMLField(_("Email content"),
+        order_customer_mail=HTMLField(_("Content of the order confirmation email sent to the consumers concerned"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=EMPTY_STRING,
                                       blank=True),
-        cancel_order_customer_mail=HTMLField(_("Email content"),
+        cancel_order_customer_mail=HTMLField(_("Content of the email in case of cancellation of the order sent to the consumers concerned"),
                                              help_text=EMPTY_STRING,
                                              configuration='CKEDITOR_SETTINGS_MODEL2',
                                              default=EMPTY_STRING,
                                              blank=True),
-        order_staff_mail=HTMLField(_("Email content"),
+        order_staff_mail=HTMLField(_("Content of the order distribution email sent to the members enrolled to a task"),
                                    help_text=EMPTY_STRING,
                                    configuration='CKEDITOR_SETTINGS_MODEL2',
                                    default=EMPTY_STRING,
                                    blank=True),
-        order_producer_mail=HTMLField(_("Email content"),
+        order_producer_mail=HTMLField(_("Content of the order confirmation email sent to the producers concerned"),
                                       help_text=EMPTY_STRING,
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=EMPTY_STRING,
                                       blank=True),
-        invoice_customer_mail=HTMLField(_("Email content"),
+        invoice_customer_mail=HTMLField(_("Content of the invoice confirmation email sent to the customers concerned"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
                                         default=EMPTY_STRING,
                                         blank=True),
-        invoice_producer_mail=HTMLField(_("Email content"),
+        invoice_producer_mail=HTMLField(_("Content of the payment confirmation email sent to the producers concerned"),
                                         help_text=EMPTY_STRING,
                                         configuration='CKEDITOR_SETTINGS_MODEL2',
                                         default=EMPTY_STRING,
@@ -211,14 +207,14 @@ class Configuration(TranslatableModel):
             self.set_current_language(language_code)
             try:
                 self.offer_customer_mail = """
-                    Bonjour,<br>
-                    <br>
-                    Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br>
-                    {% if offer_description %}{{ offer_description }}<br>
-                    {% endif %}
-                    {% if offer_recent_detail %}<br>Nouveauté(s) :<br>
-                    {{ offer_recent_detail }}{% endif %}<br>
-                    <br>
+                    Bonjour,<br />
+                    <br />
+                    Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
+                    {% if offer_description %}<br />{{ offer_description }}<br />
+                    {% endif %} {% if offer_recent_detail %}<br />
+                    Nouveauté(s) :<br />
+                    {{ offer_recent_detail }}{% endif %}<br />
+                    <br />
                     {{ signature }}
                     """
                 self.offer_producer_mail = """
@@ -363,11 +359,8 @@ def configuration_post_save(sender, **kwargs):
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
         repanier.apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
-        repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER = config.send_opening_mail_to_customer
-        repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER = config.send_order_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_CANCEL_ORDER_MAIL_TO_CUSTOMER = config.send_cancel_order_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
-        repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_PRODUCER = config.send_order_mail_to_producer
         repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER = config.send_abstract_order_mail_to_producer
         repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
         repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
