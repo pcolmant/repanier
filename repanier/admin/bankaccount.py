@@ -156,11 +156,11 @@ class BankAccountDataForm(forms.ModelForm):
     )
 
     bank_amount_in = FormMoneyField(
-        label=_("Bank amount in"),
+        label=_("Cash in"),
         help_text=_('Payment on the account'),
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     bank_amount_out = FormMoneyField(
-        label=_("Bank amount out"),
+        label=_("Cash out"),
         help_text=_('Payment from the account'),
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
 
@@ -221,14 +221,14 @@ class BankAccountDataForm(forms.ModelForm):
                         _('You may not update a balance.')
                     )
                 else:
-                    self.add_error('customer', _('Either a customer or a producer must be given.'))
-                    self.add_error('producer', _('Either a customer or a producer must be given.'))
+                    self.add_error('customer', _('Either a customer or a producer must be set.'))
+                    self.add_error('producer', _('Either a customer or a producer must be set.'))
             else:
                 bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
                 if bank_account:
                     # You may only insert the first latest bank total at initialisation of the website
-                    self.add_error('customer', _('Either a customer or a producer must be given.'))
-                    self.add_error('producer', _('Either a customer or a producer must be given.'))
+                    self.add_error('customer', _('Either a customer or a producer must be set.'))
+                    self.add_error('producer', _('Either a customer or a producer must be set.'))
         else:
             if self.instance.customer_invoice is not None or self.instance.producer_invoice is not None:
                 raise forms.ValidationError(

@@ -221,7 +221,7 @@ def create__customer_action(year):
         return
 
     name = "export_producer_{}".format(year)
-    return name, (action, name, _("Export purchases of {}").format(year))
+    return name, (action, name, _("Export the list of products purchased in {}").format(year))
 
 
 class CustomerWithUserDataForm(UserDataForm):

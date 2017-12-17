@@ -28,7 +28,7 @@ from repanier.models.product import Product
 
 
 class Configuration(TranslatableModel):
-    group_name = models.CharField(_("Group name"), max_length=50, default=EMPTY_STRING)
+    group_name = models.CharField(_("Name of the group"), max_length=50, default=EMPTY_STRING)
     test_mode = models.BooleanField(_("Test mode"), default=False)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
@@ -46,7 +46,7 @@ class Configuration(TranslatableModel):
         default=CURRENCY_EUR,
         verbose_name=_("Currency"))
     max_week_wo_participation = models.DecimalField(
-        _("Display a pop up on the order form after this max week wo participation"),
+        _("Alert the consumer after this number of weeks without participation"),
         help_text=_("0 mean : never display a pop up."),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0,
         validators=[MinValueValidator(0)])
@@ -61,9 +61,9 @@ class Configuration(TranslatableModel):
     send_order_mail_to_board = models.BooleanField(_("Send order mail to board"), default=True)
     send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
     send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
-    invoice = models.BooleanField(_("Activate invoice"), default=True)
-    display_anonymous_order_form = models.BooleanField(_("Display anonymous order form"), default=True)
-    display_producer_on_order_form = models.BooleanField(_("Display producers on order form"), default=True)
+    invoice = models.BooleanField(_("Enable accounting module"), default=True)
+    display_anonymous_order_form = models.BooleanField(_("Allow the anonymous visitor to see the consumer order screen"), default=True)
+    display_producer_on_order_form = models.BooleanField(_("Display the list of producers in the consumer order screen"), default=True)
     display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
     xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
@@ -124,7 +124,7 @@ class Configuration(TranslatableModel):
             "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
         max_length=25, null=True, blank=True, default=EMPTY_STRING)
     translations = TranslatedFields(
-        group_label=models.CharField(_("Group label"),
+        group_label=models.CharField(_("Label to mention on the invoices of the group"),
                                      max_length=100,
                                      default=EMPTY_STRING,
                                      blank=True),
@@ -341,27 +341,27 @@ def configuration_post_save(sender, **kwargs):
         if config.name == PERMANENCE_NAME_PERMANENCE:
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence on ")
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence of ")
         elif config.name == PERMANENCE_NAME_CLOSURE:
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Closure")
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure on ")
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure of ")
         elif config.name == PERMANENCE_NAME_DELIVERY:
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Delivery")
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery on ")
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery of ")
         elif config.name == PERMANENCE_NAME_ORDER:
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Order")
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order on ")
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order of ")
         elif config.name == PERMANENCE_NAME_OPENING:
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Opening")
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Openings")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Opening on ")
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Opening of ")
         else:
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Distribution")
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution on ")
+            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
         repanier.apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
         repanier.apps.REPANIER_SETTINGS_SEND_OPENING_MAIL_TO_CUSTOMER = config.send_opening_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_CUSTOMER = config.send_order_mail_to_customer

@@ -42,7 +42,7 @@ class Invoice(models.Model):
         help_text=_('Purchase to add amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_transport = ModelMoneyField(
-        _("Delivery point transport"),
+        _("Delivery point shipping cost"),
         help_text=_("Transport to add"),
         default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
@@ -54,13 +54,13 @@ class Invoice(models.Model):
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_deposit = ModelMoneyField(
         _("Deposit"),
-        help_text=_('Deposit to add to the original unit price'),
+        help_text=_('Surcharge'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     bank_amount_in = ModelMoneyField(
-        _("Bank amount in"), help_text=_('Payment on the account'),
+        _("Cash in"), help_text=_('Payment on the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     bank_amount_out = ModelMoneyField(
-        _("Bank amount out"), help_text=_('Payment from the account'),
+        _("Cash out"), help_text=_('Payment from the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     date_balance = models.DateField(
         _("Date balance"), default=datetime.date.today)
@@ -685,18 +685,18 @@ class ProducerInvoice(Invoice):
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_deposit = ModelMoneyField(
         _("Deposit"),
-        help_text=_('Deposit to add'),
+        help_text=_('+ Deposit'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_stock_deposit = ModelMoneyField(
         _("Deposit"),
-        help_text=_('Deposit to add'),
+        help_text=_('+ Deposit'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
     to_be_paid = models.BooleanField(_("To be paid"), choices=LUT_BANK_NOTE, default=False)
     calculated_invoiced_balance = ModelMoneyField(
         _("Calculated balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     to_be_invoiced_balance = ModelMoneyField(
-        _("Balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Amount claimed by the producer"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     invoice_sort_order = models.IntegerField(
         _("Invoice sort order"),
         default=None, blank=True, null=True, db_index=True)

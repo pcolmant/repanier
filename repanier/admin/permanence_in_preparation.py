@@ -327,7 +327,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return render(
             request,
             'repanier/confirm_admin_export_customer_order.html', {
-                'sub_title': _("Please, confirm the action : export customers orders"),
+                'sub_title': _("Please, confirm the action : Export customer orders"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'export_xlsx_customer_order',
                 'permanence': permanence,
@@ -336,7 +336,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 ),
             })
 
-    export_xlsx_customer_order.short_description = _("Export xlsx customers orders")
+    export_xlsx_customer_order.short_description = _("Export customer orders")
 
     def export_xlsx_producer_order(self, request, queryset):
         if 'cancel' in request.POST:
@@ -368,7 +368,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             return
 
-    export_xlsx_producer_order.short_description = _("Export xlsx producers orders")
+    export_xlsx_producer_order.short_description = _("Export producer orders")
 
     def open_and_send_offer(self, request, queryset):
         if 'cancel' in request.POST:

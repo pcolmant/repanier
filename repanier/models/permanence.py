@@ -101,7 +101,7 @@ class Permanence(TranslatableModel):
     with_delivery_point = models.BooleanField(
         _("With delivery point"), default=False)
     automatically_closed = models.BooleanField(
-        _("Automatically closed"), default=False)
+        _("Closing AND automatically transmitting orders"), default=False)
     is_updated_on = models.DateTimeField(
         _("Updated on"), auto_now=True)
     highest_status = models.CharField(

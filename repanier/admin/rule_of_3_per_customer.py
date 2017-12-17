@@ -31,7 +31,7 @@ class CustomerPurchaseSendInlineFormSet(BaseInlineFormSet):
                 value = form.cleaned_data.get('offer_item', None)
                 if value is not None:
                     if value in values:
-                        raise forms.ValidationError(_('Duplicate offer_items are not allowed.'))
+                        raise forms.ValidationError(_('The same product can not be selected twice.'))
                     else:
                         values.add(value)
 
@@ -108,7 +108,7 @@ class CustomerSendForm(forms.ModelForm):
     offer_selling_price = FormMoneyField(
         label=_("Customer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
-        label=_("Apply rule of three"), required=False, initial=False)
+        label=_("Apply the rule of 3"), required=False, initial=False)
 
     def __init__(self, *args, **kwargs):
         super(CustomerSendForm, self).__init__(*args, **kwargs)

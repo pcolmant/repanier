@@ -26,7 +26,7 @@
                 </small>
                 <br>
                 {% if object.delta_price_with_tax != 0 %}
-                    {% if object.delta_price_with_tax < 0 %}{% trans "Discount" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
+                    {% if object.delta_price_with_tax < 0 %}{% trans "Reduction granted" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
                 {% endif %}
             {% endif %}
         {% endif %}

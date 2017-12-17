@@ -36,7 +36,7 @@
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
-        <h6>{{ permanence }}{% if permanence.with_delivery_point %}, {% trans "export the customers orders of the following deviveries points" %} :{% endif %}</h6>
+        <h6>{{ permanence }}{% if permanence.with_delivery_point %}, {% trans "export orders from selected delivery points" %} :{% endif %}</h6>
         <div class="submit-row">
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
             <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>

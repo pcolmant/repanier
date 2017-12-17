@@ -85,7 +85,7 @@ class OfferItem(Item):
         _("Additional"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     new_stock = models.DecimalField(
-        _("Final stock"),
+        _("Remaining stock"),
         default=None, max_digits=9, decimal_places=3, null=True)
     contract = models.ForeignKey(
         'Contract',

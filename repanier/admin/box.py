@@ -36,7 +36,7 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
                 product = form.cleaned_data.get('product', None)
                 if product is not None:
                     if product in products:
-                        raise forms.ValidationError(_('Duplicate product are not allowed.'))
+                        raise forms.ValidationError(_('The same product can not be selected twice.'))
                     else:
                         products.add(product)
 
@@ -213,7 +213,7 @@ class BoxAdmin(TranslatableAdmin):
         task_box.flip_flop_is_into_offer(queryset)
 
     flip_flop_select_for_offer_status.short_description = _(
-        'flip_flop_select_for_offer_status for offer')
+        '✔ in offer  ↔ ✘ not in offer')
 
     def duplicate_box(self, request, queryset):
         if 'cancel' in request.POST:

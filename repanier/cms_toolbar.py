@@ -44,7 +44,7 @@ class RepanierToolbar(CMSToolbar):
                 url = reverse('admin:repanier_configuration_change', args=(1,))
                 office_menu.add_sideframe_item(_('Configuration'), url=url)
             url = reverse('admin:repanier_notification_change', args=(1,))
-            office_menu.add_sideframe_item(_('Flash ads'), url=url)
+            office_menu.add_sideframe_item(_('"Flash" ad'), url=url)
             if display_configuration:
                 url = reverse('admin:repanier_staff_changelist')
                 office_menu.add_sideframe_item(_('Management team'), url=url)
@@ -58,7 +58,7 @@ class RepanierToolbar(CMSToolbar):
                 url = reverse('admin:repanier_lut_productionmode_changelist')
                 office_menu.add_sideframe_item(_('Labels'), url=url)
             url = reverse('admin:repanier_lut_departmentforcustomer_changelist')
-            office_menu.add_sideframe_item(_('Departements'), url=url)
+            office_menu.add_sideframe_item(_('Departments'), url=url)
             position += 1
 
             url = "{}?is_active__exact=1".format(reverse('admin:repanier_customer_changelist'))

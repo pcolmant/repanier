@@ -88,7 +88,7 @@ def export_offer_row(product, row_num, ws, permanences_dates=EMPTY_STRING, flexi
     if permanences_dates:
         row += [
             (_("Permanences dates"), 60, permanences_dates, NumberFormat.FORMAT_TEXT, False),
-            (_("Flexible permanences dates"), 5, _("Yes") if flexible_dates else _("No"), NumberFormat.FORMAT_TEXT,
+            (_("Flexible dates of permanence"), 5, _("Yes") if flexible_dates else _("No"), NumberFormat.FORMAT_TEXT,
              False),
         ]
     if row_num == 0:

@@ -30,15 +30,15 @@ class BankAccount(models.Model):
         max_length=3,
         choices=LUT_BANK_TOTAL,
         default=BANK_NOT_LATEST_TOTAL,
-        verbose_name=_("Bank balance status"),
+        verbose_name=_("Account balance status"),
         db_index=True
     )
     bank_amount_in = ModelMoneyField(
-        _("Bank amount in"), help_text=_('Payment on the account'),
+        _("Cash in"), help_text=_('Payment on the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)])
     bank_amount_out = ModelMoneyField(
-        _("Bank amount out"), help_text=_('Payment from the account'),
+        _("Cash out"), help_text=_('Payment from the account'),
         max_digits=8, decimal_places=2, default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)])
     producer_invoice = models.ForeignKey(
@@ -56,7 +56,7 @@ class BankAccount(models.Model):
         else:
             return self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING
 
-    get_bank_amount_in.short_description = (_("Bank amount in"))
+    get_bank_amount_in.short_description = (_("Cash in"))
     get_bank_amount_in.admin_order_field = 'bank_amount_in'
 
     def get_bank_amount_out(self):
@@ -65,7 +65,7 @@ class BankAccount(models.Model):
         else:
             return self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING
 
-    get_bank_amount_out.short_description = (_("Bank amount out"))
+    get_bank_amount_out.short_description = (_("Cash out"))
     get_bank_amount_out.admin_order_field = 'bank_amount_out'
 
     def get_producer(self):

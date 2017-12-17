@@ -17,7 +17,7 @@ class ConfigurationDataForm(TranslatableModelForm):
         required=False,
         widget=forms.URLInput(attrs={'style': "width:100% !important"}))
     group_label = forms.CharField(
-        label=_("Group label"),
+        label=_("Label to mention on the invoices of the group"),
         required=False,
         widget=forms.TextInput(attrs={'style': "width:100% !important"}))
     email_host_user = forms.CharField(

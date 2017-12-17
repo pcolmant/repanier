@@ -113,11 +113,11 @@ LUT_PRODUCT_ORDER_UNIT = (
     (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
     (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
-     _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
+     _('Deposit taken back at the permanence.')),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
         'Subscription')),
     (PRODUCT_ORDER_UNIT_TRANSPORTATION, _(
-        'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.')),
+        'Shipping cost.')),
 )
 
 LUT_PRODUCT_ORDER_UNIT_REVERSE = (
@@ -128,13 +128,13 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
     (_("Bought per kg"), PRODUCT_ORDER_UNIT_KG),
     (_("Bought per piece, invoiced following the weight"), PRODUCT_ORDER_UNIT_PC_KG),
     (_("Bought per l"), PRODUCT_ORDER_UNIT_LT),
-    (_('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.'),
+    (_('Deposit taken back at the permanence.'),
      PRODUCT_ORDER_UNIT_DEPOSIT),
     (_(
         'Subscription'),
      PRODUCT_ORDER_UNIT_SUBSCRIPTION),
     (_(
-        'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.'),
+        'Shipping cost.'),
      PRODUCT_ORDER_UNIT_TRANSPORTATION),
 )
 
@@ -147,9 +147,9 @@ LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
     (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
     (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
-     _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
+     _('Deposit taken back at the permanence.')),
     (PRODUCT_ORDER_UNIT_TRANSPORTATION, _(
-        'As a transportation cost : add the minimal order quantity of this product to the basket representing the group.')),
+        'Shipping cost.')),
 )
 
 LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION = (
@@ -161,7 +161,7 @@ LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION = (
     (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
     (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
-     _('As a deposit, a bag : always add this product to preparation list when the customer has purchased something.')),
+     _('Deposit taken back at the permanence.')),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
         'Subscription')),
 )

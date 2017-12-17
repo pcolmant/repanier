@@ -75,11 +75,11 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
         row = [
             (_('Name'), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
-            (_('Balance before'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Bank amount in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Bank amount out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Previous balance'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Cash in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Cash out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Balance after'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Final balance'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Name'), 20, customer.short_basket_name, NumberFormat.FORMAT_TEXT),
         ]
 
@@ -126,11 +126,11 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
         row = [
             (_('Name'), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
-            (_('Balance before'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Bank amount in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Bank amount out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Previous balance'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Cash in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Cash out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Balance after'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
+            (_('Final balance'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
             (_('Name'), 20, producer.short_profile_name, NumberFormat.FORMAT_TEXT),
         ]
 

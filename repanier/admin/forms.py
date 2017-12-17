@@ -90,7 +90,7 @@ class ProducerInvoicedForm(forms.Form):
     calculated_invoiced_balance = FormMoneyField(
         label=_("Calculated balance to be invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     to_be_invoiced_balance = FormMoneyField(
-        label=_("Balance to be invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Amount claimed by the producer"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     invoice_reference = forms.CharField(label=_("Invoice reference"), max_length=100, required=False)
 
     def __init__(self, *args, **kwargs):

@@ -38,7 +38,7 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
             (_("Stock used"), 10),
             (_("Additional"), 10),
-            (_("Final stock"), 10),
+            (_("Remaining stock"), 10),
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
         ]
         offer_items = OfferItemWoReceiver.objects.filter(

@@ -45,7 +45,7 @@ class Item(TranslatableModel):
         verbose_name=_("Order unit"),
     )
     order_average_weight = models.DecimalField(
-        _("Average weight"),
+        _("Average weight / capacity"),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
 

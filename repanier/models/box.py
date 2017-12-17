@@ -84,7 +84,7 @@ class BoxContent(models.Model):
         'Product', verbose_name=_("Product"), related_name='box_content',
         null=True, blank=True, db_index=True, on_delete=models.PROTECT)
     content_quantity = models.DecimalField(
-        _("Fixed content quantity"),
+        _("Fixed quantity per unit"),
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     calculated_customer_content_price = ModelMoneyField(
@@ -92,7 +92,7 @@ class BoxContent(models.Model):
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     calculated_content_deposit = ModelMoneyField(
         _("Content deposit"),
-        help_text=_('Deposit to add to the original content price'),
+        help_text=_('Surcharge'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
     def get_calculated_customer_content_price(self):

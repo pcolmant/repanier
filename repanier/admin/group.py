@@ -118,7 +118,7 @@ def create__group_action(year):
         return
 
     name = "export_producer_{}".format(year)
-    return name, (action, name, _("Export purchases of {}").format(year))
+    return name, (action, name, _("Export the list of products purchased in {}").format(year))
 
 
 class GroupWithUserDataForm(UserDataForm):
@@ -136,7 +136,7 @@ class GroupWithUserDataForm(UserDataForm):
         required=False
     )
     transport = FormMoneyField(
-        label=_("Delivery point transport"),
+        label=_("Delivery point shipping cost"),
         # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
         max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)],

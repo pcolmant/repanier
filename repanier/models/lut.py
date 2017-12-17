@@ -81,7 +81,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         blank=True, null=True, default=None)
     inform_customer_responsible = models.BooleanField(_("Inform customer responsible"), default=False)
     transport = ModelMoneyField(
-        _("Delivery point transport"),
+        _("Delivery point shipping cost"),
         # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
         default=DECIMAL_ZERO, blank=True, max_digits=5, decimal_places=2,
         validators=[MinValueValidator(0)])
@@ -131,8 +131,8 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
         return self.safe_translation_getter('short_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
-        verbose_name = _("Department for customer")
-        verbose_name_plural = _("Departments for customer")
+        verbose_name = _("Department")
+        verbose_name_plural = _("Departments")
 
 
 class LUT_PermanenceRoleQuerySet(TranslatableQuerySet):

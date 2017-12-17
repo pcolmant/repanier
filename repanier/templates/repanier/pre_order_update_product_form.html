@@ -96,7 +96,7 @@
                 {% endif %}
             </div>
             <div id="div_{{ id_for_label }}" class="controls col-xs-4 input-group">
-                <div class="input-group-addon">{% trans "1 pc = ~" %}</div>
+                <div class="input-group-addon">{% trans "1 pc = +/-" %}</div>
                 <input class="form-control" id="{{ id_for_label }}" name="order_average_weight" value="{{ form.order_average_weight.value|unlocalize }}" min="0" step="0.1" type="number">
                 <div class="input-group-addon">{% trans "kg(s)" %}</div>
             </div>

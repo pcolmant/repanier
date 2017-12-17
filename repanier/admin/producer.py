@@ -123,7 +123,7 @@ def create__producer_action(year):
         return
 
     name = "export_producer_{}".format(year)
-    return name, (action, name, _("Export purchases of {}").format(year))
+    return name, (action, name, _("Export the list of products purchased in {}").format(year))
 
 
 class ProducerDataForm(forms.ModelForm):
@@ -188,21 +188,21 @@ class ProducerDataForm(forms.ModelForm):
             if manage_replenishment and producer_pre_opening:
                 # The producer set his offer -> no possibility to manage stock
                 self.add_error('producer_pre_opening',
-                               _("Either 'manage replenishment' or 'producer pre opening' may be set. Not both."))
+                               _("The pre-opening of the orders is incompatible with the management of the reassortment."))
                 self.add_error('manage_replenishment',
-                               _("Either 'manage replenishment' or 'producer pre opening' may be set. Not both."))
+                               _("The pre-opening of the orders is incompatible with the management of the reassortment."))
             if manage_replenishment and invoice_by_basket:
                 # The group manage the replenishment -> no possibility for the producer to prepare basket
                 self.add_error('invoice_by_basket',
-                               _("Either 'manage replenishment' or 'invoice by basket' may be set. Not both."))
+                               _("Billing by basket is incompatible with the management of the reassortment."))
                 self.add_error('manage_replenishment',
-                               _("Either 'manage replenishment' or 'invoice by basket' may be set. Not both."))
+                               _("Billing by basket is incompatible with the management of the reassortment."))
             if is_resale_price_fixed and producer_pre_opening:
                 # The producer set his price -> no possibility to fix the resale price
                 self.add_error('producer_pre_opening',
-                               _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
+                               _("The pre-opening of orders is incompatible with the imposition of consumer selling prices."))
                 self.add_error('is_resale_price_fixed',
-                               _("Either 'is resale price fixed' or 'producer pre opening' may be set. Not both."))
+                               _("The pre-opening of orders is incompatible with the imposition of consumer selling prices."))
             if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
                 # Important : For invoicing correctly
                 self.add_error('price_list_multiplier',
@@ -292,8 +292,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return
 
-    export_xlsx_customer_prices.short_description = _(
-        "Export products of selected producer(s) as XSLX file at customer's prices")
+    export_xlsx_customer_prices.short_description = _("Export the consumer tariff")
 
     def export_xlsx_stock(self, request):
         # return xlsx_stock.admin_export(self, Producer.objects.all())
@@ -310,14 +309,14 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return
 
-    export_xlsx_stock.short_description = _("Export stock")
+    export_xlsx_stock.short_description = _("Export the stock")
 
     def import_xlsx_stock(self, request):
         return import_xslx_view(
-            self, admin, request, Producer.objects.all(), _("Import stock"), handle_uploaded_stock,
+            self, admin, request, Producer.objects.all(), _("Import the stock"), handle_uploaded_stock,
             action='import_xlsx_stock', form_klass=ImportXlsxForm)
 
-    import_xlsx_stock.short_description = _("Import stock")
+    import_xlsx_stock.short_description = _("Import the stock")
 
     def get_actions(self, request):
         actions = super(ProducerAdmin, self).get_actions(request)

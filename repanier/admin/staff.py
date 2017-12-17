@@ -55,15 +55,15 @@ class UserDataForm(TranslatableModelForm):
                 self.add_error('email', _('The email {} is already used by another user.').format(email))
         else:
             if not self.cleaned_data["customer_responsible"]:
-                self.add_error('email', _('At least one email address or a responsible consumer must be set.'))
-                self.add_error('customer_responsible', _('At least one email address or a responsible consumer must be set.'))
+                self.add_error('email', _('At least one email address or one responsible consumer must be set.'))
+                self.add_error('customer_responsible', _('At least one email address or one responsible consumer must be set.'))
 
         if not is_coordinator:
             qs = Staff.objects.filter(is_coordinator=True).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if not qs.exists():
-                self.add_error('is_coordinator', _('At least on coordinator must be set'))
+                self.add_error('is_coordinator', _('At least one coordinator must be set within the management team'))
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)

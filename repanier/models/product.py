@@ -214,7 +214,7 @@ class Product(Item):
                     flexible_dates_display = " {}".format(_("Flexible dates"))
                 else:
                     color = EMPTY_STRING
-                    flexible_dates_display = " {} {}".format(selected_dates_counter, _("fixed dates"))
+                    flexible_dates_display = " {} {}".format(selected_dates_counter, _("Fixed dates"))
                 flexible_dates_link = """
                         <a href="#" onclick="{};return false;" style="color:{} !important;">{}</a>
                     """.format(

@@ -26,7 +26,7 @@ class Contract(TranslatableModel):
         ),
     )
     first_permanence_date = models.DateField(
-        verbose_name=_("First permanence date"),
+        verbose_name=_("Date of the first permanence"),
         db_index=True
     )
     last_permanence_date = models.DateField(
