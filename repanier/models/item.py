@@ -76,15 +76,15 @@ class Item(TranslatableModel):
         _('Individually wrapped by the producer'),
         default=False)
     customer_minimum_order_quantity = models.DecimalField(
-        _("Customer minimum order quantity"),
+        _("Minimum order quantity"),
         default=DECIMAL_ONE, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     customer_increment_order_quantity = models.DecimalField(
-        _("Customer increment order quantity"),
+        _("Then quantity of"),
         default=DECIMAL_ONE, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     customer_alert_order_quantity = models.DecimalField(
-        _("Customer alert order quantity"),
+        _("Alert quantity"),
         default=LIMIT_ORDER_QTY_ITEM, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     producer_order_by_quantity = models.DecimalField(
@@ -99,7 +99,7 @@ class Item(TranslatableModel):
     )
 
     stock = models.DecimalField(
-        _("Current stock"),
+        _("Inventory"),
         default=DECIMAL_MAX_STOCK, max_digits=9, decimal_places=3,
         validators=[MinValueValidator(0)])
     limit_order_quantity_to_stock = models.BooleanField(
@@ -363,10 +363,10 @@ class Item(TranslatableModel):
 
     def get_customer_alert_order_quantity(self):
         if settings.DJANGO_SETTINGS_STOCK and self.limit_order_quantity_to_stock:
-            return "{}".format(_("Current stock"))
+            return "{}".format(_("Inventory"))
         return self.customer_alert_order_quantity
 
-    get_customer_alert_order_quantity.short_description = (_("Customer alert order quantity"))
+    get_customer_alert_order_quantity.short_description = (_("Alert quantity"))
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)

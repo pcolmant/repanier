@@ -1260,14 +1260,14 @@ def export_customer_for_a_delivery(
                 # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
                 wb, ws = new_portrait_a4_sheet(
                     wb,
-                    _("Customer check") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Customer check")),
+                    _("Basket control") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Basket control")),
                     permanence,
                     header
                 )
             else:
                 wb, ws = new_landscape_a4_sheet(
                     wb,
-                    _("Customer check") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Customer check")),
+                    _("Basket control") if delivery_id is None else "{}-{}".format(delivery_cpt, _("Basket control")),
                     permanence,
                     header
                 )
@@ -1463,7 +1463,7 @@ def generate_customer_xlsx(permanence, deliveries_id=(), customer=None, group=Fa
             # At least one order
             abstract_ws = wb.get_active_sheet()
             ws_preparation_title = format_worksheet_title(_('Preparation'))
-            ws_customer_title = format_worksheet_title(_('Customer check'))
+            ws_customer_title = format_worksheet_title(_('Basket control'))
             wb = export_customer_label(
                 permanence=permanence, deliveries_id=deliveries_id, wb=wb
             )

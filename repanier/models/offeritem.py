@@ -64,7 +64,7 @@ class OfferItem(Item):
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     # Calculated with Purchase : Total customer selling price vat included
     total_selling_with_tax = ModelMoneyField(
-        _("Customer amount invoiced"),
+        _("Invoiced to the consumer including tax"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
     # Calculated with Purchase : Quantity invoiced to all customers

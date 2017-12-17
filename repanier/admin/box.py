@@ -46,7 +46,7 @@ class BoxContentInlineForm(ModelForm):
         Product.objects.none(), required=False)
     if settings.DJANGO_SETTINGS_STOCK:
         stock = forms.DecimalField(
-            label=_("Current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
+            label=_("Inventory"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
         limit_order_quantity_to_stock = forms.BooleanField(
             label=_("Limit maximum order qty of the group to stock qty"), required=False, initial=True)
 

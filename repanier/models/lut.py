@@ -158,7 +158,7 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
 
     is_counted_as_participation = models.BooleanField(
         _("This task constitutes a participation in the activities of the group"), default=True)
-    customers_may_register = models.BooleanField(_("Customer can register for this task"), default=True)
+    customers_may_register = models.BooleanField(_("Customers can register for this task"), default=True)
     is_active = models.BooleanField(_("Active"), default=True)
     objects = LUT_ProductionModeManager()
 

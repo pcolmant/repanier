@@ -434,7 +434,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def cancel_invoices(self, request, permanence_qs):
         return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_invoices')
 
-    cancel_invoices.short_description = _('Cancel latest invoices')
+    cancel_invoices.short_description = _('Cancel the last invoice or the last cancellation of delivery')
 
     def cancel_archive(self, request, permanence_qs):
         return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_archive')

@@ -88,7 +88,7 @@ class BoxContent(models.Model):
         default=DECIMAL_ZERO, max_digits=6, decimal_places=3,
         validators=[MinValueValidator(0)])
     calculated_customer_content_price = ModelMoneyField(
-        _("Customer content price"),
+        _("Calculated consumer tariff"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     calculated_content_deposit = ModelMoneyField(
         _("Content deposit"),
@@ -99,7 +99,7 @@ class BoxContent(models.Model):
         # workaround for a display problem with Money field in the admin list_display
         return self.calculated_customer_content_price + self.calculated_content_deposit
 
-    get_calculated_customer_content_price.short_description = (_("Customer content price"))
+    get_calculated_customer_content_price.short_description = (_("Calculated consumer tariff"))
     get_calculated_customer_content_price.allow_tags = False
 
     def __str__(self):

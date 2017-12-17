@@ -302,7 +302,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         if wb is not None:
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}.xlsx".format(
-                _("Current stock")
+                _("Inventory")
             )
             wb.save(response)
             return response

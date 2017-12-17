@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-17 13:06+0100\n"
-"PO-Revision-Date: 2017-12-17 13:09+0100\n"
+"POT-Creation-Date: 2017-12-17 13:36+0100\n"
+"PO-Revision-Date: 2017-12-17 13:38+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -189,7 +189,7 @@ msgstr "Le même produit ne peut pas être sélectionné deux fois."
 #: xlsx/xlsx_stock.py:325 xlsx/xlsx_stock.py:332 xlsx/xlsx_stock.py:333
 #: xlsx/xlsx_stock.py:438 xlsx/xlsx_stock.py:439 xlsx/xlsx_stock.py:463
 #: xlsx/xlsx_stock.py:470
-msgid "Current stock"
+msgid "Inventory"
 msgstr "Inventaire"
 
 #: admin/box.py:51 models/item.py:106
@@ -603,8 +603,8 @@ msgid "Please, confirm the action : restore the delivery"
 msgstr "Veuillez confirmer votre demande de reprise en compte de la livraison."
 
 #: admin/permanence_done.py:437
-msgid "Cancel latest invoices"
-msgstr "Annuler la dernière facture / annulation de livraison"
+msgid "Cancel the last invoice or the last cancellation of delivery"
+msgstr "Annuler la dernière facture ou la dernière annulation de livraison"
 
 #: admin/permanence_done.py:442
 msgid "Cancel archiving"
@@ -1035,7 +1035,7 @@ msgstr "Facturé par le producteur"
 
 #: admin/rule_of_3_per_customer.py:109 models/invoice.py:760
 #: models/offeritem.py:67
-msgid "Customer amount invoiced"
+msgid "Invoiced to the consumer including tax"
 msgstr "Facturé au consommateur TVAC"
 
 #: admin/rule_of_3_per_customer.py:111 admin/rule_of_3_per_product.py:106
@@ -1685,7 +1685,7 @@ msgid "Fixed quantity per unit"
 msgstr "Quantité fixe à l'unité"
 
 #: models/box.py:91 models/box.py:102
-msgid "Customer content price"
+msgid "Calculated consumer tariff"
 msgstr "Tarif consommateur calculé"
 
 #: models/box.py:94
@@ -2389,15 +2389,15 @@ msgid "Individually wrapped by the producer"
 msgstr "Emballage individuel par le producteur"
 
 #: models/item.py:79
-msgid "Customer minimum order quantity"
+msgid "Minimum order quantity"
 msgstr "Quantité minimale de commande"
 
 #: models/item.py:83
-msgid "Customer increment order quantity"
+msgid "Then quantity of"
 msgstr "Ensuite quantité de"
 
 #: models/item.py:87 models/item.py:369
-msgid "Customer alert order quantity"
+msgid "Alert quantity"
 msgstr "Quantité d'alerte"
 
 #: models/item.py:91
@@ -2496,7 +2496,7 @@ msgid "This task constitutes a participation in the activities of the group"
 msgstr "Cette tâche constitue une participation aux activités du groupe"
 
 #: models/lut.py:161
-msgid "Customer can register for this task"
+msgid "Customers can register for this task"
 msgstr "Les consommateurs peuvent s'inscrire à cette tâche"
 
 #: models/lut.py:169 models/permanenceboard.py:21
@@ -3908,7 +3908,7 @@ msgstr "Prix de vente consommateur pour 1 pièce"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:111
 #: templates/repanier/widgets/select_admin_order_unit.html:126
-msgid "Customer minimum piece order quantity"
+msgid "Minimum order quantity expressed as number of pieces"
 msgstr "Quantité minimale de commande exprimée en nombre de pièce(s)"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:114
@@ -3920,7 +3920,7 @@ msgid "Customer price for one pack"
 msgstr "Prix de vente consommateur pour 1 pack"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:116
-msgid "Customer minimum pack order quantity"
+msgid "Minimum order quantity expressed in number of pack(s)"
 msgstr "Quantité minimale de commande exprimée en nombre de pack(s)"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:119
@@ -3934,7 +3934,7 @@ msgid "Customer price for one kg"
 msgstr "Prix de vente consommateur pour 1 kg"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:121
-msgid "Customer minimum kg order quantity"
+msgid "Minimum order quantity in kg (0.05 = 50 grams)"
 msgstr "Quantité minimale de commande exprimée en kg (0,05 = 50 grammes)"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:129
@@ -3946,7 +3946,7 @@ msgid "Customer price for one l"
 msgstr "Prix de vente consommateur pour 1 ℓ"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:131
-msgid "Customer minimum l order quantity"
+msgid "Minimum order quantity expressed in ℓ (0.75 = 75 cℓ)"
 msgstr "Quantité minimale de commande exprimée en ℓ (0,75 = 75 cℓ)"
 
 #: templates/repanier/widgets/select_admin_order_unit.html:134
@@ -4412,8 +4412,8 @@ msgid "Deposits"
 msgstr "Consignes"
 
 #: xlsx/xlsx_order.py:1263 xlsx/xlsx_order.py:1270 xlsx/xlsx_order.py:1466
-msgid "Customer check"
-msgstr "Contrôle des paniers"
+msgid "Basket control"
+msgstr "Contrôle panier"
 
 #: xlsx/xlsx_product.py:17
 msgid "Producer prices list"
@@ -4509,8 +4509,38 @@ msgstr "Contrôle du stock"
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 
-#~ msgid "Calculated customer box price"
-#~ msgstr "Tarif consommateur à l'unité calculé"
+#~ msgid "Current stock"
+#~ msgstr "Inventaire"
+
+#~ msgid "Customer amount invoiced"
+#~ msgstr "Facturé au consommateur TVAC"
+
+#~ msgid "Customer content price"
+#~ msgstr "Tarif consommateur calculé"
+
+#~ msgid "Customer increment order quantity"
+#~ msgstr "Ensuite quantité de"
+
+#~ msgid "Customer alert order quantity"
+#~ msgstr "Quantité d'alerte"
+
+#~ msgid "Customer minimum piece order quantity"
+#~ msgstr "Quantité minimale de commande exprimée en nombre de pièce(s)"
+
+#~ msgid "Customer minimum pack order quantity"
+#~ msgstr "Quantité minimale de commande exprimée en nombre de pack(s)"
+
+#~ msgid "Customer minimum kg order quantity"
+#~ msgstr "Quantité minimale de commande exprimée en kg (0,05 = 50 grammes)"
+
+#~ msgid "Customer minimum l order quantity"
+#~ msgstr "Quantité minimale de commande exprimée en ℓ (0,75 = 75 cℓ)"
+
+#~ msgid "Customer check"
+#~ msgstr "Contrôle des paniers"
+
+#~ msgid "Cancel latest invoices"
+#~ msgstr "Annuler la dernière facture / annulation de livraison"
 
 #~ msgid "Calculated balance to be invoiced"
 #~ msgstr "Montant dû au producteur tel que calculé par Repanier"

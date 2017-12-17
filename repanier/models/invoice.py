@@ -757,7 +757,7 @@ class CustomerProducerInvoice(models.Model):
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     # Calculated with Purchase
     total_selling_with_tax = ModelMoneyField(
-        _("Customer amount invoiced"),
+        _("Invoiced to the consumer including tax"),
         help_text=_('Total selling amount vat included'),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 

@@ -322,15 +322,15 @@ def export_producer_stock(producers, customer_price=False, wb=None):
         (_("Product"), 60),
         (_("Customer unit price") if customer_price else _("Producer unit price"), 10),
         (_("Deposit"), 10),
-        (_("Current stock"), 10),
+        (_("Inventory"), 10),
         (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
     ]
     producers = producers.iterator()
     producer = next_row(producers)
     wb, ws = new_landscape_a4_sheet(
         wb,
-        _('Current stock'),
-        _('Current stock'),
+        _('Inventory'),
+        _('Inventory'),
         header
     )
     show_column_reference = False
@@ -435,8 +435,8 @@ def import_producer_stock(worksheet, producers=None):
                 # with transaction.atomic():
                 product_id = None if row[_('Id')] is None else Decimal(row[_('Id')])
                 if product_id is not None:
-                    stock = DECIMAL_ZERO if row[_('Current stock')] is None else Decimal(
-                        row[_('Current stock')]).quantize(
+                    stock = DECIMAL_ZERO if row[_('Inventory')] is None else Decimal(
+                        row[_('Inventory')]).quantize(
                         THREE_DECIMALS)
                     stock = stock if stock >= DECIMAL_ZERO else DECIMAL_ZERO
                     Product.objects.filter(
@@ -460,12 +460,12 @@ def handle_uploaded_stock(request, producers, file_to_import, *args):
     error_msg = None
     wb = load_workbook(file_to_import)
     if wb is not None:
-        ws = wb.get_sheet_by_name(format_worksheet_title(_('Current stock')))
+        ws = wb.get_sheet_by_name(format_worksheet_title(_('Inventory')))
         if ws is not None:
             error, error_msg = import_producer_stock(
                 ws,
                 producers=producers
             )
             if error:
-                error_msg = format_worksheet_title(_('Current stock')) + " > " + error_msg
+                error_msg = format_worksheet_title(_('Inventory')) + " > " + error_msg
     return error, error_msg
