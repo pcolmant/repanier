@@ -553,8 +553,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             del actions['preview_invoices']
             del actions['send_invoices']
             del actions['cancel_invoices']
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            del actions['send_invoices']
+
 
         if not actions:
             try:

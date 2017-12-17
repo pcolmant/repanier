@@ -359,7 +359,6 @@ def configuration_post_save(sender, **kwargs):
             repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
         repanier.apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
-        repanier.apps.REPANIER_SETTINGS_SEND_CANCEL_ORDER_MAIL_TO_CUSTOMER = config.send_cancel_order_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER = config.send_abstract_order_mail_to_producer
         repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
