@@ -131,12 +131,12 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
 
 class BoxForm(TranslatableModelForm):
     calculated_customer_box_price = forms.DecimalField(
-        label=_("Calculated customer box price"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
+        label=_("Consumer rate per unit calculated"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     calculated_box_deposit = forms.DecimalField(
-        label=_("Calculated box deposit"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
+        label=_("Calculated deposit per unit"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     if settings.DJANGO_SETTINGS_STOCK:
         calculated_stock = forms.DecimalField(
-            label=_("Calculated current stock"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
+            label=_("Calculated inventory"), max_digits=9, decimal_places=3, required=False, initial=DECIMAL_ZERO)
 
     def __init__(self, *args, **kwargs):
         super(BoxForm, self).__init__(*args, **kwargs)

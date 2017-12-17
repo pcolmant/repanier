@@ -34,8 +34,7 @@ class Invoice(models.Model):
         _("Previous balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     # Calculated with Purchase
     total_price_with_tax = ModelMoneyField(
-        _("Total amount"),
-        help_text=_('Total purchase amount vat included'),
+        _("Invoiced TVAC"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     delta_price_with_tax = ModelMoneyField(
         _("Total amount"),
@@ -385,7 +384,7 @@ class CustomerInvoice(Invoice):
                         if self.status == PERMANENCE_OPENED:
                             msg_confirmation1 = "<span style=\"color: red; \">{}</span><br>".format(_(
                                 "⚠ Unconfirmed orders will be canceled."))
-                            msg_confirmation2 = _("Verify my order content before validating it.")
+                            msg_confirmation2 = _("➜ Go to the confirmation step of my order.")
                             msg_html = """
                                 <div class="row">
                                 <div class="panel panel-default">
@@ -656,7 +655,7 @@ class CustomerInvoice(Invoice):
                     offer_item_id=a_purchase.offer_item_id,
                     q_order=DECIMAL_ZERO,
                     batch_job=True,
-                    comment=_("Cancelled qty : {}").format(number_format(a_purchase.quantity_ordered, 4))
+                    comment=_("Qty not confirmed : {}").format(number_format(a_purchase.quantity_ordered, 4))
                 )
 
     def __str__(self):
@@ -675,13 +674,11 @@ class ProducerInvoice(Invoice):
         on_delete=models.PROTECT)
 
     delta_stock_with_tax = ModelMoneyField(
-        _("Total stock"),
-        help_text=_('Stock taken amount vat included'),
+        _("Amount deducted from the stock"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
 
     delta_stock_vat = ModelMoneyField(
-        _("Total stock vat"),
-        help_text=_('VAT to add'),
+        _("Total VAT deducted from the stock"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     delta_deposit = ModelMoneyField(
         _("Deposit"),
@@ -694,7 +691,7 @@ class ProducerInvoice(Invoice):
 
     to_be_paid = models.BooleanField(_("To be paid"), choices=LUT_BANK_NOTE, default=False)
     calculated_invoiced_balance = ModelMoneyField(
-        _("Calculated balance to be invoiced"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Amount due to the producer as calculated by Repanier"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     to_be_invoiced_balance = ModelMoneyField(
         _("Amount claimed by the producer"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
     invoice_sort_order = models.IntegerField(

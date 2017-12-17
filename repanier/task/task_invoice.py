@@ -305,7 +305,7 @@ def generate_invoice(permanence, payment_date):
                 customer_id=customer_buyinggroup.id,
                 operation_date=payment_date,
                 operation_status=BANK_PROFIT,
-                operation_comment="{} : {}".format(_("Transport"), customer_invoice.customer.short_basket_name),
+                operation_comment="{} : {}".format(_("Shipping"), customer_invoice.customer.short_basket_name),
                 bank_amount_in=customer_invoice.delta_transport,
                 bank_amount_out=DECIMAL_ZERO,
                 customer_invoice_id=customer_invoice_buyinggroup.id,

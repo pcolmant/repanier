@@ -34,7 +34,7 @@ class PermanenceMenu(Menu):
         if permanence_board_set.exists():
             submenu_id += 1
             node = NavigationNode(
-                _('Calendar of activities'),
+                _('Registration for tasks'),
                 reverse('permanence_view'),
                 id=submenu_id, parent_id=master_id,
                 visible=True

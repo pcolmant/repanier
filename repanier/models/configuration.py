@@ -46,7 +46,7 @@ class Configuration(TranslatableModel):
         default=CURRENCY_EUR,
         verbose_name=_("Currency"))
     max_week_wo_participation = models.DecimalField(
-        _("Alert the consumer after this number of weeks without participation"),
+        _("Alert the customer after this number of weeks without participation"),
         help_text=_("0 mean : never display a pop up."),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0,
         validators=[MinValueValidator(0)])
@@ -62,8 +62,8 @@ class Configuration(TranslatableModel):
     send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
     send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
     invoice = models.BooleanField(_("Enable accounting module"), default=True)
-    display_anonymous_order_form = models.BooleanField(_("Allow the anonymous visitor to see the consumer order screen"), default=True)
-    display_producer_on_order_form = models.BooleanField(_("Display the list of producers in the consumer order screen"), default=True)
+    display_anonymous_order_form = models.BooleanField(_("Allow the anonymous visitor to see the customer order screen"), default=True)
+    display_producer_on_order_form = models.BooleanField(_("Display the list of producers in the customer order screen"), default=True)
     display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
     xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)

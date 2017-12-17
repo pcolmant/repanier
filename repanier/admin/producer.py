@@ -200,9 +200,9 @@ class ProducerDataForm(forms.ModelForm):
             if is_resale_price_fixed and producer_pre_opening:
                 # The producer set his price -> no possibility to fix the resale price
                 self.add_error('producer_pre_opening',
-                               _("The pre-opening of orders is incompatible with the imposition of consumer selling prices."))
+                               _("The pre-opening of orders is incompatible with the imposition of customer selling prices."))
                 self.add_error('is_resale_price_fixed',
-                               _("The pre-opening of orders is incompatible with the imposition of consumer selling prices."))
+                               _("The pre-opening of orders is incompatible with the imposition of customer selling prices."))
             if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
                 # Important : For invoicing correctly
                 self.add_error('price_list_multiplier',
@@ -292,7 +292,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return
 
-    export_xlsx_customer_prices.short_description = _("Export the consumer tariff")
+    export_xlsx_customer_prices.short_description = _("Export the customer tariff")
 
     def export_xlsx_stock(self, request):
         # return xlsx_stock.admin_export(self, Producer.objects.all())

@@ -940,7 +940,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                 if col_num == 4:
                     if producer.producer_price_are_wo_vat:
                         c.value = "{} {} {}".format(
-                            _("Total Price"), _("Wo tax"), department_for_customer_save.short_name \
+                            _("Total Price"), _("wo tax"), department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else "---")
                     else:
                         c.value = "{} {} {}".format(
@@ -1026,7 +1026,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
     if purchase:
         wb, ws = new_landscape_a4_sheet(
             wb,
-            "{} {}".format(producer.short_profile_name, _("by basket")),
+            "{} {}".format(producer.short_profile_name, _("duplicate, by basket")),
             permanence,
             header
         )

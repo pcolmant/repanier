@@ -88,7 +88,7 @@ class ProducerInvoicedForm(forms.Form):
     selected = forms.BooleanField(required=False)
     short_profile_name = forms.CharField(label=_("Short name"), max_length=25, required=False)
     calculated_invoiced_balance = FormMoneyField(
-        label=_("Calculated balance to be invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Amount due to the producer as calculated by Repanier"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     to_be_invoiced_balance = FormMoneyField(
         label=_("Amount claimed by the producer"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
     invoice_reference = forms.CharField(label=_("Invoice reference"), max_length=100, required=False)

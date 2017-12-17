@@ -38,7 +38,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
                 value = form.cleaned_data.get('customer', None)
                 if value is not None:
                     if value in values:
-                        raise forms.ValidationError(_('The same consumer can not be selected twice.'))
+                        raise forms.ValidationError(_('The same customer can not be selected twice.'))
                     else:
                         values.add(value)
                     qty_invoiced += form.cleaned_data.get('quantity_invoiced', DECIMAL_ZERO).quantize(THREE_DECIMALS)

@@ -432,7 +432,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             if customer.delivery_point.customer_responsible.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
                                      _(
-                                         '%(discount)s%% discount is granted to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
+                                         '%(discount)s%% discount is granted to customer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
                                          'discount': Decimal((
                                                                      DECIMAL_ONE - customer.delivery_point.customer_responsible.price_list_multiplier) * 100).quantize(
                                              TWO_DECIMALS),
@@ -443,7 +443,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             elif customer.delivery_point.customer_responsible.price_list_multiplier > DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
                                      _(
-                                         '%(surcharge)s%% surcharge is applied to consumer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
+                                         '%(surcharge)s%% surcharge is applied to customer invoices when delivered to %(delivery_point)s%(customer_price)s.') % {
                                          'surcharge': Decimal((
                                                                       customer.delivery_point.customer_responsible.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
                                              TWO_DECIMALS),

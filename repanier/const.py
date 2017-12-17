@@ -105,13 +105,13 @@ PRODUCT_ORDER_UNIT_TRANSPORTATION = '500'
 PRODUCT_ORDER_UNIT_SUBSCRIPTION = '600'
 
 LUT_PRODUCT_ORDER_UNIT = (
-    (PRODUCT_ORDER_UNIT_PC, _("Bought per piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Bought per piece (price / kg)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Bought per piece (price / l)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Bought per piece (price / pc)")),
-    (PRODUCT_ORDER_UNIT_KG, _("Bought per kg")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
-    (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
+    (PRODUCT_ORDER_UNIT_PC, _("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
+    (PRODUCT_ORDER_UNIT_KG, _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
+    (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('Deposit taken back at the permanence.')),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
@@ -121,13 +121,13 @@ LUT_PRODUCT_ORDER_UNIT = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_REVERSE = (
-    (_("Bought per piece"), PRODUCT_ORDER_UNIT_PC),
-    (_("Bought per piece (price / kg)"), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
-    (_("Bought per piece (price / l)"), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
-    (_("Bought per piece (price / pc)"), PRODUCT_ORDER_UNIT_PC_PRICE_PC),
-    (_("Bought per kg"), PRODUCT_ORDER_UNIT_KG),
-    (_("Bought per piece, invoiced following the weight"), PRODUCT_ORDER_UNIT_PC_KG),
-    (_("Bought per l"), PRODUCT_ORDER_UNIT_LT),
+    (_("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."), PRODUCT_ORDER_UNIT_PC),
+    (_("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
+    (_("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
+    (_("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."), PRODUCT_ORDER_UNIT_PC_PRICE_PC),
+    (_("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ..."), PRODUCT_ORDER_UNIT_KG),
+    (_("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."), PRODUCT_ORDER_UNIT_PC_KG),
+    (_("Sold in volume (in ℓ): non-conditioned liquids"), PRODUCT_ORDER_UNIT_LT),
     (_('Deposit taken back at the permanence.'),
      PRODUCT_ORDER_UNIT_DEPOSIT),
     (_(
@@ -139,13 +139,13 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
-    (PRODUCT_ORDER_UNIT_PC, _("Bought per piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Bought per piece (price / kg)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Bought per piece (price / l)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Bought per piece (price / pc)")),
-    (PRODUCT_ORDER_UNIT_KG, _("Bought per kg")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
-    (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
+    (PRODUCT_ORDER_UNIT_PC, _("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
+    (PRODUCT_ORDER_UNIT_KG, _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
+    (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('Deposit taken back at the permanence.')),
     (PRODUCT_ORDER_UNIT_TRANSPORTATION, _(
@@ -153,17 +153,17 @@ LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION = (
-    (PRODUCT_ORDER_UNIT_PC, _("Bought per piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Bought per piece (price / kg)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Bought per piece (price / l)")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Bought per piece (price / pc)")),
-    (PRODUCT_ORDER_UNIT_KG, _("Bought per kg")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Bought per piece, invoiced following the weight")),
-    (PRODUCT_ORDER_UNIT_LT, _("Bought per l")),
+    (PRODUCT_ORDER_UNIT_PC, _("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
+    (PRODUCT_ORDER_UNIT_KG, _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")),
+    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
+    (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
-     _('Deposit taken back at the permanence.')),
+     _("Deposit taken back at the permanence.")),
     (PRODUCT_ORDER_UNIT_SUBSCRIPTION, _(
-        'Subscription')),
+        "Subscription")),
 )
 
 LUT_PRODUCER_PRODUCT_ORDER_UNIT = (

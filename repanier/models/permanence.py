@@ -83,19 +83,17 @@ class Permanence(TranslatableModel):
 
     # Calculated with Purchase
     total_purchase_with_tax = ModelMoneyField(
-        _("Total amount"),
-        help_text=_('Total purchase amount vat included'),
+        _("Invoiced by the producer including tax"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     total_selling_with_tax = ModelMoneyField(
-        _("Total amount"),
-        help_text=_('Total purchase amount vat included'),
+        _("Invoiced to the customer including tax"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
     total_purchase_vat = ModelMoneyField(
-        _("VAT"),
+        _("Tax charged by the producer"),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
     total_selling_vat = ModelMoneyField(
-        _("VAT"),
-        help_text=_('Vat'),
+        _("Tax charged to the customer"),
+        help_text=_('VAT'),
         default=DECIMAL_ZERO, max_digits=9, decimal_places=4)
 
     with_delivery_point = models.BooleanField(

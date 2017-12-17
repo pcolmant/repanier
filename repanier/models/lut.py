@@ -77,7 +77,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     is_active = models.BooleanField(_("Active"), default=True)
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
-        help_text=_("Invoices are sent to this consumer who is responsible for collecting the payments."),
+        help_text=_("Invoices are sent to this customer who is responsible for collecting the payments."),
         blank=True, null=True, default=None)
     inform_customer_responsible = models.BooleanField(_("Inform customer responsible"), default=False)
     transport = ModelMoneyField(
@@ -158,7 +158,7 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
 
     is_counted_as_participation = models.BooleanField(
         _("This task constitutes a participation in the activities of the group"), default=True)
-    customers_may_register = models.BooleanField(_("Consumers can register for this task"), default=True)
+    customers_may_register = models.BooleanField(_("Customer can register for this task"), default=True)
     is_active = models.BooleanField(_("Active"), default=True)
     objects = LUT_ProductionModeManager()
 

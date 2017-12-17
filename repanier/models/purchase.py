@@ -91,7 +91,7 @@ class Purchase(models.Model):
         help_text=_("This multiplier is applied to each price automatically imported/pushed."),
         default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
         validators=[MinValueValidator(0)])
-    is_resale_price_fixed = models.BooleanField(_("Consumer prices are set by the producer"),
+    is_resale_price_fixed = models.BooleanField(_("Customer prices are set by the producer"),
                                                 default=False)
     comment = models.CharField(
         _("Comment"), max_length=100, default=EMPTY_STRING, blank=True, null=True)
