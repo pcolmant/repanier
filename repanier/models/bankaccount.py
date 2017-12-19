@@ -2,8 +2,6 @@
 
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -50,9 +48,31 @@ class BankAccount(models.Model):
     is_updated_on = models.DateTimeField(
         _("Updated on"), auto_now=True)
 
+    @classmethod
+    def get_closest_to(cls, target):
+        # Get closest bank_acount (sub-)total from target date
+        qs = cls.objects.filter(producer__isnull=True, customer__isnull=True).order_by('?')
+        closest_greater_qs = qs.filter(operation_date__gt=target).order_by('operation_date')
+        closest_less_qs = qs.filter(operation_date__lt=target).order_by('-operation_date')
+
+        closest_greater = closest_greater_qs.first()
+        if closest_greater is None:
+            closest_greater = closest_less_qs.first()
+
+        closest_less = closest_less_qs.first()
+        if closest_less is None:
+            closest_less = closest_greater_qs.first()
+
+        if closest_greater is not None and closest_less is not None:
+            if closest_greater.operation_date - target > target - closest_less.operation_date:
+                return closest_less
+            else:
+                return closest_greater
+
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
-            return mark_safe("<i>{}</i>".format(self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING))
+            return mark_safe(
+                "<i>{}</i>".format(self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING))
         else:
             return self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING
 
@@ -61,7 +81,8 @@ class BankAccount(models.Model):
 
     def get_bank_amount_out(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
-            return mark_safe("<i>{}</i>".format(self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING))
+            return mark_safe("<i>{}</i>".format(
+                self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING))
         else:
             return self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING
 

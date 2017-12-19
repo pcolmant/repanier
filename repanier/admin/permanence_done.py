@@ -75,7 +75,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     inlines = [PermanenceBoardInline]
     date_hierarchy = 'permanence_date'
     list_display = ['get_permanence_admin_display', ]
-    ordering = ('status', '-permanence_date', 'id')
+    ordering = ('-invoice_sort_order', '-permanence_date')
+    # ordering = ('status', '-permanence_date', 'id')
     actions = [
         'export_xlsx',
         'import_xlsx',
@@ -553,7 +554,6 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             del actions['preview_invoices']
             del actions['send_invoices']
             del actions['cancel_invoices']
-
 
         if not actions:
             try:

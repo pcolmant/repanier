@@ -463,11 +463,19 @@ def generate_invoice(permanence, payment_date):
 @transaction.atomic
 def generate_archive(permanence):
     permanence.set_status(PERMANENCE_ARCHIVED)
+    bank_account = BankAccount.get_closest_to(permanence.permanence_date)
+    if bank_account is not None:
+        permanence.invoice_sort_order = bank_account.id
+        permanence.save(update_fields=['invoice_sort_order'])
 
 
 @transaction.atomic
 def cancel_delivery(permanence):
     permanence.set_status(PERMANENCE_CANCELLED)
+    bank_account = BankAccount.get_closest_to(permanence.permanence_date)
+    if bank_account is not None:
+        permanence.invoice_sort_order = bank_account.id
+        permanence.save(update_fields=['invoice_sort_order'])
 
 
 @transaction.atomic

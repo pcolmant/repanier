@@ -8,6 +8,7 @@ from django.db import connection
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
+
 REPANIER_SETTINGS_CONFIG = None
 REPANIER_SETTINGS_TEST_MODE = None
 REPANIER_SETTINGS_GROUP_NAME = None
@@ -49,11 +50,6 @@ class RepanierSettings(AppConfig):
     verbose_name = "Repanier"
 
     def ready(self):
-        # Imports are inside the function because its point is to avoid importing
-        # the models when django.contrib."MODELS" isn't installed.
-        from django.contrib.auth.models import Group, Permission
-        from django.contrib.contenttypes.models import ContentType
-        from django.contrib.sites.models import Site
         # If PostgreSQL service is not started the const may not be set
         # Django doesn't complain
         # This happens when the server starts at power up
@@ -65,14 +61,23 @@ class RepanierSettings(AppConfig):
             except:
                 print("waiting for database connection")
                 time.sleep(1)
+
+        # Imports are inside the function because its point is to avoid importing
+        # the models when django.contrib."MODELS" isn't installed.
+        from django.contrib.auth.models import Group, Permission
+        from django.contrib.contenttypes.models import ContentType
+        from django.contrib.sites.models import Site
+
         from repanier.models.configuration import Configuration
         from repanier.models.notification import Notification
         from repanier.models.lut import LUT_DepartmentForCustomer
         from repanier.models.product import Product
         from repanier.models.offeritem import OfferItemWoReceiver
+        from repanier.models.bankaccount import BankAccount
+        from repanier.models.permanence import Permanence
         from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, WEBMASTER_GROUP, \
             PERMANENCE_SEND, \
-            PRODUCT_ORDER_UNIT_PC_KG
+            PRODUCT_ORDER_UNIT_PC_KG, PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED
 
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
@@ -116,6 +121,23 @@ class RepanierSettings(AppConfig):
             ).order_by('?').update(
                 use_order_unit_converted=True
             )
+            for bank_account in BankAccount.objects.filter(
+                permanence__isnull=False,
+                producer__isnull=True,
+                customer__isnull=True
+            ).order_by('?').only("id", "permanence_id"):
+                Permanence.objects.filter(
+                    id=bank_account.permanence_id,
+                    invoice_sort_order__isnull=True
+                ).order_by('?').update(invoice_sort_order=bank_account.id)
+            for permanence in Permanence.objects.filter(
+                status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
+                invoice_sort_order__isnull=True
+            ).order_by('?'):
+                bank_account = BankAccount.get_closest_to(permanence.permanence_date)
+                if bank_account is not None:
+                    permanence.invoice_sort_order = bank_account.id
+                    permanence.save(update_fields=['invoice_sort_order'])
             # Create groups with correct rights
             # WEBMASTER
             webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only('id').order_by('?').first()
