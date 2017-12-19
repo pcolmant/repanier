@@ -50,7 +50,9 @@ class BankAccount(models.Model):
 
     @classmethod
     def get_closest_to(cls, target):
-        # Get closest bank_acount (sub-)total from target date
+        # https://stackoverflow.com/questions/15855715/filter-on-datetime-closest-to-the-given-datetime
+        # https://www.vinta.com.br/blog/2017/advanced-django-querying-sorting-events-date/
+        # Get closest bank_account (sub-)total from target date
         qs = cls.objects.filter(producer__isnull=True, customer__isnull=True).order_by('?')
         closest_greater_qs = qs.filter(operation_date__gt=target).order_by('operation_date')
         closest_less_qs = qs.filter(operation_date__lt=target).order_by('-operation_date')
