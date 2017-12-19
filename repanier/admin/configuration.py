@@ -155,7 +155,11 @@ class ConfigurationAdmin(TranslatableAdmin):
                             'order_producer_mail',
                             'send_order_mail_to_board', 'order_staff_mail',
                         ),
-                }),
+                })
+            ]
+        from repanier.apps import REPANIER_SETTINGS_INVOICE
+        if REPANIER_SETTINGS_INVOICE:
+            fieldsets += [
                 (_('Invoicing mails'), {
                     'classes': ('collapse',),
                     'fields':
