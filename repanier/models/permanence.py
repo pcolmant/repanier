@@ -567,7 +567,7 @@ class Permanence(TranslatableModel):
                             is_box_content=False
                         )
                         membership_fee_valid_until = customer.membership_fee_valid_until + relativedelta(
-                            months=REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION
+                            months=int(REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION)
                         )
                         today = timezone.now().date()
                         if membership_fee_valid_until < today:
