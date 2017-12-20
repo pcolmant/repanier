@@ -41,7 +41,7 @@ from repanier.xlsx.widget import IdWidget, \
 class PurchaseResource(resources.ModelResource):
     id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
     short_name = fields.Field(attribute='permanence__short_name', readonly=True)
-    date = fields.Field(attribute='permanence_date', widget=DateWidgetExcel(), readonly=True)
+    date = fields.Field(attribute='permanence__permanence_date', widget=DateWidgetExcel(), readonly=True)
     product_id = fields.Field(attribute='offer_item__product__id', readonly=True)
     product = fields.Field(attribute='offer_item__get_long_name', readonly=True)
     producer_id = fields.Field(attribute='producer__id', readonly=True)

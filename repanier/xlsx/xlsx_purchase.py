@@ -111,11 +111,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     if customer is None:
                         purchases = Purchase.objects.filter(
                             permanence__status__gte=PERMANENCE_INVOICED,
-                            permanence_date__year=year,
+                            permanence__permanence_date__year=year,
                             producer_id=producer.id,
                             offer_item__translations__language_code=translation.get_language()
                         ).order_by(
-                            "permanence_date",
                             "permanence_id",
                             "customer__short_basket_name",
                             "offer_item__translations__preparation_sort_order"
@@ -123,12 +122,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     else:
                         purchases = Purchase.objects.filter(
                             permanence__status__gte=PERMANENCE_INVOICED,
-                            permanence_date__year=year,
+                            permanence__permanence_date__year=year,
                             customer_id=customer.id,
                             producer_id=producer.id,
                             offer_item__translations__language_code=translation.get_language()
                         ).order_by(
-                            "permanence_date",
                             "permanence_id",
                             "offer_item__translations__preparation_sort_order"
                         ).iterator()
@@ -316,11 +314,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     if customer is None:
                         purchases = Purchase.objects.filter(
                             permanence__status__gte=PERMANENCE_INVOICED,
-                            permanence_date__year=year,
+                            permanence__permanence_date__year=year,
                             producer_id=producer.id,
                             offer_item__translations__language_code=translation.get_language()
                         ).order_by(
-                            "permanence_date",
                             "permanence_id",
                             "offer_item__translations__preparation_sort_order",
                             "quantity_for_preparation_sort_order",
@@ -329,12 +326,11 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     else:
                         purchases = Purchase.objects.filter(
                             permanence__status__gte=PERMANENCE_INVOICED,
-                            permanence_date__year=year,
+                            permanence__permanence_date__year=year,
                             customer_id=customer.id,
                             producer_id=producer.id,
                             offer_item__translations__language_code=translation.get_language()
                         ).order_by(
-                            "permanence_date",
                             "permanence_id",
                             "offer_item__translations__preparation_sort_order",
                             "quantity_for_preparation_sort_order"

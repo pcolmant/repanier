@@ -194,7 +194,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     if permanence is not None:
         purchase_set = purchase_set.filter(permanence_id=permanence.id)
     if year is not None:
-        purchase_set = purchase_set.filter(permanence_date__year=year)
+        purchase_set = purchase_set.filter(permanence__permanence_date__year=year)
     if customer is not None:
         purchase_set = purchase_set.filter(customer_invoice__customer_charged_id=customer.id)
         hide_producer_prices = True
