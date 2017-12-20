@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 from django import template
 from django.conf import settings
@@ -25,9 +26,20 @@ def repanier_home(*args, **kwargs):
 
 
 @register.simple_tag(takes_context=False)
+def repanier_admins(*args, **kwargs):
+    return mark_safe(
+        ", ".join(["{0} <<a href=\"mailto:{1}\">{1}</a>>".format(admin[0], admin[1]) for admin in settings.ADMINS]))
+
+
+@register.simple_tag(takes_context=False)
 def repanier_group_name(*args, **kwargs):
     from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
     return REPANIER_SETTINGS_GROUP_NAME
+
+
+@register.simple_tag(takes_context=False)
+def repanier_bootstrap_static(*args, **kwargs):
+    return "{}bootstrap{}css{}{}".format(settings.STATIC_URL, os.sep, os.sep, settings.DJANGO_SETTINGS_BOOTSTRAP_CSS)
 
 
 @register.simple_tag(takes_context=True)

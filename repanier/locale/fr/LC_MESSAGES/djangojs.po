@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-04-21 12:29+0200\n"
-"PO-Revision-Date: 2017-04-21 12:30+0100\n"
+"POT-Creation-Date: 2017-12-19 10:12+0100\n"
+"PO-Revision-Date: 2017-12-19 10:39+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -16,18 +16,22 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 1.7.1\n"
+"X-Generator: Poedit 2.0.5\n"
+
+#: static/js/confirm_exit.js:12
+msgid "New information not saved. Do you wish to leave the page?"
+msgstr ""
 
 #: static/js/expenses_to_be_apportioned.js:4
 msgid "Expenses to be apportioned"
 msgstr "Frais à répartir"
 
 #: static/js/export_import_stock.js:4
-msgid "Export stock"
+msgid "Export the stock"
 msgstr "Exporter le stock"
 
 #: static/js/export_import_stock.js:5
-msgid "Import stock"
+msgid "Import the stock"
 msgstr "Importer le stock"
 
 #: static/js/import_invoice.js:4
