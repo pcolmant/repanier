@@ -156,7 +156,7 @@ class Staff(MPTTModel, TranslatableModel):
 
     @property
     def title_for_admin(self):
-        tester = _(" 💡 who is also tester ") if self.is_tester else EMPTY_STRING
+        tester = _(" 💡 who is also tester ") if self.is_tester and settings.DJANGO_SETTINGS_TEST_MODE else EMPTY_STRING
         if self.customer_responsible is not None:
             return "{} : {}{} ({})".format(
                 self.safe_translation_getter('long_name', any_language=True),

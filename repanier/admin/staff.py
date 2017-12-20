@@ -144,7 +144,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
             'is_contributor',
             'is_webmaster',
         ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.DJANGO_SETTINGS_TEST_MODE:
             fields += [
                 'is_tester',
             ]

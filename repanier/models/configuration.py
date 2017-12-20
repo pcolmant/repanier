@@ -327,7 +327,10 @@ def configuration_post_save(sender, **kwargs):
     config = kwargs["instance"]
     if config.id is not None:
         repanier.apps.REPANIER_SETTINGS_CONFIG = config
-        repanier.apps.REPANIER_SETTINGS_TEST_MODE = config.test_mode
+        if settings.DJANGO_SETTINGS_TEST_MODE:
+            repanier.apps.REPANIER_SETTINGS_TEST_MODE = config.test_mode
+        else:
+            repanier.apps.REPANIER_SETTINGS_TEST_MODE = False
         site = Site.objects.get_current()
         if site is not None:
             site.name = config.group_name

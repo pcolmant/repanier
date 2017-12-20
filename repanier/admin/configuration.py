@@ -102,6 +102,9 @@ class ConfigurationAdmin(TranslatableAdmin):
             fields += [
                 'display_producer_on_order_form',
                 'customers_must_confirm_orders',
+            ]
+        if settings.DJANGO_SETTINGS_TEST_MODE:
+            fields += [
                 'test_mode',
             ]
         fieldsets = [
