@@ -3,11 +3,13 @@
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatableModel, TranslatedFields
 
 from repanier.const import *
+from repanier.tools import cap
 
 
 class Notification(TranslatableModel):
@@ -22,8 +24,8 @@ class Notification(TranslatableModel):
     )
 
     def __str__(self):
-        return self.safe_translation_getter(
-            'notification', any_language=True)
+        return cap(escape(self.safe_translation_getter(
+            'notification', any_language=True)), 50)
 
     class Meta:
         verbose_name = _("Notification")
