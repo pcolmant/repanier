@@ -1,8 +1,10 @@
 # -*- coding: utf-8
 
 import datetime
+import uuid
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core import urlresolvers
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
@@ -114,6 +116,26 @@ class Customer(models.Model):
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
     subscribe_to_email = models.BooleanField(_("Agree to receive unsolicited mails from this site"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
+
+    @classmethod
+    def get_group(cls):
+        customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
+        if customer_buyinggroup is None:
+            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+            user = User.objects.create_user(
+                username="z-{}".format(REPANIER_SETTINGS_GROUP_NAME),
+                email="{}{}".format(
+                    REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                password=uuid.uuid1().hex,
+                first_name=EMPTY_STRING, last_name=REPANIER_SETTINGS_GROUP_NAME)
+            customer_buyinggroup = Customer.objects.create(
+                user=user,
+                short_basket_name="z-{}".format(REPANIER_SETTINGS_GROUP_NAME),
+                long_basket_name=REPANIER_SETTINGS_GROUP_NAME,
+                phone1='0499/96.64.32',
+                represent_this_buyinggroup=True
+            )
+        return customer_buyinggroup
 
     def get_admin_date_balance(self):
         return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)

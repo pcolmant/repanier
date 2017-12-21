@@ -1,7 +1,9 @@
 # -*- coding: utf-8
+import datetime
 
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -47,6 +49,28 @@ class BankAccount(models.Model):
         blank=True, null=True, on_delete=models.PROTECT, db_index=True)
     is_updated_on = models.DateTimeField(
         _("Updated on"), auto_now=True)
+
+    @classmethod
+    def open_account(cls):
+        bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?')
+        if not bank_account.exists():
+            # If not latest total exists, create it with operation date before all movements
+            if not BankAccount.objects.all().order_by('?').exist():
+                from repanier.models.customer import Customer
+                BankAccount.objects.create(
+                    operation_status=BANK_LATEST_TOTAL,
+                    operation_date=timezone.now().date(),
+                    operation_comment=_("Account opening")
+                )
+                customer_buyinggroup = Customer.get_group()
+                # Create this also prevent the deletion of the customer representing the buying group
+                BankAccount.objects.create(
+                    operation_date=timezone.now().date(),
+                    customer=customer_buyinggroup,
+                    operation_comment=_("Initial balance")
+                )
+
+
 
     @classmethod
     def get_closest_to(cls, target):

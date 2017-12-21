@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-import datetime
 import uuid
 
 from cms.toolbar_pool import toolbar_pool
@@ -323,6 +322,7 @@ def configuration_post_save(sender, **kwargs):
     from repanier.models.bankaccount import BankAccount
     from repanier.models.producer import Producer
     from repanier.models.customer import Customer
+    from repanier.models.staff import Staff
 
     config = kwargs["instance"]
     if config.id is not None:
@@ -404,75 +404,17 @@ def configuration_post_save(sender, **kwargs):
         repanier.apps.REPANIER_SETTINGS_TRANSPORT = config.transport
         repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT = config.min_transport
 
-        bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
-        if bank_account is None:
-            # If not latest total exists, create it with operation date before all movements
-            bank_account = BankAccount.objects.all().order_by("operation_date").first()
-            if bank_account is None:
-                BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
-                                           operation_date=timezone.now().date(),
-                                           operation_comment=_("Account opening"))
-            else:
-                if bank_account.producer is None and bank_account.customer is None:
-                    bank_account.operation_status = BANK_LATEST_TOTAL
-                    bank_account.save(update_fields=['operation_status'])
-                else:
-                    BankAccount.objects.create(operation_status=BANK_LATEST_TOTAL,
-                                               operation_date=bank_account.operation_date + datetime.timedelta(
-                                                   days=-1),
-                                               operation_comment=_("Account opening"))
-
-        producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
-        if producer_buyinggroup is None:
-            producer_buyinggroup = Producer.objects.create(
-                short_profile_name="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
-                long_profile_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
-                represent_this_buyinggroup=True
-            )
-        if producer_buyinggroup is not None:
-            # Create this to also prevent the deletion of the producer representing the buying group
-            membership_fee_product = Product.objects.filter(
-                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-                is_active=True
-            ).order_by('?').first()
-            if membership_fee_product is None:
-                membership_fee_product = Product.objects.create(
-                    producer_id=producer_buyinggroup.id,
-                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-                    vat_level=VAT_100
-                )
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-                membership_fee_product.set_current_language(language_code)
-                membership_fee_product.long_name = "{}".format(_("Membership fee"))
-                membership_fee_product.save()
-            translation.activate(cur_language)
+        producer_buyinggroup = Producer.get_group()
         repanier.apps.REPANIER_SETTINGS_GROUP_PRODUCER_ID = producer_buyinggroup.id
 
-        customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
-        if customer_buyinggroup is None:
-            user = User.objects.create_user(
-                username="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
-                email="{}{}".format(
-                    repanier.apps.REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
-                password=uuid.uuid1().hex,
-                first_name=EMPTY_STRING, last_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
-            customer_buyinggroup = Customer.objects.create(
-                user=user,
-                short_basket_name="z-{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME),
-                long_basket_name=repanier.apps.REPANIER_SETTINGS_GROUP_NAME,
-                phone1='0499/96.64.32',
-                represent_this_buyinggroup=True
-            )
+        customer_buyinggroup = Customer.get_group()
         repanier.apps.REPANIER_SETTINGS_GROUP_CUSTOMER_ID = customer_buyinggroup.id
 
-        if not BankAccount.objects.filter(customer=customer_buyinggroup).order_by('?').exists():
-            # Create this to also prevent the deletion of the customer representing the buying group
-            BankAccount.objects.create(operation_date=timezone.now().date(),
-                                       customer=customer_buyinggroup,
-                                       operation_comment=_("Initial balance"))
+        BankAccount.open_account()
+
+        Staff.get_any_coordinator(config.group_name)
+        Staff.get_order_responsible(config.group_name)
+        Staff.get_invoice_responsible(config.group_name)
 
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)

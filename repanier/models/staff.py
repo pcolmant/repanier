@@ -1,12 +1,15 @@
 # -*- coding: utf-8
+import uuid
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import models
 from django.db.models.signals import post_delete
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.utils import translation
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -67,12 +70,59 @@ class Staff(MPTTModel, TranslatableModel):
     is_active = models.BooleanField(_("Active"), default=True)
 
     @classmethod
-    def get_order_responsible(cls):
-        return cls.objects.filter(is_active=True, is_reply_to_order_email=True).order_by('?').first()
+    def get_any_coordinator(cls, name=EMPTY_STRING):
+        group = cls.objects.filter(
+            is_active=True,
+            is_coordinator=True
+        ).order_by('?').first()
+        if group is None:
+            from repanier.models.customer import Customer
+            customer_buyinggroup = Customer.get_group()
+            user_model = get_user_model()
+            email = "{}@repanier.be".format(uuid.uuid1())
+            user = user_model.objects.create_user(
+                username=email,
+                email=email, password=None,
+                first_name=EMPTY_STRING, last_name=EMPTY_STRING)
+            group = Staff.objects.create(
+                user=user,
+                is_active=True,
+                is_coordinator=True,
+                customer_responsible=customer_buyinggroup
+            )
+            cur_language = translation.get_language()
+            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                language_code = language["code"]
+                translation.activate(language_code)
+                group.set_current_language(language_code)
+                group.long_name = name
+                group.save()
+            translation.activate(cur_language)
+        return group
 
     @classmethod
-    def get_invoice_responsible(cls):
-        return cls.objects.filter(is_active=True, is_reply_to_invoice_email=True).order_by('?').first()
+    def get_order_responsible(cls, name=EMPTY_STRING):
+        order_responsible = cls.objects.filter(
+            is_active=True,
+            is_reply_to_order_email=True,
+        ).order_by('?').first()
+        if order_responsible is None:
+            order_responsible = Staff.get_any_coordinator(name)
+            order_responsible.is_reply_to_order_email = True
+            order_responsible.save(update_fields=["is_reply_to_order_email"])
+        return order_responsible
+
+    @classmethod
+    def get_invoice_responsible(cls, name=EMPTY_STRING):
+        invoice_responsible = cls.objects.filter(
+            is_active=True,
+            is_reply_to_invoice_email=True
+        ).order_by('?').first()
+        if invoice_responsible is None:
+            invoice_responsible = Staff.get_any_coordinator(name)
+            invoice_responsible.is_reply_to_invoice_email = True
+            invoice_responsible.save(update_fields=["is_reply_to_invoice_email"])
+        return invoice_responsible
 
     def get_customer_phone1(self):
         try:

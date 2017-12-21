@@ -10,7 +10,7 @@ from django.db import models
 from django.db.models import Sum
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -106,6 +106,37 @@ class Producer(models.Model):
     is_active = models.BooleanField(_("Active"), default=True)
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR
     is_anonymized = models.BooleanField(default=False)
+
+    @classmethod
+    def get_group(cls):
+        producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
+        if producer_buyinggroup is None:
+            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+            producer_buyinggroup = Producer.objects.create(
+                short_profile_name="z-{}".format(REPANIER_SETTINGS_GROUP_NAME),
+                long_profile_name=REPANIER_SETTINGS_GROUP_NAME,
+                represent_this_buyinggroup=True
+            )
+            # Create this to also prevent the deletion of the producer representing the buying group
+            membership_fee_product = Product.objects.filter(
+                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+                is_active=True
+            ).order_by('?')
+            if not membership_fee_product.exists():
+                membership_fee_product = Product.objects.create(
+                    producer_id=producer_buyinggroup.id,
+                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+                    vat_level=VAT_100
+                )
+                cur_language = translation.get_language()
+                for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                    language_code = language["code"]
+                    translation.activate(language_code)
+                    membership_fee_product.set_current_language(language_code)
+                    membership_fee_product.long_name = "{}".format(_("Membership fee"))
+                    membership_fee_product.save()
+                translation.activate(cur_language)
+        return producer_buyinggroup
 
     def get_negative_balance(self):
         return - self.balance

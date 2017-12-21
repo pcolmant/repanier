@@ -15,6 +15,7 @@ def admin_delete(permanence_id):
     ProducerInvoice.objects.filter(permanence_id=permanence_id).delete()
     CustomerProducerInvoice.objects.filter(permanence_id=permanence_id).delete()
     BankAccount.objects.filter(permanence_id=permanence_id).delete()
+    BankAccount.open_account()
     user_message = _(
         "The purchases of this permanence have been deleted. There is no way to restore them automaticaly.")
     user_message_level = messages.INFO

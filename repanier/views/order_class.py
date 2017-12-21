@@ -145,11 +145,7 @@ class OrderView(ListView):
                 'unit_deposit',
                 'translations__long_name',
             )
-            context['staff_order'] = Staff.objects.filter(
-                is_reply_to_order_email=True) \
-                .only("customer_responsible__long_basket_name", "customer_responsible__phone1",
-                      "user__email") \
-                .order_by('?').first()
+            context['staff_order'] = Staff.get_order_responsible()
             if self.is_anonymous:
                 context['how_to_register'] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
                     'how_to_register', any_language=True, default=EMPTY_STRING)
