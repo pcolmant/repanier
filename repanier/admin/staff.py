@@ -4,7 +4,6 @@ import uuid
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm

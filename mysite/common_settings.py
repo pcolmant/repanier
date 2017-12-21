@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
 import codecs
 import logging
-from django.utils.translation import get_language_info
-from django.utils.translation import ugettext_lazy as _
-from django.core.urlresolvers import reverse_lazy
+import os
+import sys
 
 from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
 from cmsplugin_cascade.utils import format_lazy
+from django.core.urlresolvers import reverse_lazy
+from django.utils.translation import get_language_info
+from django.utils.translation import ugettext_lazy as _
+
 from repanier.const import *
 from .settings import *
 
@@ -31,6 +32,7 @@ def get_allowed_mail_extension():
     except:
         allowed_mail_extension = "@repanier.be"
     return allowed_mail_extension
+
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 logger.info("Python path is : {}".format(sys.path))
@@ -139,12 +141,12 @@ SERVER_EMAIL = "{}{}".format(DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED
 
 DATABASES = {
     'default': {
-        'ENGINE'  : DJANGO_SETTINGS_DATABASE_ENGINE,
-        'NAME'    : DJANGO_SETTINGS_DATABASE_NAME,  # Or path to database file if using sqlite3.
-        'USER'    : DJANGO_SETTINGS_DATABASE_USER,
+        'ENGINE': DJANGO_SETTINGS_DATABASE_ENGINE,
+        'NAME': DJANGO_SETTINGS_DATABASE_NAME,  # Or path to database file if using sqlite3.
+        'USER': DJANGO_SETTINGS_DATABASE_USER,
         'PASSWORD': DJANGO_SETTINGS_DATABASE_PASSWORD,
-        'HOST'    : DJANGO_SETTINGS_DATABASE_HOST,
-        'PORT'    : DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
+        'HOST': DJANGO_SETTINGS_DATABASE_HOST,
+        'PORT': DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
     }
 }
 EMAIL_HOST = DJANGO_SETTINGS_EMAIL_HOST
@@ -205,7 +207,7 @@ INSTALLED_APPS = (
     'cmsplugin_cascade',
     'cmsplugin_cascade.clipboard',  # optional
     'cmsplugin_cascade.extra_fields',  # optional
-    'cmsplugin_cascade.icon', # optional
+    'cmsplugin_cascade.icon',  # optional
     'cmsplugin_cascade.sharable',  # optional
     # 'cmsplugin_cascade.segmentation',  # optional
     'cms',
@@ -252,15 +254,15 @@ if DEBUG:
     INSTALLED_APPS += (
         'debug_toolbar',
     )
-    INTERNAL_IPS = ['10.0.2.2',]
+    INTERNAL_IPS = ['10.0.2.2', ]
     MIDDLEWARE = (
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-    ) + MIDDLEWARE
+                     'debug_toolbar.middleware.DebugToolbarMiddleware',
+                 ) + MIDDLEWARE
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS'   : [
+        'DIRS': [
             os.path.join(PROJECT_DIR, "templates"),
         ],
         # 'APP_DIRS': True,
@@ -279,7 +281,7 @@ TEMPLATES = [
                 'cms.context_processors.cms_settings',
                 'repanier.context_processors.repanier_settings'
             ],
-            'loaders'           : [
+            'loaders': [
                 ('django.template.loaders.cached.Loader', [
                     'django.template.loaders.filesystem.Loader',
                     'django.template.loaders.app_directories.Loader',
@@ -303,8 +305,8 @@ CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
 
 CKEDITOR_SETTINGS = {
-    'language'             : '{{ language }}',
-    'toolbar_CMS'          : [
+    'language': '{{ language }}',
+    'toolbar_CMS': [
         ['Undo', 'Redo'],
         ['cmsplugins', '-', 'ShowBlocks'],
         ['Format', ],
@@ -317,47 +319,47 @@ CKEDITOR_SETTINGS = {
         ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Table'],
         ['Source']
     ],
-    'toolbar_HTMLField'    : [
+    'toolbar_HTMLField': [
         ['Format', 'Bold', 'Italic', 'TextColor', 'Smiley', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
     ],
     'forcePasteAsPlainText': 'true',
-    'skin'                 : 'moono',
+    'skin': 'moono',
     # 'format_tags'          : 'p;h4;h5;test',
-    'format_tags'          : 'p;h2;h3;h4;h5',
+    'format_tags': 'p;h2;h3;h4;h5',
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
-    'contentsCss'          : '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
+    'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
     # the following parameters to CKEDITOR_SETTINGS:
-    'basicEntities'        : False,
-    'entities'             : False,
-    'enterMode'            : 2,
+    'basicEntities': False,
+    'entities': False,
+    'enterMode': 2,
     # Do not dispaly the HTML Path below the edit window
-    'removePlugins'        : 'elementspath',
+    'removePlugins': 'elementspath',
     # 'stylesSet' : 'my_styles:{}js/ckeditor-styles.js'.format(STATIC_URL),
     'stylesSet': format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config')),
 
 }
 
 CKEDITOR_SETTINGS_MODEL2 = {
-    'language'             : '{{ language }}',
-    'toolbar_HTMLField'    : [
+    'language': '{{ language }}',
+    'toolbar_HTMLField': [
         ['Bold', 'Italic', 'TextColor', 'Smiley', '-', 'NumberedList', 'BulletedList', 'RemoveFormat'],
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
     ],
-    'extraPlugins'         : 'simplebox',
+    'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
-    'skin'                 : 'moono',
-    'contentsCss'          : '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
-    'removeFormatTags'     : 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
-    'basicEntities'        : False,
-    'entities'             : False,
-    'enterMode'            : 2,
-    'removePlugins'        : 'elementspath',
+    'skin': 'moono',
+    'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
+    'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
+    'basicEntities': False,
+    'entities': False,
+    'enterMode': 2,
+    'removePlugins': 'elementspath',
 }
 
 # Drag & Drop Images
@@ -393,8 +395,8 @@ THUMBNAIL_PROGRESSIVE = 100
 THUMBNAIL_PRESERVE_EXTENSIONS = True
 
 THUMBNAIL_OPTIMIZE_COMMAND = {
-    'png' : '/usr/bin/optipng {filename}',
-    'gif' : '/usr/bin/optipng {filename}',
+    'png': '/usr/bin/optipng {filename}',
+    'gif': '/usr/bin/optipng {filename}',
     'jpeg': '/usr/bin/jpegoptim {filename}',
 }
 THUMBNAIL_DEBUG = FILER_DEBUG
@@ -458,19 +460,19 @@ CACHE_MIDDLEWARE_SECONDS = 3600
 
 CACHES = {
     'default': {
-        'BACKEND' : 'django.core.cache.backends.filebased.FileBasedCache',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
-        'TIMEOUT' : 3000,
-        'OPTIONS' : {
-            'MAX_ENTRIES'   : 10000,
+        'TIMEOUT': 3000,
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000,
             'CULL_FREQUENCY': 3
         }
     }
 }
 
 CMS_CACHE_DURATIONS = {
-    'content'    : 300,  # default 60
-    'menus'      : 3600,  # default 3600
+    'content': 300,  # default 60
+    'menus': 3600,  # default 3600
     'permissions': 3600  # default: 3600
 }
 
@@ -482,8 +484,8 @@ getcontext().rounding = ROUND_HALF_UP
 ##################### DJANGO REST_FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
-    'DEFAULT_PAGINATION_CLASS'  : 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE'                 : 10
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10
 }
 
 ##################### DJANGO IMPORT EXPORT
@@ -494,32 +496,32 @@ DATETIME_INPUT_FORMATS = (DJANGO_SETTINGS_DATETIME,)
 
 if DJANGO_SETTINGS_LOGGING:
     LOGGING = {
-        'version'                 : 1,
+        'version': 1,
         'disable_existing_loggers': False,
-        'filters'                 : {
+        'filters': {
             'require_debug_false': {
                 '()': 'django.utils.log.RequireDebugFalse'
             }
         },
-        'handlers'                : {
+        'handlers': {
             'mail_admins': {
-                'level'  : 'ERROR',
+                'level': 'ERROR',
                 'filters': ['require_debug_false'],
-                'class'  : 'django.utils.log.AdminEmailHandler'
+                'class': 'django.utils.log.AdminEmailHandler'
             },
-            'console'    : {
+            'console': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
             },
         },
-        'loggers'                 : {
-            'django.request'    : {
-                'handlers' : ['mail_admins'],
-                'level'    : 'ERROR',
+        'loggers': {
+            'django.request': {
+                'handlers': ['mail_admins'],
+                'level': 'ERROR',
                 'propagate': True,
             },
             'django.db.backends': {
-                'level'   : 'DEBUG',
+                'level': 'DEBUG',
                 'handlers': ['console'],
             },
         }
@@ -542,20 +544,20 @@ LANGUAGES = [
 CMS_LANGUAGES = {
     SITE_ID: [
         {
-            'code'             : 'fr',
-            'name'             : get_language_info('fr')['name'],
-            'public'           : True,
+            'code': 'fr',
+            'name': get_language_info('fr')['name'],
+            'public': True,
             'hide_untranslated': False,
         },
     ]
 }
 PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
 PARLER_LANGUAGES = {
-    SITE_ID  : (
+    SITE_ID: (
         {'code': LANGUAGE_CODE, },
     ),
     'default': {
-        'fallbacks'        : [LANGUAGE_CODE],
+        'fallbacks': [LANGUAGE_CODE],
         'hide_untranslated': False,
     },
 }
@@ -569,20 +571,20 @@ if DJANGO_SETTINGS_LANGUAGE == 'es':
     CMS_LANGUAGES = {
         SITE_ID: [
             {
-                'code'             : 'es',
-                'name'             : get_language_info('es')['name'],
-                'public'           : True,
+                'code': 'es',
+                'name': get_language_info('es')['name'],
+                'public': True,
                 'hide_untranslated': False,
             },
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID  : (
+        SITE_ID: (
             {'code': LANGUAGE_CODE, },
         ),
         'default': {
-            'fallbacks'        : [LANGUAGE_CODE],
+            'fallbacks': [LANGUAGE_CODE],
             'hide_untranslated': False,
         },
     }
@@ -598,35 +600,35 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-nl-en':
     CMS_LANGUAGES = {
         SITE_ID: [
             {
-                'code'                : 'fr',
-                'name'                : get_language_info('fr')['name'],
-                'public'              : True,
+                'code': 'fr',
+                'name': get_language_info('fr')['name'],
+                'public': True,
                 'redirect_on_fallback': False,
-                'hide_untranslated'   : False,
+                'hide_untranslated': False,
             },
             {
-                'code'     : 'nl',
-                'name'     : get_language_info('nl')['name'],
+                'code': 'nl',
+                'name': get_language_info('nl')['name'],
                 'fallbacks': ['en', 'fr'],
-                'public'   : True,
+                'public': True,
             },
             {
-                'code'     : 'en',
-                'name'     : get_language_info('en')['name'],
+                'code': 'en',
+                'name': get_language_info('en')['name'],
                 'fallbacks': [LANGUAGE_CODE],
-                'public'   : True,
+                'public': True,
             },
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID  : (
+        SITE_ID: (
             {'code': 'fr', },
             {'code': 'nl', },
             {'code': 'en', },
         ),
         'default': {
-            'fallbacks'        : [LANGUAGE_CODE],
+            'fallbacks': [LANGUAGE_CODE],
             'hide_untranslated': False,
         },
     }
@@ -640,28 +642,28 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
     CMS_LANGUAGES = {
         SITE_ID: [
             {
-                'code'                : 'fr',
-                'name'                : get_language_info('fr')['name'],
-                'public'              : True,
+                'code': 'fr',
+                'name': get_language_info('fr')['name'],
+                'public': True,
                 'redirect_on_fallback': False,
-                'hide_untranslated'   : False,
+                'hide_untranslated': False,
             },
             {
-                'code'     : 'en',
-                'name'     : get_language_info('en')['name'],
+                'code': 'en',
+                'name': get_language_info('en')['name'],
                 'fallbacks': [LANGUAGE_CODE],
-                'public'   : True,
+                'public': True,
             },
         ]
     }
     PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
     PARLER_LANGUAGES = {
-        SITE_ID  : (
+        SITE_ID: (
             {'code': 'fr', },
             {'code': 'en', },
         ),
         'default': {
-            'fallbacks'        : [LANGUAGE_CODE],
+            'fallbacks': [LANGUAGE_CODE],
             'hide_untranslated': False,
         },
     }
@@ -681,12 +683,12 @@ CMSPLUGIN_CASCADE_PLUGINS = (
 CMSPLUGIN_CASCADE = {
     'alien_plugins': ('TextPlugin', 'TextLinkPlugin',),
     'plugins_with_extra_fields': {
-        'BootstrapRowPlugin'      : PluginExtraFieldsConfig(inline_styles={
+        'BootstrapRowPlugin': PluginExtraFieldsConfig(inline_styles={
             'extra_fields:Margins': ['margin-top', 'margin-bottom'],
-            'extra_units:Margins' : 'px,em'}),
+            'extra_units:Margins': 'px,em'}),
         'BootstrapJumbotronPlugin': PluginExtraFieldsConfig(inline_styles={
             'extra_fields:Margins': ['padding-top', 'padding-bottom', 'margin-bottom'],
-            'extra_units:Margins' : 'px,em'}),
+            'extra_units:Margins': 'px,em'}),
     },
     # 'bootstrap3'               : (
     #     ('xs', (768, 'mobile', _("mobile phones"), 750, 768)),
@@ -701,16 +703,16 @@ CMSPLUGIN_CASCADE = {
     #     ),
     # ),
     'plugins_with_sharables': {
-        'BootstrapImagePlugin'  : ('image_shapes', 'image_width_responsive', 'image_width_fixed',
-                                   'image_height', 'resize_options',),
+        'BootstrapImagePlugin': ('image_shapes', 'image_width_responsive', 'image_width_fixed',
+                                 'image_height', 'resize_options',),
         'BootstrapPicturePlugin': ('image_shapes', 'responsive_heights', 'image_size', 'resize_options',),
-        'BootstrapButtonPlugin' : ('button_type', 'button_size', 'button_options', 'icon_font',),
-        'TextLinkPlugin'        : ('link', 'target',),
+        'BootstrapButtonPlugin': ('button_type', 'button_size', 'button_options', 'icon_font',),
+        'TextLinkPlugin': ('link', 'target',),
     },
     # 'exclude_hiding_plugin' : ('SegmentPlugin', 'Badge'),
-    'exclude_hiding_plugin' : ('Badge'),
-    'allow_plugin_hiding'   : True,
-    'leaflet'               : {'default_position': {'lat': 50.0, 'lng': 12.0, 'zoom': 6}},
+    'exclude_hiding_plugin': ('Badge'),
+    'allow_plugin_hiding': True,
+    'leaflet': {'default_position': {'lat': 50.0, 'lng': 12.0, 'zoom': 6}},
 }
 
 CACSCADE_WORKAREA_GLOSSARY = {
@@ -726,9 +728,9 @@ CACSCADE_WORKAREA_GLOSSARY = {
 }
 
 CMS_PLACEHOLDER_CONF = {
-    'home-hero'        : {
-        'name'             : gettext('Hero'),
-        'plugins'          : [
+    'home-hero': {
+        'name': gettext('Hero'),
+        'plugins': [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -738,10 +740,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins'  : [
+        'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
-                'values'     : {
+                'values': {
                     'body':
                         """
                         <h3>Lorem ipsum</h3>
@@ -754,9 +756,9 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'home-col-1'       : {
-        'name'             : gettext('Column 1'),
-        'plugins'          : [
+    'home-col-1': {
+        'name': gettext('Column 1'),
+        'plugins': [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -766,10 +768,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins'  : [
+        'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
-                'values'     : {
+                'values': {
                     'body':
                         """
                         <div class="panel panel-info">
@@ -786,9 +788,9 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'home-col-2'       : {
-        'name'             : gettext('Column 2'),
-        'plugins'          : [
+    'home-col-2': {
+        'name': gettext('Column 2'),
+        'plugins': [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -798,10 +800,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins'  : [
+        'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
-                'values'     : {
+                'values': {
                     'body':
                         """
                         <div class="panel panel-danger">
@@ -818,9 +820,9 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'home-col-3'       : {
-        'name'             : gettext('Column 3'),
-        'plugins'          : [
+    'home-col-3': {
+        'name': gettext('Column 3'),
+        'plugins': [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -830,10 +832,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins'  : [
+        'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
-                'values'     : {
+                'values': {
                     'body':
                         """
                         <div class="panel panel-warning">
@@ -850,9 +852,9 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'subpage_content'  : {
-        'name'             : gettext('Content'),
-        'plugins'          : [
+    'subpage_content': {
+        'name': gettext('Content'),
+        'plugins': [
             'TextPlugin',
         ],
         'text_only_plugins': [
@@ -862,10 +864,10 @@ CMS_PLACEHOLDER_CONF = {
             'FilerFilePlugin',
             'FilerVideoPlugin'
         ],
-        'default_plugins'  : [
+        'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
-                'values'     : {
+                'values': {
                     'body':
                         """
                         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed luctus tortor quis imperdiet egestas. Proin mollis sem ipsum, nec facilisis nibh cursus eu. Sed convallis cursus venenatis. Maecenas rutrum, elit ut ornare lobortis, mi dolor placerat elit, at laoreet sapien urna vitae arcu. Phasellus consectetur tincidunt ullamcorper. Sed et enim at lacus cursus rhoncus. Vestibulum porttitor velit non ante ullamcorper, ut gravida ipsum vestibulum. Aenean sed condimentum nisi. Quisque sagittis mauris non leo tincidunt vulputate. Ut euismod ante purus, sed pulvinar nisl volutpat quis. Maecenas consequat mi vitae libero egestas varius. Nam in tempor augue, sit amet pulvinar purus.</p>
@@ -877,7 +879,7 @@ CMS_PLACEHOLDER_CONF = {
         ]
     },
     'bootstrap_content': {
-        'name'             : gettext('Bootstrap Content'),
+        'name': gettext('Bootstrap Content'),
         'plugins': ['BootstrapContainerPlugin', 'BootstrapJumbotronPlugin'],
         'parent_classes': {'BootstrapContainerPlugin': None, 'BootstrapJumbotronPlugin': None},
         'glossary': CACSCADE_WORKAREA_GLOSSARY,
@@ -890,17 +892,17 @@ CMS_PLACEHOLDER_CONF = {
         ],
     },
 
-    'footer'           : {
-        'name'             : gettext('Footer'),
-        'plugins'          : ['TextPlugin', 'FilerImagePlugin'],
+    'footer': {
+        'name': gettext('Footer'),
+        'plugins': ['TextPlugin', 'FilerImagePlugin'],
         'text_only_plugins': ['TextLinkPlugin'],
-        'limits'           : {
+        'limits': {
             'TextPlugin': 1,
         },
-        'default_plugins'  : [
+        'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
-                'values'     : {
+                'values': {
                     'body':
                         'Lorem ipsum dolor sit amet'
 

@@ -1,10 +1,7 @@
 # -*- coding: utf-8
 
-import uuid
-
 from cms.toolbar_pool import toolbar_pool
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -13,8 +10,6 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save, post_init
 from django.dispatch import receiver
 from django.template import Template
-from django.utils import timezone
-from django.utils import translation
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -23,7 +18,6 @@ from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNo
 
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.models.product import Product
 
 
 class Configuration(TranslatableModel):
@@ -53,12 +47,15 @@ class Configuration(TranslatableModel):
                                                                default=False)
     send_abstract_order_mail_to_producer = models.BooleanField(_("Send abstract order mail to producers"),
                                                                default=False)
-    send_order_mail_to_board = models.BooleanField(_("Send an order distribution email to members registered for a task"), default=True)
+    send_order_mail_to_board = models.BooleanField(
+        _("Send an order distribution email to members registered for a task"), default=True)
     send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
     send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
     invoice = models.BooleanField(_("Enable accounting module"), default=True)
-    display_anonymous_order_form = models.BooleanField(_("Allow the anonymous visitor to see the customer order screen"), default=True)
-    display_producer_on_order_form = models.BooleanField(_("Display the list of producers in the customer order screen"), default=True)
+    display_anonymous_order_form = models.BooleanField(
+        _("Allow the anonymous visitor to see the customer order screen"), default=True)
+    display_producer_on_order_form = models.BooleanField(
+        _("Display the list of producers in the customer order screen"), default=True)
     display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
     xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
@@ -143,11 +140,12 @@ class Configuration(TranslatableModel):
                                       configuration='CKEDITOR_SETTINGS_MODEL2',
                                       default=EMPTY_STRING,
                                       blank=True),
-        cancel_order_customer_mail=HTMLField(_("Content of the email in case of cancellation of the order sent to the consumers concerned"),
-                                             help_text=EMPTY_STRING,
-                                             configuration='CKEDITOR_SETTINGS_MODEL2',
-                                             default=EMPTY_STRING,
-                                             blank=True),
+        cancel_order_customer_mail=HTMLField(
+            _("Content of the email in case of cancellation of the order sent to the consumers concerned"),
+            help_text=EMPTY_STRING,
+            configuration='CKEDITOR_SETTINGS_MODEL2',
+            default=EMPTY_STRING,
+            blank=True),
         order_staff_mail=HTMLField(_("Content of the order distribution email sent to the members enrolled to a task"),
                                    help_text=EMPTY_STRING,
                                    configuration='CKEDITOR_SETTINGS_MODEL2',

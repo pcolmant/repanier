@@ -129,6 +129,7 @@ class Staff(MPTTModel, TranslatableModel):
             return self.customer_responsible.phone1
         except:
             return "----"
+
     get_customer_phone1.short_description = (_("Phone1"))
 
     @cached_property

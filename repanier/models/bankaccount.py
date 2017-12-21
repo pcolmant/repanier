@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-import datetime
 
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -69,8 +68,6 @@ class BankAccount(models.Model):
                     customer=customer_buyinggroup,
                     operation_comment=_("Initial balance")
                 )
-
-
 
     @classmethod
     def get_closest_to(cls, target):

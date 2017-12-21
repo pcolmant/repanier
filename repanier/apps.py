@@ -8,7 +8,6 @@ from django.db import connection
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-
 REPANIER_SETTINGS_CONFIG = None
 REPANIER_SETTINGS_TEST_MODE = None
 REPANIER_SETTINGS_GROUP_NAME = None
@@ -122,17 +121,17 @@ class RepanierSettings(AppConfig):
                 use_order_unit_converted=True
             )
             for bank_account in BankAccount.objects.filter(
-                permanence__isnull=False,
-                producer__isnull=True,
-                customer__isnull=True
+                    permanence__isnull=False,
+                    producer__isnull=True,
+                    customer__isnull=True
             ).order_by('?').only("id", "permanence_id"):
                 Permanence.objects.filter(
                     id=bank_account.permanence_id,
                     invoice_sort_order__isnull=True
                 ).order_by('?').update(invoice_sort_order=bank_account.id)
             for permanence in Permanence.objects.filter(
-                status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
-                invoice_sort_order__isnull=True
+                    status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
+                    invoice_sort_order__isnull=True
             ).order_by('?'):
                 bank_account = BankAccount.get_closest_to(permanence.permanence_date)
                 if bank_account is not None:
