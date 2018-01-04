@@ -26,20 +26,20 @@ class RepanierCustomBackend(ModelBackend):
                 email__iexact=username
             )
         ).order_by('?').first()
-        is_admin = False
+        is_superuser = False
         staff = customer = None
         login_attempt_counter = DECIMAL_THREE
         if user_username is not None:
             username = user_username.username
             customer = Customer.objects.filter(
-                user=user_username, is_active=True
+                user=user_username
             ).order_by('?').first()
             if customer is None:
                 staff = Staff.objects.filter(
-                    user=user_username, is_active=True
+                    user=user_username
                 ).order_by('?').first()
                 if staff is None:
-                    is_admin = True
+                    is_superuser = True
                     login_attempt_counter = Configuration.objects.filter(
                         id=DECIMAL_ONE
                     ).only(
@@ -65,7 +65,7 @@ class RepanierCustomBackend(ModelBackend):
                         login_attempt_counter=F('login_attempt_counter') +
                                               DECIMAL_ONE
                     )
-                elif is_admin:
+                elif is_superuser:
                     Configuration.objects.filter(id=DECIMAL_ONE).update(
                         login_attempt_counter=F('login_attempt_counter') +
                                               DECIMAL_ONE
@@ -101,7 +101,7 @@ class RepanierCustomBackend(ModelBackend):
                         Staff.objects.filter(id=staff.id).update(
                             login_attempt_counter=DECIMAL_ZERO
                         )
-                elif is_admin:
+                elif is_superuser:
                     if login_attempt_counter > DECIMAL_ZERO:
                         Configuration.objects.filter(id=DECIMAL_ONE).update(
                             login_attempt_counter=DECIMAL_ZERO
@@ -110,8 +110,46 @@ class RepanierCustomBackend(ModelBackend):
                 self.user = self.get_user(user.id)
                 return self.user
 
+    @classmethod
+    def set_user_right(cls, user, is_superuser, customer, staff):
+        if is_superuser:
+            user.is_order_manager = True
+            user.is_invoice_manager = True
+            user.is_order_referent = True
+            user.is_invoice_referent = True
+            user.is_coordinator = True
+            user.is_webmaster = True
+            user.customer_id = None
+            user.staff_id = None
+            user.subscribe_to_email = True
+        else:
+            if staff is None:
+                user.is_order_manager = False
+                user.is_invoice_manager = False
+                user.is_order_referent = False
+                user.is_invoice_referent = False
+                user.is_coordinator = False
+                user.is_webmaster = False
+                user.customer_id = customer.id
+                user.staff_id = None
+                user.subscribe_to_email = customer.subscribe_to_email
+            else:
+                user.is_order_manager = staff.is_order_manager
+                user.is_invoice_manager = staff.is_invoice_manager
+                user.is_order_referent = staff.is_order_referent
+                user.is_invoice_referent = staff.is_invoice_referent
+                user.is_coordinator = staff.is_coordinator
+                user.is_webmaster = staff.is_webmaster
+                user.staff_id = staff.id
+                user.subscribe_to_email = True
+                if customer is None:
+                    user.customer_id = staff.customer_responsible_id
+                else:
+                    user.customer_id = customer.id
+
     def get_user(self, user_id):
-        if self.user is not None and self.user.id == user_id:
+        if self.user is not None and self.user.id == user_id and hasattr(self.user, 'is_order_manager'):
+            # Test "hasattr(self.user, 'is_order_manager')" to detect user without new attributes
             return self.user
         user_or_none = UserModel.objects.filter(pk=user_id).only("id", "password", "is_staff", "is_superuser").order_by(
             '?').first()
@@ -127,59 +165,51 @@ class RepanierCustomBackend(ModelBackend):
                     elif customer.as_staff is not None:
                         staff = Staff.objects.filter(id=customer.as_staff_id).only(
                             "id",
-                            "is_active", "is_reply_to_order_email", "is_reply_to_invoice_email",
-                            "is_contributor", "is_coordinator"
+                            "is_active", "is_order_manager", "is_invoice_manager",
+                            "is_order_referent", "is_invoice_referent", "is_coordinator",
+                            "is_webmaster"
                         ).order_by('?').first()
-                        if staff is not None:
-                            if not staff.is_active:
-                                user_or_none = None
-                            else:
-                                user_or_none.is_order = staff.is_reply_to_order_email
-                                user_or_none.is_invoice = staff.is_reply_to_invoice_email
-                                user_or_none.is_contributor = staff.is_contributor
-                                user_or_none.is_coordinator = staff.is_coordinator
-                                user_or_none.is_customer = True
-                                user_or_none.customer_id = customer.id
-                                user_or_none.staff_id = staff.id
-                                user_or_none.subscribe_to_email = True
+                        if staff is not None and staff.is_active:
+                            RepanierCustomBackend.set_user_right(
+                                user=user_or_none,
+                                is_superuser=False,
+                                staff=staff,
+                                customer=customer
+                            )
+                        else:
+                            user_or_none = None
                     else:
-                        user_or_none.is_order = False
-                        user_or_none.is_invoice = False
-                        user_or_none.is_contributor = False
-                        user_or_none.is_coordinator = False
-                        user_or_none.is_customer = True
-                        user_or_none.customer_id = customer.id
-                        user_or_none.staff_id = None
-                        user_or_none.subscribe_to_email = customer.subscribe_to_email
-
+                        RepanierCustomBackend.set_user_right(
+                            user=user_or_none,
+                            is_superuser=False,
+                            staff=None,
+                            customer=customer
+                        )
                 else:
                     staff = Staff.objects.filter(user_id=user_or_none.id).only(
                         "id", "customer_responsible_id",
-                        "is_active", "is_reply_to_order_email", "is_reply_to_invoice_email",
-                        "is_contributor", "is_coordinator"
+                        "is_active", "is_order_manager", "is_invoice_manager",
+                        "is_order_referent", "is_invoice_referent", "is_coordinator",
+                        "is_webmaster"
                     ).order_by('?').first()
                     if staff is not None:
                         if not staff.is_active:
                             user_or_none = None
                         else:
-                            user_or_none.is_order = staff.is_reply_to_order_email
-                            user_or_none.is_invoice = staff.is_reply_to_invoice_email
-                            user_or_none.is_contributor = staff.is_contributor
-                            user_or_none.is_coordinator = staff.is_coordinator
-                            user_or_none.is_customer = False
-                            user_or_none.customer_id = staff.customer_responsible_id
-                            user_or_none.staff_id = staff.id
-                            user_or_none.subscribe_to_email = True
+                            RepanierCustomBackend.set_user_right(
+                                user=user_or_none,
+                                is_superuser=False,
+                                staff=staff,
+                                customer=None
+                            )
                     else:
                         user_or_none = None
             else:
-                user_or_none.is_order = True
-                user_or_none.is_invoice = True
-                user_or_none.is_contributor = True
-                user_or_none.is_coordinator = True
-                user_or_none.is_customer = False
-                user_or_none.customer_id = None
-                user_or_none.staff_id = None
-                user_or_none.subscribe_to_email = True
+                RepanierCustomBackend.set_user_right(
+                    user=user_or_none,
+                    is_superuser=True,
+                    staff=None,
+                    customer=None
+                )
         self.user = user_or_none
         return user_or_none

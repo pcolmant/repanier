@@ -51,14 +51,32 @@ class Staff(MPTTModel, TranslatableModel):
         function_description=HTMLField(_("Function description"), configuration='CKEDITOR_SETTINGS_MODEL2',
                                        blank=True, default=EMPTY_STRING),
     )
+    # TBD: replaced by is_order_manager
     is_reply_to_order_email = models.BooleanField(
         _("Responsible for orders; this contact is used to transmit offers and orders"),
         default=False)
+    # TBD: replaced by is_invoice_manager
     is_reply_to_invoice_email = models.BooleanField(
         _("Responsible for invoices; this contact is used to transmit invoices"),
         default=False)
-    is_contributor = models.BooleanField(_("Producer referent"),
-                                         default=False)
+    # TBD: replaced by is_order_referent
+    is_contributor = models.BooleanField(
+        _("Producer referent"),
+        default=False)
+
+    is_order_manager = models.BooleanField(
+        _("Offers in preparation manager"),
+        default=False)
+    is_order_referent = models.BooleanField(
+        _("Offers in preparation referent"),
+        default=False)
+    is_invoice_manager = models.BooleanField(
+        _("Billing offers manager"),
+        default=False)
+    is_invoice_referent = models.BooleanField(
+        _("Billing offers referent"),
+        default=False)
+
     is_webmaster = models.BooleanField(_("Webmaster"),
                                        default=False)
     is_coordinator = models.BooleanField(_("Coordonnateur"),
@@ -70,19 +88,19 @@ class Staff(MPTTModel, TranslatableModel):
     is_active = models.BooleanField(_("Active"), default=True)
 
     @classmethod
-    def get_any_coordinator(cls, name=EMPTY_STRING):
+    def get_any_coordinator(cls):
         group = cls.objects.filter(
             is_active=True,
             is_coordinator=True
         ).order_by('?').first()
         if group is None:
+            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
             from repanier.models.customer import Customer
             customer_buyinggroup = Customer.get_group()
             user_model = get_user_model()
-            email = "{}@repanier.be".format(uuid.uuid1())
             user = user_model.objects.create_user(
-                username=email,
-                email=email, password=None,
+                username="{}@repanier.be".format(uuid.uuid1()),
+                email=EMPTY_STRING, password=None,
                 first_name=EMPTY_STRING, last_name=EMPTY_STRING)
             group = Staff.objects.create(
                 user=user,
@@ -95,33 +113,33 @@ class Staff(MPTTModel, TranslatableModel):
                 language_code = language["code"]
                 translation.activate(language_code)
                 group.set_current_language(language_code)
-                group.long_name = name
+                group.long_name = REPANIER_SETTINGS_GROUP_NAME or settings.DJANGO_SETTINGS_GROUP_NAME
                 group.save()
             translation.activate(cur_language)
         return group
 
     @classmethod
-    def get_order_responsible(cls, name=EMPTY_STRING):
+    def get_order_responsible(cls):
         order_responsible = cls.objects.filter(
             is_active=True,
-            is_reply_to_order_email=True,
+            is_order_manager=True,
         ).order_by('?').first()
         if order_responsible is None:
-            order_responsible = Staff.get_any_coordinator(name)
-            order_responsible.is_reply_to_order_email = True
-            order_responsible.save(update_fields=["is_reply_to_order_email"])
+            order_responsible = Staff.get_any_coordinator()
+            order_responsible.is_order_manager = True
+            order_responsible.save(update_fields=["is_order_manager"])
         return order_responsible
 
     @classmethod
-    def get_invoice_responsible(cls, name=EMPTY_STRING):
+    def get_invoice_responsible(cls):
         invoice_responsible = cls.objects.filter(
             is_active=True,
-            is_reply_to_invoice_email=True
+            is_invoice_manager=True
         ).order_by('?').first()
         if invoice_responsible is None:
-            invoice_responsible = Staff.get_any_coordinator(name)
-            invoice_responsible.is_reply_to_invoice_email = True
-            invoice_responsible.save(update_fields=["is_reply_to_invoice_email"])
+            invoice_responsible = Staff.get_any_coordinator()
+            invoice_responsible.is_invoice_manager = True
+            invoice_responsible.save(update_fields=["is_invoice_manager"])
         return invoice_responsible
 
     def get_customer_phone1(self):

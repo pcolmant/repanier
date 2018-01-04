@@ -122,16 +122,17 @@ class Customer(models.Model):
         customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if customer_buyinggroup is None:
             from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+            name = REPANIER_SETTINGS_GROUP_NAME or settings.DJANGO_SETTINGS_GROUP_NAME
+            z_name = "z-{}".format(name)
             user = User.objects.create_user(
-                username="z-{}".format(REPANIER_SETTINGS_GROUP_NAME),
-                email="{}{}".format(
-                    REPANIER_SETTINGS_GROUP_NAME, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                username=z_name,
+                email="{}{}".format(name, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
                 password=uuid.uuid1().hex,
-                first_name=EMPTY_STRING, last_name=REPANIER_SETTINGS_GROUP_NAME)
+                first_name=EMPTY_STRING, last_name=name)
             customer_buyinggroup = Customer.objects.create(
                 user=user,
-                short_basket_name="z-{}".format(REPANIER_SETTINGS_GROUP_NAME),
-                long_basket_name=REPANIER_SETTINGS_GROUP_NAME,
+                short_basket_name=z_name,
+                long_basket_name=name,
                 phone1='0499/96.64.32',
                 represent_this_buyinggroup=True
             )

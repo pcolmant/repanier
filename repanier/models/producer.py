@@ -112,9 +112,11 @@ class Producer(models.Model):
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:
             from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+            name = REPANIER_SETTINGS_GROUP_NAME or settings.DJANGO_SETTINGS_GROUP_NAME
+            z_name = "z-{}".format(name)
             producer_buyinggroup = Producer.objects.create(
-                short_profile_name="z-{}".format(REPANIER_SETTINGS_GROUP_NAME),
-                long_profile_name=REPANIER_SETTINGS_GROUP_NAME,
+                short_profile_name=z_name,
+                long_profile_name=name,
                 represent_this_buyinggroup=True
             )
             # Create this to also prevent the deletion of the producer representing the buying group
@@ -261,8 +263,8 @@ class Producer(models.Model):
                     unit_price = offer_item.producer_unit_price.amount
                 if taken_from_stock > DECIMAL_ZERO:
                     delta_price_with_tax = (
-                        (unit_price + offer_item.unit_deposit.amount)
-                        * taken_from_stock
+                            (unit_price + offer_item.unit_deposit.amount)
+                            * taken_from_stock
                     ).quantize(TWO_DECIMALS)
                     calculated_invoiced_balance -= delta_price_with_tax
         return calculated_invoiced_balance

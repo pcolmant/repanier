@@ -37,7 +37,7 @@ class CoordinatorsContactForm(RepanierForm):
         super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
         choices = []
         for staff in Staff.objects.filter(
-                is_active=True, is_contributor=False,
+                is_active=True, is_order_referent=False,
                 translations__language_code=translation.get_language()
         ):
             r = staff.customer_responsible
@@ -66,7 +66,7 @@ def send_mail_to_coordinators_view(request):
             to_email_staff = []
             selected_staff_members = form.cleaned_data.get('staff')
             for staff in Staff.objects.filter(
-                    is_active=True, is_contributor=False,
+                    is_active=True, is_order_referent=False,
                     id__in=selected_staff_members
             ).order_by('?'):
                 to_email_staff = list(set(to_email_staff + staff.get_to_email))

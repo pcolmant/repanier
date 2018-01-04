@@ -72,7 +72,14 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
     parent_object = None
 
     def has_delete_permission(self, request, obj=None):
+        # To delete the purchase, set the quantity to zero
         return False
+
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
 
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_object = obj
@@ -173,7 +180,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator:
+        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
             return True
         return False
 

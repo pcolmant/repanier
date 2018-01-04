@@ -112,8 +112,6 @@ class Product(Item):
             self.get_html_is_into_offer(contract)
         ))
 
-    get_html_admin_is_into_offer.short_description = (_("In offer"))
-
     def get_html_is_into_offer(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
         css_class = ' class = "btn"'
@@ -256,7 +254,7 @@ class Product(Item):
             flexible_dates_link,
             contract_dates
         )
-        return link
+        return mark_safe(link)
 
     def get_qty_display(self):
         if self.is_box:
@@ -285,8 +283,7 @@ def product_pre_save(sender, **kwargs):
     getcontext().rounding = ROUND_HALF_UP
     product = kwargs["instance"]
     producer = product.producer
-    if not product.is_active:
-        product.is_into_offer = False
+
     if product.order_unit not in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG,
                                   PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
         product.unit_deposit = DECIMAL_ZERO
@@ -316,11 +313,15 @@ def product_pre_save(sender, **kwargs):
             product.producer_order_by_quantity = DECIMAL_ZERO
             product.limit_order_quantity_to_stock = True
             # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
-            product.is_into_offer = product.stock > DECIMAL_ZERO
+            product.is_into_offer = False if product.stock <= DECIMAL_ZERO else product.is_into_offer
         if product.is_box:
             product.limit_order_quantity_to_stock = True
     else:
         product.limit_order_quantity_to_stock = False
+
+    if not product.is_active:
+        product.is_into_offer = False
+
     if product.customer_increment_order_quantity <= DECIMAL_ZERO:
         product.customer_increment_order_quantity = DECIMAL_ONE
     if product.customer_minimum_order_quantity <= DECIMAL_ZERO:

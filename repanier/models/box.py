@@ -63,15 +63,10 @@ class Box(Product):
 def box_pre_save(sender, **kwargs):
     box = kwargs["instance"]
     box.is_box = True
-    # box.producer_id = Producer.objects.filter(
-    #     represent_this_buyinggroup=True
-    # ).order_by('?').only('id').first().id
     box.order_unit = PRODUCT_ORDER_UNIT_PC
     box.producer_unit_price = box.customer_unit_price
     box.producer_vat = box.customer_vat
     box.limit_order_quantity_to_stock = True
-    if not box.is_active:
-        box.is_into_offer = False
     # ! Important to initialise all fields of the box. Remember : a box is a product.
     product_pre_save(sender, **kwargs)
 

@@ -89,6 +89,12 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
         # To delete the purchase, set the quantity to zero
         return False
 
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer":
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
@@ -273,7 +279,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator:
+        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
             return True
         return False
 

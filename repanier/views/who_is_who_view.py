@@ -24,7 +24,7 @@ def who_is_who_view(request):
     if q is not None:
         customer_list = customer_list.filter(Q(long_basket_name__icontains=q) | Q(city__icontains=q))
     staff_list = Staff.objects.filter(
-        is_active=True, is_contributor=False
+        is_active=True, is_order_referent=False
     )
     try:
         is_coordinator = request.user.is_coordinator

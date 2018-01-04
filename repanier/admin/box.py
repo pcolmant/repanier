@@ -111,6 +111,9 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
+    def has_change_permission(self, request, obj=None):
+        return self.has_delete_permission(request)
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "product":
             kwargs["queryset"] = Product.objects.filter(
@@ -184,7 +187,7 @@ class BoxAdmin(TranslatableAdmin):
 
     def has_delete_permission(self, request, box=None):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator:
+        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
             return True
         return False
 
@@ -196,7 +199,7 @@ class BoxAdmin(TranslatableAdmin):
 
     def get_list_display(self, request):
         list_display = [
-            'get_is_into_offer', 'get_box_admin_display'
+            'get_html_is_into_offer', 'get_box_admin_display'
         ]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += [
@@ -312,13 +315,10 @@ class BoxAdmin(TranslatableAdmin):
                         is_into_offer_field.initial = True
         return form
 
-    def get_queryset(self, request):
-        qs = super(BoxAdmin, self).get_queryset(request)
-        qs = qs.filter(
-            is_box=True,
-            translations__language_code=translation.get_language()
-        )
-        return qs
+    def get_html_is_into_offer(self, product):
+        return product.get_html_admin_is_into_offer()
+
+    get_html_is_into_offer.short_description = (_("In offer"))
 
     def save_model(self, request, box, form, change):
         if box.is_into_offer and box.stock <= 0:
@@ -351,3 +351,11 @@ class BoxAdmin(TranslatableAdmin):
         except IndexError:
             # No formset present in list admin, but well in detail admin
             pass
+
+    def get_queryset(self, request):
+        qs = super(BoxAdmin, self).get_queryset(request)
+        qs = qs.filter(
+            is_box=True,
+            translations__language_code=translation.get_language()
+        )
+        return qs

@@ -18,34 +18,22 @@ class RepanierToolbar(CMSToolbar):
         user = self.request.user
         if user.is_anonymous:
             return
-        if user.is_coordinator:
-            display_all_but_configuration = True
-            display_configuration = True
-        else:
-            if user.is_order or user.is_invoice:
-                display_all_but_configuration = True
-                display_configuration = False
-            elif user.is_contributor:
-                display_all_but_configuration = False
-                display_configuration = False
-            else:
-                return
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER, _('Manage'))
         position = 0
         admin_menu.add_break('custom-break', position=position)
-        if display_all_but_configuration:
+        if user.is_coordinator or user.is_order_manager or user.is_invoice_manager:
             office_menu = admin_menu.get_or_create_menu(
                 'parameter-menu',
                 _('Parameters ...'),
                 position=position
             )
             # add_sideframe_item
-            if display_configuration:
+            if user.is_coordinator:
                 url = reverse('admin:repanier_configuration_change', args=(1,))
                 office_menu.add_sideframe_item(_('Configuration'), url=url)
             url = reverse('admin:repanier_notification_change', args=(1,))
             office_menu.add_sideframe_item(_('"Flash" ad'), url=url)
-            if display_configuration:
+            if user.is_coordinator:
                 url = reverse('admin:repanier_staff_changelist')
                 office_menu.add_sideframe_item(_('Management team'), url=url)
                 if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
@@ -73,7 +61,7 @@ class RepanierToolbar(CMSToolbar):
         url = "{}?is_active__exact=1".format(reverse('admin:repanier_producer_changelist'))
         admin_menu.add_sideframe_item(_('Producers'), url=url, position=position)
 
-        if display_all_but_configuration:
+        if user.is_coordinator or user.is_order_manager or user.is_invoice_manager:
             if settings.DJANGO_SETTINGS_BOX:
                 position += 1
                 url = "{}?is_into_offer__exact=1&is_active__exact=1".format(reverse('admin:repanier_box_changelist'))
@@ -82,11 +70,11 @@ class RepanierToolbar(CMSToolbar):
                 position += 1
                 url = "{}?is_active__exact=1".format(reverse('admin:repanier_contract_changelist'))
                 admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
-            if user.is_coordinator or user.is_order:
+            if user.is_coordinator or user.is_order_manager:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')
                 admin_menu.add_sideframe_item(_("Offers in preparation"), url=url, position=position)
-            if user.is_invoice:
+            if user.is_invoice_manager or user.is_coordinator:
                 if REPANIER_SETTINGS_INVOICE:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')

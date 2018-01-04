@@ -58,22 +58,21 @@ def repanier_user(context, *args, **kwargs):
                 """.format(
                 _('Welkom'),
                 user.username or '<span id = "my_name"></ span>'
+            ), "<li><a href=\"{}\">{}</a></li>".format(
+                reverse('send_mail_to_coordinators_view'),
+                _('Send mail to coordinators')
             )]
-            if user.is_customer:
-                nodes.append("<li><a href=\"{}\">{}</a></li>".format(
-                    reverse('send_mail_to_coordinators_view'),
-                    _('Send mail to coordinators')
-                ))
-                if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-                    if user.subscribe_to_email:
-                        nodes.append("<li><a href=\"{}\">{}</a></li>".format(
-                            reverse('send_mail_to_all_members_view'),
-                            _('Send mail to all members')
-                        ))
+            if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+                if user.subscribe_to_email:
                     nodes.append("<li><a href=\"{}\">{}</a></li>".format(
-                        reverse('who_is_who_view'),
-                        _("Who's who")
+                        reverse('send_mail_to_all_members_view'),
+                        _('Send mail to all members')
                     ))
+                nodes.append("<li><a href=\"{}\">{}</a></li>".format(
+                    reverse('who_is_who_view'),
+                    _("Who's who")
+                ))
+            if user.customer_id is not None:
                 nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                     reverse('my_profile_view'),
                     _('My profile')

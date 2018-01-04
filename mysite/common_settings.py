@@ -22,9 +22,9 @@ gettext = lambda s: s
 logger = logging.getLogger(__name__)
 
 
-def get_allowed_mail_extension():
+def get_allowed_mail_extension(site_name):
     try:
-        composant = DJANGO_SETTINGS_ALLOWED_HOSTS[0].split(".")
+        composant = site_name.split(".")
         if composant[-1] == "local":
             allowed_mail_extension = "@repanier.be"
         else:
@@ -32,6 +32,14 @@ def get_allowed_mail_extension():
     except:
         allowed_mail_extension = "@repanier.be"
     return allowed_mail_extension
+
+
+def get_group_name(site_name):
+    try:
+        composant = site_name.split(".")
+        return composant[0]
+    except:
+        return "repanier"
 
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
@@ -97,7 +105,9 @@ for name in config.options('ALLOWED_HOSTS'):
     DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
 logger.info("Settings loaded from {}".format(conf_file_name))
 logger.info("Allowed hosts: {}".format(DJANGO_SETTINGS_ALLOWED_HOSTS))
-DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension()
+DJANGO_SETTINGS_GROUP_SITE_NAME = DJANGO_SETTINGS_ALLOWED_HOSTS[0]
+DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_GROUP_SITE_NAME)
+DJANGO_SETTINGS_GROUP_NAME = get_group_name(DJANGO_SETTINGS_GROUP_SITE_NAME)
 
 # Avoid impossible options
 if DJANGO_SETTINGS_IS_MINIMALIST:

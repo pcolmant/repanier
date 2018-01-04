@@ -51,23 +51,21 @@ class BankAccount(models.Model):
 
     @classmethod
     def open_account(cls):
-        bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?')
+        bank_account = BankAccount.objects.filter().order_by('?')
         if not bank_account.exists():
-            # If not latest total exists, create it with operation date before all movements
-            if not BankAccount.objects.all().order_by('?').exist():
-                from repanier.models.customer import Customer
-                BankAccount.objects.create(
-                    operation_status=BANK_LATEST_TOTAL,
-                    operation_date=timezone.now().date(),
-                    operation_comment=_("Account opening")
-                )
-                customer_buyinggroup = Customer.get_group()
-                # Create this also prevent the deletion of the customer representing the buying group
-                BankAccount.objects.create(
-                    operation_date=timezone.now().date(),
-                    customer=customer_buyinggroup,
-                    operation_comment=_("Initial balance")
-                )
+            from repanier.models.customer import Customer
+            BankAccount.objects.create(
+                operation_status=BANK_LATEST_TOTAL,
+                operation_date=timezone.now().date(),
+                operation_comment=_("Account opening")
+            )
+            customer_buyinggroup = Customer.get_group()
+            # Create this also prevent the deletion of the customer representing the buying group
+            BankAccount.objects.create(
+                operation_date=timezone.now().date(),
+                customer=customer_buyinggroup,
+                operation_comment=_("Initial balance")
+            )
 
     @classmethod
     def get_closest_to(cls, target):

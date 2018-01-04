@@ -31,11 +31,6 @@ from repanier.xlsx.xlsx_invoice import export_invoice
 from repanier.xlsx.xlsx_product import export_customer_prices
 from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stock
 
-try:
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import parse_qsl
-
 
 class ProducerResource(resources.ModelResource):
     id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
@@ -188,9 +183,11 @@ class ProducerDataForm(forms.ModelForm):
             if manage_replenishment and producer_pre_opening:
                 # The producer set his offer -> no possibility to manage stock
                 self.add_error('producer_pre_opening',
-                               _("The pre-opening of the orders is incompatible with the management of the reassortment."))
+                               _(
+                                   "The pre-opening of the orders is incompatible with the management of the reassortment."))
                 self.add_error('manage_replenishment',
-                               _("The pre-opening of the orders is incompatible with the management of the reassortment."))
+                               _(
+                                   "The pre-opening of the orders is incompatible with the management of the reassortment."))
             if manage_replenishment and invoice_by_basket:
                 # The group manage the replenishment -> no possibility for the producer to prepare basket
                 self.add_error('invoice_by_basket',
@@ -200,9 +197,11 @@ class ProducerDataForm(forms.ModelForm):
             if is_resale_price_fixed and producer_pre_opening:
                 # The producer set his price -> no possibility to fix the resale price
                 self.add_error('producer_pre_opening',
-                               _("The pre-opening of orders is incompatible with the imposition of customer selling prices."))
+                               _(
+                                   "The pre-opening of orders is incompatible with the imposition of customer selling prices."))
                 self.add_error('is_resale_price_fixed',
-                               _("The pre-opening of orders is incompatible with the imposition of customer selling prices."))
+                               _(
+                                   "The pre-opening of orders is incompatible with the imposition of customer selling prices."))
             if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
                 # Important : For invoicing correctly
                 self.add_error('price_list_multiplier',
@@ -262,7 +261,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def has_delete_permission(self, request, producer=None):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator or user.is_contributor:
+        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
             return True
         return False
 

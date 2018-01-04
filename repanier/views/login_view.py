@@ -50,20 +50,22 @@ def login_view(request, template_name='repanier/registration/login.html',
 
         if as_staff is not None:
             user = request.user
-            Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff_id=as_staff_id)
+            Customer.objects.filter(
+                user_id=user.id
+            ).order_by('?').update(as_staff_id=as_staff_id)
             auth_logout(request)
             user.is_staff = True
             user.groups.clear()
-            # if as_staff.is_reply_to_order_email:
+            # if as_staff.is_order_manager:
             #     group_id = Group.objects.filter(name=ORDER_GROUP).first()
             #     user.groups.add(group_id)
-            # if as_staff.is_reply_to_invoice_email:
+            # if as_staff.is_invoice_manager:
             #     group_id = Group.objects.filter(name=INVOICE_GROUP).first()
             #     user.groups.add(group_id)
             if as_staff.is_webmaster:
                 group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
                 user.groups.add(group_id)
-            # if as_staff.is_contributor:
+            # if as_staff.is_order_referent:
             #     group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
             #     user.groups.add(group_id)
             # if as_staff.is_coordinator:

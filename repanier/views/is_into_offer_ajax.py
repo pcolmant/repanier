@@ -21,7 +21,7 @@ from repanier.tools import sint
 def is_into_offer(request, product_id, contract_id):
     if request.is_ajax():
         user = request.user
-        if user.is_staff or user.is_superuser:
+        if user.is_staff:
             product_id = sint(product_id)
             product = Product.objects.filter(id=product_id).order_by('?').first()
             if product is not None:
@@ -65,7 +65,7 @@ def is_into_offer(request, product_id, contract_id):
 def is_into_offer_content(request, product_id, contract_id, one_date_str):
     if request.is_ajax():
         user = request.user
-        if user.is_staff or user.is_superuser:
+        if user.is_staff:
             product_id = sint(product_id)
             product = Product.objects.filter(id=product_id).order_by('?').only(
                 'is_into_offer').first()

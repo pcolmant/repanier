@@ -13,6 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
+from repanier.auth_backend import RepanierCustomBackend
 from repanier.models.customer import Customer
 
 
@@ -55,13 +56,20 @@ def logout_view(request, next_page=None,
     return TemplateResponse(request, template_name, context)
 
 
-def remove_staff_right(user, is_customer=False):
-    is_customer = is_customer or Customer.objects.filter(user_id=user.id).exists()
-    if is_customer and user.is_staff:
-        Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff=None)
+def remove_staff_right(user):
+    update_counter = Customer.objects.filter(
+        user_id=user.id, as_staff__isnull=False
+    ).order_by('?').update(as_staff=None)
+    if update_counter > 0:
         user.is_staff = False
         user.groups.clear()
         user.save()
+        RepanierCustomBackend.set_user_right(
+            user=user,
+            is_superuser=False,
+            staff=None,
+            customer=user.customer
+        )
 
 
 @receiver(user_logged_out)

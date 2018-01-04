@@ -27,21 +27,27 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        is_reply_to_order_email = self.cleaned_data["is_reply_to_order_email"]
-        is_reply_to_invoice_email = self.cleaned_data["is_reply_to_invoice_email"]
+        is_order_manager = self.cleaned_data["is_order_manager"]
+        is_invoice_manager = self.cleaned_data["is_invoice_manager"]
         is_coordinator = self.cleaned_data["is_coordinator"]
-        if is_reply_to_order_email:
-            qs = Staff.objects.filter(is_reply_to_order_email=True).order_by('?')
+        if is_order_manager:
+            qs = Staff.objects.filter(is_order_manager=True, is_active=True).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
-                self.add_error('is_reply_to_order_email', _('This flag is already set for another staff member'))
-        if is_reply_to_invoice_email:
-            qs = Staff.objects.filter(is_reply_to_invoice_email=True).order_by('?')
+                self.add_error(
+                    'is_order_manager',
+                    _('One and only one member of the management team can assure this function')
+                )
+        if is_invoice_manager:
+            qs = Staff.objects.filter(is_invoice_manager=True, is_active=True).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
-                self.add_error('is_reply_to_invoice_email', _('This flag is already set for another staff member'))
+                self.add_error(
+                    'is_invoice_manager',
+                    _('One and only one member of the management team can assure this function')
+                )
         # Check that the email is not already used
         email = self.cleaned_data["email"].lower()
         if email:
@@ -51,18 +57,30 @@ class UserDataForm(TranslatableModelForm):
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.user_id)
             if qs.exists():
-                self.add_error('email', _('The email {} is already used by another user.').format(email))
+                self.add_error(
+                    'email',
+                    _('The email {} is already used by another user.').format(email)
+                )
         else:
             if not self.cleaned_data["customer_responsible"]:
-                self.add_error('email', _('At least one email address or one responsible customer must be set.'))
-                self.add_error('customer_responsible', _('At least one email address or one responsible customer must be set.'))
+                self.add_error(
+                    'email',
+                    _('At least one email address or one responsible customer must be set.')
+                )
+                self.add_error(
+                    'customer_responsible',
+                    _('At least one email address or one responsible customer must be set.')
+                )
 
         if not is_coordinator:
             qs = Staff.objects.filter(is_coordinator=True).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if not qs.exists():
-                self.add_error('is_coordinator', _('At least one coordinator must be set within the management team'))
+                self.add_error(
+                    'is_coordinator',
+                    _('At least one coordinator must be set within the management team')
+                )
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -138,9 +156,10 @@ class StaffWithUserDataAdmin(LUTAdmin):
             'email',
             'customer_responsible',
             'is_coordinator',
-            'is_reply_to_order_email',
-            'is_reply_to_invoice_email',
-            'is_contributor',
+            'is_order_manager',
+            'is_order_referent',
+            'is_invoice_manager',
+            'is_invoice_referent',
             'is_webmaster',
         ]
         if settings.DJANGO_SETTINGS_TEST_MODE:
@@ -193,4 +212,4 @@ class StaffWithUserDataAdmin(LUTAdmin):
 
         super(StaffWithUserDataAdmin, self).save_model(request, staff, form, change)
         if change_previous_customer_responsible:
-            remove_staff_right(old_customer_responsible_field.user, is_customer=True)
+            remove_staff_right(old_customer_responsible_field.user)

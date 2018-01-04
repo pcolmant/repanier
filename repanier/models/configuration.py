@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import F
 from django.db.models.signals import post_save, pre_save, post_init
 from django.dispatch import receiver
 from django.template import Template
@@ -115,6 +116,7 @@ class Configuration(TranslatableModel):
         help_text=_(
             "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
         max_length=25, null=True, blank=True, default=EMPTY_STRING)
+    db_version = models.PositiveSmallIntegerField(default=0)
     translations = TranslatedFields(
         group_label=models.CharField(_("Label to mention on the invoices of the group"),
                                      max_length=100,
@@ -287,6 +289,57 @@ class Configuration(TranslatableModel):
             except TranslationDoesNotExist:
                 pass
 
+    def upgrade_db(self):
+        try:
+            if self.db_version == 0:
+                from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
+                # db_version is used to not upgrade twice the db
+
+                # Purchase.objects.filter(customer_charged__isnull=True).update(
+                #     customer_charged=F('customer_invoice__customer_charged')
+                # )
+                # for purchase in Purchase.objects.filter(
+                #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
+                #     purchase.customer_charged = purchase.customer_invoice.customer_charged
+                #     purchase.save(update_fields=["customer_charged",])
+                # Staff.objects.rebuild()
+                Product.objects.filter(
+                    is_box=True
+                ).order_by('?').update(
+                    limit_order_quantity_to_stock=True
+                )
+                OfferItemWoReceiver.objects.filter(
+                    permanence__status__gte=PERMANENCE_SEND,
+                    order_unit=PRODUCT_ORDER_UNIT_PC_KG
+                ).order_by('?').update(
+                    use_order_unit_converted=True
+                )
+                for bank_account in BankAccount.objects.filter(
+                        permanence__isnull=False,
+                        producer__isnull=True,
+                        customer__isnull=True
+                ).order_by('?').only("id", "permanence_id"):
+                    Permanence.objects.filter(
+                        id=bank_account.permanence_id,
+                        invoice_sort_order__isnull=True
+                    ).order_by('?').update(invoice_sort_order=bank_account.id)
+                for permanence in Permanence.objects.filter(
+                        status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
+                        invoice_sort_order__isnull=True
+                ).order_by('?'):
+                    bank_account = BankAccount.get_closest_to(permanence.permanence_date)
+                    if bank_account is not None:
+                        permanence.invoice_sort_order = bank_account.id
+                        permanence.save(update_fields=['invoice_sort_order'])
+                Staff.objects.order_by('?').update(
+                    is_order_manager=F('is_reply_to_order_email'),
+                    is_invoice_manager=F('is_reply_to_invoice_email'),
+                    is_order_referent=F('is_contributor')
+                )
+                self.db_version = 1
+        except:
+            pass
+
     def __str__(self):
         return self.group_name
 
@@ -410,9 +463,9 @@ def configuration_post_save(sender, **kwargs):
 
         BankAccount.open_account()
 
-        Staff.get_any_coordinator(config.group_name)
-        Staff.get_order_responsible(config.group_name)
-        Staff.get_invoice_responsible(config.group_name)
+        Staff.get_any_coordinator()
+        Staff.get_order_responsible()
+        Staff.get_invoice_responsible()
 
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)

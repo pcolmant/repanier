@@ -48,7 +48,7 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator:
+        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
             return True
         return False
 

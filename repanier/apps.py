@@ -70,13 +70,7 @@ class RepanierSettings(AppConfig):
         from repanier.models.configuration import Configuration
         from repanier.models.notification import Notification
         from repanier.models.lut import LUT_DepartmentForCustomer
-        from repanier.models.product import Product
-        from repanier.models.offeritem import OfferItemWoReceiver
-        from repanier.models.bankaccount import BankAccount
-        from repanier.models.permanence import Permanence
-        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, WEBMASTER_GROUP, \
-            PERMANENCE_SEND, \
-            PRODUCT_ORDER_UNIT_PC_KG, PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED
+        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, WEBMASTER_GROUP
 
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
@@ -100,43 +94,10 @@ class RepanierSettings(AppConfig):
                     currency=CURRENCY_EUR
                 )
                 config.init_email()
+            config.upgrade_db()
             config.save()
-            # Purchase.objects.filter(customer_charged__isnull=True).update(
-            #     customer_charged=F('customer_invoice__customer_charged')
-            # )
-            # for purchase in Purchase.objects.filter(
-            #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
-            #     purchase.customer_charged = purchase.customer_invoice.customer_charged
-            #     purchase.save(update_fields=["customer_charged",])
-            # Staff.objects.rebuild()
-            Product.objects.filter(
-                is_box=True
-            ).order_by('?').update(
-                limit_order_quantity_to_stock=True
-            )
-            OfferItemWoReceiver.objects.filter(
-                permanence__status__gte=PERMANENCE_SEND,
-                order_unit=PRODUCT_ORDER_UNIT_PC_KG
-            ).order_by('?').update(
-                use_order_unit_converted=True
-            )
-            for bank_account in BankAccount.objects.filter(
-                    permanence__isnull=False,
-                    producer__isnull=True,
-                    customer__isnull=True
-            ).order_by('?').only("id", "permanence_id"):
-                Permanence.objects.filter(
-                    id=bank_account.permanence_id,
-                    invoice_sort_order__isnull=True
-                ).order_by('?').update(invoice_sort_order=bank_account.id)
-            for permanence in Permanence.objects.filter(
-                    status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
-                    invoice_sort_order__isnull=True
-            ).order_by('?'):
-                bank_account = BankAccount.get_closest_to(permanence.permanence_date)
-                if bank_account is not None:
-                    permanence.invoice_sort_order = bank_account.id
-                    permanence.save(update_fields=['invoice_sort_order'])
+
+
             # Create groups with correct rights
             # WEBMASTER
             webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only('id').order_by('?').first()

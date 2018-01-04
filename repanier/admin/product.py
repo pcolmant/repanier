@@ -309,13 +309,13 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator:
+        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
             return True
         return False
 
     def has_add_permission(self, request):
         user = request.user
-        if user.is_order or user.is_invoice or user.is_coordinator or user.is_contributor:
+        if user.is_staff:
             return True
         return False
 
@@ -557,7 +557,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return form
 
     def changelist_view(self, request, extra_context=None):
-        # Important : Needed to pass contract to product.get_is_into_offer() in the list_display of 'get_is_into_offer'
+        # Important : Needed to pass contract to product.get_html_is_into_offer() in the list_display of 'get_html_is_into_offer'
         # and in 'deselect_is_into_offer'
         if settings.DJANGO_SETTINGS_CONTRACT:
             contract_id = sint(request.GET.get('commitment', 0))

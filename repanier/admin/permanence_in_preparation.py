@@ -63,6 +63,9 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
 
+    def has_change_permission(self, request, obj=None):
+        return self.has_delete_permission(request)
+
     def get_formset(self, request, obj=None, **kwargs):
         formset = super(PermanenceBoardInline, self).get_formset(request, obj, **kwargs)
         form = formset.form
@@ -108,6 +111,9 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
         return self._has_add_or_delete_permission
 
     def has_add_permission(self, request):
+        return self.has_delete_permission(request)
+
+    def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -193,7 +199,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
-        if user.is_order or user.is_coordinator:
+        if user.is_order_manager or user.is_coordinator:
             return True
         return False
 
