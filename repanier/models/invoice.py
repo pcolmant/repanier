@@ -2,6 +2,7 @@
 
 import datetime
 
+from django.conf import settings
 from django.core import urlresolvers
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -11,12 +12,11 @@ from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.staff import Staff
-from repanier.tools import create_or_update_one_cart_item
+from repanier.tools import create_or_update_one_cart_item, round_gov_be
 
 
 class Invoice(models.Model):
@@ -302,26 +302,30 @@ class CustomerInvoice(Invoice):
                     if transport:
                         if self.price_list_multiplier > DECIMAL_ONE:
                             msg_price = "{}<br>".format(
-                                _('In addition, a surcharge of %(increase)s %% is applied to the billed total. It does not apply to deposits or fees.') % {
+                                _(
+                                    'In addition, a surcharge of %(increase)s %% is applied to the billed total. It does not apply to deposits or fees.') % {
                                     'increase': number_format(
                                         (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
                                 })
                         else:
                             msg_price = "{}<br>".format(
-                                _('In addition a reduction of %(decrease)s %% is applied to the billed total. It does not apply to deposits or fees.') % {
+                                _(
+                                    'In addition a reduction of %(decrease)s %% is applied to the billed total. It does not apply to deposits or fees.') % {
                                     'decrease': number_format(
                                         (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
                                 })
                     else:
                         if self.price_list_multiplier > DECIMAL_ONE:
                             msg_price = "{}<br>".format(
-                                _('For this delivery point, an overload of %(increase)s %% is applied to the billed total (out of deposit).') % {
+                                _(
+                                    'For this delivery point, an overload of %(increase)s %% is applied to the billed total (out of deposit).') % {
                                     'increase': number_format(
                                         (self.price_list_multiplier - DECIMAL_ONE) * 100, 2)
                                 })
                         else:
                             msg_price = "{}<br>".format(
-                                _('For this delivery point, a reduction of %(decrease)s %% is applied to the invoiced total (out of deposit).') % {
+                                _(
+                                    'For this delivery point, a reduction of %(decrease)s %% is applied to the invoiced total (out of deposit).') % {
                                     'decrease': number_format(
                                         (DECIMAL_ONE - self.price_list_multiplier) * 100, 2)
                                 })
@@ -447,15 +451,15 @@ class CustomerInvoice(Invoice):
         Purchase.objects.filter(
             customer_invoice__id=self.id
         ).update(quantity_confirmed=F('quantity_ordered'))
-        self.calculate_and_save_delta_buyinggroup(confirm_order=True)
+        self.calculate_and_save_delta_buyinggroup()
         self.is_order_confirm_send = True
 
-    def calculate_and_save_delta_buyinggroup(self, confirm_order=False):
+    def calculate_and_save_delta_buyinggroup(self):
         previous_delta_price_with_tax = self.delta_price_with_tax.amount
         previous_delta_vat = self.delta_vat.amount
         previous_delta_transport = self.delta_transport.amount
 
-        self.calculate_delta_price(confirm_order)
+        self.calculate_delta_price()
         self.calculate_delta_transport()
 
         if previous_delta_price_with_tax != self.delta_price_with_tax.amount or previous_delta_vat != self.delta_vat.amount or previous_delta_transport != self.delta_transport.amount:
@@ -467,6 +471,7 @@ class CustomerInvoice(Invoice):
                 # producer_buyinggroup = Producer.objects.filter(
                 #     represent_this_buyinggroup=True
                 # ).order_by('?').first()
+                from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
 
                 producer_invoice_buyinggroup = ProducerInvoice.objects.create(
                     producer_id=REPANIER_SETTINGS_GROUP_PRODUCER_ID,
@@ -479,23 +484,16 @@ class CustomerInvoice(Invoice):
 
             producer_invoice_buyinggroup.save()
 
-    def calculate_delta_price(self, confirm_order=False):
+    def calculate_delta_price(self):
         from repanier.models.purchase import Purchase
-        getcontext().rounding = ROUND_HALF_UP
 
         self.delta_price_with_tax.amount = DECIMAL_ZERO
         self.delta_vat.amount = DECIMAL_ZERO
 
-        # Important
-        # Si c'est une facture du membre d'un groupe :
-        #   self.customer_charged_id == purchase.customer_charged_id != self.customer_id
-        #   self.customer_charged_id == purchase.customer_charged_id == owner of the group
-        #   self.price_list_multiplier = DECIMAL_ONE
-        # Si c'est une facture lambda ou d'un groupe :
-        #   self.customer_charged_id == purchase.customer_charged_id = self.customer_id
-        #   self.price_list_multiplier may vary
         if self.customer_id == self.customer_charged_id:
-
+            # It's an invoice of a group, or of a customer who is not member of a group :
+            #   self.customer_charged_id = self.customer_id
+            #   self.price_list_multiplier may vary
             if self.price_list_multiplier != DECIMAL_ONE:
                 result_set = Purchase.objects.filter(
                     permanence_id=self.permanence_id,
@@ -521,15 +519,14 @@ class CustomerInvoice(Invoice):
                     total_price_with_tax = DECIMAL_ZERO
 
                 total_price_with_tax_wo_deposit = total_price_with_tax - total_deposit
-                self.delta_price_with_tax.amount = -(
-                        total_price_with_tax_wo_deposit - (
-                        total_price_with_tax_wo_deposit * self.price_list_multiplier
-                ).quantize(TWO_DECIMALS)
+                self.delta_price_with_tax.amount = (
+                        (
+                                total_price_with_tax_wo_deposit * self.price_list_multiplier
+                        ).quantize(TWO_DECIMALS) - total_price_with_tax_wo_deposit
                 )
                 self.delta_vat.amount = -(
-                        total_vat - (
-                        total_vat * self.price_list_multiplier
-                ).quantize(FOUR_DECIMALS)
+                        (total_vat * self.price_list_multiplier
+                         ).quantize(FOUR_DECIMALS) - total_vat
                 )
 
             result_set = Purchase.objects.filter(
@@ -541,6 +538,10 @@ class CustomerInvoice(Invoice):
                 Sum('selling_price')
             )
         else:
+            # It's an invoice of a member of a group
+            #   self.customer_charged_id != self.customer_id
+            #   self.customer_charged_id == owner of the group
+            #   assertion : self.price_list_multiplier always == DECIMAL_ONE
             result_set = Purchase.objects.filter(
                 permanence_id=self.permanence_id,
                 customer_id=self.customer_id,
@@ -561,6 +562,10 @@ class CustomerInvoice(Invoice):
             self.total_price_with_tax.amount = result_set["selling_price__sum"]
         else:
             self.total_price_with_tax.amount = DECIMAL_ZERO
+        if settings.DJANGO_SETTINGS_ROUND_INVOICES:
+            total_price = self.total_price_with_tax.amount + self.delta_price_with_tax.amount
+            total_price_gov_be = round_gov_be(total_price)
+            self.delta_price_with_tax.amount += (total_price_gov_be - total_price)
 
     def calculate_delta_transport(self):
 

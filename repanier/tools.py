@@ -1,10 +1,8 @@
 # -*- coding: utf-8
-import calendar
 import datetime
 import json
 from urllib.request import urlopen
 
-from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core import urlresolvers
 from django.core.cache import cache
@@ -648,7 +646,6 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         # The purchases are already invoiced.
         # The offer item may not be modified any more
         raise ValueError("Not offer item may be created when permanece status > PERMANENCE_SEND")
-    getcontext().rounding = ROUND_HALF_UP
     for offer_item in queryset.select_related("producer", "product"):
         product = offer_item.product
         producer = offer_item.producer
@@ -962,11 +959,11 @@ def get_recurrence_dates(first_date, recurrences):
     return dates
 
 
-def round_total_invoiced(number):
-    """ Rounded according to Belgian market regulations
+def round_gov_be(number):
+    """ Round according to Belgian market regulations
     http://economie.fgov.be/fr/entreprises/reglementation_de_marche/Pratiques_commerce/bienarrondir/
     If the total amount to be paid ends with 1 or 2 cents, it is rounded down to 0.00 euro.
     If the total amount to be paid ends with 3, 4, 6 or 7 cents, it is rounded to 0.05 euro.
     If the total amount to be paid ends with 8 or 9 cents, it is rounded up to 0.10 euro.
     """
-    return (number / DECIMAL_0_5).quantize(DECIMAL_ONE, rounding=ROUND_HALF_UP) * DECIMAL_0_5
+    return (number / DECIMAL_0_05).quantize(DECIMAL_ONE, rounding=ROUND_HALF_UP) * DECIMAL_0_05
