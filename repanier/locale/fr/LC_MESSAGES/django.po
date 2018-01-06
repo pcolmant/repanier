@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-01 12:26+0100\n"
-"PO-Revision-Date: 2018-01-01 12:27+0100\n"
+"PO-Revision-Date: 2018-01-04 08:47+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -2855,19 +2855,19 @@ msgstr "Référant producteur"
 
 #: models/staff.py:68
 msgid "Offers in preparation manager"
-msgstr "Responsable principal(e) des offres en préparation"
+msgstr "Responsable principal/e des offres en préparation"
 
 #: models/staff.py:71
 msgid "Offers in preparation referent"
-msgstr "Assistant à l'encodage des offres en préparation"
+msgstr "Assistant/e à l'encodage des offres en préparation"
 
 #: models/staff.py:74
 msgid "Billing offers manager"
-msgstr "Responsable principal(e) des offres en facturation"
+msgstr "Responsable principal/e des offres en facturation"
 
 #: models/staff.py:77
 msgid "Billing offers referent"
-msgstr "Assistant à l'encodage des offres en facturation"
+msgstr "Assistant/e à l'encodage des offres en facturation"
 
 #: models/staff.py:80
 msgid "Webmaster"
@@ -3363,8 +3363,7 @@ msgstr ""
 #: templates/repanier/communication_permanence_board.html:9
 msgid "Your are registered to the following task :"
 msgstr ""
-"Vous êtes inscrit(e)s pour les tâches suivantes au tableau des "
-"permanenciers :"
+"Vous êtes inscrit/e pour les tâches suivantes au tableau des permanenciers :"
 
 #: templates/repanier/communication_permanence_board.html:15
 msgid "No task found."

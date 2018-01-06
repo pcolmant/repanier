@@ -295,13 +295,6 @@ class Configuration(TranslatableModel):
                 from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
                 # db_version is used to not upgrade twice the db
 
-                # Purchase.objects.filter(customer_charged__isnull=True).update(
-                #     customer_charged=F('customer_invoice__customer_charged')
-                # )
-                # for purchase in Purchase.objects.filter(
-                #         customer_charged__isnull=True).select_related("customer_invoice").order_by('?'):
-                #     purchase.customer_charged = purchase.customer_invoice.customer_charged
-                #     purchase.save(update_fields=["customer_charged",])
                 # Staff.objects.rebuild()
                 Product.objects.filter(
                     is_box=True

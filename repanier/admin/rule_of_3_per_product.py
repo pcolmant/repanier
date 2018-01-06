@@ -49,7 +49,8 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
 
             if qty_invoiced > stock + qty_delivered:
                 raise ValidationError(
-                    _('Total quantity invoiced %(qty_invoiced)s is greather than the sum of the stock and the quantity delivered.') % {
+                    _(
+                        'Total quantity invoiced %(qty_invoiced)s is greather than the sum of the stock and the quantity delivered.') % {
                         'qty_invoiced': number_format(qty_invoiced, 3)
                     }
                 )
@@ -107,7 +108,8 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
 
 class OfferItemSendDataForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
-        label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False,
+        initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
         label=_("Apply the rule of 3"), required=False, initial=False)
     qty_delivered = forms.DecimalField(
@@ -126,7 +128,6 @@ class OfferItemSendDataForm(forms.ModelForm):
         max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
 
     def __init__(self, *args, **kwargs):
-        getcontext().rounding = ROUND_HALF_UP
         super(OfferItemSendDataForm, self).__init__(*args, **kwargs)
         offer_item = self.instance
         self.fields["previous_producer_unit_price"].initial = offer_item.producer_unit_price
@@ -136,8 +137,8 @@ class OfferItemSendDataForm(forms.ModelForm):
             invoiced_qty, taken_from_stock, customer_qty = offer_item.get_producer_qty_stock_invoiced()
             self.fields["offer_purchase_price"].initial = RepanierMoney(
                 offer_item.total_purchase_with_tax.amount - (
-                    (offer_item.producer_unit_price.amount +
-                     offer_item.unit_deposit.amount) * taken_from_stock
+                        (offer_item.producer_unit_price.amount +
+                         offer_item.unit_deposit.amount) * taken_from_stock
                 ).quantize(TWO_DECIMALS), 2)
             self.fields["qty_delivered"].initial = invoiced_qty.quantize(FOUR_DECIMALS)
             self.fields["qty_prepared"].initial = customer_qty.quantize(
@@ -298,7 +299,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
-        getcontext().rounding = ROUND_HALF_UP
         for formset in formsets:
             # option.py -> construct_change_message doesn't test the presence of those array not created at form initialisation...
             if not hasattr(formset, 'new_objects'): formset.new_objects = []
@@ -324,7 +324,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             purchase_form_instance = purchase_form.instance
             try:
                 customer = purchase_form_instance.customer
-            except: #  RelatedObjectDoesNotExist:
+            except:  # RelatedObjectDoesNotExist:
                 customer = None
             if customer is None:
                 purchase_form.repanier_is_valid = False
@@ -345,7 +345,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                         purchase.quantity_invoiced = DECIMAL_ZERO
                 else:
                     purchase.purchase_price.amount = (
-                    purchase.quantity_invoiced * offer_item.producer_unit_price.amount) \
+                            purchase.quantity_invoiced * offer_item.producer_unit_price.amount) \
                         .quantize(TWO_DECIMALS)
 
         if not offer_item.wrapped and offer_item.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
@@ -378,14 +378,14 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                                     delta = rule_of_3_target - adjusted_invoice
                                     if offer_item.producer_unit_price.amount != DECIMAL_ZERO:
                                         purchase.quantity_invoiced = (
-                                            delta / offer_item.producer_unit_price.amount).quantize(FOUR_DECIMALS)
+                                                delta / offer_item.producer_unit_price.amount).quantize(FOUR_DECIMALS)
                                     else:
                                         purchase.quantity_invoiced = DECIMAL_ZERO
                                 else:
                                     purchase.quantity_invoiced = (purchase.quantity_invoiced * ratio).quantize(
                                         FOUR_DECIMALS)
                                     adjusted_invoice += (
-                                        purchase.quantity_invoiced * offer_item.producer_unit_price.amount).quantize(
+                                            purchase.quantity_invoiced * offer_item.producer_unit_price.amount).quantize(
                                         TWO_DECIMALS)
                                 purchase.save()
                                 purchase.save_box()

@@ -103,7 +103,6 @@ class Purchase(models.Model):
         if self.price_list_multiplier == DECIMAL_ONE:
             return offer_item.customer_unit_price.amount
         else:
-            getcontext().rounding = ROUND_HALF_UP
             return (offer_item.customer_unit_price.amount * self.price_list_multiplier).quantize(TWO_DECIMALS)
 
     get_customer_unit_price.short_description = (_("Customer unit price"))
@@ -116,7 +115,6 @@ class Purchase(models.Model):
         if self.price_list_multiplier == DECIMAL_ONE:
             return offer_item.customer_vat.amount
         else:
-            getcontext().rounding = ROUND_HALF_UP
             return (offer_item.customer_vat.amount * self.price_list_multiplier).quantize(FOUR_DECIMALS)
 
     def get_producer_unit_vat(self):
@@ -335,9 +333,9 @@ def purchase_pre_save(sender, **kwargs):
         unit_deposit = purchase.get_unit_deposit()
 
         purchase.purchase_price.amount = (
-            (purchase.get_producer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
+                (purchase.get_producer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
         purchase.selling_price.amount = (
-            (purchase.get_customer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
+                (purchase.get_customer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
 
         permanences_dates_counter = purchase.offer_item.permanences_dates_counter
         if permanences_dates_counter > 1:
@@ -349,8 +347,8 @@ def purchase_pre_save(sender, **kwargs):
         delta_selling_price = purchase.selling_price.amount - purchase.previous_selling_price
 
         if (delta_quantity != DECIMAL_ZERO or
-            delta_selling_price != DECIMAL_ZERO or
-            delta_purchase_price != DECIMAL_ZERO):
+                delta_selling_price != DECIMAL_ZERO or
+                delta_purchase_price != DECIMAL_ZERO):
 
             purchase.vat_level = purchase.offer_item.vat_level
             purchase.producer_vat.amount = (purchase.get_producer_unit_vat() * quantity).quantize(FOUR_DECIMALS)

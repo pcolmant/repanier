@@ -1,7 +1,5 @@
 # -*- coding: utf-8
 
-from decimal import ROUND_HALF_UP, getcontext
-
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -9,14 +7,14 @@ from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatableModel
 
-from repanier.picture.const import SIZE_M, SIZE_L
-from repanier.picture.fields import AjaxPictureField
-from repanier.const import BOX_UNICODE, DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG, EMPTY_STRING, \
+from repanier.const import DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG, EMPTY_STRING, \
     DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC, \
     TWO_DECIMALS, PRODUCT_ORDER_UNIT_LT, DICT_VAT, DICT_VAT_RATE, FOUR_DECIMALS, PRODUCT_ORDER_UNIT_DEPOSIT, \
     LUT_PRODUCT_ORDER_UNIT, PRODUCT_ORDER_UNIT_PC, LUT_PRODUCT_PLACEMENT, PRODUCT_PLACEMENT_BASKET, LUT_ALL_VAT, \
-    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK, CONTRACT_UNICODE
+    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
+from repanier.picture.const import SIZE_L
+from repanier.picture.fields import AjaxPictureField
 
 
 class Item(TranslatableModel):
@@ -68,7 +66,7 @@ class Item(TranslatableModel):
         validators=[MinValueValidator(0)])
     vat_level = models.CharField(
         max_length=3,
-        choices=LUT_ALL_VAT, # settings.LUT_VAT,
+        choices=LUT_ALL_VAT,  # settings.LUT_VAT,
         default=settings.DICT_VAT_DEFAULT,
         verbose_name=_("Tax level"))
 
@@ -144,7 +142,6 @@ class Item(TranslatableModel):
         self.is_box = source.is_box
 
     def recalculate_prices(self, producer_price_are_wo_vat, is_resale_price_fixed, price_list_multiplier):
-        getcontext().rounding = ROUND_HALF_UP
         vat = DICT_VAT[self.vat_level]
         vat_rate = vat[DICT_VAT_RATE]
         if producer_price_are_wo_vat:
@@ -152,7 +149,7 @@ class Item(TranslatableModel):
             if not is_resale_price_fixed:
                 if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                     self.customer_unit_price.amount = (
-                        self.producer_unit_price.amount * price_list_multiplier).quantize(
+                            self.producer_unit_price.amount * price_list_multiplier).quantize(
                         TWO_DECIMALS)
                 else:
                     self.customer_unit_price = self.producer_unit_price
@@ -161,18 +158,18 @@ class Item(TranslatableModel):
                 self.customer_unit_price += self.customer_vat
         else:
             self.producer_vat.amount = self.producer_unit_price.amount - (
-                self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)).quantize(
+                    self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)).quantize(
                 FOUR_DECIMALS)
             if not is_resale_price_fixed:
                 if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
                     self.customer_unit_price.amount = (
-                        self.producer_unit_price.amount * price_list_multiplier).quantize(
+                            self.producer_unit_price.amount * price_list_multiplier).quantize(
                         TWO_DECIMALS)
                 else:
                     self.customer_unit_price = self.producer_unit_price
 
             self.customer_vat.amount = self.customer_unit_price.amount - (
-                self.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)).quantize(
+                    self.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)).quantize(
                 FOUR_DECIMALS)
 
     def get_unit_price(self, customer_price=True):
@@ -370,6 +367,7 @@ class Item(TranslatableModel):
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)
+
     get_long_name_with_producer_price.short_description = (_("Long name"))
     get_long_name_with_producer_price.admin_order_field = 'translations__long_name'
 

@@ -18,13 +18,13 @@ from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNo
 
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.models.product import Product
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice, ProducerInvoice
 from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
+from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
 from repanier.tools import cap, create_or_update_one_purchase
@@ -528,7 +528,6 @@ class Permanence(TranslatableModel):
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
             REPANIER_SETTINGS_GROUP_CUSTOMER_ID, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
             REPANIER_SETTINGS_MEMBERSHIP_FEE
-        getcontext().rounding = ROUND_HALF_UP
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             # Cancel unconfirmed purchases whichever the producer is
             customer_invoice_qs = CustomerInvoice.objects.filter(
@@ -619,7 +618,7 @@ class Permanence(TranslatableModel):
                     needed = offer_item.quantity_invoiced
                 if needed > DECIMAL_ZERO:
                     offer_item.add_2_stock = offer_item.producer_order_by_quantity - (
-                        needed % offer_item.producer_order_by_quantity)
+                            needed % offer_item.producer_order_by_quantity)
                     offer_item.save()
             # Add Transport
             offer_item_qs = OfferItem.objects.filter(
@@ -736,7 +735,6 @@ class Permanence(TranslatableModel):
                                  re_init=False,
                                  send_to_producer=False):
         from repanier.models.purchase import Purchase
-        getcontext().rounding = ROUND_HALF_UP
 
         if send_to_producer or re_init:
             assert offer_item_qs is None, 'offer_item_qs must be set to None when send_to_producer or re_init'
@@ -824,7 +822,6 @@ class Permanence(TranslatableModel):
 
     def recalculate_profit(self):
         from repanier.models.purchase import Purchase
-        getcontext().rounding = ROUND_HALF_UP
 
         result_set = CustomerInvoice.objects.filter(
             permanence_id=self.id,

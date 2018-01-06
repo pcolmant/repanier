@@ -23,7 +23,6 @@ from repanier.tools import *
 
 @transaction.atomic
 def generate_invoice(permanence, payment_date):
-    getcontext().rounding = ROUND_HALF_UP
     bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
     producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
     customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
@@ -480,7 +479,6 @@ def cancel_delivery(permanence):
 
 @transaction.atomic
 def cancel_invoice(permanence, last_bank_account_total):
-    getcontext().rounding = ROUND_HALF_UP
     CustomerInvoice.objects.filter(
         permanence_id=permanence.id,
     ).update(

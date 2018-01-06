@@ -78,7 +78,7 @@ class Product(Item):
         if self.is_box:
             # Add box products
             for box_content in BoxContent.objects.filter(
-                box=self.id
+                    box=self.id
             ).order_by('?'):
                 box_offer_item_qs = OfferItem.objects.filter(
                     permanence_id=permanence.id,
@@ -101,7 +101,8 @@ class Product(Item):
                     box_offer_item.permanences_dates_order = 0
                     if reset_add_2_stock:
                         box_offer_item.may_order = True
-                    box_offer_item.save(update_fields=["is_box_content", "contract", "may_order", "permanences_dates_order"])
+                    box_offer_item.save(
+                        update_fields=["is_box_content", "contract", "may_order", "permanences_dates_order"])
 
         offer_item = offer_item_qs.first()
         return offer_item
@@ -123,7 +124,8 @@ class Product(Item):
                     contract=contract
                 ).order_by('?').first()
             if contract_content is not None and contract_content.permanences_dates is not None:
-                all_dates_str = sorted(list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+                all_dates_str = sorted(list(
+                    filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
                 is_into_offer = len(all_dates_str) > 0
                 flexible_dates = contract_content.flexible_dates
             else:
@@ -131,7 +133,8 @@ class Product(Item):
                 is_into_offer = False
                 flexible_dates = False
             if contract.permanences_dates is not None:
-                contract_all_dates_str = sorted(list(filter(None, contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+                contract_all_dates_str = sorted(
+                    list(filter(None, contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             else:
                 contract_all_dates_str = []
             contract_dates_array = []
@@ -176,12 +179,12 @@ class Product(Item):
                 link = """
                         {}<a href="#" onclick="{};return false;" style="color:{} !important;">{}{}</a>
                     """.format(
-                        new_line,
-                        javascript,
-                        color,
-                        icon,
-                        one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)
-                    )
+                    new_line,
+                    javascript,
+                    color,
+                    icon,
+                    one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)
+                )
                 contract_dates_array.append(
                     link
                 )
@@ -216,10 +219,10 @@ class Product(Item):
                 flexible_dates_link = """
                         <a href="#" onclick="{};return false;" style="color:{} !important;">{}</a>
                     """.format(
-                        javascript,
-                        color,
-                        flexible_dates_display,
-                    )
+                    javascript,
+                    color,
+                    flexible_dates_display,
+                )
             else:
                 flexible_dates_link = EMPTY_STRING
         else:
@@ -280,7 +283,6 @@ class Product(Item):
 
 @receiver(pre_save, sender=Product)
 def product_pre_save(sender, **kwargs):
-    getcontext().rounding = ROUND_HALF_UP
     product = kwargs["instance"]
     producer = product.producer
 
@@ -299,8 +301,8 @@ def product_pre_save(sender, **kwargs):
     ]:
         # No VAT on those products
         product.vat_level = VAT_100
-    if product.order_unit not in [ PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
-                                   PRODUCT_ORDER_UNIT_LT ]:
+    if product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
+                                  PRODUCT_ORDER_UNIT_LT]:
         product.wrapped = False
     product.recalculate_prices(
         producer.producer_price_are_wo_vat,
@@ -336,10 +338,10 @@ def product_pre_save(sender, **kwargs):
             if product.order_unit == PRODUCT_ORDER_UNIT_PC:
                 product.customer_minimum_order_quantity = DECIMAL_ONE
             product.customer_alert_order_quantity = (
-            product.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM).quantize(THREE_DECIMALS)
+                    product.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM).quantize(THREE_DECIMALS)
         else:
             product.customer_alert_order_quantity = (product.customer_minimum_order_quantity + (
-                product.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1))).quantize(THREE_DECIMALS)
+                    product.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1))).quantize(THREE_DECIMALS)
     if not product.reference:
         product.reference = uuid.uuid1()
     # Update stock of boxes containing this product
@@ -365,4 +367,3 @@ class Product_Translation(TranslatedFieldsModel):
 
     class Meta:
         unique_together = ('language_code', 'master')
-

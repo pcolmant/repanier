@@ -7,14 +7,14 @@ from openpyxl import load_workbook
 from openpyxl.style import Fill
 from openpyxl.styles import Color
 
-from repanier.xlsx.export_tools import *
-from repanier.xlsx.import_tools import *
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
 from repanier.const import *
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
 from repanier.tools import cap, next_row
+from repanier.xlsx.export_tools import *
+from repanier.xlsx.import_tools import *
 
 
 def next_purchase(purchases):
@@ -240,7 +240,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
 
                         count_permanence_purchase += count_purchase
                         if year is None and count_purchase > 1:
-                            c = ws.cell(row=row_num -1, column=11)
+                            c = ws.cell(row=row_num - 1, column=11)
                             c.value = "=SUM(J{}:J{})".format(row_start_purchase, row_num)
                             c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.font.color = Color(Color.BLUE)
@@ -249,7 +249,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 [str(purchases_price)], True, wb,
                                 None, None, yellowFill
                             )
-                            c = ws.cell(row=row_num -1, column=0)
+                            c = ws.cell(row=row_num - 1, column=0)
                             c.value = "C"
                             # row_num += 1
 
@@ -415,7 +415,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.value = purchase.offer_item.unit_deposit.amount
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=9)
-                                c.value = "=ROUND(G{}*(H{}+I{}),2)".format(row_num + 1, row_first_offer_item + 1, row_num + 1)
+                                c.value = "=ROUND(G{}*(H{}+I{}),2)".format(row_num + 1, row_first_offer_item + 1,
+                                                                           row_num + 1)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 if year is None:
                                     offer_item_price = (purchase.quantity_invoiced *
@@ -552,7 +553,6 @@ def import_purchase_sheet(worksheet, permanence=None,
         array_purchase = []
         rule_of_3_source = DECIMAL_ZERO
         row = get_row(worksheet, header, row_num)
-        getcontext().rounding = ROUND_HALF_UP
         while row and not error:
             try:
                 row_format = row[_('Format')]
@@ -673,7 +673,8 @@ def import_purchase_sheet(worksheet, permanence=None,
                                             purchase.quantity_invoiced = (purchase.quantity_invoiced * ratio).quantize(
                                                 FOUR_DECIMALS)
                                             adjusted_invoice += (
-                                                purchase.quantity_invoiced * producer_unit_price).quantize(TWO_DECIMALS)
+                                                    purchase.quantity_invoiced * producer_unit_price).quantize(
+                                                TWO_DECIMALS)
                                         purchase.save()
 
                 row_num += 1

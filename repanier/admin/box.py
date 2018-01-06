@@ -16,7 +16,6 @@ from easy_select2 import Select2
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-import repanier.apps
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import DECIMAL_ZERO, PERMANENCE_PLANNED, DECIMAL_MAX_STOCK, PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
 from repanier.models import Producer
@@ -134,7 +133,8 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
 
 class BoxForm(TranslatableModelForm):
     calculated_customer_box_price = forms.DecimalField(
-        label=_("Consumer rate per unit calculated"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
+        label=_("Consumer rate per unit calculated"), max_digits=8, decimal_places=2, required=False,
+        initial=DECIMAL_ZERO)
     calculated_box_deposit = forms.DecimalField(
         label=_("Calculated deposit per unit"), max_digits=8, decimal_places=2, required=False, initial=DECIMAL_ZERO)
     if settings.DJANGO_SETTINGS_STOCK:
@@ -277,7 +277,9 @@ class BoxAdmin(TranslatableAdmin):
         return ['is_updated_on']
 
     def get_form(self, request, box=None, **kwargs):
-        producer_queryset = Producer.objects.filter(id=repanier.apps.REPANIER_SETTINGS_GROUP_PRODUCER_ID)
+        from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
+
+        producer_queryset = Producer.objects.filter(id=REPANIER_SETTINGS_GROUP_PRODUCER_ID)
         form = super(BoxAdmin, self).get_form(request, box, **kwargs)
         producer_field = form.base_fields["producer"]
         picture_field = form.base_fields["picture2"]

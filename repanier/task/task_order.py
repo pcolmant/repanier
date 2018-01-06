@@ -10,7 +10,6 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-import repanier.apps
 from repanier.const import *
 from repanier.email import email_offer
 from repanier.email import email_order
@@ -59,7 +58,6 @@ def automatically_open():
 
 
 def common_to_pre_open_and_open(permanence_id):
-    getcontext().rounding = ROUND_HALF_UP
     permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
 
     if permanence.contract is not None:
@@ -224,7 +222,8 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
                           deliveries_id=deliveries_id)
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
-    email_order.email_order(permanence.id, everything=everything, producers_id=producers_id, deliveries_id=deliveries_id)
+    email_order.email_order(permanence.id, everything=everything, producers_id=producers_id,
+                            deliveries_id=deliveries_id)
     permanence.set_status(PERMANENCE_SEND, everything=everything, producers_id=producers_id,
                           deliveries_id=deliveries_id)
 

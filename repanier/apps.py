@@ -2,6 +2,7 @@
 import sys
 import time
 
+from decimal import setcontext, DefaultContext, ROUND_HALF_UP
 from django.apps import AppConfig
 from django.conf import settings
 from django.db import connection
@@ -49,6 +50,10 @@ class RepanierSettings(AppConfig):
     verbose_name = "Repanier"
 
     def ready(self):
+        # https://docs.python.org/3/library/decimal.html#working-with-threads
+        DefaultContext.rounding = ROUND_HALF_UP
+        setcontext(DefaultContext)
+
         # If PostgreSQL service is not started the const may not be set
         # Django doesn't complain
         # This happens when the server starts at power up
