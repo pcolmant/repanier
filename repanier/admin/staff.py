@@ -27,9 +27,25 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        is_order_manager = self.cleaned_data["is_order_manager"]
-        is_invoice_manager = self.cleaned_data["is_invoice_manager"]
         is_coordinator = self.cleaned_data["is_coordinator"]
+        is_order_manager = self.cleaned_data["is_order_manager"]
+        is_order_referent = self.cleaned_data["is_order_referent"]
+        is_invoice_manager = self.cleaned_data["is_invoice_manager"]
+        is_invoice_referent = self.cleaned_data["is_invoice_referent"]
+        is_webmaster = self.cleaned_data["is_webmaster"]
+        if settings.DJANGO_SETTINGS_TEST_MODE:
+            is_tester  = self.cleaned_data["is_tester"]
+        else:
+            is_tester = False
+        if not (is_coordinator or
+                is_order_manager or is_order_referent or
+                is_invoice_manager or is_invoice_referent or
+                is_webmaster or
+                is_tester):
+            self.add_error(
+                None,
+                _('Members of the management team must assure at least one function')
+            )
         if is_order_manager:
             qs = Staff.objects.filter(is_order_manager=True, is_active=True).order_by('?')
             if self.instance.id is not None:
