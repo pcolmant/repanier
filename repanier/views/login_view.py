@@ -3,7 +3,6 @@
 from django.conf import settings
 from django.contrib.auth import (REDIRECT_FIELD_NAME, login as auth_login, logout as auth_logout)
 from django.contrib.auth.models import Group
-from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
@@ -35,10 +34,11 @@ def login_view(request, template_name='repanier/registration/login.html',
     how_to_register = EMPTY_STRING
 
     if request.method == "GET" and request.user.is_authenticated:
-        as_staff_id = request.GET.get('as_id', None)
+        print("---------------- is_authenticated : {}".format(request.user))
         if request.user.is_staff:
             as_staff = None
         else:
+            as_staff_id = request.GET.get('as_id', None)
             as_staff = Staff.objects.filter(
                 id=as_staff_id,
                 customer_responsible_id=request.user.customer.id,
@@ -48,31 +48,30 @@ def login_view(request, template_name='repanier/registration/login.html',
         if as_staff is None or not is_safe_url(url=redirect_to, host=request.get_host()):
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
 
-        if as_staff is not None:
-            user = request.user
-            Customer.objects.filter(
-                user_id=user.id
-            ).order_by('?').update(as_staff_id=as_staff_id)
-            auth_logout(request)
-            user.is_staff = True
-            user.groups.clear()
-            # if as_staff.is_order_manager:
-            #     group_id = Group.objects.filter(name=ORDER_GROUP).first()
-            #     user.groups.add(group_id)
-            # if as_staff.is_invoice_manager:
-            #     group_id = Group.objects.filter(name=INVOICE_GROUP).first()
-            #     user.groups.add(group_id)
-            if as_staff.is_webmaster:
-                group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
-                user.groups.add(group_id)
-            # if as_staff.is_order_referent:
-            #     group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
-            #     user.groups.add(group_id)
-            # if as_staff.is_coordinator:
-            #     group_id = Group.objects.filter(name=COORDINATION_GROUP).first()
-            #     user.groups.add(group_id)
-            user.save()
-            auth_login(request, user)
+        user = request.user
+        Customer.objects.filter(
+            user_id=user.id
+        ).order_by('?').update(as_staff_id=as_staff.id)
+        auth_logout(request)
+        user.is_staff = True
+        user.groups.clear()
+        # if as_staff.is_order_manager:
+        #     group_id = Group.objects.filter(name=ORDER_GROUP).first()
+        #     user.groups.add(group_id)
+        # if as_staff.is_invoice_manager:
+        #     group_id = Group.objects.filter(name=INVOICE_GROUP).first()
+        #     user.groups.add(group_id)
+        if as_staff.is_webmaster:
+            group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+            user.groups.add(group_id)
+        # if as_staff.is_order_referent:
+        #     group_id = Group.objects.filter(name=CONTRIBUTOR_GROUP).first()
+        #     user.groups.add(group_id)
+        # if as_staff.is_coordinator:
+        #     group_id = Group.objects.filter(name=COORDINATION_GROUP).first()
+        #     user.groups.add(group_id)
+        user.save()
+        auth_login(request, user)
         return HttpResponseRedirect(redirect_to)
     elif request.method == "POST":
         form = authentication_form(request, data=request.POST)
@@ -84,17 +83,19 @@ def login_view(request, template_name='repanier/registration/login.html',
 
             # Okay, security check complete. Log the user in.
             auth_login(request, form.get_user())
+
             if request.user.is_staff:
                 may_become_a_staff_user = False
             else:
                 may_become_a_staff_user = Staff.objects.filter(
-                    customer_responsible_id=request.user.customer.id,
+                    customer_responsible_id=request.user.customer_id,
                     is_active=True
                 ).order_by('?').exists()
+
             if may_become_a_staff_user:
                 # Ask the user to log in as a customer or as a staff member
                 staff_responsibilities = Staff.objects.filter(
-                    customer_responsible_id=request.user.customer.id,
+                    customer_responsible_id=request.user.customer_id,
                     is_active=True
                 ).all()
             else:
@@ -107,13 +108,13 @@ def login_view(request, template_name='repanier/registration/login.html',
         except:
             how_to_register = EMPTY_STRING
 
-    current_site = get_current_site(request)
+    # current_site = get_current_site(request)
 
     context = {
         'form': form,
         redirect_field_name: redirect_to,
-        'site': current_site,
-        'site_name': current_site.name,
+        # 'site': current_site,
+        # 'site_name': current_site.name,
         'how_to_register': how_to_register,
         'staff_responsibilities': staff_responsibilities
     }
