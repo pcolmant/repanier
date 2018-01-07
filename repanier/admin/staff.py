@@ -205,11 +205,11 @@ class StaffWithUserDataAdmin(LUTAdmin):
         old_customer_responsible_field = form.base_fields["customer_responsible"].initial
         new_customer_responsible_field = form.cleaned_data["customer_responsible"]
         change_previous_customer_responsible = (
-            change and
-            old_customer_responsible_field is not None and
-            old_customer_responsible_field.id != new_customer_responsible_field.id
+                change and
+                old_customer_responsible_field is not None and
+                old_customer_responsible_field.id != new_customer_responsible_field.id
         )
 
         super(StaffWithUserDataAdmin, self).save_model(request, staff, form, change)
         if change_previous_customer_responsible:
-            remove_staff_right(old_customer_responsible_field.user)
+            remove_staff_right(old_customer_responsible_field.user, is_customer=True)

@@ -33,7 +33,7 @@ def logout_view(request, next_page=None,
         next_page = resolve_url(next_page)
 
     if (redirect_field_name in request.POST or
-                redirect_field_name in request.GET):
+            redirect_field_name in request.GET):
         next_page = request.POST.get(redirect_field_name,
                                      request.GET.get(redirect_field_name))
         # Security check -- don't allow redirection to a different host.
@@ -56,11 +56,10 @@ def logout_view(request, next_page=None,
     return TemplateResponse(request, template_name, context)
 
 
-def remove_staff_right(user):
-    update_counter = Customer.objects.filter(
-        user_id=user.id, as_staff__isnull=False
-    ).order_by('?').update(as_staff=None)
-    if update_counter > 0:
+def remove_staff_right(user, is_customer=False):
+    is_customer = is_customer or Customer.objects.filter(user_id=user.id).exists()
+    if is_customer and user.is_staff:
+        Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff=None)
         user.is_staff = False
         user.groups.clear()
         user.save()
