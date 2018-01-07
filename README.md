@@ -13,7 +13,6 @@ Active customers groups :
 - https://commande.coopeco-supermarche.be/fr/
 - https://commandes.gac-hamois.be/fr/
 - https://exceptionnel.repanier.be/fr/
-- https://gacmonssud.repanier.be/fr/
 - https://lepanierlensois.repanier.be/fr/
 - https://niveze.repanier.be/fr/
 - https://pigal.repanier.be/
@@ -25,49 +24,16 @@ Active producer :
 
 Licence : GPL v3
 
-Howto contribute to Repanier ?
-------------------------------
+Howto contribute to Repanier?
+-----------------------------
 
   * En participant aux discussions entre utilisateurs et avec les développeur, lors des permanences, par téléphone ou par email, …
   * [En utilisant les tickets](https://github.com/pcolmant/repanier/issues)
   * [En envoyant un patch ou une demande de merge](https://guides.github.com/introduction/flow/)
 
-Comment tester Repanier?
-------------------------
-
-Afin de pouvoir travailler en local sur Repanier, nous allons télécharger l'application et ses dépendances:
-
-Clone du projet:
-
-```commandline
-git clone https://github.com/pcolmant/repanier.git
-```
-
-Initialisation et activation de l'environnement de développement, installation des dépendances:
-
-```commandline
-virtualenv -p python3 venv
-. venv/bin/activate
-pip install -r requirements/requirement.txt
-```
-
-Construction de la base de données et ajout des données factices:
-
-```commandline
-./manage.py migrate
-./manage.py loaddata fixtures/initial_users.yaml
-```
-
-Démarrage de l'application:
-
-```commandline
-./manage.py runserver
-```
-
-Vous pouvez désormais accéder à l'application avec votre navigateur à l'adresse http://localhost:8000/ Pour s'authentifier comme administrateur vous pouvez utiliser: *admin* *secret*.
-
 How to setup repanier on Debian 9
 ---------------------------------
+
 
 ~ As Root (or with sudo) ~
 
@@ -136,7 +102,7 @@ source bin/activate
 
 ```commandline
 cd ~
-git clone https://github.com/pcolmant/repanier.git
+git clone https://github.com/pcolmant/repanier
 ```
 
  * Install the requirements in the virtual env
@@ -161,31 +127,12 @@ nano ~/venv/my_repanier/my_repanier/my_repanier.ini
     [DJANGO_SETTINGS]
     DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
     DJANGO_SETTINGS_ADMIN_NAME=repanier
-    DJANGO_SETTINGS_DATABASE_ENGINE=django.db.backends.postgresql_psycopg2
     DJANGO_SETTINGS_DATABASE_NAME=db_name
     DJANGO_SETTINGS_DATABASE_USER=db_user
     DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
-    DJANGO_SETTINGS_DATABASE_HOST=127.0.0.1
-    DJANGO_SETTINGS_DATABASE_PORT=5432
-    DJANGO_SETTINGS_DEBUG=True
-    DJANGO_SETTINGS_DEMO=False
     DJANGO_SETTINGS_EMAIL_HOST=email_host
     DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
     DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
-    DJANGO_SETTINGS_EMAIL_PORT=email_port
-    DJANGO_SETTINGS_EMAIL_USE_TLS=True
-    DJANGO_SETTINGS_LANGUAGE=fr-en
-    DJANGO_SETTINGS_LOGGING=False
-    DJANGO_SETTINGS_CACHE=/var/tmp/django-cache
-    DJANGO_SETTINGS_SESSION=/var/tmp/django-session
-    DJANGO_SETTINGS_COUNTRY=be
-    DJANGO_SETTINGS_BOOTSTRAP_CSS=bootstrap.css
-    DJANGO_SETTINGS_IS_MINIMALIST=False
-    DJANGO_SETTINGS_GROUP=True
-    DJANGO_SETTINGS_CONTRACT=True
-    DJANGO_SETTINGS_STOCK=True
-    DJANGO_SETTINGS_BOX=True
-    DJANGO_SETTINGS_TEST_MODE=False
     [ALLOWED_HOSTS]
     1:repanier.myhost
 
@@ -330,31 +277,12 @@ source bin/activate
     [DJANGO_SETTINGS]
     DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
     DJANGO_SETTINGS_ADMIN_NAME=repanier
-    DJANGO_SETTINGS_DATABASE_ENGINE=django.db.backends.postgresql_psycopg2
-    DJANGO_SETTINGS_DATABASE_NAME=my_repanier2
+    DJANGO_SETTINGS_DATABASE_NAME=db_name2
     DJANGO_SETTINGS_DATABASE_USER=db_user
     DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
-    DJANGO_SETTINGS_DATABASE_HOST=127.0.0.1
-    DJANGO_SETTINGS_DATABASE_PORT=5432
-    DJANGO_SETTINGS_DEBUG=False
-    DJANGO_SETTINGS_DEMO=False
     DJANGO_SETTINGS_EMAIL_HOST=email_host
     DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
     DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
-    DJANGO_SETTINGS_EMAIL_PORT=email_port
-    DJANGO_SETTINGS_EMAIL_USE_TLS=True
-    DJANGO_SETTINGS_LANGUAGE=fr-nl-en
-    DJANGO_SETTINGS_LOGGING=False
-    DJANGO_SETTINGS_CACHE=/var/tmp/django-cache
-    DJANGO_SETTINGS_SESSION=/var/tmp/django-session
-    DJANGO_SETTINGS_COUNTRY=be
-    DJANGO_SETTINGS_BOOTSTRAP_CSS=bootstrap.css
-    DJANGO_SETTINGS_IS_MINIMALIST=False
-    DJANGO_SETTINGS_GROUP=True
-    DJANGO_SETTINGS_CONTRACT=True
-    DJANGO_SETTINGS_STOCK=True
-    DJANGO_SETTINGS_BOX=True
-    DJANGO_SETTINGS_TEST_MODE=False
     [ALLOWED_HOSTS]
     1:repanier2.myhost
 

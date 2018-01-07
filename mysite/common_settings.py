@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import codecs
+import configparser
 import logging
 import os
 import sys
@@ -12,11 +13,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
 from .settings import *
-
-try:
-    import configparser
-except:
-    from six.moves import configparser
 
 gettext = lambda s: s
 logger = logging.getLogger(__name__)
@@ -78,7 +74,7 @@ DJANGO_SETTINGS_CONTRACT = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS
 DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY', fallback="be")
 DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE',
                                              fallback="django.db.backends.postgresql_psycopg2")
-DJANGO_SETTINGS_DATABASE_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_HOST')
+DJANGO_SETTINGS_DATABASE_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_HOST', fallback="127.0.0.1")
 DJANGO_SETTINGS_DATABASE_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_NAME')
 DJANGO_SETTINGS_DATABASE_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PASSWORD')
 DJANGO_SETTINGS_DATABASE_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PORT', fallback=5432)
