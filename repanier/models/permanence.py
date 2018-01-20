@@ -528,78 +528,86 @@ class Permanence(TranslatableModel):
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
             REPANIER_SETTINGS_GROUP_CUSTOMER_ID, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
             REPANIER_SETTINGS_MEMBERSHIP_FEE
+
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
             # Cancel unconfirmed purchases whichever the producer is
             customer_invoice_qs = CustomerInvoice.objects.filter(
                 permanence_id=self.id,
                 is_order_confirm_send=False,
+                status=self.status
             ).order_by('?')
             if self.with_delivery_point:
                 customer_invoice_qs = customer_invoice_qs.filter(delivery_id__in=deliveries_id)
             for customer_invoice in customer_invoice_qs:
                 customer_invoice.cancel_if_unconfirmed(self)
-        # Add membership fee
-        if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0:
-            membership_fee_product = Product.objects.filter(
-                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-                is_active=True
-            ).order_by('?').first()
-            membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
-            # Update the prices
-            membership_fee_product.save()
+        if everything:
+            # Add membership fee
+            if REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0:
+                membership_fee_product = Product.objects.filter(
+                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+                    is_active=True
+                ).order_by('?').first()
+                membership_fee_product.producer_unit_price = REPANIER_SETTINGS_MEMBERSHIP_FEE
+                # Update the prices
+                membership_fee_product.save()
 
-            for customer_invoice in CustomerInvoice.objects.filter(
+                customer_invoice_qs = CustomerInvoice.objects.filter(
                     permanence_id=self.id,
                     customer_charged_id=F('customer_id')
-            ).select_related("customer").order_by('?'):
-                customer = customer_invoice.customer
-                if not customer.represent_this_buyinggroup:
-                    # Should pay a membership fee
-                    if customer.membership_fee_valid_until < self.permanence_date:
-                        membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(self)
-                        self.producers.add(membership_fee_offer_item.producer_id)
-                        create_or_update_one_purchase(
-                            customer.id,
-                            membership_fee_offer_item,
-                            q_order=1,
-                            batch_job=True,
-                            is_box_content=False
-                        )
-                        membership_fee_valid_until = customer.membership_fee_valid_until + relativedelta(
-                            months=int(REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION)
-                        )
-                        today = timezone.now().date()
-                        if membership_fee_valid_until < today:
-                            # For or occasional customer
-                            membership_fee_valid_until = today
-                        # customer.save(update_fields=['membership_fee_valid_until', ])
-                        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                        Customer.objects.filter(id=customer.id).order_by('?').update(
-                            membership_fee_valid_until=membership_fee_valid_until
-                        )
-        # Add deposit products to be able to return them
-        customer_qs = Customer.objects.filter(
-            may_order=True,
-            customerinvoice__permanence_id=self.id,
-            represent_this_buyinggroup=False
-        ).order_by('?')
-        if self.with_delivery_point:
-            customer_qs = customer_qs.filter(customerinvoice__delivery_id__in=deliveries_id)
-        for customer in customer_qs:
-            offer_item_qs = OfferItem.objects.filter(
-                permanence_id=self.id,
-                order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
+                ).select_related("customer").order_by('?')
+                if self.with_delivery_point:
+                    customer_invoice_qs = customer_invoice_qs.filter(delivery_id__in=deliveries_id)
+
+                for customer_invoice in customer_invoice_qs:
+                    customer = customer_invoice.customer
+                    if not customer.represent_this_buyinggroup:
+                        # Should pay a membership fee
+                        if customer.membership_fee_valid_until < self.permanence_date:
+                            membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(self)
+                            self.producers.add(membership_fee_offer_item.producer_id)
+                            create_or_update_one_purchase(
+                                customer.id,
+                                membership_fee_offer_item,
+                                q_order=1,
+                                batch_job=True,
+                                is_box_content=False
+                            )
+                            membership_fee_valid_until = customer.membership_fee_valid_until + relativedelta(
+                                months=int(REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION)
+                            )
+                            today = timezone.now().date()
+                            if membership_fee_valid_until < today:
+                                # For or occasional customer
+                                membership_fee_valid_until = today
+                            # customer.save(update_fields=['membership_fee_valid_until', ])
+                            # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                            Customer.objects.filter(id=customer.id).order_by('?').update(
+                                membership_fee_valid_until=membership_fee_valid_until
+                            )
+        if everything or self.with_delivery_point:
+            # Add deposit products to be able to return them
+            customer_qs = Customer.objects.filter(
+                may_order=True,
+                customerinvoice__permanence_id=self.id,
+                represent_this_buyinggroup=False
             ).order_by('?')
-            if not everything:
-                offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
-            for offer_item in offer_item_qs:
-                create_or_update_one_purchase(customer.id, offer_item, q_order=1,
-                                              batch_job=True,
-                                              is_box_content=False)
-                create_or_update_one_purchase(customer.id, offer_item, q_order=0,
-                                              batch_job=True,
-                                              is_box_content=False)
-        if everything or not self.with_delivery_point:
+            if self.with_delivery_point:
+                customer_qs = customer_qs.filter(customerinvoice__delivery_id__in=deliveries_id)
+            for customer in customer_qs:
+                offer_item_qs = OfferItem.objects.filter(
+                    permanence_id=self.id,
+                    order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
+                ).order_by('?')
+                if not everything:
+                    offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
+                for offer_item in offer_item_qs:
+                    create_or_update_one_purchase(customer.id, offer_item, q_order=1,
+                                                  batch_job=True,
+                                                  is_box_content=False)
+                    create_or_update_one_purchase(customer.id, offer_item, q_order=0,
+                                                  batch_job=True,
+                                                  is_box_content=False)
+        if everything or len(producers_id) > 0:
             # Round to multiple producer_order_by_quantity
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=self.id,
@@ -608,7 +616,7 @@ class Permanence(TranslatableModel):
                 producer_order_by_quantity__gt=1,
                 quantity_invoiced__gt=0
             ).order_by('?')
-            if not everything:
+            if len(producers_id) > 0:
                 offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
             for offer_item in offer_item_qs:
                 # It's possible to round the ordered qty even If we do not manage stock

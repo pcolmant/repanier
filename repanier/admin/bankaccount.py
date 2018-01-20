@@ -275,7 +275,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def has_add_permission(self, request):
         user = request.user
-        if user.is_invoice_manager or user.is_coordinator:
+        if user.is_invoice_staff:
             return True
         return False
 

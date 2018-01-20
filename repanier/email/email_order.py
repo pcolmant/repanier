@@ -5,7 +5,6 @@ from django.template import Template, Context as TemplateContext
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.writer.excel import save_virtual_workbook
 
-from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
@@ -18,7 +17,6 @@ from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_x
 
 
 def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
-
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, \
         REPANIER_SETTINGS_GROUP_NAME, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER, \
@@ -44,12 +42,12 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
             # if closed deliveries_id is not empty list and not "None" then all_producers should be True
             everything = True
             for delivery_id in deliveries_id:
-                    # Send a recap of the orders to the responsible
-                    export_order_2_1_group(
-                        config, delivery_id, filename,
-                        permanence,
-                        staff
-                    )
+                # Send a recap of the orders to the responsible
+                export_order_2_1_group(
+                    config, delivery_id, filename,
+                    permanence,
+                    staff
+                )
 
         if not everything:
             abstract_ws = None
@@ -232,9 +230,9 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
         template = Template(order_customer_mail)
         context = TemplateContext({
             'name': long_basket_name,
-            'long_basket_name': long_basket_name, # deprecated
+            'long_basket_name': long_basket_name,  # deprecated
             'basket_name': str(customer_responsible),
-            'short_basket_name': str(customer_responsible), # deprecated
+            'short_basket_name': str(customer_responsible),  # deprecated
             'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                 settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
             'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
@@ -270,8 +268,10 @@ def export_order_2_1_customer(customer, filename, permanence, staff,
         REPANIER_SETTINGS_CONFIG
 
     config = REPANIER_SETTINGS_CONFIG
-    customer_invoice = CustomerInvoice.objects.filter(permanence_id=permanence.id,
-                                                      customer_id=customer.id).order_by('?').first()
+    customer_invoice = CustomerInvoice.objects.filter(
+        permanence_id=permanence.id,
+        customer_id=customer.id
+    ).order_by('?').first()
     if customer_invoice is not None:
         wb = generate_customer_xlsx(permanence=permanence, customer=customer)[0]
         if wb is not None:

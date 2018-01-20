@@ -1,61 +1,22 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags i18n l10n static %}
 {% block content %}
-    {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}<link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}
+    <script type="text/javascript" src="{% static 'js/toggle.js' %}"></script>
+    {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}
+        <link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}
     <link rel="stylesheet" href="{% static "css/custom.css" %}">
-{#<script type="text/javascript" src="/fr/coordi/jsi18n/"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/core.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/vendor/jquery/jquery.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/jquery.init.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/admin/RelatedObjectLookups.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/actions.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/urlify.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/prepopulate.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/vendor/xregexp/xregexp.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/calendar.js"></script>#}
-{#<script type="text/javascript" src="/static_001/admin/js/admin/DateTimeShortcuts.js"></script>#}
+    <style type="text/css">
 
-<style type="text/css">
-.form-group input[type="checkbox"] {
-    display: none;
-}
-.form-group input[type="checkbox"] + .btn-group > label span {
-    width: 20px;
-}
-.form-group input[type="checkbox"] + .btn-group > label span:first-child {
-    display: none;
-}
-.form-group input[type="checkbox"] + .btn-group > label span:last-child {
-    display: inline-block;
-}
-.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
-    display: inline-block;
-}
-.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
-    display: none;
-}
-.button, input[type=submit], input[type=button], .submit-row input, a.button {
-    color: initial !important;
-    cursor: initial !important;
-}
-.colorgraph {
-  height: 5px;
-  border-top: 0;
-  background: #c4e17f;
-  border-radius: 5px;
-  background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
-  background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
-  background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
-  background-image: linear-gradient(to right, #c4e17f, #62c2e4);
-}
-</style>
+    </style>
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
         <h6>{{ permanence }}, {% trans "please indicate the producers you wish to pay" %} :</h6>
         <div class="submit-row">
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default">
+                <h6>{% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}</h6>
+            </button>
             {{ producer_invoiced_formset.management_form }}
         </div>
         <fieldset class="module aligned ">
@@ -65,9 +26,9 @@
                     <div class="fieldWrapper">
                         {% if permanence_form.payment_date.errors %}
                             <ul class="errorlist">
-                            {% for error in permanence_form.payment_date.errors %}
-                                <li>{{ error|escape }}</li>
-                            {% endfor %}
+                                {% for error in permanence_form.payment_date.errors %}
+                                    <li>{{ error|escape }}</li>
+                                {% endfor %}
                             </ul>
                         {% endif %}
                         <label for="id_payment_date">{% trans "payment date" %}&nbsp;:</label>
@@ -79,65 +40,52 @@
         {% for f_form in producer_invoiced_formset %}
             {% if forloop.first %}
                 <fieldset class="module aligned ">
-                    <div class="submit-row">
-                        <div class="form-group">
-                            <input id="all-producers" name="all-producers" onClick="toggle_all_producers(this)" autocomplete="off" type="checkbox" checked>
-                            <div class="btn-group">
-                                <label for="all-producers" class="btn btn-primary btn-sm">
-                                    <span class="glyphicon glyphicon-ok"></span>
-                                    <span>&nbsp;</span>
-                                </label>
-                                <label for="all-producers" class="btn active btn-sm">
-                                    {% trans "Select all producers." %}
-                                </label>
-                            </div>
-                        </div>
-                        <hr class="colorgraph">
+                <div class="submit-row">
+                <div class="form-group">
+                    <input id="all-producers" name="all-producers" onClick="toggle_all('all-producers', 'producers');"
+                           autocomplete="off" type="checkbox" checked>
+                    <div class="btn-group">
+                        <label for="all-producers" class="btn btn-primary">
+                            <span class="glyphicon glyphicon-ok"></span>
+                            <span>&nbsp;</span>
+                        </label>
+                        <label for="all-producers" class="btn active">
+                            {% trans "Select all producers." %}
+                        </label>
+                    </div>
+                </div>
+                <hr class="colorgraph">
             {% endif %}
-            <span class="form-group">
-                <input id="id_form-{{ forloop.counter0 }}-selected" name="form-{{ forloop.counter0 }}-selected" onClick="toggle_producer(this)" autocomplete="off" type="checkbox" checked>
+            <div class="form-group">
+                <input id="id_form-{{ forloop.counter0 }}-selected" name="producers"
+                       onClick="toggle('all-producers', 'id_form-{{ forloop.counter0 }}-selected' , 'producers');" autocomplete="off" type="checkbox" checked>
                 <div class="btn-group">
-                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn btn-info btn-sm">
+                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn btn-info">
                         <span class="glyphicon glyphicon-ok"></span>
                         <span>&nbsp;</span>
                     </label>
-                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn active btn-sm">
+                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn active">
                         {{ f_form.short_profile_name.value | truncatechars:20 }}
                         {% trans ", calculated : " %}
                             {{ f_form.calculated_invoiced_balance.value }}
                         {% trans ", invoiced : " %}
                         {{ f_form.to_be_invoiced_balance }}
-                        {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}{% trans "w tax" %}{% endif %}
+                        {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}
+                            {% trans "w tax" %}{% endif %}
                         {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
-                        <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name" name="form-{{ forloop.counter0 }}-short_profile_name" value="{{ f_form.short_profile_name.value }}"/>
+                        <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name"
+                               name="form-{{ forloop.counter0 }}-short_profile_name"
+                               value="{{ f_form.short_profile_name.value }}"/>
                     </label>
                 </div>
-            </span>
-            {% if forloop.last %}
-                    </div>
-                </fieldset>
-            {%  endif %}
+            </div>
+        {% if forloop.last %}
+            </div>
+            </fieldset>
+        {% endif %}
         {% endfor %}
-
 
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>
     </form>
-        <script type="text/javascript">
-        function toggle_all_producers(source) {
-            {% for f_form in producer_invoiced_formset %}
-                checkbox = document.getElementsByName("form-{{ forloop.counter0 }}-selected");
-                checkbox[0].checked = source.checked;
-            {% endfor %}
-        }
-        function toggle_producer(source) {
-            all_checked = true;
-            {% for f_form in producer_invoiced_formset %}
-                checkbox = document.getElementsByName("form-{{ forloop.counter0 }}-selected");
-                all_checked &= checkbox[0].checked;
-            {% endfor %}
-            all_checkboxes = document.getElementsByName("all-producers");
-            all_checkboxes[0].checked = all_checked;
-        }
-    </script>
 {% endblock %}

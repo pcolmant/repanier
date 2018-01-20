@@ -309,7 +309,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             return response
         if 'apply' in request.POST:
             if admin.ACTION_CHECKBOX_NAME in request.POST:
-                deliveries_to_be_exported = request.POST.getlist("deliveries")
+                deliveries_to_be_exported = request.POST.getlist("deliveries", [])
                 if len(deliveries_to_be_exported) == 0:
                     user_message = _("You must select at least one delivery point.")
                     user_message_level = messages.WARNING
@@ -520,9 +520,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             return
         only_deliveries = permanence.with_delivery_point
         if 'apply' in request.POST:
-            all_deliveries = request.POST.get("all-deliveries", False)
+            all_deliveries = True if request.POST.get("all-deliveries", False) else False
             deliveries_to_be_send = request.POST.getlist("deliveries", [])
-            all_producers = request.POST.get("all-producers", False)
+            all_producers = True if request.POST.get("all-producers", False) else False
             producers_to_be_send = request.POST.getlist("producers", [])
             if only_deliveries:
                 if not all_deliveries and len(deliveries_to_be_send) == 0:
@@ -533,6 +533,12 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             else:
                 if not all_producers and len(producers_to_be_send) == 0:
                     user_message = _("You must select at least one producer.")
+                    user_message_level = messages.WARNING
+                    self.message_user(request, user_message, user_message_level)
+                    return
+                from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+                if not all_producers and REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                    user_message = _("You must select all producers because the customers must confirm orders.")
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return

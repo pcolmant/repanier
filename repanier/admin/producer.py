@@ -261,7 +261,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def has_delete_permission(self, request, producer=None):
         user = request.user
-        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
+        if user.is_repanier_staff:
             return True
         return False
 

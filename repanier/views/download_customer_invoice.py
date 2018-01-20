@@ -18,7 +18,7 @@ from repanier.xlsx.xlsx_invoice import export_invoice
 def download_customer_invoice(request, customer_invoice_id):
     user = request.user
     if user.is_authenticated:
-        if user.is_staff:
+        if user.is_repanier_staff:
             customer_invoice = CustomerInvoice.objects.filter(
                 id=customer_invoice_id,
                 invoice_sort_order__isnull=False

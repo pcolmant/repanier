@@ -146,9 +146,12 @@ class RepanierCustomBackend(ModelBackend):
                     user.customer_id = staff.customer_responsible_id
                 else:
                     user.customer_id = customer.id
+        user.is_order_staff = user.is_coordinator or user.is_order_manager or user.is_order_referent
+        user.is_invoice_staff = user.is_coordinator or user.is_invoice_manager or user.is_invoice_referent
+        user.is_repanier_staff = user.is_order_staff or user.is_invoice_staff
 
     def get_user(self, user_id):
-        if self.user is not None and self.user.id == user_id and hasattr(self.user, 'is_order_manager'):
+        if self.user is not None and self.user.id == user_id and hasattr(self.user, 'is_repanier_staff'):
             # Test "hasattr(self.user, 'is_order_manager')" to detect user without new attributes
             return self.user
         user_or_none = UserModel.objects.filter(pk=user_id).only("id", "password", "is_staff", "is_superuser").order_by(

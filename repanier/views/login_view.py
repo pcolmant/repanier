@@ -34,7 +34,6 @@ def login_view(request, template_name='repanier/registration/login.html',
     how_to_register = EMPTY_STRING
 
     if request.method == "GET" and request.user.is_authenticated:
-        print("---------------- is_authenticated : {}".format(request.user))
         if request.user.is_staff:
             as_staff = None
         else:
@@ -44,6 +43,7 @@ def login_view(request, template_name='repanier/registration/login.html',
                 customer_responsible_id=request.user.customer.id,
                 is_active=True
             ).order_by('?').first()
+
         # Ensure the user-originating redirection url is safe.
         if as_staff is None or not is_safe_url(url=redirect_to, host=request.get_host()):
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)

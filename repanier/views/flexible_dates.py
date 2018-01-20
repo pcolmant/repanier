@@ -20,7 +20,7 @@ from repanier.tools import sint
 def flexible_dates(request, product_id, contract_id):
     if request.is_ajax():
         user = request.user
-        if user.is_staff:
+        if user.is_order_staff:
             product_id = sint(product_id)
             product = Product.objects.filter(id=product_id).order_by('?').first()
             if product is not None:

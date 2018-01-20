@@ -58,10 +58,10 @@ class RepanierToolbar(CMSToolbar):
                 admin_menu.add_sideframe_item(_('Groups'), url=url, position=position)
                 position += 1
 
-        url = "{}?is_active__exact=1".format(reverse('admin:repanier_producer_changelist'))
-        admin_menu.add_sideframe_item(_('Producers'), url=url, position=position)
+        if user.is_repanier_staff:
+            url = "{}?is_active__exact=1".format(reverse('admin:repanier_producer_changelist'))
+            admin_menu.add_sideframe_item(_('Producers'), url=url, position=position)
 
-        if user.is_coordinator or user.is_order_manager or user.is_invoice_manager:
             if settings.DJANGO_SETTINGS_BOX:
                 position += 1
                 url = "{}?is_into_offer__exact=1&is_active__exact=1".format(reverse('admin:repanier_box_changelist'))
@@ -70,11 +70,11 @@ class RepanierToolbar(CMSToolbar):
                 position += 1
                 url = "{}?is_active__exact=1".format(reverse('admin:repanier_contract_changelist'))
                 admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
-            if user.is_coordinator or user.is_order_manager:
+            if user.is_order_staff:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')
                 admin_menu.add_sideframe_item(_("Offers in preparation"), url=url, position=position)
-            if user.is_invoice_manager or user.is_coordinator:
+            if user.is_invoice_staff:
                 if REPANIER_SETTINGS_INVOICE:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')

@@ -421,3 +421,42 @@ ul.djng-field-errors li.valid::before {
     transform: rotate(359deg);
   }
 }
+.form-group input[type="checkbox"] {
+    display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span {
+    width: 20px;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:first-child {
+    display: none;
+}
+
+.form-group input[type="checkbox"] + .btn-group > label span:last-child {
+    display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
+    display: inline-block;
+}
+
+.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
+    display: none;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    color: initial !important;
+    cursor: initial !important;
+}
+
+.colorgraph {
+    height: 5px;
+    border-top: 0;
+    background: #c4e17f;
+    border-radius: 5px;
+    background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
+    background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
+    background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
+    background-image: linear-gradient(to right, #c4e17f, #62c2e4);
+}

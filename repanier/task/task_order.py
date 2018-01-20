@@ -208,11 +208,33 @@ def automatically_closed():
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_full_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
 def close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
-    # Be carefull : use permanece_id, deliveries_id, ... and not objects
-    # for the "trhread" processing
-    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-    if permanence is None or permanence.status != PERMANENCE_OPENED:
+    # Be careful : use permanece_id, deliveries_id, ... and not objects
+    # for the "thread" processing
+
+    print("-------------- close_and_send_order")
+    print("------ permanence_id : {}".format(permanence_id))
+    print("------ everything : {}".format(everything))
+    print("------ producers_id : {}".format(producers_id))
+    print("------ deliveries_id : {}".format(deliveries_id))
+
+    permanence = Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED).order_by('?').first()
+    if permanence is None:
         return
+    if permanence.with_delivery_point:
+        if len(deliveries_id) == 0:
+            return
+        if len(producers_id) > 0:
+            return
+    else:
+        if len(deliveries_id) > 0:
+            return
+        if len(producers_id) == 0:
+            return
+
+        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
+        if not everything and REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+            return
+
     permanence.set_status(PERMANENCE_WAIT_FOR_CLOSED, everything=everything, producers_id=producers_id,
                           deliveries_id=deliveries_id)
     permanence.close_order(everything=everything, producers_id=producers_id, deliveries_id=deliveries_id)
@@ -229,10 +251,10 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
 
 
 def admin_close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
-    # close_and_send_order(permanence_id, everything, producers_id, deliveries_id)
-    t = threading.Thread(target=close_and_send_order,
-                         args=(permanence_id, everything, producers_id, deliveries_id))
-    t.start()
+    close_and_send_order(permanence_id, everything, producers_id, deliveries_id)
+    # t = threading.Thread(target=close_and_send_order,
+    #                      args=(permanence_id, everything, producers_id, deliveries_id))
+    # t.start()
     user_message = _("The orders are being send.")
     user_message_level = messages.INFO
     return user_message, user_message_level

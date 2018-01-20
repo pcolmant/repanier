@@ -309,18 +309,15 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
-        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
+        if user.is_repanier_staff:
             return True
         return False
 
     def has_add_permission(self, request):
-        user = request.user
-        if user.is_staff:
-            return True
-        return False
+        return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        return self.has_add_permission(request)
+        return self.has_delete_permission(request)
 
     def deselect_is_into_offer(self, request, queryset):
         task_product.deselect_is_into_offer(queryset, self._contract)
@@ -341,7 +338,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             return
         if 'apply' in request.POST:
             if "producers" in request.POST:
-                producers = request.POST.getlist("producers")
+                producers = request.POST.getlist("producers", [])
                 if len(producers) == 1:
                     producer = Producer.objects.filter(id=producers[0]).order_by('?').first()
                     if producer is not None:

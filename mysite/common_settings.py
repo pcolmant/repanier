@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 def get_allowed_mail_extension(site_name):
     try:
-        composant = site_name.split(".")
-        if composant[-1] == "local":
+        component = site_name.split(".")
+        if component[-1] == "local":
             allowed_mail_extension = "@repanier.be"
         else:
-            allowed_mail_extension = "@{}.{}".format(composant[-2], composant[-1])
+            allowed_mail_extension = "@{}.{}".format(component[-2], component[-1])
     except:
         allowed_mail_extension = "@repanier.be"
     return allowed_mail_extension
@@ -32,8 +32,7 @@ def get_allowed_mail_extension(site_name):
 
 def get_group_name(site_name):
     try:
-        composant = site_name.split(".")
-        return composant[0]
+        return site_name.split(".")[0]
     except:
         return "repanier"
 

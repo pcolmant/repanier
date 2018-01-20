@@ -197,7 +197,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             if Permanence.objects.filter(id=permanence_id, status__gt=PERMANENCE_SEND).order_by('?').exists():
                 return False
             user = request.user
-            if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
+            if user.is_repanier_staff:
                 return True
         return False
 
@@ -205,7 +205,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         if purchase is not None and purchase.status > PERMANENCE_SEND:
             return False
         user = request.user
-        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
+        if user.is_repanier_staff:
             return True
         return False
 
