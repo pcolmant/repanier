@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.conf.urls import url, include
+from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
@@ -50,7 +50,7 @@ from repanier.views.who_is_who_view import who_is_who_view
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
-    url(r'^leave_repanier/$', logout_view, name='logout_form'),
+    url(r'^leave_repanier/$', logout_view, name='logout'),
     url(r'^coordi/password_reset/$', auth_views.password_reset,
         {
             'post_reset_redirect': 'done/',

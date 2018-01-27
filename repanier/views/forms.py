@@ -2,8 +2,6 @@
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth import authenticate
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
@@ -28,32 +26,6 @@ from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
 
 
-class AuthRepanierLoginForm(AuthenticationForm):
-    confirm = forms.CharField(label=_("Validation code"), max_length=15, required=False)
-
-    def clean(self):
-        """We overwrite clean method of the original AuthenticationForm to include
-        the third parameter, called otp_token
-
-        """
-        username = self.cleaned_data.get('username')
-        password = self.cleaned_data.get('password')
-
-        if username and password:
-            self.user_cache = authenticate(username=username,
-                                           password=password)
-            if self.user_cache is None:
-                raise forms.ValidationError(
-                    self.error_messages['invalid_login'],
-                    code='invalid_login',
-                    params={'username': self.username_field.verbose_name},
-                )
-            else:
-                self.confirm_login_allowed(self.user_cache)
-
-        return self.cleaned_data
-
-
 class AuthRepanierPasswordResetForm(PasswordResetForm):
     def send_mail(self, subject_template_name, email_template_name,
                   context, from_email, to_email, html_email_template_name=None):
@@ -73,30 +45,24 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
             show_customer_may_unsubscribe=False,
             send_even_if_unsubscribed=True
         )
-        # if html_email_template_name is not None:
-        #     html_email = loader.render_to_string(html_email_template_name, context)
-        #     email.attach_alternative(html_email, 'text/html')
-
-        # email_message.send()
         email.send_email()
 
     # From Django 1.8, this let the user enter name or email to recover
     def get_users(self, email):
         """Given an email, return matching user(s) who should receive a reset.
 
-        This allows subclasses to more easily customize the default policies
-        that prevent inactive users and users with unusable passwords from
-        resetting their password.
-
         """
-        active_users = User.objects.filter(
-            Q(
-                username__iexact=email[:150], is_active=True
-            ) | Q(
-                email__iexact=email, is_active=True
-            )
-        ).order_by('?')
-        return active_users.all()
+
+        if email:
+            return User.objects.filter(
+                Q(
+                    username__iexact=email[:150], is_active=True
+                ) | Q(
+                    email__iexact=email, is_active=True
+                )
+            ).order_by('?')
+        else:
+            return User.objects.none()
 
 
 class AuthRepanierSetPasswordForm(SetPasswordForm):

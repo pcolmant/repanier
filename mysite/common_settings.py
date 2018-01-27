@@ -412,7 +412,7 @@ THUMBNAIL_DEBUG = FILER_DEBUG
 
 ##################### Repanier
 # AUTH_USER_MODEL = 'auth.User'
-AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierCustomBackend',)
+AUTHENTICATION_BACKENDS = ('repanier.auth_backend.RepanierAuthBackend',)
 # ADMIN_LOGIN = 'pi'
 # ADMIN_PASSWORD = 'raspberry'
 LOGIN_URL = "/repanier/go_repanier/"

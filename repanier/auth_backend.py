@@ -1,22 +1,24 @@
 # -*- coding: utf-8
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth import (login as auth_login, logout as auth_logout)
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import Group
 from django.db.models import F, Q
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE
+from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE, WEBMASTER_GROUP
 from repanier.models import Customer, Staff, Configuration
 
 UserModel = get_user_model()
 
 
-class RepanierCustomBackend(ModelBackend):
+class RepanierAuthBackend(ModelBackend):
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(RepanierCustomBackend, self).__init__()
+        super(RepanierAuthBackend, self).__init__()
 
     def authenticate(self, request, username=None, password=None, **kwargs):
         user_username = UserModel.objects.filter(
@@ -50,7 +52,7 @@ class RepanierCustomBackend(ModelBackend):
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
-        user = super(RepanierCustomBackend, self).authenticate(request, username=username, password=password)
+        user = super(RepanierAuthBackend, self).authenticate(request, username=username, password=password)
         if user is None:
             # Failed to log in
             if login_attempt_counter < 20:
@@ -109,6 +111,34 @@ class RepanierCustomBackend(ModelBackend):
 
                 self.user = self.get_user(user.id)
                 return self.user
+
+    @classmethod
+    def set_staff_right(cls, request, user=None, as_staff=None):
+        auth_logout(request)
+        Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff=as_staff)
+        user.is_staff = True
+        user.groups.clear()
+        if as_staff.is_webmaster:
+            group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+            user.groups.add(group_id)
+        user.save()
+        auth_login(request, user)
+
+    @classmethod
+    def remove_staff_right(cls, user=None):
+        if user is not None:
+            is_customer_as_staff = Customer.objects.filter(user_id=user.id, as_staff__isnull=False).exists()
+            if is_customer_as_staff:
+                Customer.objects.filter(user_id=user.id).order_by('?').update(as_staff=None)
+                user.is_staff = False
+                user.groups.clear()
+                user.save()
+                RepanierAuthBackend.set_user_right(
+                    user=user,
+                    is_superuser=False,
+                    staff=None,
+                    customer=user.customer
+                )
 
     @classmethod
     def set_user_right(cls, user, is_superuser, customer, staff):
@@ -173,7 +203,7 @@ class RepanierCustomBackend(ModelBackend):
                             "is_webmaster"
                         ).order_by('?').first()
                         if staff is not None and staff.is_active:
-                            RepanierCustomBackend.set_user_right(
+                            RepanierAuthBackend.set_user_right(
                                 user=user_or_none,
                                 is_superuser=False,
                                 staff=staff,
@@ -182,7 +212,7 @@ class RepanierCustomBackend(ModelBackend):
                         else:
                             user_or_none = None
                     else:
-                        RepanierCustomBackend.set_user_right(
+                        RepanierAuthBackend.set_user_right(
                             user=user_or_none,
                             is_superuser=False,
                             staff=None,
@@ -199,7 +229,7 @@ class RepanierCustomBackend(ModelBackend):
                         if not staff.is_active:
                             user_or_none = None
                         else:
-                            RepanierCustomBackend.set_user_right(
+                            RepanierAuthBackend.set_user_right(
                                 user=user_or_none,
                                 is_superuser=False,
                                 staff=staff,
@@ -208,7 +238,7 @@ class RepanierCustomBackend(ModelBackend):
                     else:
                         user_or_none = None
             else:
-                RepanierCustomBackend.set_user_right(
+                RepanierAuthBackend.set_user_right(
                     user=user_or_none,
                     is_superuser=True,
                     staff=None,

@@ -107,7 +107,8 @@ class UserDataForm(forms.ModelForm):
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = user.email = email
+            user.username = username
+            user.email = email
             user.first_name = EMPTY_STRING
             user.last_name = username
             user.save()

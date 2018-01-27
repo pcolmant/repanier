@@ -1,17 +1,16 @@
-{% extends "base.html" %}{% load i18n admin_static %}
+{% extends "base.html" %}{% load i18n %}
 {% block base_content %}
 <div id="content-main" class="container-repanier">
 <div class="container">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="loginModalLabel">{% trans "Login" %}</h4>
-      </div>
-{#      <div class="modal-body">#}
 
 <form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8" id="login-form">{% csrf_token %}
+<div class="modal-header">
+    <h4 class="modal-title" id="loginModalLabel">{% trans "Login" %}</h4>
+</div>
+
 <div class="modal-body">
-{#<div class="row">#}
     <div class="form-group">
 {%  if staff_responsibilities %}
     <p>{% trans "You are now logged in as a customer." %}</p>
@@ -37,7 +36,7 @@
           {% endfor %}
           </p>
         {% endif %}
-        <input type="text" class="form-control" id="id_username" placeholder="{% trans "Username" %}" name="username">
+        <input type="text" class="form-control" id="id_username" placeholder="{% trans "Username" %}" name="username" autofocus>
         <br>
         <label for="id_password">{% trans "Password" %}</label>
         {% if form.password.errors %}
@@ -52,24 +51,24 @@
         <input type="hidden" name="this_is_the_login_form" value="1" />
         <input type="hidden" name="next" value="{{ next }}" />
     </div>
-{% if how_to_register %}
-<p></p>
-    <div class="form-group">
-        <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
-            <span class="btn btn-info">{% trans "Create an account" %}</span>
+    {% if how_to_register %}
+        <p></p>
+        <div class="form-group">
+            <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
+                <span class="btn btn-info">{% trans "Create an account" %}</span>
+            </div>
+            <div id="collapse" class="panel-collapse collapse">
+                {{ how_to_register | safe }}
+            </div>
         </div>
-        <div id="collapse" class="panel-collapse collapse">
-            {{ how_to_register | safe }}
-        </div>
-    </div>
+    {% endif %}
 </div>
-{% endif %}
 
 <div class="modal-footer">
     <div class="form-group">
         {% if staff_responsibilities %}
             <a href="{{ next }}" class="btn btn-info">{% trans "Continue as a customer." %}</a>
-            <a href="{% url "logout_form" %}" class="btn btn-info">{% trans "Logout" %}</a>
+            <a href="{% url "logout" %}" class="btn btn-info">{% trans "Logout" %}</a>
         {% else %}
             <button class="btn btn-info" type="submit">{% trans "Login" %}</button>
             <a href="{% url "admin_password_reset" %}" class="btn btn-info">{% trans "Password reset" %}</a>
@@ -77,12 +76,8 @@
     </div>
 </div>
 </form>
-{#      </div><!-- /form -->#}
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
-<script type="text/javascript">
-document.getElementById('id_username').focus()
-</script>
 </div>
 </div>
 {% endblock %}

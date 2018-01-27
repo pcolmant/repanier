@@ -2,6 +2,7 @@
 
 from cms.toolbar_pool import toolbar_pool
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -330,6 +331,16 @@ class Configuration(TranslatableModel):
                     is_order_referent=F('is_contributor')
                 )
                 self.db_version = 1
+            if self.db_version == 1:
+                User.objects.filter(is_staff=False).order_by('?').update(
+                    first_name=EMPTY_STRING,
+                    last_name=F('username')
+                )
+                User.objects.filter(is_staff=True, is_superuser=False).order_by('?').update(
+                    first_name=EMPTY_STRING,
+                    last_name=F('email')
+                )
+                self.db_version = 2
         except:
             pass
 

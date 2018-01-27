@@ -51,17 +51,27 @@ def repanier_user(context, *args, **kwargs):
     nodes = []
     if user.is_authenticated:
         if not user.is_staff:
-            nodes = ["""
+            nodes = []
+            p_permanence_id = sint(kwargs.get("permanence_id", 0))
+            if p_permanence_id > 0:
+                nodes.append("<li id=\"li_my_basket\" style=\"display:none;\" class=\"dropdown\">")
+                nodes.append(
+                    "<a href=\"{}?is_basket=yes\" class=\"btn btn-info\"><span id=\"my_basket\"></span></a>".format(
+                        reverse("order_view", args=(p_permanence_id,)))
+                )
+                nodes.append('</li>')
+            nodes.append("""
                 <li id="li_my_name" class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {} {}<b class="caret"></b></a>
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                 """.format(
-                _('Welkom'),
+                # _('Welkom'),
                 user.username or '<span id = "my_name"></ span>'
-            ), "<li><a href=\"{}\">{}</a></li>".format(
+            ))
+            nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                 reverse('send_mail_to_coordinators_view'),
                 _('Send mail to coordinators')
-            )]
+            ))
             if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
                 if user.subscribe_to_email:
                     nodes.append("<li><a href=\"{}\">{}</a></li>".format(
@@ -100,17 +110,10 @@ def repanier_user(context, *args, **kwargs):
                     ))
                 nodes.append('<li class="divider"></li>')
             nodes.append("<li><a href=\"{}\">{}</a></li>".format(
-                reverse("logout_form"), _("Logout")
+                reverse("logout"), _("Logout")
             ))
             nodes.append("</ul></li>")
-            p_permanence_id = sint(kwargs.get("permanence_id", 0))
-            if p_permanence_id > 0:
-                nodes.append("<li id=\"li_my_basket\" style=\"display:none;\" class=\"dropdown\">")
-                nodes.append(
-                    "<a href=\"{}?is_basket=yes\" class=\"btn btn-info\"><span id=\"my_basket\"></span></a>".format(
-                        reverse("order_view", args=(p_permanence_id,)))
-                )
-                nodes.append('</li>')
+
     else:
         p_offer_uuid = kwargs.get("offer_uuid", None)
         if len(p_offer_uuid) == 36:

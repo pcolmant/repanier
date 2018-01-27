@@ -8,11 +8,11 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm
 
+from repanier.auth_backend import RepanierAuthBackend
 from repanier.const import EMPTY_STRING, \
     ONE_LEVEL_DEPTH
 from repanier.models.customer import Customer
 from repanier.models.staff import Staff
-from repanier.views.logout_view import remove_staff_right
 from .lut import LUTAdmin
 
 
@@ -34,7 +34,7 @@ class UserDataForm(TranslatableModelForm):
         is_invoice_referent = self.cleaned_data["is_invoice_referent"]
         is_webmaster = self.cleaned_data["is_webmaster"]
         if settings.DJANGO_SETTINGS_TEST_MODE:
-            is_tester  = self.cleaned_data["is_tester"]
+            is_tester = self.cleaned_data["is_tester"]
         else:
             is_tester = False
         if not (is_coordinator or
@@ -106,6 +106,9 @@ class UserDataForm(TranslatableModelForm):
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
             user.email = email
+            user.username = email or uuid.uuid1()
+            user.last_name = self.data['long_name']
+            user.first_name = EMPTY_STRING
             user.save()
         else:
             # Important : The username who is never used is uuid1 to avoid clash with customer username
@@ -114,7 +117,7 @@ class UserDataForm(TranslatableModelForm):
             user = user_model.objects.create_user(
                 username=email or "{}@repanier.be".format(uuid.uuid1()),
                 email=email, password=None,
-                first_name=EMPTY_STRING, last_name=EMPTY_STRING)
+                first_name=EMPTY_STRING, last_name=email)
         self.user = user
         return self.instance
 
@@ -227,5 +230,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
         )
 
         super(StaffWithUserDataAdmin, self).save_model(request, staff, form, change)
-        if change_previous_customer_responsible:
-            remove_staff_right(old_customer_responsible_field.user, is_customer=True)
+        if change_previous_customer_responsible and old_customer_responsible_field.user is not None:
+            RepanierAuthBackend.remove_staff_right(
+                user=old_customer_responsible_field.user
+            )
