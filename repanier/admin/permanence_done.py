@@ -274,6 +274,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         }
                     )
                 else:
+                    at_least_one_selected = False
                     for producer_invoiced_form in producer_invoiced_formset:
                         if producer_invoiced_form.is_valid():
                             selected = producer_invoiced_form.cleaned_data.get('selected')
@@ -286,6 +287,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                 '?'
                             ).first()
                             if selected:
+                                at_least_one_selected = True
                                 producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
                                     'to_be_invoiced_balance')
                                 producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
@@ -307,33 +309,38 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                     'to_be_paid'
                                 ]
                             )
-
-                    task_invoice.generate_invoice(
-                        permanence=permanence,
-                        payment_date=payment_date)
-                    previous_latest_total = BankAccount.objects.filter(
-                        operation_status=BANK_NOT_LATEST_TOTAL,
-                        producer__isnull=True,
-                        customer__isnull=True
-                    ).order_by('-id').first()
-                    previous_latest_total_id = previous_latest_total.id if previous_latest_total is not None else 0
-                    return render(request, 'repanier/confirm_admin_bank_movement.html', {
-                        'sub_title': _("Please make the following payments, whose bank movements have been generated"),
-                        'action': 'generate_invoices',
-                        'permanence': permanence,
-                        'bankaccounts': BankAccount.objects.filter(
-                            id__gt=previous_latest_total_id,
-                            producer__isnull=False,
-                            producer__represent_this_buyinggroup=False,
-                            customer__isnull=True,
-                            operation_status=BANK_CALCULATED_INVOICE
-                        ).order_by(
-                            'producer',
-                            '-operation_date',
-                            '-id'
-                        ),
-                        'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                    })
+                    if at_least_one_selected:
+                        task_invoice.generate_invoice(
+                            permanence=permanence,
+                            payment_date=payment_date)
+                        previous_latest_total = BankAccount.objects.filter(
+                            operation_status=BANK_NOT_LATEST_TOTAL,
+                            producer__isnull=True,
+                            customer__isnull=True
+                        ).order_by('-id').first()
+                        previous_latest_total_id = previous_latest_total.id if previous_latest_total is not None else 0
+                        return render(request, 'repanier/confirm_admin_bank_movement.html', {
+                            'sub_title': _("Please make the following payments, whose bank movements have been generated"),
+                            'action': 'generate_invoices',
+                            'permanence': permanence,
+                            'bankaccounts': BankAccount.objects.filter(
+                                id__gt=previous_latest_total_id,
+                                producer__isnull=False,
+                                producer__represent_this_buyinggroup=False,
+                                customer__isnull=True,
+                                operation_status=BANK_CALCULATED_INVOICE
+                            ).order_by(
+                                'producer',
+                                '-operation_date',
+                                '-id'
+                            ),
+                            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
+                        })
+                    else:
+                        user_message = _("You must select at least one producer.")
+                        user_message_level = messages.WARNING
+                        self.message_user(request, user_message, user_message_level)
+                        return
         else:
             producer_invoiced = []
             for producer_invoice in ProducerInvoice.objects.filter(
