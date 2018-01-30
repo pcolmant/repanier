@@ -32,7 +32,6 @@ from repanier.models.permanence import PermanenceInPreparation
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
-from repanier.models.purchase import Purchase
 from repanier.models.staff import Staff
 from repanier.task import task_order
 from repanier.tools import send_email_to_who, get_board_composition, get_recurrence_dates
