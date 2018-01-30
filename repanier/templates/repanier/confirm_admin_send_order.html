@@ -5,9 +5,6 @@
     {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}
         <link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}
     <link rel="stylesheet" href="{% static "css/custom.css" %}">
-    <style type="text/css">
-
-    </style>
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
@@ -22,7 +19,8 @@
             <fieldset class="module aligned ">
                 <div class="submit-row">
                     <div class="form-group">
-                        <input id="all-deliveries" name="all-deliveries" onClick="toggle_all('all-deliveries', 'deliveries');"
+                        <input id="all-deliveries" name="all-deliveries"
+                               onClick="toggle_all('all-deliveries', 'deliverie_form');"
                                autocomplete="off" type="checkbox" checked>
                         <div class="btn-group">
                             <label for="all-deliveries" class="btn btn-primary">
@@ -37,8 +35,8 @@
                     <hr class="colorgraph">
                     {% for delivery in deliveries %}
                         <div class="form-group">
-                            <input id="deliveries-{{ forloop.counter0 }}" name="deliveries"
-                                   onClick="toggle('all-deliveries', 'deliveries-{{ forloop.counter0 }}', 'deliveries');"
+                            <input id="deliveries-{{ forloop.counter0 }}" name="deliveries" class="deliverie_form"
+                                   onClick="toggle('all-deliveries', 'deliveries-{{ forloop.counter0 }}', 'deliverie_form');"
                                    value="{{ delivery.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
                             <div class="btn-group">
                                 <label for="deliveries-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
@@ -57,7 +55,8 @@
             <fieldset class="module aligned ">
                 <div class="submit-row">
                     <div class="form-group">
-                        <input id="all-producers" name="all-producers" onClick="all_checked=toggle_all('all-producers', 'producers');toggle_display(all_checked,['id_mail_to_board', 'id_mail_to_customers']);"
+                        <input id="all-producers" name="all-producers"
+                               onClick="all_checked=toggle_all('all-producers', 'producer_form');toggle_display(all_checked,['id_mail_to_board', 'id_mail_to_customers']);"
                                autocomplete="off" type="checkbox" checked>
                         <div class="btn-group">
                             <label for="all-producers" class="btn btn-primary">
@@ -72,8 +71,9 @@
                     <hr class="colorgraph">
                     {% for producer in producers %}
                         <div class="form-group">
-                            <input id="producers-{{ forloop.counter0 }}" name="producers"
-                                   {% if not must_confirm %}onClick="all_checked=toggle('all-producers', 'producers-{{ forloop.counter0 }}', 'producers');toggle_display(all_checked,['id_mail_to_board', 'id_mail_to_customers']);"{% else %}disabled{% endif %}
+                            <input id="producers-{{ forloop.counter0 }}" name="producers" class="producer_form"
+                                   {% if not must_confirm %}onClick="all_checked=toggle('all-producers', 'producers-{{ forloop.counter0 }}', 'producer_form');toggle_display(all_checked,['id_mail_to_board', 'id_mail_to_customers']);"
+                                   {% else %}disabled{% endif %}
                                    value="{{ producer.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
                             <div class="btn-group">
                                 <label for="producers-{{ forloop.counter0 }}" class="btn btn-info">
@@ -114,7 +114,9 @@
                                                 toolbar: [
                                                     ['Preview', 'Image', 'Source']
                                                 ],
-                                                contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
+                                                contentsCss:
+                                                    {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'
+                                                        {% static bootstrap_static %}'{% endwith %},
                                                 width: '100%',
                                                 height: '24em',
                                                 removePlugins: 'elementspath',
@@ -153,7 +155,9 @@
                                             toolbar: [
                                                 ['Preview', 'Image', 'Source']
                                             ],
-                                            contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
+                                            contentsCss:
+                                                {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'
+                                                    {% static bootstrap_static %}'{% endwith %},
                                             width: '100%',
                                             height: '24em',
                                             removePlugins: 'elementspath',
@@ -192,7 +196,9 @@
                                                 toolbar: [
                                                     ['Preview', 'Image', 'Source']
                                                 ],
-                                                contentsCss: {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'{% static bootstrap_static %}'{% endwith %},
+                                                contentsCss:
+                                                    {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}'
+                                                        {% static bootstrap_static %}'{% endwith %},
                                                 width: '100%',
                                                 height: '24em',
                                                 removePlugins: 'elementspath',

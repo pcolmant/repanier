@@ -8,20 +8,20 @@ function toggle_display(checked, elementId) {
     }
 }
 
-function toggle_all(parentId, childrenName) {
+function toggle_all(parentId, childrenClassName) {
     parent = document.getElementById(parentId);
-    children = document.getElementsByName(childrenName);
+    children = document.getElementsByClassName(childrenClassName);
     for (var i = 0, n = children.length; i < n; i++) {
         children[i].checked = parent.checked;
     }
     return parent.checked
 }
 
-function toggle(parentId, childId, childrenName) {
+function toggle(parentId, childId, childrenClassName) {
     all_checked = true;
     none_checked = true;
     child = document.getElementById(childId);
-    children = document.getElementsByName(childrenName);
+    children = document.getElementsByClassName(childrenClassName);
     for (var i = 0, n = children.length; i < n; i++) {
         all_checked &= children[i].checked;
         none_checked &= !children[i].checked

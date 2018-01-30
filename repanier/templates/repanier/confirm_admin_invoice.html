@@ -5,9 +5,6 @@
     {% with "bootstrap/css/"|add:BOOTSTRAP_CSS as bootstrap_static %}
         <link rel="stylesheet" href="{% static bootstrap_static %}">{% endwith %}
     <link rel="stylesheet" href="{% static "css/custom.css" %}">
-    <style type="text/css">
-
-    </style>
     <h4>{{ sub_title }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
@@ -42,7 +39,8 @@
                 <fieldset class="module aligned ">
                 <div class="submit-row">
                 <div class="form-group">
-                    <input id="all-producers" name="all-producers" onClick="toggle_all('all-producers', 'producers');"
+                    <input id="all-producers" name="all-producers"
+                           onClick="toggle_all('all-producers', 'producer_invoiced_form');"
                            autocomplete="off" type="checkbox" checked>
                     <div class="btn-group">
                         <label for="all-producers" class="btn btn-primary">
@@ -56,29 +54,31 @@
                 </div>
                 <hr class="colorgraph">
             {% endif %}
-            <div class="form-group">
-                <input id="id_form-{{ forloop.counter0 }}-selected" name="producers"
-                       onClick="toggle('all-producers', 'id_form-{{ forloop.counter0 }}-selected' , 'producers');" autocomplete="off" type="checkbox" checked>
-                <div class="btn-group">
-                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn btn-info">
-                        <span class="glyphicon glyphicon-ok"></span>
-                        <span>&nbsp;</span>
-                    </label>
-                    <label for="id_form-{{ forloop.counter0 }}-selected" class="btn active">
-                        {{ f_form.short_profile_name.value | truncatechars:20 }}
-                        {% trans ", calculated : " %}
-                            {{ f_form.calculated_invoiced_balance.value }}
-                        {% trans ", invoiced : " %}
-                        {{ f_form.to_be_invoiced_balance }}
-                        {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}
-                            {% trans "w tax" %}{% endif %}
-                        {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
-                        <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name"
-                               name="form-{{ forloop.counter0 }}-short_profile_name"
-                               value="{{ f_form.short_profile_name.value }}"/>
-                    </label>
-                </div>
+        <div class="form-group">
+            <input id="id_form-{{ forloop.counter0 }}-selected" name="form-{{ forloop.counter0 }}-selected"
+                   class="producer_invoiced_form"
+                   onClick="toggle('all-producers', 'id_form-{{ forloop.counter0 }}-selected' , 'producer_invoiced_form');"
+                   autocomplete="off" type="checkbox" checked>
+            <div class="btn-group">
+                <label for="id_form-{{ forloop.counter0 }}-selected" class="btn btn-info">
+                    <span class="glyphicon glyphicon-ok"></span>
+                    <span>&nbsp;</span>
+                </label>
+                <label for="id_form-{{ forloop.counter0 }}-selected" class="btn active">
+                    {{ f_form.short_profile_name.value | truncatechars:20 }}
+                    {% trans ", calculated : " %}
+                    {{ f_form.calculated_invoiced_balance.value }}
+                    {% trans ", invoiced : " %}
+                    {{ f_form.to_be_invoiced_balance }}
+                    {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}
+                        {% trans "w tax" %}{% endif %}
+                    {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
+                    <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name"
+                           name="form-{{ forloop.counter0 }}-short_profile_name"
+                           value="{{ f_form.short_profile_name.value }}"/>
+                </label>
             </div>
+        </div>
         {% if forloop.last %}
             </div>
             </fieldset>
