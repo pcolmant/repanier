@@ -662,8 +662,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             producers = Producer.objects.filter(
                 producerinvoice__permanence_id=permanence.id,
-                producerinvoice__status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED],
-                represent_this_buyinggroup=False
+                producerinvoice__status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED]
             )
             deliveries = DeliveryBoard.objects.none()
         return render(
