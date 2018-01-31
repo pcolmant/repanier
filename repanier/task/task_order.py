@@ -198,9 +198,14 @@ def automatically_closed():
                 permanence_id=permanence.id,
                 status=PERMANENCE_OPENED
             ).values_list('id', flat=True))
+            producers_id=()
         else:
             deliveries_id = ()
-        close_and_send_order(permanence.id, everything=True, producers_id=(), deliveries_id=deliveries_id)
+            producers_id = list(Producer.objects.filter(
+                producerinvoice__permanence_id=permanence.id,
+                producerinvoice__status=PERMANENCE_OPENED
+            ).values_list('id', flat=True))
+        close_and_send_order(permanence.id, everything=True, producers_id=producers_id, deliveries_id=deliveries_id)
         something_to_close = True
     return something_to_close
 
