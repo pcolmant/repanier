@@ -10,6 +10,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         something_to_close = task_order.automatically_closed()
         if something_to_close:
-            self.stdout.write('At least one order being closed')
+            self.stdout.write('At least one order closed')
         else:
             self.stdout.write('Nothing to close')
