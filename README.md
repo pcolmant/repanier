@@ -1,7 +1,7 @@
 Repanier
 ========
 
-Collective buying group management web site using Django CMS 3.4.5 / Bootstrap 3 / Python 3.5.
+`Repanier` is a web tool for short circuit food supply using Django CMS 3.4.5 / Bootstrap 3 / Python 3.5.
 
 - https://repanier.be/fr/documentation/survol/
 - https://repanier.be/fr/
@@ -24,152 +24,161 @@ Active producer :
 
 Licence : GPL v3
 
-Howto contribute to Repanier?
------------------------------
-
-  * En participant aux discussions entre utilisateurs et avec les développeur, lors des permanences, par téléphone ou par email, …
-  * [En utilisant les tickets](https://github.com/pcolmant/repanier/issues)
-  * [En envoyant un patch ou une demande de merge](https://guides.github.com/introduction/flow/)
-
-How to setup repanier on Debian 9
----------------------------------
+# Howto contribute to `Repanier`?
 
 
-~ As Root (or with sudo) ~
+  * [Contact the `repanier` discourse community](https://discourse.repanier.be/)
+  * [Send a mail to support@repanier.be](mailt:support@repanier.be)
+  * [Propose a pull request](https://github.com/pcolmant/repanier/pulls)
 
- * Be sure to have the right locales set
- 
- ```commandline
-dpkg-reconfigure locales
-        -- select>>>> fr_BE.UTF-8  and/or other following your need
-```
+# How to setup `Repanier` on Debian 9
 
- * Packages to install
+This procedure shows you step by step how to install `Repanier` on a server.
+By applying it, you have all the elements to update a `Repanier` website with a new version of `Repanier`.
+And even to install several `Repanier` website on a seveur.
+
+## Linux prerequisites to run only once
+
+These prerequisites enhance the security of your server and configure it with the minimum libraries required for the installation of Repanier. 
+If you use a different distribution than Debian 9, take a look at [cookiecutter-django](https://github.com/pydanny/cookiecutter-django/tree/master/%7B%7Bcookiecutter.project_slug%7D%7D/utility).
+If you want to install `Repanier` on a container, a good starting point is [Today I Learned – A Brief Intro to Docker for Djangonauts](https://www.revsys.com/tidbits/brief-intro-docker-djangonauts/)
+
+1. Login as `root` using a ssh session.
+2. Update you installation and install `sudo`.
+    ```commandline
+    apt-get update
+    apt-get upgrade -y
+    apt-get install -y sudo
+    ```
+3. Be sure to have the right locales set. This will be used to create the PostgreSQL data base
+    ```commandline
+    dpkg-reconfigure locales    <<--- select>>>> fr_BE.UTF-8  and/or other following your need
+    ```
+4. Login as `root` using a ssh session.
+5. Create a new user that will install the application (avoid `root` for security purpose), let it be sudoers and a sshuser. In the example, the name of this new user is `repanier`.
+    ```commandline
+    useradd -m -s /bin/bash repanier
+    passwd repanier             <<--- must be a complex password
+    usermod -G sudo -a repanier
+    groupadd sshusers
+    usermod -G sshusers -a repanier
+    nano /etc/ssh/sshd_config
+    ```
+        #Port 22                <<--- should be uncommented and changed
+        Protocol 2
+        PermitRootLogin no      <<--- uncomment and set to no
+        AllowGroups sshusers    <<--- new line to add
+    ```
+6. Do not close *this current* SSH session.
+    ```commandline
+    service ssh restart
+    ```
+7. On a new SSH session logged with user `repanier`.
+    ```commandline
+    sudo -l
+    ```
+8. If you encounter ***no issue*** to execute the *`sudo -l`*, then close all active ssh sessions but this where you are logged in as user `repanier`.
+9. Install needed linux packages.
+    ```commandline
+    apt-get install -y build-essential gettext unzip git \
+            python3-dev virtualenv \
+            postgresql libpq-dev \
+            nginx uwsgi uwsgi-plugin-python3 \
+            zlib1g-dev libtiff5-dev libjpeg62-turbo-dev libfreetype6-dev liblcms2-dev libwebp-dev
+    ```
+10. Reboot to apply changes on all process.
+    ```commandline
+    reboot
+    ```
+
+## From now on, I guess you're still logged in as a `repanier` user
+
+1. Login as a `repanier` using a ssh session. Reminder : Use the correct shh port
+
+## Create Django cache and session directories
+Each `Repanier` website will be (later) configured to use it's own cache and file session subdirectory.
+For the impatient, this configuration will be made in [common_settings.py](https://raw.githubusercontent.com/pcolmant/repanier/master/mysite/common_settings.py) : `DJANGO_SETTINGS_CACHE` and `DJANGO_SETTINGS_SESSION`
+1. Create Django cache directory and give acces to it at the group `www-data`. This group is used by the web server `nginx`.
+    ```commandline
+    mkdir /var/tmp/django-cache
+    chgrp www-data /var/tmp/django-cache
+    chmod g+w /var/tmp/django-cache
+    ```
+2. Create Django file session directory and give acces to it at the group `www-data`.
+    ```commandline
+    mkdir /var/tmp/django-session
+    chgrp www-data /var/tmp/django-session
+    chmod g+w /var/tmp/django-session
+    ```
+## Set up a Python virtualenv
+A virtualenv let you isolate all the [pypi librairies](https://pypi.python.org/pypi) for a specific project.
+One virtualenv can contains many `Repanier` websites, using such all the same version of the pypi librairies.
+You will need to setup a new virtualenv at least at each security update of a package present in [requirement.txt](https://github.com/pcolmant/repanier/blob/master/requirements/requirement.txt)
+And then create (or migrate) `Repanier` websites.
+
+2. Create a python virtual environment called `prd1` here. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial
+    ```commandline
+    cd ~
+    virtualenv --python=python3 prd1
+     ```
+3. Goto the virtualenv and activate it
+    ```commandline
+    cd ~/prd1
+    source bin/activate
+    ```
+4. Install the pypi librairies versions required by `Repanier`
+    ```commandline
+    https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement.txt
+    pip install -r requirement.txt
+    ```
+
+## Create a Django empty project with a PostgreSQL data base
+We assume here :
+* that the virtualenv is named `prd1`
+* that the `Repanier` website will be named `_0_prd_ptidej`
+
+A recommended naming convention for a Django `Repanier` website is _counter_environnement_name :
+* `counter` : 0..9,a..z
+* `environment` : `prd`, `dev`, ... The environement must match the virtualenv naming. For e.g. `prd` for virtualenv `prd1`.
+* `name` : only made of lower cases.
+
+1. Create a postgresql database
+    * `db_user` is `repanier`, same user as the Linux installation user created in "Linux prerequisites to run only once".
+    * `db_password` is not the `repanier` user password. It's a new password you set to connect the user to the Db.
+    * `db_name` is `_0_prd_ptidej`. So, the same name as the `Repanier` website. This is not mandatory, but will ease the management.
+    ```commandline
+    sudo -u postgres psql
+    ```
+    ```postgresql
+    CREATE USER db_user PASSWORD 'db_password';
+    ALTER ROLE db_user WITH CREATEDB;
+    CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+    \q  <---- to leave postgresql
+    ```
+2. Goto the virtualenv and activate it
+    ```commandline
+    cd ~/prd1
+    source bin/activate
+    ```
+3. Create an empty django website
+    ```commandline
+    django-admin.py startproject _0_prd_ptidej
+    ```
+    
+## Configure nginx to answer to `repanier.host` dns name
 
 ```commandline
-apt-get install virtualenv nginx postgresql uwsgi uwsgi-plugin-python3 gettext unzip python3-dev build-essential python3-dev uwsgi-plugin-python3 git sudo
+sudo nano /etc/nginx
 ```
-
- * Create a postgresql database
-
+    user www-data;
+    http {
+        send_timeout 300s;
+        proxy_connect_timeout       60s;
+        proxy_send_timeout          60s;
+        proxy_read_timeout          610s;
+    }
 ```commandline
-	sudo -u postgres psql
-```
-```postgresql
-CREATE USER db_user PASSWORD 'db_password';
-ALTER ROLE db_user WITH CREATEDB;
-CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
-(\q to leave postgresql)
-```
-
- * Create an user that will host the application (or use one you've already have, but avoid root for security purpose)
-
-```commandline
-useradd -m -s /bin/bash repanier
-passwd repanier
-
-# Add the user to the sudo group
-usermod -G sudo -a repanier
-```
-
- * Create cache and session directories used as temporary cache by the repanier django configuration.
-	By the way, Django offers other cache and session management possibilities.
-
-```commandline
-# ----------------- Create django cache directory
-mkdir /var/tmp/django-cache
-chgrp repanier /var/tmp/django-cache
-chmod g+w /var/tmp/django-cache
-# ----------------- Create django file session directory
-mkdir /var/tmp/django-session
-chgrp repanier /var/tmp/django-session
-chmod g+w /var/tmp/django-session
-```
-
-~ As user repanier ~
-(connect as repanier or type 'sudo su - repanier')
-
- * Create a python virtual environment (called 'venv' here. Choose whatever you want, but be carefull to change to what you choose everywhere in this tuto)
-
-```commandline
-cd ~
-virtualenv --python=python3 venv
-cd venv
-source bin/activate
-```
-
- * Git clone the project into the home folder of the user repanier
-
-```commandline
-cd ~
-git clone https://github.com/pcolmant/repanier
-```
-
- * Install the requirements in the virtual env
-
-```commandline
-cd venv
-pip install -r ~/repanier/requirement/requirement.txt
-```
-
- * Create the django project (my_repanier in this tuto. Be carefull to change everywhere this varialbe if you choose another one)
-	Also, do not use "repanier" as project name because it's reserved for the application.
-
-```commandline
-django-admin.py startproject my_repanier
-```
-
- * Create the system configuration file for Repanier.
-
-```commandline
-nano ~/venv/my_repanier/my_repanier/my_repanier.ini
-```
-    [DJANGO_SETTINGS]
-    DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
-    DJANGO_SETTINGS_ADMIN_NAME=repanier
-    DJANGO_SETTINGS_DATABASE_NAME=db_name
-    DJANGO_SETTINGS_DATABASE_USER=db_user
-    DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
-    DJANGO_SETTINGS_EMAIL_HOST=email_host
-    DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
-    DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
-    [ALLOWED_HOSTS]
-    1:repanier.myhost
-
- * Install & Configure Repanier
-
-```commandline
-cd ~/venv/gazewee/gazewee/
-mkdir media/public -p
-sudo chgrp -R www-data media
-sudo chmod -R g+w media
-cp ~/repanier_git/repanier/static/robots.txt ~/venv/gazewee/gazewee/media/
-cp ~/repanier_git/repanier/static/favicon.ico ~/venv/gazewee/gazewee/media/
-cp ~/repanier_git/mysite/common_settings.py ~/venv/gazewee/gazewee/
-cp ~/repanier_git/mysite/urls.py ~/venv/gazewee/gazewee/
-cp ~/repanier_git/mysite/wsgi.py ~/venv/gazewee/gazewee/
-cp -R ~/repanier_git/repanier/locale/ ~/venv/gazewee/gazewee/
-cp ~/repanier_git/manage.py ~/venv/gazewee/
-cp -R ~/repanier_git/repanier/ ~/venv/gazewee/
-```
-
- * Finalize the django configuration
-
-```commandline
-cd ~/venv/my_repanier
-python manage.py collectstatic
-python manage.py makemigrations repanier
-python manage.py migrate
-python manage.py createsuperuser
-sudo rm -rf /var/tmp/django-cache/*
-```
-
-~ As Root (or with sudo) ~
-
- * Create nginx my_repanier vHost
-
-```commandline
-nano /etc/nginx/sites-available/my_repanier
+sudo nano /etc/nginx/sites-available/_0_prd_ptidej
 ```
     server {
         listen 80;
@@ -177,419 +186,173 @@ nano /etc/nginx/sites-available/my_repanier
 
         server_name repanier.host;
 
-        access_log /var/log/nginx/my_repanier_access.log;
-        error_log /var/log/nginx/my_repanier_error.log;
+        access_log /var/log/nginx/_0_prd_ptidej_access.log;
+        error_log /var/log/nginx/_0_prd_ptidej_error.log;
 
         client_max_body_size 3M;
 
         location /media/ {
-            alias /home/repanier/venv/my_repanier/my_repanier/media/public/;
+            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/media/public/;
         }
 
         location /static/ {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/;
+            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/collect-static/;
         }
 
         location /favicon.ico {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/favicon.ico;
+            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/media/favicon.ico;
         }
 
         location /robots.txt {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/robots.txt;
+            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/media/robots.txt;
         }
 
         location / {
             include		uwsgi_params;
             uwsgi_param HTTP_X_FORWARDED_HOST $server_name;
-            uwsgi_pass 	unix:///tmp/my_repanier.sock;
+            uwsgi_pass 	unix:///tmp/_0_prd_ptidej.sock;
             uwsgi_read_timeout 600s;
             uwsgi_send_timeout 60s;
             uwsgi_connect_timeout 60s;
         }
     }
 ```commandline
-ln -s /etc/nginx/sites-available/my_repanier /etc/nginx/sites-enabled/my_repanier
-service nginx restart
+sudo ln -s /etc/nginx/sites-available/_0_prd_ptidej /etc/nginx/sites-enabled/_0_prd_ptidej
 ```
 
- * Create uwsgi my_repanier config
+## Configure uwsgi
 
 ```commandline
-nano /etc/uwsgi/apps-available/my_repanier.ini
+sudo nano /etc/uwsgi/apps-available/_0_prd_ptidej.ini
 ```
     [uwsgi]
     vhost = true
     plugins = python35
-    socket = /tmp/my_repanier.sock
+    socket = /tmp/_0_prd_ptidej.sock
     master = true
     enable-threads = true
     processes = 1
     thread = 2
     buffer-size = 8192
-    wsgi-file = /home/repanier/venv/my_repanier/my_repanier/wsgi.py
-    virtualenv = /home/repanier/venv/
-    chdir = /home/repanier/venv/my_repanier/
-    harakiri = 360
-
-```commandline
-ln -s /etc/uwsgi/apps-available/my_repanier.ini /etc/uwsgi/apps-enabled/my_repanier.ini
-service uwsgi restart
-```
-
-
-How to add more repanier instances
-----------------------------------
-
-~ As user repanier ~
-(connect as repanier or type 'sudo su - repanier')
-
- * Create the database (using the same user as for the first repanier)
-
-```commandline
-	sudo -u postgres psql
-```
-
-```postgresql
-		CREATE DATABASE my_repanier2 WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
-		\q  (to quit)
-```
-
-* Re-enter the python virtual environment if need be (ig you don't have the "(venv)" on the left of the shell command line)
-
-```commandline
-cd ~/venv
-source bin/activate
-```
-
- * Create the django project (my_repanier2)
-
-```commandline
-	cd ~/venv
-	django-admin.py startproject my_repanier2
-```
-
- * Create the system configuration file for Repanier.
-
-```commandline
-	nano ~/venv/my_repanier2/my_repanier2/my_repanier2.ini
-```
-	
-    [DJANGO_SETTINGS]
-    DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
-    DJANGO_SETTINGS_ADMIN_NAME=repanier
-    DJANGO_SETTINGS_DATABASE_NAME=db_name2
-    DJANGO_SETTINGS_DATABASE_USER=db_user
-    DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
-    DJANGO_SETTINGS_EMAIL_HOST=email_host
-    DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
-    DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
-    [ALLOWED_HOSTS]
-    1:repanier2.myhost
-
- * Install & Configure Repanier
-
-```commandline
-cd ~/venv/my_repanier2/my_repanier2
-mkdir media/public -p
-sudo chgrp -R www-data media
-sudo chmod -R g+w media
-cp ~/repanier_git/repanier/static/robots.txt ~/venv/my_repanier2/my_repanier2/media/
-cp ~/repanier_git/repanier/static/favicon.ico ~/venv/my_repanier2/my_repanier2/media/
-cp ~/repanier_git/mysite/common_settings.py ~/venv/my_repanier2/my_repanier2/
-cp ~/repanier_git/mysite/urls.py ~/venv/my_repanier2/my_repanier2/
-cp ~/repanier_git/mysite/wsgi.py ~/venv/my_repanier2/my_repanier2/
-cp -R ~/repanier_git/repanier/locale/ ~/venv/my_repanier2/my_repanier2/
-cp ~/repanier_git/manage.py ~/venv/my_repanier2/
-cp -R ~/repanier_git/repanier/ ~/venv/my_repanier2/
-```
-
- * Finalize the django configuration
-
-```commandline
-cd ~/venv/my_repanier2
-python manage.py collectstatic
-python manage.py makemigrations repanier
-python manage.py migrate
-python manage.py createsuperuser
-sudo rm -rf /var/tmp/django-cache/*
-```
-
-~ As Root (or with sudo) ~
-
- * Create nginx my_repanier2 vHost
-
-```commandline
-nano /etc/nginx/sites-available/my_repanier2
-```
-    server {
-        listen 80;
-        listen [::]:80;
-    
-        server_name repanier2.host;
-    
-        access_log /var/log/nginx/my_repanier2_access.log;
-        error_log /var/log/nginx/my_repanier2_error.log;
-    
-        client_max_body_size 3M;
-    
-        location /media/ {
-            alias /home/repanier/venv/my_repanier2/my_repanier2/media/public/;
-        }
-    
-        location /static/ {
-            alias /home/repanier/venv/my_repanier2/my_repanier2/collect-static/;
-        }
-    
-        location /favicon.ico {
-            alias /home/repanier/venv/my_repanier2/my_repanier2/collect-static/favicon.ico;
-        }
-    
-        location /robots.txt {
-            alias /home/repanier/venv/my_repanier2/my_repanier2/collect-static/robots.txt;
-        }
-        location / {
-            include		uwsgi_params;
-            uwsgi_param HTTP_X_FORWARDED_HOST $server_name;
-            uwsgi_pass 	unix:///tmp/my_repanier2.sock;
-            uwsgi_read_timeout 600s;
-            uwsgi_send_timeout 60s;
-            uwsgi_connect_timeout 60s;
-        }
-    }
-```commandline
-	ln -s /etc/nginx/sites-available/my_repanier2 /etc/nginx/sites-enabled/my_repanier2
-	service nginx reload
-```
-
- * Create uwsgi my_repanier2 config
-
-```commandline
-nano /etc/uwsgi/apps-available/my_repanier2.ini
-```
-    [uwsgi]
-    vhost = true
-    plugins = python35
-    socket = /tmp/my_repanier2.sock
-    master = true
-    enable-threads = true
-    processes = 1
-    thread = 2
-    buffer-size = 8192
-    wsgi-file = /home/repanier/venv/my_repanier2/my_repanier2/wsgi.py
-    virtualenv = /home/repanier/venv/
-    chdir = /home/repanier/venv/my_repanier2/
+    wsgi-file = /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/wsgi.py
+    virtualenv = /home/repanier/prd1/
+    chdir = /home/repanier/prd1/_0_prd_ptidej/
     harakiri = 360
 ```commandline
-ln -s /etc/uwsgi/apps-available/my_repanier2.ini /etc/uwsgi/apps-enabled/my_repanier2.ini
-service uwsgi restart
+sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_0_prd_ptidej.ini
 ```
 
-
-How to use https (with letsencrypt)
------------------------------------
-
-~ As Root (or with sudo) ~
-
- * Install the certbot package
-
-```commandline
-	apt install certbot
-```
-
- * Create Dhparams
-
-```commandline
-	mkdir /etc/nginx/ssl
-	/usr/bin/openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
-```
-
- * Edit vhost my_repanier
-
-```commandline
-	nano /etc/nginx/sites-available/my_repanier
-```
-    server {
-        listen 80;
-        listen [::]:80;
-
-        server_name repanier.host;
-
-        access_log /var/log/nginx/my_repanier_access.log;
-        error_log /var/log/nginx/my_repanier_error.log;
-
-        client_max_body_size 3M;
-
-        # Let's Encrypt certificates with Acmetool
-        location ^~ /.well-known/acme-challenge/ {
-            root   /var/www/html/;
-            allow all;
-            default_type "text/plain";
-            try_files $uri /dev/null =404;
-        }
-
-        location /media/ {
-            alias /home/repanier/venv/my_repanier/my_repanier/media/public/;
-        }
-
-        location /static/ {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/;
-        }
-
-        location /favicon.ico {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/favicon.ico;
-        }
-
-        location /robots.txt {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/robots.txt;
-        }
-        location / {
-            include	 uwsgi_params;
-            uwsgi_param HTTP_X_FORWARDED_HOST $server_name;
-            uwsgi_pass  unix:///tmp/my_repanier.sock;
-            uwsgi_read_timeout 600s;
-            uwsgi_send_timeout 60s;
-            uwsgi_connect_timeout 60s;
-        }
-    }
-```commandline
-service nginx reload
-```
-
- * Create the certificate
-
-```commandline
-	certbot certonly --webroot -m admin_email@mail.org -t --agree-tos  -w /var/www/html/ -d repanier.host
-```
-
- * Edit vhost my_repanier
-	(check here: https://mozilla.github.io/server-side-tls/ssl-config-generator/ to help youfind the ciphers that suit best your situation)
-
-```commandline
-nano /etc/nginx/sites-available/my_repanier
-```
-    server {
-        listen 80;
-        listen [::]:80;
-
-        server_name repanier.host;
-
-        # Let's Encrypt certificates with Acmetool
-        location ^~ /.well-known/acme-challenge/ {
-            root   /var/www/html/;
-            allow all;
-            default_type "text/plain";
-            try_files $uri /dev/null =404;
-        }
-
-        location / {
-            return     301 https://$host$request_uri;
-        }
-    }
-
-    server {
-        listen 443 ssl http2;
-        listen [::]:443 ssl http2;
-
-        server_name repanier.host;
-
-        client_max_body_size 3M;
-
-        ssl on;
-        ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
-
-        ssl_protocols              TLSv1 TLSv1.1 TLSv1.2;
-        ssl_prefer_server_ciphers on;
-        ssl_session_cache shared:SSL:10m;
-        ssl_session_timeout 1h;
-        ssl_dhparam /etc/nginx/ssl/dhparam.pem;
-
-        ssl_stapling on;
-        ssl_stapling_verify on;
-        resolver 8.8.8.8 8.8.4.4 valid=300s;
-        resolver_timeout 5s;
-
-        ssl_certificate /etc/letsencrypt/live/repanier.host/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/repanier.host/privkey.pem;
-
-        location /media/ {
-            alias /home/repanier/venv/my_repanier/my_repanier/media/public/;
-        }
-
-        location /static/ {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/;
-        }
-
-        location /favicon.ico {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/favicon.ico;
-        }
-
-        location /robots.txt {
-            alias /home/repanier/venv/my_repanier/my_repanier/collect-static/robots.txt;
-        }
-
-        location / {
-            include     uwsgi_params;
-            uwsgi_param HTTP_X_FORWARDED_HOST $server_name;
-            uwsgi_pass  unix:///tmp/my_repanier.sock;
-            uwsgi_read_timeout 600s;
-            uwsgi_send_timeout 60s;
-            uwsgi_connect_timeout 60s;
-        }
-
-        access_log /var/log/nginx/access.log;
-        error_log /var/log/nginx/error.log;
-    }
-
-```commandline
-service nginx reload
-```
-
-How to update repanir instances
--------------------------------
-
-Je n'ai pas encore eu la possibilité de mettre à jour et donc de tester la procédure
-Check pour voir si ça te semble correct.
-
-```commandline
-(cd ~/repanier_git && git pull)
-cd ~/venv/my_repanier
-rm -R ~/venv/my_repanier/repanier
-cp -R ~/repanier_git/repanier/ ~/venv/my_repanier/
-
-rm -R ~/venv/my_repanier/my_repanier/collect-static/
-sudo rm -rf /var/tmp/django-cache/*
-python manage.py collectstatic
-python manage.py makemigrations repanier
-python manage.py migrate
-sudo rm -rf /var/tmp/django-cache/*
-
-service uwsgi reload
-```
-
+## Install or update `Repanier`
+1. Git clone the `Repanier` project into the home folder of the user `repanier`
+    ```commandline
+    cd ~
+    rm -rf repanier_git
+    git clone https://github.com/pcolmant/repanier repanier_git
+    ```
+2. Goto the virtualenv and activate it
+    ```commandline
+    cd ~/prd1
+    source bin/activate
+    ```
+3. Create the media directory **if it's not done yet** and give it correct read/write acces rights for the webserver. For the impatient, this setting come from [common_settings.py](https://raw.githubusercontent.com/pcolmant/repanier/master/mysite/common_settings.py) : `MEDIA_ROOT`
+    ```commandline
+    cd ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
+    mkdir media/public -p
+    sudo chgrp -R www-data media
+    sudo chmod -R g+w media
+    ```
+4. Populate it with the `Repanier` project
+    ```commandline
+    cp ~/repanier_git/mysite/media/robots.txt ~/prd1/_0_prd_ptidej/_0_prd_ptidej/media/
+    cp ~/repanier_git/mysite/media/favicon.ico ~/prd1/_0_prd_ptidej/_0_prd_ptidej/media/
+    cp ~/repanier_git/mysite/common_settings.py ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
+    cp ~/repanier_git/mysite/urls.py ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
+    cp ~/repanier_git/mysite/wsgi.py ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
+    cp -R ~/repanier_git/mysite/locale/ ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
+    cp ~/repanier_git/manage.py ~/prd1/_0_prd_ptidej/
+    cp -R ~/repanier_git/repanier/ ~/prd1/_0_prd_ptidej/
+    ```
+5. Create the system configuration file for `Repanier`.
+    ```commandline
+    nano ~/prd1/_0_prd_ptidej/_0_prd_ptidej/_0_prd_ptidej.ini
+    ```
+        [DJANGO_SETTINGS]
+        DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
+        DJANGO_SETTINGS_ADMIN_NAME=admin_name
+        DJANGO_SETTINGS_DATABASE_NAME=db_name
+        DJANGO_SETTINGS_DATABASE_USER=db_user
+        DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
+        DJANGO_SETTINGS_EMAIL_HOST=email_host
+        DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
+        DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
+        [ALLOWED_HOSTS]
+        1:repanier.myhost
+    ```
+    A common mistake here is to use a non valid `repanier.host`name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
+6. Clear the cache to avoid access rights conflicts
+    ```commandline
+    sudo rm -rf /var/tmp/django-cache/*
+    ```
+7. Update `Repanier` static files and data base
+    ```commandline
+    cd ~/prd1/_0_prd_ptidej
+    python manage.py collectstatic
+    python manage.py makemigrations repanier
+    python manage.py migrate
+    ```
+8. Create a superuser **if it's not done yet**
+    ```commandline
+    python manage.py createsuperuser
+    ```
+9. Clear again the cache to avoid access rights conflicts
+    ```commandline
+    sudo rm -rf /var/tmp/django-cache/*
+    ```
+10. Restart (`restart`) nginx and uwsgi -- or Reload if no DNS/certificate change (`reload`)
+    ```commandline
+    sudo nginx -t && sudo nginx -s restart
+    service uwsgi restart
+    
+    ```
 How to change superuser passord
 -------------------------------
-
-Celui qui est créé va la commande 'python manage.py createsuperuser'. 
-Y a pas moyen de changer son mdp via l'interface web
-
+1. Goto the virtualenv and activate it
+    ```commandline
+    cd ~/prd1
+    source bin/activate
+    ```
+2. If you know the superuser user name
+    ```commandline
+    manage.py changepassword user_name
+    ```
+3. Else create a new one
+    ```commandline
+    python manage.py createsuperuser
+    ```
+4. Clear the cache to avoid access rights conflicts
+    ```commandline
+    sudo rm -rf /var/tmp/django-cache/*
+    ```
+10. Reload uwsgi
+    ```commandline
+    service uwsgi reload
+    
+    ```
 How to debug
 ------------
-```commandline
-nano ~/venv/my_repanier/my_repanier/my_repanier.ini
-```
+/!\ Never do it on a production environment and never forget to set it back to non debug mode...
 
-    DJANGO_SETTINGS_DEBUG=True
-    DJANGO_SETTINGS_LOGGING=True
-
-```commandline
-rm -R ~/venv/my_repanier/my_repanier/collect-static/
-sudo rm -rf /var/tmp/django-cache/*
-python manage.py collectstatic
-python manage.py makemigrations repanier
-python manage.py migrate
-sudo rm -rf /var/tmp/django-cache/*
-
-service uwsgi reload
-```
-(check log files in /var/log/uwsgi/app/)
+1. Update the `Repanier` config file
+    ```commandline
+    nano ~/prd1/_0_prd_ptidej/_0_prd_ptidej/_0_prd_ptidej.ini
+    ```
+        DJANGO_SETTINGS_DEBUG=True
+        DJANGO_SETTINGS_LOGGING=True
+2. Reload uwsgi
+    ```commandline
+    service uwsgi reload
+    ```
+How to check log files
+----------------------
+See /var/log/uwsgi/app/_0_prd_ptidej* and /var/log/nginx/_0_prd_ptidej*
 
