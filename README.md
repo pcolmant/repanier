@@ -103,7 +103,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
 1. On a new SSH session, log you in with user `repanier`.
 
 ## Create Django cache and session directories
-Each `Repanier` website will be (later) configured to use it's own cache and file session subdirectory.
+Each `Repanier` website will be (later) configured to use it's own cache and file session subdirectory under both main directories we create now.
 For the impatient, this configuration will be made in [common_settings.py](https://raw.githubusercontent.com/pcolmant/repanier/master/mysite/common_settings.py) : `DJANGO_SETTINGS_CACHE` and `DJANGO_SETTINGS_SESSION`
 1. Create Django cache directory and give acces to it at the group `www-data`. This group is used by the web server `nginx`.
     ```commandline
