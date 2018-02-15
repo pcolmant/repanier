@@ -172,7 +172,7 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     django-admin.py startproject _0_prd_ptidej
     ```
     
-## Configure nginx to answer to `ptidej.repanier.be` dns name
+## Configure nginx to answer to `example.com` dns name
 
 ```commandline
 sudo nano /etc/nginx/nginx.conf
@@ -195,7 +195,7 @@ sudo nano /etc/nginx/sites-available/_0_prd_ptidej
         listen 80;
         listen [::]:80;
 
-        server_name ptidej.repanier.be;
+        server_name example.com;
 
         access_log /var/log/nginx/_0_prd_ptidej_access.log;
         error_log /var/log/nginx/_0_prd_ptidej_error.log;
@@ -221,6 +221,9 @@ sudo nano /etc/nginx/sites-available/_0_prd_ptidej
         location / {
             include                 uwsgi_params;
             uwsgi_param             HTTP_X_FORWARDED_HOST $server_name;
+            # With NAT on virtualbox, if you NAT local port 9000 to 80 on virtual server 
+            #     replace HTTP_X_FORWARDED_HOST $server_name;
+            #     with HTTP_X_FORWARDED_HOST $server_name:9000;
             uwsgi_pass              unix:///tmp/_0_prd_ptidej.sock;
             uwsgi_read_timeout      600s;
             uwsgi_send_timeout      60s;
@@ -297,9 +300,14 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_
         DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
         DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
         [ALLOWED_HOSTS]
-        1:ptidej.repanier.be
+        1:example.com
     ```
-    A common mistake here is to use a non valid `ptidej.repanier.be` DNS name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
+    A common mistake here is to use a non valid `example.com` DNS name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
+    If you are on a local PC/MAC/.. do not forget to add 
+    example.com  127.0.0.1
+    to your "hosts" file. 
+    On Windows, it's usually : C:\WINDOWS\system32\drivers\etc\hosts
+    Always on windows, remember to open a shell as an Administrator to edit C:\WINDOWS\system32\drivers\etc\hosts with notepad
 6. Clear the cache to avoid access rights conflicts
     ```commandline
     sudo rm -rf /var/tmp/django-cache/*
@@ -319,10 +327,10 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_
     ```commandline
     sudo rm -rf /var/tmp/django-cache/*
     ```
-10. Restart (`restart`) nginx and uwsgi -- or Reload if no DNS/certificate change (`reload`)
+10. Restart (`restart`) nginx and uwsgi -- or Reload (`reload`) if no DNS/certificate change 
     ```commandline
-    sudo nginx -t && sudo nginx -s restart
-    service uwsgi restart
+    sudo nginx -t && sudo service nginx restart
+    sudo service uwsgi restart
     
     ```
 How to change superuser password
