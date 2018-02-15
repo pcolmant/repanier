@@ -35,7 +35,7 @@ Licence : GPL v3
 
 This procedure shows you step by step how to install `Repanier` on a server.
 By applying it, you have all the elements to update a `Repanier` website with a new version of `Repanier`.
-And even to install several `Repanier` websites on a seveur.
+And even to install several `Repanier` websites on a server.
 
 ## Linux prerequisites to run only once
 
@@ -71,16 +71,12 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     ```commandline
     service ssh restart
     ```
-7. On a new SSH session, log you in with user `repanier`.
+7. On a new SSH session, log you in with user `repanier`. Then test.
     ```commandline
     sudo -l
     ```
 8. If you encounter ***no issue*** to execute the *`sudo -l`*, then close all active ssh sessions.
-9. On a new SSH session, log you in with user `repanier`.
-    ```commandline
-    sudo -l
-    ```
-9. Install needed linux packages.
+9. On a new SSH session, log you in with user `repanier`. Then install needed linux packages.
     ```commandline
     sudo apt-get install -y build-essential gettext unzip git \
             python3-dev virtualenv \
