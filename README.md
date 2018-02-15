@@ -167,7 +167,7 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     django-admin.py startproject _0_prd_ptidej
     ```
     
-## Configure nginx to answer to `repanier.host` dns name
+## Configure nginx to answer to `ptidej.repanier.be` dns name
 
 ```commandline
 sudo nano /etc/nginx
@@ -186,7 +186,7 @@ sudo nano /etc/nginx/sites-available/_0_prd_ptidej
         listen 80;
         listen [::]:80;
 
-        server_name repanier.host;
+        server_name ptidej.repanier.be;
 
         access_log /var/log/nginx/_0_prd_ptidej_access.log;
         error_log /var/log/nginx/_0_prd_ptidej_error.log;
@@ -288,9 +288,9 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_
         DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
         DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
         [ALLOWED_HOSTS]
-        1:repanier.myhost
+        1:ptidej.repanier.be
     ```
-    A common mistake here is to use a non valid `repanier.host`name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
+    A common mistake here is to use a non valid `ptidej.repanier.be` DNS name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
 6. Clear the cache to avoid access rights conflicts
     ```commandline
     sudo rm -rf /var/tmp/django-cache/*
