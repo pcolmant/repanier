@@ -80,7 +80,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     ```commandline
     service ssh restart
     ```
-7. On a new SSH session, log you in with user `repanier`. Reminder : Use the correct shh port. Then test.
+7. On a new SSH session, log you in with user `repanier`. Reminder : Use the correct ssh port. Then test.
     ```commandline
     sudo -l
     ```
