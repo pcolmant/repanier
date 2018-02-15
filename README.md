@@ -274,7 +274,7 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_
     cp ~/repanier_git/manage.py ~/prd1/_0_prd_ptidej/
     cp -R ~/repanier_git/repanier/ ~/prd1/_0_prd_ptidej/
     ```
-5. Create the system configuration file for `Repanier`.
+5. Create the system configuration file for `Repanier` **if it's not done yet**.
     ```commandline
     nano ~/prd1/_0_prd_ptidej/_0_prd_ptidej/_0_prd_ptidej.ini
     ```
@@ -316,8 +316,8 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_
     service uwsgi restart
     
     ```
-How to change superuser passord
--------------------------------
+How to change superuser password
+--------------------------------
 1. Goto the virtualenv and activate it
     ```commandline
     cd ~/prd1
