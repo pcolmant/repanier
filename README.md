@@ -50,11 +50,20 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     apt-get upgrade -y
     apt-get install -y sudo
     ```
-3. Be sure to have the right locales set. This will be used to create the PostgreSQL data base.
+3. Check if `apache` is installed. If yes, the uninstall it because we will use `nginx` and not `apache`.
+    ```commandline
+    service apache2 status
+    ---> Goto step 4 if the message is like : "Unit apache2.service could not be found."
+    service apache2 stop
+    apt-get purge -y apache2 apache2-utils
+    apt-get -y autoremove
+    rm -rf /etc/apache2
+    ```
+4. Be sure to have the right locales set. This will be used to create the PostgreSQL data base.
     ```commandline
     dpkg-reconfigure locales    <<--- select>>>> fr_BE.UTF-8  and/or other following your need
     ```
-4. Create a new user whose name is `repanier` (or whatever else). It will be used to install the `Repanier` (avoid `root` for security purpose). Let it be sudoers and a sshuser.
+5. Create a new user whose name is `repanier` (or whatever else). It will be used to install the `Repanier` (avoid `root` for security purpose). Let it be sudoers and a sshuser.
     ```commandline
     useradd -m -s /bin/bash repanier
     passwd repanier             <<--- must be a complex password
@@ -67,11 +76,11 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
         Protocol 2
         PermitRootLogin no      <<--- uncomment and set to no
         AllowGroups sshusers    <<--- new line to add
-5. Do not close *this current* SSH session.
+6. Do not close *this current* SSH session.
     ```commandline
     service ssh restart
     ```
-7. On a new SSH session, log you in with user `repanier`. Then test.
+7. On a new SSH session, log you in with user `repanier`. Reminder : Use the correct shh port. Then test.
     ```commandline
     sudo -l
     ```
@@ -91,7 +100,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
 
 ## From now on, I guess you're still logged in as a `repanier` user
 
-1. Login as a `repanier` using a ssh session. Reminder : Use the correct shh port
+1. On a new SSH session, log you in with user `repanier`.
 
 ## Create Django cache and session directories
 Each `Repanier` website will be (later) configured to use it's own cache and file session subdirectory.
