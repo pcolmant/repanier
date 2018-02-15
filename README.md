@@ -50,7 +50,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     apt-get upgrade -y
     apt-get install -y sudo
     ```
-3. Be sure to have the right locales set. This will be used to create the PostgreSQL data base
+3. Be sure to have the right locales set. This will be used to create the PostgreSQL data base.
     ```commandline
     dpkg-reconfigure locales    <<--- select>>>> fr_BE.UTF-8  and/or other following your need
     ```
@@ -67,27 +67,30 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
         Protocol 2
         PermitRootLogin no      <<--- uncomment and set to no
         AllowGroups sshusers    <<--- new line to add
-    ```
 5. Do not close *this current* SSH session.
     ```commandline
     service ssh restart
     ```
-7. On a new SSH session logged with user `repanier`.
+7. On a new SSH session, log you in with user `repanier`.
     ```commandline
     sudo -l
     ```
-8. If you encounter ***no issue*** to execute the *`sudo -l`*, then close all active ssh sessions but this where you are logged in as user `repanier`.
+8. If you encounter ***no issue*** to execute the *`sudo -l`*, then close all active ssh sessions.
+9. On a new SSH session, log you in with user `repanier`.
+    ```commandline
+    sudo -l
+    ```
 9. Install needed linux packages.
     ```commandline
-    apt-get install -y build-essential gettext unzip git \
+    sudo apt-get install -y build-essential gettext unzip git \
             python3-dev virtualenv \
             postgresql libpq-dev \
             nginx uwsgi uwsgi-plugin-python3 \
             zlib1g-dev libtiff5-dev libjpeg62-turbo-dev libfreetype6-dev liblcms2-dev libwebp-dev
     ```
-10. Reboot to apply changes on all process.
+10. Reboot to apply changes on all active processes.
     ```commandline
-    reboot
+    sudo reboot
     ```
 
 ## From now on, I guess you're still logged in as a `repanier` user
