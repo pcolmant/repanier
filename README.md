@@ -50,7 +50,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     apt-get upgrade -y
     apt-get install -y sudo
     ```
-3. Check if `apache` is installed. If yes, the uninstall it because we will use `nginx` and not `apache`.
+3. Check if `apache` is installed. If yes, then uninstall it because we will use `nginx` and not `apache` to listen to port 80 and 443.
     ```commandline
     service apache2 status
     ---> Goto step 4 if the message is like : "Unit apache2.service could not be found."
@@ -98,7 +98,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     sudo reboot
     ```
 
-## From now on, I guess you're still logged in as a `repanier` user
+## From now on, I guess you're still logged in as user `repanier`
 
 1. On a new SSH session, log you in with user `repanier`.
 
