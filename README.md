@@ -108,13 +108,13 @@ For the impatient, this configuration will be made in [common_settings.py](https
 1. Create Django cache directory and give acces to it at the group `www-data`. This group is used by the web server `nginx`.
     ```commandline
     mkdir /var/tmp/django-cache
-    chgrp www-data /var/tmp/django-cache
+    sudo chgrp www-data /var/tmp/django-cache
     chmod g+w /var/tmp/django-cache
     ```
 2. Create Django file session directory and give acces to it at the group `www-data`.
     ```commandline
     mkdir /var/tmp/django-session
-    chgrp www-data /var/tmp/django-session
+    sudo chgrp www-data /var/tmp/django-session
     chmod g+w /var/tmp/django-session
     ```
 ## Set up a Python virtualenv
@@ -135,7 +135,7 @@ And then create (or migrate) `Repanier` websites.
     ```
 4. Install the pypi librairies versions required by `Repanier`
     ```commandline
-    https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement.txt
+    wget https://raw.githubusercontent.com/pcolmant/repanier/master/requirements/requirement.txt
     pip install -r requirement.txt
     ```
 
@@ -175,14 +175,18 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
 ## Configure nginx to answer to `ptidej.repanier.be` dns name
 
 ```commandline
-sudo nano /etc/nginx
+sudo nano /etc/nginx/nginx.conf
 ```
+    ...
     user www-data;
+    ...
     http {
-        send_timeout 300s;
+        ...
+        send_timeout                300s;
         proxy_connect_timeout       60s;
         proxy_send_timeout          60s;
         proxy_read_timeout          610s;
+        ...
     }
 ```commandline
 sudo nano /etc/nginx/sites-available/_0_prd_ptidej
@@ -215,12 +219,12 @@ sudo nano /etc/nginx/sites-available/_0_prd_ptidej
         }
 
         location / {
-            include		uwsgi_params;
-            uwsgi_param HTTP_X_FORWARDED_HOST $server_name;
-            uwsgi_pass 	unix:///tmp/_0_prd_ptidej.sock;
-            uwsgi_read_timeout 600s;
-            uwsgi_send_timeout 60s;
-            uwsgi_connect_timeout 60s;
+            include                 uwsgi_params;
+            uwsgi_param             HTTP_X_FORWARDED_HOST $server_name;
+            uwsgi_pass              unix:///tmp/_0_prd_ptidej.sock;
+            uwsgi_read_timeout      600s;
+            uwsgi_send_timeout      60s;
+            uwsgi_connect_timeout   60s;
         }
     }
 ```commandline
