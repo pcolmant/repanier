@@ -35,16 +35,16 @@ Licence : GPL v3
 
 This procedure shows you step by step how to install `Repanier` on a server.
 By applying it, you have all the elements to update a `Repanier` website with a new version of `Repanier`.
-And even to install several `Repanier` website on a seveur.
+And even to install several `Repanier` websites on a seveur.
 
 ## Linux prerequisites to run only once
 
-These prerequisites enhance the security of your server and configure it with the minimum libraries required for the installation of Repanier. 
+These prerequisites enhance the security of your server and configure it with the minimum libraries required for the installation of `Repanier`. 
 If you use a different distribution than Debian 9, take a look at [cookiecutter-django](https://github.com/pydanny/cookiecutter-django/tree/master/%7B%7Bcookiecutter.project_slug%7D%7D/utility).
 If you want to install `Repanier` on a container, a good starting point is [Today I Learned – A Brief Intro to Docker for Djangonauts](https://www.revsys.com/tidbits/brief-intro-docker-djangonauts/)
 
 1. Login as `root` using a ssh session.
-2. Update you installation and install `sudo`.
+2. Update Linux and install `sudo`.
     ```commandline
     apt-get update
     apt-get upgrade -y
@@ -54,8 +54,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     ```commandline
     dpkg-reconfigure locales    <<--- select>>>> fr_BE.UTF-8  and/or other following your need
     ```
-4. Login as `root` using a ssh session.
-5. Create a new user that will install the application (avoid `root` for security purpose), let it be sudoers and a sshuser. In the example, the name of this new user is `repanier`.
+4. Create a new user whose name is `repanier` (or whatever else). It will be used to install the `Repanier` (avoid `root` for security purpose). Let it be sudoers and a sshuser.
     ```commandline
     useradd -m -s /bin/bash repanier
     passwd repanier             <<--- must be a complex password
@@ -69,7 +68,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
         PermitRootLogin no      <<--- uncomment and set to no
         AllowGroups sshusers    <<--- new line to add
     ```
-6. Do not close *this current* SSH session.
+5. Do not close *this current* SSH session.
     ```commandline
     service ssh restart
     ```
