@@ -145,7 +145,7 @@ class OrderView(ListView):
                 'unit_deposit',
                 'translations__long_name',
             )
-            context['staff_order'] = Staff.get_order_responsible()
+            context['staff_order'] = Staff.get_or_create_order_responsible()
             if self.is_anonymous:
                 context['how_to_register'] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
                     'how_to_register', any_language=True, default=EMPTY_STRING)

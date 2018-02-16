@@ -32,8 +32,8 @@ def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     worksheet.header_footer.left_footer.text = "{}".format(title2)
     worksheet.header_footer.center_footer.text = "{}".format(title1)
     worksheet.header_footer.right_footer.text = 'Page &[Page]/&[Pages]'
-    orders_responsible = Staff.get_order_responsible()
-    invoices_responsible = Staff.get_invoice_responsible()
+    orders_responsible = Staff.get_or_create_order_responsible()
+    invoices_responsible = Staff.get_or_create_invoice_responsible()
     s1 = EMPTY_STRING
     if orders_responsible:
         c = orders_responsible.customer_responsible

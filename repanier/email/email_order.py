@@ -36,7 +36,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
             REPANIER_SETTINGS_GROUP_NAME,
             filename
         )
-        staff = Staff.get_order_responsible()
+        staff = Staff.get_or_create_order_responsible()
 
         if len(deliveries_id) > 0:
             # if closed deliveries_id is not empty list and not "None" then all_producers should be True

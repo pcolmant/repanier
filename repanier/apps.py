@@ -1,8 +1,8 @@
 # -*- coding: utf-8
 import sys
 import time
-
 from decimal import setcontext, DefaultContext, ROUND_HALF_UP
+
 from django.apps import AppConfig
 from django.conf import settings
 from django.db import connection
@@ -12,8 +12,6 @@ from django.utils.translation import ugettext_lazy as _
 REPANIER_SETTINGS_CONFIG = None
 REPANIER_SETTINGS_TEST_MODE = None
 REPANIER_SETTINGS_GROUP_NAME = None
-REPANIER_SETTINGS_GROUP_CUSTOMER_ID = None
-REPANIER_SETTINGS_GROUP_PRODUCER_ID = None
 REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
 REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
 REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence on ")
@@ -45,8 +43,8 @@ DJANGO_IS_MIGRATION_RUNNING = 'makemigrations' in sys.argv or 'migrate' in sys.a
 REPANIER_SETTINGS_NOTIFICATION = None
 
 
-class RepanierSettings(AppConfig):
-    name = 'repanier'
+class RepanierConfig(AppConfig):
+    name = "repanier"
     verbose_name = "Repanier"
 
     def ready(self):
@@ -70,12 +68,11 @@ class RepanierSettings(AppConfig):
         # the models when django.contrib."MODELS" isn't installed.
         from django.contrib.auth.models import Group, Permission
         from django.contrib.contenttypes.models import ContentType
-        from django.contrib.sites.models import Site
 
         from repanier.models.configuration import Configuration
         from repanier.models.notification import Notification
         from repanier.models.lut import LUT_DepartmentForCustomer
-        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR, WEBMASTER_GROUP
+        from repanier.const import DECIMAL_ONE, WEBMASTER_GROUP
 
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
@@ -84,24 +81,6 @@ class RepanierSettings(AppConfig):
             if notification is None:
                 notification = Notification.objects.create()
             notification.save()
-            config = Configuration.objects.filter(id=DECIMAL_ONE).first()
-            if config is None:
-                group_name = settings.ALLOWED_HOSTS[0]
-                site = Site.objects.get_current()
-                if site is not None:
-                    site.name = group_name
-                    site.domain = group_name
-                    site.save()
-                config = Configuration.objects.create(
-                    group_name=group_name,
-                    name=PERMANENCE_NAME_PERMANENCE,
-                    bank_account="BE99 9999 9999 9999",
-                    currency=CURRENCY_EUR
-                )
-                config.init_email()
-            config.upgrade_db()
-            config.save()
-
 
             # Create groups with correct rights
             # WEBMASTER
@@ -183,6 +162,12 @@ class RepanierSettings(AppConfig):
                 parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Hygiene"))
                 parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Deposit"))
                 parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Subscription"))
+
+            config = Configuration.objects.filter(id=DECIMAL_ONE).first()
+            if config is None:
+                config = Configuration.init_repanier()
+            config.upgrade_db()
+            config.save()
         except Exception as error_str:
             print("##################################")
             print(error_str)

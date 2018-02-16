@@ -526,7 +526,7 @@ class Permanence(TranslatableModel):
     @transaction.atomic
     def close_order(self, everything, producers_id=(), deliveries_id=()):
         from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
-            REPANIER_SETTINGS_GROUP_CUSTOMER_ID, REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
+            REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
             REPANIER_SETTINGS_MEMBERSHIP_FEE
 
         if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
@@ -635,9 +635,10 @@ class Permanence(TranslatableModel):
             ).order_by('?')
             if not everything:
                 offer_item_qs = offer_item_qs.filter(producer_id__in=producers_id)
+            group_id = Customer.get_or_create_group().id
             for offer_item in offer_item_qs:
                 create_or_update_one_purchase(
-                    REPANIER_SETTINGS_GROUP_CUSTOMER_ID, offer_item, q_order=1,
+                    group_id, offer_item, q_order=1,
                     batch_job=True, is_box_content=False
                 )
 

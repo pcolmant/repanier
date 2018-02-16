@@ -277,9 +277,8 @@ class BoxAdmin(TranslatableAdmin):
         return ['is_updated_on']
 
     def get_form(self, request, box=None, **kwargs):
-        from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
 
-        producer_queryset = Producer.objects.filter(id=REPANIER_SETTINGS_GROUP_PRODUCER_ID)
+        producer_queryset = Producer.objects.filter(id=Producer.get_or_create_group().id)
         form = super(BoxAdmin, self).get_form(request, box, **kwargs)
         producer_field = form.base_fields["producer"]
         picture_field = form.base_fields["picture2"]

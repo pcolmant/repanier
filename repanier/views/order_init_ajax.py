@@ -33,7 +33,7 @@ def order_init_ajax(request):
     permanence_ok_or_404(permanence)
     user = request.user
     customer = Customer.objects.filter(
-        user_id=user.id, is_active=True
+        user_id=user.id, may_order=True
     ).only(
         "id", "vat_id", "short_basket_name", "email2", "delivery_point",
         "balance", "date_balance", "may_order"

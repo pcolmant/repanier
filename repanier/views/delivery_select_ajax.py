@@ -26,7 +26,7 @@ def delivery_select_ajax(request):
     user = request.user
     json_dict = {}
     customer = Customer.objects.filter(
-        user_id=user.id, is_active=True, may_order=True) \
+        user_id=user.id, may_order=True) \
         .only("id", "language", "delivery_point").order_by('?').first()
     if customer is not None:
         translation.activate(customer.language)

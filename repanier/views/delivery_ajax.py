@@ -30,7 +30,7 @@ def delivery_ajax(request):
     if permanence is None:
         raise Http404
     customer = Customer.objects.filter(
-        user_id=user.id, is_active=True, may_order=True
+        user_id=user.id, may_order=True
     ).only(
         "id", "delivery_point", "balance"
     ).order_by('?').first()

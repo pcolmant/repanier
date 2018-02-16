@@ -108,15 +108,15 @@ class Producer(models.Model):
     is_anonymized = models.BooleanField(default=False)
 
     @classmethod
-    def get_group(cls):
+    def get_or_create_group(cls):
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:
-            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
-            name = REPANIER_SETTINGS_GROUP_NAME or settings.DJANGO_SETTINGS_GROUP_NAME
-            z_name = "z-{}".format(name)
+            long_name = settings.DJANGO_SETTINGS_GROUP_NAME
+            short_name=long_name[:25]
             producer_buyinggroup = Producer.objects.create(
-                short_profile_name=z_name,
-                long_profile_name=name,
+                short_profile_name=short_name,
+                long_profile_name=long_name,
+                phone1=settings.DJANGO_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True
             )
             # Create this to also prevent the deletion of the producer representing the buying group
@@ -393,7 +393,10 @@ class Producer(models.Model):
     class Meta:
         verbose_name = _("Producer")
         verbose_name_plural = _("Producers")
-        ordering = ("short_profile_name",)
+        ordering = ("-represent_this_buyinggroup", "short_profile_name",)
+        indexes = [
+            models.Index(fields=["-represent_this_buyinggroup", "short_profile_name"], name='producer_order_idx'),
+        ]
 
 
 @receiver(pre_save, sender=Producer)

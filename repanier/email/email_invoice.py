@@ -23,7 +23,7 @@ def send_invoice(permanence_id):
         permanence = Permanence.objects.get(id=permanence_id)
         config = REPANIER_SETTINGS_CONFIG
 
-        staff = Staff.get_invoice_responsible()
+        staff = Staff.get_or_create_invoice_responsible()
 
         if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER:
             # To the producer we speak of "payment".

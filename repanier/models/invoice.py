@@ -468,13 +468,9 @@ class CustomerInvoice(Invoice):
                 permanence_id=self.permanence_id,
             ).order_by('?').first()
             if producer_invoice_buyinggroup is None:
-                # producer_buyinggroup = Producer.objects.filter(
-                #     represent_this_buyinggroup=True
-                # ).order_by('?').first()
-                from repanier.apps import REPANIER_SETTINGS_GROUP_PRODUCER_ID
-
+                from repanier.models.producer import Producer
                 producer_invoice_buyinggroup = ProducerInvoice.objects.create(
-                    producer_id=REPANIER_SETTINGS_GROUP_PRODUCER_ID,
+                    producer=Producer.get_or_create_group(),
                     permanence_id=self.permanence_id,
                     status=self.permanence.status
                 )
@@ -644,7 +640,7 @@ class CustomerInvoice(Invoice):
                 permanence
             )
 
-            staff = Staff.get_order_responsible()
+            staff = Staff.get_or_create_order_responsible()
 
             export_order_2_1_customer(
                 self.customer, filename, permanence, staff,

@@ -27,17 +27,21 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        is_coordinator = self.cleaned_data["is_coordinator"]
-        is_order_manager = self.cleaned_data["is_order_manager"]
-        is_order_referent = self.cleaned_data["is_order_referent"]
-        is_invoice_manager = self.cleaned_data["is_invoice_manager"]
-        is_invoice_referent = self.cleaned_data["is_invoice_referent"]
-        is_webmaster = self.cleaned_data["is_webmaster"]
+        is_active = self.cleaned_data["is_active"]
+        is_coordinator = is_active and self.cleaned_data["is_coordinator"]
+        # print("------- self.cleaned_data[\"is_active\"] : {}".format(self.cleaned_data["is_active"]))
+        # print("------- is_active : {}".format(is_active))
+        # print("------- is_coordinator : {}".format(is_coordinator))
+        is_order_manager = is_active and self.cleaned_data["is_order_manager"]
+        is_order_referent = is_active and self.cleaned_data["is_order_referent"]
+        is_invoice_manager = is_active and self.cleaned_data["is_invoice_manager"]
+        is_invoice_referent = is_active and self.cleaned_data["is_invoice_referent"]
+        is_webmaster = is_active and self.cleaned_data["is_webmaster"]
         if settings.DJANGO_SETTINGS_TEST_MODE:
-            is_tester = self.cleaned_data["is_tester"]
+            is_tester = is_active and self.cleaned_data["is_tester"]
         else:
             is_tester = False
-        if not (is_coordinator or
+        if is_active and not (is_coordinator or
                 is_order_manager or is_order_referent or
                 is_invoice_manager or is_invoice_referent or
                 is_webmaster or
@@ -89,7 +93,7 @@ class UserDataForm(TranslatableModelForm):
                 )
 
         if not is_coordinator:
-            qs = Staff.objects.filter(is_coordinator=True).order_by('?')
+            qs = Staff.objects.filter(is_coordinator=True, is_active=True).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if not qs.exists():
@@ -97,6 +101,11 @@ class UserDataForm(TranslatableModelForm):
                     'is_coordinator',
                     _('At least one coordinator must be set within the management team')
                 )
+                if not is_active:
+                    self.add_error(
+                        'is_active',
+                        _('At least one coordinator must be set within the management team')
+                    )
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -213,7 +222,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer_responsible":
-            kwargs["queryset"] = Customer.objects.filter(is_active=True)
+            kwargs["queryset"] = Customer.objects.filter(is_active=True, represent_this_buyinggroup=False)
         return super(StaffWithUserDataAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, staff, form, change):

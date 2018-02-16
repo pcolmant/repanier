@@ -401,7 +401,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 with switch_language(repanier.apps.REPANIER_SETTINGS_CONFIG, language_code):
                     template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.offer_producer_mail)
 
-                staff = Staff.get_order_responsible()
+                staff = Staff.get_or_create_order_responsible()
 
                 with switch_language(permanence, language_code):
                     offer_description = permanence.safe_translation_getter(
@@ -430,7 +430,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 with switch_language(repanier.apps.REPANIER_SETTINGS_CONFIG, language_code):
                     template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail)
 
-                staff = Staff.get_order_responsible()
+                staff = Staff.get_or_create_order_responsible()
 
                 with switch_language(permanence, language_code):
                     offer_description = permanence.safe_translation_getter(
@@ -560,7 +560,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
             template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail)
 
-            staff = Staff.get_order_responsible()
+            staff = Staff.get_or_create_order_responsible()
 
             customer_last_balance = \
                 _('The balance of your account as of %(date)s is %(balance)s.') % {

@@ -7,7 +7,7 @@ import sys
 
 from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
 from cmsplugin_cascade.utils import format_lazy
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
 
@@ -32,21 +32,16 @@ def get_allowed_mail_extension(site_name):
 
 def get_group_name(site_name):
     try:
-        return site_name.split(".")[0]
+        return (site_name.split(".")[0]).capitalize()
     except:
-        return "repanier"
+        return "Repanier"
 
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-logger.info("Python path is : {}".format(sys.path))
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
-PROJECT_PATH = os.path.split(PROJECT_DIR)[0]
+PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
-MEDIA_ROOT = os.path.join(PROJECT_DIR, "media", "public")
-MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
-STATIC_ROOT = os.path.join(PROJECT_DIR, "collect-static")
-
-DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)[-1]
+logger.info("Python path is : {}".format(sys.path))
 
 config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = "{}{}{}.ini".format(
@@ -60,7 +55,7 @@ try:
         # TODO : Use parser.read_file() instead of readfp()
         config.readfp(f)
 except IOError:
-    logging.exception("Unable to open {} settings".format(conf_file_name))
+    logger.exception("Unable to open {} settings".format(conf_file_name))
     raise SystemExit(-1)
 
 DJANGO_SETTINGS_ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
@@ -70,6 +65,12 @@ DJANGO_SETTINGS_BOX = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_BOX'
 DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE',
                                    fallback="/var/tmp/django-cache")
 DJANGO_SETTINGS_CONTRACT = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CONTRACT', fallback=False)
+DJANGO_SETTINGS_COORDINATOR_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COORDINATOR_NAME',
+                                              fallback=DJANGO_SETTINGS_ADMIN_NAME)
+DJANGO_SETTINGS_COORDINATOR_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COORDINATOR_EMAIL',
+                                               fallback=DJANGO_SETTINGS_ADMIN_EMAIL)
+DJANGO_SETTINGS_COORDINATOR_PHONE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COORDINATOR_PHONE',
+                                               fallback="+32 499 96 64 32")
 DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY', fallback="be")
 DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE',
                                              fallback="django.db.backends.postgresql_psycopg2")
@@ -94,7 +95,6 @@ DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION
                                      fallback="/var/tmp/django-session")
 DJANGO_SETTINGS_STOCK = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STOCK', fallback=False)
 DJANGO_SETTINGS_TEST_MODE = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_TEST_MODE', fallback=False)
-DJANGO_STATIC = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STATIC', fallback="static")
 
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):
@@ -106,7 +106,8 @@ logger.info("Settings loaded from {}".format(conf_file_name))
 logger.info("Allowed hosts: {}".format(DJANGO_SETTINGS_ALLOWED_HOSTS))
 DJANGO_SETTINGS_GROUP_SITE_NAME = DJANGO_SETTINGS_ALLOWED_HOSTS[0]
 DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_GROUP_SITE_NAME)
-DJANGO_SETTINGS_GROUP_NAME = get_group_name(DJANGO_SETTINGS_GROUP_SITE_NAME)
+DJANGO_SETTINGS_GROUP_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_GROUP_NAME',
+                                        fallback=get_group_name(DJANGO_SETTINGS_GROUP_SITE_NAME))
 
 # Avoid impossible options
 if DJANGO_SETTINGS_IS_MINIMALIST:
@@ -122,9 +123,6 @@ DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
-# If statics file change with same file name, a path change will force a reload on the client side -> DJANGO_STA
-STATIC_URL = "{}{}{}".format(os.sep, DJANGO_STATIC, os.sep)
-
 if DJANGO_SETTINGS_SITE_NAME == 'mysite':
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
     STATICFILES_DIRS = (
@@ -133,6 +131,21 @@ if DJANGO_SETTINGS_SITE_NAME == 'mysite':
 else:
     # Activate ManifestStaticFilesStorage also when in debug mode
     STATICFILES_STORAGE = 'repanier.big_blind_static.BigBlindManifestStaticFilesStorage'
+
+# Directory where working files, such as media and databases are kept
+MEDIA_DIR = os.path.join(PROJECT_DIR, "media")
+# print("------- media dir : {}".format(MEDIA_DIR))
+
+MEDIA_PUBLIC_DIR = os.path.join(MEDIA_DIR, "public")
+# print("------- media public dir : {}".format(MEDIA_PUBLIC_DIR))
+
+STATIC_DIR = os.path.join(PROJECT_DIR, "collect-static")
+# print("------- static dir : {}".format(STATIC_DIR))
+
+MEDIA_ROOT = MEDIA_PUBLIC_DIR
+MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
+STATIC_ROOT = STATIC_DIR
+STATIC_URL = "{}{}{}".format(os.sep, "static", os.sep)
 
 ###################### DEBUG
 DEBUG = DJANGO_SETTINGS_DEBUG
@@ -207,12 +220,12 @@ INSTALLED_APPS = (
 
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
     'django_select2',
-    'cmsplugin_filer_file',
-    'cmsplugin_filer_folder',
-    'cmsplugin_filer_link',
-    'cmsplugin_filer_image',
-    'cmsplugin_filer_video',
-    # 'cmsplugin_filer_utils',
+    # 'cmsplugin_filer_file', # deprecated
+    # 'cmsplugin_filer_folder', # deprecated
+    # 'cmsplugin_filer_link', # deprecated
+    # 'cmsplugin_filer_image', # deprecated
+    # 'cmsplugin_filer_video', # deprecated
+    # 'cmsplugin_filer_utils', # deprecated
     'cmsplugin_cascade',
     'cmsplugin_cascade.clipboard',  # optional
     'cmsplugin_cascade.extra_fields',  # optional
@@ -223,9 +236,9 @@ INSTALLED_APPS = (
     # 'cms_bootstrap3',
     'menus',
     'treebeard',
-    'filer',
     'easy_thumbnails',
     'easy_thumbnails.optimize',
+    'filer',
     'sekizai',
     'mptt',
     'django_mptt_admin',
@@ -334,7 +347,7 @@ CKEDITOR_SETTINGS = {
         ['Source']
     ],
     'forcePasteAsPlainText': 'true',
-    'skin': 'moono',
+    # 'skin': 'moono',
     # 'format_tags'          : 'p;h4;h5;test',
     'format_tags': 'p;h2;h3;h4;h5',
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
@@ -362,7 +375,7 @@ CKEDITOR_SETTINGS_MODEL2 = {
     ],
     'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
-    'skin': 'moono',
+    # 'skin': 'moono',
     'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
     'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities': False,
@@ -531,10 +544,11 @@ if DJANGO_SETTINGS_LOGGING:
         }
     }
 
+CMS_TEMPLATE_HOME = 'cms_home.html'
 CMS_TEMPLATES = (
     ('cms_page.html', gettext("Internal page")),
     ('cms_subpage.html', gettext("Internal page with menu on left")),
-    ('cms_home.html', gettext("Home page")),
+    (CMS_TEMPLATE_HOME, gettext("Home page")),
     ('cms_bootstrap_page.html', gettext("Bootstrap page")),
     ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
 )
@@ -706,13 +720,13 @@ CMSPLUGIN_CASCADE = {
     #         'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
     #     ),
     # ),
-    'plugins_with_sharables': {
-        'BootstrapImagePlugin': ('image_shapes', 'image_width_responsive', 'image_width_fixed',
-                                 'image_height', 'resize_options',),
-        'BootstrapPicturePlugin': ('image_shapes', 'responsive_heights', 'image_size', 'resize_options',),
-        'BootstrapButtonPlugin': ('button_type', 'button_size', 'button_options', 'icon_font',),
-        'TextLinkPlugin': ('link', 'target',),
-    },
+    # 'plugins_with_sharables': {
+    #     'BootstrapImagePlugin': ('image_shapes', 'image_width_responsive', 'image_width_fixed',
+    #                              'image_height', 'resize_options',),
+    #     'BootstrapPicturePlugin': ('image_shapes', 'responsive_heights', 'image_size', 'resize_options',),
+    #     'BootstrapButtonPlugin': ('button_type', 'button_size', 'button_options', 'icon_font',),
+    #     'TextLinkPlugin': ('link', 'target',),
+    # },
     # 'exclude_hiding_plugin' : ('SegmentPlugin', 'Badge'),
     'exclude_hiding_plugin': ('Badge'),
     'allow_plugin_hiding': True,
@@ -898,8 +912,8 @@ CMS_PLACEHOLDER_CONF = {
 
     'footer': {
         'name': gettext('Footer'),
-        'plugins': ['TextPlugin', 'FilerImagePlugin'],
-        'text_only_plugins': ['TextLinkPlugin'],
+        'plugins': ['TextPlugin'],
+        'text_only_plugins': ['TextLinkPlugin', 'FilerImagePlugin', 'BootstrapImagePlugin'],
         'limits': {
             'TextPlugin': 1,
         },

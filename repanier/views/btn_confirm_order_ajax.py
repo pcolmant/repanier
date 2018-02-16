@@ -24,7 +24,7 @@ def btn_confirm_order_ajax(request):
         raise Http404
     user = request.user
     customer = Customer.objects.filter(
-        user_id=user.id, is_active=True, may_order=True).order_by('?').first()
+        user_id=user.id, may_order=True).order_by('?').first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)
@@ -44,7 +44,7 @@ def btn_confirm_order_ajax(request):
         _("Order"),
         permanence
     )
-    staff = Staff.get_order_responsible()
+    staff = Staff.get_or_create_order_responsible()
 
     export_order_2_1_customer(customer, filename, permanence, staff)
     customer_invoice.confirm_order()

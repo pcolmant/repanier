@@ -88,56 +88,65 @@ class Staff(MPTTModel, TranslatableModel):
     is_active = models.BooleanField(_("Active"), default=True)
 
     @classmethod
-    def get_any_coordinator(cls):
-        group = cls.objects.filter(
+    def get_or_create_any_coordinator(cls):
+        coordinator = cls.objects.filter(
             is_active=True,
             is_coordinator=True
-        ).order_by('?').first()
-        if group is None:
+        ).order_by('id').first()
+        if coordinator is None:
+            # Set the first staff member as coordinator if possible
+            coordinator = cls.objects.all().order_by('id').first()
+            if coordinator is not None:
+                coordinator.is_active = True
+                coordinator.is_coordinator = True
+                coordinator.save(update_fields=["is_active", "is_coordinator"])
+        if coordinator is None:
+            # Create the very first staff member
             from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
             from repanier.models.customer import Customer
-            customer_buyinggroup = Customer.get_group()
+            very_first_customer = Customer.get_or_create_the_very_first_customer()
             user_model = get_user_model()
             user = user_model.objects.create_user(
-                username="{}@repanier.be".format(uuid.uuid1()),
+                username="{}{}".format(uuid.uuid1(), settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
                 email=EMPTY_STRING, password=None,
                 first_name=EMPTY_STRING, last_name=EMPTY_STRING)
-            group = Staff.objects.create(
+            coordinator = Staff.objects.create(
                 user=user,
                 is_active=True,
                 is_coordinator=True,
-                customer_responsible=customer_buyinggroup
+                is_webmaster=True,
+                customer_responsible=very_first_customer
             )
             cur_language = translation.get_language()
             for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
                 language_code = language["code"]
                 translation.activate(language_code)
-                group.set_current_language(language_code)
-                group.long_name = REPANIER_SETTINGS_GROUP_NAME or settings.DJANGO_SETTINGS_GROUP_NAME
-                group.save()
+                coordinator.set_current_language(language_code)
+                coordinator.long_name = _("Coordinator")
+                coordinator.save()
             translation.activate(cur_language)
-        return group
+        return coordinator
 
     @classmethod
-    def get_order_responsible(cls):
+    def get_or_create_order_responsible(cls):
         order_responsible = cls.objects.filter(
             is_active=True,
             is_order_manager=True,
         ).order_by('?').first()
         if order_responsible is None:
-            order_responsible = Staff.get_any_coordinator()
+            order_responsible = Staff.get_or_create_any_coordinator()
             order_responsible.is_order_manager = True
             order_responsible.save(update_fields=["is_order_manager"])
         return order_responsible
 
     @classmethod
-    def get_invoice_responsible(cls):
+    def get_or_create_invoice_responsible(cls):
         invoice_responsible = cls.objects.filter(
             is_active=True,
             is_invoice_manager=True
         ).order_by('?').first()
         if invoice_responsible is None:
-            invoice_responsible = Staff.get_any_coordinator()
+            invoice_responsible = Staff.get_or_create_any_coordinator()
             invoice_responsible.is_invoice_manager = True
             invoice_responsible.save(update_fields=["is_invoice_manager"])
         return invoice_responsible

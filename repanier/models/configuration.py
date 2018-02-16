@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-
 from cms.toolbar_pool import toolbar_pool
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -201,6 +200,111 @@ class Configuration(TranslatableModel):
         except Exception as error_str:
             raise ValidationError(mark_safe("{} : {}".format(self.invoice_producer_mail, error_str)))
 
+    @classmethod
+    def init_repanier(cls):
+        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR
+        from repanier.models.producer import Producer
+        from repanier.models.bankaccount import BankAccount
+        from repanier.models.staff import Staff
+        from repanier.models.customer import Customer
+
+        # Create the configuration record managed via the admin UI
+        config = Configuration.objects.filter(id=DECIMAL_ONE).first()
+        if config is not None:
+            return config
+        group_name = settings.DJANGO_SETTINGS_GROUP_NAME
+        site = Site.objects.get_current()
+        if site is not None:
+            site.name = group_name
+            site.domain = group_name
+            site.save()
+        config = Configuration.objects.create(
+            group_name=group_name,
+            name=PERMANENCE_NAME_PERMANENCE,
+            bank_account="BE99 9999 9999 9999",
+            currency=CURRENCY_EUR
+        )
+        config.init_email()
+        config.save()
+        
+        # Create firsts users
+        Producer.get_or_create_group()
+        customer_buyinggroup = Customer.get_or_create_group()
+        very_first_customer = Customer.get_or_create_the_very_first_customer()
+
+        BankAccount.open_account(
+            customer_buyinggroup=customer_buyinggroup,
+            very_first_customer=very_first_customer
+        )
+
+        coordinator = Staff.get_or_create_any_coordinator()
+        Staff.get_or_create_order_responsible()
+        Staff.get_or_create_invoice_responsible()
+        # Create and publish first web page
+        if not coordinator.is_webmaster:
+            # This should not be the case...
+            return
+
+        from cms.models import StaticPlaceholder
+        from cms.constants import X_FRAME_OPTIONS_DENY
+        from cms import api
+        page = api.create_page(
+            title=_("Home"),
+            soft_root=True,
+            template=settings.CMS_TEMPLATE_HOME,
+            language=settings.LANGUAGE_CODE,
+            published=True,
+            parent=None,
+            xframe_options=X_FRAME_OPTIONS_DENY,
+            in_navigation=True
+        )
+        page.set_as_homepage()
+        placeholder = page.placeholders.get(slot="home-hero")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type='TextPlugin',
+            language=settings.LANGUAGE_CODE,
+            body='hello world 1')
+        placeholder = page.placeholders.get(slot="home-col-1")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type='TextPlugin',
+            language=settings.LANGUAGE_CODE,
+            body='hello world 2')
+        placeholder = page.placeholders.get(slot="home-col-2")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type='TextPlugin',
+            language=settings.LANGUAGE_CODE,
+            body='hello world 3')
+        placeholder = page.placeholders.get(slot="home-col-3")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type='TextPlugin',
+            language=settings.LANGUAGE_CODE,
+            body='hello world 4')
+        # static_placeholder = StaticPlaceholder(code=str(uuid.uuid4()), site_id=1)
+        # static_placeholder.save()
+        # add_plugin(static_placeholder.draft, "TextPlugin", lang, body="example content")
+        static_placeholder = StaticPlaceholder(
+            code="footer",
+            # site_id=1
+        )
+        static_placeholder.save()
+        api.add_plugin(
+            placeholder=static_placeholder.draft,
+            plugin_type='TextPlugin',
+            language=settings.LANGUAGE_CODE,
+            body='hello footer world'
+        )
+        # TODO : Check why this doesn't pubish the static placeholder. Try with a superuser.
+        api.publish_page(
+            page=page,
+            user=coordinator.user,
+            language=settings.LANGUAGE_CODE)
+
+        return config
+
     def init_email(self):
         for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
             language_code = language["code"]
@@ -291,58 +395,53 @@ class Configuration(TranslatableModel):
                 pass
 
     def upgrade_db(self):
-        try:
-            if self.db_version == 0:
-                from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
-                # db_version is used to not upgrade twice the db
-
-                # Staff.objects.rebuild()
-                Product.objects.filter(
-                    is_box=True
-                ).order_by('?').update(
-                    limit_order_quantity_to_stock=True
-                )
-                OfferItemWoReceiver.objects.filter(
-                    permanence__status__gte=PERMANENCE_SEND,
-                    order_unit=PRODUCT_ORDER_UNIT_PC_KG
-                ).order_by('?').update(
-                    use_order_unit_converted=True
-                )
-                for bank_account in BankAccount.objects.filter(
-                        permanence__isnull=False,
-                        producer__isnull=True,
-                        customer__isnull=True
-                ).order_by('?').only("id", "permanence_id"):
-                    Permanence.objects.filter(
-                        id=bank_account.permanence_id,
-                        invoice_sort_order__isnull=True
-                    ).order_by('?').update(invoice_sort_order=bank_account.id)
-                for permanence in Permanence.objects.filter(
-                        status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
-                        invoice_sort_order__isnull=True
-                ).order_by('?'):
-                    bank_account = BankAccount.get_closest_to(permanence.permanence_date)
-                    if bank_account is not None:
-                        permanence.invoice_sort_order = bank_account.id
-                        permanence.save(update_fields=['invoice_sort_order'])
-                Staff.objects.order_by('?').update(
-                    is_order_manager=F('is_reply_to_order_email'),
-                    is_invoice_manager=F('is_reply_to_invoice_email'),
-                    is_order_referent=F('is_contributor')
-                )
-                self.db_version = 1
-            if self.db_version == 1:
-                User.objects.filter(is_staff=False).order_by('?').update(
-                    first_name=EMPTY_STRING,
-                    last_name=F('username')
-                )
-                User.objects.filter(is_staff=True, is_superuser=False).order_by('?').update(
-                    first_name=EMPTY_STRING,
-                    last_name=F('email')
-                )
-                self.db_version = 2
-        except:
-            pass
+        if self.db_version == 0:
+            from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
+            # Staff.objects.rebuild()
+            Product.objects.filter(
+                is_box=True
+            ).order_by('?').update(
+                limit_order_quantity_to_stock=True
+            )
+            OfferItemWoReceiver.objects.filter(
+                permanence__status__gte=PERMANENCE_SEND,
+                order_unit=PRODUCT_ORDER_UNIT_PC_KG
+            ).order_by('?').update(
+                use_order_unit_converted=True
+            )
+            for bank_account in BankAccount.objects.filter(
+                    permanence__isnull=False,
+                    producer__isnull=True,
+                    customer__isnull=True
+            ).order_by('?').only("id", "permanence_id"):
+                Permanence.objects.filter(
+                    id=bank_account.permanence_id,
+                    invoice_sort_order__isnull=True
+                ).order_by('?').update(invoice_sort_order=bank_account.id)
+            for permanence in Permanence.objects.filter(
+                    status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
+                    invoice_sort_order__isnull=True
+            ).order_by('?'):
+                bank_account = BankAccount.get_closest_to(permanence.permanence_date)
+                if bank_account is not None:
+                    permanence.invoice_sort_order = bank_account.id
+                    permanence.save(update_fields=['invoice_sort_order'])
+            Staff.objects.order_by('?').update(
+                is_order_manager=F('is_reply_to_order_email'),
+                is_invoice_manager=F('is_reply_to_invoice_email'),
+                is_order_referent=F('is_contributor')
+            )
+            self.db_version = 1
+        if self.db_version == 1:
+            User.objects.filter(is_staff=False).order_by('?').update(
+                first_name=EMPTY_STRING,
+                last_name=F('username')[:30]
+            )
+            User.objects.filter(is_staff=True, is_superuser=False).order_by('?').update(
+                first_name=EMPTY_STRING,
+                last_name=F('email')[:30]
+            )
+            self.db_version = 2
 
     def __str__(self):
         return self.group_name
@@ -374,10 +473,6 @@ def configuration_pre_save(sender, **kwargs):
 @receiver(post_save, sender=Configuration)
 def configuration_post_save(sender, **kwargs):
     import repanier.cms_toolbar
-    from repanier.models.bankaccount import BankAccount
-    from repanier.models.producer import Producer
-    from repanier.models.customer import Customer
-    from repanier.models.staff import Staff
 
     config = kwargs["instance"]
     if config.id is not None:
@@ -458,18 +553,6 @@ def configuration_post_save(sender, **kwargs):
             repanier.apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
         repanier.apps.REPANIER_SETTINGS_TRANSPORT = config.transport
         repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT = config.min_transport
-
-        producer_buyinggroup = Producer.get_group()
-        repanier.apps.REPANIER_SETTINGS_GROUP_PRODUCER_ID = producer_buyinggroup.id
-
-        customer_buyinggroup = Customer.get_group()
-        repanier.apps.REPANIER_SETTINGS_GROUP_CUSTOMER_ID = customer_buyinggroup.id
-
-        BankAccount.open_account()
-
-        Staff.get_any_coordinator()
-        Staff.get_order_responsible()
-        Staff.get_invoice_responsible()
 
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)

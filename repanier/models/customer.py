@@ -27,7 +27,7 @@ from repanier.picture.fields import AjaxPictureField
 
 
 class Customer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, db_index=True)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
@@ -118,25 +118,52 @@ class Customer(models.Model):
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     @classmethod
-    def get_group(cls):
+    def get_or_create_group(cls):
         customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if customer_buyinggroup is None:
-            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
-            name = REPANIER_SETTINGS_GROUP_NAME or settings.DJANGO_SETTINGS_GROUP_NAME
-            z_name = "z-{}".format(name)
-            user = User.objects.create_user(
-                username=z_name,
-                email="{}{}".format(name, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
-                password=uuid.uuid1().hex,
-                first_name=EMPTY_STRING, last_name=name)
+            long_name = settings.DJANGO_SETTINGS_GROUP_NAME
+            short_name = long_name[:25]
+            user = User.objects.filter(username=short_name).order_by('?').first()
+            if user is None:
+                user = User.objects.create_user(
+                    username=short_name,
+                    email="{}{}".format(long_name, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                    password=uuid.uuid1().hex,
+                    first_name=EMPTY_STRING, last_name=long_name)
             customer_buyinggroup = Customer.objects.create(
                 user=user,
-                short_basket_name=z_name,
-                long_basket_name=name,
-                phone1='0499/96.64.32',
+                short_basket_name=short_name,
+                long_basket_name=long_name,
+                phone1=settings.DJANGO_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True
             )
         return customer_buyinggroup
+
+    @classmethod
+    def get_or_create_the_very_first_customer(cls):
+        very_first_customer = Customer.objects.filter(
+            represent_this_buyinggroup=False,
+            is_active=True
+        ).order_by('id').first()
+        if very_first_customer is None:
+            long_name = settings.DJANGO_SETTINGS_COORDINATOR_NAME
+            # short_name is the first word of long_name, limited to max. 25 characters
+            short_name = long_name.split(None, 1)[0][:25]
+            user = User.objects.filter(username=short_name).order_by('?').first()
+            if user is None:
+                user = User.objects.create_user(
+                    username=short_name,
+                    email=settings.DJANGO_SETTINGS_COORDINATOR_EMAIL,
+                    password=uuid.uuid1().hex,
+                    first_name=EMPTY_STRING, last_name=long_name)
+            very_first_customer = Customer.objects.create(
+                user=user,
+                short_basket_name=short_name,
+                long_basket_name=long_name,
+                phone1=settings.DJANGO_SETTINGS_COORDINATOR_PHONE,
+                represent_this_buyinggroup=False
+            )
+        return very_first_customer
 
     def get_admin_date_balance(self):
         return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)
@@ -413,9 +440,9 @@ class Customer(models.Model):
     class Meta:
         verbose_name = _("Customer")
         verbose_name_plural = _("Customers")
-        ordering = ("short_basket_name",)
-        index_together = [
-            ["user", "is_active", "may_order"],
+        ordering = ("-represent_this_buyinggroup", "short_basket_name",)
+        indexes = [
+            models.Index(fields=["-represent_this_buyinggroup", "short_basket_name"], name='customer_order_idx'),
         ]
 
 

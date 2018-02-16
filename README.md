@@ -50,18 +50,14 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     apt-get upgrade -y
     apt-get install -y sudo
     ```
-3. Check if `apache` is installed. If yes, then uninstall it because we will use `nginx` and not `apache` to listen to port 80 and 443.
+3. Disable `apache` is enabled because we will use `nginx` and not `apache` to listen to port 80 and 443.
     ```commandline
-    service apache2 status
-    ---> Goto step 4 if the message is like : "Unit apache2.service could not be found."
     service apache2 stop
-    apt-get purge -y apache2 apache2-utils
-    apt-get -y autoremove
-    rm -rf /etc/apache2
+    sudo update-rc.d apache2 disable
     ```
-4. Be sure to have the right locales set. This will be used to create the PostgreSQL data base.
+4. Be sure to have the right locales set. **This will be used to create the PostgreSQL data base**.
     ```commandline
-    dpkg-reconfigure locales    <<--- select>>>> fr_BE.UTF-8  and/or other following your need
+    dpkg-reconfigure locales    <<--- select>>>> fr_BE.UTF-8  and/or other following your need. E.g fr_CH.UTF-8
     ```
 5. Create a new user whose name is `repanier` (or whatever else). It will be used to install the `Repanier` (avoid `root` for security purpose). Let it be sudoers and a sshuser.
     ```commandline
@@ -142,7 +138,7 @@ And then create (or migrate) `Repanier` websites.
 ## Create a Django empty project with a PostgreSQL data base
 We assume here :
 * that the virtualenv is named `prd1`
-* that the `Repanier` website will be named `_0_prd_ptidej`
+* that the `Repanier` website will be named `_0_prd_example`
 
 A recommended naming convention for a Django `Repanier` website is _counter_environnement_name :
 * `counter` : 0..9,a..z
@@ -152,14 +148,14 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
 1. Create a postgresql database
     * `db_user` is `repanier`, same user as the Linux installation user created in "Linux prerequisites to run only once".
     * `db_password` is not the `repanier` user password. It's a new password you set to connect the user to the Db.
-    * `db_name` is `_0_prd_ptidej`. So, the same name as the `Repanier` website. This is not mandatory, but will ease the management.
+    * `db_name` is `_0_prd_example`. So, the same name as the `Repanier` website. This is not mandatory, but will ease the management.
     ```commandline
     sudo -u postgres psql
     ```
     ```postgresql
-    CREATE USER db_user PASSWORD 'db_password';
-    ALTER ROLE db_user WITH CREATEDB;
-    CREATE DATABASE db_name WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+    CREATE USER repanier PASSWORD 'db_password';
+    ALTER ROLE repanier WITH CREATEDB;
+    CREATE DATABASE _0_prd_example WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
     \q  <---- to leave postgresql
     ```
 2. Goto the virtualenv and activate it
@@ -169,7 +165,14 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     ```
 3. Create an empty django website
     ```commandline
-    django-admin.py startproject _0_prd_ptidej
+    django-admin.py startproject _0_prd_example
+    ```
+4. Create the media directory and give it correct read/write acces rights for the webserver. For the impatient, this setting come from [common_settings.py](https://raw.githubusercontent.com/pcolmant/repanier/master/mysite/common_settings.py) : `MEDIA_ROOT`
+    ```commandline
+    cd ~/prd1/_0_prd_example/_0_prd_example/
+    mkdir media/public -p
+    sudo chgrp -R www-data media
+    sudo chmod -R g+w media
     ```
     
 ## Configure nginx to answer to `example.com` dns name
@@ -189,7 +192,7 @@ sudo nano /etc/nginx/nginx.conf
         ...
     }
 ```commandline
-sudo nano /etc/nginx/sites-available/_0_prd_ptidej
+sudo nano /etc/nginx/sites-available/_0_prd_example
 ```
     server {
         listen 80;
@@ -197,64 +200,95 @@ sudo nano /etc/nginx/sites-available/_0_prd_ptidej
 
         server_name example.com;
 
-        access_log /var/log/nginx/_0_prd_ptidej_access.log;
-        error_log /var/log/nginx/_0_prd_ptidej_error.log;
+        access_log /var/log/nginx/_0_prd_example_access.log;
+        error_log /var/log/nginx/_0_prd_example_error.log;
 
         client_max_body_size 3M;
 
         location /media/ {
-            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/media/public/;
+            alias /home/repanier/prd1/_0_prd_example/_0_prd_example/media/public/;
         }
 
         location /static/ {
-            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/collect-static/;
+            alias /home/repanier/prd1/_0_prd_example/_0_prd_example/collect-static/;
         }
 
         location /favicon.ico {
-            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/media/favicon.ico;
+            alias /home/repanier/prd1/_0_prd_example/_0_prd_example/media/favicon.ico;
         }
 
         location /robots.txt {
-            alias /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/media/robots.txt;
+            alias /home/repanier/prd1/_0_prd_example/_0_prd_example/media/robots.txt;
         }
 
         location / {
             include                 uwsgi_params;
             uwsgi_param             HTTP_X_FORWARDED_HOST $server_name;
-            # With NAT on virtualbox, if you NAT local port 9000 to 80 on virtual server 
+            # With NAT on virtualbox, if you NAT local port 8080 to 80 on virtual server 
             #     replace HTTP_X_FORWARDED_HOST $server_name;
-            #     with HTTP_X_FORWARDED_HOST $server_name:9000;
-            uwsgi_pass              unix:///tmp/_0_prd_ptidej.sock;
+            #     with HTTP_X_FORWARDED_HOST $server_name:8080;
+            uwsgi_pass              unix:///tmp/_0_prd_example.sock;
             uwsgi_read_timeout      600s;
             uwsgi_send_timeout      60s;
             uwsgi_connect_timeout   60s;
         }
     }
 ```commandline
-sudo ln -s /etc/nginx/sites-available/_0_prd_ptidej /etc/nginx/sites-enabled/_0_prd_ptidej
+sudo ln -s /etc/nginx/sites-available/_0_prd_example /etc/nginx/sites-enabled/_0_prd_example
 ```
 
 ## Configure uwsgi
 
 ```commandline
-sudo nano /etc/uwsgi/apps-available/_0_prd_ptidej.ini
+sudo nano /etc/uwsgi/apps-available/_0_prd_example.ini
 ```
     [uwsgi]
     vhost = true
     plugins = python35
-    socket = /tmp/_0_prd_ptidej.sock
+    socket = /tmp/_0_prd_example.sock
     master = true
     enable-threads = true
     processes = 1
     thread = 2
     buffer-size = 8192
-    wsgi-file = /home/repanier/prd1/_0_prd_ptidej/_0_prd_ptidej/wsgi.py
+    wsgi-file = /home/repanier/prd1/_0_prd_example/_0_prd_example/wsgi.py
     virtualenv = /home/repanier/prd1/
-    chdir = /home/repanier/prd1/_0_prd_ptidej/
+    chdir = /home/repanier/prd1/_0_prd_example/
     harakiri = 360
 ```commandline
-sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_0_prd_ptidej.ini
+sudo ln -s /etc/uwsgi/apps-available/_0_prd_example.ini /etc/uwsgi/apps-enabled/_0_prd_example.ini
 ```
+
+## Configure `Repanier`
+
+Create the system configuration file for `Repanier`.
+```commandline
+nano ~/prd1/_0_prd_example/_0_prd_example/_0_prd_example.ini
+```
+    [DJANGO_SETTINGS]
+    DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
+    DJANGO_SETTINGS_ADMIN_NAME=admin_name
+    DJANGO_SETTINGS_DATABASE_NAME=_0_prd_example
+    DJANGO_SETTINGS_DATABASE_USER=repanier
+    DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
+    DJANGO_SETTINGS_EMAIL_HOST=email_host
+    DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
+    DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
+    DJANGO_SETTINGS_GROUP_NAME=GASAP Example
+    DJANGO_SETTINGS_COORDINATOR_NAME=Eva Frank
+    DJANGO_SETTINGS_COORDINATOR_EMAIL=eva.frank@no-spam.ws
+    DJANGO_SETTINGS_COORDINATOR_PHONE=0499/12.34.56
+    DJANGO_SETTINGS_COUNTRY=be
+    DJANGO_SETTINGS_LANGUAGE=fr
+    [ALLOWED_HOSTS]
+    1:example.com
+A common mistake here is to use a non valid `example.com` DNS name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
+If you are on a local PC/MAC/.. do not forget to add 
+example.com  127.0.0.1
+to your "hosts" file. 
+On Windows, it's usually : C:\WINDOWS\system32\drivers\etc\hosts
+Always on windows, remember to open a shell as an Administrator to edit C:\WINDOWS\system32\drivers\etc\hosts with notepad
+
 
 ## Install or update `Repanier`
 1. Git clone the `Repanier` project into the home folder of the user `repanier`
@@ -263,76 +297,51 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_ptidej.ini /etc/uwsgi/apps-enabled/_
     rm -rf repanier_git
     git clone https://github.com/pcolmant/repanier repanier_git
     ```
-2. Goto the virtualenv and activate it
+2. Populate the `Repanier` django project
+    ```commandline
+    cp ~/repanier_git/mysite/media/robots.txt ~/prd1/_0_prd_example/_0_prd_example/media/
+    cp ~/repanier_git/mysite/media/favicon.ico ~/prd1/_0_prd_example/_0_prd_example/media/
+    cp ~/repanier_git/mysite/common_settings.py ~/prd1/_0_prd_example/_0_prd_example/
+    cp ~/repanier_git/mysite/urls.py ~/prd1/_0_prd_example/_0_prd_example/
+    cp ~/repanier_git/mysite/wsgi.py ~/prd1/_0_prd_example/_0_prd_example/
+    cp -R ~/repanier_git/mysite/locale/ ~/prd1/_0_prd_example/_0_prd_example/
+    cp -R ~/repanier_git/cron/ ~/prd1/_0_prd_example/cron/
+    sudo chown www-data:www-data ~/prd1/_0_prd_example/cron/*.sh
+    sudo chmod +x ~/prd1/_0_prd_example/cron/*.sh
+    cp ~/repanier_git/manage.py ~/prd1/_0_prd_example/
+    cp -R ~/repanier_git/repanier/ ~/prd1/_0_prd_example/
+    ```
+3. Goto the virtualenv and activate it
     ```commandline
     cd ~/prd1
     source bin/activate
     ```
-3. Create the media directory **if it's not done yet** and give it correct read/write acces rights for the webserver. For the impatient, this setting come from [common_settings.py](https://raw.githubusercontent.com/pcolmant/repanier/master/mysite/common_settings.py) : `MEDIA_ROOT`
-    ```commandline
-    cd ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
-    mkdir media/public -p
-    sudo chgrp -R www-data media
-    sudo chmod -R g+w media
-    ```
-4. Populate it with the `Repanier` project
-    ```commandline
-    cp ~/repanier_git/mysite/media/robots.txt ~/prd1/_0_prd_ptidej/_0_prd_ptidej/media/
-    cp ~/repanier_git/mysite/media/favicon.ico ~/prd1/_0_prd_ptidej/_0_prd_ptidej/media/
-    cp ~/repanier_git/mysite/common_settings.py ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
-    cp ~/repanier_git/mysite/urls.py ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
-    cp ~/repanier_git/mysite/wsgi.py ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
-    cp -R ~/repanier_git/mysite/locale/ ~/prd1/_0_prd_ptidej/_0_prd_ptidej/
-    cp ~/repanier_git/manage.py ~/prd1/_0_prd_ptidej/
-    cp -R ~/repanier_git/repanier/ ~/prd1/_0_prd_ptidej/
-    ```
-5. Create the system configuration file for `Repanier` **if it's not done yet**.
-    ```commandline
-    nano ~/prd1/_0_prd_ptidej/_0_prd_ptidej/_0_prd_ptidej.ini
-    ```
-        [DJANGO_SETTINGS]
-        DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
-        DJANGO_SETTINGS_ADMIN_NAME=admin_name
-        DJANGO_SETTINGS_DATABASE_NAME=db_name
-        DJANGO_SETTINGS_DATABASE_USER=db_user
-        DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
-        DJANGO_SETTINGS_EMAIL_HOST=email_host
-        DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
-        DJANGO_SETTINGS_EMAIL_HOST_USER=email_host_user
-        [ALLOWED_HOSTS]
-        1:example.com
-    ```
-    A common mistake here is to use a non valid `example.com` DNS name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
-    If you are on a local PC/MAC/.. do not forget to add 
-    example.com  127.0.0.1
-    to your "hosts" file. 
-    On Windows, it's usually : C:\WINDOWS\system32\drivers\etc\hosts
-    Always on windows, remember to open a shell as an Administrator to edit C:\WINDOWS\system32\drivers\etc\hosts with notepad
-6. Clear the cache to avoid access rights conflicts
+4. Clear the cache to avoid access rights conflicts
     ```commandline
     sudo rm -rf /var/tmp/django-cache/*
     ```
-7. Update `Repanier` static files and data base
+5. Update `Repanier` static files and data base
     ```commandline
-    cd ~/prd1/_0_prd_ptidej
+    cd ~/prd1/_0_prd_example
     python manage.py collectstatic
     python manage.py makemigrations repanier
     python manage.py migrate
     ```
-8. Create a superuser **if it's not done yet**
+6. Create a superuser **if it's not done yet**
     ```commandline
     python manage.py createsuperuser
     ```
-9. Clear again the cache to avoid access rights conflicts
+7. Clear again the cache to avoid access rights conflicts
     ```commandline
     sudo rm -rf /var/tmp/django-cache/*
     ```
-10. Restart (`restart`) nginx and uwsgi -- or Reload (`reload`) if no DNS/certificate change 
+8. Restart (`restart`) nginx and uwsgi -- or Reload (`reload`) if no DNS/certificate change 
     ```commandline
     sudo nginx -t && sudo service nginx restart
     sudo service uwsgi restart
-    
     ```
+9. Browse to http://example.com/
+
 How to change superuser password
 --------------------------------
 1. Goto the virtualenv and activate it
@@ -355,7 +364,6 @@ How to change superuser password
 10. Reload uwsgi
     ```commandline
     service uwsgi reload
-    
     ```
 How to debug
 ------------
@@ -363,15 +371,42 @@ How to debug
 
 1. Update the `Repanier` config file
     ```commandline
-    nano ~/prd1/_0_prd_ptidej/_0_prd_ptidej/_0_prd_ptidej.ini
+    nano ~/prd1/_0_prd_example/_0_prd_example/_0_prd_example.ini
     ```
         DJANGO_SETTINGS_DEBUG=True
-        DJANGO_SETTINGS_LOGGING=True
 2. Reload uwsgi
     ```commandline
     service uwsgi reload
     ```
 How to check log files
 ----------------------
-See /var/log/uwsgi/app/_0_prd_ptidej* and /var/log/nginx/_0_prd_ptidej*
+
+```commandline
+ sudo tail -f /var/log/uwsgi/app/_0_prd_example.log
+ sudo tail -f /var/log/nginx/_0_prd_example_error.log
+ sudo tail -f /var/log/nginx/_0_prd_example_access.log
+```
+
+How to backup / restore the data base
+-------------------------------------
+
+```commandline
+pg_dump -Fc -U repanier _0_prd_example > db.sql
+pg_restore  -U repanier --format=c --no-owner --dbname=_0_prd_example db.sql
+```
+
+Repanier cron jobs
+------------------
+
+`Repanier` povides scripts to backup the db, close the orders and delete pending purchases.
+Those scripts have to be placed in cron jobs of the user `www-data`.
+
+Due to the `GDPR`, the backup db script also anonymize old and inactive customers.
+
+```commandline
+/home/repanier/prd1/_0_prd_example/cron/backup_db.sh
+/home/repanier/prd1/_0_prd_example/cron/close_orders.sh
+/home/repanier/prd1/_0_prd_example/cron/delete_pending_purchases.sh
+```
+
 

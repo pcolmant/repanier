@@ -238,7 +238,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             _("Order"),
                             permanence
                         )
-                        staff = Staff.get_order_responsible()
+                        staff = Staff.get_or_create_order_responsible()
 
                         export_order_2_1_customer(
                             customer, filename, permanence, staff)

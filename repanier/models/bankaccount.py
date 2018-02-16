@@ -50,20 +50,24 @@ class BankAccount(models.Model):
         _("Updated on"), auto_now=True)
 
     @classmethod
-    def open_account(cls):
+    def open_account(cls, customer_buyinggroup, very_first_customer):
         bank_account = BankAccount.objects.filter().order_by('?')
         if not bank_account.exists():
-            from repanier.models.customer import Customer
             BankAccount.objects.create(
                 operation_status=BANK_LATEST_TOTAL,
                 operation_date=timezone.now().date(),
                 operation_comment=_("Account opening")
             )
-            customer_buyinggroup = Customer.get_group()
             # Create this also prevent the deletion of the customer representing the buying group
             BankAccount.objects.create(
                 operation_date=timezone.now().date(),
                 customer=customer_buyinggroup,
+                operation_comment=_("Initial balance")
+            )
+            # Create this also prevent the deletion of the very first customer
+            BankAccount.objects.create(
+                operation_date=timezone.now().date(),
+                customer=very_first_customer,
                 operation_comment=_("Initial balance")
             )
 

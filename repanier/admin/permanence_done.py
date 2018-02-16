@@ -474,7 +474,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         invoice_description = permanence.safe_translation_getter(
             'invoice_description', any_language=True, default=EMPTY_STRING
         )
-        staff = Staff.get_invoice_responsible()
+        staff = Staff.get_or_create_invoice_responsible()
 
         # TODO : Align on tools.payment_message
         customer_order_amount = \

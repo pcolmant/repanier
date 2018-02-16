@@ -30,7 +30,7 @@ def send_pre_open_order(permanence_id):
             'offer_producer_mail', any_language=True, default=EMPTY_STRING
         )
 
-        staff = Staff.get_order_responsible()
+        staff = Staff.get_or_create_order_responsible()
 
         offer_description = permanence.safe_translation_getter(
             'offer_description', any_language=True, default=EMPTY_STRING
@@ -93,11 +93,10 @@ def send_open_order(permanence_id):
         permanence = Permanence.objects.get(id=permanence_id)
         config = REPANIER_SETTINGS_CONFIG
 
-        staff = Staff.get_order_responsible()
+        staff = Staff.get_or_create_order_responsible()
 
         to_email_customer = []
         for customer in Customer.objects.filter(
-                is_active=True,
                 represent_this_buyinggroup=False,
                 may_order=True,
                 language=language_code

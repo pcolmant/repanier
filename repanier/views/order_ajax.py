@@ -26,7 +26,7 @@ def order_ajax(request):
         raise Http404
     user = request.user
     customer = Customer.objects.filter(
-        user_id=user.id, is_active=True, may_order=True
+        user_id=user.id, may_order=True
     ).order_by('?').first()
     if customer is None:
         raise Http404
