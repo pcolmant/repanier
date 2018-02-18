@@ -283,9 +283,6 @@ class Configuration(TranslatableModel):
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
             body='hello world 4')
-        # static_placeholder = StaticPlaceholder(code=str(uuid.uuid4()), site_id=1)
-        # static_placeholder.save()
-        # add_plugin(static_placeholder.draft, "TextPlugin", lang, body="example content")
         static_placeholder = StaticPlaceholder(
             code="footer",
             # site_id=1
@@ -295,9 +292,13 @@ class Configuration(TranslatableModel):
             placeholder=static_placeholder.draft,
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
-            body='hello footer world'
+            body='hello world foter'
         )
-        # TODO : Check why this doesn't pubish the static placeholder. Try with a superuser.
+        static_placeholder.publish(
+            request=None,
+            language=settings.LANGUAGE_CODE,
+            force=True
+        )
         api.publish_page(
             page=page,
             user=coordinator.user,
@@ -433,14 +434,14 @@ class Configuration(TranslatableModel):
             )
             self.db_version = 1
         if self.db_version == 1:
-            User.objects.filter(is_staff=False).order_by('?').update(
-                first_name=EMPTY_STRING,
-                last_name=F('username')[:30]
-            )
-            User.objects.filter(is_staff=True, is_superuser=False).order_by('?').update(
-                first_name=EMPTY_STRING,
-                last_name=F('email')[:30]
-            )
+            for user in User.objects.filter(is_staff=False).order_by('?'):
+                user.first_name=EMPTY_STRING
+                user.last_name=user.username[:30]
+                user.save()
+            for user in User.objects.filter(is_staff=True, is_superuser=False).order_by('?'):
+                user.first_name=EMPTY_STRING
+                user.last_name=user.email[:30]
+                user.save()
             self.db_version = 2
 
     def __str__(self):
