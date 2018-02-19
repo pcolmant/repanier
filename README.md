@@ -120,7 +120,7 @@ One virtualenv can contains many `Repanier` websites, using such all the same ve
 You will need to setup a new virtualenv at least at each security update of a package present in [requirement.txt](https://github.com/pcolmant/repanier/blob/master/requirements/requirement.txt)
 And then create (or migrate) `Repanier` websites.
 
-2. Create a python virtual environment called `prd1` here. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial
+2. Create a python virtual environment called `prd1` here. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial.
     ```commandline
     cd ~
     virtualenv --python=python3 prd1
@@ -141,13 +141,13 @@ We assume here :
 * that the virtualenv is named `prd1`
 * that the `Repanier` website will be named `_0_prd_example`
 
-A recommended naming convention for a Django `Repanier` website is _counter_environnement_name :
+A recommended naming convention for a Django `Repanier` website is _counter_environment_name :
 * `counter` : 0..9,a..z
-* `environment` : `prd`, `dev`, ... The environement must match the virtualenv naming. For e.g. `prd` for virtualenv `prd1`.
+* `environment` : `prd`, `dev`, ... The environment should match the virtualenv naming. For e.g. `prd` for virtualenv `prd1`.
 * `name` : only made of lower cases.
 
 1. Create a postgresql database
-    * `db_user` is `repanier`, same user as the Linux installation user created in "Linux prerequisites to run only once".
+    * `db_user` is `_0_prd_example`. Choose whatever you want, but carefully change it to what you choose everywhere in this tutorial.
     * `db_password` is not the `repanier` user password. It's a new password you set to connect the user to the Db.
     * `db_name` is `_0_prd_example`. So, the same name as the `Repanier` website. This is not mandatory, but will ease the management.
     ```commandline
@@ -159,6 +159,7 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     CREATE DATABASE _0_prd_example WITH TEMPLATE = template0 OWNER = _0_prd_example ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
     \q  <---- to leave postgresql
     ```
+    I have not investigated why but `user`, `role` and `owner` must be set to the same value. 
 2. Goto the virtualenv and activate it
     ```commandline
     cd ~/prd1
