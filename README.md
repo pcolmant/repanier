@@ -88,6 +88,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
             postgresql libpq-dev \
             nginx uwsgi uwsgi-plugin-python3 \
             zlib1g-dev libtiff5-dev libjpeg62-turbo-dev libfreetype6-dev liblcms2-dev libwebp-dev
+    sudo rm /etc/nginx/sites-enabled/default
     ```
 10. Reboot to apply changes on all active processes.
     ```commandline
@@ -153,9 +154,9 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     sudo -u postgres psql
     ```
     ```postgresql
-    CREATE USER repanier PASSWORD 'db_password';
-    ALTER ROLE repanier WITH CREATEDB;
-    CREATE DATABASE _0_prd_example WITH TEMPLATE = template0 OWNER = db_user ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
+    CREATE USER _0_prd_example PASSWORD 'db_password';
+    ALTER ROLE _0_prd_example WITH CREATEDB;
+    CREATE DATABASE _0_prd_example WITH TEMPLATE = template0 OWNER = _0_prd_example ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
     \q  <---- to leave postgresql
     ```
 2. Goto the virtualenv and activate it
@@ -269,7 +270,7 @@ nano ~/prd1/_0_prd_example/_0_prd_example/_0_prd_example.ini
     DJANGO_SETTINGS_ADMIN_EMAIL=admin_email@mail.org
     DJANGO_SETTINGS_ADMIN_NAME=admin_name
     DJANGO_SETTINGS_DATABASE_NAME=_0_prd_example
-    DJANGO_SETTINGS_DATABASE_USER=repanier
+    DJANGO_SETTINGS_DATABASE_USER=_0_prd_example
     DJANGO_SETTINGS_DATABASE_PASSWORD=db_password
     DJANGO_SETTINGS_EMAIL_HOST=email_host
     DJANGO_SETTINGS_EMAIL_HOST_PASSWORD=email_host_password
@@ -277,7 +278,7 @@ nano ~/prd1/_0_prd_example/_0_prd_example/_0_prd_example.ini
     DJANGO_SETTINGS_GROUP_NAME=GASAP Example
     DJANGO_SETTINGS_COORDINATOR_NAME=Eva Frank
     DJANGO_SETTINGS_COORDINATOR_EMAIL=eva.frank@no-spam.ws
-    DJANGO_SETTINGS_COORDINATOR_PHONE=0499/12.34.56
+    DJANGO_SETTINGS_COORDINATOR_PHONE=0456/12.34.56
     DJANGO_SETTINGS_COUNTRY=be
     DJANGO_SETTINGS_LANGUAGE=fr
     [ALLOWED_HOSTS]
