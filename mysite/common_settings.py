@@ -226,11 +226,15 @@ INSTALLED_APPS = (
     # 'cmsplugin_filer_image', # deprecated
     # 'cmsplugin_filer_video', # deprecated
     # 'cmsplugin_filer_utils', # deprecated
+    'djangocms_link',
+    'djangocms_file',
+    'djangocms_picture',
+    'djangocms_video',
     'cmsplugin_cascade',
     'cmsplugin_cascade.clipboard',  # optional
     'cmsplugin_cascade.extra_fields',  # optional
     'cmsplugin_cascade.icon',  # optional
-    'cmsplugin_cascade.sharable',  # optional
+    # 'cmsplugin_cascade.sharable',  # optional
     # 'cmsplugin_cascade.segmentation',  # optional
     'cms',
     # 'cms_bootstrap3',
@@ -373,10 +377,10 @@ CKEDITOR_SETTINGS_MODEL2 = {
         ['Preview', 'Cut', 'Copy', 'PasteText', 'Simplebox', 'Link', '-', 'Undo', 'Redo'],
         ['Source']
     ],
-    'extraPlugins': 'simplebox',
+    # 'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
     # 'skin': 'moono',
-    'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
+    # 'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
     'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities': False,
     'entities': False,
@@ -752,11 +756,11 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'TextLinkPlugin',
-            # 'FilerLinkPlugin',
-            'FilerImagePlugin',
-            'FilerFilePlugin',
-            'FilerVideoPlugin'
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
         ],
         'default_plugins': [
             {
@@ -780,11 +784,11 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'TextLinkPlugin',
-            # 'FilerLinkPlugin',
-            'FilerImagePlugin',
-            'FilerFilePlugin',
-            'FilerVideoPlugin'
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
         ],
         'default_plugins': [
             {
@@ -812,11 +816,11 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'TextLinkPlugin',
-            # 'FilerLinkPlugin',
-            'FilerImagePlugin',
-            'FilerFilePlugin',
-            'FilerVideoPlugin'
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
         ],
         'default_plugins': [
             {
@@ -844,11 +848,11 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'TextLinkPlugin',
-            # 'FilerLinkPlugin',
-            'FilerImagePlugin',
-            'FilerFilePlugin',
-            'FilerVideoPlugin'
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
         ],
         'default_plugins': [
             {
@@ -876,11 +880,11 @@ CMS_PLACEHOLDER_CONF = {
             'TextPlugin',
         ],
         'text_only_plugins': [
-            'TextLinkPlugin',
-            # 'FilerLinkPlugin',
-            'FilerImagePlugin',
-            'FilerFilePlugin',
-            'FilerVideoPlugin'
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
         ],
         'default_plugins': [
             {
@@ -902,18 +906,24 @@ CMS_PLACEHOLDER_CONF = {
         'parent_classes': {'BootstrapContainerPlugin': None, 'BootstrapJumbotronPlugin': None},
         'glossary': CACSCADE_WORKAREA_GLOSSARY,
         'text_only_plugins': [
-            # 'FilerLinkPlugin',
-            'TextLinkPlugin',
-            'FilerImagePlugin',
-            'FilerFilePlugin',
-            'FilerVideoPlugin'
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
         ],
     },
 
     'footer': {
         'name': gettext('Footer'),
         'plugins': ['TextPlugin'],
-        'text_only_plugins': ['TextLinkPlugin', 'FilerImagePlugin', 'BootstrapImagePlugin'],
+        'text_only_plugins': [
+            'LinkPlugin',
+            'PicturePlugin',
+            'FilePlugin',
+            'FolderPlugin',
+            'VideoPlayerPlugin'
+        ],
         'limits': {
             'TextPlugin': 1,
         },
