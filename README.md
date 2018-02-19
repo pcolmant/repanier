@@ -50,7 +50,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     apt-get upgrade -y
     apt-get install -y sudo
     ```
-3. Disable `apache` is enabled because we will use `nginx` and not `apache` to listen to port 80 and 443.
+3. Disable `apache` if enabled because we will use `nginx` and not `apache` to listen to port 80 and 443.
     ```commandline
     service apache2 stop
     sudo update-rc.d apache2 disable
