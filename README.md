@@ -264,6 +264,9 @@ sudo ln -s /etc/uwsgi/apps-available/_0_prd_example.ini /etc/uwsgi/apps-enabled/
 ## Configure `Repanier`
 
 Create the system configuration file for `Repanier`.
+In the example, the very first person who will be responsible for the group is `Eva Frank`.
+The name of the group is `GASAP Example`.
+
 ```commandline
 nano ~/prd1/_0_prd_example/_0_prd_example/_0_prd_example.ini
 ```
@@ -343,9 +346,14 @@ Always on windows, remember to open a shell as an Administrator to edit C:\WINDO
     sudo service uwsgi restart
     ```
 9. Browse to http://example.com/
+10. Reset the pasword for the very first user whose mail is `eva.frank@no-spam.ws`
+11. Then log in as this user, create others customers, producers, products, ....
 
 How to change superuser password
 --------------------------------
+`Repanier` users must be created and updated through the `Repanier` interface.
+This command allows you to create or change password of *Django* administrators and not of users of your `Repanier` site.
+
 1. Goto the virtualenv and activate it
     ```commandline
     cd ~/prd1
