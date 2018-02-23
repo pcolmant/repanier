@@ -258,7 +258,12 @@ class Configuration(TranslatableModel):
             xframe_options=X_FRAME_OPTIONS_DENY,
             in_navigation=True
         )
-        page.set_as_homepage()
+        try:
+            # New in CMS 4.5
+            page.set_as_homepage()
+        except:
+            pass
+
         placeholder = page.placeholders.get(slot="home-hero")
         api.add_plugin(
             placeholder=placeholder,
