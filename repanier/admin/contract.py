@@ -48,7 +48,7 @@ class ContractAdmin(TranslatableAdmin):
     def has_delete_permission(self, request, contract=None):
         user = request.user
         if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
-            return settings.DJANGO_SETTINGS_CONTRACT
+            return settings.REPANIER_SETTINGS_CONTRACT
         return False
 
     def has_add_permission(self, request):

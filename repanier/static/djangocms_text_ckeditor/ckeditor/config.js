@@ -8,5 +8,8 @@ CKEDITOR.editorConfig = function( config ) {
 	// config.language = 'fr';
 	// config.uiColor = '#AADC6E';
 };
+
+// Remove default styles set
+// CKEDITOR.stylesSet.add('default', []);
 // IMPORTANT PCO : Allow epmty span tag needed for bootstrap glyficons
 CKEDITOR.dtd.$removeEmpty.span = 0;

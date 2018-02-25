@@ -95,9 +95,9 @@ class CustomerInvoice(Invoice):
     # is_order_confirm_send and total_price_with_tax = 0 --> display nothing
     # otherwise display
     # - send a mail with the order to me
-    # - confirm the order (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and send a mail with the order to me
+    # - confirm the order (if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER) and send a mail with the order to me
     # - mail send to XYZ
-    # - order confirmed (if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS) and mail send to XYZ
+    # - order confirmed (if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER) and mail send to XYZ
     is_order_confirm_send = models.BooleanField(_("Confirmation of the order send"), choices=LUT_CONFIRM, default=False)
     invoice_sort_order = models.IntegerField(
         _("Invoice sort order"),
@@ -232,7 +232,6 @@ class CustomerInvoice(Invoice):
                         )
 
     def get_html_my_order_confirmation(self, permanence, is_basket=False, basket_message=EMPTY_STRING):
-        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
 
         if permanence.with_delivery_point:
             if self.delivery is not None:
@@ -347,9 +346,9 @@ class CustomerInvoice(Invoice):
         else:
             msg_delivery = EMPTY_STRING
         msg_confirmation1 = EMPTY_STRING
-        if not is_basket and not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if not is_basket and not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             # or customer_invoice.total_price_with_tax.amount != DECIMAL_ZERO:
-            # If apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS is True,
+            # If REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER,
             # then permanence.with_delivery_point is also True
             msg_html = EMPTY_STRING
         else:
@@ -370,7 +369,7 @@ class CustomerInvoice(Invoice):
                 msg_html = None
                 btn_disabled = EMPTY_STRING if permanence.status == PERMANENCE_OPENED else "disabled"
                 msg_confirmation2 = EMPTY_STRING
-                if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                     if is_basket:
                         if self.status == PERMANENCE_OPENED:
                             if (permanence.with_delivery_point and self.delivery is None) \
@@ -558,7 +557,7 @@ class CustomerInvoice(Invoice):
             self.total_price_with_tax.amount = result_set["selling_price__sum"]
         else:
             self.total_price_with_tax.amount = DECIMAL_ZERO
-        if settings.DJANGO_SETTINGS_ROUND_INVOICES:
+        if settings.REPANIER_SETTINGS_ROUND_INVOICES:
             total_price = self.total_price_with_tax.amount + self.delta_price_with_tax.amount
             total_price_gov_be = round_gov_be(total_price)
             self.delta_price_with_tax.amount += (total_price_gov_be - total_price)

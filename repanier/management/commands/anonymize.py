@@ -19,7 +19,7 @@ class Command(BaseCommand):
     help = "Anonymize customers, staff and producers"
 
     def handle(self, *args, **options):
-        if not settings.DJANGO_SETTINGS_DEMO:
+        if not settings.REPANIER_SETTINGS_DEMO:
             print("Command not executed because the site is not in DEMO MODE")
             exit()
         translation.activate(settings.LANGUAGE_CODE)

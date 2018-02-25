@@ -191,7 +191,7 @@ class ProductDataForm(TranslatableModelForm):
             customer_increment_order_quantity = self.cleaned_data.get("customer_increment_order_quantity", DECIMAL_ZERO)
             field_customer_alert_order_quantity_is_present = "customer_alert_order_quantity" in self.cleaned_data
             customer_alert_order_quantity = self.cleaned_data.get("customer_alert_order_quantity", LIMIT_ORDER_QTY_ITEM)
-            if not settings.DJANGO_SETTINGS_STOCK:
+            if not settings.REPANIER_SETTINGS_STOCK:
                 limit_order_quantity_to_stock = False
             else:
                 # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
@@ -367,17 +367,17 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ['language_column']
         list_display += ['producer_unit_price']
-        if settings.DJANGO_SETTINGS_STOCK:
+        if settings.REPANIER_SETTINGS_STOCK:
             list_display += ['stock']
             list_editable += ['stock']
         else:
-            if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
                 list_display += ['get_customer_alert_order_quantity']
         self.list_editable = list_editable
         return list_display
 
     def get_list_filter(self, request):
-        if settings.DJANGO_SETTINGS_CONTRACT:
+        if settings.REPANIER_SETTINGS_CONTRACT:
             list_filter = [ProductFilterByContract, ]
         else:
             list_filter = []
@@ -390,11 +390,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ProductFilterByVatLevel,
             'is_active'
         ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
             list_filter += [
                 ProductFilterByProductioMode,
             ]
-        if settings.DJANGO_SETTINGS_STOCK:
+        if settings.REPANIER_SETTINGS_STOCK:
             list_filter += [
                 'limit_order_quantity_to_stock',
             ]
@@ -437,14 +437,14 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             fields_basic += [
                 ('producer_unit_price', 'unit_deposit', 'order_average_weight'),
             ]
-        if settings.DJANGO_SETTINGS_STOCK:
+        if settings.REPANIER_SETTINGS_STOCK:
             fields_basic += [
                 ('customer_minimum_order_quantity', 'customer_increment_order_quantity'),
                 'limit_order_quantity_to_stock',
                 'stock'
             ]
         else:
-            if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+            if settings.REPANIER_SETTINGS_IS_MINIMALIST:
                 # Important : do not use ( ) for minimalist. The UI will be more logical.
                 fields_basic += ['customer_minimum_order_quantity', 'customer_increment_order_quantity']
             else:
@@ -456,7 +456,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ('department_for_customer', 'placement'),
             'offer_description',
         ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.REPANIER_SETTINGS_IS_MINIMALIST:
             fields_advanced_options = [
                 'vat_level',
                 ('is_into_offer', 'is_active')
@@ -465,7 +465,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             fields_advanced_descriptions += [
                 'production_mode',
             ]
-            if settings.DJANGO_SETTINGS_STOCK:
+            if settings.REPANIER_SETTINGS_STOCK:
                 fields_advanced_options = [
                     'producer_order_by_quantity',
                     ('reference', 'vat_level'),
@@ -556,7 +556,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def changelist_view(self, request, extra_context=None):
         # Important : Needed to pass contract to product.get_html_is_into_offer() in the list_display of 'get_html_is_into_offer'
         # and in 'deselect_is_into_offer'
-        if settings.DJANGO_SETTINGS_CONTRACT:
+        if settings.REPANIER_SETTINGS_CONTRACT:
             contract_id = sint(request.GET.get('commitment', 0))
             contract = Contract.objects.filter(id=contract_id).order_by('?').first()
         else:

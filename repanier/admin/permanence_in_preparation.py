@@ -143,7 +143,7 @@ class PermanenceInPreparationForm(TranslatableModelForm):
 
     def __init__(self, *args, **kwargs):
         super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
-        if settings.DJANGO_SETTINGS_CONTRACT:
+        if settings.REPANIER_SETTINGS_CONTRACT:
             if "contract" in self.fields:
                 contract_field = self.fields["contract"]
                 contract_field.widget.can_add_related = False
@@ -154,13 +154,13 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        if settings.DJANGO_SETTINGS_CONTRACT:
+        if settings.REPANIER_SETTINGS_CONTRACT:
             contract = self.cleaned_data.get("contract", None)
             if contract is not None:
                 producers = self.cleaned_data.get("producers", None)
                 if producers:
                     self.add_error('producers', _('No producer may be selected if a contract is also selected.'))
-                if settings.DJANGO_SETTINGS_BOX:
+                if settings.REPANIER_SETTINGS_BOX:
                     boxes = self.cleaned_data.get("boxes", None)
                     if boxes:
                         self.add_error('boxes', _('No box may be selected if a contract is also selected.'))
@@ -229,21 +229,21 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             'offer_description',
             'offer_description_on_home_page'
         ]
-        if settings.DJANGO_SETTINGS_CONTRACT:
+        if settings.REPANIER_SETTINGS_CONTRACT:
             fields.append('contract')
         fields += [
             'producers'
         ]
-        if settings.DJANGO_SETTINGS_BOX:
+        if settings.REPANIER_SETTINGS_BOX:
             fields.append('boxes')
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
         if permanence is not None and permanence.status > PERMANENCE_PLANNED:
             readonly_fields = ['status', 'producers']
-            if settings.DJANGO_SETTINGS_CONTRACT:
+            if settings.REPANIER_SETTINGS_CONTRACT:
                 readonly_fields += ['contract']
-            if settings.DJANGO_SETTINGS_BOX:
+            if settings.REPANIER_SETTINGS_BOX:
                 readonly_fields += ['boxes']
             return readonly_fields
         return ['status']
@@ -460,7 +460,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
-                if repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                if settings.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDER:
                     context = TemplateContext({
                         'name': _('Long name'),
                         'long_basket_name': _('Long name'),
@@ -535,8 +535,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return
-                from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-                if not all_producers and REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+                if not all_producers and settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                     user_message = _("You must select all producers because the customers must confirm orders.")
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)

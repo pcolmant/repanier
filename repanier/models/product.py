@@ -310,7 +310,7 @@ def product_pre_save(sender, **kwargs):
         producer.price_list_multiplier
     )
 
-    if settings.DJANGO_SETTINGS_STOCK:
+    if settings.REPANIER_SETTINGS_STOCK:
         if producer.producer_pre_opening or producer.represent_this_buyinggroup:
             product.producer_order_by_quantity = DECIMAL_ZERO
             product.limit_order_quantity_to_stock = True
@@ -332,7 +332,7 @@ def product_pre_save(sender, **kwargs):
         product.order_average_weight = DECIMAL_ONE
     if product.limit_order_quantity_to_stock:
         product.customer_alert_order_quantity = min(999, product.stock)
-    if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+    if settings.REPANIER_SETTINGS_IS_MINIMALIST:
         if product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
                                       PRODUCT_ORDER_UNIT_LT]:
             if product.order_unit == PRODUCT_ORDER_UNIT_PC:

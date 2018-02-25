@@ -19,7 +19,7 @@ from repanier.xlsx.import_tools import get_row, get_header
 
 
 def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, wb=None, ws_customer_title=None):
-    if settings.DJANGO_SETTINGS_STOCK and wb is not None:
+    if settings.REPANIER_SETTINGS_STOCK and wb is not None:
         yellowFill = Fill()
         yellowFill.start_color.index = 'FFEEEE11'
         yellowFill.end_color.index = 'FFEEEE11'

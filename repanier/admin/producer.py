@@ -69,7 +69,7 @@ class ProducerResource(resources.ModelResource):
         """
         Override to add additional logic.
         """
-        if not settings.DJANGO_SETTINGS_STOCK:
+        if not settings.REPANIER_SETTINGS_STOCK:
             if instance.manage_replenishment:
                 raise ValueError(
                     _("Manage replenishment must be set to False because this option is not activated."))
@@ -167,7 +167,7 @@ class ProducerDataForm(forms.ModelForm):
             price_list_multiplier = self.cleaned_data["price_list_multiplier"]
         else:
             price_list_multiplier = DECIMAL_ONE
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
             if "producer_pre_opening" in self.cleaned_data:
                 producer_pre_opening = self.cleaned_data["producer_pre_opening"]
             else:
@@ -327,7 +327,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         list_display = [
             '__str__', 'get_products'
         ]
-        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             list_display += [
                 'get_balance',
             ]
@@ -355,7 +355,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 ('address', 'city'),
                 'memo',
             ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.REPANIER_SETTINGS_IS_MINIMALIST:
             if producer is not None and producer.represent_this_buyinggroup:
                 fields_advanced = [
                     'invoice_by_basket',
@@ -387,7 +387,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                     'minimum_order_value',
                     'invoice_by_basket'
                 ]
-                if settings.DJANGO_SETTINGS_STOCK:
+                if settings.REPANIER_SETTINGS_STOCK:
                     fields_advanced += [
                         'manage_replenishment',
                     ]
@@ -426,5 +426,5 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
 
     class Media:
-        if settings.DJANGO_SETTINGS_STOCK:
+        if settings.REPANIER_SETTINGS_STOCK:
             js = ('js/export_import_stock.js',)

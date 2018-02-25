@@ -560,7 +560,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         actions = super(PermanenceDoneAdmin, self).get_actions(request)
         if 'delete_selected' in actions:
             del actions['delete_selected']
-        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             del actions['generate_archive']
             del actions['cancel_archive']
         else:
@@ -590,7 +590,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     def get_queryset(self, request):
         qs = super(PermanenceDoneAdmin, self).get_queryset(request)
-        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             return qs.filter(
                 status__gte=PERMANENCE_SEND
                 # master_contract__isnull=True

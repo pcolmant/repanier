@@ -107,7 +107,7 @@ class Staff(MPTTModel, TranslatableModel):
             very_first_customer = Customer.get_or_create_the_very_first_customer()
             user_model = get_user_model()
             user = user_model.objects.create_user(
-                username="{}{}".format(uuid.uuid1(), settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                username="{}{}".format(uuid.uuid1(), settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION),
                 email=EMPTY_STRING, password=None,
                 first_name=EMPTY_STRING, last_name=EMPTY_STRING)
             coordinator = Staff.objects.create(
@@ -201,7 +201,7 @@ class Staff(MPTTModel, TranslatableModel):
         else:
             staff_email = self.user.email
             if staff_email:
-                if staff_email.endswith(settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION):
+                if staff_email.endswith(settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION):
                     from_email = staff_email
                 else:
                     # The mail address of the staff member doesn't end with an allowed mail extension,
@@ -234,7 +234,7 @@ class Staff(MPTTModel, TranslatableModel):
 
     @property
     def title_for_admin(self):
-        tester = _(" 💡 who is also tester ") if self.is_tester and settings.DJANGO_SETTINGS_TEST_MODE else EMPTY_STRING
+        tester = _(" 💡 who is also tester ") if self.is_tester and settings.REPANIER_SETTINGS_TEST_MODE else EMPTY_STRING
         if self.customer_responsible is not None:
             return "{} : {}{} ({})".format(
                 self.safe_translation_getter('long_name', any_language=True),

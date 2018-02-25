@@ -35,7 +35,7 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         subject = loader.render_to_string(subject_template_name, context)
         html_content = loader.render_to_string('repanier/registration/password_reset_email.html', context)
 
-        if settings.DJANGO_SETTINGS_DEMO:
+        if settings.REPANIER_SETTINGS_DEMO:
             to_email = DEMO_EMAIL
         email = RepanierEmail(
             subject,

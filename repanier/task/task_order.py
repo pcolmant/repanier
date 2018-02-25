@@ -236,8 +236,7 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
         if len(producers_id) == 0:
             return
 
-        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-        if not everything and REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if not everything and settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             return
 
     permanence.set_status(PERMANENCE_WAIT_FOR_CLOSED, everything=everything, producers_id=producers_id,

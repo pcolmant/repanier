@@ -46,8 +46,6 @@ class Configuration(TranslatableModel):
         validators=[MinValueValidator(0)])
     send_abstract_order_mail_to_customer = models.BooleanField(_("Send abstract order mail to customers"),
                                                                default=False)
-    send_abstract_order_mail_to_producer = models.BooleanField(_("Send abstract order mail to producers"),
-                                                               default=False)
     send_order_mail_to_board = models.BooleanField(
         _("Send an order distribution email to members registered for a task"), default=True)
     send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
@@ -55,8 +53,6 @@ class Configuration(TranslatableModel):
     invoice = models.BooleanField(_("Enable accounting module"), default=True)
     display_anonymous_order_form = models.BooleanField(
         _("Allow the anonymous visitor to see the customer order screen"), default=True)
-    display_producer_on_order_form = models.BooleanField(
-        _("Display the list of producers in the customer order screen"), default=True)
     display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
     xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
     bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
@@ -68,7 +64,6 @@ class Configuration(TranslatableModel):
         help_text=_(
             "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
         max_length=50, null=True, blank=True, default=EMPTY_STRING)
-    customers_must_confirm_orders = models.BooleanField(_("⚠ Customers must confirm orders"), default=False)
     membership_fee = ModelMoneyField(
         _("Membership fee"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
@@ -191,14 +186,15 @@ class Configuration(TranslatableModel):
             template = Template(self.order_producer_mail)
         except Exception as error_str:
             raise ValidationError(mark_safe("{} : {}".format(self.order_producer_mail, error_str)))
-        try:
-            template = Template(self.invoice_customer_mail)
-        except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.invoice_customer_mail, error_str)))
-        try:
-            template = Template(self.invoice_producer_mail)
-        except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.invoice_producer_mail, error_str)))
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            try:
+                template = Template(self.invoice_customer_mail)
+            except Exception as error_str:
+                raise ValidationError(mark_safe("{} : {}".format(self.invoice_customer_mail, error_str)))
+            try:
+                template = Template(self.invoice_producer_mail)
+            except Exception as error_str:
+                raise ValidationError(mark_safe("{} : {}".format(self.invoice_producer_mail, error_str)))
 
     @classmethod
     def init_repanier(cls):
@@ -212,7 +208,7 @@ class Configuration(TranslatableModel):
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
         if config is not None:
             return config
-        group_name = settings.DJANGO_SETTINGS_GROUP_NAME
+        group_name = settings.REPANIER_SETTINGS_GROUP_NAME
         site = Site.objects.get_current()
         if site is not None:
             site.name = group_name
@@ -483,7 +479,7 @@ def configuration_post_save(sender, **kwargs):
     config = kwargs["instance"]
     if config.id is not None:
         repanier.apps.REPANIER_SETTINGS_CONFIG = config
-        if settings.DJANGO_SETTINGS_TEST_MODE:
+        if settings.REPANIER_SETTINGS_TEST_MODE:
             repanier.apps.REPANIER_SETTINGS_TEST_MODE = config.test_mode
         else:
             repanier.apps.REPANIER_SETTINGS_TEST_MODE = False
@@ -519,13 +515,10 @@ def configuration_post_save(sender, **kwargs):
             repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
         repanier.apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
         repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
-        repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER = config.send_abstract_order_mail_to_producer
         repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
         repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
         repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = config.send_invoice_mail_to_producer
-        repanier.apps.REPANIER_SETTINGS_INVOICE = config.invoice
         repanier.apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
-        repanier.apps.REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM = config.display_producer_on_order_form
         repanier.apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
         repanier.apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
         if config.bank_account is not None and len(config.bank_account.strip()) == 0:
@@ -538,7 +531,6 @@ def configuration_post_save(sender, **kwargs):
             repanier.apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
         repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = config.page_break_on_customer_check
         repanier.apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.sms_gateway_mail
-        repanier.apps.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS = config.customers_must_confirm_orders
         repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
         repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
         if config.currency == CURRENCY_LOC:

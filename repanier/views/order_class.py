@@ -98,8 +98,7 @@ class OrderView(ListView):
         return super(OrderView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
-            REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM, REPANIER_SETTINGS_CONFIG, \
+        from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM, REPANIER_SETTINGS_CONFIG, \
             REPANIER_SETTINGS_NOTIFICATION
 
         context = super(OrderView, self).get_context_data(**kwargs)
@@ -113,7 +112,7 @@ class OrderView(ListView):
                                           not REPANIER_SETTINGS_NOTIFICATION.notification_is_public  else \
             REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter('notification', any_language=True)
         if self.first_page:
-            if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 producer_set = Producer.objects.filter(permanence=self.permanence.id).only("id", "short_profile_name")
             else:
                 producer_set = None
@@ -229,7 +228,7 @@ class OrderView(ListView):
                 )
                 if isinstance(self.date_id, int):
                     qs = qs.filter(permanences_dates__contains=self.all_dates[self.date_id])
-                elif settings.DJANGO_SETTINGS_CONTRACT:
+                elif settings.REPANIER_SETTINGS_CONTRACT:
                     qs = qs.filter(permanences_dates_order__lte=1)
                 if self.producer_id != 'all':
                     qs = qs.filter(producer_id=self.producer_id)

@@ -67,9 +67,9 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         # if permanence.exists():
         #     permanence_open = True
         if producer is not None:
-            if settings.DJANGO_SETTINGS_STOCK:
+            if settings.REPANIER_SETTINGS_STOCK:
                 self.list_editable = ('stock',)
-                if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+                if settings.REPANIER_SETTINGS_IS_MINIMALIST:
                     return ('department_for_customer', 'get_html_long_name_with_producer',
                             'stock', 'limit_order_quantity_to_stock',
                             'get_html_producer_qty_stock_invoiced')

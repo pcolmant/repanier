@@ -281,7 +281,6 @@ def get_base_unit(qty=0, order_unit=PRODUCT_ORDER_UNIT_PC, status=None):
 
 
 def payment_message(customer, permanence):
-    from repanier.apps import REPANIER_SETTINGS_INVOICE
     from repanier.models.invoice import CustomerInvoice
 
     customer_invoice = CustomerInvoice.objects.filter(
@@ -322,7 +321,7 @@ def payment_message(customer, permanence):
         customer_on_hold_movement = customer.get_html_on_hold_movement(
             bank_not_invoiced, order_not_invoiced, total_price_with_tax
         )
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             payment_needed = - (customer.balance - order_not_invoiced + bank_not_invoiced)
         else:
             payment_needed = total_price_with_tax
@@ -413,7 +412,6 @@ def create_or_update_one_purchase(
         customer_id, offer_item,
         status=PERMANENCE_OPENED, q_order=None,
         batch_job=False, is_box_content=False, comment=EMPTY_STRING):
-    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     from repanier.models.purchase import Purchase
     from repanier.models.invoice import CustomerInvoice
     # The batch_job flag is used because we need to forbid
@@ -479,7 +477,7 @@ def create_or_update_one_purchase(
             if purchase is not None:
                 purchase.set_comment(comment)
                 if q_order <= q_alert:
-                    if not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS or purchase.quantity_confirmed <= q_order:
+                    if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or purchase.quantity_confirmed <= q_order:
                         purchase.quantity_ordered = q_order
                         purchase.save()
                     else:
@@ -603,8 +601,7 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
 
 
 def my_basket(is_order_confirm_send, order_amount):
-    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not is_order_confirm_send:
+    if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and not is_order_confirm_send:
         if order_amount.amount <= DECIMAL_ZERO:
             msg_confirm = EMPTY_STRING
         else:
@@ -818,9 +815,8 @@ def producer_web_services_activated(reference_site=None):
 
 
 def get_html_basket_message(customer, permanence, status):
-    from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
     if status == PERMANENCE_OPENED:
-        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             if permanence.with_delivery_point:
                 you_can_change = "<br>{}".format(
                     _("You can increase the order quantities as long as the orders are open for your delivery point.")
@@ -851,7 +847,7 @@ def get_html_basket_message(customer, permanence, status):
     payment_msg = EMPTY_STRING
     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
         customer, permanence)
-    if apps.REPANIER_SETTINGS_INVOICE:
+    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
         if customer_last_balance:
             invoice_msg = "<br>{} {}".format(
                 customer_last_balance,

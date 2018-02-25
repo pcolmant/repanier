@@ -161,5 +161,5 @@ class LUTPermanenceRoleAdmin(LUTAdmin):
         'is_active',
     ]
 
-    if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+    if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
         inlines = [PermanenceBoardInline]

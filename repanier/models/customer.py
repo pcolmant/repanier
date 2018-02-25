@@ -121,20 +121,20 @@ class Customer(models.Model):
     def get_or_create_group(cls):
         customer_buyinggroup = Customer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if customer_buyinggroup is None:
-            long_name = settings.DJANGO_SETTINGS_GROUP_NAME
+            long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
             user = User.objects.filter(username=short_name).order_by('?').first()
             if user is None:
                 user = User.objects.create_user(
                     username=short_name,
-                    email="{}{}".format(long_name, settings.DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                    email="{}{}".format(long_name, settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION),
                     password=uuid.uuid1().hex,
                     first_name=EMPTY_STRING, last_name=long_name)
             customer_buyinggroup = Customer.objects.create(
                 user=user,
                 short_basket_name=short_name,
                 long_basket_name=long_name,
-                phone1=settings.DJANGO_SETTINGS_COORDINATOR_PHONE,
+                phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True
             )
         return customer_buyinggroup
@@ -146,21 +146,21 @@ class Customer(models.Model):
             is_active=True
         ).order_by('id').first()
         if very_first_customer is None:
-            long_name = settings.DJANGO_SETTINGS_COORDINATOR_NAME
+            long_name = settings.REPANIER_SETTINGS_COORDINATOR_NAME
             # short_name is the first word of long_name, limited to max. 25 characters
             short_name = long_name.split(None, 1)[0][:25]
             user = User.objects.filter(username=short_name).order_by('?').first()
             if user is None:
                 user = User.objects.create_user(
                     username=short_name,
-                    email=settings.DJANGO_SETTINGS_COORDINATOR_EMAIL,
+                    email=settings.REPANIER_SETTINGS_COORDINATOR_EMAIL,
                     password=uuid.uuid1().hex,
                     first_name=EMPTY_STRING, last_name=long_name)
             very_first_customer = Customer.objects.create(
                 user=user,
                 short_basket_name=short_name,
                 long_basket_name=long_name,
-                phone1=settings.DJANGO_SETTINGS_COORDINATOR_PHONE,
+                phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=False
             )
         return very_first_customer
@@ -184,8 +184,7 @@ class Customer(models.Model):
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
-        from repanier.apps import REPANIER_SETTINGS_INVOICE
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = CustomerInvoice.objects.filter(
                 customer_id=self.id,
                 status__gte=PERMANENCE_OPENED,
@@ -205,8 +204,7 @@ class Customer(models.Model):
         return order_not_invoiced
 
     def get_bank_not_invoiced(self):
-        from repanier.apps import REPANIER_SETTINGS_INVOICE
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = BankAccount.objects.filter(
                 customer_id=self.id, customer_invoice__isnull=True
             ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
@@ -255,8 +253,7 @@ class Customer(models.Model):
 
     def get_html_on_hold_movement(self, bank_not_invoiced=None, order_not_invoiced=None,
                                   total_price_with_tax=REPANIER_MONEY_ZERO):
-        from repanier.apps import REPANIER_SETTINGS_INVOICE
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             bank_not_invoiced = bank_not_invoiced if bank_not_invoiced is not None else self.get_bank_not_invoiced()
             order_not_invoiced = order_not_invoiced if order_not_invoiced is not None else self.get_order_not_invoiced()
             other_order_not_invoiced = order_not_invoiced - total_price_with_tax
@@ -353,14 +350,12 @@ class Customer(models.Model):
     get_purchase.allow_tags = False
 
     def my_order_confirmation_email_send_to(self):
-        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-
         if self.email2:
             to_email = (self.user.email, self.email2)
         else:
             to_email = (self.user.email,)
         sent_to = ", ".join(to_email) if to_email is not None else EMPTY_STRING
-        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             msg_confirmation = _(
                 "Order confirmed. An email containing this order summary has been sent to {}.").format(sent_to)
         else:
@@ -489,7 +484,7 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = None
     if not customer.is_active:
         customer.may_order = False
-    if customer.price_list_multiplier <= DECIMAL_ZERO or settings.DJANGO_SETTINGS_IS_MINIMALIST:
+    if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE and customer.price_list_multiplier <= DECIMAL_ZERO:
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = ("{}".format(customer.city).upper())
     customer.login_attempt_counter = DECIMAL_ZERO

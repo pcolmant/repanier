@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404, JsonResponse
@@ -80,8 +81,6 @@ def delivery_ajax(request):
         if delivery is None:
             raise Http404
         if customer_invoice.delivery != delivery:
-            from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-
             if customer_invoice.delivery is not None:
                 status_changed = customer_invoice.cancel_confirm_order()
                 json_dict = my_basket(customer_invoice.is_order_confirm_send,
@@ -90,7 +89,7 @@ def delivery_ajax(request):
                 status_changed = False
             customer_invoice.set_delivery(delivery)
             customer_invoice.save()
-            if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and status_changed:
+            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and status_changed:
                 html = render_to_string(
                     'repanier/communication_confirm_order.html')
                 json_dict["#communicationModal"] = mark_safe(html)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 
+from django.conf import settings
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.style import Fill
@@ -7,7 +8,6 @@ from openpyxl.styles import Color
 
 import repanier.apps
 from repanier.const import *
-from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
@@ -28,7 +28,6 @@ def next_purchase(purchases):
 
 def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
     if permanence is not None:
-        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
         row_num = 1
         # Customer info
         Customer.objects.all().update(preparation_order=0)
@@ -61,7 +60,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             preparation_order=preparation_order
                         )
                         preparation_order += 1
-                        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
+                        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and not invoice.is_order_confirm_send:
                             confirmed = "\n{}".format(_("⚠ This order isn't confirmed"))
                         else:
                             confirmed = EMPTY_STRING
@@ -118,7 +117,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         preparation_order=preparation_order
                     )
                     preparation_order += 1
-                    if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS and not invoice.is_order_confirm_send:
+                    if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and not invoice.is_order_confirm_send:
                         confirmed = "\n{}".format(_("⚠ This order isn't confirmed"))
                     else:
                         confirmed = EMPTY_STRING

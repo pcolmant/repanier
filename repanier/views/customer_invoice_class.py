@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 
+from django.conf import settings
 from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
@@ -22,12 +23,11 @@ class CustomerInvoiceView(DetailView):
         return obj
 
     def get_context_data(self, **kwargs):
-        from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
         context = super(CustomerInvoiceView, self).get_context_data(**kwargs)
         if context['object'] is None:
             # This customer has never been invoiced
             context['bank_account_set'] = BankAccount.objects.none()
-            if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 context['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = True
             else:
                 context['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = False
@@ -45,7 +45,7 @@ class CustomerInvoiceView(DetailView):
             customer_invoice = self.get_object()
             bank_account_set = BankAccount.objects.filter(customer_invoice=customer_invoice).order_by("operation_date")
             context['bank_account_set'] = bank_account_set
-            if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 context['DISPLAY_PRODUCERS_ON_ORDER_FORM'] = True
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,

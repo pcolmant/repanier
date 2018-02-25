@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils import translation
@@ -22,8 +23,7 @@ from repanier.tools import permanence_ok_or_404, sint
 def order_filter_view(request, permanence_id):
     permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
     permanence_ok_or_404(permanence)
-    from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM
-    if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+    if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
         producer_set = Producer.objects.filter(permanence=permanence_id).only("id", "short_profile_name")
     else:
         producer_set = None

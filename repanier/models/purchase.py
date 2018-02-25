@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -147,7 +147,7 @@ class Purchase(models.Model):
 
     def get_html_unit_deposit(self):
         if self.offer_item is not None:
-            return mark_safe(_("<b>%(price)s</b>") % {'price': self.offer_item.deposit})
+            return mark_safe(_("<b>%(price)s</b>") % {'price': self.offer_item.unit_deposit})
         return EMPTY_STRING
 
     get_html_unit_deposit.short_description = (_("Deposit"))
@@ -324,11 +324,14 @@ def purchase_pre_save(sender, **kwargs):
             )
     else:
         purchase.is_resale_price_fixed = purchase.offer_item.is_resale_price_fixed
-        if purchase.is_resale_price_fixed \
-                or purchase.offer_item.price_list_multiplier < DECIMAL_ONE:
-            purchase.price_list_multiplier = DECIMAL_ONE
+        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
+            if purchase.is_resale_price_fixed \
+                    or purchase.offer_item.price_list_multiplier < DECIMAL_ONE:
+                purchase.price_list_multiplier = DECIMAL_ONE
+            else:
+                purchase.price_list_multiplier = purchase.customer.price_list_multiplier
         else:
-            purchase.price_list_multiplier = purchase.customer.price_list_multiplier
+            purchase.price_list_multiplier = DECIMAL_ONE
 
         unit_deposit = purchase.get_unit_deposit()
 

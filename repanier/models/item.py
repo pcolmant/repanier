@@ -359,7 +359,7 @@ class Item(TranslatableModel):
             return display
 
     def get_customer_alert_order_quantity(self):
-        if settings.DJANGO_SETTINGS_STOCK and self.limit_order_quantity_to_stock:
+        if settings.REPANIER_SETTINGS_STOCK and self.limit_order_quantity_to_stock:
             return "{}".format(_("Inventory"))
         return self.customer_alert_order_quantity
 

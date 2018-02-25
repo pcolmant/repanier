@@ -39,12 +39,12 @@ def repanier_group_name(*args, **kwargs):
 
 @register.simple_tag(takes_context=False)
 def repanier_bootstrap_static(*args, **kwargs):
-    return "{}bootstrap{}css{}{}".format(settings.STATIC_URL, os.sep, os.sep, settings.DJANGO_SETTINGS_BOOTSTRAP_CSS)
+    return "{}bootstrap{}css{}{}".format(settings.STATIC_URL, os.sep, os.sep, settings.REPANIER_SETTINGS_BOOTSTRAP_CSS)
 
 
 @register.simple_tag(takes_context=True)
 def repanier_user(context, *args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_INVOICE, REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
     request = context["request"]
     user = request.user
@@ -87,7 +87,7 @@ def repanier_user(context, *args, **kwargs):
                     reverse('my_profile_view'),
                     _('My profile')
                 ))
-                if REPANIER_SETTINGS_INVOICE:
+                if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                     last_customer_invoice = CustomerInvoice.objects.filter(
                         customer__user_id=request.user.id,
                         invoice_sort_order__isnull=False) \

@@ -19,8 +19,6 @@ from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_x
 def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, \
         REPANIER_SETTINGS_GROUP_NAME, \
-        REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER, \
-        REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
         REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
@@ -157,7 +155,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                 reply_to=staff.get_reply_to_email
             )
             if wb is not None:
-                if REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_PRODUCER:
+                if producer.represent_this_buyinggroup:
                     if abstract_ws is not None:
                         wb.add_sheet(abstract_ws, index=0)
                 email.attach(
@@ -172,8 +170,8 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
             # Orders send to our customers only if they don't have already received it
             # ==> customerinvoice__is_order_confirm_send=False
             #     customerinvoice__permanence_id=permanence.id
-            if not REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
-                # REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS -> Do not send cancelled orders
+            if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                # -> Do not send cancelled orders
                 customer_set = Customer.objects.filter(
                     represent_this_buyinggroup=False,
                     customerinvoice__is_order_confirm_send=False,
@@ -263,7 +261,7 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
 def export_order_2_1_customer(customer, filename, permanence, staff,
                               abstract_ws=None, cancel_order=False):
     from repanier.apps import \
-        REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
+        REPANIER_SETTINGS_GROUP_NAME, \
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER, \
         REPANIER_SETTINGS_CONFIG
 
@@ -275,7 +273,7 @@ def export_order_2_1_customer(customer, filename, permanence, staff,
     if customer_invoice is not None:
         wb = generate_customer_xlsx(permanence=permanence, customer=customer)[0]
         if wb is not None:
-            if cancel_order or REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+            if cancel_order or settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                 cc = staff.get_to_email
             else:
                 cc = []

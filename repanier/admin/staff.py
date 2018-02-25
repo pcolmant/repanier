@@ -37,7 +37,7 @@ class UserDataForm(TranslatableModelForm):
         is_invoice_manager = is_active and self.cleaned_data["is_invoice_manager"]
         is_invoice_referent = is_active and self.cleaned_data["is_invoice_referent"]
         is_webmaster = is_active and self.cleaned_data["is_webmaster"]
-        if settings.DJANGO_SETTINGS_TEST_MODE:
+        if settings.REPANIER_SETTINGS_TEST_MODE:
             is_tester = is_active and self.cleaned_data["is_tester"]
         else:
             is_tester = False
@@ -190,7 +190,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
             'is_invoice_referent',
             'is_webmaster',
         ]
-        if settings.DJANGO_SETTINGS_TEST_MODE:
+        if settings.REPANIER_SETTINGS_TEST_MODE:
             fields += [
                 'is_tester',
             ]

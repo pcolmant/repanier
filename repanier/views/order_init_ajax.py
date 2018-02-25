@@ -2,6 +2,7 @@
 
 import datetime
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
@@ -58,8 +59,7 @@ def order_init_ajax(request):
         raise Http404
 
     basket = sboolean(request.GET.get('ba', False))
-    from repanier.apps import REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM, \
-        REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
+    from repanier.apps import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
     if customer_invoice.delivery is not None:
         status = customer_invoice.delivery.status
     else:
@@ -79,7 +79,7 @@ def order_init_ajax(request):
         basket_message=basket_message
     )
     if customer.may_order:
-        if REPANIER_SETTINGS_DISPLAY_PRODUCER_ON_ORDER_FORM:
+        if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
             for producer_invoice in ProducerInvoice.objects.filter(
                 permanence_id=permanence.id
             ).only(

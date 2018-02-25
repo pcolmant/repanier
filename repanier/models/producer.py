@@ -111,12 +111,12 @@ class Producer(models.Model):
     def get_or_create_group(cls):
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:
-            long_name = settings.DJANGO_SETTINGS_GROUP_NAME
+            long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name=long_name[:25]
             producer_buyinggroup = Producer.objects.create(
                 short_profile_name=short_name,
                 long_profile_name=long_name,
-                phone1=settings.DJANGO_SETTINGS_COORDINATOR_PHONE,
+                phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True
             )
             # Create this to also prevent the deletion of the producer representing the buying group
@@ -181,8 +181,7 @@ class Producer(models.Model):
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
-        from repanier.apps import REPANIER_SETTINGS_INVOICE
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = ProducerInvoice.objects.filter(
                 producer_id=self.id,
                 status__gte=PERMANENCE_OPENED,
@@ -201,8 +200,7 @@ class Producer(models.Model):
         return order_not_invoiced
 
     def get_bank_not_invoiced(self):
-        from repanier.apps import REPANIER_SETTINGS_INVOICE
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = BankAccount.objects.filter(
                 producer_id=self.id, producer_invoice__isnull=True
             ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))

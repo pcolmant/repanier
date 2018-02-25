@@ -16,8 +16,7 @@ class Command(BaseCommand):
     help = 'Delete pending purchases'
 
     def handle(self, *args, **options):
-        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS
-        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             now_less_one_hour = timezone.now() - datetime.timedelta(hours=1)
             translation.activate(settings.LANGUAGE_CODE)
 

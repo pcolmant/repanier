@@ -26,7 +26,7 @@ class RepanierEmail(EmailMultiAlternatives):
     def _set_connection_param(self):
         from repanier.apps import REPANIER_SETTINGS_CONFIG
         config = REPANIER_SETTINGS_CONFIG
-        if config.email_is_custom and not settings.DJANGO_SETTINGS_DEMO:
+        if config.email_is_custom and not settings.REPANIER_SETTINGS_DEMO:
             self.host = config.email_host
             self.port = config.email_port
             self.from_email = self.host_user = config.email_host_user
@@ -36,7 +36,7 @@ class RepanierEmail(EmailMultiAlternatives):
             self.host = settings.EMAIL_HOST
             self.port = settings.EMAIL_PORT
             self.host_user = settings.EMAIL_HOST_USER
-            if not hasattr(self, 'from_email') or settings.DJANGO_SETTINGS_DEMO:
+            if not hasattr(self, 'from_email') or settings.REPANIER_SETTINGS_DEMO:
                 self.from_email = settings.DEFAULT_FROM_EMAIL
             self.host_password = settings.EMAIL_HOST_PASSWORD
             self.use_tls = settings.EMAIL_USE_TLS
@@ -48,7 +48,7 @@ class RepanierEmail(EmailMultiAlternatives):
         self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
         self.body = strip_tags(self.html_content)
 
-        if settings.DJANGO_SETTINGS_DEMO:
+        if settings.REPANIER_SETTINGS_DEMO:
             if settings.DEBUG:
                 print("to : {}".format(self.to))
                 print("cc : {}".format(self.cc))

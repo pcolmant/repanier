@@ -63,11 +63,12 @@ class UserDataForm(forms.ModelForm):
         if qs.exists():
             self.add_error(username_field_name, user_error2)
         if self.instance.id is not None:
-            if "price_list_multiplier" in self.cleaned_data and self.instance.delivery_point is not None \
-                    and self.instance.delivery_point.customer_responsible is not None \
-                    and self.cleaned_data["price_list_multiplier"] != DECIMAL_ONE:
-                self.add_error('price_list_multiplier', _(
-                    'If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE'))
+            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
+                if self.instance.delivery_point is not None \
+                        and self.instance.delivery_point.customer_responsible is not None \
+                        and self.cleaned_data.get("price_list_multiplier") != DECIMAL_ONE:
+                    self.add_error('price_list_multiplier', _(
+                        'If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE'))
             is_active = self.cleaned_data.get("is_active")
             if is_active is not None and not is_active:
                 delivery_point = LUT_DeliveryPoint.objects.filter(
@@ -296,7 +297,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         return actions
 
     def get_list_display(self, request):
-        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             return ('__str__', 'get_balance', 'may_order', 'long_basket_name', 'phone1', 'get_email',
                     'get_last_login', 'valid_email')
         else:
@@ -310,7 +311,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             ('phone1', 'phone2', 'show_phones_to_members'),
             'membership_fee_valid_until',
         ]
-        if settings.DJANGO_SETTINGS_GROUP:
+        if settings.REPANIER_SETTINGS_GROUP:
             fields_basic += [
                 "delivery_point"
             ]
@@ -325,7 +326,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 ('address', 'city'),
                 'memo',
             ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
             fields_basic += [
                 'price_list_multiplier',
             ]
@@ -419,17 +420,18 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             request, customer, form, change)
         if customer.delivery_point is not None:
             customer_price = EMPTY_STRING
-            if customer.price_list_multiplier < DECIMAL_ONE:
-                customer_price = \
-                    _(' in addition to the %(discount)s%% personal discount rate on to the pricelist') % {
-                        'discount': Decimal((DECIMAL_ONE - customer.price_list_multiplier) * 100).quantize(TWO_DECIMALS)
-                    }
-            elif customer.price_list_multiplier > DECIMAL_ONE:
-                customer_price = \
-                    _(' in addition to the %(surcharge)s%% personal surcharge on to the pricelist') % {
-                        'surcharge': Decimal((customer.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
-                            TWO_DECIMALS)
-                    }
+            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
+                if customer.price_list_multiplier < DECIMAL_ONE:
+                    customer_price = \
+                        _(' in addition to the %(discount)s%% personal discount rate on to the pricelist') % {
+                            'discount': Decimal((DECIMAL_ONE - customer.price_list_multiplier) * 100).quantize(TWO_DECIMALS)
+                        }
+                elif customer.price_list_multiplier > DECIMAL_ONE:
+                    customer_price = \
+                        _(' in addition to the %(surcharge)s%% personal surcharge on to the pricelist') % {
+                            'surcharge': Decimal((customer.price_list_multiplier - DECIMAL_ONE) * 100).quantize(
+                                TWO_DECIMALS)
+                        }
             if customer.delivery_point.customer_responsible.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(request, messages.WARNING,
                                      _(

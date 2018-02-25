@@ -525,11 +525,10 @@ class Permanence(TranslatableModel):
 
     @transaction.atomic
     def close_order(self, everything, producers_id=(), deliveries_id=()):
-        from repanier.apps import REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS, \
-            REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
+        from repanier.apps import REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION, \
             REPANIER_SETTINGS_MEMBERSHIP_FEE
 
-        if REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDERS:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             # Cancel unconfirmed purchases whichever the producer is
             customer_invoice_qs = CustomerInvoice.objects.filter(
                 permanence_id=self.id,

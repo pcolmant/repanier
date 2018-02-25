@@ -445,7 +445,7 @@ def generate_invoice(permanence, payment_date):
         producer_invoice=None
     )
 
-    new_status = PERMANENCE_INVOICED if repanier.apps.REPANIER_SETTINGS_INVOICE else PERMANENCE_ARCHIVED
+    new_status = PERMANENCE_INVOICED if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING else PERMANENCE_ARCHIVED
     permanence.set_status(new_status, update_payment_date=True, payment_date=payment_date)
 
     ProducerInvoice.objects.filter(

@@ -242,7 +242,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return actions
 
     def get_list_display(self, request):
-        if repanier.apps.REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             return ('__str__', 'get_balance', 'long_basket_name', 'phone1', 'get_email',
                     'valid_email')
         else:

@@ -43,7 +43,7 @@ class ConfigurationDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        if not settings.DJANGO_SETTINGS_DEMO:
+        if not settings.REPANIER_SETTINGS_DEMO:
             email_is_custom = self.cleaned_data["email_is_custom"]
             if email_is_custom:
                 email_host_password = self.cleaned_data["email_host_password"]
@@ -98,12 +98,7 @@ class ConfigurationAdmin(TranslatableAdmin):
             ('membership_fee', 'membership_fee_duration'),
             'display_anonymous_order_form',
         ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            fields += [
-                'display_producer_on_order_form',
-                'customers_must_confirm_orders',
-            ]
-        if settings.DJANGO_SETTINGS_TEST_MODE:
+        if settings.REPANIER_SETTINGS_TEST_MODE:
             fields += [
                 'test_mode',
             ]
@@ -112,17 +107,16 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'fields': fields,
             }),
         ]
-        if not settings.DJANGO_SETTINGS_IS_MINIMALIST:
-            if Producer.objects.filter(producer_pre_opening=True).order_by('?').only('id').exists():
-                fieldsets += [
-                    (_('Pre-opening mails'), {
-                        'classes': ('collapse',),
-                        'fields':
-                            (
-                                'offer_producer_mail',
-                            ),
-                    }),
-                ]
+        if settings.REPANIER_SETTINGS_PRE_OPENING:
+            fieldsets += [
+                (_('Pre-opening mails'), {
+                    'classes': ('collapse',),
+                    'fields':
+                        (
+                            'offer_producer_mail',
+                        ),
+                }),
+            ]
         fieldsets += [
             (_('Opening mails'), {
                 'classes': ('collapse',),
@@ -132,7 +126,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                     ),
             }),
         ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             fieldsets += [
                 (_('Ordering mails'), {
                     'classes': ('collapse',),
@@ -140,6 +134,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                         (
                             'send_abstract_order_mail_to_customer',
                             'order_customer_mail',
+                            'cancel_order_customer_mail',
                             'order_producer_mail',
                             'send_order_mail_to_board', 'order_staff_mail',
                         ),
@@ -153,15 +148,12 @@ class ConfigurationAdmin(TranslatableAdmin):
                         (
                             'send_abstract_order_mail_to_customer',
                             'order_customer_mail',
-                            'cancel_order_customer_mail',
-                            'send_abstract_order_mail_to_producer',
                             'order_producer_mail',
                             'send_order_mail_to_board', 'order_staff_mail',
                         ),
                 })
             ]
-        from repanier.apps import REPANIER_SETTINGS_INVOICE
-        if REPANIER_SETTINGS_INVOICE:
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             fieldsets += [
                 (_('Invoicing mails'), {
                     'classes': ('collapse',),
@@ -172,9 +164,9 @@ class ConfigurationAdmin(TranslatableAdmin):
                         ),
                 }),
             ]
-        if settings.DJANGO_SETTINGS_IS_MINIMALIST:
+        if settings.REPANIER_SETTINGS_IS_MINIMALIST:
             fields = [
-                'invoice',
+                'display_who_is_who',
                 'how_to_register',
             ]
         else:
@@ -184,7 +176,6 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'group_label',
                 # 'page_break_on_customer_check',
                 'display_who_is_who',
-                'invoice',
                 'xlsx_portrait',
                 'how_to_register',
                 ('currency', 'vat_id'),
