@@ -1,7 +1,7 @@
 Repanier
 ========
 
-`Repanier` is a web tool for short circuit food supply using Django CMS 3.4.5 / Bootstrap 3 / Python 3.5.
+`Repanier` is a web tool for short circuit food supply using Django CMS 3.5 / Bootstrap 3 / Python 3.5.
 
 - https://repanier.be/fr/documentation/survol/
 - https://repanier.be/fr/
@@ -296,23 +296,22 @@ On Windows, it's usually : C:\WINDOWS\system32\drivers\etc\hosts
 Always on windows, remember to open a shell as an Administrator to edit C:\WINDOWS\system32\drivers\etc\hosts with notepad
 
 Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here above `_0_prd_example.ini` 
-
-    - REPANIER_SETTINGS_BOOTSTRAP_CSS  (*bootstrap.css*, bootstrap_buisson_watch.css, bootstrap_coopeco_watch.css) : Allows you to change the look of the site
-    - REPANIER_SETTINGS_BOX (True, *False*) : Allows you to sell multiple products together
-    - REPANIER_SETTINGS_CONTRACT (True, *False*) : Allows you to operate in * GASAP * mode, with contracts
-    - REPANIER_SETTINGS_COUNTRY  (be, fr, ch, es) : Allows you to change the applicable VAT. The currency (EUR, CHF, ...) is configured directly in the management interface of `Repanier`
-    - REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by Repanier
-    - REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE (True, *False*) : If True, Repanier lets you define a custom selling price coefficient at customer level 
-    - REPANIER_SETTINGS_DELIVERY_POINT (True, *False*) : If True, Repanier lets you manage more than one delivery point per order
-    - REPANIER_SETTINGS_GROUP (True, *False*) : Others groups may be members of the `Repanier` site
-    - REPANIER_SETTINGS_IS_MINIMALIST (*True*, False) : Remove the rare option from the Repanier administration screens
-    - REPANIER_SETTINGS_MANAGE_ACCOUNTING (*True*, False) : If True, Repanier is used to manage the accounts (customers, proucers, bank)
-    - REPANIER_SETTINGS_PRE_OPENING (True, *False*) : Lets the producer modify their offer during an order pre-opening phase
-    - REPANIER_SETTINGS_PRODUCT_LABEL (True, *False*) : If True, Repanier lets you define labels (for e.g. bio, local, ...) at product level
-    - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5)
-    - REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form
-    - REPANIER_SETTINGS_STOCK (True, *False*) : Allows you to limit the available quantities of a product
-    - REPANIER_SETTINGS_TEST_MODE (True, *False*) : Lets sending emails to a limited number of management team testers
+- REPANIER_SETTINGS_BOOTSTRAP_CSS  (*bootstrap.css*, bootstrap_buisson_watch.css, bootstrap_coopeco_watch.css) : Allows you to change the look of the site
+- REPANIER_SETTINGS_BOX (True, *False*) : Allows you to sell multiple products together
+- REPANIER_SETTINGS_CONTRACT (True, *False*) : Allows you to operate in * GASAP * mode, with contracts
+- REPANIER_SETTINGS_COUNTRY  (be, fr, ch, es) : Allows you to change the applicable VAT. The currency (EUR, CHF, ...) is configured directly in the management interface of `Repanier`
+- REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by Repanier
+- REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE (True, *False*) : If True, Repanier lets you define a custom selling price coefficient at customer level 
+- REPANIER_SETTINGS_DELIVERY_POINT (True, *False*) : If True, Repanier lets you manage more than one delivery point per order
+- REPANIER_SETTINGS_GROUP (True, *False*) : Others groups may be members of the `Repanier` site
+- REPANIER_SETTINGS_IS_MINIMALIST (*True*, False) : Remove the rare option from the Repanier administration screens
+- REPANIER_SETTINGS_MANAGE_ACCOUNTING (*True*, False) : If True, Repanier is used to manage the accounts (customers, proucers, bank)
+- REPANIER_SETTINGS_PRE_OPENING (True, *False*) : Lets the producer modify their offer during an order pre-opening phase
+- REPANIER_SETTINGS_PRODUCT_LABEL (True, *False*) : If True, Repanier lets you define labels (for e.g. bio, local, ...) at product level
+- REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5)
+- REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form
+- REPANIER_SETTINGS_STOCK (True, *False*) : Allows you to limit the available quantities of a product
+- REPANIER_SETTINGS_TEST_MODE (True, *False*) : Lets sending emails to a limited number of management team testers
 
 ## Install or update `Repanier`
 1. Git clone the `Repanier` project into the home folder of the user `repanier`
