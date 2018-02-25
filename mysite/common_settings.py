@@ -58,65 +58,58 @@ except IOError:
     logger.exception("Unable to open {} settings".format(conf_file_name))
     raise SystemExit(-1)
 
+
 DJANGO_SETTINGS_ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
 DJANGO_SETTINGS_ADMIN_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_NAME')
-DJANGO_SETTINGS_BOOTSTRAP_CSS = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_BOOTSTRAP_CSS', fallback="bootstrap.css")
-DJANGO_SETTINGS_BOX = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_BOX', fallback=False)
-DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE',
-                                   fallback="/var/tmp/django-cache")
-DJANGO_SETTINGS_CONTRACT = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CONTRACT', fallback=False)
-DJANGO_SETTINGS_COORDINATOR_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COORDINATOR_NAME',
-                                              fallback=DJANGO_SETTINGS_ADMIN_NAME)
-DJANGO_SETTINGS_COORDINATOR_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COORDINATOR_EMAIL',
-                                               fallback=DJANGO_SETTINGS_ADMIN_EMAIL)
-DJANGO_SETTINGS_COORDINATOR_PHONE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COORDINATOR_PHONE',
-                                               fallback="+32 499 96 64 32")
-DJANGO_SETTINGS_COUNTRY = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_COUNTRY', fallback="be")
-DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE',
-                                             fallback="django.db.backends.postgresql_psycopg2")
+DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE', fallback="/var/tmp/django-cache")
+DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE', fallback="django.db.backends.postgresql_psycopg2")
 DJANGO_SETTINGS_DATABASE_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_HOST', fallback="127.0.0.1")
 DJANGO_SETTINGS_DATABASE_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_NAME')
 DJANGO_SETTINGS_DATABASE_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PASSWORD')
 DJANGO_SETTINGS_DATABASE_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PORT', fallback=5432)
 DJANGO_SETTINGS_DATABASE_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_USER')
 DJANGO_SETTINGS_DEBUG = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG', fallback=False)
-DJANGO_SETTINGS_DEMO = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEMO', fallback=False)
 DJANGO_SETTINGS_EMAIL_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST')
 DJANGO_SETTINGS_EMAIL_HOST_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD')
 DJANGO_SETTINGS_EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_USER')
 DJANGO_SETTINGS_EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT', fallback=587)
 DJANGO_SETTINGS_EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS', fallback=True)
-DJANGO_SETTINGS_GROUP = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_GROUP', fallback=False)
-DJANGO_SETTINGS_IS_MINIMALIST = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_IS_MINIMALIST', fallback=True)
 DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE', fallback="fr")
 DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING', fallback=False)
-DJANGO_SETTINGS_ROUND_INVOICES = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ROUND_INVOICES', fallback=False)
-DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION',
-                                     fallback="/var/tmp/django-session")
-DJANGO_SETTINGS_STOCK = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_STOCK', fallback=False)
-DJANGO_SETTINGS_TEST_MODE = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_TEST_MODE', fallback=False)
+DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION',fallback="/var/tmp/django-session")
+
+REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOOTSTRAP_CSS', fallback="bootstrap.css")
+REPANIER_SETTINGS_BOX = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOX', fallback=False)
+REPANIER_SETTINGS_CONTRACT = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CONTRACT', fallback=False)
+REPANIER_SETTINGS_COORDINATOR_EMAIL = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_EMAIL', fallback=DJANGO_SETTINGS_ADMIN_EMAIL)
+REPANIER_SETTINGS_COORDINATOR_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_NAME', fallback=DJANGO_SETTINGS_ADMIN_NAME)
+REPANIER_SETTINGS_COORDINATOR_PHONE = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_PHONE', fallback="+32 499 96 64 32")
+REPANIER_SETTINGS_COUNTRY = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COUNTRY', fallback="be")
+REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER', fallback=False)
+REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE', fallback=False)
+REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_DELIVERY_POINT', fallback=False)
+REPANIER_SETTINGS_DEMO = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_DEMO', fallback=False)
+REPANIER_SETTINGS_GROUP = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_GROUP', fallback=False)
+REPANIER_SETTINGS_IS_MINIMALIST = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_IS_MINIMALIST', fallback=True)
+REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_MANAGE_ACCOUNTING', fallback=True)
+REPANIER_SETTINGS_PRE_OPENING = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRE_OPENING', fallback=False)
+REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_LABEL', fallback=False)
+REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_ROUND_INVOICES', fallback=False)
+REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM', fallback=True)
+REPANIER_SETTINGS_STOCK = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_STOCK', fallback=False)
+REPANIER_SETTINGS_TEST_MODE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_TEST_MODE', fallback=False)
 
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):
     allowed_host = config.get('ALLOWED_HOSTS', name)
     if allowed_host.startswith("demo"):
-        DJANGO_SETTINGS_DEMO = True
+        REPANIER_SETTINGS_DEMO = True
     DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
 logger.info("Settings loaded from {}".format(conf_file_name))
 logger.info("Allowed hosts: {}".format(DJANGO_SETTINGS_ALLOWED_HOSTS))
-DJANGO_SETTINGS_GROUP_SITE_NAME = DJANGO_SETTINGS_ALLOWED_HOSTS[0]
-DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_GROUP_SITE_NAME)
-DJANGO_SETTINGS_GROUP_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_GROUP_NAME',
-                                        fallback=get_group_name(DJANGO_SETTINGS_GROUP_SITE_NAME))
-
-# Avoid impossible options
-if DJANGO_SETTINGS_IS_MINIMALIST:
-    if DJANGO_SETTINGS_GROUP:
-        logger.info("DJANGO_SETTINGS_GROUP has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
-        DJANGO_SETTINGS_GROUP = False
-    if DJANGO_SETTINGS_BOX:
-        logger.info("DJANGO_SETTINGS_BOX has been set to False because DJANGO_SETTINGS_IS_MINIMALIST is True")
-        DJANGO_SETTINGS_BOX = False
+REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
+REPANIER_SETTINGS_GROUP_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_GROUP_NAME',
+                                          fallback=get_group_name(DJANGO_SETTINGS_ALLOWED_HOSTS[0]))
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
@@ -158,7 +151,7 @@ ADMINS = (
         DJANGO_SETTINGS_ADMIN_EMAIL
     ),
 )
-SERVER_EMAIL = "{}{}".format(DJANGO_SETTINGS_ADMIN_NAME, DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
+SERVER_EMAIL = "{}{}".format(DJANGO_SETTINGS_ADMIN_NAME, REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION)
 ######################
 
 DATABASES = {
@@ -193,7 +186,7 @@ ROOT_URLCONF = "{}.urls".format(DJANGO_SETTINGS_SITE_NAME)
 WSGI_APPLICATION = "{}.wsgi.application".format(DJANGO_SETTINGS_SITE_NAME)
 EMAIL_SUBJECT_PREFIX = '[' + DJANGO_SETTINGS_ALLOWED_HOSTS[0] + ']'
 # DEFAULT_FROM_EMAIL Used by PASSWORD RESET
-DEFAULT_FROM_EMAIL = "no-reply{}".format(DJANGO_SETTINGS_ALLOWED_MAIL_EXTENSION)
+DEFAULT_FROM_EMAIL = "no-reply{}".format(REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION)
 
 USE_X_FORWARDED_HOST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -355,7 +348,7 @@ CKEDITOR_SETTINGS = {
     # 'format_tags'          : 'p;h4;h5;test',
     'format_tags': 'p;h2;h3;h4;h5',
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
-    'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
+    'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS),
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
@@ -380,7 +373,7 @@ CKEDITOR_SETTINGS_MODEL2 = {
     # 'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
     # 'skin': 'moono',
-    # 'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, DJANGO_SETTINGS_BOOTSTRAP_CSS),
+    # 'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS),
     'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities': False,
     'entities': False,
@@ -550,12 +543,13 @@ if DJANGO_SETTINGS_LOGGING:
 
 CMS_TEMPLATE_HOME = 'cms_home.html'
 CMS_TEMPLATES = (
-    ('cms_page.html', gettext("Internal page")),
     ('cms_subpage.html', gettext("Internal page with menu on left")),
+    ('cms_page.html', gettext("Internal page")),
     (CMS_TEMPLATE_HOME, gettext("Home page")),
     ('cms_bootstrap_page.html', gettext("Bootstrap page")),
     ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
 )
+CMS_TEMPLATE_INHERITANCE = False
 
 # if DJANGO_SETTINGS_LANGUAGE == 'fr':
 
@@ -942,7 +936,7 @@ CMS_PLACEHOLDER_CONF = {
 
 ##################### REPANIER VAT/RATE
 
-if DJANGO_SETTINGS_COUNTRY == "ch":
+if REPANIER_SETTINGS_COUNTRY == "ch":
     # Switzerland
     DICT_VAT_DEFAULT = VAT_325
     LUT_VAT = (
@@ -958,7 +952,7 @@ if DJANGO_SETTINGS_COUNTRY == "ch":
         (_('VAT 3.8%'), VAT_350),
         (_('VAT 8%'), VAT_430),
     )
-elif DJANGO_SETTINGS_COUNTRY == "fr":
+elif REPANIER_SETTINGS_COUNTRY == "fr":
     # France
     DICT_VAT_DEFAULT = VAT_375
     LUT_VAT = (
@@ -976,7 +970,7 @@ elif DJANGO_SETTINGS_COUNTRY == "fr":
         (_('VAT 10%'), VAT_460),
         (_('VAT 20%'), VAT_590),
     )
-elif DJANGO_SETTINGS_COUNTRY == "es":
+elif REPANIER_SETTINGS_COUNTRY == "es":
     # Espagne
     DICT_VAT_DEFAULT = VAT_460
     LUT_VAT = (
