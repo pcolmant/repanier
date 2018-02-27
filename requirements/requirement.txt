@@ -28,8 +28,8 @@ django-treebeard==4.2.0
 djangocms-admin-style==1.2.7
 djangocms-attributes-field==0.3.0
 # djangocms-cascade==0.15.4
-# https://github.com/jrief/djangocms-cascade/archive/master.zip
--e git+https://github.com/pcolmant/djangocms-cascade.git@883f39eac05f77d0638df3719bbe5a5bb7b10048#egg=djangocms-cascade
+https://github.com/jrief/djangocms-cascade/archive/master.zip
+# -e git+https://github.com/pcolmant/djangocms-cascade.git@883f39eac05f77d0638df3719bbe5a5bb7b10048#egg=djangocms-cascade
 djangocms-text-ckeditor==3.5.3
 djangorestframework==3.7.7
 easy-thumbnails==2.5
