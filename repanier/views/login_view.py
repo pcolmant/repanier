@@ -39,7 +39,6 @@ def login_view(request, template_name='repanier/registration/login.html',
 
     if request.method == "POST":
         form = authentication_form(request, data=request.POST)
-        print("POST : {}".format(form))
 
         if form.is_valid():
             print("FORM IS VALID")
