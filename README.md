@@ -328,7 +328,7 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
     cp ~/repanier_git/mysite/urls.py ~/prd1/_0_prd_example/_0_prd_example/
     cp ~/repanier_git/mysite/wsgi.py ~/prd1/_0_prd_example/_0_prd_example/
     cp -R ~/repanier_git/mysite/locale/ ~/prd1/_0_prd_example/_0_prd_example/
-    cp -R ~/repanier_git/cron/ ~/prd1/_0_prd_example/cron/
+    cp -R ~/repanier_git/cron/ ~/prd1/_0_prd_example/
     sudo chown www-data:www-data ~/prd1/_0_prd_example/cron/*.sh
     sudo chmod +x ~/prd1/_0_prd_example/cron/*.sh
     cp ~/repanier_git/manage.py ~/prd1/_0_prd_example/
