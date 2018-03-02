@@ -293,7 +293,7 @@ class Configuration(TranslatableModel):
             placeholder=static_placeholder.draft,
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
-            body='hello world foter'
+            body='hello world footer'
         )
         static_placeholder.publish(
             request=None,
