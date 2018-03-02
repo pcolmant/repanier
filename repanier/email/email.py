@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 import datetime
+import logging
 import time
 from smtplib import SMTPRecipientsRefused, SMTPAuthenticationError
 
@@ -11,6 +12,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.html import strip_tags
 
+logger = logging.getLogger(__name__)
 from repanier.const import DEMO_EMAIL, EMPTY_STRING
 
 
@@ -50,10 +52,10 @@ class RepanierEmail(EmailMultiAlternatives):
 
         if settings.REPANIER_SETTINGS_DEMO:
             if settings.DEBUG:
-                print("to : {}".format(self.to))
-                print("cc : {}".format(self.cc))
-                print("bcc : {}".format(self.bcc))
-                print("subject : {}".format(self.subject))
+                logger.debug("to : %s", self.to)
+                logger.debug("cc : %s", self.cc)
+                logger.debug("bcc : %s", self.bcc)
+                logger.debug("subject : %s", self.subject)
                 email_send = True
             else:
                 self.to = [DEMO_EMAIL]
@@ -75,13 +77,13 @@ class RepanierEmail(EmailMultiAlternatives):
                     self.bcc = []
                     email_send = self._send_email_with_error_log()
                 else:
-                    print('############################ test mode, without tester...')
+                    logger.info('############################ test mode, without tester...')
             else:
                 if settings.DEBUG:
-                    print("to : {}".format(self.to))
-                    print("cc : {}".format(self.cc))
-                    print("bcc : {}".format(self.bcc))
-                    print("subject : {}".format(self.subject))
+                    logger.debug("to : %s", self.to)
+                    logger.debug("cc : %s", self.cc)
+                    logger.debug("bcc : %s", self.bcc)
+                    logger.debug("subject : %s", self.subject)
                     email_send = True
                 else:
                     # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
@@ -127,6 +129,7 @@ class RepanierEmail(EmailMultiAlternatives):
         email_send = False
         # Email subject *must not* contain newlines
         self.subject = ''.join(self.subject.splitlines())
+        logger.info("################################## send_email")
         try:
             with mail.get_connection(
                     host=self.host,
@@ -138,41 +141,40 @@ class RepanierEmail(EmailMultiAlternatives):
                 self.connection = connection
                 message = EMPTY_STRING
                 try:
-                    print("################################## send_email")
                     # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
                     from_email = "from_email : {}".format(self.from_email)
+                    logger.info(from_email)
                     reply_to = "reply_to : {}".format(self.reply_to)
+                    logger.info(reply_to)
                     to_email = "to : {}".format(self.to)
+                    logger.info(to_email)
                     cc_email = "cc : {}".format(self.cc)
+                    logger.info(cc_email)
                     bcc_email = "bcc : {}".format(self.bcc)
+                    logger.info(bcc_email)
                     subject = "subject : {}".format(self.subject)
-                    print(from_email)
-                    print(reply_to)
-                    print(to_email)
-                    print(cc_email)
-                    print(bcc_email)
-                    print(subject)
+                    logger.info(subject)
                     message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
                                                               subject)
                     self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:
-                    print("################################## send_email SMTPRecipientsRefused")
-                    print(error_str)
+                    logger.info("################################## send_email SMTPRecipientsRefused")
+                    logger.error(error_str)
                     time.sleep(1)
                     connection = mail.get_connection()
                     connection.open()
                     mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
                     connection.close()
                 except Exception as error_str:
-                    print("################################## send_email error")
-                    print(error_str)
+                    logger.info("################################## send_email error")
+                    logger.error(error_str)
                     time.sleep(1)
                     connection = mail.get_connection()
                     connection.open()
                     mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
                     connection.close()
-                print("##################################")
+                logger.info("##################################")
                 if email_send and customer is not None:
                     from repanier.models.customer import Customer
 
@@ -181,11 +183,11 @@ class RepanierEmail(EmailMultiAlternatives):
                     # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
                     Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=email_send)
         except SMTPAuthenticationError as error_str:
-            print("################################## send_email SMTPAuthenticationError")
+            logger.info("################################## send_email SMTPAuthenticationError")
             # https://support.google.com/accounts/answer/185833
             # https://support.google.com/accounts/answer/6010255
             # https://security.google.com/settings/security/apppasswords
-            print(error_str)
+            logger.error(error_str)
         return email_send
 
     def _get_customer(self, email_address):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import logging
 import sys
 import time
 from decimal import setcontext, DefaultContext, ROUND_HALF_UP
@@ -8,6 +9,8 @@ from django.conf import settings
 from django.db import connection
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 REPANIER_SETTINGS_CONFIG = None
 REPANIER_SETTINGS_TEST_MODE = None
@@ -57,7 +60,7 @@ class RepanierConfig(AppConfig):
             try:
                 db_started = connection.cursor() is not None
             except:
-                print("waiting for database connection")
+                logger.info("waiting for database connection")
                 time.sleep(1)
 
         # Imports are inside the function because its point is to avoid importing
@@ -165,7 +168,7 @@ class RepanierConfig(AppConfig):
             config.upgrade_db()
             config.save()
         except Exception as error_str:
-            print("##################################")
-            print(error_str)
-            print("##################################")
+            logger.info("##################################")
+            logger.error(error_str)
+            logger.info("##################################")
             other = _("Other qty")

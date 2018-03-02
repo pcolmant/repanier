@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 import datetime
+import logging
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -15,6 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
+
+logger = logging.getLogger(__name__)
 
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
@@ -432,13 +435,13 @@ class Permanence(TranslatableModel):
                    everything=True, producers_id=(), deliveries_id=(),
                    update_payment_date=False,
                    payment_date=None):
-        # print("------------ status : {}".format(self.status))
-        # print("------------ new_status : {}".format(new_status))
-        # print("------------ everything : {}".format(everything))
-        # print("------------ producers_id : {}".format(producers_id))
-        # print("------------ deliveries_id : {}".format(deliveries_id))
-        # print("------------ update_payment_date : {}".format(update_payment_date))
-        # print("------------ payment_date : {}".format(payment_date))
+        logger.debug("status : %s", self.status)
+        logger.debug("new_status : %s", new_status)
+        logger.debug("everything : %s", everything)
+        logger.debug("producers_id : %s", producers_id)
+        logger.debug("deliveries_id : %s", deliveries_id)
+        logger.debug("update_payment_date : %s", update_payment_date)
+        logger.debug("payment_date : %s", payment_date)
         if new_status == PERMANENCE_WAIT_FOR_OPEN:
             everything = True
             all_producers = self.contract.producers.all() if self.contract else self.producers.all()

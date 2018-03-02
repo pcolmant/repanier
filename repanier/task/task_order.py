@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import logging
 import threading
 import uuid
 
@@ -9,6 +10,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 from repanier.const import *
 from repanier.email import email_offer
@@ -98,13 +101,8 @@ def pre_open_order(permanence_id):
         producer.offer_uuid = uuid.uuid1()
         producer.offer_filled = False
         producer.save(update_fields=['offer_uuid', 'offer_filled'])
-    # try:
     email_offer.send_pre_open_order(permanence_id)
     permanence.set_status(PERMANENCE_PRE_OPEN)
-    # except Exception as error_str:
-    #     print("################################## pre_open_order")
-    #     print(error_str)
-    #     print("##################################")
 
 
 @transaction.atomic
@@ -134,14 +132,9 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
 
-    # try:
     if not do_not_send_any_mail:
         email_offer.send_open_order(permanence_id)
     permanence.set_status(PERMANENCE_OPENED)
-    # except Exception as error_str:
-    #     print("################################## open_order")
-    #     print(error_str)
-    #     print("##################################")
 
 
 def admin_back_to_scheduled(request, permanence):
@@ -216,11 +209,11 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
 
-    print("-------------- close_and_send_order")
-    print("------ permanence_id : {}".format(permanence_id))
-    print("------ everything : {}".format(everything))
-    print("------ producers_id : {}".format(producers_id))
-    print("------ deliveries_id : {}".format(deliveries_id))
+    logger.debug("close_and_send_order")
+    logger.debug("permanence_id : %s", permanence_id)
+    logger.debug("everything : %s", everything)
+    logger.debug("producers_id : %s", producers_id)
+    logger.debug("deliveries_id : %s", deliveries_id)
 
     permanence = Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED).order_by('?').first()
     if permanence is None:

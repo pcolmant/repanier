@@ -29,9 +29,6 @@ class UserDataForm(TranslatableModelForm):
             return
         is_active = self.cleaned_data["is_active"]
         is_coordinator = is_active and self.cleaned_data["is_coordinator"]
-        # print("------- self.cleaned_data[\"is_active\"] : {}".format(self.cleaned_data["is_active"]))
-        # print("------- is_active : {}".format(is_active))
-        # print("------- is_coordinator : {}".format(is_coordinator))
         is_order_manager = is_active and self.cleaned_data["is_order_manager"]
         is_order_referent = is_active and self.cleaned_data["is_order_referent"]
         is_invoice_manager = is_active and self.cleaned_data["is_invoice_manager"]

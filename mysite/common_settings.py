@@ -41,7 +41,7 @@ def get_group_name(site_name):
 PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
 PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
-logger.info("Python path is : {}".format(sys.path))
+logger.info("Python path is : %s", sys.path)
 
 config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = "{}{}{}.ini".format(
@@ -55,7 +55,7 @@ try:
         # TODO : Use parser.read_file() instead of readfp()
         config.readfp(f)
 except IOError:
-    logger.exception("Unable to open {} settings".format(conf_file_name))
+    logger.exception("Unable to open %s settings", conf_file_name)
     raise SystemExit(-1)
 
 
@@ -69,13 +69,14 @@ DJANGO_SETTINGS_DATABASE_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTIN
 DJANGO_SETTINGS_DATABASE_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PORT', fallback=5432)
 DJANGO_SETTINGS_DATABASE_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_USER')
 DJANGO_SETTINGS_DEBUG = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG', fallback=False)
+DJANGO_SETTINGS_DEBUG_TOOLBAR = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG_TOOLBAR', fallback=False)
 DJANGO_SETTINGS_EMAIL_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST')
 DJANGO_SETTINGS_EMAIL_HOST_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD')
 DJANGO_SETTINGS_EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_USER')
 DJANGO_SETTINGS_EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT', fallback=587)
 DJANGO_SETTINGS_EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS', fallback=True)
 DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE', fallback="fr")
-DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING', fallback=False)
+DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING', fallback=False) or DJANGO_SETTINGS_DEBUG
 DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION',fallback="/var/tmp/django-session")
 
 REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOOTSTRAP_CSS', fallback="bootstrap.css")
@@ -105,8 +106,8 @@ for name in config.options('ALLOWED_HOSTS'):
     if allowed_host.startswith("demo"):
         REPANIER_SETTINGS_DEMO = True
     DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
-logger.info("Settings loaded from {}".format(conf_file_name))
-logger.info("Allowed hosts: {}".format(DJANGO_SETTINGS_ALLOWED_HOSTS))
+logger.info("Settings loaded from: %s", conf_file_name)
+logger.info("Allowed hosts: %s", DJANGO_SETTINGS_ALLOWED_HOSTS)
 REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
 REPANIER_SETTINGS_GROUP_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_GROUP_NAME',
                                           fallback=get_group_name(DJANGO_SETTINGS_ALLOWED_HOSTS[0]))
@@ -127,13 +128,13 @@ else:
 
 # Directory where working files, such as media and databases are kept
 MEDIA_DIR = os.path.join(PROJECT_DIR, "media")
-# print("------- media dir : {}".format(MEDIA_DIR))
+logger.debug("------- media dir : %s", MEDIA_DIR)
 
 MEDIA_PUBLIC_DIR = os.path.join(MEDIA_DIR, "public")
-# print("------- media public dir : {}".format(MEDIA_PUBLIC_DIR))
+logger.debug("------- media public dir : %s", MEDIA_PUBLIC_DIR)
 
 STATIC_DIR = os.path.join(PROJECT_DIR, "collect-static")
-# print("------- static dir : {}".format(STATIC_DIR))
+logger.debug("------- static dir : %s", STATIC_DIR)
 
 MEDIA_ROOT = MEDIA_PUBLIC_DIR
 MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
@@ -269,7 +270,7 @@ MIDDLEWARE = (
     'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
-if DJANGO_SETTINGS_LOGGING:
+if DJANGO_SETTINGS_DEBUG_TOOLBAR:
     INSTALLED_APPS += (
         'debug_toolbar',
     )
@@ -454,19 +455,19 @@ STATICFILES_FINDERS = (
 
 ################# Django_compressor
 
-INSTALLED_APPS += (
-    'compressor',
-)
-
-STATICFILES_FINDERS += (
-    'compressor.finders.CompressorFinder',
-)
-
-COMPRESS_ENABLED = True
-COMPRESS_OUTPUT_DIR = "compressor"
-COMPRESS_STORAGE = 'compressor.storage.GzipCompressorFileStorage'
-COMPRESS_PARSER = "compressor.parser.HtmlParser"
-COMPRESS_OFFLINE = False
+# INSTALLED_APPS += (
+#     'compressor',
+# )
+#
+# STATICFILES_FINDERS += (
+#     'compressor.finders.CompressorFinder',
+# )
+#
+# COMPRESS_ENABLED = True
+# COMPRESS_OUTPUT_DIR = "compressor"
+# COMPRESS_STORAGE = 'compressor.storage.GzipCompressorFileStorage'
+# COMPRESS_PARSER = "compressor.parser.HtmlParser"
+# COMPRESS_OFFLINE = False
 
 # COMPRESS_PRECOMPILERS = (
 #     ('text/x-scss', 'django_libsass.SassCompiler'),
@@ -512,29 +513,24 @@ if DJANGO_SETTINGS_LOGGING:
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
-        'filters': {
-            'require_debug_false': {
-                '()': 'django.utils.log.RequireDebugFalse'
-            }
+        'formatters': {
+            'console': {
+                'format': '%(levelname)s %(name)s %(message)s',
+            },
         },
         'handlers': {
-            'mail_admins': {
-                'level': 'ERROR',
-                'filters': ['require_debug_false'],
-                'class': 'django.utils.log.AdminEmailHandler'
-            },
             'console': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
+                'formatter': 'console',
             },
         },
         'loggers': {
-            'django.request': {
-                'handlers': ['mail_admins'],
-                'level': 'ERROR',
-                'propagate': True,
-            },
             'django.db.backends': {
+                'level': 'INFO',
+                'handlers': ['console'],
+            },
+            'repanier': {
                 'level': 'DEBUG',
                 'handlers': ['console'],
             },

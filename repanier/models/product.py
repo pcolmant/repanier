@@ -140,7 +140,6 @@ class Product(Item):
             contract_dates_array = []
             month_save = None
             selected_dates_counter = 0
-            # print(all_dates_str)
             for one_date_str in contract_all_dates_str:
                 one_date = parse_date(one_date_str)
                 if month_save != one_date.month:

@@ -41,7 +41,6 @@ def login_view(request, template_name='repanier/registration/login.html',
         form = authentication_form(request, data=request.POST)
 
         if form.is_valid():
-            print("FORM IS VALID")
             # Okay, security check complete. Log the user in.
             auth_login(request, form.get_user())
 
