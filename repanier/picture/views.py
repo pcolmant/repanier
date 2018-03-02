@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-import json
 import os
 
 from PIL import Image
@@ -49,14 +48,14 @@ def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
 
         if default_storage.exists(name):
             msg = "{}".format(_(
-                 'A picture with the same file name already exist. This picture will not replace it.'
+                'A picture with the same file name already exist. This picture will not replace it.'
             ))
             return JsonResponse(
-                    {'url'     : default_storage.url(name),
-                     'filename': name,
-                     'msg'     : msg
-                     }
-                )
+                {'url': default_storage.url(name),
+                 'filename': name,
+                 'msg': msg
+                 }
+            )
         else:
             image = Image.open(file_)
             if image.size[0] > size or image.size[1] > size:
