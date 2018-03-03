@@ -214,12 +214,11 @@ INSTALLED_APPS = (
 
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
     'django_select2',
-    # 'cmsplugin_filer_file', # deprecated
-    # 'cmsplugin_filer_folder', # deprecated
-    # 'cmsplugin_filer_link', # deprecated
-    # 'cmsplugin_filer_image', # deprecated
-    # 'cmsplugin_filer_video', # deprecated
-    # 'cmsplugin_filer_utils', # deprecated
+    'cmsplugin_filer_file', # TODO : remove cmsplugin which is replaced by djangocms_file
+    'cmsplugin_filer_folder', # TODO : remove cmsplugin which is replaced by djangocms_file
+    'cmsplugin_filer_link', # TODO : remove cmsplugin which is replaced by djangocms_link
+    'cmsplugin_filer_image', # TODO : remove cmsplugin which is replaced by djangocms_picture
+    'cmsplugin_filer_video', # TODO : remove cmsplugin which is replaced by djangocms_video
     'djangocms_link',
     'djangocms_file',
     'djangocms_picture',
