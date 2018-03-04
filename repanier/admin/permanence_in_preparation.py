@@ -460,7 +460,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 })
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
-                if settings.REPANIER_SETTINGS_CUSTOMERS_MUST_CONFIRM_ORDER:
+                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                     context = TemplateContext({
                         'name': _('Long name'),
                         'long_basket_name': _('Long name'),
