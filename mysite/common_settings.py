@@ -58,11 +58,11 @@ except IOError:
     logger.exception("Unable to open %s settings", conf_file_name)
     raise SystemExit(-1)
 
-
 DJANGO_SETTINGS_ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
 DJANGO_SETTINGS_ADMIN_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_NAME')
 DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE', fallback="/var/tmp/django-cache")
-DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE', fallback="django.db.backends.postgresql_psycopg2")
+DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE',
+                                             fallback="django.db.backends.postgresql_psycopg2")
 DJANGO_SETTINGS_DATABASE_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_HOST', fallback="127.0.0.1")
 DJANGO_SETTINGS_DATABASE_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_NAME')
 DJANGO_SETTINGS_DATABASE_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PASSWORD')
@@ -76,27 +76,45 @@ DJANGO_SETTINGS_EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS
 DJANGO_SETTINGS_EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT', fallback=587)
 DJANGO_SETTINGS_EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS', fallback=True)
 DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE', fallback="fr")
-DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING', fallback=False) or DJANGO_SETTINGS_DEBUG
-DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION',fallback="/var/tmp/django-session")
+DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING',
+                                            fallback=False) or DJANGO_SETTINGS_DEBUG
+DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION', fallback="/var/tmp/django-session")
 
-REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOOTSTRAP_CSS', fallback="bootstrap.css")
+REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOOTSTRAP_CSS',
+                                             fallback="bootstrap.css")
 REPANIER_SETTINGS_BOX = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOX', fallback=False)
 REPANIER_SETTINGS_CONTRACT = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CONTRACT', fallback=False)
-REPANIER_SETTINGS_COORDINATOR_EMAIL = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_EMAIL', fallback=DJANGO_SETTINGS_ADMIN_EMAIL)
-REPANIER_SETTINGS_COORDINATOR_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_NAME', fallback=DJANGO_SETTINGS_ADMIN_NAME)
-REPANIER_SETTINGS_COORDINATOR_PHONE = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_PHONE', fallback="+32 499 96 64 32")
+REPANIER_SETTINGS_COORDINATOR_EMAIL = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_EMAIL',
+                                                 fallback=DJANGO_SETTINGS_ADMIN_EMAIL)
+REPANIER_SETTINGS_COORDINATOR_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_NAME',
+                                                fallback=DJANGO_SETTINGS_ADMIN_NAME)
+REPANIER_SETTINGS_COORDINATOR_PHONE = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_PHONE',
+                                                 fallback="+32 499 96 64 32")
 REPANIER_SETTINGS_COUNTRY = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COUNTRY', fallback="be")
-REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER', fallback=False)
-REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE', fallback=False)
-REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_DELIVERY_POINT', fallback=False)
+REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean('REPANIER_SETTINGS',
+                                                                  'REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER',
+                                                                  fallback=False)
+REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE = config.getboolean('REPANIER_SETTINGS',
+                                                            'REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE', fallback=False)
+REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_DELIVERY_POINT',
+                                                     fallback=False)
 REPANIER_SETTINGS_DEMO = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_DEMO', fallback=False)
 REPANIER_SETTINGS_GROUP = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_GROUP', fallback=False)
-REPANIER_SETTINGS_IS_MINIMALIST = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_IS_MINIMALIST', fallback=True)
-REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_MANAGE_ACCOUNTING', fallback=True)
+REPANIER_SETTINGS_IS_MINIMALIST = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_IS_MINIMALIST',
+                                                    fallback=True)
+REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_MANAGE_ACCOUNTING',
+                                                        fallback=True)
 REPANIER_SETTINGS_PRE_OPENING = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRE_OPENING', fallback=False)
-REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_LABEL', fallback=False)
-REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_ROUND_INVOICES', fallback=False)
-REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM', fallback=True)
+REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_LABEL',
+                                                    fallback=False)
+REPANIER_SETTINGS_PRODUCT_REFERENCE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_REFERENCE',
+                                                     fallback=False)
+REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_ROUND_INVOICES',
+                                                     fallback=False)
+
+REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM = config.getboolean('REPANIER_SETTINGS',
+                                                                  'REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM',
+                                                                  fallback=True)
 REPANIER_SETTINGS_STOCK = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_STOCK', fallback=False)
 REPANIER_SETTINGS_TEST_MODE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_TEST_MODE', fallback=False)
 
@@ -214,11 +232,11 @@ INSTALLED_APPS = (
 
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
     'django_select2',
-    'cmsplugin_filer_file', # TODO : remove cmsplugin which is replaced by djangocms_file
-    'cmsplugin_filer_folder', # TODO : remove cmsplugin which is replaced by djangocms_file
-    'cmsplugin_filer_link', # TODO : remove cmsplugin which is replaced by djangocms_link
-    'cmsplugin_filer_image', # TODO : remove cmsplugin which is replaced by djangocms_picture
-    'cmsplugin_filer_video', # TODO : remove cmsplugin which is replaced by djangocms_video
+    'cmsplugin_filer_file',  # TODO : remove cmsplugin which is replaced by djangocms_file
+    'cmsplugin_filer_folder',  # TODO : remove cmsplugin which is replaced by djangocms_file
+    'cmsplugin_filer_link',  # TODO : remove cmsplugin which is replaced by djangocms_link
+    'cmsplugin_filer_image',  # TODO : remove cmsplugin which is replaced by djangocms_picture
+    'cmsplugin_filer_video',  # TODO : remove cmsplugin which is replaced by djangocms_video
     'djangocms_link',
     'djangocms_file',
     'djangocms_picture',
@@ -472,29 +490,6 @@ STATICFILES_FINDERS = (
 #     ('text/x-scss', 'django_libsass.SassCompiler'),
 # )
 
-###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
-
-CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 3600
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
-        'TIMEOUT': 3000,
-        'OPTIONS': {
-            'MAX_ENTRIES': 10000,
-            'CULL_FREQUENCY': 3
-        }
-    }
-}
-
-CMS_CACHE_DURATIONS = {
-    'content': 300,  # default 60
-    'menus': 3600,  # default 3600
-    'permissions': 3600  # default: 3600
-}
-
 ##################### DJANGO REST_FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
@@ -508,6 +503,7 @@ IMPORT_EXPORT_USE_TRANSACTIONS = True
 DATE_INPUT_FORMATS = (DJANGO_SETTINGS_DATE, "%d/%m/%Y", "%Y-%m-%d")
 DATETIME_INPUT_FORMATS = (DJANGO_SETTINGS_DATETIME,)
 
+##################### LOGGING
 if DJANGO_SETTINGS_LOGGING:
     LOGGING = {
         'version': 1,
@@ -536,16 +532,7 @@ if DJANGO_SETTINGS_LOGGING:
         }
     }
 
-CMS_TEMPLATE_HOME = 'cms_home.html'
-CMS_TEMPLATES = (
-    ('cms_subpage.html', gettext("Internal page with menu on left")),
-    ('cms_page.html', gettext("Internal page")),
-    (CMS_TEMPLATE_HOME, gettext("Home page")),
-    ('cms_bootstrap_page.html', gettext("Bootstrap page")),
-    ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
-)
-CMS_TEMPLATE_INHERITANCE = False
-
+####################### LANGUAGE
 # if DJANGO_SETTINGS_LANGUAGE == 'fr':
 
 LANGUAGE_CODE = 'fr'
@@ -680,6 +667,24 @@ elif DJANGO_SETTINGS_LANGUAGE == 'fr-en':
     }
 
 DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
+
+###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
+
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 3600
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
+        'TIMEOUT': 3000,
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000,
+            'CULL_FREQUENCY': 3
+        }
+    }
+}
+
 ##################### DJANGOCMS-CASCADE
 CMSPLUGIN_CASCADE_PLUGINS = (
     # 'cmsplugin_cascade.segmentation',
@@ -738,6 +743,80 @@ CACSCADE_WORKAREA_GLOSSARY = {
     },
 }
 
+######################## CMS
+
+CMS_CACHE_DURATIONS = {
+    'content': 300,  # default 60
+    'menus': 5,  # default 3600
+    'permissions': 3600  # default: 3600
+}
+
+CMS_TEMPLATE_HOME = 'cms_home.html'
+CMS_TEMPLATE_SUB_PAGE = 'cms_subpage.html'
+CMS_TEMPLATES = (
+    (CMS_TEMPLATE_SUB_PAGE, gettext("Internal page with menu on left")),
+    ('cms_page.html', gettext("Internal page")),
+    (CMS_TEMPLATE_HOME, gettext("Home page")),
+    ('cms_bootstrap_page.html', gettext("Bootstrap page")),
+    ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
+)
+CMS_TEMPLATE_INHERITANCE = False
+
+CMS_PAGE_CACHE = True
+CMS_PLACEHOLDER_CACHE = True
+CMS_PLUGIN_CACHE = True
+CMS_TOOLBAR_ANONYMOUS_ON = False
+CMS_PAGE_WIZARD_DEFAULT_TEMPLATE = CMS_TEMPLATE_SUB_PAGE
+CMS_PAGE_WIZARD_CONTENT_PLACEHOLDER = 'subpage_content'
+
+CMS_TEMPLATE_HOME_HERO = """
+<h3>Lorem ipsum</h3>
+<p>Lorem ipsum.</p>
+<p class="text-muted"><span class="glyphicon glyphicon-pushpin"></span>&nbsp;Lorem ipsum.</p>
+<h3>Lorem ipsum</h3>
+<p class="text-muted">Lorem ipsum.</p>
+"""
+
+CMS_TEMPLATE_HOME_COL_1 = """
+<div class="panel panel-info">
+<div class="panel-heading"><h4>Lorem ipsum</h4></div>
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">Lorem ipsum.</li>
+<li class="list-group-item">Lorem ipsum.</li>
+</ul>
+</div>
+</div>
+"""
+
+CMS_TEMPLATE_HOME_COL_2 = """
+<div class="panel panel-danger">
+<div class="panel-heading"><h4>Lorem ipsum</h4></div>
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">Lorem ipsum.</li>
+<li class="list-group-item">Lorem ipsum.</li>
+</ul>
+</div>
+</div>
+"""
+
+CMS_TEMPLATE_HOME_COL_3 = """
+<div class="panel panel-warning">
+<div class="panel-heading"><h4>Lorem ipsum</h4></div>
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">Lorem ipsum.</li>
+<li class="list-group-item">Lorem ipsum.</li>
+</ul>
+</div>
+</div>
+"""
+
+CMS_TEMPLATE_FOOTER = """
+Lorem ipsum dolor sit amet
+"""
+
 CMS_PLACEHOLDER_CONF = {
     'home-hero': {
         'name': gettext('Hero'),
@@ -755,14 +834,7 @@ CMS_PLACEHOLDER_CONF = {
             {
                 'plugin_type': 'TextPlugin',
                 'values': {
-                    'body':
-                        """
-                        <h3>Lorem ipsum</h3>
-                        <p>Lorem ipsum.</p>
-                        <p class="text-muted"><span class="glyphicon glyphicon-pushpin"></span>&nbsp;Lorem ipsum.</p>
-                        <h3>Lorem ipsum</h3>
-                        <p class="text-muted">Lorem ipsum.</p>
-                        """
+                    'body': CMS_TEMPLATE_HOME_HERO
                 },
             },
         ]
@@ -784,17 +856,7 @@ CMS_PLACEHOLDER_CONF = {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        """
-                        <div class="panel panel-info">
-                        <div class="panel-heading"><h4>Lorem ipsum</h4></div>
-                        <div class="panel-body">
-                        <ul class="list-group">
-                        <li class="list-group-item">Lorem ipsum.</li>
-                        <li class="list-group-item">Lorem ipsum.</li>
-                        </ul>
-                        </div>
-                        </div>
-                        """
+                        CMS_TEMPLATE_HOME_COL_1
                 },
             },
         ]
@@ -816,17 +878,7 @@ CMS_PLACEHOLDER_CONF = {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        """
-                        <div class="panel panel-danger">
-                        <div class="panel-heading"><h4>Lorem ipsum</h4></div>
-                        <div class="panel-body">
-                        <ul class="list-group">
-                        <li class="list-group-item">Lorem ipsum.</li>
-                        <li class="list-group-item">Lorem ipsum.</li>
-                        </ul>
-                        </div>
-                        </div>
-                        """
+                        CMS_TEMPLATE_HOME_COL_2
                 },
             },
         ]
@@ -848,17 +900,7 @@ CMS_PLACEHOLDER_CONF = {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        """
-                        <div class="panel panel-warning">
-                        <div class="panel-heading"><h4>Lorem ipsum</h4></div>
-                        <div class="panel-body">
-                        <ul class="list-group">
-                        <li class="list-group-item">Lorem ipsum.</li>
-                        <li class="list-group-item">Lorem ipsum.</li>
-                        </ul>
-                        </div>
-                        </div>
-                        """
+                        CMS_TEMPLATE_HOME_COL_3
                 },
             },
         ]
@@ -921,7 +963,7 @@ CMS_PLACEHOLDER_CONF = {
                 'plugin_type': 'TextPlugin',
                 'values': {
                     'body':
-                        'Lorem ipsum dolor sit amet'
+                        CMS_TEMPLATE_FOOTER
 
                 },
             },

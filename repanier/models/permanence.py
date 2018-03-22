@@ -21,9 +21,11 @@ logger = logging.getLogger(__name__)
 
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice, ProducerInvoice
+from repanier.models.lut import LUT_DeliveryPoint
 from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
@@ -31,6 +33,15 @@ from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
 from repanier.tools import cap, create_or_update_one_purchase
+
+refresh_status = [
+    PERMANENCE_WAIT_FOR_PRE_OPEN,
+    PERMANENCE_WAIT_FOR_OPEN,
+    PERMANENCE_WAIT_FOR_CLOSED,
+    PERMANENCE_CLOSED,
+    PERMANENCE_WAIT_FOR_SEND,
+    PERMANENCE_WAIT_FOR_INVOICED
+]
 
 
 class Permanence(TranslatableModel):
@@ -431,17 +442,25 @@ class Permanence(TranslatableModel):
     get_board.short_description = (_("Tasks"))
 
     @transaction.atomic
-    def set_status(self, new_status,
+    def set_status(self, old_status=(), new_status=None,
                    everything=True, producers_id=(), deliveries_id=(),
                    update_payment_date=False,
                    payment_date=None):
-        logger.debug("status : %s", self.status)
+        logger.debug("old_status : %s", self.status)
         logger.debug("new_status : %s", new_status)
         logger.debug("everything : %s", everything)
         logger.debug("producers_id : %s", producers_id)
         logger.debug("deliveries_id : %s", deliveries_id)
         logger.debug("update_payment_date : %s", update_payment_date)
         logger.debug("payment_date : %s", payment_date)
+        permanence = Permanence.objects.select_for_update().filter(
+            id=self.id,
+            status__in=old_status
+        ).exclude(
+            status=new_status
+        ).first()
+        if permanence is None:
+            raise ValueError
         if new_status == PERMANENCE_WAIT_FOR_OPEN:
             everything = True
             all_producers = self.contract.producers.all() if self.contract else self.producers.all()
@@ -510,21 +529,33 @@ class Permanence(TranslatableModel):
                 )
         if everything:
             now = timezone.now().date()
-            self.is_updated_on = now
-            self.status = new_status
+            permanence.is_updated_on = self.is_updated_on = now
+            permanence.status = self.status = new_status
             if self.highest_status < new_status:
-                self.highest_status = new_status
+                permanence.highest_status = self.highest_status = new_status
             if update_payment_date:
                 if payment_date is None:
-                    self.payment_date = now
+                    permanence.payment_date = self.payment_date = now
                 else:
-                    self.payment_date = payment_date
-                self.save(
-                    update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
-            else:
-                self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-            menu_pool.clear()
-            cache.clear()
+                    permanence.payment_date = self.payment_date = payment_date
+            #     self.save(
+            #         update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
+            # else:
+            #     self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
+        # Unlock
+        permanence.save()
+        menu_pool.clear(all=True)
+        cache.clear()
+
+    @transaction.atomic
+    def back_to_scheduled(self):
+        self.producers.clear()
+        for offer_item in OfferItemWoReceiver.objects.filter(
+                permanence_id=self.id,
+                may_order=True
+        ).order_by().distinct("producer_id"):
+            self.producers.add(offer_item.producer_id)
+        OfferItemWoReceiver.objects.filter(permanence_id=self.id).update(may_order=False)
 
     @transaction.atomic
     def close_order(self, everything, producers_id=(), deliveries_id=()):
@@ -644,16 +675,571 @@ class Permanence(TranslatableModel):
                     batch_job=True, is_box_content=False
                 )
 
+    @transaction.atomic
+    def invoice(self, payment_date):
+        from repanier.apps import REPANIER_SETTINGS_MIN_TRANSPORT, REPANIER_SETTINGS_TRANSPORT
+        from repanier.models.purchase import PurchaseWoReceiver
+
+        self.set_status(old_status=(PERMANENCE_SEND,), new_status=PERMANENCE_WAIT_FOR_INVOICED)
+        bank_account = BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL).order_by('?').first()
+        producer_buyinggroup = Producer.get_or_create_group()
+        customer_buyinggroup = Customer.get_or_create_group()
+        if bank_account is None or producer_buyinggroup is None or customer_buyinggroup is None:
+            return
+        customer_invoice_buyinggroup = CustomerInvoice.objects.filter(
+            customer_id=customer_buyinggroup.id,
+            permanence_id=self.id,
+        ).order_by('?').first()
+        if customer_invoice_buyinggroup is None:
+            customer_invoice_buyinggroup = CustomerInvoice.objects.create(
+                customer_id=customer_buyinggroup.id,
+                permanence_id=self.id,
+                date_previous_balance=customer_buyinggroup.date_balance,
+                previous_balance=customer_buyinggroup.balance,
+                date_balance=payment_date,
+                balance=customer_buyinggroup.balance,
+                customer_charged_id=customer_buyinggroup.id,
+                transport=REPANIER_SETTINGS_TRANSPORT,
+                min_transport=REPANIER_SETTINGS_MIN_TRANSPORT,
+                price_list_multiplier=DECIMAL_ONE
+            )
+        old_bank_latest_total = bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+        permanence_partially_invoiced = ProducerInvoice.objects.filter(
+            permanence_id=self.id,
+            invoice_sort_order__isnull=True,
+            to_be_paid=False
+        ).order_by('?').exists()
+        if permanence_partially_invoiced:
+            # Move the producers not invoiced into a new permanence
+            producers_to_keep = list(Producer.objects.filter(
+                producerinvoice__permanence_id=self.id,
+                producerinvoice__invoice_sort_order__isnull=True,
+                producerinvoice__to_be_paid=True
+            ).values_list(
+                'id', flat=True
+            ).order_by('?'))
+            self.producers.clear()
+            self.producers.add(*producers_to_keep)
+            producers_to_move = list(Producer.objects.filter(
+                producerinvoice__permanence_id=self.id,
+                producerinvoice__invoice_sort_order__isnull=True,
+                producerinvoice__to_be_paid=False
+            ).values_list(
+                'id', flat=True
+            ).order_by('?'))
+            new_permanence = self.create_child(PERMANENCE_SEND)
+            new_permanence.producers.add(*producers_to_move)
+            ProducerInvoice.objects.filter(
+                permanence_id=self.id,
+                producer_id__in=producers_to_move
+            ).order_by('?').update(
+                permanence_id=new_permanence.id
+            )
+            CustomerProducerInvoice.objects.filter(
+                permanence_id=self.id,
+                producer_id__in=producers_to_move
+            ).order_by('?').update(
+                permanence_id=new_permanence.id
+            )
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=self.id,
+                producer_id__in=producers_to_move
+            ).order_by('?').update(
+                permanence_id=new_permanence.id
+            )
+
+            customer_invoice_id_to_create = list(PurchaseWoReceiver.objects.filter(
+                permanence_id=self.id,
+                producer_id__in=producers_to_move
+            ).order_by('customer_invoice_id').distinct('customer_invoice').values_list(
+                'customer_invoice', flat=True
+            ))
+            for customer_invoice_id in customer_invoice_id_to_create:
+                customer_invoice = CustomerInvoice.objects.filter(
+                    id=customer_invoice_id
+                ).order_by('?').first()
+                new_customer_invoice = customer_invoice.create_child(new_permanence=new_permanence)
+                new_customer_invoice.set_delivery(customer_invoice.delivery)
+                # Save new_customer_invoice before reference it when updating the purchases
+                new_customer_invoice.save()
+                # Important : The purchase customer charged must be calculated before calculate_and_save_delta_buyinggroup
+                PurchaseWoReceiver.objects.filter(
+                    customer_invoice_id=customer_invoice.id,
+                    producer_id__in=producers_to_move
+                ).order_by('?').update(
+                    permanence_id=new_permanence.id,
+                    customer_invoice_id=new_customer_invoice.id,
+                )
+                new_customer_invoice.calculate_and_save_delta_buyinggroup()
+
+            new_permanence.recalculate_order_amount(re_init=True)
+
+        for customer_invoice in CustomerInvoice.objects.filter(
+                permanence_id=self.id,
+                customer_id=F('customer_charged_id')
+        ).order_by('?'):
+            # Need to calculate delta_price_with_tax, delta_vat and delta_transport
+            # Important : A customer may only be responsible of one and only one delivery point
+            if customer_invoice.is_group:
+                # Refresh in case of change in the admin
+                delivery_point = LUT_DeliveryPoint.objects.filter(
+                    customer_responsible=customer_invoice.customer).order_by(
+                    '?').first()
+                if delivery_point is not None:
+                    customer_invoice.price_list_multiplier = delivery_point.customer_responsible.price_list_multiplier
+                    customer_invoice.transport = delivery_point.transport
+                    customer_invoice.min_transport = delivery_point.min_transport
+
+            customer_invoice.calculate_and_save_delta_buyinggroup()
+            customer_invoice.save()
+
+        self.recalculate_profit()
+        self.save()
+
+        for customer_invoice in CustomerInvoice.objects.filter(
+                permanence_id=self.id
+        ):
+            customer_invoice.balance = customer_invoice.previous_balance = customer_invoice.customer.balance
+            customer_invoice.date_previous_balance = customer_invoice.customer.date_balance
+            customer_invoice.date_balance = payment_date
+
+            if customer_invoice.customer_id == customer_invoice.customer_charged_id:
+                # ajuster sa balance
+                # il a droit aux réductions
+                total_price_with_tax = customer_invoice.get_total_price_with_tax().amount
+                customer_invoice.balance.amount -= total_price_with_tax
+                Customer.objects.filter(
+                    id=customer_invoice.customer_id
+                ).update(
+                    date_balance=payment_date,
+                    balance=F('balance') - total_price_with_tax
+                )
+            else:
+                # ne pas modifier sa balance
+                # ajuster la balance de celui qui paye
+                # celui qui paye a droit aux réductions
+                Customer.objects.filter(
+                    id=customer_invoice.customer_id
+                ).update(
+                    date_balance=payment_date,
+                )
+            customer_invoice.save()
+
+        # Claculate new stock
+        for offer_item in OfferItem.objects.filter(
+                is_active=True, manage_replenishment=True, permanence_id=self.id
+        ).order_by('?'):
+            invoiced_qty, taken_from_stock, customer_qty = offer_item.get_producer_qty_stock_invoiced()
+            if taken_from_stock != DECIMAL_ZERO:
+                if offer_item.price_list_multiplier < DECIMAL_ONE:  # or offer_item.is_resale_price_fixed:
+                    unit_price = offer_item.customer_unit_price.amount
+                    unit_vat = offer_item.customer_vat.amount
+                else:
+                    unit_price = offer_item.producer_unit_price.amount
+                    unit_vat = offer_item.producer_vat.amount
+                delta_price_with_tax = ((unit_price +
+                                         offer_item.unit_deposit.amount) * taken_from_stock).quantize(TWO_DECIMALS)
+                delta_vat = unit_vat * taken_from_stock
+                delta_deposit = offer_item.unit_deposit.amount * taken_from_stock
+                producer_invoice = ProducerInvoice.objects.get(
+                    producer_id=offer_item.producer_id,
+                    permanence_id=self.id,
+                )
+                producer_invoice.delta_stock_with_tax.amount -= delta_price_with_tax
+                producer_invoice.delta_stock_vat.amount -= delta_vat
+                producer_invoice.delta_stock_deposit.amount -= delta_deposit
+                producer_invoice.save(update_fields=[
+                    'delta_stock_with_tax',
+                    'delta_stock_vat',
+                    'delta_stock_deposit'
+                ])
+
+            # Update new_stock even if no order
+            # // xslx_stock and task_invoice
+            offer_item.new_stock = offer_item.stock - taken_from_stock + offer_item.add_2_stock
+            if offer_item.new_stock < DECIMAL_ZERO:
+                offer_item.new_stock = DECIMAL_ZERO
+            offer_item.previous_add_2_stock = offer_item.add_2_stock
+            offer_item.previous_producer_unit_price = offer_item.producer_unit_price
+            offer_item.previous_unit_deposit = offer_item.unit_deposit
+            if self.highest_status <= PERMANENCE_SEND:
+                # Asked by Bees-Coop : Do not update stock when canceling
+                new_stock = offer_item.stock if offer_item.stock > DECIMAL_ZERO else DECIMAL_ZERO
+                Product.objects.filter(
+                    id=offer_item.product_id, stock=new_stock
+                ).update(stock=offer_item.new_stock)
+            offer_item.save()
+
+        for producer_invoice in ProducerInvoice.objects.filter(
+                permanence_id=self.id):
+            producer_invoice.balance = producer_invoice.previous_balance = producer_invoice.producer.balance
+            producer_invoice.date_previous_balance = producer_invoice.producer.date_balance
+            producer_invoice.date_balance = payment_date
+            total_price_with_tax = producer_invoice.get_total_price_with_tax().amount
+            producer_invoice.balance.amount += total_price_with_tax
+            producer_invoice.save()
+            Producer.objects.filter(
+                id=producer_invoice.producer_id
+            ).update(
+                date_balance=payment_date,
+                balance=F('balance') + total_price_with_tax
+            )
+            producer_invoice.save()
+
+        result_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.id,
+            is_box_content=False,
+            offer_item__price_list_multiplier__gte=DECIMAL_ONE,
+            producer__represent_this_buyinggroup=False
+        ).order_by('?').aggregate(
+            Sum('purchase_price'),
+            Sum('selling_price'),
+            Sum('producer_vat'),
+            Sum('customer_vat'),
+        )
+        if result_set["purchase_price__sum"] is not None:
+            sum_purchase_price = result_set["purchase_price__sum"]
+        else:
+            sum_purchase_price = DECIMAL_ZERO
+        if result_set["selling_price__sum"] is not None:
+            sum_selling_price = result_set["selling_price__sum"]
+        else:
+            sum_selling_price = DECIMAL_ZERO
+        if result_set["producer_vat__sum"] is not None:
+            sum_producer_vat = result_set["producer_vat__sum"]
+        else:
+            sum_producer_vat = DECIMAL_ZERO
+        if result_set["customer_vat__sum"] is not None:
+            sum_customer_vat = result_set["customer_vat__sum"]
+        else:
+            sum_customer_vat = DECIMAL_ZERO
+        purchases_delta_vat = sum_customer_vat - sum_producer_vat
+        purchases_delta_price_with_tax = sum_selling_price - sum_purchase_price
+
+        purchases_delta_price_wo_tax = purchases_delta_price_with_tax - purchases_delta_vat
+
+        if purchases_delta_price_wo_tax != DECIMAL_ZERO:
+            BankAccount.objects.create(
+                permanence_id=self.id,
+                producer=None,
+                customer_id=customer_buyinggroup.id,
+                operation_date=payment_date,
+                operation_status=BANK_PROFIT,
+                operation_comment=_("Profit") if purchases_delta_price_wo_tax >= DECIMAL_ZERO else _("Lost"),
+                bank_amount_out=-purchases_delta_price_wo_tax if purchases_delta_price_wo_tax < DECIMAL_ZERO else DECIMAL_ZERO,
+                bank_amount_in=purchases_delta_price_wo_tax if purchases_delta_price_wo_tax > DECIMAL_ZERO else DECIMAL_ZERO,
+                customer_invoice_id=None,
+                producer_invoice=None
+            )
+        if purchases_delta_vat != DECIMAL_ZERO:
+            BankAccount.objects.create(
+                permanence_id=self.id,
+                producer=None,
+                customer_id=customer_buyinggroup.id,
+                operation_date=payment_date,
+                operation_status=BANK_TAX,
+                operation_comment=_("VAT to pay to the tax authorities") if purchases_delta_vat >= DECIMAL_ZERO else
+                _("VAT to receive from the tax authorities"),
+                bank_amount_out=-purchases_delta_vat if purchases_delta_vat < DECIMAL_ZERO else DECIMAL_ZERO,
+                bank_amount_in=purchases_delta_vat if purchases_delta_vat > DECIMAL_ZERO else DECIMAL_ZERO,
+                customer_invoice_id=None,
+                producer_invoice=None
+            )
+
+        for customer_invoice in CustomerInvoice.objects.filter(
+                permanence_id=self.id,
+        ).exclude(
+            customer_id=customer_buyinggroup.id,
+            delta_transport=DECIMAL_ZERO
+        ):
+            if customer_invoice.delta_transport != DECIMAL_ZERO:
+                # --> This bank movement is not a real entry
+                # customer_invoice_id=customer_invoice_buyinggroup.id
+                # making this, it will not be counted into the customer_buyinggroup movements twice
+                # because Repanier will see it has already been counted into the customer_buyinggroup movements
+                BankAccount.objects.create(
+                    permanence_id=self.id,
+                    producer=None,
+                    customer_id=customer_buyinggroup.id,
+                    operation_date=payment_date,
+                    operation_status=BANK_PROFIT,
+                    operation_comment="{} : {}".format(_("Shipping"), customer_invoice.customer.short_basket_name),
+                    bank_amount_in=customer_invoice.delta_transport,
+                    bank_amount_out=DECIMAL_ZERO,
+                    customer_invoice_id=customer_invoice_buyinggroup.id,
+                    producer_invoice=None
+                )
+
+        # generate bank account movements
+        self.generate_bank_account_movement(
+            payment_date=payment_date
+        )
+
+        new_bank_latest_total = old_bank_latest_total
+
+        # Calculate new current balance : Bank
+        for bank_account in BankAccount.objects.select_for_update().filter(
+
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                operation_status__in=[BANK_PROFIT, BANK_TAX],
+                customer_id=customer_buyinggroup.id,
+                operation_date__lte=payment_date
+        ).order_by('?'):
+            # --> This bank movement is not a real entry
+            # It will not be counted into the customer_buyinggroup bank movements twice
+            Customer.objects.filter(
+                id=bank_account.customer_id
+            ).update(
+                date_balance=payment_date,
+                balance=F('balance') + bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+            )
+            CustomerInvoice.objects.filter(
+                customer_id=bank_account.customer_id,
+                permanence_id=self.id,
+            ).update(
+                date_balance=payment_date,
+                balance=F('balance') + bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+            )
+            bank_account.customer_invoice_id = customer_invoice_buyinggroup.id
+            bank_account.save(update_fields=['customer_invoice'])
+
+        for bank_account in BankAccount.objects.select_for_update().filter(
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                customer__isnull=False,
+                operation_date__lte=payment_date).order_by('?'):
+
+            customer_invoice = CustomerInvoice.objects.filter(
+                customer_id=bank_account.customer_id,
+                permanence_id=self.id,
+            ).order_by('?').first()
+            if customer_invoice is None:
+                customer_invoice = CustomerInvoice.objects.create(
+                    customer_id=bank_account.customer_id,
+                    permanence_id=self.id,
+                    date_previous_balance=bank_account.customer.date_balance,
+                    previous_balance=bank_account.customer.balance,
+                    date_balance=payment_date,
+                    balance=bank_account.customer.balance,
+                    customer_charged_id=bank_account.customer_id,
+                    transport=REPANIER_SETTINGS_TRANSPORT,
+                    min_transport=REPANIER_SETTINGS_MIN_TRANSPORT
+                )
+            bank_amount_in = bank_account.bank_amount_in.amount
+            new_bank_latest_total += bank_amount_in
+            bank_amount_out = bank_account.bank_amount_out.amount
+            new_bank_latest_total -= bank_amount_out
+            customer_invoice.date_balance = payment_date
+            customer_invoice.bank_amount_in.amount += bank_amount_in
+            customer_invoice.bank_amount_out.amount += bank_amount_out
+            customer_invoice.balance.amount += (bank_amount_in - bank_amount_out)
+
+            customer_invoice.save()
+            Customer.objects.filter(
+                id=bank_account.customer_id
+            ).update(
+                date_balance=payment_date,
+                balance=F('balance') + bank_amount_in - bank_amount_out
+            )
+            bank_account.customer_invoice_id = customer_invoice.id
+            bank_account.permanence_id = self.id
+            bank_account.save()
+
+        for bank_account in BankAccount.objects.select_for_update().filter(
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                producer__isnull=False,
+                operation_date__lte=payment_date).order_by('?'):
+
+            producer_invoice = ProducerInvoice.objects.filter(
+                producer_id=bank_account.producer_id,
+                permanence_id=self.id,
+            ).order_by('?').first()
+            if producer_invoice is None:
+                producer_invoice = ProducerInvoice.objects.create(
+                    producer=bank_account.producer,
+                    permanence_id=self.id,
+                    date_previous_balance=bank_account.producer.date_balance,
+                    previous_balance=bank_account.producer.balance,
+                    date_balance=payment_date,
+                    balance=bank_account.producer.balance
+                )
+            bank_amount_in = bank_account.bank_amount_in.amount
+            new_bank_latest_total += bank_amount_in
+            bank_amount_out = bank_account.bank_amount_out.amount
+            new_bank_latest_total -= bank_amount_out
+            producer_invoice.date_balance = payment_date
+            producer_invoice.bank_amount_in.amount += bank_amount_in
+            producer_invoice.bank_amount_out.amount += bank_amount_out
+            producer_invoice.balance.amount += (bank_amount_in - bank_amount_out)
+            producer_invoice.save()
+            Producer.objects.filter(
+                id=bank_account.producer_id
+            ).update(
+                date_balance=payment_date,
+                balance=F('balance') + bank_amount_in - bank_amount_out
+            )
+            bank_account.permanence_id = self.id
+            bank_account.producer_invoice_id = producer_invoice.id
+            bank_account.save()
+
+        BankAccount.objects.filter(
+            operation_status=BANK_LATEST_TOTAL
+        ).order_by('?').update(
+            operation_status=BANK_NOT_LATEST_TOTAL
+        )
+        # Important : Create a new bank total for this permanence even if there is no bank movement
+        bank_account = BankAccount.objects.create(
+            permanence_id=self.id,
+            producer=None,
+            customer=None,
+            operation_date=payment_date,
+            operation_status=BANK_LATEST_TOTAL,
+            operation_comment=cap(str(self), 100),
+            bank_amount_in=new_bank_latest_total if new_bank_latest_total >= DECIMAL_ZERO else DECIMAL_ZERO,
+            bank_amount_out=-new_bank_latest_total if new_bank_latest_total < DECIMAL_ZERO else DECIMAL_ZERO,
+            customer_invoice=None,
+            producer_invoice=None
+        )
+
+        ProducerInvoice.objects.filter(
+            permanence_id=self.id
+        ).update(invoice_sort_order=bank_account.id)
+        CustomerInvoice.objects.filter(
+            permanence_id=self.id
+        ).update(invoice_sort_order=bank_account.id)
+        Permanence.objects.filter(
+            id=self.id
+        ).update(invoice_sort_order=bank_account.id)
+
+        new_status = PERMANENCE_INVOICED if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING else PERMANENCE_ARCHIVED
+        self.set_status(old_status=(PERMANENCE_WAIT_FOR_INVOICED,), new_status=new_status,
+                        update_payment_date=True, payment_date=payment_date)
+
+    @transaction.atomic
+    def cancel_invoice(self, last_bank_account_total):
+        self.set_status(old_status=(PERMANENCE_INVOICED,), new_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE)
+        CustomerInvoice.objects.filter(
+            permanence_id=self.id,
+        ).update(
+            bank_amount_in=DECIMAL_ZERO,
+            bank_amount_out=DECIMAL_ZERO,
+            balance=F('previous_balance'),
+            date_balance=F('date_previous_balance'),
+            invoice_sort_order=None
+        )
+        for customer_invoice in CustomerInvoice.objects.filter(
+                permanence_id=self.id).order_by('?'):
+            # customer = customer_invoice.customer
+            # customer.balance = customer_invoice.previous_balance
+            # customer.date_balance = customer_invoice.date_previous_balance
+            # customer.save(update_fields=['balance', 'date_balance'])
+            # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+            Customer.objects.filter(id=customer_invoice.customer_id).order_by('?').update(
+                balance=customer_invoice.previous_balance,
+                date_balance=customer_invoice.date_previous_balance
+            )
+            BankAccount.objects.filter(
+                customer_invoice_id=customer_invoice.id
+            ).update(
+                customer_invoice=None
+            )
+        ProducerInvoice.objects.filter(
+            permanence_id=self.id,
+            producer__represent_this_buyinggroup=False
+        ).update(
+            bank_amount_in=DECIMAL_ZERO,
+            bank_amount_out=DECIMAL_ZERO,
+            delta_price_with_tax=DECIMAL_ZERO,
+            delta_vat=DECIMAL_ZERO,
+            delta_transport=DECIMAL_ZERO,
+            delta_deposit=DECIMAL_ZERO,
+            delta_stock_with_tax=DECIMAL_ZERO,
+            delta_stock_vat=DECIMAL_ZERO,
+            delta_stock_deposit=DECIMAL_ZERO,
+            balance=F('previous_balance'),
+            date_balance=F('date_previous_balance'),
+            invoice_sort_order=None
+        )
+        # Important : Restore delta from delivery points added into invoice.confirm_order()
+        ProducerInvoice.objects.filter(
+            permanence_id=self.id,
+            producer__represent_this_buyinggroup=True
+        ).update(
+            bank_amount_in=DECIMAL_ZERO,
+            bank_amount_out=DECIMAL_ZERO,
+            delta_stock_with_tax=DECIMAL_ZERO,
+            delta_stock_vat=DECIMAL_ZERO,
+            delta_stock_deposit=DECIMAL_ZERO,
+            balance=F('previous_balance'),
+            date_balance=F('date_previous_balance'),
+            invoice_sort_order=None
+        )
+
+        for producer_invoice in ProducerInvoice.objects.filter(
+                permanence_id=self.id
+        ).order_by('?'):
+            Producer.objects.filter(id=producer_invoice.producer_id).order_by('?').update(
+                balance=producer_invoice.previous_balance,
+                date_balance=producer_invoice.date_previous_balance
+            )
+            BankAccount.objects.all().filter(
+                producer_invoice_id=producer_invoice.id
+            ).update(
+                producer_invoice=None
+            )
+        # IMPORTANT : Do not update stock when canceling
+        last_bank_account_total.delete()
+        bank_account = BankAccount.objects.filter(
+            customer=None,
+            producer=None).order_by('-id').first()
+        if bank_account is not None:
+            bank_account.operation_status = BANK_LATEST_TOTAL
+            bank_account.save()
+        # Delete also all payments recorded to producers, bank profit, bank tax
+        # Delete also all compensation recorded to producers
+        BankAccount.objects.filter(
+            permanence_id=self.id,
+            operation_status__in=[
+                BANK_CALCULATED_INVOICE,
+                BANK_PROFIT,
+                BANK_TAX,
+                BANK_MEMBERSHIP_FEE,
+                BANK_COMPENSATION  # BANK_COMPENSATION may occurs in previous release of Repanier
+            ]
+        ).order_by('?').delete()
+        Permanence.objects.filter(
+            id=self.id
+        ).update(invoice_sort_order=None)
+        self.set_status(old_status=(PERMANENCE_WAIT_FOR_CANCEL_INVOICE,), new_status=PERMANENCE_SEND)
+
+    @transaction.atomic
+    def cancel_delivery(self):
+        self.set_status(old_status=(PERMANENCE_SEND,), new_status=PERMANENCE_CANCELLED)
+        bank_account = BankAccount.get_closest_to(self.permanence_date)
+        if bank_account is not None:
+            self.invoice_sort_order = bank_account.id
+            self.save(update_fields=['invoice_sort_order'])
+
+    @transaction.atomic
+    def archive(self):
+        self.set_status(old_status=(PERMANENCE_SEND,), new_status=PERMANENCE_ARCHIVED)
+        bank_account = BankAccount.get_closest_to(self.permanence_date)
+        if bank_account is not None:
+            self.invoice_sort_order = bank_account.id
+            self.save(update_fields=['invoice_sort_order'])
+
     def duplicate(self, dates):
         creation_counter = 0
         short_name = self.safe_translation_getter(
             'short_name', any_language=True, default=EMPTY_STRING
         )
         cur_language = translation.get_language()
-        for date in dates:
-            delta_days = (date - self.permanence_date).days
-            # Mandatory because of Parler
+        for date in dates[:56]:
+            # Limit to 56 weeks
             if short_name != EMPTY_STRING:
+                # Mandatory because of Parler
                 already_exists = Permanence.objects.filter(
                     permanence_date=date,
                     translations__language_code=cur_language,
@@ -690,13 +1276,6 @@ class Permanence(TranslatableModel):
                 for delivery_board in DeliveryBoard.objects.filter(
                         permanence=self
                 ):
-                    # if delivery_board.delivery_date is not None:
-                    #     new_delivery_board = DeliveryBoard.objects.create(
-                    #         permanence=new_permanence,
-                    #         delivery_point=delivery_board.delivery_point,
-                    #         delivery_date=delivery_board.delivery_date + datetime.timedelta(days=delta_days)
-                    #     )
-                    # else:
                     new_delivery_board = DeliveryBoard.objects.create(
                         permanence=new_permanence,
                         delivery_point=delivery_board.delivery_point,
@@ -715,6 +1294,105 @@ class Permanence(TranslatableModel):
                 for a_producer in self.producers.all():
                     new_permanence.producers.add(a_producer)
         return creation_counter
+
+    def generate_bank_account_movement(
+            self, payment_date):
+
+        from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+
+        for producer_invoice in ProducerInvoice.objects.filter(
+                permanence_id=self.id,
+                invoice_sort_order__isnull=True,
+                to_be_paid=True
+        ).select_related("producer"):
+            # We have to pay something
+            producer = producer_invoice.producer
+            result_set = BankAccount.objects.filter(
+                producer_id=producer.id, producer_invoice__isnull=True
+            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
+            if result_set["bank_amount_in__sum"] is not None:
+                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
+            else:
+                bank_in = REPANIER_MONEY_ZERO
+            if result_set["bank_amount_out__sum"] is not None:
+                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
+            else:
+                bank_out = REPANIER_MONEY_ZERO
+            bank_not_invoiced = bank_out - bank_in
+
+            if producer.balance.amount != DECIMAL_ZERO or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO or bank_not_invoiced != DECIMAL_ZERO:
+
+                delta = (producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced.amount).quantize(
+                    TWO_DECIMALS)
+                if delta > DECIMAL_ZERO:
+
+                    if producer_invoice.invoice_reference:
+                        operation_comment = producer_invoice.invoice_reference
+                    else:
+                        if producer.represent_this_buyinggroup:
+                            operation_comment = self.get_permanence_display()
+                        else:
+                            if producer_invoice is not None:
+                                if producer_invoice.total_price_with_tax.amount == delta:
+                                    operation_comment = _("Delivery %(current_site)s - %(permanence)s. Thanks!") \
+                                                        % {
+                                                            'current_site': REPANIER_SETTINGS_GROUP_NAME,
+                                                            'permanence': self.get_permanence_display()
+                                                        }
+                                else:
+                                    operation_comment = _(
+                                        "Deliveries %(current_site)s - up to the %(permanence)s (included). Thanks!") \
+                                                        % {
+                                                            'current_site': REPANIER_SETTINGS_GROUP_NAME,
+                                                            'permanence': self.get_permanence_display()
+                                                        }
+                            else:
+                                operation_comment = _(
+                                    "Deliveries %(current_site)s - up to %(payment_date)s (included). Thanks!") \
+                                                    % {
+                                                        'current_site': REPANIER_SETTINGS_GROUP_NAME,
+                                                        'payment_date': payment_date.strftime(
+                                                            settings.DJANGO_SETTINGS_DATE)
+                                                    }
+
+                    BankAccount.objects.create(
+                        permanence_id=None,
+                        producer_id=producer.id,
+                        customer=None,
+                        operation_date=payment_date,
+                        operation_status=BANK_CALCULATED_INVOICE,
+                        operation_comment=cap(operation_comment, 100),
+                        bank_amount_out=delta,
+                        customer_invoice=None,
+                        producer_invoice=None
+                    )
+
+            delta = (producer.balance.amount - producer_invoice.to_be_invoiced_balance.amount).quantize(TWO_DECIMALS)
+            if delta != DECIMAL_ZERO:
+                # Profit or loss for the group
+                customer_buyinggroup = Customer.get_or_create_group()
+                operation_comment = _("Correction %(producer)s") \
+                                    % {
+                                        'producer': producer.short_profile_name
+                                    }
+                BankAccount.objects.create(
+                    permanence_id=self.id,
+                    producer=None,
+                    customer_id=customer_buyinggroup.id,
+                    operation_date=payment_date,
+                    operation_status=BANK_PROFIT,
+                    operation_comment=cap(operation_comment, 100),
+                    bank_amount_in=delta if delta > DECIMAL_ZERO else DECIMAL_ZERO,
+                    bank_amount_out=-delta if delta < DECIMAL_ZERO else DECIMAL_ZERO,
+                    customer_invoice_id=None,
+                    producer_invoice=None
+                )
+            producer_invoice.balance.amount -= delta
+            producer_invoice.save(update_fields=['balance'])
+            producer.balance.amount -= delta
+            producer.save(update_fields=['balance'])
+
+        return
 
     def duplicate_short_name(self, new_permanence, cur_language):
         for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
@@ -832,7 +1510,7 @@ class Permanence(TranslatableModel):
         self.save()
 
     def recalculate_profit(self):
-        from repanier.models.purchase import Purchase
+        from repanier.models.purchase import PurchaseWoReceiver
 
         result_set = CustomerInvoice.objects.filter(
             permanence_id=self.id,
@@ -855,7 +1533,7 @@ class Permanence(TranslatableModel):
         else:
             ci_sum_delta_transport = DECIMAL_ZERO
 
-        result_set = Purchase.objects.filter(
+        result_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
             offer_item__price_list_multiplier__gte=DECIMAL_ONE
         ).order_by('?').aggregate(
@@ -887,7 +1565,7 @@ class Permanence(TranslatableModel):
         self.total_purchase_vat = producer_vat
         self.total_selling_vat = customer_vat
 
-        result_set = Purchase.objects.filter(
+        result_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.id,
             offer_item__price_list_multiplier__lt=DECIMAL_ONE
         ).order_by('?').aggregate(
@@ -967,16 +1645,8 @@ class Permanence(TranslatableModel):
             return mark_safe("<ul>{}</ul>".format(EMPTY_STRING.join(result)))
         return EMPTY_STRING
 
-    def get_full_status_display(self):
-        refresh_status = [
-            PERMANENCE_WAIT_FOR_PRE_OPEN,
-            PERMANENCE_WAIT_FOR_OPEN,
-            PERMANENCE_WAIT_FOR_CLOSED,
-            PERMANENCE_CLOSED,
-            PERMANENCE_WAIT_FOR_SEND,
-            PERMANENCE_WAIT_FOR_INVOICED
-        ]
-        need_to_refresh_status = self.status in refresh_status
+    def get_html_status_display(self, force_refresh=True):
+        need_to_refresh_status = force_refresh or self.status in refresh_status
         if self.with_delivery_point:
             status_list = []
             status = None
@@ -996,8 +1666,15 @@ class Permanence(TranslatableModel):
                 'display_status',
                 args=(self.id,)
             )
-            progress = "◤◥◢◣"[self.gauge]  # "◴◷◶◵" "▛▜▟▙"
-            self.gauge = (self.gauge + 1) % 4
+            if force_refresh:
+                # force self.gauge to 3 so that next call the guage will be set to 0
+                self.gauge = 3
+                progress = EMPTY_STRING
+                delay = 1000
+            else:
+                progress = "{} ".format("◤◥◢◣"[self.gauge]) # "◴◷◶◵" "▛▜▟▙"
+                self.gauge = (self.gauge + 1) % 4
+                delay = 500
             self.save(update_fields=['gauge'])
             msg_html = """
                     <div class="wrap-text" id="id_get_status_{}">
@@ -1006,23 +1683,23 @@ class Permanence(TranslatableModel):
                             django.jQuery.ajax({{
                                 url: '{}',
                                 cache: false,
-                                async: false,
+                                async: true,
                                 success: function (result) {{
                                     django.jQuery("#id_get_status_{}").html(result);
                                 }}
                             }});
-                        }}, 500);
+                        }}, {});
                     </script>
-                    {} {}</div>
+                    {}{}</div>
                 """.format(
-                self.id, url, self.id, progress, message
+                self.id, url, self.id, delay, progress, message
             )
 
         else:
             msg_html = "<div class=\"wrap-text\">{}</div>".format(message)
         return mark_safe(msg_html)
 
-    get_full_status_display.short_description = (_("Status"))
+    get_html_status_display.short_description = (_("Status"))
 
     def get_permanence_display(self):
         short_name = self.safe_translation_getter(

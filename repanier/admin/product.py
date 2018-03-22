@@ -331,11 +331,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         product = queryset.first()
-        if product is None or product.is_box:
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
         if 'apply' in request.POST:
             if "producers" in request.POST:
                 producers = request.POST.getlist("producers", [])
@@ -456,26 +451,28 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ('department_for_customer', 'placement'),
             'offer_description',
         ]
-        if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            fields_advanced_options = [
-                'vat_level',
-                ('is_into_offer', 'is_active')
-            ]
-        else:
+
+        fields_advanced_options = []
+
+        if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
             fields_advanced_descriptions += [
                 'production_mode',
             ]
-            if settings.REPANIER_SETTINGS_STOCK:
-                fields_advanced_options = [
-                    'producer_order_by_quantity',
-                    ('reference', 'vat_level'),
-                    ('is_into_offer', 'is_active')
-                ]
-            else:
-                fields_advanced_options = [
-                    ('reference', 'vat_level'),
-                    ('is_into_offer', 'is_active')
-                ]
+        if settings.REPANIER_SETTINGS_STOCK:
+            fields_advanced_options += [
+                'producer_order_by_quantity',
+            ]
+        if settings.REPANIER_SETTINGS_PRODUCT_REFERENCE:
+            fields_advanced_options += [
+                'reference',
+            ]
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            fields_advanced_options += [
+                'vat_level',
+            ]
+        fields_advanced_options += [
+            ('is_into_offer', 'is_active')
+        ]
 
         self.fieldsets = (
             (None, {'fields': fields_basic}),

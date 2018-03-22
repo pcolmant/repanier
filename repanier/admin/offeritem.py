@@ -69,16 +69,10 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         if producer is not None:
             if settings.REPANIER_SETTINGS_STOCK:
                 self.list_editable = ('stock',)
-                if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-                    return ('department_for_customer', 'get_html_long_name_with_producer',
-                            'stock', 'limit_order_quantity_to_stock',
-                            'get_html_producer_qty_stock_invoiced')
-                else:
-                    # if producer.manage_replenishment and not permanence_open:
-                    return ('department_for_customer', 'get_html_long_name_with_producer',
-                            'stock', 'limit_order_quantity_to_stock',
-                            'get_html_producer_qty_stock_invoiced',
-                            'add_2_stock')
+                return ('department_for_customer', 'get_html_long_name_with_producer',
+                        'stock', 'limit_order_quantity_to_stock',
+                        'get_html_producer_qty_stock_invoiced',
+                        'add_2_stock')
             else:
                 return ('department_for_customer', 'get_html_long_name_with_producer',
                         'get_html_producer_qty_stock_invoiced')

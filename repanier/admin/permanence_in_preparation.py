@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import threading
 
 from django import forms
 from django.conf import settings
@@ -28,12 +29,13 @@ from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
-from repanier.models.permanence import PermanenceInPreparation
+from repanier.models.permanence import PermanenceInPreparation, Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
+from repanier.task.task_order import pre_open_order, open_order, close_and_send_order
 from repanier.tools import send_email_to_who, get_board_composition, get_recurrence_dates
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
@@ -217,7 +219,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'language_column',
             ]
         list_display += [
-            'get_producers', 'get_customers', 'get_board', 'get_full_status_display',
+            'get_producers', 'get_customers', 'get_board', 'get_html_status_display',
         ]
         return list_display
 
@@ -262,8 +264,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def export_xlsx_offer(self, request, queryset):
         permanence = queryset.first()
-        if permanence is None or permanence.status not in [PERMANENCE_PLANNED, PERMANENCE_OPENED]:
-            user_message = _("Action canceled by the system.")
+        if permanence.status not in [PERMANENCE_PLANNED, PERMANENCE_OPENED]:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -288,8 +291,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence is None or permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
-            user_message = _("Action canceled by the system.")
+        if permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -350,8 +354,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence is None or permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
-            user_message = _("Action canceled by the system.")
+        if permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -382,8 +387,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence is None or not (PERMANENCE_PLANNED <= permanence.status <= PERMANENCE_WAIT_FOR_OPEN):
-            user_message = _("Action canceled by the system.")
+        if permanence.status not in [PERMANENCE_PLANNED, PERMANENCE_PRE_OPEN]:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -476,9 +482,26 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if 'apply' in request.POST or 'apply-wo-mail' in request.POST:
             form = OpenAndSendOfferForm(request.POST)
             if form.is_valid():
-                user_message, user_message_level = task_order.admin_open_and_send(
-                    request, permanence, 'apply-wo-mail' in request.POST
-                )
+                do_not_send_any_mail = 'apply-wo-mail' in request.POST
+                if pre_open:
+                    permanence_already_pre_opened = Permanence.objects.filter(
+                        status__in=[PERMANENCE_WAIT_FOR_PRE_OPEN, PERMANENCE_PRE_OPEN]
+                    ).order_by("-is_updated_on").only("id").first()
+                    if permanence_already_pre_opened is not None:
+                        user_message = _("A maximum of one permanence may be pre opened.")
+                        user_message_level = messages.ERROR
+                    else:
+                        # pre_open_order(permanence.id)
+                        t = threading.Thread(target=pre_open_order, args=(permanence.id,))
+                        t.start()
+                        user_message = _("The offers are being generated.")
+                        user_message_level = messages.INFO
+                else:
+                    # open_order(permanence.id, do_not_send_any_mail)
+                    t = threading.Thread(target=open_order, args=(permanence.id, do_not_send_any_mail))
+                    t.start()
+                    user_message = _("The offers are being generated.")
+                    user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
         else:
@@ -512,8 +535,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence is None or permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
-            user_message = _("Action canceled by the system.")
+        if permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -540,12 +564,13 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
                     return
-            user_message, user_message_level = task_order.admin_close_and_send_order(
-                permanence_id=permanence.id,
-                everything=all_producers or all_deliveries,
-                producers_id=producers_to_be_send,
-                deliveries_id=deliveries_to_be_send
-            )
+            everything = all_producers or all_deliveries
+            # close_and_send_order(permanence.id, everything, producers_to_be_send, deliveries_to_be_send)
+            t = threading.Thread(target=close_and_send_order,
+                                 args=(permanence.id, everything, producers_to_be_send, deliveries_to_be_send))
+            t.start()
+            user_message = _("The orders are being send.")
+            user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
 
@@ -692,13 +717,16 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence is None or permanence.status != PERMANENCE_OPENED:
-            user_message = _("Action canceled by the system.")
+        if permanence.status != PERMANENCE_OPENED:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
         if 'apply' in request.POST:
-            user_message, user_message_level = task_order.admin_back_to_scheduled(request, permanence)
+            task_order.back_to_scheduled(permanence)
+            user_message = _("The permanence is back to scheduled.")
+            user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         return render(request, 'repanier/confirm_admin_action.html', {
@@ -717,10 +745,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence is None or permanence.status not in [
+        if permanence.status not in [
             PERMANENCE_PLANNED, PERMANENCE_PRE_OPEN, PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND
         ]:
-            user_message = _("Action canceled by the system.")
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -729,18 +758,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             if form.is_valid():
                 recurrences = form.cleaned_data['recurrences']
                 dates = get_recurrence_dates(permanence.permanence_date, recurrences)
-                if 1 <= len(dates) <= 55:
-                    creation_counter = permanence.duplicate(dates)
-                    if creation_counter == 0:
-                        user_message = _("Nothing to do.")
-                    elif creation_counter == 1:
-                        user_message = _("{} duplicate created.").format(creation_counter)
-                    else:
-                        user_message = _("{} duplicates created.").format(creation_counter)
-                    user_message_level = messages.INFO
+                creation_counter = permanence.duplicate(dates)
+                if creation_counter == 0:
+                    user_message = _("Nothing to do.")
+                elif creation_counter == 1:
+                    user_message = _("{} duplicate created.").format(creation_counter)
                 else:
-                    user_message = _("Action canceled by the system.")
-                    user_message_level = messages.ERROR
+                    user_message = _("{} duplicates created.").format(creation_counter)
+                user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
         else:

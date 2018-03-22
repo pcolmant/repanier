@@ -15,13 +15,38 @@ from repanier.models.staff import Staff
 
 
 class Command(BaseCommand):
-    args = "<none>"
     help = "Anonymize customers, staff and producers"
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--coordinator_password',
+            nargs=1,
+            type=str,
+            action='store',
+            default=['password'],
+            help='set the coordinator password (default="password")'
+        )
+        parser.add_argument(
+            '--coordinator_login',
+            nargs=1,
+            type=str,
+            action='store',
+            default=['coordinator'],
+            help='Set the coordinator (default="coordiantor")'
+        )
+        parser.add_argument(
+            '--reset_admin',
+            action='store_true',
+            help='If present, reset the admin account'
+        )
+
 
     def handle(self, *args, **options):
         if not settings.REPANIER_SETTINGS_DEMO:
-            print("Command not executed because the site is not in DEMO MODE")
+            self.stdout.write(self.style.ERROR("Command not executed because the site is not in DEMO MODE"))
             exit()
+        password = options['password'][0]
+        self.stdout.write(self.style.ERROR(password))
         translation.activate(settings.LANGUAGE_CODE)
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
         if config is None:
@@ -44,7 +69,8 @@ class Command(BaseCommand):
             print("Customer anonymized : {}".format(customer))
         for staff in Staff.objects.all().order_by('?'):
             staff.anonymize()
-            staff.user.set_password("staff")
+            # if staff.is_coordinator:
+            staff.user.set_password(None)
             staff.user.save()
             print("Staff anonymized : {}".format(staff))
         for producer in Producer.objects.all().order_by('?'):
@@ -59,15 +85,19 @@ class Command(BaseCommand):
                     permanence_role.save_translations()
                 except TranslationDoesNotExist:
                     pass
-        for user in User.objects.filter(is_superuser=True):
-            str_id = str(user.id)
-            user.username = user.email = "{}@repanier.be".format(str_id)
-            user.first_name = EMPTY_STRING
-            user.last_name = str_id
-            user.is_staff = False
-            user.is_superuser = False
-            user.set_password(None)
-            user.save()
         BankAccount.objects.filter(customer__isnull=False).order_by('?').update(operation_comment=EMPTY_STRING)
-        User.objects.create_user(username="admin", email="admin@repanier.be", password="admin",
-                                 first_name=EMPTY_STRING, last_name="admin", is_staff=True, is_superuser=True)
+
+        if options['reset_admin']:
+            self.stdout.write(self.style.SUCCESS("Reset admin to admin/admin"))
+            for user in User.objects.filter(is_superuser=True):
+                str_id = str(user.id)
+                user.username = user.email = "{}@repanier.be".format(str_id)
+                user.first_name = EMPTY_STRING
+                user.last_name = str_id
+                user.is_staff = False
+                user.is_superuser = False
+                user.set_password(None)
+                user.save()
+            User.objects.create_user(username="admin", email="admin@repanier.be", password="admin",
+                                     first_name=EMPTY_STRING, last_name="admin", is_staff=True, is_superuser=True)
+        self.stdout.write(self.style.SUCCESS("Successfully anonymized customers, staff and producers"))

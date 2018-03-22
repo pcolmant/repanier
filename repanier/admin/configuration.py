@@ -164,20 +164,18 @@ class ConfigurationAdmin(TranslatableAdmin):
                         ),
                 }),
             ]
-        if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            fields = [
-                'display_who_is_who',
-                'how_to_register',
-            ]
-        else:
-            fields = [
+
+        fields = [
+            'display_who_is_who',
+            'how_to_register',
+        ]
+        if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
+            fields += [
                 'home_site',
                 ('transport', 'min_transport'),
                 'group_label',
                 # 'page_break_on_customer_check',
-                'display_who_is_who',
                 'xlsx_portrait',
-                'how_to_register',
                 ('currency', 'vat_id'),
                 'sms_gateway_mail',
             ]

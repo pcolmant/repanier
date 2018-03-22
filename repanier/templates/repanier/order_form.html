@@ -75,7 +75,6 @@
                 }
                 var infinite = new Waypoint.Infinite({
                   element: $('.infinite-container')[0],
-{#                  offset: '50%',#}
                   offset: function() { return Waypoint.viewportHeight() - this.element.clientHeight + 3500 },
                   onBeforePageLoad: function () {
                     $('.loading').show();

@@ -89,7 +89,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
         for col_num in range(len(row)):
             c = ws.cell(row=row_num, column=col_num)
-            c.value = row[col_num][ROW_VALUE]
+            c.value = "{}".format(row[col_num][ROW_VALUE])
             c.style.number_format.format_code = row[col_num][ROW_FORMAT]
 
         row_num += 1
@@ -140,7 +140,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
         for col_num in range(len(row)):
             c = ws.cell(row=row_num, column=col_num)
-            c.value = row[col_num][ROW_VALUE]
+            c.value = "{}".format(row[col_num][ROW_VALUE])
             c.style.number_format.format_code = row[col_num][ROW_FORMAT]
 
         row_num += 1
@@ -347,7 +347,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                         c.style.borders.top.border_style = Border.BORDER_THIN
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if col_num == 2:
-                            c.value = group_label
+                            c.value = "{}".format(group_label)
                             c.style.font.bold = True
     return wb
 

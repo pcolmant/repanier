@@ -59,7 +59,7 @@ def order_init_ajax(request):
         raise Http404
 
     basket = sboolean(request.GET.get('ba', False))
-    from repanier.apps import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
+
     if customer_invoice.delivery is not None:
         status = customer_invoice.delivery.status
     else:
@@ -87,20 +87,15 @@ def order_init_ajax(request):
             ).order_by('?'):
                 json_dict.update(producer_invoice.get_order_json())
         communication = sboolean(request.GET.get('co', False))
-        if communication \
-                and customer_invoice.total_price_with_tax == DECIMAL_ZERO \
-                and not customer_invoice.is_order_confirm_send:
+        if communication:
             now = timezone.now()
             permanence_boards = PermanenceBoard.objects.filter(
                 customer_id=customer.id,
                 permanence_date__gte=now,
                 permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
             ).order_by("permanence_date")[:2]
-            is_staff = Staff.objects.filter(
-                customer_responsible_id=customer.id
-            ).order_by('?').exists()
-            if (not is_staff and REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION > DECIMAL_ZERO) \
-                    or len(permanence_boards) > 0:
+            from repanier.apps import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
+            if REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION > DECIMAL_ZERO or len(permanence_boards) > 0:
                 if len(permanence_boards) == 0:
                     count_activity = PermanenceBoard.objects.filter(
                         customer_id=customer.id, permanence_date__lt=now,

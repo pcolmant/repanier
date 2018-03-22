@@ -161,5 +161,4 @@ class LUTPermanenceRoleAdmin(LUTAdmin):
         'is_active',
     ]
 
-    if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-        inlines = [PermanenceBoardInline]
+    inlines = [PermanenceBoardInline]

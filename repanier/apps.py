@@ -168,7 +168,7 @@ class RepanierConfig(AppConfig):
             config.upgrade_db()
             config.save()
         except Exception as error_str:
-            logger.info("##################################")
+            logger.error("##################################")
             logger.error(error_str)
-            logger.info("##################################")
+            logger.error("##################################")
             other = _("Other qty")

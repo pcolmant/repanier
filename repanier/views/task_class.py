@@ -4,19 +4,28 @@ from django.conf import settings
 from django.db.models import F
 from django.views.generic import ListView
 
-from repanier.const import PERMANENCE_SEND
+from repanier.const import PERMANENCE_SEND, EMPTY_STRING
 from repanier.models.permanenceboard import PermanenceBoard
 
 
 class PermanenceView(ListView):
     template_name = 'repanier/task_form.html'
-    success_url = '/thanks/'
+    success_url = '/'
     paginate_by = 50
     paginate_orphans = 5
 
     def get_context_data(self, **kwargs):
         context = super(PermanenceView, self).get_context_data(**kwargs)
         context['DISPLAY_PRODUCER'] = settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM
+
+        if self.request.user.is_anonymous:
+            from repanier.apps import REPANIER_SETTINGS_CONFIG
+
+            context['how_to_register'] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+                'how_to_register', any_language=True, default=EMPTY_STRING)
+        else:
+            context['how_to_register'] = EMPTY_STRING
+
         return context
 
     def get_queryset(self):

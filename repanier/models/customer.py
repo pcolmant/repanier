@@ -424,6 +424,10 @@ class Customer(models.Model):
         self.user.set_password(None)
         self.user.save()
         self.is_anonymized = True
+        self.valid_email = False
+        self.subscribe_to_email = False
+        self.show_mails_to_members = False
+        self.show_phones_to_members = False
         self.save()
 
     def __str__(self):
@@ -445,13 +449,6 @@ class Customer(models.Model):
 def customer_pre_save(sender, **kwargs):
     customer = kwargs["instance"]
 
-    if customer.is_anonymized:
-        customer.is_active = False
-        customer.may_order = False
-        customer.valid_email = False
-        customer.subscribe_to_email = False
-        customer.show_mails_to_members = False
-        customer.show_phones_to_members = False
     if customer.represent_this_buyinggroup:
         # The buying group may not be de activated
         customer.is_active = True

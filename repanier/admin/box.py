@@ -225,11 +225,6 @@ class BoxAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         box = queryset.first()
-        if box is None:
-            user_message = _("Action canceled by the system.")
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
         if 'apply' in request.POST:
             user_message, user_message_level = task_box.admin_duplicate(queryset)
             self.message_user(request, user_message, user_message_level)

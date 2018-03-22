@@ -157,7 +157,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.value = permanence_save.permanence_date
                                 c.style.number_format.format_code = NumberFormat.FORMAT_DATE_DDMMYYYY
                                 c = ws.cell(row=row_num, column=3)
-                                c.value = producer_save.short_profile_name
+                                c.value = "{}".format(producer_save.short_profile_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 if count_purchase == 0:
                                     row_start_purchase = row_num + 1
@@ -178,7 +178,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                     c.value = "{}".format(purchase.get_long_name())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=5)
-                                c.value = customer_save.short_basket_name
+                                c.value = "{}".format(customer_save.short_basket_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 if count_purchase == 0 and customer is None:
                                     c.style.font.bold = True
@@ -223,13 +223,13 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.value = "=G{}*{}".format(row_num + 1, purchase.offer_item.customer_vat.amount)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=12)
-                                c.value = cap(purchase.comment, 100)
+                                c.value = "{}".format(cap(purchase.comment, 100))
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=13)
-                                c.value = purchase.offer_item.get_vat_level_display()
+                                c.value = "{}".format(purchase.offer_item.get_vat_level_display())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=14)
-                                c.value = purchase.customer.user.email
+                                c.value = "{}".format(purchase.customer.user.email)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 delta = 5
                                 for col_num in range(5):
@@ -364,7 +364,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.value = permanence_save.permanence_date
                                 c.style.number_format.format_code = NumberFormat.FORMAT_DATE_DDMMYYYY
                                 c = ws.cell(row=row_num, column=3)
-                                c.value = producer_save.short_profile_name
+                                c.value = "{}".format(producer_save.short_profile_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 if count_offer_item == 0:
                                     row_start_offer_item = row_num + 1
@@ -386,7 +386,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 if count_offer_item != 0:
                                     c.style.font.color.index = 'FF939393'
                                 c = ws.cell(row=row_num, column=5)
-                                c.value = purchase.customer.short_basket_name
+                                c.value = "{}".format(purchase.customer.short_basket_name)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=6)
                                 c.value = purchase.quantity_invoiced
@@ -438,13 +438,13 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c.value = "=G{}*{}".format(row_num + 1, purchase.offer_item.customer_vat.amount)
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
                                 c = ws.cell(row=row_num, column=12)
-                                c.value = cap(purchase.comment, 100)
+                                c.value = "{}".format(cap(purchase.comment, 100))
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=13)
-                                c.value = purchase.offer_item.get_vat_level_display()
+                                c.value = "{}".format(purchase.offer_item.get_vat_level_display())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=14)
-                                c.value = purchase.customer.user.email
+                                c.value = "{}".format(purchase.customer.user.email)
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 delta = 5
                                 for col_num in range(5):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import threading
 
 from django import forms
 from django.conf import settings
@@ -20,6 +21,7 @@ from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, Perm
     ImportInvoiceForm
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
+from repanier.email import email_invoice
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -28,7 +30,6 @@ from repanier.models.lut import LUT_PermanenceRole
 from repanier.models.permanence import PermanenceDone
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
-from repanier.task import task_invoice
 from repanier.tools import send_email_to_who
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.xlsx_invoice import export_bank, export_invoice, handle_uploaded_invoice
@@ -113,10 +114,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     def get_list_display(self, request):
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             return ('get_permanence_admin_display', 'language_column', 'get_producers',
-                    'get_customers', 'get_board', 'get_full_status_display')
+                    'get_customers', 'get_board', 'get_html_status_display')
         else:
             return ('get_permanence_admin_display', 'get_producers',
-                    'get_customers', 'get_board', 'get_full_status_display')
+                    'get_customers', 'get_board', 'get_html_status_display')
 
     def get_urls(self):
         urls = super(PermanenceDoneAdmin, self).get_urls()
@@ -141,14 +142,13 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if permanence is None or permanence.status not in [
             PERMANENCE_CLOSED, PERMANENCE_SEND
         ]:
-            user_message = _("Action canceled by the system.")
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
         if 'apply' in request.POST:
-            task_invoice.cancel_delivery(
-                permanence=permanence,
-            )
+            permanence.cancel_delivery()
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
@@ -164,8 +164,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     def export_xlsx(self, request, permanence_qs):
         permanence = permanence_qs.first()
-        if permanence is None or permanence.status != PERMANENCE_SEND:
-            user_message = _("Action canceled by the system.")
+        if permanence.status != PERMANENCE_SEND:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -185,8 +186,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     def import_xlsx(self, request, permanence_qs):
         permanence = permanence_qs.first()
-        if permanence is None or permanence.status != PERMANENCE_SEND:
-            user_message = _("Action canceled by the system.")
+        if permanence.status != PERMANENCE_SEND:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -239,8 +241,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
-        if permanence is None or permanence.status != PERMANENCE_SEND:
-            user_message = _("Action canceled by the system.")
+        if permanence.status != PERMANENCE_SEND:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -310,9 +313,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                 ]
                             )
                     if at_least_one_selected:
-                        task_invoice.generate_invoice(
-                            permanence=permanence,
-                            payment_date=payment_date)
+                        permanence.invoice(payment_date=payment_date)
                         previous_latest_total = BankAccount.objects.filter(
                             operation_status=BANK_NOT_LATEST_TOTAL,
                             producer__isnull=True,
@@ -320,7 +321,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         ).order_by('-id').first()
                         previous_latest_total_id = previous_latest_total.id if previous_latest_total is not None else 0
                         return render(request, 'repanier/confirm_admin_bank_movement.html', {
-                            'sub_title': _("Please make the following payments, whose bank movements have been generated"),
+                            'sub_title': _(
+                                "Please make the following payments, whose bank movements have been generated"),
                             'action': 'generate_invoices',
                             'permanence': permanence,
                             'bankaccounts': BankAccount.objects.filter(
@@ -398,15 +400,14 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if permanence is None or permanence.status not in [
             PERMANENCE_CLOSED, PERMANENCE_SEND
         ]:
-            user_message = _("Action canceled by the system.")
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
 
         if 'apply' in request.POST:
-            task_invoice.generate_archive(
-                permanence=permanence,
-            )
+            permanence.archive()
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
@@ -427,15 +428,48 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
-        if permanence is None or permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED,
-                                                           PERMANENCE_CANCELLED]:
-            user_message = _("Action canceled by the system.")
+        if permanence.status not in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED,
+                                     PERMANENCE_CANCELLED]:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
 
         if 'apply' in request.POST:
-            user_message, user_message_level = task_invoice.admin_cancel(permanence)
+            if permanence.status == PERMANENCE_INVOICED:
+                last_bank_account_total = BankAccount.objects.filter(
+                    operation_status=BANK_LATEST_TOTAL).only(
+                    "permanence"
+                ).first()
+                if last_bank_account_total is not None:
+                    last_permanence_invoiced_id = last_bank_account_total.permanence_id
+                    if last_permanence_invoiced_id is not None:
+                        if last_permanence_invoiced_id == permanence.id:
+                            # This is well the latest closed permanence. The invoices can be cancelled without damages.
+                            permanence.cancel_invoice(last_bank_account_total)
+                            user_message = _("The selected invoice has been canceled.")
+                            user_message_level = messages.INFO
+                        else:
+                            user_message = (
+                                _("You mus first cancel the invoices of {} whose date is {}.").format(
+                                    last_bank_account_total.permanence,
+                                    last_bank_account_total.permanence.permanence_date.strftime(
+                                        settings.DJANGO_SETTINGS_DATE))
+                            )
+                            user_message_level = messages.ERROR
+                    else:
+                        user_message = _("The selected invoice is not the latest invoice.")
+                        user_message_level = messages.ERROR
+                else:
+                    user_message = _("The selected invoice has been canceled.")
+                    user_message_level = messages.INFO
+                    permanence.set_status(old_status=(PERMANENCE_INVOICED,), new_status=PERMANENCE_SEND)
+            else:
+                permanence.set_status(old_status=(PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED,),
+                                      new_status=PERMANENCE_SEND)
+                user_message = _("The selected invoice has been restored.")
+                user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         return render(request, 'repanier/confirm_admin_action.html', {
@@ -465,8 +499,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
-        if permanence is None or permanence.status != PERMANENCE_INVOICED:
-            user_message = _("Action canceled by the system.")
+        if permanence.status != PERMANENCE_INVOICED:
+            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
+                'permanence': permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
@@ -528,9 +563,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if 'apply' in request.POST:
             form = InvoiceOrderForm(request.POST)
             if form.is_valid():
-                user_message, user_message_level = task_invoice.admin_send(
-                    permanence
-                )
+                t = threading.Thread(target=email_invoice.send_invoice, args=(permanence.id,))
+                t.start()
+                user_message = _("Emails containing the invoices will be send to the customers and the producers.")
+                user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
         else:

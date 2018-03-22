@@ -20,10 +20,8 @@ from .forms import FileForm
 # @login_required
 @csrf_protect
 def ajax_picture(request, upload_to=None, form_class=FileForm, size=SIZE_XS):
-    print("ajax_picture")
     form = form_class(request.POST, request.FILES)
     if form.is_valid():
-        print("ajax_picture form is valid")
         size = sint(size)
         if size not in [SIZE_XS, SIZE_S, SIZE_M, SIZE_L]:
             msg = "{}".format(_('Wrong picture size.'))

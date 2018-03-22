@@ -92,7 +92,7 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
                 producer_save = offer_item.producer
                 row_start_producer = row_num + 1
                 c = ws.cell(row=row_num, column=2)
-                c.value = producer_save.short_profile_name
+                c.value = "{}".format(producer_save.short_profile_name)
                 c.style.font.bold = True
                 c.style.font.italic = True
                 while offer_item is not None and producer_save.id == offer_item.producer_id:
@@ -120,7 +120,7 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
                             c = ws.cell(row=row_num, column=1)
                             c.value = offer_item.id
                             c = ws.cell(row=row_num, column=2)
-                            c.value = offer_item_reference
+                            c.value = "{}".format(offer_item_reference)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=3)
@@ -363,7 +363,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 else:
                     product_reference = EMPTY_STRING
                 c = ws.cell(row=row_num, column=2)
-                c.value = product_reference
+                c.value = "{}".format(product_reference)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=3)

@@ -246,7 +246,7 @@ class Configuration(TranslatableModel):
         from cms import api
         page = api.create_page(
             title=_("Home"),
-            soft_root=True,
+            soft_root=False,
             template=settings.CMS_TEMPLATE_HOME,
             language=settings.LANGUAGE_CODE,
             published=True,
@@ -255,7 +255,7 @@ class Configuration(TranslatableModel):
             in_navigation=True
         )
         try:
-            # New in CMS 4.5
+            # New in CMS 3.5
             page.set_as_homepage()
         except:
             pass
@@ -265,25 +265,25 @@ class Configuration(TranslatableModel):
             placeholder=placeholder,
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
-            body='hello world 1')
+            body=settings.CMS_TEMPLATE_HOME_HERO)
         placeholder = page.placeholders.get(slot="home-col-1")
         api.add_plugin(
             placeholder=placeholder,
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
-            body='hello world 2')
+            body=settings.CMS_TEMPLATE_HOME_COL_1)
         placeholder = page.placeholders.get(slot="home-col-2")
         api.add_plugin(
             placeholder=placeholder,
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
-            body='hello world 3')
+            body=settings.CMS_TEMPLATE_HOME_COL_2)
         placeholder = page.placeholders.get(slot="home-col-3")
         api.add_plugin(
             placeholder=placeholder,
             plugin_type='TextPlugin',
             language=settings.LANGUAGE_CODE,
-            body='hello world 4')
+            body=settings.CMS_TEMPLATE_HOME_COL_3)
         static_placeholder = StaticPlaceholder(
             code="footer",
             # site_id=1

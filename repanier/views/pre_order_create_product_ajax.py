@@ -31,6 +31,7 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
 
     permanence = get_object_or_404(Permanence, id=permanence_id)
     offer_item = None
+    update = None
     if permanence.status == PERMANENCE_PRE_OPEN:
         if request.method == 'POST':  # If the form has been submitted...
             form = ProducerProductForm(request.POST)  # A form bound to the POST data
@@ -76,7 +77,7 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
                         limit_order_quantity_to_stock=True,
                         is_active=True
                     )
-                    production_mode = form.cleaned_data.get('production_mode')
+                    production_mode = form.cleaned_data.get('production_mode', None)
                     if production_mode is not None:
                         product.production_mode.add(form.cleaned_data.get('production_mode'))
                     offer_item = product.get_or_create_offer_item(permanence, reset_add_2_stock=True)

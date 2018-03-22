@@ -155,59 +155,47 @@ class ProducerDataForm(forms.ModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        reference_site = self.cleaned_data["reference_site"]
+        reference_site = self.cleaned_data.get("reference_site", EMPTY_STRING)
         for allowed_host in settings.ALLOWED_HOSTS:
             if reference_site.endswith(allowed_host):
                 self.add_error(
                     'reference_site',
                     _("The reference site may not be your site."))
                 break
-        invoice_by_basket = self.cleaned_data["invoice_by_basket"]
-        if "price_list_multiplier" in self.cleaned_data:
-            price_list_multiplier = self.cleaned_data["price_list_multiplier"]
-        else:
-            price_list_multiplier = DECIMAL_ONE
-        if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            if "producer_pre_opening" in self.cleaned_data:
-                producer_pre_opening = self.cleaned_data["producer_pre_opening"]
-            else:
-                producer_pre_opening = False
-            if "manage_replenishment" in self.cleaned_data:
-                manage_replenishment = self.cleaned_data["manage_replenishment"]
-            else:
-                manage_replenishment = False
-            if "is_resale_price_fixed" in self.cleaned_data:
-                is_resale_price_fixed = self.cleaned_data["is_resale_price_fixed"]
-            else:
-                is_resale_price_fixed = False
-            if manage_replenishment and producer_pre_opening:
-                # The producer set his offer -> no possibility to manage stock
-                self.add_error('producer_pre_opening',
-                               _(
-                                   "The pre-opening of the orders is incompatible with the management of the reassortment."))
-                self.add_error('manage_replenishment',
-                               _(
-                                   "The pre-opening of the orders is incompatible with the management of the reassortment."))
-            if manage_replenishment and invoice_by_basket:
-                # The group manage the replenishment -> no possibility for the producer to prepare basket
-                self.add_error('invoice_by_basket',
-                               _("Billing by basket is incompatible with the management of the reassortment."))
-                self.add_error('manage_replenishment',
-                               _("Billing by basket is incompatible with the management of the reassortment."))
-            if is_resale_price_fixed and producer_pre_opening:
-                # The producer set his price -> no possibility to fix the resale price
-                self.add_error('producer_pre_opening',
-                               _(
-                                   "The pre-opening of orders is incompatible with the imposition of customer selling prices."))
-                self.add_error('is_resale_price_fixed',
-                               _(
-                                   "The pre-opening of orders is incompatible with the imposition of customer selling prices."))
-            if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
-                # Important : For invoicing correctly
-                self.add_error('price_list_multiplier',
-                               _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
-                self.add_error('is_resale_price_fixed',
-                               _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
+        invoice_by_basket = self.cleaned_data.get("invoice_by_basket", False)
+        price_list_multiplier = self.cleaned_data.get("price_list_multiplier", DECIMAL_ONE)
+
+        producer_pre_opening = self.cleaned_data.get("producer_pre_opening", False)
+        manage_replenishment = self.cleaned_data.get("manage_replenishment", False)
+        is_resale_price_fixed = self.cleaned_data.get("is_resale_price_fixed", False)
+        if manage_replenishment and producer_pre_opening:
+            # The producer set his offer -> no possibility to manage stock
+            self.add_error('producer_pre_opening',
+                           _(
+                               "The pre-opening of the orders is incompatible with the management of the reassortment."))
+            self.add_error('manage_replenishment',
+                           _(
+                               "The pre-opening of the orders is incompatible with the management of the reassortment."))
+        if manage_replenishment and invoice_by_basket:
+            # The group manage the replenishment -> no possibility for the producer to prepare basket
+            self.add_error('invoice_by_basket',
+                           _("Billing by basket is incompatible with the management of the reassortment."))
+            self.add_error('manage_replenishment',
+                           _("Billing by basket is incompatible with the management of the reassortment."))
+        if is_resale_price_fixed and producer_pre_opening:
+            # The producer set his price -> no possibility to fix the resale price
+            self.add_error('producer_pre_opening',
+                           _(
+                               "The pre-opening of orders is incompatible with the imposition of customer selling prices."))
+            self.add_error('is_resale_price_fixed',
+                           _(
+                               "The pre-opening of orders is incompatible with the imposition of customer selling prices."))
+        if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
+            # Important : For invoicing correctly
+            self.add_error('price_list_multiplier',
+                           _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
+            self.add_error('is_resale_price_fixed',
+                           _("The 'price list multiplier' must be set to 1 when 'fixed reseale price'."))
 
         if invoice_by_basket and self.instance.id is not None:
             if BoxContent.objects.filter(product__producer_id=self.instance.id).exists():
@@ -346,6 +334,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_basic += [
                 ('address', 'city', 'picture'),
                 'memo',
+                'is_active',
                 'permanences',
                 ('get_admin_balance', 'get_admin_date_balance'),
             ]
@@ -354,49 +343,43 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_basic += [
                 ('address', 'city'),
                 'memo',
+                'is_active',
             ]
-        if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            if producer is not None and producer.represent_this_buyinggroup:
-                fields_advanced = [
-                    'invoice_by_basket',
-                    'represent_this_buyinggroup'
-                ]
-            else:
-                fields_advanced = [
-                    'price_list_multiplier',
-                    'minimum_order_value',
-                    'invoice_by_basket'
-                ]
+        if producer is not None and producer.represent_this_buyinggroup:
+            fields_advanced = [
+                'represent_this_buyinggroup'
+            ]
         else:
-            if producer is not None and producer.represent_this_buyinggroup:
-                fields_advanced = [
-                    'vat_id',
-                    'invoice_by_basket',
-                    'sort_products_by_reference',
-                    'represent_this_buyinggroup'
-                ]
-            else:
-                fields_basic += [
-                    ('producer_price_are_wo_vat', 'is_active'),
-                ]
-                fields_advanced = [
-                    'bank_account',
-                    'vat_id',
-                    'is_resale_price_fixed',
-                    'price_list_multiplier',
-                    'minimum_order_value',
-                    'invoice_by_basket'
-                ]
-                if settings.REPANIER_SETTINGS_STOCK:
-                    fields_advanced += [
-                        'manage_replenishment',
-                    ]
-                fields_advanced += [
-                    'sort_products_by_reference',
-                    'producer_pre_opening',
-                    'reference_site',
-                    'web_services_activated'
-                ]
+            fields_advanced = []
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            fields_advanced += [
+                'bank_account',
+                'vat_id',
+            ]
+        if settings.REPANIER_SETTINGS_STOCK:
+            fields_advanced += [
+                'manage_replenishment',
+            ]
+        if settings.REPANIER_SETTINGS_PRODUCT_REFERENCE:
+            fields_advanced += [
+                'sort_products_by_reference',
+            ]
+        fields_advanced += [
+            'invoice_by_basket',
+            'price_list_multiplier',
+            'minimum_order_value',
+            'invoice_by_basket'
+        ]
+        if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
+            fields_basic += [
+                'producer_price_are_wo_vat',
+            ]
+            fields_advanced += [
+                'is_resale_price_fixed',
+                'producer_pre_opening',
+                'reference_site',
+                'web_services_activated'
+            ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced options'), {'classes': ('collapse',), 'fields': fields_advanced})

@@ -308,6 +308,7 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_MANAGE_ACCOUNTING (*True*, False) : If True, Repanier is used to manage the accounts (customers, proucers, bank).
 - REPANIER_SETTINGS_PRE_OPENING (True, *False*) : Lets the producer modify their offer during an order pre-opening phase.
 - REPANIER_SETTINGS_PRODUCT_LABEL (True, *False*) : If True, Repanier lets you define labels (for e.g. bio, local, ...) at product level.
+- REPANIER_SETTINGS_PRODUCT_REFERENCE (True, *False*) : If True, Repanier lets you define reference at product level and use them to communicate with the producer.
 - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5).
 - REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form.
 - REPANIER_SETTINGS_STOCK (True, *False*) : Allows you to limit the available quantities of a product.

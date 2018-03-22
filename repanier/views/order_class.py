@@ -88,13 +88,11 @@ class OrderView(ListView):
                 self.is_box = True
                 # Do not display "all department" as selected
                 self.department_id = None
-            self.communication = False
+        if len(request.GET) == 0:
+            # This to let display a communication into a popup when the user is on the first order screen
+            self.communication = True
         else:
-            if not self.is_basket and 'page' not in request.GET:
-                # This to let display a communication into a popup when the user is on the first order screen
-                self.communication = True
-            else:
-                self.communication = False
+            self.communication = False
         return super(OrderView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

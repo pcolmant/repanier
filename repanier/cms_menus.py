@@ -1,4 +1,6 @@
 # -*- coding: utf-8
+import logging
+
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from menus.base import Menu, NavigationNode
@@ -8,28 +10,33 @@ from repanier.const import *
 from repanier.models import Permanence
 from repanier.models import PermanenceBoard
 
+logger = logging.getLogger(__name__)
+
 
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
         from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
+        logger.debug("menu")
         user = request.user
         if user.is_anonymous or user.is_staff:
             is_anonymous = True
         else:
             is_anonymous = False
         nodes = []
-        master_id = -1
+        master_id = 0
         node = NavigationNode(
             "{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
             "/",
             id=master_id,
-            visible=True
+            visible=True,
+            attr={'soft_root': False}
         )
         nodes.append(node)
         submenu_id = master_id
 
         separator = False
-        permanence_board_set = PermanenceBoard.objects.filter(permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED).only(
+        permanence_board_set = PermanenceBoard.objects.filter(
+            permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED).only(
             "id").order_by('?')
         if permanence_board_set.exists():
             submenu_id += 1
@@ -96,5 +103,6 @@ class PermanenceMenu(Menu):
         )
         nodes.append(node)
         return submenu_id
+
 
 menu_pool.register_menu(PermanenceMenu)

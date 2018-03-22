@@ -2,6 +2,7 @@
 
 from os import sep as os_sep
 
+from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import never_cache
@@ -62,7 +63,7 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
                 product.picture2 = form.cleaned_data.get('picture')
                 product.save()
                 product.production_mode.clear()
-                production_mode = form.cleaned_data.get('production_mode')
+                production_mode = form.cleaned_data.get('production_mode', None)
                 if production_mode is not None:
                     product.production_mode.add(production_mode)
                 offer_item_qs = OfferItem.objects.filter(
@@ -78,8 +79,9 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
             form = ProducerProductForm()  # An unbound form
             field = form.fields["long_name"]
             field.initial = offer_item.safe_translation_getter('long_name', any_language=True)
-            field = form.fields["production_mode"]
-            field.initial = offer_item.product.production_mode.first()
+            if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
+                field = form.fields["production_mode"]
+                field.initial = offer_item.product.production_mode.first()
             field = form.fields["order_unit"]
             field.initial = offer_item.order_unit
             field = form.fields["order_average_weight"]

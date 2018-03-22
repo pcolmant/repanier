@@ -67,8 +67,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         row = [
                             "{} - {}".format(delivery_ref, delivery.get_delivery_display()),
                             "  {} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
-                            customer.phone1,
-                            customer.phone2,
+                            customer.phone1 or EMPTY_STRING,
+                            customer.phone2 or EMPTY_STRING,
                             invoice.total_price_with_tax.amount,
                             # Used to send mail to customer with an order (via copy-paste to mail)
                             ";".join(
@@ -79,7 +79,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         ]
                         for col_num in range(len(row)):
                             c = ws.cell(row=row_num, column=col_num)
-                            c.value = row[col_num]
+                            c.value = "{}".format(row[col_num])
                             if col_num == 4:
                                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             else:
@@ -124,8 +124,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     row = [
                         "{} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
                         customer.long_basket_name,
-                        customer.phone1,
-                        customer.phone2,
+                        customer.phone1 or EMPTY_STRING,
+                        customer.phone2 or EMPTY_STRING,
                         invoice.total_price_with_tax.amount,
                         # Used to send mail to customer with an order (via copy-paste to mail)
                         ";".join(
@@ -136,7 +136,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     ]
                     for col_num in range(len(row)):
                         c = ws.cell(row=row_num, column=col_num)
-                        c.value = row[col_num]
+                        c.value = "{}".format(row[col_num])
                         if col_num == 4:
                             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                         else:
@@ -183,8 +183,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     row = [
                         (next_permanence.permanence_date, NumberFormat.FORMAT_DATE_DMYSLASH),
                         (customer.long_basket_name, NumberFormat.FORMAT_TEXT),
-                        (customer.phone1, NumberFormat.FORMAT_TEXT),
-                        (customer.phone2, NumberFormat.FORMAT_TEXT),
+                        (customer.phone1 or EMPTY_STRING, NumberFormat.FORMAT_TEXT),
+                        (customer.phone2 or EMPTY_STRING, NumberFormat.FORMAT_TEXT),
                         (permanenceboard.permanence_role.short_name, NumberFormat.FORMAT_TEXT),
                     ]
                     for col_num in range(len(row)):
@@ -234,7 +234,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 ]
                 for col_num in range(len(row)):
                     c = ws.cell(row=row_num, column=col_num)
-                    c.value = row[col_num]
+                    c.value = "{}".format(row[col_num])
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.alignment.wrap_text = True
                 row_num += 1
@@ -271,14 +271,14 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 row = [
                     producer.short_profile_name,
                     producer.long_profile_name,
-                    producer.phone1,
-                    producer.phone2,
+                    producer.phone1 or EMPTY_STRING,
+                    producer.phone2 or EMPTY_STRING,
                     total_price_with_tax.amount,
                     minimum_order_amount_reached
                 ]
                 for col_num in range(len(row)):
                     c = ws.cell(row=row_num, column=col_num)
-                    c.value = row[col_num]
+                    c.value = "{}".format(row[col_num])
                     if col_num == 4:
                         c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                     else:
@@ -333,15 +333,15 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
 
         row_num = customer_label(customer_identifier, placements, row_num, ws)
 
-    placement_label = "[❄ {} ❄]".format(dict_placement[PRODUCT_PLACEMENT_FRIDGE])
+    placement_label = "[❄ {} ]".format(dict_placement[PRODUCT_PLACEMENT_FRIDGE])
     for customer_identifier in fridge:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[❄❄❄ {} ❄❄❄]".format(dict_placement[PRODUCT_PLACEMENT_FREEZER])
+    placement_label = "[❄❄❄ {} ]".format(dict_placement[PRODUCT_PLACEMENT_FREEZER])
     for customer_identifier in freezer:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
-    placement_label = "[⏭ {} ⏭]".format(dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET])
+    placement_label = "👜 [ {} ]".format(dict_placement[PRODUCT_PLACEMENT_OUT_OF_BASKET])
     for customer_identifier in out_of_basket:
         row_num = customer_label(customer_identifier, placement_label, row_num, ws)
 
@@ -353,7 +353,7 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
 
 def customer_label(customer_identifier, placements, row_num, ws):
     c = ws.cell(row=row_num, column=0)
-    c.value = customer_identifier
+    c.value = "{}".format(customer_identifier)
     c.style.font.size = 36
     c.style.alignment.wrap_text = False
     c.style.borders.top.border_style = Border.BORDER_THIN
@@ -364,7 +364,7 @@ def customer_label(customer_identifier, placements, row_num, ws):
     row_num += 1
     ws.row_dimensions[row_num].height = 60
     c = ws.cell(row=row_num, column=0)
-    c.value = placements
+    c.value = "{}".format(placements)
     c.style.borders.left.border_style = Border.BORDER_THIN
     c.style.borders.right.border_style = Border.BORDER_THIN
     c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -479,14 +479,14 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 c.value = purchase.offer_item_id
                                 c.style.number_format.format_code = NumberFormat.FORMAT_DATE_DDMMYYYY
                                 c = ws.cell(row=row_num, column=2)
-                                c.value = purchase.offer_item.get_placement_display()
+                                c.value = "{}".format(purchase.offer_item.get_placement_display())
                                 if placement_save is None:
                                     placement_save = c.value
                                 elif hide_column_placement:
                                     if placement_save != c.value:
                                         hide_column_placement = False
                                 c = ws.cell(row=row_num, column=3)
-                                c.value = producer_save.short_profile_name
+                                c.value = "{}".format(producer_save.short_profile_name)
                                 c = ws.cell(row=row_num, column=5)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "{} - {}".format(
@@ -609,14 +609,14 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                     c.value = purchase.offer_item_id
                                     if count_offer_item == 0:
                                         c = ws.cell(row=row_num, column=2)
-                                        c.value = purchase.offer_item.get_placement_display()
+                                        c.value = "{}".format(purchase.offer_item.get_placement_display())
                                         if placement_save is None:
                                             placement_save = c.value
                                         elif hide_column_placement:
                                             if placement_save != c.value:
                                                 hide_column_placement = False
                                         c = ws.cell(row=row_num, column=3)
-                                        c.value = producer_save.short_profile_name
+                                        c.value = "{}".format(producer_save.short_profile_name)
                                     c = ws.cell(row=row_num, column=5)
                                     if department_for_customer_save__short_name is not None:
                                         c.value = "{} - {}".format(
@@ -743,7 +743,7 @@ def export_producer_by_product(permanence, producer, wb=None):
         while offer_item is not None:
             department_for_customer_save = offer_item.department_for_customer
             c = ws.cell(row=row_num, column=1)
-            c.value = department_for_customer_save.short_name \
+            c.value = "{}".format(department_for_customer_save.short_name) \
                 if department_for_customer_save is not None else "---"
             c.style.font.bold = True
             row_num += 1
@@ -776,7 +776,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 status
                             )
                             c = ws.cell(row=row_num, column=0)
-                            c.value = purchase.customer.short_basket_name
+                            c.value = "{}".format(purchase.customer.short_basket_name)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=1)
@@ -801,7 +801,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 # Avoid display of exponent by Excel
                                 c.value = "[{}]".format(reference)
                             else:
-                                c.value = reference
+                                c.value = "{}".format(reference)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=4)
@@ -863,7 +863,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             status
                         )
                         c = ws.cell(row=row_num, column=0)
-                        c.value = repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+                        c.value = "{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=1)
@@ -888,7 +888,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             # Avoid display of exponent by Excel
                             c.value = "[{}]".format(reference)
                         else:
-                            c.value = reference
+                            c.value = "{}".format(reference)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=4)
@@ -1040,7 +1040,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 )
                 c.style.fill = yellowFill
             else:
-                c.value = customer_save.short_basket_name
+                c.value = "{}".format(customer_save.short_basket_name)
             c.style.font.bold = True
             row_num += 1
             row_start_customer = row_num
@@ -1069,7 +1069,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                         # Avoid display of exponent by Excel
                         c.value = "[{}]".format(reference)
                     else:
-                        c.value = reference
+                        c.value = "{}".format(reference)
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=3)
@@ -1279,7 +1279,7 @@ def export_customer_for_a_delivery(
         if delivery_id is not None:
             c = ws.cell(row=row_num, column=4)
             c.style.font.bold = True
-            c.value = DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display()
+            c.value = "{}".format(DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display())
             row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
             if delivery_id is None:
@@ -1317,11 +1317,11 @@ def export_customer_for_a_delivery(
                         c = ws.cell(row=row_num, column=1)
                         c.value = offer_item_save.id
                         c = ws.cell(row=row_num, column=2)
-                        c.value = offer_item_save.get_placement_display()
+                        c.value = "{}".format(offer_item_save.get_placement_display())
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=3)
-                        c.value = purchase.producer.short_profile_name
+                        c.value = "{}".format(purchase.producer.short_profile_name)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=4)
@@ -1399,7 +1399,7 @@ def export_customer_for_a_delivery(
                             c.value = "{} - {}".format(purchase.customer.preparation_order,
                                                        purchase.customer.short_basket_name)
                         else:
-                            c.value = purchase.customer.long_basket_name
+                            c.value = "{}".format(purchase.customer.long_basket_name)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if first_purchase:
@@ -1416,7 +1416,7 @@ def export_customer_for_a_delivery(
             if something_ordered:
                 row_num += 1
                 c = ws.cell(row=row_num, column=4)
-                c.value = group_label
+                c.value = "{}".format(group_label)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
                 c = ws.cell(row=row_num, column=8)
