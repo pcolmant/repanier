@@ -27,11 +27,11 @@ class Command(BaseCommand):
             help='set the coordinator password (default="password")'
         )
         parser.add_argument(
-            '--coordinator_login',
+            '--coordinator_email',
             nargs=1,
             type=str,
             action='store',
-            default=['coordinator'],
+            default=['coordinator@repanier.be'],
             help='Set the coordinator (default="coordiantor")'
         )
         parser.add_argument(
@@ -40,13 +40,10 @@ class Command(BaseCommand):
             help='If present, reset the admin account'
         )
 
-
     def handle(self, *args, **options):
         if not settings.REPANIER_SETTINGS_DEMO:
             self.stdout.write(self.style.ERROR("Command not executed because the site is not in DEMO MODE"))
             exit()
-        password = options['password'][0]
-        self.stdout.write(self.style.ERROR(password))
         translation.activate(settings.LANGUAGE_CODE)
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
         if config is None:
@@ -69,10 +66,15 @@ class Command(BaseCommand):
             print("Customer anonymized : {}".format(customer))
         for staff in Staff.objects.all().order_by('?'):
             staff.anonymize()
-            # if staff.is_coordinator:
             staff.user.set_password(None)
             staff.user.save()
             print("Staff anonymized : {}".format(staff))
+        coordinator_password = options['coordinator_password'][0]
+        coordinator_email = options['coordinator_email'][0].lower()
+        coordinator = Staff.get_or_create_any_coordinator()
+        coordinator.user.set_password(coordinator_password)
+        coordinator.user.email = coordinator_email
+        coordinator.user.save()
         for producer in Producer.objects.all().order_by('?'):
             producer.anonymize(also_group=True)
             print("Producer anonymized : {}".format(producer))
