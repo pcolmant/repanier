@@ -33,13 +33,13 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
         subject = loader.render_to_string(subject_template_name, context)
-        html_content = loader.render_to_string('repanier/registration/password_reset_email.html', context)
+        html_body = loader.render_to_string('repanier/registration/password_reset_email.html', context)
 
         if settings.REPANIER_SETTINGS_DEMO:
             to_email = DEMO_EMAIL
         email = RepanierEmail(
             subject,
-            html_content=html_content,
+            html_body=html_body,
             from_email=from_email,
             to=[to_email],
             show_customer_may_unsubscribe=False,

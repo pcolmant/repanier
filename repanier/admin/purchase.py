@@ -238,10 +238,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             _("Order"),
                             permanence
                         )
-                        staff = Staff.get_or_create_order_responsible()
-
                         export_order_2_1_customer(
-                            customer, filename, permanence, staff)
+                            customer, filename, permanence)
                         user_message_level = messages.INFO
                         user_message = customer.my_order_confirmation_email_send_to()
                     else:

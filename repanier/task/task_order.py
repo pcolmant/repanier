@@ -199,11 +199,12 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
     else:
         if len(deliveries_id) > 0:
             return
-        if len(producers_id) == 0:
-            return
+        if not everything:
+            if len(producers_id) == 0:
+                return
 
-        if not everything and settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            return
+            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                return
 
     permanence.set_status(old_status=(PERMANENCE_OPENED,), new_status=PERMANENCE_WAIT_FOR_CLOSED, everything=everything,
                           producers_id=producers_id,

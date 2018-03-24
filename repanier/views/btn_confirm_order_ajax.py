@@ -44,9 +44,7 @@ def btn_confirm_order_ajax(request):
         _("Order"),
         permanence
     )
-    staff = Staff.get_or_create_order_responsible()
-
-    export_order_2_1_customer(customer, filename, permanence, staff)
+    export_order_2_1_customer(customer, filename, permanence)
     customer_invoice.confirm_order()
     customer_invoice.save()
     json_dict = my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax())

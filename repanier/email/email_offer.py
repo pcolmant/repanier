@@ -8,7 +8,6 @@ from django.template import Template, Context as TemplateContext
 # is the "bad One" this lib has a Context object too. Thanks for anyone reading!
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
@@ -30,7 +29,7 @@ def send_pre_open_order(permanence_id):
             'offer_producer_mail', any_language=True, default=EMPTY_STRING
         )
 
-        staff = Staff.get_or_create_order_responsible()
+        order_responsible = Staff.get_or_create_order_responsible()
 
         offer_description = permanence.safe_translation_getter(
             'offer_description', any_language=True, default=EMPTY_STRING
@@ -58,23 +57,23 @@ def send_pre_open_order(permanence_id):
                         settings.ALLOWED_HOSTS[0],
                         reverse('pre_order_uuid_view', args=(producer.offer_uuid,)), _("Offers"))
                 ),
-                'signature': staff.get_html_signature
+                'signature': order_responsible.get_html_signature
             })
-            html_content = template.render(context)
-            to_email_producer = []
+            html_body = template.render(context)
+            to_email = []
             if producer.email:
-                to_email_producer.append(producer.email)
+                to_email.append(producer.email)
             if producer.email2:
-                to_email_producer.append(producer.email2)
+                to_email.append(producer.email2)
             if producer.email3:
-                to_email_producer.append(producer.email3)
+                to_email.append(producer.email3)
+            to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
             email = RepanierEmail(
                 subject=offer_producer_mail_subject,
-                html_content=html_content,
-                from_email=staff.get_from_email,
-                reply_to=staff.get_reply_to_email,
-                to=to_email_producer,
-                cc=staff.get_to_email
+                html_body=html_body,
+                from_email=order_responsible.get_from_email,
+                reply_to=order_responsible.get_reply_to_email,
+                to=to_email
             )
             email.send_email()
             send_sms(
@@ -93,17 +92,17 @@ def send_open_order(permanence_id):
         permanence = Permanence.objects.get(id=permanence_id)
         config = REPANIER_SETTINGS_CONFIG
 
-        staff = Staff.get_or_create_order_responsible()
+        order_responsible = Staff.get_or_create_order_responsible()
 
-        to_email_customer = []
+        to_email = []
         for customer in Customer.objects.filter(
                 represent_this_buyinggroup=False,
                 may_order=True,
                 language=language_code
         ).order_by('?'):
-            to_email_customer.append(customer.user.email)
-            if customer.email2 is not None and len(customer.email2.strip()) > 0:
-                to_email_customer.append(customer.email2)
+            to_email.append(customer.user.email)
+            if customer.email2:
+                to_email.append(customer.email2)
         offer_description = permanence.safe_translation_getter(
             'offer_description', any_language=True, default=EMPTY_STRING
         )
@@ -134,15 +133,16 @@ def send_open_order(permanence_id):
             'offer_detail': mark_safe(offer_detail),
             'offer_recent_detail': mark_safe(permanence.get_new_products),
             'offer_producer': offer_producer,
-            'signature': staff.get_html_signature
+            'signature': order_responsible.get_html_signature
         })
-        html_content = template.render(context)
+        html_body = template.render(context)
+        to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
         email = RepanierEmail(
             subject=offer_customer_mail_subject,
-            html_content=html_content,
-            from_email=staff.get_from_email,
-            reply_to=staff.get_reply_to_email,
-            bcc=list(set(staff.get_to_email) | set(to_email_customer)),
+            html_body=html_body,
+            from_email=order_responsible.get_from_email,
+            reply_to=order_responsible.get_reply_to_email,
+            to=to_email,
             show_customer_may_unsubscribe=True
         )
         email.send_email()

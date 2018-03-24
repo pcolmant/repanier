@@ -26,15 +26,11 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
         translation.activate(language_code)
         permanence = Permanence.objects.get(id=permanence_id)
         config = REPANIER_SETTINGS_CONFIG
-        filename = "{0}-{1}.xlsx".format(
+        filename = "{}-{}.xlsx".format(
             _("Order"),
             permanence
         )
-        group_filename = "{0}-{1}.xlsx".format(
-            REPANIER_SETTINGS_GROUP_NAME,
-            filename
-        )
-        staff = Staff.get_or_create_order_responsible()
+        order_responsible = Staff.get_or_create_order_responsible()
 
         if len(deliveries_id) > 0:
             # if closed deliveries_id is not empty list and not "None" then all_producers should be True
@@ -44,22 +40,16 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                 export_order_2_1_group(
                     config, delivery_id, filename,
                     permanence,
-                    staff
+                    order_responsible
                 )
 
         if not everything:
             abstract_ws = None
         else:
-            # Orders send to the preparation team
+            # Orders send to the preparation team, to the order_responsible and the staff.is_order_copy
             wb, abstract_ws = generate_customer_xlsx(permanence, deliveries_id=deliveries_id)
             if wb is not None:
                 # At least one order
-                to_email_board = []
-                for permanence_board in PermanenceBoard.objects.filter(
-                        permanence_id=permanence.id).order_by('?'):
-                    if permanence_board.customer:
-                        to_email_board.append(permanence_board.customer.user.email)
-
                 order_staff_mail = config.safe_translation_getter(
                     'order_staff_mail', any_language=True, default=EMPTY_STRING
                 )
@@ -73,27 +63,29 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'board_composition': mark_safe(board_composition),
                     'board_composition_and_description': mark_safe(board_composition_and_description),
-                    'signature': staff.get_html_signature
+                    'signature': order_responsible.get_html_signature
                 })
-                html_content = template.render(context)
+                html_body = template.render(context)
+
+                to_email = []
                 if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
-                    email = RepanierEmail(
-                        subject=order_staff_mail_subject,
-                        html_content=html_content,
-                        from_email=staff.get_from_email,
-                        to=to_email_board,
-                        cc=staff.get_to_email,
-                        reply_to=staff.get_reply_to_email
-                    )
+                    for permanence_board in PermanenceBoard.objects.filter(
+                            permanence_id=permanence.id).order_by('?'):
+                        if permanence_board.customer:
+                            to_email.append(permanence_board.customer.user.email)
+                    to_email = list(
+                        set(to_email) | set(order_responsible.get_to_email) | set(Staff.get_to_order_copy()))
                 else:
-                    email = RepanierEmail(
-                        subject=order_staff_mail_subject,
-                        html_content=html_content,
-                        from_email=staff.get_from_email,
-                        to=staff.get_to_email,
-                        reply_to=staff.get_reply_to_email
-                    )
-                email.attach(group_filename,
+                    to_email = list(set(order_responsible.get_to_email + Staff.get_to_order_copy()))
+
+                email = RepanierEmail(
+                    subject=order_staff_mail_subject,
+                    html_body=html_body,
+                    from_email=order_responsible.get_from_email,
+                    to=to_email,
+                    reply_to=order_responsible.get_reply_to_email
+                )
+                email.attach(filename,
                              save_virtual_workbook(wb),
                              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 email.send_email()
@@ -122,37 +114,37 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                 'duplicate': not (wb is None or producer.manage_replenishment),
                 'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                'signature': staff.get_html_signature
+                'signature': order_responsible.get_html_signature
             })
-            html_content = template.render(context)
+            html_body = template.render(context)
 
             producer_invoice = ProducerInvoice.objects.filter(
                 producer_id=producer.id, permanence_id=permanence.id
             ).only("total_price_with_tax").order_by('?').first()
+
+            to_email = []
             if producer_invoice is not None \
                     and producer_invoice.total_price_with_tax < producer.minimum_order_value:
-                to_email_producer = []
-                html_content = "{}<br><br>{}".format(
-                    order_producer_mail_subject, html_content
+                html_body = "{}<br><br>{}".format(
+                    order_producer_mail_subject, html_body
                 )
                 order_producer_mail_subject = _(
                     '⚠ Mail not send to our producer {} because the minimum order value has not been reached.').format(
                     long_profile_name)
             else:
-                to_email_producer = []
                 if producer.email:
-                    to_email_producer.append(producer.email)
+                    to_email.append(producer.email)
                 if producer.email2:
-                    to_email_producer.append(producer.email2)
+                    to_email.append(producer.email2)
                 if producer.email3:
-                    to_email_producer.append(producer.email3)
+                    to_email.append(producer.email3)
+            to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
             email = RepanierEmail(
                 subject=order_producer_mail_subject,
-                html_content=html_content,
-                from_email=staff.get_from_email,
-                to=to_email_producer,
-                cc=staff.get_to_email,
-                reply_to=staff.get_reply_to_email
+                html_body=html_body,
+                from_email=order_responsible.get_from_email,
+                to=to_email,
+                reply_to=order_responsible.get_reply_to_email
             )
             if wb is not None:
                 if producer.represent_this_buyinggroup:
@@ -185,7 +177,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                 for customer in customer_set:
                     export_order_2_1_customer(
                         customer, filename, permanence,
-                        staff,
+                        order_responsible,
                         abstract_ws
                     )
                     # confirm_customer_invoice(permanence_id, customer.id)
@@ -198,7 +190,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
     translation.activate(cur_language)
 
 
-def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
+def export_order_2_1_group(config, delivery_id, filename, permanence, order_responsible):
     delivery_board = DeliveryBoard.objects.filter(
         id=delivery_id
     ).exclude(
@@ -219,10 +211,6 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
         )
         order_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
-        to_email_customer = [customer_responsible.user.email]
-        if customer_responsible.email2:
-            to_email_customer.append(customer_responsible.email2)
-
         long_basket_name = customer_responsible.long_basket_name or str(customer_responsible)
 
         template = Template(order_customer_mail)
@@ -240,16 +228,21 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
             'on_hold_movement': EMPTY_STRING,
             'payment_needed': EMPTY_STRING,
             'delivery_point': delivery_point,
-            'signature': staff.get_html_signature
+            'signature': order_responsible.get_html_signature
         })
-        html_content = template.render(context)
+        html_body = template.render(context)
+
+        to_email = [customer_responsible.user.email]
+        if customer_responsible.email2:
+            to_email.append(customer_responsible.email2)
+        to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+
         email = RepanierEmail(
             subject=order_customer_mail_subject,
-            html_content=html_content,
-            from_email=staff.get_from_email,
-            to=to_email_customer,
-            cc=staff.get_to_email,
-            reply_to=staff.get_reply_to
+            html_body=html_body,
+            from_email=order_responsible.get_from_email,
+            to=to_email,
+            reply_to=order_responsible.get_reply_to
         )
         email.attach(filename,
                      save_virtual_workbook(wb),
@@ -258,7 +251,7 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, staff):
         email.send_email()
 
 
-def export_order_2_1_customer(customer, filename, permanence, staff,
+def export_order_2_1_customer(customer, filename, permanence, order_responsible=None,
                               abstract_ws=None, cancel_order=False):
     from repanier.apps import \
         REPANIER_SETTINGS_GROUP_NAME, \
@@ -271,23 +264,21 @@ def export_order_2_1_customer(customer, filename, permanence, staff,
         customer_id=customer.id
     ).order_by('?').first()
     if customer_invoice is not None:
+        if order_responsible is None:
+            order_responsible = Staff.get_or_create_order_responsible()
         wb = generate_customer_xlsx(permanence=permanence, customer=customer)[0]
         if wb is not None:
-            if cancel_order or settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                cc = staff.get_to_email
-            else:
-                cc = []
-            to_email_customer = [customer.user.email]
+            to_email = [customer.user.email]
             if customer.email2:
-                to_email_customer.append(customer.email2)
+                to_email.append(customer.email2)
             if customer_invoice.delivery is not None:
                 delivery_point = customer_invoice.delivery
                 if delivery_point.delivery_point.inform_customer_responsible and delivery_point.delivery_point.customer_responsible is not None:
                     customer_responsible = delivery_point.delivery_point.customer_responsible
                     if customer_responsible.id != customer.id:
-                        to_email_customer.append(customer_responsible.user.email)
+                        to_email.append(customer_responsible.user.email)
                         if customer_responsible.email2:
-                            to_email_customer.append(customer_responsible.email2)
+                            to_email.append(customer_responsible.email2)
             else:
                 delivery_point = EMPTY_STRING
             customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
@@ -320,16 +311,20 @@ def export_order_2_1_customer(customer, filename, permanence, staff,
                 'on_hold_movement': customer_on_hold_movement,
                 'payment_needed': mark_safe(customer_payment_needed),
                 'delivery_point': delivery_point,
-                'signature': staff.get_html_signature
+                'signature': order_responsible.get_html_signature
             })
-            html_content = template.render(context)
+            html_body = template.render(context)
+
+            if cancel_order or settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                to_email.append(order_responsible.get_to_email)
+            to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+
             email = RepanierEmail(
                 subject=order_customer_mail_subject,
-                html_content=html_content,
-                from_email=staff.get_from_email,
-                to=to_email_customer,
-                cc=cc,
-                reply_to=staff.get_reply_to_email,
+                html_body=html_body,
+                from_email=order_responsible.get_from_email,
+                to=to_email,
+                reply_to=order_responsible.get_reply_to_email,
                 show_customer_may_unsubscribe=False,
                 send_even_if_unsubscribed=True
             )

@@ -18,7 +18,7 @@ from repanier.const import DEMO_EMAIL, EMPTY_STRING
 
 class RepanierEmail(EmailMultiAlternatives):
     def __init__(self, *args, **kwargs):
-        self.html_content = kwargs.pop('html_content', None)
+        self.html_body = kwargs.pop('html_body', None)
         self.show_customer_may_unsubscribe = kwargs.pop('show_customer_may_unsubscribe', True)
         self.send_even_if_unsubscribed = kwargs.pop('send_even_if_unsubscribed', False)
         self.test_connection = kwargs.pop('test_connection', None)
@@ -48,7 +48,7 @@ class RepanierEmail(EmailMultiAlternatives):
 
         email_send = False
         self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
-        self.body = strip_tags(self.html_content)
+        self.body = strip_tags(self.html_body)
 
         if settings.REPANIER_SETTINGS_DEMO:
             if settings.DEBUG:
@@ -70,8 +70,8 @@ class RepanierEmail(EmailMultiAlternatives):
                 if len(to_email) > 0:
                     # Send the mail only if there is at least one tester
                     self.body = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc, self.body)
-                    self.html_content = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc,
-                                                                                      self.html_content)
+                    self.html_body = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc,
+                                                                                   self.html_body)
                     self.to = to_email
                     self.cc = []
                     self.bcc = []
@@ -118,18 +118,34 @@ class RepanierEmail(EmailMultiAlternatives):
         self.alternatives = []
         if customer is not None and self.show_customer_may_unsubscribe:
             self.attach_alternative(
-                "{}{}".format(self.html_content, customer.get_html_unsubscribe_mail_footer()),
+                "{}{}".format(self.html_body, customer.get_html_unsubscribe_mail_footer()),
                 "text/html"
             )
         else:
             self.attach_alternative(
-                self.html_content,
+                self.html_body,
                 "text/html"
             )
         email_send = False
         # Email subject *must not* contain newlines
         self.subject = ''.join(self.subject.splitlines())
+
         logger.info("################################## send_email")
+        # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
+        from_email = "from_email : {}".format(self.from_email)
+        logger.info(from_email)
+        reply_to = "reply_to : {}".format(self.reply_to)
+        logger.info(reply_to)
+        to_email = "to : {}".format(self.to)
+        logger.info(to_email)
+        cc_email = "cc : {}".format(self.cc)
+        logger.info(cc_email)
+        bcc_email = "bcc : {}".format(self.bcc)
+        logger.info(bcc_email)
+        subject = "subject : {}".format(self.subject)
+        logger.info(subject)
+        message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
+                                                  subject)
         try:
             with mail.get_connection(
                     host=self.host,
@@ -139,27 +155,11 @@ class RepanierEmail(EmailMultiAlternatives):
                     use_tls=self.use_tls,
                     use_ssl=not self.use_tls) as connection:
                 self.connection = connection
-                message = EMPTY_STRING
                 try:
-                    # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
-                    from_email = "from_email : {}".format(self.from_email)
-                    logger.info(from_email)
-                    reply_to = "reply_to : {}".format(self.reply_to)
-                    logger.info(reply_to)
-                    to_email = "to : {}".format(self.to)
-                    logger.info(to_email)
-                    cc_email = "cc : {}".format(self.cc)
-                    logger.info(cc_email)
-                    bcc_email = "bcc : {}".format(self.bcc)
-                    logger.info(bcc_email)
-                    subject = "subject : {}".format(self.subject)
-                    logger.info(subject)
-                    message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
-                                                              subject)
                     self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:
-                    logger.info("################################## send_email SMTPRecipientsRefused")
+                    logger.error("################################## send_email SMTPRecipientsRefused")
                     logger.error(error_str)
                     time.sleep(1)
                     connection = mail.get_connection()
@@ -167,7 +167,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
                     connection.close()
                 except Exception as error_str:
-                    logger.info("################################## send_email error")
+                    logger.error("################################## send_email error")
                     logger.error(error_str)
                     time.sleep(1)
                     connection = mail.get_connection()
@@ -183,11 +183,18 @@ class RepanierEmail(EmailMultiAlternatives):
                     # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
                     Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=email_send)
         except SMTPAuthenticationError as error_str:
-            logger.info("################################## send_email SMTPAuthenticationError")
+            logger.fatal("################################## send_email SMTPAuthenticationError")
             # https://support.google.com/accounts/answer/185833
             # https://support.google.com/accounts/answer/6010255
             # https://security.google.com/settings/security/apppasswords
-            logger.error(error_str)
+            logger.fatal(error_str)
+            time.sleep(5)
+            mail_admins("FATAL", "{}\n{}".format(message, error_str))
+        except Exception as error_str:
+            logger.fatal("################################## send_email error")
+            logger.fatal(error_str)
+            time.sleep(5)
+            mail_admins("FATAL", "{}\n{}".format(message, error_str))
         return email_send
 
     def _get_customer(self, email_address):

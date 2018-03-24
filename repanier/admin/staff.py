@@ -183,8 +183,10 @@ class StaffWithUserDataAdmin(LUTAdmin):
             'is_coordinator',
             'is_order_manager',
             'is_order_referent',
+            'is_order_copy',
             'is_invoice_manager',
             'is_invoice_referent',
+            'is_invoice_copy',
             'is_webmaster',
         ]
         if settings.REPANIER_SETTINGS_TEST_MODE:

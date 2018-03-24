@@ -63,9 +63,9 @@ def send_mail_to_all_members_view(request):
             to_email_customer.append(request.user.email)
             email = RepanierEmail(
                 strip_tags(form.cleaned_data.get('subject')),
-                html_content=strip_tags(form.cleaned_data.get('message')),
+                html_body=strip_tags(form.cleaned_data.get('message')),
                 from_email=request.user.email,
-                cc=to_email_customer,
+                to=to_email_customer,
                 show_customer_may_unsubscribe=True
             )
             t = threading.Thread(target=email.send_email, args=(email, user_customer.long_basket_name))

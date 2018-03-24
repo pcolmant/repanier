@@ -639,10 +639,8 @@ class CustomerInvoice(Invoice):
                 permanence
             )
 
-            staff = Staff.get_or_create_order_responsible()
-
             export_order_2_1_customer(
-                self.customer, filename, permanence, staff,
+                self.customer, filename, permanence,
                 cancel_order=True
             )
             purchase_qs = Purchase.objects.filter(

@@ -65,7 +65,7 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
         body = "{}".format(_("The mail is correctly configured on your Repanier website"))
         email = RepanierEmail(
             subject=subject,
-            html_content=body,
+            html_body=body,
             from_email=host_user,
             to=to,
             test_connection=True
@@ -132,7 +132,7 @@ def send_sms(sms_nr=None, sms_msg=None):
                     # Send SMS with free gateway : Sms Gateway - Android.
                     email = RepanierEmail(
                         valid_nr,
-                        html_content=sms_msg,
+                        html_body=sms_msg,
                         from_email=from_email,
                         to=[apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ]
                     )

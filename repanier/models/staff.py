@@ -70,11 +70,17 @@ class Staff(MPTTModel, TranslatableModel):
     is_order_referent = models.BooleanField(
         _("Offers in preparation referent"),
         default=False)
+    is_order_copy = models.BooleanField(
+        _("In copy of the offers in preparation"),
+        default=False)
     is_invoice_manager = models.BooleanField(
         _("Billing offers manager"),
         default=False)
     is_invoice_referent = models.BooleanField(
         _("Billing offers referent"),
+        default=False)
+    is_invoice_copy = models.BooleanField(
+        _("In copy of the billing offers"),
         default=False)
 
     is_webmaster = models.BooleanField(_("Webmaster"),
@@ -140,6 +146,20 @@ class Staff(MPTTModel, TranslatableModel):
         return order_responsible
 
     @classmethod
+    def get_to_order_copy(cls):
+        all_order_copy = cls.objects.filter(
+            is_active=True,
+            is_order_copy=True,
+        ).select_related("user").order_by('?').all()
+        to_order_copy = []
+        for order_copy in all_order_copy:
+            if order_copy.user.email:
+                to_order_copy.append(order_copy.user.email)
+            elif order_copy.customer_responsible is not None:
+                to_order_copy.append(order_copy.customer_responsible.user.email)
+        return to_order_copy
+
+    @classmethod
     def get_or_create_invoice_responsible(cls):
         invoice_responsible = cls.objects.filter(
             is_active=True,
@@ -150,6 +170,20 @@ class Staff(MPTTModel, TranslatableModel):
             invoice_responsible.is_invoice_manager = True
             invoice_responsible.save(update_fields=["is_invoice_manager"])
         return invoice_responsible
+
+    @classmethod
+    def get_to_invoice_copy(cls):
+        all_invoice_copy = cls.objects.filter(
+            is_active=True,
+            is_invoice_copy=True,
+        ).select_related("user").order_by('?').all()
+        to_invoice_copy = []
+        for invoice_copy in all_invoice_copy:
+            if invoice_copy.user.email:
+                to_invoice_copy.append(invoice_copy.user.email)
+            elif invoice_copy.customer_responsible is not None:
+                to_invoice_copy.append(invoice_copy.customer_responsible.user.email)
+        return to_invoice_copy
 
     def get_customer_phone1(self):
         try:
@@ -230,7 +264,18 @@ class Staff(MPTTModel, TranslatableModel):
 
     @cached_property
     def get_to_email(self):
-        return self.get_reply_to_email
+        if self.user.email:
+            to_email = [self.user.email]
+        elif self.customer_responsible is not None:
+            to_email = [self.customer_responsible.user.email]
+        else:
+            from repanier.apps import REPANIER_SETTINGS_CONFIG
+            config = REPANIER_SETTINGS_CONFIG
+            if config.email_is_custom and config.email_host_user:
+                to_email = [config.email_host_user]
+            else:
+                to_email = []
+        return to_email
 
     @property
     def title_for_admin(self):

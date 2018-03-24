@@ -37,18 +37,19 @@ class CoordinatorsContactForm(RepanierForm):
         super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
         choices = []
         for staff in Staff.objects.filter(
-                is_active=True, is_order_referent=False,
+                is_active=True,
                 translations__language_code=translation.get_language()
         ):
-            r = staff.customer_responsible
-            if r is not None:
-                sender_function = staff.safe_translation_getter(
-                    'long_name', any_language=True, default=EMPTY_STRING
-                )
-                phone = " ({})".format(r.phone1 if r.phone1 else EMPTY_STRING)
-                name = r.long_basket_name if r.long_basket_name else r.short_basket_name
-                signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
-                choices.append(("{}".format(staff.id), mark_safe(signature)))
+            if staff.is_coordinator or staff.is_invoice_manager or staff.is_invoice_referent or staff.is_webmaster:
+                r = staff.customer_responsible
+                if r is not None:
+                    sender_function = staff.safe_translation_getter(
+                        'long_name', any_language=True, default=EMPTY_STRING
+                    )
+                    phone = " ({})".format(r.phone1 if r.phone1 else EMPTY_STRING)
+                    name = r.long_basket_name if r.long_basket_name else r.short_basket_name
+                    signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
+                    choices.append(("{}".format(staff.id), mark_safe(signature)))
         self.fields["staff"].choices = choices
 
 
@@ -63,32 +64,30 @@ def send_mail_to_coordinators_view(request):
     if request.method == 'POST':
         form = CoordinatorsContactValidationForm(request.POST)
         if form.is_valid():
-            to_email_staff = []
+            to_email = [request.user.email]
             selected_staff_members = form.cleaned_data.get('staff')
             for staff in Staff.objects.filter(
-                    is_active=True, is_order_referent=False,
+                    is_active=True,
                     id__in=selected_staff_members
             ).order_by('?'):
-                to_email_staff = list(set(to_email_staff + staff.get_to_email))
+                if staff.is_coordinator or staff.is_invoice_manager or staff.is_invoice_referent or staff.is_webmaster:
+                    to_email = list(set(to_email + staff.get_to_email))
 
-            if to_email_staff:
-                to_email_customer = [request.user.email]
-                email = RepanierEmail(
-                    strip_tags(form.cleaned_data.get('subject')),
-                    html_content=strip_tags(form.cleaned_data.get('message')),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=to_email_customer,
-                    cc=to_email_staff,
-                    show_customer_may_unsubscribe=False,
-                    send_even_if_unsubscribed=True
-                )
-                t = threading.Thread(target=email.send_email)
-                t.start()
-                email = form.fields["your_email"]
-                email.initial = request.user.email
-                email.widget.attrs['readonly'] = True
-                return render(request, "repanier/send_mail_to_coordinators.html",
-                              {'form': form, 'send': True})
+            email = RepanierEmail(
+                strip_tags(form.cleaned_data.get('subject')),
+                html_body=strip_tags(form.cleaned_data.get('message')),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=to_email,
+                show_customer_may_unsubscribe=False,
+                send_even_if_unsubscribed=True
+            )
+            t = threading.Thread(target=email.send_email)
+            t.start()
+            email = form.fields["your_email"]
+            email.initial = request.user.email
+            email.widget.attrs['readonly'] = True
+            return render(request, "repanier/send_mail_to_coordinators.html",
+                          {'form': form, 'send': True})
     else:
         form = CoordinatorsContactValidationForm()
 

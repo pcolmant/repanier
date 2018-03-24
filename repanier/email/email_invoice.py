@@ -3,7 +3,6 @@
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
 
-from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
@@ -23,7 +22,7 @@ def send_invoice(permanence_id):
         permanence = Permanence.objects.get(id=permanence_id)
         config = REPANIER_SETTINGS_CONFIG
 
-        staff = Staff.get_or_create_invoice_responsible()
+        invoice_responsible = Staff.get_or_create_invoice_responsible()
 
         if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER:
             # To the producer we speak of "payment".
@@ -32,43 +31,46 @@ def send_invoice(permanence_id):
                     permanence_id=permanence.id,
                     language=language_code
             ).order_by('?'):
-                long_profile_name = producer.long_profile_name \
-                    if producer.long_profile_name is not None else producer.short_profile_name
-                if Purchase.objects.filter(
-                        permanence_id=permanence.id, producer_id=producer.id
-                ).order_by('?').exists():
-                    invoice_producer_mail = config.safe_translation_getter(
-                        'invoice_producer_mail', any_language=True, default=EMPTY_STRING
-                    )
-                    invoice_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
+                to_email = []
+                if producer.email:
+                    to_email.append(producer.email)
+                if producer.email2:
+                    to_email.append(producer.email2)
+                if producer.email3:
+                    to_email.append(producer.email3)
+                if to_email:
+                    to_email = list(
+                        set(to_email) | set(invoice_responsible.get_to_email) | set(Staff.get_to_invoice_copy()))
+                    long_profile_name = producer.long_profile_name \
+                        if producer.long_profile_name is not None else producer.short_profile_name
+                    if Purchase.objects.filter(
+                            permanence_id=permanence.id, producer_id=producer.id
+                    ).order_by('?').exists():
+                        invoice_producer_mail = config.safe_translation_getter(
+                            'invoice_producer_mail', any_language=True, default=EMPTY_STRING
+                        )
+                        invoice_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
 
-                    template = Template(invoice_producer_mail)
-                    context = TemplateContext({
-                        'name': long_profile_name,
-                        'long_profile_name': long_profile_name,
-                        'permanence_link': mark_safe(
-                            "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
-                                                                     reverse('producer_invoice_uuid_view',
-                                                                             args=(0, producer.uuid)),
-                                                                     permanence)),
-                        'signature': staff.get_html_signature
-                    })
-                    html_content = template.render(context)
-                    to_email_producer = []
-                    if producer.email:
-                        to_email_producer.append(producer.email)
-                    if producer.email2:
-                        to_email_producer.append(producer.email2)
-                    if producer.email3:
-                        to_email_producer.append(producer.email3)
-                    email = RepanierEmail(
-                        subject=invoice_producer_mail_subject,
-                        html_content=html_content,
-                        from_email=staff.get_from_email,
-                        to=to_email_producer,
-                        reply_to=staff.get_reply_to
-                    )
-                    email.send_email()
+                        template = Template(invoice_producer_mail)
+                        context = TemplateContext({
+                            'name': long_profile_name,
+                            'long_profile_name': long_profile_name,
+                            'permanence_link': mark_safe(
+                                "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
+                                                                         reverse('producer_invoice_uuid_view',
+                                                                                 args=(0, producer.uuid)),
+                                                                         permanence)),
+                            'signature': invoice_responsible.get_html_signature
+                        })
+                        html_body = template.render(context)
+                        email = RepanierEmail(
+                            subject=invoice_producer_mail_subject,
+                            html_body=html_body,
+                            from_email=invoice_responsible.get_from_email,
+                            to=to_email,
+                            reply_to=invoice_responsible.get_reply_to
+                        )
+                        email.send_email()
 
         if REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER:
             # To the customer we speak of "invoice".
@@ -87,9 +89,11 @@ def send_invoice(permanence_id):
                         permanence_id=permanence.id,
                         customer_invoice__customer_charged_id=customer.id
                 ).order_by('?').exists():
-                    to_email_customer = [customer.user.email]
-                    if customer.email2 is not None and len(customer.email2.strip()) > 0:
-                        to_email_customer.append(customer.email2)
+                    to_email = [customer.user.email]
+                    if customer.email2:
+                        to_email.append(customer.email2)
+                    to_email = list(
+                        set(to_email) | set(invoice_responsible.get_to_email) | set(Staff.get_to_invoice_copy()))
 
                     invoice_customer_mail = config.safe_translation_getter(
                         'invoice_customer_mail', any_language=True, default=EMPTY_STRING
@@ -114,14 +118,14 @@ def send_invoice(permanence_id):
                         'order_amount': mark_safe(customer_order_amount),
                         'payment_needed': mark_safe(customer_payment_needed),
                         'invoice_description': mark_safe(invoice_description),
-                        'signature': staff.get_html_signature
+                        'signature': invoice_responsible.get_html_signature
                     })
-                    html_content = template.render(context)
+                    html_body = template.render(context)
                     email = RepanierEmail(
                         subject=invoice_customer_mail_subject,
-                        html_content=html_content,
-                        from_email=staff.get_from_email,
-                        to=to_email_customer,
+                        html_body=html_body,
+                        from_email=invoice_responsible.get_from_email,
+                        to=to_email,
                         show_customer_may_unsubscribe=True
                     )
                     email.send_email()

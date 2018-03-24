@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-22 18:03+0100\n"
-"PO-Revision-Date: 2018-03-22 18:08+0100\n"
+"POT-Creation-Date: 2018-03-24 16:37+0100\n"
+"PO-Revision-Date: 2018-03-24 16:38+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -54,7 +54,7 @@ msgstr "TVA"
 
 #: admin/admin_filter.py:179 admin/permanence_in_preparation.py:308
 #: admin/permanence_in_preparation.py:331 cms_toolbar.py:52
-#: models/contract.py:46 models/customer.py:441 models/invoice.py:787
+#: models/contract.py:46 models/customer.py:441 models/invoice.py:785
 msgid "Customers"
 msgstr "Consommateurs"
 
@@ -112,7 +112,7 @@ msgstr ""
 
 #: admin/bankaccount.py:145 models/bankaccount.py:22 models/bankaccount.py:154
 #: models/customer.py:440 models/invoice.py:85 models/invoice.py:88
-#: models/invoice.py:745 models/invoice.py:786 models/permanenceboard.py:14
+#: models/invoice.py:743 models/invoice.py:784 models/permanenceboard.py:14
 #: models/purchase.py:36 templates/repanier/customer_invoice_form.html:159
 #: templates/repanier/customer_invoice_form.html:245 xlsx/xlsx_invoice.py:272
 #: xlsx/xlsx_invoice.py:380 xlsx/xlsx_order.py:395 xlsx/xlsx_purchase.py:41
@@ -121,7 +121,7 @@ msgid "Customer"
 msgstr "Consommateur"
 
 #: admin/bankaccount.py:153 admin/forms.py:80 models/bankaccount.py:19
-#: models/bankaccount.py:130 models/invoice.py:672 models/invoice.py:748
+#: models/bankaccount.py:130 models/invoice.py:670 models/invoice.py:746
 #: models/item.py:23 models/producer.py:370 models/producer.py:392
 #: models/purchase.py:34 templates/repanier/customer_invoice_form.html:164
 #: templates/repanier/customer_invoice_form.html:249 xlsx/xlsx_invoice.py:218
@@ -422,7 +422,7 @@ msgstr "Date du paiement"
 msgid "File to import"
 msgstr "Fichier à importer"
 
-#: admin/forms.py:79 admin/forms.py:94 models/invoice.py:701
+#: admin/forms.py:79 admin/forms.py:94 models/invoice.py:699
 msgid "Invoice reference"
 msgstr "Référence facture"
 
@@ -438,11 +438,11 @@ msgstr "Référence facture"
 msgid "Short name"
 msgstr "Nom abrégé"
 
-#: admin/forms.py:91 models/invoice.py:694
+#: admin/forms.py:91 models/invoice.py:692
 msgid "Amount due to the producer as calculated by Repanier"
 msgstr "Montant dû au producteur tel que calculé par Repanier"
 
-#: admin/forms.py:93 models/invoice.py:696
+#: admin/forms.py:93 models/invoice.py:694
 msgid "Amount claimed by the producer"
 msgstr "Montant réclamé par le producteur"
 
@@ -712,8 +712,8 @@ msgid "Export producer orders"
 msgstr "Exporter les commandes producteurs"
 
 #: admin/permanence_in_preparation.py:419
-#: admin/permanence_in_preparation.py:421 email/email_offer.py:53
-#: email/email_offer.py:59 models/permanence.py:1731
+#: admin/permanence_in_preparation.py:421 email/email_offer.py:52
+#: email/email_offer.py:58 models/permanence.py:1731
 msgid "Offers"
 msgstr "Offres"
 
@@ -1013,7 +1013,7 @@ msgstr ""
 msgid "Product"
 msgstr "Produit"
 
-#: admin/purchase.py:106 admin/purchase.py:457
+#: admin/purchase.py:106 admin/purchase.py:455
 msgid "No more product to add. Please update a product of previous screen"
 msgstr ""
 "Pas d'autres produits à ajouter pour ce consommateur chez ce producteur."
@@ -1029,51 +1029,51 @@ msgstr "La quantité doit être différente de zéro."
 msgid "Department"
 msgstr "Rayon"
 
-#: admin/purchase.py:226 admin/purchase.py:270
+#: admin/purchase.py:226 admin/purchase.py:268
 msgid "Action canceled by the system."
 msgstr "Action annulée par Repanier."
 
 #: admin/purchase.py:238 const.py:272 email/email_order.py:30
-#: models/configuration.py:505 models/invoice.py:24 models/invoice.py:751
+#: models/configuration.py:505 models/invoice.py:24 models/invoice.py:749
 #: models/permanence.py:1757 views/btn_confirm_order_ajax.py:44
 msgid "Order"
 msgstr "Commande"
 
-#: admin/purchase.py:249
+#: admin/purchase.py:247
 msgid "Order confirmed"
 msgstr "Commande confirmée"
 
-#: admin/purchase.py:254
+#: admin/purchase.py:252
 msgid "Nothing to confirm"
 msgstr "Rien à confirmer."
 
-#: admin/purchase.py:283
+#: admin/purchase.py:281
 msgid "Order not confirmed"
 msgstr "Commande non confirmée"
 
-#: admin/purchase.py:288
+#: admin/purchase.py:286
 msgid "Nothing to unconfirm"
 msgstr "Rien à ne pas confirmer."
 
-#: admin/purchase.py:400
+#: admin/purchase.py:398
 msgid "Please select first a permanence in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner une permanence via les filtres dans l'écran "
 "précédent..."
 
-#: admin/purchase.py:461
+#: admin/purchase.py:459
 msgid "Please select first a customer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un consommateur via les filtres dans l'écran "
 "précédent..."
 
 #: admin/rule_of_3_per_customer.py:114 admin/rule_of_3_per_product.py:111
-#: models/invoice.py:755 models/invoice.py:769 models/offeritem.py:63
+#: models/invoice.py:753 models/invoice.py:767 models/offeritem.py:63
 #: models/offeritem.py:191
 msgid "Producer amount invoiced"
 msgstr "Facturé par le producteur"
 
-#: admin/rule_of_3_per_customer.py:116 models/invoice.py:760
+#: admin/rule_of_3_per_customer.py:116 models/invoice.py:758
 #: models/offeritem.py:67
 msgid "Invoiced to the consumer including tax"
 msgstr "Facturé au consommateur TVAC"
@@ -1361,7 +1361,7 @@ msgstr "Liqueur"
 msgid "Hygiene"
 msgstr "Hygiène"
 
-#: apps.py:162 models/invoice.py:55 models/invoice.py:684 models/invoice.py:688
+#: apps.py:162 models/invoice.py:55 models/invoice.py:682 models/invoice.py:686
 #: models/item.py:63 models/purchase.py:84 models/purchase.py:153
 #: templates/repanier/customer_invoice_form.html:50
 #: templates/repanier/producer_invoice_form.html:20 views/forms.py:170
@@ -1671,12 +1671,12 @@ msgstr "Fr."
 msgid "Local"
 msgstr "✿"
 
-#: email/email_offer.py:83
+#: email/email_offer.py:82
 #: templates/repanier/confirm_admin_open_and_send_offer.html:6
 msgid "Pre-opening of orders"
 msgstr "Pré-ouverture des commandes"
 
-#: email/email_order.py:139
+#: email/email_order.py:133
 msgid ""
 "⚠ Mail not send to our producer {} because the minimum order value has not "
 "been reached."
@@ -1684,11 +1684,11 @@ msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
 
-#: email/email_order.py:237
+#: email/email_order.py:229
 msgid "Group invoices"
 msgstr "Factures du groupe"
 
-#: email/email_order.py:301
+#: email/email_order.py:296
 msgid "⚠ Order cancelled"
 msgstr "⚠ Commande annulée"
 
@@ -1704,11 +1704,11 @@ msgstr "Commentaire"
 msgid "Account balance status"
 msgstr "Statut du solde du compte"
 
-#: models/bankaccount.py:44 models/invoice.py:738 models/purchase.py:41
+#: models/bankaccount.py:44 models/invoice.py:736 models/purchase.py:41
 msgid "Producer invoice"
 msgstr "Facture d'un producteur"
 
-#: models/bankaccount.py:47 models/invoice.py:665 models/purchase.py:44
+#: models/bankaccount.py:47 models/invoice.py:663 models/purchase.py:44
 msgid "Customer invoice"
 msgstr "Facture d'un consommateur"
 
@@ -1774,7 +1774,7 @@ msgstr ""
 msgid "Login attempt counter"
 msgstr "Compteur de tentatives de login"
 
-#: models/configuration.py:31 models/customer.py:93 models/staff.py:87
+#: models/configuration.py:31 models/customer.py:93 models/staff.py:93
 msgid "Password reset on"
 msgstr "Mot de passe réinitialisé le"
 
@@ -2036,7 +2036,7 @@ msgstr "Photo"
 
 #: models/contract.py:53 models/customer.py:107 models/item.py:111
 #: models/lut.py:45 models/lut.py:77 models/lut.py:122 models/lut.py:162
-#: models/producer.py:106 models/staff.py:88
+#: models/producer.py:106 models/staff.py:94
 msgid "Active"
 msgstr "Actif"
 
@@ -2070,7 +2070,7 @@ msgstr "Adresse ✉ secondaire"
 msgid "Language"
 msgstr "Langue"
 
-#: models/customer.py:53 models/producer.py:51 models/staff.py:160
+#: models/customer.py:53 models/producer.py:51 models/staff.py:194
 #: xlsx/xlsx_order.py:39 xlsx/xlsx_order.py:98
 msgid "Phone1"
 msgstr "✆"
@@ -2267,7 +2267,7 @@ msgstr "TVA à ajouter"
 msgid "Confirmation of the order send"
 msgstr "Confirmation de la commande envoyée"
 
-#: models/invoice.py:103 models/invoice.py:698 models/permanence.py:132
+#: models/invoice.py:103 models/invoice.py:696 models/permanence.py:132
 msgid "Invoice sort order"
 msgstr "Ordre de tri des factures"
 
@@ -2384,39 +2384,39 @@ msgstr "Recevoir un ✉ récapitulatif de ma commande."
 msgid "Canceled order"
 msgstr "Commande annulée"
 
-#: models/invoice.py:658
+#: models/invoice.py:656
 msgid "Qty not confirmed : {}"
 msgstr "Qté non confirmée : {}"
 
-#: models/invoice.py:666
+#: models/invoice.py:664
 msgid "Customers invoices"
 msgstr "Factures de consommateurs"
 
-#: models/invoice.py:677
+#: models/invoice.py:675
 msgid "Amount deducted from the stock"
 msgstr "Montant déduit du stock"
 
-#: models/invoice.py:681
+#: models/invoice.py:679
 msgid "Total VAT deducted from the stock"
 msgstr "Total TVA déduit du stock"
 
-#: models/invoice.py:685 models/invoice.py:689
+#: models/invoice.py:683 models/invoice.py:687
 msgid "+ Deposit"
 msgstr "+ Consigne"
 
-#: models/invoice.py:692
+#: models/invoice.py:690
 msgid "To be paid"
 msgstr "A payer"
 
-#: models/invoice.py:739
+#: models/invoice.py:737
 msgid "Producers invoices"
 msgstr "Facture de producteurs"
 
-#: models/invoice.py:756 models/invoice.py:761
+#: models/invoice.py:754 models/invoice.py:759
 msgid "Total selling amount vat included"
 msgstr "Facturé au consommateur à la pièce ou au kg TVA incluse"
 
-#: models/invoice.py:766 models/offeritem.py:188 models/purchase.py:142
+#: models/invoice.py:764 models/offeritem.py:188 models/purchase.py:142
 #: models/purchase.py:150
 #, python-format
 msgid "<b>%(price)s</b>"
@@ -2961,42 +2961,50 @@ msgid "Offers in preparation referent"
 msgstr "Assistant/e à l'encodage des offres en préparation"
 
 #: models/staff.py:74
+msgid "In copy of the offers in preparation"
+msgstr "En copie des offres en préparation"
+
+#: models/staff.py:77
 msgid "Billing offers manager"
 msgstr "Responsable principal/e des offres en facturation"
 
-#: models/staff.py:77
+#: models/staff.py:80
 msgid "Billing offers referent"
 msgstr "Assistant/e à l'encodage des offres en facturation"
 
-#: models/staff.py:80
+#: models/staff.py:83
+msgid "In copy of the billing offers"
+msgstr "En copie des offres en facturation"
+
+#: models/staff.py:86
 msgid "Webmaster"
 msgstr "Webmaster"
 
-#: models/staff.py:82
+#: models/staff.py:88
 msgid "Coordonnateur"
 msgstr "Coordonnateur/trice"
 
-#: models/staff.py:84
+#: models/staff.py:90
 msgid "Tester"
 msgstr "Testeur"
 
-#: models/staff.py:125
+#: models/staff.py:131
 msgid "Coordinator"
 msgstr "Coordonnateur/trice"
 
-#: models/staff.py:237
+#: models/staff.py:282
 msgid " 💡 who is also tester "
 msgstr " 💡 qui est aussi un testeur "
 
-#: models/staff.py:254
+#: models/staff.py:299
 msgid "STAFF"
 msgstr "RESPONSABLE"
 
-#: models/staff.py:264
+#: models/staff.py:309
 msgid "Staff member"
 msgstr "Responsable"
 
-#: models/staff.py:265
+#: models/staff.py:310
 msgid "Staff members"
 msgstr "Responsables"
 
