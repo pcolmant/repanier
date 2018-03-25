@@ -12,7 +12,7 @@ from django.forms import Textarea
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from import_export.formats.base_formats import XLS
+from import_export.formats.base_formats import CSV, ODS, JSON, XLS
 
 import repanier.apps
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
@@ -350,4 +350,4 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]

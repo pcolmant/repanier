@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import XLS
+from import_export.formats.base_formats import CSV, ODS, JSON, XLS
 from import_export.widgets import ForeignKeyWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -583,7 +583,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
 
     class Media:
         js = ('js/confirm_exit.js',)
