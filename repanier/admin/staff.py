@@ -27,20 +27,19 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        is_active = self.cleaned_data["is_active"]
-        is_coordinator = is_active and self.cleaned_data["is_coordinator"]
-        is_order_manager = is_active and self.cleaned_data["is_order_manager"]
-        is_order_referent = is_active and self.cleaned_data["is_order_referent"]
-        is_invoice_manager = is_active and self.cleaned_data["is_invoice_manager"]
-        is_invoice_referent = is_active and self.cleaned_data["is_invoice_referent"]
-        is_webmaster = is_active and self.cleaned_data["is_webmaster"]
-        if settings.REPANIER_SETTINGS_TEST_MODE:
-            is_tester = is_active and self.cleaned_data["is_tester"]
-        else:
-            is_tester = False
+        is_active = self.cleaned_data.get("is_active", False)
+        is_coordinator = is_active and self.cleaned_data.get("is_coordinator", False)
+        is_order_manager = is_active and self.cleaned_data.get("is_order_manager", False)
+        is_order_referent = is_active and self.cleaned_data.get("is_order_referent", False)
+        is_order_copy = is_active and self.cleaned_data.get("is_order_copy", False)
+        is_invoice_manager = is_active and self.cleaned_data.get("is_invoice_manager", False)
+        is_invoice_referent = is_active and self.cleaned_data.get("is_invoice_referent", False)
+        is_invoice_copy = is_active and self.cleaned_data.get("is_invoice_copy", False)
+        is_webmaster = is_active and self.cleaned_data.get("is_webmaster", False)
+        is_tester = is_active and self.cleaned_data.get("is_tester", False)
         if is_active and not (is_coordinator or
-                is_order_manager or is_order_referent or
-                is_invoice_manager or is_invoice_referent or
+                is_order_manager or is_order_referent or is_order_copy or
+                is_invoice_manager or is_invoice_referent or is_invoice_copy or
                 is_webmaster or
                 is_tester):
             self.add_error(
