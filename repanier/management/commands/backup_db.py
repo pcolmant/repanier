@@ -23,14 +23,8 @@ class Command(BaseCommand):
         db_name = settings.DJANGO_SETTINGS_DATABASE_NAME
         db_user = settings.DJANGO_SETTINGS_DATABASE_USER
         backup_file = NamedTemporaryFile(prefix="{}-db.bak.".format(db_name), suffix='.gz')
-        # pg_dump  -Fc -U pi _8_dev_gassines -f db.bak
 
-        # sudo /etc/init.d/postgresql restart
-        # sudo -u postgres psql
-        # drop database _8_dev_gassines;
-        # CREATE DATABASE _8_dev_gassines WITH TEMPLATE = template0 OWNER = pi ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
-        # \q
-        # pg_restore  --username=pi --format=c --no-owner --dbname=_8_dev_gassines db.bak
+        # pg_restore  -Fc -U _0_prd_example -C -c --no-owner --dbname=_0_prd_example db.bak
 
         result = call("pg_dump -Fc -U {} {} | gzip".format(db_user, db_name), stdout=backup_file, shell=True)
         if result == 0:
