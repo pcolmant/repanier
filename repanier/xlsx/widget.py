@@ -50,8 +50,12 @@ class IdWidget(DecimalsWidget):
 
     def clean(self, value, row=None, *args, **kwargs):
         if self.is_empty(value):
-            return DECIMAL_ZERO
-        return Decimal(value).quantize(ZERO_DECIMAL)
+            return None
+        try:
+            return Decimal(value).quantize(ZERO_DECIMAL)
+        except InvalidOperation:
+            # This occurs when text is present in a decimal field
+            return None
 
     def render(self, value, obj=None):
         return super(IdWidget, self).render_quantize(value, ZERO_DECIMAL)
