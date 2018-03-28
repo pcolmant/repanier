@@ -172,7 +172,11 @@ class Customer(models.Model):
     get_admin_date_balance.allow_tags = False
 
     def get_admin_date_joined(self):
-        return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
+        # New customer have no user during import of customers in admin.customer.CustomerResource
+        try:
+            return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
+        except User.DoesNotExist: # RelatedObjectDoesNotExist
+            return EMPTY_STRING
 
     get_admin_date_joined.short_description = _("Date joined")
     get_admin_date_joined.allow_tags = False
