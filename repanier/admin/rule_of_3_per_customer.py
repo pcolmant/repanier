@@ -12,7 +12,7 @@ from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheM
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.models.customer import Customer
-from repanier.models.offeritem import OfferItemSend
+from repanier.models.offeritem import OfferItemSend, OfferItem
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
@@ -229,7 +229,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
             purchase_form_instance = purchase_form.instance
             try:
                 offer_item = purchase_form_instance.offer_item
-            except: #  RelatedObjectDoesNotExist:
+            except OfferItem.DoesNotExist: # RelatedObjectDoesNotExist
                 offer_item = None
             if offer_item is None:
                 purchase_form.repanier_is_valid = False

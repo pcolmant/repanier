@@ -324,7 +324,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             purchase_form_instance = purchase_form.instance
             try:
                 customer = purchase_form_instance.customer
-            except:  # RelatedObjectDoesNotExist:
+            except Customer.DoesNotExist:  # RelatedObjectDoesNotExist
                 customer = None
             if customer is None:
                 purchase_form.repanier_is_valid = False
