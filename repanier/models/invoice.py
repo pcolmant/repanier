@@ -15,7 +15,6 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.deliveryboard import DeliveryBoard
-from repanier.models.staff import Staff
 from repanier.tools import create_or_update_one_cart_item, round_gov_be
 
 
@@ -630,7 +629,9 @@ class CustomerInvoice(Invoice):
         )
 
     def cancel_if_unconfirmed(self, permanence):
-        if not self.is_order_confirm_send and self.has_purchase:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER \
+                and not self.is_order_confirm_send \
+                and self.has_purchase:
             from repanier.email.email_order import export_order_2_1_customer
             from repanier.models.purchase import Purchase
 

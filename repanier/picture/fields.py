@@ -3,7 +3,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Field, NOT_PROVIDED
 from django.db.models.fields.files import FileDescriptor, FieldFile
 
-from repanier.const import EMPTY_STRING
+from repanier.picture.const import SIZE_M
 from repanier.widget.picture import AjaxPictureWidget
 
 
@@ -13,9 +13,9 @@ class AjaxPictureField(Field):
     descriptor_class = FileDescriptor
 
     def __init__(self, *args, **kwargs):
-        upload_to = kwargs.pop('upload_to', EMPTY_STRING)
-        size = kwargs.pop('size', EMPTY_STRING)
-        bootstrap = kwargs.pop('bootstrap', EMPTY_STRING)
+        upload_to = kwargs.pop('upload_to', 'pictures')
+        size = kwargs.pop('size', SIZE_M)
+        bootstrap = kwargs.pop('bootstrap', False)
 
         self.widget = AjaxPictureWidget(
             upload_to=upload_to,

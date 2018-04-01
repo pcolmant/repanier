@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
         from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
-        logger.debug("menu")
         user = request.user
         if user.is_anonymous or user.is_staff:
             is_anonymous = True

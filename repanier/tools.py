@@ -1,6 +1,8 @@
 # -*- coding: utf-8
 import datetime
 import json
+import logging
+from functools import wraps
 from urllib.request import urlopen
 
 from django.conf import settings
@@ -20,8 +22,8 @@ from six import string_types
 
 from repanier import apps
 from repanier.const import *
-from repanier.email.email import RepanierEmail
 
+logger = logging.getLogger(__name__)
 
 def sboolean(str_val, default_val=False):
     try:
@@ -35,6 +37,24 @@ def sint(str_val, default_val=0):
         return int(str_val)
     except:
         return default_val
+
+
+if settings.DEBUG:
+    def debug_parameters(func):
+        @wraps(func)
+        def func_wrapper(*args, **kwargs):
+            logger.debug("__module__ %s", func_wrapper.__module__)
+            logger.debug("__name__ %s", func_wrapper.__name__)
+            logger.debug('Must-have arguments are: %s', list(args))
+            logger.debug('Optional arguments are: %s', kwargs)
+            return func(*args, **kwargs)
+        return func_wrapper
+else:
+    def debug_parameters(func):
+        def func_wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return func_wrapper
+
 
 
 def next_row(query_iterator):
@@ -57,6 +77,7 @@ def emails_of_testers():
 
 def send_test_email(host=None, port=None, host_user=None, host_password=None, use_tls=None):
     if host and port:
+        from repanier.email.email import RepanierEmail
         to = emails_of_testers()
         if len(to) == 0:
             to = host_user
@@ -83,10 +104,13 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
 
 
 def send_email_to_who(is_email_send=True, board=False):
-    from repanier.apps import REPANIER_SETTINGS_TEST_MODE
+    if settings.REPANIER_SETTINGS_TEST_MODE:
+        from repanier.apps import REPANIER_SETTINGS_TEST_MODE_ACTIVATED
+    else:
+        REPANIER_SETTINGS_TEST_MODE_ACTIVATED = False
     if not is_email_send:
         if board:
-            if REPANIER_SETTINGS_TEST_MODE:
+            if REPANIER_SETTINGS_TEST_MODE_ACTIVATED:
                 return True, _("This email will be sent to the following tester(s) : {}.").format(
                     ", ".join(emails_of_testers()))
             else:
@@ -97,7 +121,7 @@ def send_email_to_who(is_email_send=True, board=False):
         else:
             return False, _("No email will be sent.")
     else:
-        if REPANIER_SETTINGS_TEST_MODE:
+        if REPANIER_SETTINGS_TEST_MODE_ACTIVATED:
             return True, _("This email will be sent to the following tester(s) : {}.").format(
                 ", ".join(emails_of_testers()))
         else:
@@ -124,6 +148,7 @@ def send_sms(sms_nr=None, sms_msg=None):
             if len(valid_nr) == 10:
                 from repanier.apps import REPANIER_SETTINGS_CONFIG, REPANIER_SETTINGS_SMS_GATEWAY_MAIL
                 if REPANIER_SETTINGS_SMS_GATEWAY_MAIL:
+                    from repanier.email.email import RepanierEmail
                     config = REPANIER_SETTINGS_CONFIG
                     if config.email_is_custom:
                         from_email = config.email_host_user

@@ -91,6 +91,8 @@ REPANIER_SETTINGS_COORDINATOR_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_S
 REPANIER_SETTINGS_COORDINATOR_PHONE = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_PHONE',
                                                  fallback="+32 499 96 64 32")
 REPANIER_SETTINGS_COUNTRY = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COUNTRY', fallback="be")
+REPANIER_SETTINGS_BCC_ALL_EMAIL_TO = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BCC_ALL_EMAIL_TO',
+                                                fallback=EMPTY_STRING)
 REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean('REPANIER_SETTINGS',
                                                                   'REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER',
                                                                   fallback=False)

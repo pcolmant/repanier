@@ -5,6 +5,7 @@ from django.template import Template, Context as TemplateContext
 from django.utils.translation import ugettext_lazy as _
 from openpyxl.writer.excel import save_virtual_workbook
 
+from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
@@ -315,9 +316,8 @@ def export_order_2_1_customer(customer, filename, permanence, order_responsible=
             })
             html_body = template.render(context)
 
-            if cancel_order or settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                to_email.append(order_responsible.get_to_email)
-            to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
 
             email = RepanierEmail(
                 subject=order_customer_mail_subject,

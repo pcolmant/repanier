@@ -3,6 +3,7 @@
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
 
+from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer

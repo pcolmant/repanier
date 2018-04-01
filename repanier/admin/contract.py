@@ -12,11 +12,6 @@ from repanier.models import Contract
 from repanier.models import Customer
 from repanier.models import Producer
 
-try:
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import parse_qsl
-
 
 class ContractDataForm(TranslatableModelForm):
     producers = forms.ModelMultipleChoiceField(

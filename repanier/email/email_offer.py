@@ -8,6 +8,7 @@ from django.template import Template, Context as TemplateContext
 # is the "bad One" this lib has a Context object too. Thanks for anyone reading!
 from django.utils.translation import ugettext_lazy as _
 
+from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
@@ -125,10 +126,29 @@ def send_open_order(permanence_id):
         )
                                                     for o in qs
                                                     ), )
+        if permanence.picture:
+            permanence_picture = format_html(
+                """
+                 <img
+                    alt="{}" 
+                    border="0" width="80" height="80"
+                    style="display:block; border:none; outline:none; text-decoration:none;"
+                    src="https:/{}{}{}"/>
+                """
+                ,
+                permanence.get_permanence_customer_display(),
+                settings.DJANGO_SETTINGS_ALLOWED_HOSTS[0],
+                settings.MEDIA_URL,
+                permanence.picture,
+            )
+
+        else:
+            permanence_picture = EMPTY_STRING
         template = Template(offer_customer_mail)
         context = TemplateContext({
             'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                 settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+            'permanence_picture': mark_safe(permanence_picture),
             'offer_description': mark_safe(offer_description),
             'offer_detail': mark_safe(offer_detail),
             'offer_recent_detail': mark_safe(permanence.get_new_products),

@@ -379,6 +379,13 @@ class Customer(models.Model):
             )
         )
 
+    def get_html_list_unsubscribe(self):
+        return mark_safe(
+            "<{}>".format(
+                self._get_unsubscribe_link()
+            )
+        )
+
     def _get_unsubscribe_link(self):
         customer_id, token = self.make_token().split(":", 1)
         return "https://{}{}".format(

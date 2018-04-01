@@ -19,7 +19,7 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
-from repanier.tools import reorder_offer_items
+from repanier.tools import reorder_offer_items, debug_parameters
 from repanier.tools import reorder_purchases
 
 
@@ -178,15 +178,10 @@ def automatically_closed():
 
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_html_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
+@debug_parameters
 def close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
-
-    logger.debug("close_and_send_order")
-    logger.debug("permanence_id : %s", permanence_id)
-    logger.debug("everything : %s", everything)
-    logger.debug("producers_id : %s", producers_id)
-    logger.debug("deliveries_id : %s", deliveries_id)
 
     permanence = Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED).order_by('?').first()
     if permanence is None:

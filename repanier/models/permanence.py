@@ -17,8 +17,6 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
-logger = logging.getLogger(__name__)
-
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.bankaccount import BankAccount
@@ -32,7 +30,9 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import AjaxPictureField
-from repanier.tools import cap, create_or_update_one_purchase
+from repanier.tools import cap, create_or_update_one_purchase, debug_parameters
+
+logger = logging.getLogger(__name__)
 
 refresh_status = [
     PERMANENCE_WAIT_FOR_PRE_OPEN,
@@ -442,17 +442,11 @@ class Permanence(TranslatableModel):
     get_board.short_description = (_("Tasks"))
 
     @transaction.atomic
+    @debug_parameters
     def set_status(self, old_status=(), new_status=None,
                    everything=True, producers_id=(), deliveries_id=(),
                    update_payment_date=False,
                    payment_date=None):
-        logger.debug("old_status : %s", self.status)
-        logger.debug("new_status : %s", new_status)
-        logger.debug("everything : %s", everything)
-        logger.debug("producers_id : %s", producers_id)
-        logger.debug("deliveries_id : %s", deliveries_id)
-        logger.debug("update_payment_date : %s", update_payment_date)
-        logger.debug("payment_date : %s", payment_date)
         permanence = Permanence.objects.select_for_update().filter(
             id=self.id,
             status__in=old_status
@@ -538,11 +532,7 @@ class Permanence(TranslatableModel):
                     permanence.payment_date = self.payment_date = now
                 else:
                     permanence.payment_date = self.payment_date = payment_date
-            #     self.save(
-            #         update_fields=['status', 'is_updated_on', 'highest_status', 'payment_date'])
-            # else:
-            #     self.save(update_fields=['status', 'is_updated_on', 'highest_status'])
-        # Unlock
+        # Unlock permanence
         permanence.save()
         menu_pool.clear(all=True)
         cache.clear()

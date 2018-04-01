@@ -12,6 +12,8 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.html import strip_tags
 
+from repanier.tools import debug_parameters
+
 logger = logging.getLogger(__name__)
 from repanier.const import DEMO_EMAIL, EMPTY_STRING
 
@@ -51,20 +53,16 @@ class RepanierEmail(EmailMultiAlternatives):
         self.body = strip_tags(self.html_body)
 
         if settings.REPANIER_SETTINGS_DEMO:
-            if settings.DEBUG:
-                logger.debug("to : %s", self.to)
-                logger.debug("cc : %s", self.cc)
-                logger.debug("bcc : %s", self.bcc)
-                logger.debug("subject : %s", self.subject)
-                email_send = True
-            else:
-                self.to = [DEMO_EMAIL]
-                self.cc = []
-                self.bcc = []
-                email_send = self._send_email_with_error_log()
+            self.to = [DEMO_EMAIL]
+            self.cc = []
+            self.bcc = []
+            email_send = self._send_email_with_error_log()
         else:
-            from repanier.apps import REPANIER_SETTINGS_TEST_MODE
-            if REPANIER_SETTINGS_TEST_MODE:
+            if settings.REPANIER_SETTINGS_TEST_MODE:
+                from repanier.apps import REPANIER_SETTINGS_TEST_MODE_ACTIVATED
+            else:
+                REPANIER_SETTINGS_TEST_MODE_ACTIVATED = False
+            if REPANIER_SETTINGS_TEST_MODE_ACTIVATED:
                 from repanier.tools import emails_of_testers
                 to_email = emails_of_testers()
                 if len(to_email) > 0:
@@ -79,27 +77,21 @@ class RepanierEmail(EmailMultiAlternatives):
                 else:
                     logger.info('############################ test mode, without tester...')
             else:
-                if settings.DEBUG:
-                    logger.debug("to : %s", self.to)
-                    logger.debug("cc : %s", self.cc)
-                    logger.debug("bcc : %s", self.bcc)
-                    logger.debug("subject : %s", self.subject)
-                    email_send = True
-                else:
-                    # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
-                    # for chunk in chunks:
-                    # Remove duplicates
-                    send_email_to = list(set(self.to + self.cc + self.bcc))
-                    self.cc = []
-                    self.bcc = []
-                    email_send = True
-                    if len(send_email_to) >= 1:
-                        for email_to in send_email_to:
-                            self.to = [email_to]
-                            email_send &= self._send_email_with_error_log()
-                            time.sleep(1)
+                # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
+                # for chunk in chunks:
+                # Remove duplicates
+                send_email_to = list(set(self.to + self.cc + self.bcc))
+                self.cc = []
+                self.bcc = []
+                email_send = True
+                if len(send_email_to) >= 1:
+                    for email_to in send_email_to:
+                        self.to = [email_to]
+                        email_send &= self._send_email_with_error_log()
+                        time.sleep(1)
         return email_send
 
+    @debug_parameters
     def _send_email_with_error_log(self):
         email_to = self.to[0]
         if not self.test_connection:
@@ -121,6 +113,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 "{}{}".format(self.html_body, customer.get_html_unsubscribe_mail_footer()),
                 "text/html"
             )
+            self.extra_headers['List-Unsubscribe'] = customer.get_html_list_unsubscribe()
         else:
             self.attach_alternative(
                 self.html_body,
@@ -129,23 +122,10 @@ class RepanierEmail(EmailMultiAlternatives):
         email_send = False
         # Email subject *must not* contain newlines
         self.subject = ''.join(self.subject.splitlines())
+        if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
+            self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO,]
 
         logger.info("################################## send_email")
-        # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
-        from_email = "from_email : {}".format(self.from_email)
-        logger.info(from_email)
-        reply_to = "reply_to : {}".format(self.reply_to)
-        logger.info(reply_to)
-        to_email = "to : {}".format(self.to)
-        logger.info(to_email)
-        cc_email = "cc : {}".format(self.cc)
-        logger.info(cc_email)
-        bcc_email = "bcc : {}".format(self.bcc)
-        logger.info(bcc_email)
-        subject = "subject : {}".format(self.subject)
-        logger.info(subject)
-        message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
-                                                  subject)
         try:
             with mail.get_connection(
                     host=self.host,
@@ -156,24 +136,21 @@ class RepanierEmail(EmailMultiAlternatives):
                     use_ssl=not self.use_tls) as connection:
                 self.connection = connection
                 try:
-                    self.send()
+                    if not settings.DEBUG:
+                        # Do not send mail in debug mode
+                        self.send()
+                    else:
+                        self.to = ['pcolmant@gmail.com']
+                        self.send()
                     email_send = True
                 except SMTPRecipientsRefused as error_str:
                     logger.error("################################## send_email SMTPRecipientsRefused")
                     logger.error(error_str)
-                    time.sleep(1)
-                    connection = mail.get_connection()
-                    connection.open()
-                    mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
-                    connection.close()
+                    self._send_error("ERROR", error_str)
                 except Exception as error_str:
                     logger.error("################################## send_email error")
                     logger.error(error_str)
-                    time.sleep(1)
-                    connection = mail.get_connection()
-                    connection.open()
-                    mail_admins("ERROR", "{}\n{}".format(message, error_str), connection=connection)
-                    connection.close()
+                    self._send_error("ERROR", error_str)
                 logger.info("##################################")
                 if email_send and customer is not None:
                     from repanier.models.customer import Customer
@@ -188,14 +165,31 @@ class RepanierEmail(EmailMultiAlternatives):
             # https://support.google.com/accounts/answer/6010255
             # https://security.google.com/settings/security/apppasswords
             logger.fatal(error_str)
-            time.sleep(5)
-            mail_admins("FATAL", "{}\n{}".format(message, error_str))
+            self._send_error("FATAL", error_str)
         except Exception as error_str:
             logger.fatal("################################## send_email error")
             logger.fatal(error_str)
-            time.sleep(5)
-            mail_admins("FATAL", "{}\n{}".format(message, error_str))
+            self._send_error("FATAL", error_str)
         return email_send
+
+    def _send_error(self, subject, error_str, connection=None):
+        # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
+        from_email = "from_email : {}".format(self.from_email)
+        reply_to = "reply_to : {}".format(self.reply_to)
+        to_email = "to : {}".format(self.to)
+        cc_email = "cc : {}".format(self.cc)
+        bcc_email = "bcc : {}".format(self.bcc)
+        subject_email = "subject : {}".format(self.subject)
+        message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
+                                                  subject_email)
+        time.sleep(5)
+        try:
+            connection = mail.get_connection()
+            connection.open()
+            mail_admins(subject, "{}\n{}".format(message, error_str), connection=connection)
+            connection.close()
+        except:
+            pass
 
     def _get_customer(self, email_address):
         from repanier.models.customer import Customer
