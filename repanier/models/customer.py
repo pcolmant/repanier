@@ -165,6 +165,20 @@ class Customer(models.Model):
             )
         return very_first_customer
 
+    @classmethod
+    def get_customer_from_valid_email(cls, email_address):
+        # try to find a customer based on user__email or customer__email2
+        customer = Customer.objects.filter(
+            Q(
+                user__email=email_address
+            ) | Q(
+                email2=email_address
+            )
+        ).exclude(
+            valid_email=False,
+        ).order_by('?').first()
+        return customer
+
     def get_admin_date_balance(self):
         return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)
 

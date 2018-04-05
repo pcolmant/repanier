@@ -12,10 +12,10 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.html import strip_tags
 
+from repanier.const import DEMO_EMAIL, EMPTY_STRING
 from repanier.tools import debug_parameters
 
 logger = logging.getLogger(__name__)
-from repanier.const import DEMO_EMAIL, EMPTY_STRING
 
 
 class RepanierEmail(EmailMultiAlternatives):
@@ -95,7 +95,9 @@ class RepanierEmail(EmailMultiAlternatives):
     def _send_email_with_error_log(self):
         email_to = self.to[0]
         if not self.test_connection:
-            customer = self._get_customer(email_to)
+            from repanier.models.customer import Customer
+
+            customer = Customer.get_customer_from_valid_email(email_to)
             if customer is not None:
                 if not self.send_even_if_unsubscribed and not customer.subscribe_to_email:
                     return False
@@ -120,56 +122,67 @@ class RepanierEmail(EmailMultiAlternatives):
                 "text/html"
             )
         email_send = False
+        try_to_send = True
         # Email subject *must not* contain newlines
         self.subject = ''.join(self.subject.splitlines())
         if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
-            self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO,]
+            self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO, ]
 
         logger.info("################################## send_email")
-        try:
-            with mail.get_connection(
-                    host=self.host,
-                    port=self.port,
-                    username=self.host_user,
-                    password=self.host_password,
-                    use_tls=self.use_tls,
-                    use_ssl=not self.use_tls) as connection:
-                self.connection = connection
-                try:
-                    if not settings.DEBUG:
-                        # Do not send mail in debug mode
-                        self.send()
-                    else:
-                        self.to = ['pcolmant@gmail.com']
-                        self.send()
-                    email_send = True
-                except SMTPRecipientsRefused as error_str:
-                    logger.error("################################## send_email SMTPRecipientsRefused")
-                    logger.error(error_str)
-                    self._send_error("ERROR", error_str)
-                except Exception as error_str:
-                    logger.error("################################## send_email error")
-                    logger.error(error_str)
-                    self._send_error("ERROR", error_str)
-                logger.info("##################################")
-                if email_send and customer is not None:
-                    from repanier.models.customer import Customer
+        attempt_counter = 1
+        while not email_send and try_to_send:
+            attempt_counter += 1
+            try_to_send = False
+            try:
+                with mail.get_connection(
+                        host=self.host,
+                        port=self.port,
+                        username=self.host_user,
+                        password=self.host_password,
+                        use_tls=self.use_tls,
+                        use_ssl=not self.use_tls) as connection:
+                    self.connection = connection
+                    try:
+                        if not settings.DEBUG:
+                            # Do not send mail in debug mode
+                            self.send()
+                        else:
+                            self.to = ['pcolmant@gmail.com']
+                            self.send()
+                        email_send = True
+                    except SMTPRecipientsRefused as error_str:
+                        logger.error("################################## send_email SMTPRecipientsRefused")
+                        logger.error(error_str)
+                        self._send_error("ERROR", error_str)
+                    except Exception as error_str:
+                        logger.error("################################## send_email error")
+                        logger.error(error_str)
+                        self._send_error("ERROR", error_str)
+                    logger.info("##################################")
+                    if email_send and customer is not None:
+                        from repanier.models.customer import Customer
 
-                    # customer.valid_email = valid_email
-                    # customer.save(update_fields=['valid_email'])
-                    # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                    Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=email_send)
-        except SMTPAuthenticationError as error_str:
-            logger.fatal("################################## send_email SMTPAuthenticationError")
-            # https://support.google.com/accounts/answer/185833
-            # https://support.google.com/accounts/answer/6010255
-            # https://security.google.com/settings/security/apppasswords
-            logger.fatal(error_str)
-            self._send_error("FATAL", error_str)
-        except Exception as error_str:
-            logger.fatal("################################## send_email error")
-            logger.fatal(error_str)
-            self._send_error("FATAL", error_str)
+                        # customer.valid_email = valid_email
+                        # customer.save(update_fields=['valid_email'])
+                        # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
+                        Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=email_send)
+            except SMTPAuthenticationError as error_str:
+                logger.fatal("################################## send_email SMTPAuthenticationError")
+                # https://support.google.com/accounts/answer/185833
+                # https://support.google.com/accounts/answer/6010255
+                # https://security.google.com/settings/security/apppasswords
+                logger.fatal(error_str)
+                self._send_error("FATAL", error_str)
+            except Exception as error_str:
+                logger.fatal("################################## send_email error")
+                logger.fatal(error_str)
+                self._send_error("FATAL", error_str)
+                if attempt_counter <= 2:
+                    # retry max 2 more times
+                    attempt_counter += 1
+                    try_to_send = True
+                    time.sleep(5)
+
         return email_send
 
     def _send_error(self, subject, error_str, connection=None):
@@ -190,18 +203,3 @@ class RepanierEmail(EmailMultiAlternatives):
             connection.close()
         except:
             pass
-
-    def _get_customer(self, email_address):
-        from repanier.models.customer import Customer
-
-        # try to find a customer based on user__email or customer__email2
-        customer = Customer.objects.filter(
-            Q(
-                user__email=email_address
-            ) | Q(
-                email2=email_address
-            )
-        ).exclude(
-            valid_email=False,
-        ).order_by('?').first()
-        return customer
