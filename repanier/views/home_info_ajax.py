@@ -101,5 +101,6 @@ def home_info_ajax(request):
             notification_html=notification_html,
             permanences_info_html=permanences_info_html
         )
-        return JsonResponse({"#containerInfo": mark_safe(html)})
+        if html:
+            return JsonResponse({"#containerInfo": mark_safe(html)})
     raise Http404
