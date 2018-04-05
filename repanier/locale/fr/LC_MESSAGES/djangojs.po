@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-19 10:12+0100\n"
-"PO-Revision-Date: 2017-12-19 10:39+0100\n"
+"PO-Revision-Date: 2018-04-05 10:43+0200\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -40,8 +40,8 @@ msgstr "Importer une facture"
 
 #: static/js/is_order_confirm_send.js:4
 msgid "✗🔓"
-msgstr "✗🔓 - déverrouiller"
+msgstr "✗ - ne pas confirmer"
 
 #: static/js/is_order_confirm_send.js:5
 msgid "✓🔐"
-msgstr "✓🔐 - confirmer et vérrouiller"
+msgstr "🔑 - confirmer et vérrouiller"

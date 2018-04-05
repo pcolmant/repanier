@@ -188,7 +188,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
             if ci is not None:
                 if ci.is_order_confirm_send:
                     list_filter.append(
-                        (c.id, "{} ({}) {}".format(LOCK_UNICODE, c.short_basket_name, ci.get_total_price_with_tax())))
+                        (c.id, "{} {} ({})".format(LOCK_UNICODE, c.short_basket_name, ci.get_total_price_with_tax())))
                 else:
                     list_filter.append((c.id, "{} ({})".format(c.short_basket_name, ci.total_price_with_tax)))
             else:

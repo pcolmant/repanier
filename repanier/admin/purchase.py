@@ -209,91 +209,91 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             return True
         return False
 
-    def get_urls(self):
-        urls = super(PurchaseAdmin, self).get_urls()
-        my_urls = [
-            url(r'^is_order_confirm_send/$', self.admin_site.admin_view(self.is_order_confirm_send)),
-            url(r'^is_order_confirm_not_send/$', self.admin_site.admin_view(self.is_order_confirm_not_send)),
-            # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), {'packages': ('repanier',)}, name='javascript-catalog'),
-            # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
-        ]
-        return my_urls + urls
+    # def get_urls(self):
+    #     urls = super(PurchaseAdmin, self).get_urls()
+    #     my_urls = [
+    #         url(r'^is_order_confirm_send/$', self.admin_site.admin_view(self.is_order_confirm_send)),
+    #         url(r'^is_order_confirm_not_send/$', self.admin_site.admin_view(self.is_order_confirm_not_send)),
+    #         # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), {'packages': ('repanier',)}, name='javascript-catalog'),
+    #         # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
+    #     ]
+    #     return my_urls + urls
 
-    def is_order_confirm_send(self, request):
-        permanence_id = request.GET.get('permanence', None)
-        customer_id = request.GET.get('customer', None)
-        user_message_level = messages.ERROR
-        user_message = _("Action canceled by the system.")
-        if permanence_id is not None and customer_id is not None:
-            customer = Customer.objects.filter(id=customer_id).order_by('?').first()
-            permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-            if permanence is not None and customer is not None:
-                customer_invoice = CustomerInvoice.objects.filter(
-                    customer_id=customer_id,
-                    permanence_id=permanence_id,
-                ).order_by('?').first()
-                if customer_invoice is not None:
-                    if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
-                        filename = "{0}-{1}.xlsx".format(
-                            _("Order"),
-                            permanence
-                        )
-                        export_order_2_1_customer(
-                            customer, filename, permanence)
-                        user_message_level = messages.INFO
-                        user_message = customer.my_order_confirmation_email_send_to()
-                    else:
-                        user_message_level = messages.INFO
-                        user_message = _('Order confirmed')
-                    customer_invoice.confirm_order()
-                    customer_invoice.save()
-                else:
-                    user_message_level = messages.INFO
-                    user_message = _('Nothing to confirm')
+    # def is_order_confirm_send(self, request):
+    #     permanence_id = request.GET.get('permanence', None)
+    #     customer_id = request.GET.get('customer', None)
+    #     user_message_level = messages.ERROR
+    #     user_message = _("Action canceled by the system.")
+    #     if permanence_id is not None and customer_id is not None:
+    #         customer = Customer.objects.filter(id=customer_id).order_by('?').first()
+    #         permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
+    #         if permanence is not None and customer is not None:
+    #             customer_invoice = CustomerInvoice.objects.filter(
+    #                 customer_id=customer_id,
+    #                 permanence_id=permanence_id,
+    #             ).order_by('?').first()
+    #             if customer_invoice is not None:
+    #                 if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
+    #                     filename = "{0}-{1}.xlsx".format(
+    #                         _("Order"),
+    #                         permanence
+    #                     )
+    #                     export_order_2_1_customer(
+    #                         customer, filename, permanence)
+    #                     user_message_level = messages.INFO
+    #                     user_message = customer.my_order_confirmation_email_send_to()
+    #                 else:
+    #                     user_message_level = messages.INFO
+    #                     user_message = _('Order confirmed')
+    #                 customer_invoice.confirm_order()
+    #                 customer_invoice.save()
+    #             else:
+    #                 user_message_level = messages.INFO
+    #                 user_message = _('Nothing to confirm')
+    #
+    #         redirect_to = "{}?permanence={}&customer={}".format(
+    #             urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
+    #     elif permanence_id is not None:
+    #         redirect_to = "{}?permanence={}".format(
+    #             urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
+    #     else:
+    #         redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
+    #     self.message_user(request, user_message, user_message_level)
+    #     return HttpResponseRedirect(redirect_to)
 
-            redirect_to = "{}?permanence={}&customer={}".format(
-                urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
-        elif permanence_id is not None:
-            redirect_to = "{}?permanence={}".format(
-                urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
-        else:
-            redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
-        self.message_user(request, user_message, user_message_level)
-        return HttpResponseRedirect(redirect_to)
-
-    def is_order_confirm_not_send(self, request):
-        permanence_id = request.GET.get('permanence', None)
-        customer_id = request.GET.get('customer', None)
-        user_message_level = messages.ERROR
-        user_message = _("Action canceled by the system.")
-        if permanence_id is not None and customer_id is not None:
-            customer = Customer.objects.filter(id=customer_id).order_by('?').first()
-            permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-            if permanence is not None and customer is not None:
-                customer_invoice = CustomerInvoice.objects.filter(
-                    customer_id=customer_id,
-                    permanence_id=permanence_id,
-                ).order_by('?').first()
-                if customer_invoice is not None \
-                        and customer_invoice.status == PERMANENCE_OPENED \
-                        and customer_invoice.is_order_confirm_send:
-                    user_message_level = messages.INFO
-                    user_message = _('Order not confirmed')
-                    customer_invoice.is_order_confirm_send = False
-                    customer_invoice.save(update_fields=['is_order_confirm_send'])
-                else:
-                    user_message_level = messages.INFO
-                    user_message = _('Nothing to unconfirm')
-
-            redirect_to = "{}?permanence={}&customer={}".format(
-                urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
-        elif permanence_id is not None:
-            redirect_to = "{}?permanence={}".format(
-                urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
-        else:
-            redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
-        self.message_user(request, user_message, user_message_level)
-        return HttpResponseRedirect(redirect_to)
+    # def is_order_confirm_not_send(self, request):
+    #     permanence_id = request.GET.get('permanence', None)
+    #     customer_id = request.GET.get('customer', None)
+    #     user_message_level = messages.ERROR
+    #     user_message = _("Action canceled by the system.")
+    #     if permanence_id is not None and customer_id is not None:
+    #         customer = Customer.objects.filter(id=customer_id).order_by('?').first()
+    #         permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
+    #         if permanence is not None and customer is not None:
+    #             customer_invoice = CustomerInvoice.objects.filter(
+    #                 customer_id=customer_id,
+    #                 permanence_id=permanence_id,
+    #             ).order_by('?').first()
+    #             if customer_invoice is not None \
+    #                     and customer_invoice.status == PERMANENCE_OPENED \
+    #                     and customer_invoice.is_order_confirm_send:
+    #                 user_message_level = messages.INFO
+    #                 user_message = _('Order not confirmed')
+    #                 customer_invoice.is_order_confirm_send = False
+    #                 customer_invoice.save(update_fields=['is_order_confirm_send'])
+    #             else:
+    #                 user_message_level = messages.INFO
+    #                 user_message = _('Nothing to unconfirm')
+    #
+    #         redirect_to = "{}?permanence={}&customer={}".format(
+    #             urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
+    #     elif permanence_id is not None:
+    #         redirect_to = "{}?permanence={}".format(
+    #             urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
+    #     else:
+    #         redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
+    #     self.message_user(request, user_message, user_message_level)
+    #     return HttpResponseRedirect(redirect_to)
 
     def get_fieldsets(self, request, purchase=None):
         permanence_id = None
@@ -423,28 +423,15 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             offeritem__permanence_id=permanence_id,
                             offeritem__purchase__customer_id=customer_id
                         ).order_by('?')
+                        qs = Product.objects.filter(
+                            producer__permanence=permanence_id,
+                            is_into_offer=True,
+                            translations__language_code=translation.get_language()
+                        ).order_by('translations__long_name')
                         if self.producer_id is not None:
-                            qs = Product.objects.filter(
-                                Q(
-                                    offeritem__permanence_id=permanence_id,
-                                    producer_id=self.producer_id,
-                                    translations__language_code=translation.get_language()
-                                ) | Q(
-                                    is_into_offer=True,
-                                    producer_id=self.producer_id,
-                                    translations__language_code=translation.get_language()
-                                )
-                            ).order_by('translations__long_name')
-                        else:
-                            qs = Product.objects.filter(
-                                Q(
-                                    offeritem__permanence_id=permanence_id,
-                                    translations__language_code=translation.get_language()
-                                ) | Q(
-                                    is_into_offer=True,
-                                    translations__language_code=translation.get_language()
-                                )
-                            ).order_by('translations__long_name')
+                            qs = qs.filter(
+                                producer_id=self.producer_id
+                            )
                         if customer_id is not None and purchased_product.exists():
                             qs = qs.exclude(
                                 id__in=purchased_product
@@ -510,14 +497,11 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 purchase.save()
                 purchase.save_box()
                 # The customer_invoice may be created with "purchase.save()"
-                # The default value of  is_order_confirm_send is True and should, in this case be False
                 customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=purchase.customer_id,
                     permanence_id=purchase.permanence_id
                 ).order_by('?').first()
                 customer_invoice.status = status
-                if status == PERMANENCE_SEND:
-                    customer_invoice.cancel_confirm_order()
                 customer_invoice.set_delivery(delivery)
                 customer_invoice.confirm_order()
                 customer_invoice.save()
@@ -541,5 +525,5 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         """
         return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
 
-    class Media:
-        js = ('js/is_order_confirm_send.js',)
+    # class Media:
+    #     js = ('js/is_order_confirm_send.js',)
