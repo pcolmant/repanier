@@ -2,7 +2,6 @@
 
 from django.conf import settings
 from django.http import Http404, JsonResponse
-from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -19,7 +18,6 @@ def home_info_ajax(request):
     if request.is_ajax():
         from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
         permanences = []
-        html = EMPTY_STRING
         for permanence in Permanence.objects.filter(
                 status=PERMANENCE_OPENED) \
                 .only("id", "permanence_date", "with_delivery_point") \
@@ -35,8 +33,16 @@ def home_info_ajax(request):
                 if permanence.picture:
                     permanences.append(
                         format_html(
-                            '<div class="panel-body"><div class="col-xs-12"><img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{}" title="{}" src="{}{}"/><div class="clearfix visible-xs-block visible-sm-block"></div>{}</div></div>',
-                            permanence.get_permanence_customer_display(),
+                            """
+                            <div class="panel-body">
+                                <div class="col-xs-12">
+                                    <img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{0}" title="{0}" src="{1}{2}"/>
+                                    <div class="clearfix visible-xs-block visible-sm-block"></div>
+                                    {3}
+                                </div>
+                                </div>
+                            """
+                            ,
                             permanence.get_permanence_customer_display(),
                             settings.MEDIA_URL,
                             permanence.picture,
@@ -51,7 +57,7 @@ def home_info_ajax(request):
                         )
                     )
         if len(permanences) > 0:
-            home_info = """
+            permanences_info_html = """
             <div class="container">
                 <div class="row">
                     <div class="panel-group">
@@ -65,28 +71,35 @@ def home_info_ajax(request):
                 permanences="".join(permanences)
             )
         else:
-            home_info = EMPTY_STRING
+            permanences_info_html = EMPTY_STRING
 
-        notification = REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter(
-            'notification', any_language=True, default=EMPTY_STRING)
-        if notification:
-            if REPANIER_SETTINGS_NOTIFICATION.notification_is_public or request.user.is_authenticated:
-                html = """
-                <div class="container">
-                    <div class="row">
-                        <div class="panel-group">
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    {notification}
+        if REPANIER_SETTINGS_NOTIFICATION.notification_is_public or request.user.is_authenticated:
+            notification = REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter(
+                'notification', any_language=True, default=EMPTY_STRING)
+            if notification:
+                notification_html = """
+                    <div class="container">
+                        <div class="row">
+                            <div class="panel-group">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        {notification}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                {home_info}
-                """.format(
+                    """.format(
                     notification=notification,
-                    home_info=home_info
                 )
-            return JsonResponse({"#containerInfo": mark_safe(html)})
+            else:
+                notification_html = EMPTY_STRING
+        else:
+            notification_html = EMPTY_STRING
+
+        html = "{notification_html}{permanences_info_html}".format(
+            notification_html=notification_html,
+            permanences_info_html=permanences_info_html
+        )
+        return JsonResponse({"#containerInfo": mark_safe(html)})
     raise Http404
