@@ -181,7 +181,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     # retry max 2 more times
                     attempt_counter += 1
                     try_to_send = True
-                    time.sleep(5)
+                    time.sleep(5 * attempt_counter)
 
         return email_send
 
