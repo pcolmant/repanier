@@ -130,10 +130,9 @@ def send_open_order(permanence_id):
             permanence_picture = format_html(
                 """
                  <img
-                    alt="{}" 
-                    border="0" width="80" height="80"
-                    style="display:block; border:none; outline:none; text-decoration:none;"
-                    src="https:/{}{}{}"/>
+                    alt="{0}" title="{0}"
+                    style="float: left; margin: 5px;"
+                    src="https:/{1}{2}{3}"/>
                 """
                 ,
                 permanence.get_permanence_customer_display(),
@@ -141,14 +140,12 @@ def send_open_order(permanence_id):
                 settings.MEDIA_URL,
                 permanence.picture,
             )
+            offer_description = "<hr/>{}<hr/>{}".format(permanence_picture, offer_description)
 
-        else:
-            permanence_picture = EMPTY_STRING
         template = Template(offer_customer_mail)
         context = TemplateContext({
             'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                 settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-            'permanence_picture': mark_safe(permanence_picture),
             'offer_description': mark_safe(offer_description),
             'offer_detail': mark_safe(offer_detail),
             'offer_recent_detail': mark_safe(permanence.get_new_products),
