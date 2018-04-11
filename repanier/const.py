@@ -279,26 +279,18 @@ LIMIT_DISPLAYED_PERMANENCE = 25
 BOX_VALUE_STR = "-1"
 BOX_VALUE_INT = -1
 BOX_UNICODE = "📦"  # http://unicode-table.com/fr/1F6CD/
-LOCK_UNICODE = "🔑"
-VALID_UNICODE = "✓"
+LOCK_UNICODE = EMPTY_STRING  # "✉"  # "🔑"
+# VALID_UNICODE = "✓"
 BANK_NOTE_UNICODE = "💶"
 LINK_UNICODE = "⛓"
-
-# 📝 https://www.fileformat.info/info/unicode/char/1f4dd/browsertest.htm
-# 📖 open book1
-# 🕮 open book2
-# 📕 closed book - red
-# 📗 closed book - green
-# 📚 books
-# 🥂 glas
 
 LUT_CONFIRM = (
     (True, LOCK_UNICODE), (False, EMPTY_STRING)
 )
 
-LUT_VALID = (
-    (True, VALID_UNICODE), (False, EMPTY_STRING)
-)
+# LUT_VALID = (
+#     (True, VALID_UNICODE), (False, EMPTY_STRING)
+# )
 
 LUT_BANK_NOTE = (
     (True, BANK_NOTE_UNICODE), (False, EMPTY_STRING)
