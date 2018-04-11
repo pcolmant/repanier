@@ -1,8 +1,10 @@
 # -*- coding: utf-8
+import codecs
 import datetime
 import json
 import logging
 from functools import wraps
+from urllib.parse import urljoin
 from urllib.request import urlopen
 
 from django.conf import settings
@@ -24,6 +26,7 @@ from repanier import apps
 from repanier.const import *
 
 logger = logging.getLogger(__name__)
+reader = codecs.getreader("utf-8")
 
 def sboolean(str_val, default_val=False):
     try:
@@ -821,22 +824,20 @@ def update_offer_item(product_id=None, producer_id=None):
     cache.clear()
 
 
-def producer_web_services_activated(reference_site=None):
-    web_services_activated = False
-    web_service_version = None
+def web_services_activated(reference_site=None):
+    activated = False
+    version = None
     if reference_site:
         try:
-            web_services = urlopen(
-                "{}{}".format(reference_site, urlresolvers.reverse('version_rest')),
-                timeout=0.5
-            )
-            version_rest = json.load(web_services)
-            if version_rest['version'] == '1':
-                web_services_activated = True
-                web_service_version = 1
+            url = urljoin(reference_site, urlresolvers.reverse('version_rest'))
+            web_services = urlopen(url, timeout=0.5)
+            rest_as_json = json.load(reader(web_services))
+            if rest_as_json['version'] == '1':
+                activated = True
+                version = 1
         except:
             pass
-    return web_services_activated, "Repanier", web_service_version
+    return activated, "Repanier", version
 
 
 def get_html_basket_message(customer, permanence, status):

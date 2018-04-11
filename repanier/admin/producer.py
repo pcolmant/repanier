@@ -335,6 +335,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 ('address', 'city', 'picture'),
                 'memo',
                 'is_active',
+                'producer_price_are_wo_vat',
                 'permanences',
                 ('get_admin_balance', 'get_admin_date_balance'),
             ]
@@ -343,6 +344,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_basic += [
                 ('address', 'city'),
                 'memo',
+                'producer_price_are_wo_vat',
                 'is_active',
             ]
         if producer is not None and producer.represent_this_buyinggroup:
@@ -366,20 +368,13 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             ]
         fields_advanced += [
             'invoice_by_basket',
-            'price_list_multiplier',
             'minimum_order_value',
-            'invoice_by_basket'
+            'price_list_multiplier',
+            'is_resale_price_fixed',
+            'producer_pre_opening',
+            'reference_site',
+            'web_services_activated'
         ]
-        if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            fields_basic += [
-                'producer_price_are_wo_vat',
-            ]
-            fields_advanced += [
-                'is_resale_price_fixed',
-                'producer_pre_opening',
-                'reference_site',
-                'web_services_activated'
-            ]
         fieldsets = (
             (None, {'fields': fields_basic}),
             (_('Advanced options'), {'classes': ('collapse',), 'fields': fields_advanced})
@@ -398,7 +393,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             return ['web_services_activated']
 
     def save_model(self, request, producer, form, change):
-        producer.web_services_activated, drop1, drop2 = producer_web_services_activated(producer.reference_site)
+        producer.web_services_activated, _, _ = web_services_activated(producer.reference_site)
         super(ProducerAdmin, self).save_model(
             request, producer, form, change)
 
