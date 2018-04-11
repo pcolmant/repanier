@@ -22,7 +22,7 @@ from repanier.const import *
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
-from repanier.tools import producer_web_services_activated
+from repanier.tools import web_services_activated
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
