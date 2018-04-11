@@ -3,6 +3,7 @@
 import datetime
 import logging
 import time
+from random import randint
 from smtplib import SMTPRecipientsRefused, SMTPAuthenticationError
 
 from django.conf import settings
@@ -174,14 +175,17 @@ class RepanierEmail(EmailMultiAlternatives):
                 logger.fatal(error_str)
                 self._send_error("FATAL", error_str)
             except Exception as error_str:
-                logger.fatal("################################## send_email error")
-                logger.fatal(error_str)
-                self._send_error("FATAL", error_str)
-                if attempt_counter <= 2:
-                    # retry max 2 more times
+                if attempt_counter <= 5:
+                    logger.info("################################## send_email error, retry")
+                    logger.info(error_str)
+                    # retry max 5 more times
                     attempt_counter += 1
                     try_to_send = True
-                    time.sleep(5 * attempt_counter)
+                    time.sleep(min(5 * attempt_counter, randint(10, 20)))
+                else:
+                    logger.fatal("################################## send_email error, abort")
+                    logger.fatal(error_str)
+                    self._send_error("FATAL", error_str)
 
         return email_send
 
