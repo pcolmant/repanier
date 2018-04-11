@@ -122,7 +122,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     else:
                         confirmed = EMPTY_STRING
                     row = [
-                        "{} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
+                        "{} - {}{}".format(customer.preparation_order, customer.short_basket_name, confirmed),
                         customer.long_basket_name,
                         customer.phone1 or EMPTY_STRING,
                         customer.phone2 or EMPTY_STRING,
