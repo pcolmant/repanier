@@ -30,6 +30,7 @@ Licence : GPL v3
   * [Contact the `repanier` discourse community](https://discourse.repanier.be/)
   * [Send a mail to support@repanier.be](mailt:support@repanier.be)
   * [Propose a pull request](https://github.com/pcolmant/repanier/pulls)
+  * [Interface Web pour gérer les instances Repanier](https://gitlab.domainepublic.net/quenenni/repanier_gui/)
 
 # How to setup `Repanier` on Debian 9
 
