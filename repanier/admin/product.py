@@ -11,7 +11,7 @@ from django.db.models import F
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.formats import number_format
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
@@ -156,6 +156,14 @@ class ProductDataForm(TranslatableModelForm):
             # Don't bother validating the formset unless each form is valid on its own
             return
 
+        if self.instance.id is None:
+            if self.language_code != settings.LANGUAGE_CODE:
+                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+                self.add_error(
+                    'long_name',
+                    _('Please define first a long_name in %(language)s') % {
+                        'language': get_language_info(settings.LANGUAGE_CODE)['name_local']})
+
         producer = self.cleaned_data.get("producer", None)
         if producer is None:
             self.add_error(
@@ -248,7 +256,7 @@ class ProductDataForm(TranslatableModelForm):
                 if customer_increment_order_quantity <= customer_minimum_order_quantity:
                     if customer_minimum_order_quantity != customer_alert_order_quantity:
                         order_qty_item = (
-                                             customer_alert_order_quantity - customer_minimum_order_quantity) / customer_increment_order_quantity
+                                                 customer_alert_order_quantity - customer_minimum_order_quantity) / customer_increment_order_quantity
                         q_max = customer_minimum_order_quantity + int(
                             order_qty_item) * customer_increment_order_quantity
                         if order_qty_item > (LIMIT_ORDER_QTY_ITEM - 1):
@@ -572,12 +580,14 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         update_offer_item(product_id=product.id)
 
     def get_queryset(self, request):
-        queryset = super(ProductAdmin, self).get_queryset(request)
-        return queryset.filter(
+        qs = super(ProductAdmin, self).get_queryset(request)
+        qs = qs.filter(
             is_box=False,
             producer__is_active=True,
-            translations__language_code=translation.get_language()
+            # Important to also display untranslated products : translations__language_code=settings.LANGUAGE_CODE
+            translations__language_code=settings.LANGUAGE_CODE
         ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
+        return qs
 
     def get_import_formats(self):
         """

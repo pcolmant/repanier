@@ -4,7 +4,7 @@ import uuid
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import apply_select2
 from parler.forms import TranslatableModelForm
 
@@ -27,6 +27,15 @@ class UserDataForm(TranslatableModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
+
+        if self.instance.id is None:
+            if self.language_code != settings.LANGUAGE_CODE:
+                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+                self.add_error(
+                    'long_name',
+                    _('Please define first a long_name in %(language)s') % {
+                        'language': get_language_info(settings.LANGUAGE_CODE)['name_local']})
+
         is_active = self.cleaned_data.get("is_active", False)
         is_coordinator = is_active and self.cleaned_data.get("is_coordinator", False)
         is_order_manager = is_active and self.cleaned_data.get("is_order_manager", False)
@@ -241,3 +250,4 @@ class StaffWithUserDataAdmin(LUTAdmin):
             RepanierAuthBackend.remove_staff_right(
                 user=old_customer_responsible_field.user
             )
+

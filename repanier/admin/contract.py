@@ -3,7 +3,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, get_language_info
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
@@ -20,6 +20,19 @@ class ContractDataForm(TranslatableModelForm):
         widget=admin.widgets.FilteredSelectMultiple(_('Producers'), False),
         required=True
     )
+
+    def clean(self):
+        if any(self.errors):
+            # Don't bother validating the formset unless each form is valid on its own
+            return
+
+        if self.instance.id is None:
+            if self.language_code != settings.LANGUAGE_CODE:
+                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+                self.add_error(
+                    'long_name',
+                    _('Please define first a long_name in %(language)s') % {
+                        'language': get_language_info(settings.LANGUAGE_CODE)['name_local']})
 
 
 class ContractAdmin(TranslatableAdmin):
@@ -95,6 +108,7 @@ class ContractAdmin(TranslatableAdmin):
     def get_queryset(self, request):
         qs = super(ContractAdmin, self).get_queryset(request)
         qs = qs.filter(
-            translations__language_code=translation.get_language()
+            # Important to also display untranslated contracts : translations__language_code=settings.LANGUAGE_CODE
+            translations__language_code=settings.LANGUAGE_CODE
         )
         return qs

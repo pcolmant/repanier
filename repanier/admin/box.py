@@ -11,7 +11,7 @@ from django.forms import ModelForm, BaseInlineFormSet
 from django.forms.formsets import DELETION_FIELD_NAME
 from django.shortcuts import render
 from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import Select2
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -116,13 +116,14 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "product":
             kwargs["queryset"] = Product.objects.filter(
+                # Box products may be only bought via a box (is_into_offer = False but is_active=True)
                 is_active=True,
                 order_unit__lt=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                 # A box may not include another box
                 is_box=False,
                 # We can't make any composition with producer preparing baskets on basis of our order.
                 producer__invoice_by_basket=False,
-                translations__language_code=translation.get_language()
+                translations__language_code=settings.LANGUAGE_CODE
             ).select_related("producer").prefetch_related("translations").order_by(
                 "producer__short_profile_name",
                 "translations__long_name",
@@ -155,6 +156,19 @@ class BoxForm(TranslatableModelForm):
         self.fields["calculated_box_deposit"].disabled = True
         if settings.REPANIER_SETTINGS_STOCK:
             self.fields["calculated_stock"].disabled = True
+
+    def clean(self):
+        if any(self.errors):
+            # Don't bother validating the formset unless each form is valid on its own
+            return
+
+        if self.instance.id is None:
+            if self.language_code != settings.LANGUAGE_CODE:
+                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+                self.add_error(
+                    'long_name',
+                    _('Please define first a long_name in %(language)s') % {
+                        'language': get_language_info(settings.LANGUAGE_CODE)['name_local']})
 
 
 class BoxAdmin(TranslatableAdmin):
@@ -352,6 +366,7 @@ class BoxAdmin(TranslatableAdmin):
         qs = super(BoxAdmin, self).get_queryset(request)
         qs = qs.filter(
             is_box=True,
-            translations__language_code=translation.get_language()
+            # Important to also display untranslated boxes : translations__language_code=settings.LANGUAGE_CODE
+            translations__language_code=settings.LANGUAGE_CODE
         )
         return qs

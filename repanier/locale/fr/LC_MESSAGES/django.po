@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-04-04 15:25+0200\n"
-"PO-Revision-Date: 2018-04-04 15:26+0200\n"
+"POT-Creation-Date: 2018-04-14 18:21+0200\n"
+"PO-Revision-Date: 2018-04-14 18:22+0200\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -196,51 +196,56 @@ msgstr "Inventaire"
 msgid "Limit maximum order qty of the group to stock qty"
 msgstr "Limiter les ventes au stock d'inventaire"
 
-#: admin/box.py:136
+#: admin/box.py:137
 msgid "Consumer rate per unit calculated"
 msgstr "Tarif consommateur à l'unité calculé"
 
-#: admin/box.py:139
+#: admin/box.py:140
 msgid "Calculated deposit per unit"
 msgstr "Consigne calculée par unité"
 
-#: admin/box.py:142
+#: admin/box.py:143
 msgid "Calculated inventory"
 msgstr "Inventaire calculé"
 
-#: admin/box.py:219
+#: admin/box.py:170 admin/contract.py:34 admin/product.py:164 admin/staff.py:36
+#, python-format
+msgid "Please define first a long_name in %(language)s"
+msgstr "Veuillez d'abord définir le nom étendu en %(language)s"
+
+#: admin/box.py:233
 msgid "✔ in offer  ↔ ✘ not in offer"
 msgstr "✔ en offre  ↔ ✘ pas en offre"
 
-#: admin/box.py:223 admin/permanence_done.py:137 admin/permanence_done.py:239
+#: admin/box.py:237 admin/permanence_done.py:137 admin/permanence_done.py:239
 #: admin/permanence_done.py:394 admin/permanence_done.py:426
 #: admin/permanence_done.py:497 admin/permanence_in_preparation.py:289
 #: admin/permanence_in_preparation.py:352
 #: admin/permanence_in_preparation.py:385
 #: admin/permanence_in_preparation.py:533
 #: admin/permanence_in_preparation.py:715
-#: admin/permanence_in_preparation.py:743 admin/product.py:329 xlsx/views.py:46
+#: admin/permanence_in_preparation.py:743 admin/product.py:337 xlsx/views.py:46
 msgid "Action canceled by the user."
 msgstr "Action annulée par l'utilisateur."
 
-#: admin/box.py:235
+#: admin/box.py:249
 msgid "Please, confirm the action : duplicate box"
 msgstr "Veuillez confirmer votre demande de duplication d'une composition."
 
-#: admin/box.py:241 admin/permanence_in_preparation.py:781 admin/product.py:357
+#: admin/box.py:255 admin/permanence_in_preparation.py:781 admin/product.py:365
 msgid "Duplicate"
 msgstr "Créer un duplicata"
 
-#: admin/box.py:266 admin/product.py:479
+#: admin/box.py:280 admin/product.py:487
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
-#: admin/box.py:267 admin/configuration.py:189 admin/customer.py:367
-#: admin/group.py:280 admin/producer.py:385 admin/product.py:480
+#: admin/box.py:281 admin/configuration.py:189 admin/customer.py:367
+#: admin/group.py:280 admin/producer.py:380 admin/product.py:488
 msgid "Advanced options"
 msgstr "Paramètres avancés"
 
-#: admin/box.py:317 admin/product.py:567 models/product.py:39
+#: admin/box.py:331 admin/product.py:575 models/product.py:39
 msgid "In offer"
 msgstr "En offre"
 
@@ -320,7 +325,7 @@ msgid "The given short_basket_name is used by another user"
 msgstr "Ce nom de panier est déjà attribué à un autre consommateur."
 
 #: admin/customer.py:59 admin/customer.py:170 admin/group.py:56
-#: admin/staff.py:78 views/my_profile_view.py:63
+#: admin/staff.py:87 views/my_profile_view.py:63
 msgid "The email {} is already used by another user."
 msgstr "L'adresse mail {} est déjà utilisée par un autre utilisateur."
 
@@ -469,7 +474,12 @@ msgstr "Frais de livraison"
 msgid "Minium order amount for free shipping cost"
 msgstr "Minimum pour éviter les frais"
 
-#: admin/lut.py:76 admin/lut.py:79
+#: admin/lut.py:33
+#, python-format
+msgid "Please define first a short_name in %(language)s"
+msgstr "Veuillez d'abord définir le nom abrégé en %(language)s"
+
+#: admin/lut.py:72 admin/lut.py:75
 msgid "The maximum level for this model is {}"
 msgstr ""
 "Pour simplifier la lisibilité de l'interface pour les consommateurs/"
@@ -620,13 +630,13 @@ msgstr "Annuler la dernière facture ou la dernière annulation de livraison"
 msgid "Cancel archiving"
 msgstr "Annuler l'archivage"
 
-#: admin/permanence_done.py:516 tools.py:318
+#: admin/permanence_done.py:516 tools.py:321
 #, python-format
 msgid "The amount of your order is %(amount)s."
 msgstr "Le montant de votre commande s'élève à %(amount)s."
 
 #: admin/permanence_done.py:520 admin/permanence_in_preparation.py:590
-#: tools.py:327
+#: tools.py:330
 #, python-format
 msgid "The balance of your account as of %(date)s is %(balance)s."
 msgstr "Le solde de votre compte en date du %(date)s est de %(balance)s."
@@ -758,7 +768,7 @@ msgstr ""
 "facture pour un montant de %(bank)s, ni compte des commandes qui ne sont pas "
 "encore facturées pour un montant de %(other_order)s."
 
-#: admin/permanence_in_preparation.py:611 tools.py:364
+#: admin/permanence_in_preparation.py:611 tools.py:367
 #, python-format
 msgid ""
 "Please pay %(payment)s to the bank account %(name)s %(number)s with "
@@ -832,7 +842,7 @@ msgid "Reference site"
 msgstr "Site de référence"
 
 #: admin/producer.py:151 admin/product.py:95 admin/product.py:97
-#: admin/product.py:181 admin/product.py:187
+#: admin/product.py:189 admin/product.py:195
 msgid "The price must be greater than or equal to zero."
 msgstr "Cette valeur doit être supérieure ou égale à zéro."
 
@@ -898,36 +908,36 @@ msgstr "Importer le stock"
 msgid "The order unit must be set."
 msgstr "Le mode de passation doit être renseigné."
 
-#: admin/product.py:107 admin/product.py:223
+#: admin/product.py:107 admin/product.py:231
 msgid "The minimum order quantity must be an integer."
 msgstr ""
 "La quantité minimale de commande doit être un nombre entier (1, 2, 3, ...) "
 "car elle représente un nombre de pièces."
 
-#: admin/product.py:109 admin/product.py:227
+#: admin/product.py:109 admin/product.py:235
 msgid "The increment must be an integer."
 msgstr ""
 "Cette valeur doit être doit être un nombre entier (1, 2, 3, ...) car elle "
 "représente un nombre de pièces."
 
-#: admin/product.py:111 admin/product.py:233
+#: admin/product.py:111 admin/product.py:241
 msgid "The stock must be an integer."
 msgstr ""
 "Le stock doit être un nombre entier (1, 2, 3, ...) car il représente un "
 "nombre de pièces."
 
-#: admin/product.py:113 admin/product.py:237
+#: admin/product.py:113 admin/product.py:245
 msgid "The alert quantity must be an integer."
 msgstr ""
 "La quantité d'alerte doit être un nombre entier (1, 2, 3, ...) car elle "
 "représente un nombre de pièces."
 
-#: admin/product.py:117 admin/product.py:241
+#: admin/product.py:117 admin/product.py:249
 msgid "The minimum order quantity must be greater than zero."
 msgstr ""
 "La quantité minimale de commande doit être strictement supérieure à zéro."
 
-#: admin/product.py:121 admin/product.py:246
+#: admin/product.py:121 admin/product.py:254
 msgid "The increment must be greater than zero."
 msgstr "Cette valeur doit être strictement supérieure à zéro."
 
@@ -936,18 +946,18 @@ msgstr "Cette valeur doit être strictement supérieure à zéro."
 msgid "The reference %(reference)s is already used by %(product)s"
 msgstr "La référence %(reference)s est déjà attribuée à %(product)s"
 
-#: admin/product.py:163 admin/product.py:525 admin/purchase.py:101
+#: admin/product.py:171 admin/product.py:533 admin/purchase.py:101
 msgid "Please select first a producer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un producteur via les filtres dans l'écran "
 "précédent..."
 
-#: admin/product.py:173
+#: admin/product.py:181
 #, python-format
 msgid "The reference is already used by %(product)s"
 msgstr "La référence est déjà attribuée à %(product)s"
 
-#: admin/product.py:205
+#: admin/product.py:213
 msgid ""
 "You must limit the order quantity to the stock because the producer "
 "represent this buyinggroup."
@@ -955,7 +965,7 @@ msgstr ""
 "Vous devez limiter les ventes au stock d'inventaire car il s'agit d'un "
 "produit que vous produisez."
 
-#: admin/product.py:210
+#: admin/product.py:218
 msgid ""
 "You must limit the order quantity to the stock because you pre open the "
 "orders for this producer."
@@ -963,7 +973,7 @@ msgstr ""
 "Vous devez limiter les ventes au stock d'inventaire car le producteur "
 "renseignera son stock lors de la préouverture des commandes."
 
-#: admin/product.py:269
+#: admin/product.py:277
 #, python-format
 msgid ""
 "This alert quantity will generate more than %(qty_item)d choices for the "
@@ -971,7 +981,7 @@ msgid ""
 msgstr ""
 "Cette quantité d'alerte proposera plus de %(qty_item)d choix au consommateur."
 
-#: admin/product.py:274
+#: admin/product.py:282
 msgid ""
 "The alert quantity must be greater than or equal to the minimum order "
 "quantity."
@@ -979,7 +989,7 @@ msgstr ""
 "La quantité d'alerte doit être supérieure ou égale à la quantité minimale de "
 "commande."
 
-#: admin/product.py:278
+#: admin/product.py:286
 #, python-format
 msgid ""
 "This alert quantity is not reachable. %(q_max)s is the best lower choice."
@@ -987,15 +997,15 @@ msgstr ""
 "Cette quantité d'alerte n'est pas accessible. %(q_max)s est le meilleur "
 "choix inférieur le plus proche."
 
-#: admin/product.py:325
+#: admin/product.py:333
 msgid "Remove selected products from the offer"
 msgstr "Retirer les produits sélectionnés de l'offre"
 
-#: admin/product.py:343
+#: admin/product.py:351
 msgid "You must select one and only one producer."
 msgstr "Vous ne pouvez sélectionner qu'un seul producteur."
 
-#: admin/product.py:350
+#: admin/product.py:358
 msgid "Please, confirm the action : duplicate product"
 msgstr ""
 "Veuillez confirmer votre demande de duplication d'un produit et renseigner "
@@ -1013,7 +1023,7 @@ msgstr ""
 msgid "Product"
 msgstr "Produit"
 
-#: admin/purchase.py:106 admin/purchase.py:455
+#: admin/purchase.py:106 admin/purchase.py:442
 msgid "No more product to add. Please update a product of previous screen"
 msgstr ""
 "Pas d'autres produits à ajouter pour ce consommateur chez ce producteur."
@@ -1029,39 +1039,13 @@ msgstr "La quantité doit être différente de zéro."
 msgid "Department"
 msgstr "Rayon"
 
-#: admin/purchase.py:226 admin/purchase.py:268
-msgid "Action canceled by the system."
-msgstr "Action annulée par Repanier."
-
-#: admin/purchase.py:238 const.py:272 email/email_order.py:31
-#: models/configuration.py:505 models/invoice.py:23 models/invoice.py:750
-#: models/permanence.py:1747 views/btn_confirm_order_ajax.py:44
-msgid "Order"
-msgstr "Commande"
-
-#: admin/purchase.py:247
-msgid "Order confirmed"
-msgstr "Commande confirmée"
-
-#: admin/purchase.py:252
-msgid "Nothing to confirm"
-msgstr "Rien à confirmer."
-
-#: admin/purchase.py:281
-msgid "Order not confirmed"
-msgstr "Commande non confirmée"
-
-#: admin/purchase.py:286
-msgid "Nothing to unconfirm"
-msgstr "Rien à ne pas confirmer."
-
 #: admin/purchase.py:398
 msgid "Please select first a permanence in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner une permanence via les filtres dans l'écran "
 "précédent..."
 
-#: admin/purchase.py:459
+#: admin/purchase.py:446
 msgid "Please select first a customer in the filter of previous screen"
 msgstr ""
 "Vous devez d'abord sélectionner un consommateur via les filtres dans l'écran "
@@ -1112,21 +1096,21 @@ msgstr "Quantité préparée"
 msgid "Producer amount invoiced wo tax"
 msgstr "Facturé HTVA par le producteur"
 
-#: admin/staff.py:47
+#: admin/staff.py:56
 msgid "Members of the management team must assure at least one function"
 msgstr ""
 "Les membres de l'équipe de gestion doivent assurer au moins une fonction"
 
-#: admin/staff.py:56 admin/staff.py:65
+#: admin/staff.py:65 admin/staff.py:74
 msgid "One and only one member of the management team can assure this function"
 msgstr ""
 "Un et un seul membre de l'équipe de gestion peut assurer cette fonction"
 
-#: admin/staff.py:84 admin/staff.py:88
+#: admin/staff.py:93 admin/staff.py:97
 msgid "At least one email address or one responsible customer must be set."
 msgstr "Au moins un email, ou un consommateur responsable doit être renseigné."
 
-#: admin/staff.py:98 admin/staff.py:103
+#: admin/staff.py:107 admin/staff.py:112
 msgid "At least one coordinator must be set within the management team"
 msgstr ""
 "Au moins un/e coordinateur/trice doit être renseigné/e au sein de l'équipe "
@@ -1651,6 +1635,12 @@ msgstr "Clôture"
 msgid "Delivery"
 msgstr "Livraison"
 
+#: const.py:272 email/email_order.py:31 models/configuration.py:505
+#: models/invoice.py:23 models/invoice.py:750 models/permanence.py:1747
+#: views/btn_confirm_order_ajax.py:44
+msgid "Order"
+msgstr "Commande"
+
 #: const.py:273 models/configuration.py:509
 msgid "Opening"
 msgstr "Offre"
@@ -1659,15 +1649,15 @@ msgstr "Offre"
 msgid "Distribution"
 msgstr "Distribution"
 
-#: const.py:312
+#: const.py:304
 msgid "Euro"
 msgstr "€"
 
-#: const.py:313
+#: const.py:305
 msgid "Franc"
 msgstr "Fr."
 
-#: const.py:314
+#: const.py:306
 msgid "Local"
 msgstr "✿"
 
@@ -2146,7 +2136,7 @@ msgstr "Zéro déchet"
 
 #: models/customer.py:116
 msgid "Valid email"
-msgstr "@ validé"
+msgstr "E-mail validé"
 
 #: models/customer.py:117
 msgid "Agree to receive unsolicited mails from this site"
@@ -2483,18 +2473,18 @@ msgstr "Emplacement"
 
 #: models/item.py:181 models/item.py:200
 #: templates/repanier/widgets/select_producer_order_unit.html:39
-#: templates/repanier/widgets/select_producer_order_unit.html:59 tools.py:251
-#: tools.py:264
+#: templates/repanier/widgets/select_producer_order_unit.html:59 tools.py:254
+#: tools.py:267
 msgid "/ kg"
 msgstr "/ kg"
 
 #: models/item.py:183 models/item.py:202
-#: templates/repanier/widgets/select_producer_order_unit.html:49 tools.py:253
-#: tools.py:266
+#: templates/repanier/widgets/select_producer_order_unit.html:49 tools.py:256
+#: tools.py:269
 msgid "/ l"
 msgstr "/ ℓ"
 
-#: models/item.py:186 tools.py:256
+#: models/item.py:186 tools.py:259
 msgid "/ piece"
 msgstr "/ pièce"
 
@@ -2507,7 +2497,7 @@ msgstr "/ pc"
 msgid "gr"
 msgstr "gr"
 
-#: models/item.py:222 models/item.py:242 tools.py:292
+#: models/item.py:222 models/item.py:242 tools.py:295
 msgid "kg"
 msgstr "kg"
 
@@ -2515,7 +2505,7 @@ msgstr "kg"
 msgid "cl"
 msgstr "cℓ"
 
-#: models/item.py:230 models/item.py:275 tools.py:297
+#: models/item.py:230 models/item.py:275 tools.py:300
 msgid "l"
 msgstr "ℓ"
 
@@ -2848,10 +2838,6 @@ msgstr "Date de calcul du solde"
 #: models/producer.py:105
 msgid "Represent this buyinggroup"
 msgstr "Représente ce groupement d'achats"
-
-#: models/producer.py:157
-msgid "Link to his products"
-msgstr "Produits"
 
 #: models/producer.py:330
 msgid "Last invoice"
@@ -3340,7 +3326,7 @@ msgstr "Votre commande n'est plus confirmée car vous venez de la modifier."
 msgid "Do not forget to confirm it again."
 msgstr "N'oubliez pas de la confirmer à nouveau."
 
-#: templates/repanier/communication_confirm_order.html:12 tools.py:851
+#: templates/repanier/communication_confirm_order.html:12 tools.py:852
 msgid "You can increase the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
@@ -4044,69 +4030,69 @@ msgstr "Mon solde"
 msgid "Welkom"
 msgstr "Bienvenue"
 
-#: tools.py:85
+#: tools.py:88
 msgid "Test from Repanier"
 msgstr "Test de Repanier"
 
-#: tools.py:86
+#: tools.py:89
 msgid "The mail is correctly configured on your Repanier website"
 msgstr ""
 "Les paramètres mails sont correctement configuré sur votre site Repanier."
 
-#: tools.py:114 tools.py:125
+#: tools.py:117 tools.py:128
 msgid "This email will be sent to the following tester(s) : {}."
 msgstr ""
 "Les mails générés par Repanier sont uniquement envoyés aux testeurs de "
 "l'équipe de gestion qui sont : {}."
 
-#: tools.py:118 tools.py:122 tools.py:129
+#: tools.py:121 tools.py:125 tools.py:132
 msgid "No email will be sent."
 msgstr "Aucun ✉ ne sera envoyé."
 
-#: tools.py:120
+#: tools.py:123
 msgid "This email will be sent to the staff."
 msgstr "Cet ✉ sera envoyé à tous les membres de l'équipe de gestion."
 
-#: tools.py:132
+#: tools.py:135
 msgid "This email will be sent to the preparation team and the staff."
 msgstr ""
 "Cet ✉ sera envoyé à tous les membres de l'équipe de préparation et de "
 "l'équipe de gestion."
 
-#: tools.py:134
+#: tools.py:137
 msgid ""
 "This email will be sent to customers or producers depending of the case."
 msgstr "Ce ✉ sera envoyé aux consommateurs ou aux producteurs selon le cas."
 
-#: tools.py:258
+#: tools.py:261
 msgid "/ pieces"
 msgstr "/ pièces"
 
-#: tools.py:277
+#: tools.py:280
 msgid "Piece(s) :"
 msgstr "Pièce(s) :"
 
-#: tools.py:279
+#: tools.py:282
 msgid "{} or kg :"
 msgstr "{} ou kg :"
 
-#: tools.py:281
+#: tools.py:284
 msgid "L :"
 msgstr "ℓ :"
 
-#: tools.py:283
+#: tools.py:286
 msgid "Kg :"
 msgstr "kg :"
 
-#: tools.py:302
+#: tools.py:305
 msgid "piece"
 msgstr "pièce"
 
-#: tools.py:304
+#: tools.py:307
 msgid "pieces"
 msgstr "pièces"
 
-#: tools.py:338
+#: tools.py:341
 #, python-format
 msgid ""
 "Invoices for this delivery point are sent to %(name)s who is responsible for "
@@ -4115,19 +4101,19 @@ msgstr ""
 "Vos factures pour ce point de livraison sont envoyées à %(name)s qui se "
 "charge de centraliser les paiements."
 
-#: tools.py:375
+#: tools.py:378
 msgid "Your account balance is sufficient"
 msgstr "Le solde de votre compte est suffisant"
 
-#: tools.py:389 tools.py:401 views/order_select_ajax.py:93
+#: tools.py:392 tools.py:404 views/order_select_ajax.py:93
 msgid "Sold out"
 msgstr "Épuisé"
 
-#: tools.py:403 views/order_select_ajax.py:154
+#: tools.py:406 views/order_select_ajax.py:154
 msgid "Closed"
 msgstr "Clôturé"
 
-#: tools.py:847
+#: tools.py:848
 msgid ""
 "You can increase the order quantities as long as the orders are open for "
 "your delivery point."
@@ -4135,7 +4121,7 @@ msgstr ""
 "Vous pouvez ajouter des produits et augmenter quantités commandés aussi "
 "longtemps que les commandes sont ouvertes pour votre point de livraison."
 
-#: tools.py:856
+#: tools.py:857
 msgid ""
 "You can change the order quantities as long as the orders are open for your "
 "delivery point."
@@ -4143,17 +4129,17 @@ msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes pour votre point de livraison."
 
-#: tools.py:860
+#: tools.py:861
 msgid "You can change the order quantities as long as the orders are open."
 msgstr ""
 "Vous pouvez modifier les produits et quantités commandés aussi longtemps que "
 "les commandes sont ouvertes."
 
-#: tools.py:865
+#: tools.py:866
 msgid "The orders are closed for your delivery point."
 msgstr "Les commandes sont clôturées pour votre point de livraison."
 
-#: tools.py:869 views/order_init_ajax.py:74
+#: tools.py:870 views/order_init_ajax.py:74
 msgid "The orders are closed."
 msgstr "Les commandes sont clôturées."
 
@@ -4534,6 +4520,24 @@ msgstr "Contrôle du stock"
 #, python-format
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
+
+#~ msgid "Link to his products"
+#~ msgstr "Produits"
+
+#~ msgid "Action canceled by the system."
+#~ msgstr "Action annulée par Repanier."
+
+#~ msgid "Order confirmed"
+#~ msgstr "Commande confirmée"
+
+#~ msgid "Nothing to confirm"
+#~ msgstr "Rien à confirmer."
+
+#~ msgid "Order not confirmed"
+#~ msgstr "Commande non confirmée"
+
+#~ msgid "Nothing to unconfirm"
+#~ msgstr "Rien à ne pas confirmer."
 
 #, fuzzy
 #~| msgid "by basket"
