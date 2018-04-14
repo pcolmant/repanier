@@ -149,12 +149,12 @@ class Producer(models.Model):
             changeproductslist_url = urlresolvers.reverse(
                 'admin:repanier_product_changelist',
             )
-            link = "<a href=\"{}?is_active__exact=1&producer={}\" class=\"btn addlink\">&nbsp;{}</a>".format(
+            link = "<a href=\"{}?is_active__exact=1&producer={}\" class=\"btn\">&nbsp;{}</a>".format(
                 changeproductslist_url, str(self.id), _("Products"))
             return link
         return EMPTY_STRING
 
-    get_products.short_description = (_("Link to his products"))
+    get_products.short_description = EMPTY_STRING
     get_products.allow_tags = True
 
     def get_admin_date_balance(self):
@@ -168,7 +168,7 @@ class Producer(models.Model):
         else:
             return timezone.now().date()
 
-    get_admin_date_balance.short_description = (_("Date_balance"))
+    get_admin_date_balance.short_description = _("Date_balance")
     get_admin_date_balance.allow_tags = False
 
     def get_admin_balance(self):
@@ -177,7 +177,7 @@ class Producer(models.Model):
         else:
             return REPANIER_MONEY_ZERO
 
-    get_admin_balance.short_description = (_("Balance"))
+    get_admin_balance.short_description = _("Balance")
     get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
@@ -267,7 +267,7 @@ class Producer(models.Model):
                     calculated_invoiced_balance -= delta_price_with_tax
         return calculated_invoiced_balance
 
-    get_calculated_invoiced_balance.short_description = (_("Balance"))
+    get_calculated_invoiced_balance.short_description = _("Balance")
     get_calculated_invoiced_balance.allow_tags = False
 
     def get_balance(self):
