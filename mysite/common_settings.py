@@ -233,7 +233,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
 
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
-    'django_select2',
+    # 'django_select2',
     'cmsplugin_filer_file',  # TODO : remove cmsplugin which is replaced by djangocms_file
     'cmsplugin_filer_folder',  # TODO : remove cmsplugin which is replaced by djangocms_file
     'cmsplugin_filer_link',  # TODO : remove cmsplugin which is replaced by djangocms_link
