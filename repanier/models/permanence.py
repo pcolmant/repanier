@@ -447,12 +447,19 @@ class Permanence(TranslatableModel):
                    everything=True, producers_id=(), deliveries_id=(),
                    update_payment_date=False,
                    payment_date=None):
-        permanence = Permanence.objects.select_for_update().filter(
-            id=self.id,
-            status__in=old_status
-        ).exclude(
-            status=new_status
-        ).first()
+        if everything:
+            permanence = Permanence.objects.select_for_update().filter(
+                id=self.id,
+                status__in=old_status
+            ).exclude(
+                status=new_status
+            ).first()
+        else:
+            permanence = Permanence.objects.select_for_update().filter(
+                id=self.id,
+            ).exclude(
+                status=new_status
+            ).first()
         if permanence is None:
             raise ValueError
         if new_status == PERMANENCE_WAIT_FOR_OPEN:
