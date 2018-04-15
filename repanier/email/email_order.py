@@ -243,7 +243,7 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, order_resp
             html_body=html_body,
             from_email=order_responsible.get_from_email,
             to=to_email,
-            reply_to=order_responsible.get_reply_to
+            reply_to=order_responsible.get_reply_to_email
         )
         email.attach(filename,
                      save_virtual_workbook(wb),

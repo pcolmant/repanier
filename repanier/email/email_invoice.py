@@ -69,7 +69,7 @@ def send_invoice(permanence_id):
                             html_body=html_body,
                             from_email=invoice_responsible.get_from_email,
                             to=to_email,
-                            reply_to=invoice_responsible.get_reply_to
+                            reply_to=invoice_responsible.get_reply_to_email
                         )
                         email.send_email()
 
