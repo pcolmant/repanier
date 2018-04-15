@@ -1707,12 +1707,12 @@ class Permanence(TranslatableModel):
 
     def get_permanence_admin_display(self):
         if self.status == PERMANENCE_INVOICED and self.total_selling_with_tax.amount != DECIMAL_ZERO:
-            profit = self.total_selling_with_tax.amount - self.total_purchase_with_tax.amount
-            # profit = self.total_selling_with_tax.amount - self.total_selling_vat.amount - self.total_purchase_with_tax.amount + self.total_purchase_vat.amount
-            if profit != DECIMAL_ZERO:
-                return mark_safe("{}<br>{}<br>💶&nbsp;{}".format(
-                    self.get_permanence_display(), self.total_selling_with_tax, RepanierMoney(profit)
-                ))
+            # profit = self.total_selling_with_tax.amount - self.total_purchase_with_tax.amount
+            # # old : profit = self.total_selling_with_tax.amount - self.total_selling_vat.amount - self.total_purchase_with_tax.amount + self.total_purchase_vat.amount
+            # if profit != DECIMAL_ZERO:
+            #     return mark_safe("{}<br>{}<br>{}&nbsp;{}".format(
+            #         self.get_permanence_display(), self.total_selling_with_tax, BANK_NOTE_UNICODE, RepanierMoney(profit)
+            #     ))
             return mark_safe("{}<br>{}".format(
                 self.get_permanence_display(), self.total_selling_with_tax))
         else:
