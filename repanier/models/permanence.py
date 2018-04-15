@@ -1637,7 +1637,7 @@ class Permanence(TranslatableModel):
 
     def get_html_status_display(self, force_refresh=True):
         need_to_refresh_status = force_refresh or self.status in refresh_status
-        if self.with_delivery_point:
+        if self.with_delivery_point and self.status < PERMANENCE_INVOICED:
             status_list = []
             status = None
             status_counter = 0
