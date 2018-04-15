@@ -4,7 +4,7 @@
 <script type="text/javascript">var go_from_select = function(opt) { window.location = window.location.pathname + opt };</script>
 <script type="text/javascript" src="{% static "easy_select2/js/init.js" %}"></script>
 <script type="text/javascript" src="{% static "easy_select2/js/easy_select2.js" %}"></script>
-<script type="text/javascript" src="{% static "easy_select2/js/lookup_override.1.8.js" %}"></script>
+{#<script type="text/javascript" src="{% static "easy_select2/js/lookup_override.1.8.js" %}"></script>#}
 <script type="text/javascript" src="{% static "easy_select2/vendor/select2/js/select2.min.js" %}"></script>
 <h3>{% blocktrans with title as filter_title %} By {{ filter_title }} {% endblocktrans %}</h3>
 <ul class="admin-filter-{{ title|cut:' ' }}">
