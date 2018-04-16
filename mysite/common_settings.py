@@ -161,6 +161,17 @@ MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
 STATIC_ROOT = STATIC_DIR
 STATIC_URL = "{}{}{}".format(os.sep, "static", os.sep)
 
+###################### LUT_CONFIRM
+if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+    LOCK_UNICODE = "🔑"  # "✓"  # "✉"
+else:
+    LOCK_UNICODE = EMPTY_STRING
+
+LUT_CONFIRM = (
+    (True, LOCK_UNICODE), (False, EMPTY_STRING)
+)
+
+
 ###################### DEBUG
 DEBUG = DJANGO_SETTINGS_DEBUG
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG

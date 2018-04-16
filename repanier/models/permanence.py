@@ -200,8 +200,8 @@ class Permanence(TranslatableModel):
                     else:
                         label = ("{}{} ({}) {}".format(link_unicode,
                                                        p.short_profile_name, pi.get_total_price_with_tax(),
-                                                       LOCK_UNICODE)).replace(' ',
-                                                                              '&nbsp;')
+                                                       settings.LOCK_UNICODE)).replace(' ',
+                                                                                       '&nbsp;')
                         offeritem_changelist_url = close_offeritem_changelist_url
                 else:
                     label = ("{}{} ".format(link_unicode, p.short_profile_name, )).replace(' ', '&nbsp;')
@@ -233,9 +233,9 @@ class Permanence(TranslatableModel):
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
-                    label = "{}{} ({}) {}".format(link_unicode,
-                                                  pi.producer.short_profile_name, pi.get_total_price_with_tax(),
-                                                  LOCK_UNICODE)
+                    label = "{}{} ({})".format(link_unicode,
+                                               pi.producer.short_profile_name, pi.get_total_price_with_tax(),
+                                               )
                     link.append(
                         "<a href=\"{}?permanence={}&producer={}\">&nbsp;{}</a>".format(
                             changelist_url, self.id, pi.producer_id, label.replace(' ', '&nbsp;')
@@ -1669,7 +1669,7 @@ class Permanence(TranslatableModel):
                 progress = EMPTY_STRING
                 delay = 1000
             else:
-                progress = "{} ".format("◤◥◢◣"[self.gauge]) # "◴◷◶◵" "▛▜▟▙"
+                progress = "{} ".format("◤◥◢◣"[self.gauge])  # "◴◷◶◵" "▛▜▟▙"
                 self.gauge = (self.gauge + 1) % 4
                 delay = 500
             self.save(update_fields=['gauge'])

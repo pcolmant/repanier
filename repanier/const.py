@@ -279,14 +279,10 @@ LIMIT_DISPLAYED_PERMANENCE = 25
 BOX_VALUE_STR = "-1"
 BOX_VALUE_INT = -1
 BOX_UNICODE = "📦"  # http://unicode-table.com/fr/1F6CD/
-LOCK_UNICODE = EMPTY_STRING  # "✉"  # "🔑"
+
 # VALID_UNICODE = "✓"
 BANK_NOTE_UNICODE = "💶"
 LINK_UNICODE = "⛓"
-
-LUT_CONFIRM = (
-    (True, LOCK_UNICODE), (False, EMPTY_STRING)
-)
 
 # LUT_VALID = (
 #     (True, VALID_UNICODE), (False, EMPTY_STRING)

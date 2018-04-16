@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 # Filters in the right sidebar of the change list page of the admin
+from django.conf import settings
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
@@ -188,7 +189,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
             if ci is not None:
                 if ci.is_order_confirm_send:
                     list_filter.append(
-                        (c.id, "{} {} ({})".format(LOCK_UNICODE, c.short_basket_name, ci.get_total_price_with_tax())))
+                        (c.id, "{} {} ({})".format(settings.LOCK_UNICODE, c.short_basket_name, ci.get_total_price_with_tax())))
                 else:
                     list_filter.append((c.id, "{} ({})".format(c.short_basket_name, ci.total_price_with_tax)))
             else:
