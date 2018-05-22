@@ -272,7 +272,8 @@ class CustomerInvoice(Invoice):
                         permanence_id=permanence.id,
                         customer_id=self.customer_id
                     ).order_by('?').update(
-                        status=PERMANENCE_CLOSED)
+                        status=PERMANENCE_CLOSED
+                    )
             if self.customer_id != self.customer_charged_id:
                 msg_price = msg_transport = EMPTY_STRING
             else:

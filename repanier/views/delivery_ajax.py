@@ -32,8 +32,6 @@ def delivery_ajax(request):
         raise Http404
     customer = Customer.objects.filter(
         user_id=user.id, may_order=True
-    ).only(
-        "id", "delivery_point", "balance"
     ).order_by('?').first()
     if customer is None:
         raise Http404
