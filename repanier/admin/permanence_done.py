@@ -521,13 +521,24 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 'date': timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
                 'balance': RepanierMoney(123.45)
             }
-        customer_payment_needed = "{} {} {} ({}) {} \"{}\".".format(
-            _('Please pay'),
-            RepanierMoney(123.45),
-            _('to the bank account number'),
-            repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT,
-            _('with communication'),
-            _('Short name'))
+        bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
+        if bank_account_number is not None:
+            group_name = repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+            if permanence.short_name:
+                communication = "{} ({})".format(_('Short name'), permanence.short_name)
+            else:
+                communication = _('Short name')
+            customer_payment_needed = "<font color=\"#bd0926\">{}</font>".format(
+                _(
+                    'Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
+                    'payment': RepanierMoney(123.45),
+                    'name': group_name,
+                    'number': bank_account_number,
+                    'communication': communication
+                }
+            )
+        else:
+            customer_payment_needed = EMPTY_STRING
         context = TemplateContext({
             'name': _('Long name'),
             'long_basket_name': _('Long name'),

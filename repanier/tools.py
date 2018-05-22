@@ -3,13 +3,16 @@ import codecs
 import datetime
 import json
 import logging
+import time
 from functools import wraps
+from smtplib import SMTPAuthenticationError, SMTPRecipientsRefused
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
 from django.conf import settings
-from django.core import urlresolvers
+from django.core import urlresolvers, mail
 from django.core.cache import cache
+from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import F
 from django.http import Http404
@@ -78,32 +81,45 @@ def emails_of_testers():
     return list(set(testers))
 
 
-def send_test_email(host=None, port=None, host_user=None, host_password=None, use_tls=None):
-    if host and port:
-        from repanier.email.email import RepanierEmail
-        to = emails_of_testers()
-        if len(to) == 0:
-            to = host_user
-        # Avoid : string payload expected: <class 'django.utils.functional.__proxy__'>
-        subject = "{}".format(_("Test from Repanier"))
-        body = "{}".format(_("The mail is correctly configured on your Repanier website"))
-        email = RepanierEmail(
-            subject=subject,
-            html_body=body,
-            from_email=host_user,
-            to=to,
-            test_connection=True
-        )
-        email.from_email = host_user
-        email.host = host
-        email.port = port
-        email.host_user = host_user
-        email.host_password = host_password
-        email.use_tls = use_tls
-        email.use_ssl = not use_tls
-        return email.send_email()
-    else:
-        return False
+@debug_parameters
+def send_test_email(host=None, port=None, host_user=None, host_password=None, use_tls=None, to_email=EMPTY_STRING):
+    test_is_ok = False
+    try:
+        if host and port:
+            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
+            # Avoid : string payload expected: <class 'django.utils.functional.__proxy__'>
+            subject = "{}".format(_("Test mail server configuration from Repanier"))
+            body = "{} {}".format(
+                _("The mail server configuration is working on your website {}.").format(REPANIER_SETTINGS_GROUP_NAME),
+                _("Do not forget to activate it.")
+            )
+            to_email = list({to_email, host_user})
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=body,
+                from_email=host_user,
+                to=to_email,
+            )
+            with mail.get_connection(
+                    host=host,
+                    port=port,
+                    username=host_user,
+                    password=host_password,
+                    use_tls=use_tls,
+                    use_ssl=not use_tls) as connection:
+                email.connection = connection
+                email.send()
+                test_is_ok = True
+    except SMTPAuthenticationError:
+        pass
+    except SMTPRecipientsRefused:
+        pass
+    except:
+        pass
+    if not test_is_ok:
+        # delay to avoid too many attempts in a too short period of time
+        time.sleep(10)
+    return test_is_ok
 
 
 def send_email_to_who(is_email_send=True, board=False):
@@ -364,7 +380,7 @@ def payment_message(customer, permanence):
                 group_name = apps.REPANIER_SETTINGS_GROUP_NAME
                 customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
                     _(
-                        'Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
+                        'Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
                         'payment': payment_needed,
                         'name': group_name,
                         'number': bank_account_number,
@@ -841,34 +857,6 @@ def web_services_activated(reference_site=None):
 
 
 def get_html_basket_message(customer, permanence, status):
-    if status == PERMANENCE_OPENED:
-        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            if permanence.with_delivery_point:
-                you_can_change = "<br>{}".format(
-                    _("You can increase the order quantities as long as the orders are open for your delivery point.")
-                )
-            else:
-                you_can_change = "<br>{}".format(
-                    _("You can increase the order quantities as long as the orders are open.")
-                )
-        else:
-            if permanence.with_delivery_point:
-                you_can_change = "<br>{}".format(
-                    _("You can change the order quantities as long as the orders are open for your delivery point.")
-                )
-            else:
-                you_can_change = "<br>{}".format(
-                    _("You can change the order quantities as long as the orders are open.")
-                )
-    else:
-        if permanence.with_delivery_point:
-            you_can_change = "<br>{}".format(
-                _('The orders are closed for your delivery point.')
-            )
-        else:
-            you_can_change = "<br>{}".format(
-                _('The orders are closed.')
-            )
     invoice_msg = EMPTY_STRING
     payment_msg = EMPTY_STRING
     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
@@ -883,7 +871,25 @@ def get_html_basket_message(customer, permanence, status):
         payment_msg = "<br>{}".format(
             customer_payment_needed
         )
-    basket_message = "{}{}{}{}".format(
+
+    if status == PERMANENCE_OPENED:
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+            if permanence.with_delivery_point:
+                you_can_change = _("You can increase the order quantities as long as the orders are open for your delivery point.")
+            else:
+                you_can_change = _("You can increase the order quantities as long as the orders are open.")
+        else:
+            if permanence.with_delivery_point:
+                you_can_change = _("You can change the order quantities as long as the orders are open for your delivery point.")
+            else:
+                you_can_change = _("You can change the order quantities as long as the orders are open.")
+    else:
+        if permanence.with_delivery_point:
+            you_can_change = _('The orders are closed for your delivery point.')
+        else:
+            you_can_change = _('The orders are closed.')
+
+    basket_message = "{}{}{}<br>{}".format(
         customer_order_amount,
         invoice_msg,
         payment_msg,

@@ -608,7 +608,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     communication = _('Short name')
                 customer_payment_needed = "<font color=\"#bd0926\">{}</font>".format(
                     _(
-                        'Please pay %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
+                        'Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
                         'payment': RepanierMoney(123.45),
                         'name': group_name,
                         'number': bank_account_number,
