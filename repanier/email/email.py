@@ -9,7 +9,6 @@ from smtplib import SMTPRecipientsRefused, SMTPAuthenticationError
 from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMultiAlternatives, mail_admins
-from django.db.models import Q
 from django.utils import timezone
 from django.utils.html import strip_tags
 
@@ -24,7 +23,7 @@ class RepanierEmail(EmailMultiAlternatives):
         self.html_body = kwargs.pop('html_body', None)
         self.show_customer_may_unsubscribe = kwargs.pop('show_customer_may_unsubscribe', True)
         self.send_even_if_unsubscribed = kwargs.pop('send_even_if_unsubscribed', False)
-        self.test_connection = kwargs.pop('test_connection', None)
+        self.test_connection = kwargs.pop('test_connection', False)
         super(RepanierEmail, self).__init__(*args, **kwargs)
         self._set_connection_param()
 

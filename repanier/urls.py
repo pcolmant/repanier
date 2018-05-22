@@ -43,6 +43,7 @@ from repanier.views.send_mail_to_all_members_view import send_mail_to_all_member
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
 from repanier.views.task_class import PermanenceView
 from repanier.views.task_form_ajax import task_form_ajax
+from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
 
@@ -124,6 +125,8 @@ urlpatterns = [
         is_into_offer_content, name='is_into_offer_content'),
     url(r'^ajax/flexible_dates/(?P<product_id>\d+)/(?P<contract_id>\d+)/$',
         flexible_dates, name='flexible_dates'),
+    # url(r'^ajax/test-mail-config/(?P<id_email_host>.*)/(?P<id_email_port>.*)/(?P<id_email_use_tls>.*)/(?P<id_email_host_user>.*)/(?P<id_new_email_host_password>.*)/$', test_mail_config_ajax, name='test_mail_config_ajax'),
+    url(r'^ajax/test-mail-config/$', test_mail_config_ajax, name='test_mail_config_ajax'),
     url(r'^permanence/$', never_cache(PermanenceView.as_view()), name='permanence_view'),
     url(r'^customer-invoice/(?P<pk>[0-9]+)/$', login_required(CustomerInvoiceView.as_view()),
         name='customer_invoice_view'),

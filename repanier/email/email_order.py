@@ -68,8 +68,8 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                 })
                 html_body = template.render(context)
 
-                to_email = []
                 if REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD:
+                    to_email = []
                     for permanence_board in PermanenceBoard.objects.filter(
                             permanence_id=permanence.id).order_by('?'):
                         if permanence_board.customer:
@@ -77,7 +77,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                     to_email = list(
                         set(to_email) | set(order_responsible.get_to_email) | set(Staff.get_to_order_copy()))
                 else:
-                    to_email = list(set(order_responsible.get_to_email + Staff.get_to_order_copy()))
+                    to_email = list(set(order_responsible.get_to_email) | set(Staff.get_to_order_copy()))
 
                 email = RepanierEmail(
                     subject=order_staff_mail_subject,

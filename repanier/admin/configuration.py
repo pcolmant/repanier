@@ -1,14 +1,18 @@
 # -*- coding: utf-8
 from django import forms
 from django.conf import settings
+from django.conf.urls import url
+from django.core import urlresolvers
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.const import EMPTY_STRING
 from repanier.models.configuration import Configuration
-from repanier.models.producer import Producer
 from repanier.tools import send_test_email
+from repanier.widget.button_test_mail_config import ButtonTestMailConfigWidget
 
 
 class ConfigurationDataForm(TranslatableModelForm):
@@ -16,6 +20,7 @@ class ConfigurationDataForm(TranslatableModelForm):
         label=_("Home site"),
         required=False,
         widget=forms.URLInput(attrs={'style': "width:100% !important"}))
+    send_test_mail_button = forms.CharField(label=EMPTY_STRING, widget=ButtonTestMailConfigWidget)
     group_label = forms.CharField(
         label=_("Label to mention on the invoices of the group"),
         required=False,
@@ -26,7 +31,7 @@ class ConfigurationDataForm(TranslatableModelForm):
         required=False,
         widget=forms.EmailInput(attrs={'style': "width:100% !important"})
     )
-    email_host_password = forms.CharField(
+    new_email_host_password = forms.CharField(
         label=_("Email host password"),
         help_text=_(
             "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
@@ -39,33 +44,45 @@ class ConfigurationDataForm(TranslatableModelForm):
         required=False,
         widget=forms.EmailInput(attrs={'style': "width:50% !important"}))
 
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        # Voilà, now you can access request anywhere in your form methods by using self.request!
+        super(ConfigurationDataForm, self).__init__(*args, **kwargs)
+
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
         if not settings.REPANIER_SETTINGS_DEMO:
+            new_email_host_password = self.cleaned_data["new_email_host_password"]
             email_is_custom = self.cleaned_data["email_is_custom"]
             if email_is_custom:
-                email_host_password = self.cleaned_data["email_host_password"]
-                # Send test email
-                if not email_host_password:
-                    email_host_password = self.instance.previous_email_host_password
-                email_host = self.cleaned_data["email_host"]
-                email_port = self.cleaned_data["email_port"]
-                email_use_tls = self.cleaned_data["email_use_tls"]
-                email_host_user = self.cleaned_data["email_host_user"]
-                email_send = send_test_email(
-                    host=email_host,
-                    port=email_port,
-                    host_user=email_host_user,
-                    host_password=email_host_password,
-                    use_tls=email_use_tls
-                )
-                if not email_send:
-                    self.add_error(
-                        'email_is_custom',
-                        _('Repanier tried to send a test email without success.'))
-                    self.instance.email_is_custom = False
+                if new_email_host_password:
+                    # Send test email
+
+                    email_host = self.cleaned_data["email_host"]
+                    email_port = self.cleaned_data["email_port"]
+                    email_use_tls = self.cleaned_data["email_use_tls"]
+                    email_host_user = self.cleaned_data["email_host_user"]
+                    email_send = send_test_email(
+                        host=email_host,
+                        port=email_port,
+                        host_user=email_host_user,
+                        host_password=new_email_host_password,
+                        use_tls=email_use_tls,
+                        cc=(self.request.user.email,)
+                    )
+                    if not email_send:
+                        self.add_error(
+                            'email_is_custom',
+                            _('Repanier tried to send a test email without success.'))
+                        self.instance.email_is_custom = False
+                        self.instance.email_host_password = new_email_host_password
+
+            if not new_email_host_password:
+                self.instance.email_host_password = self.instance.previous_email_host_password
+            else:
+                self.instance.email_host_password = new_email_host_password
 
     class Meta:
         model = Configuration
@@ -91,12 +108,25 @@ class ConfigurationAdmin(TranslatableAdmin):
             return True
         return False
 
+    # def get_urls(self):
+    #     urls = super(ConfigurationAdmin, self).get_urls()
+    #     my_urls = [
+    #         url(r'^test_mail_config/$', self.admin_site.admin_view(self.test_mail_config), name="test_mail_config"),
+    #     ]
+    #     return my_urls + urls
+    #
+    # def test_mail_config(self, request):
+    #     redirect_to = reverse('admin:repanier_configuration_change', args=(1,))
+    #     return HttpResponseRedirect(redirect_to)
+
     def get_fieldsets(self, *args, **kwargs):
         fields = [
             ('group_name', 'name'),
             ('bank_account', 'max_week_wo_participation'),
             ('membership_fee', 'membership_fee_duration'),
             'display_anonymous_order_form',
+            'display_who_is_who',
+            'how_to_register',
         ]
         if settings.REPANIER_SETTINGS_TEST_MODE:
             fields += [
@@ -165,12 +195,8 @@ class ConfigurationAdmin(TranslatableAdmin):
                 }),
             ]
 
-        fields = [
-            'display_who_is_who',
-            'how_to_register',
-        ]
         if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            fields += [
+            fields = [
                 'home_site',
                 ('transport', 'min_transport'),
                 'group_label',
@@ -179,16 +205,35 @@ class ConfigurationAdmin(TranslatableAdmin):
                 ('currency', 'vat_id'),
                 'sms_gateway_mail',
             ]
+            fieldsets += [
+                (_('Advanced options'), {
+                    'classes': ('collapse',),
+                    'fields': fields,
+                }),
+            ]
 
-        fields += [
+        fields = [
             'email_is_custom',
+            'send_test_mail_button',
             ('email_host', 'email_port', 'email_use_tls'),
-            ('email_host_user', 'email_host_password')
+            ('email_host_user', 'new_email_host_password')
         ]
         fieldsets += [
-            (_('Advanced options'), {
+            (_('Advanced mail server configuration'), {
                 'classes': ('collapse',),
                 'fields': fields,
             }),
         ]
+
         return fieldsets
+
+    def get_form(self, request, obj=None, **kwargs):
+
+        AdminForm = super(ConfigurationAdmin, self).get_form(request, obj, **kwargs)
+
+        class AdminFormWithRequest(AdminForm):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return AdminForm(*args, **kwargs)
+
+        return AdminFormWithRequest
