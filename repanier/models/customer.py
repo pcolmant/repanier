@@ -114,7 +114,7 @@ class Customer(models.Model):
     may_order = models.BooleanField(_("May order"), default=True)
     zero_waste = models.BooleanField(_("Zero waste"), default=False)
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
-    subscribe_to_email = models.BooleanField(_("Agree to receive unsolicited mails from this site"), default=True)
+    subscribe_to_email = models.BooleanField(_("Agree to receive mails from this site"), default=True)
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     @classmethod
@@ -389,7 +389,7 @@ class Customer(models.Model):
         return mark_safe(
             "<br><br><hr/><br><a href=\"{}\">{}</a>".format(
                 self._get_unsubscribe_link(),
-                _("Stop receiving unsolicited mails from {}").format(self._get_unsubscribe_site())
+                _("Stop receiving mails from {}").format(self._get_unsubscribe_site())
             )
         )
 
