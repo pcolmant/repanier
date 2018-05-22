@@ -77,7 +77,7 @@ class CustomerForm(RepanierForm):
             self.fields["show_mails_to_members"].widget = HiddenInput()
             self.fields["show_phones_to_members"].widget = HiddenInput()
         self.fields["subscribe_to_email"].widget = CheckboxWidget(
-            label=_('I agree to receive unsolicited mails from this site'))
+            label=_('I agree to receive mails from this site'))
         self.fields["zero_waste"].widget = CheckboxWidget(
             label=_('Family zero waste'))
 

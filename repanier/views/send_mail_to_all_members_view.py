@@ -20,7 +20,7 @@ from repanier.views.forms import RepanierForm
 class MembersContactForm(RepanierForm):
     recipient = fields.CharField(
         label=_('Recipient(s)'),
-        initial=_("All members who agree to receive unsolicited mails from this site")
+        initial=_("All members who agree to receive mails from this site")
     )
     your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
