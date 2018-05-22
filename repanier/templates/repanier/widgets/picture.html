@@ -19,7 +19,7 @@
         {% endif %}
         <input id="{{ id }}" type="hidden" value="{{ repanier_file_path }}" name="{{ name }}" />
     </div>
-    <script>
+    <script type="text/javascript">
         var {{ id }}_jQuery;
         if( typeof django === 'undefined'){
             if( typeof CMS === 'undefined'){
@@ -39,7 +39,7 @@
                 {{ id }}_file_remove = $("#{{ id }}_file_remove"),
                 {{ id }}_file_path = $("#{{ id }}");
             function getCsrftoken() {
-                var cookieValue = null;
+                var csrftoken = null;
                 if (document.cookie && document.cookie !== '') {
                     var cookies = document.cookie.split(';');
                     for (var i = 0; i < cookies.length; i++) {
@@ -107,10 +107,11 @@
                         canvas.style.visibility = "hidden";
 
                         context.drawImage(img, 0, 0, width, height);
+                        var dataURL = null;
                         if(file_type === 'image/png') {
-                            var dataURL = canvas.toDataURL("image/png");
+                            dataURL = canvas.toDataURL("image/png");
                         } else {
-                            var dataURL = canvas.toDataURL("image/jpeg", 0.9);
+                            dataURL = canvas.toDataURL("image/jpeg", 0.9);
                         }
                         if (dataURL.split(',')[0].indexOf('base64') >= 0)
                             byteString = atob(dataURL.split(',')[1]);
