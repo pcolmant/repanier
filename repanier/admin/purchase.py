@@ -9,7 +9,6 @@ from django.contrib import admin
 from django.core import urlresolvers
 from django.core.checks import messages
 from django.db import transaction
-from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
@@ -30,7 +29,6 @@ from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
-from repanier.models.staff import Staff
 from repanier.tools import sint
 from repanier.widget.select_admin_delivery import SelectAdminDeliveryWidget
 from repanier.widget.select_admin_permanence import SelectAdminPermanenceWidget
