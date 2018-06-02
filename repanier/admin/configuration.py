@@ -20,7 +20,10 @@ class ConfigurationDataForm(TranslatableModelForm):
         label=_("Home site"),
         required=False,
         widget=forms.URLInput(attrs={'style': "width:100% !important"}))
-    send_test_mail_button = forms.CharField(label=EMPTY_STRING, widget=ButtonTestMailConfigWidget)
+    send_test_mail_button = forms.CharField(
+        label=EMPTY_STRING, widget=ButtonTestMailConfigWidget,
+        required=False
+    )
     group_label = forms.CharField(
         label=_("Label to mention on the invoices of the group"),
         required=False,
