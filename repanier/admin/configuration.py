@@ -58,29 +58,30 @@ class ConfigurationDataForm(TranslatableModelForm):
             return
         if not settings.REPANIER_SETTINGS_DEMO:
             new_email_host_password = self.cleaned_data["new_email_host_password"]
-            email_is_custom = self.cleaned_data["email_is_custom"]
-            if email_is_custom:
-                if new_email_host_password:
-                    # Send test email
-
-                    email_host = self.cleaned_data["email_host"]
-                    email_port = self.cleaned_data["email_port"]
-                    email_use_tls = self.cleaned_data["email_use_tls"]
-                    email_host_user = self.cleaned_data["email_host_user"]
-                    email_send = send_test_email(
-                        host=email_host,
-                        port=email_port,
-                        host_user=email_host_user,
-                        host_password=new_email_host_password,
-                        use_tls=email_use_tls,
-                        cc=(self.request.user.email,)
-                    )
-                    if not email_send:
-                        self.add_error(
-                            'email_is_custom',
-                            _('Repanier tried to send a test email without success.'))
-                        self.instance.email_is_custom = False
-                        self.instance.email_host_password = new_email_host_password
+            # vvvvvv use send_test_mail_button instead
+            # email_is_custom = self.cleaned_data["email_is_custom"]
+            # if email_is_custom:
+            #     if new_email_host_password:
+            #         # Send test email
+            #
+            #         email_host = self.cleaned_data["email_host"]
+            #         email_port = self.cleaned_data["email_port"]
+            #         email_use_tls = self.cleaned_data["email_use_tls"]
+            #         email_host_user = self.cleaned_data["email_host_user"]
+            #         email_send = send_test_email(
+            #             host=email_host,
+            #             port=email_port,
+            #             host_user=email_host_user,
+            #             host_password=new_email_host_password,
+            #             use_tls=email_use_tls,
+            #             cc=(self.request.user.email,)
+            #         )
+            #         if not email_send:
+            #             self.add_error(
+            #                 'email_is_custom',
+            #                 _('Repanier tried to send a test email without success.'))
+            #             self.instance.email_is_custom = False
+            #             self.instance.email_host_password = new_email_host_password
 
             if not new_email_host_password:
                 self.instance.email_host_password = self.instance.previous_email_host_password
