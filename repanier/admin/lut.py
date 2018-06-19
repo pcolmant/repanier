@@ -102,7 +102,6 @@ class LUTDeliveryPointAdmin(LUTAdmin):
 
     def get_fields(self, request, obj=None):
         fields = [
-            'parent',
             'short_name',
             'is_active',
             ('transport', 'min_transport')
@@ -174,7 +173,6 @@ class LUTPermanenceRoleAdmin(LUTAdmin):
 
     def get_fields(self, request, obj=None):
         fields = [
-            'parent',
             'short_name',
             'customers_may_register',
             'is_counted_as_participation',
