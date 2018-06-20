@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-22 08:32+0200\n"
-"PO-Revision-Date: 2018-05-22 08:33+0200\n"
+"POT-Creation-Date: 2018-06-19 08:23+0200\n"
+"PO-Revision-Date: 2018-06-19 08:24+0200\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -59,7 +59,7 @@ msgid "Customers"
 msgstr "Consommateurs"
 
 #: admin/admin_filter.py:230 admin/admin_filter.py:251 apps.py:19
-#: models/configuration.py:494 models/contract.py:162
+#: models/configuration.py:497 models/contract.py:162
 msgid "Permanences"
 msgstr "Permanences"
 
@@ -240,7 +240,7 @@ msgstr "Créer un duplicata"
 msgid "Advanced descriptions"
 msgstr "Descriptions avancées"
 
-#: admin/box.py:281 admin/configuration.py:209 admin/customer.py:367
+#: admin/box.py:281 admin/configuration.py:213 admin/customer.py:367
 #: admin/group.py:280 admin/producer.py:380 admin/product.py:488
 msgid "Advanced options"
 msgstr "Paramètres avancés"
@@ -253,23 +253,23 @@ msgstr "En offre"
 msgid "Home site"
 msgstr "Adresse (URL) associée au bouton \"Home\" du site de commande"
 
-#: admin/configuration.py:25 models/configuration.py:116
+#: admin/configuration.py:28 models/configuration.py:116
 msgid "Label to mention on the invoices of the group"
 msgstr "Label à mentionner sur les factures du groupe"
 
-#: admin/configuration.py:29 models/configuration.py:106
+#: admin/configuration.py:32 models/configuration.py:106
 msgid "Email host user"
 msgstr "Mail host user"
 
-#: admin/configuration.py:30 models/configuration.py:107
+#: admin/configuration.py:33 models/configuration.py:107
 msgid "For @gmail.com : username@gmail.com"
 msgstr "Exemple : LeCompteDeMonGroupe@gmail.com"
 
-#: admin/configuration.py:35 models/configuration.py:110
+#: admin/configuration.py:38 models/configuration.py:110
 msgid "Email host password"
 msgstr "Mail host password"
 
-#: admin/configuration.py:37 models/configuration.py:112
+#: admin/configuration.py:40 models/configuration.py:112
 msgid ""
 "For @gmail.com, you must generate an application password, see: https://"
 "security.google.com/settings/security/apppasswords"
@@ -277,11 +277,11 @@ msgstr ""
 "Pour @gmail.com, vous devez générer un mot de passe applicatif. Voir : "
 "https://security.google.com/settings/security/apppasswords"
 
-#: admin/configuration.py:41 models/configuration.py:63
+#: admin/configuration.py:44 models/configuration.py:63
 msgid "Sms gateway email"
 msgstr "✉ de passerelle SMS"
 
-#: admin/configuration.py:43 models/configuration.py:65
+#: admin/configuration.py:46 models/configuration.py:65
 msgid ""
 "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/"
 "apps/details?id=eu.apksoft.android.smsgateway"
@@ -289,27 +289,23 @@ msgstr ""
 "Le SMS sera envoyé par une application tournant sur un GSM. Par exemple : "
 "https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"
 
-#: admin/configuration.py:78
-msgid "Repanier tried to send a test email without success."
-msgstr "Repanier a tenté d'envoyé un ✉ de test sans succès."
-
-#: admin/configuration.py:142
+#: admin/configuration.py:146
 msgid "Pre-opening mails"
 msgstr "✉ mails de pré-ouverture des commandes"
 
-#: admin/configuration.py:151
+#: admin/configuration.py:155
 msgid "Opening mails"
 msgstr "✉ mails d'ouverture des commandes"
 
-#: admin/configuration.py:161 admin/configuration.py:175
+#: admin/configuration.py:165 admin/configuration.py:179
 msgid "Ordering mails"
 msgstr "✉ mails de transmission des commandes"
 
-#: admin/configuration.py:188
+#: admin/configuration.py:192
 msgid "Invoicing mails"
 msgstr "✉ mails de facturation des commandes"
 
-#: admin/configuration.py:222
+#: admin/configuration.py:226
 msgid "Advanced mail server configuration"
 msgstr "Configuration de serveur de messagerie avancée"
 
@@ -465,9 +461,8 @@ msgid "Members"
 msgstr "Membres"
 
 #: admin/group.py:135 models/lut.py:82
-msgid "Inform customer responsible"
-msgstr ""
-"Informer le consommateur responsable des commandes passées par ses membres"
+msgid "Inform the group of orders placed by its members"
+msgstr "Informer le groupe des commandes passées par ses membres"
 
 #: admin/group.py:139 models/invoice.py:43 models/invoice.py:111
 #: models/lut.py:84
@@ -1038,7 +1033,7 @@ msgid "Action canceled by the system."
 msgstr "Action annulée par Repanier."
 
 #: admin/purchase.py:239 const.py:272 email/email_order.py:31
-#: models/configuration.py:505 models/invoice.py:23 models/invoice.py:751
+#: models/configuration.py:508 models/invoice.py:23 models/invoice.py:751
 #: models/permanence.py:1754 views/btn_confirm_order_ajax.py:44
 msgid "Order"
 msgstr "Commande"
@@ -1128,7 +1123,7 @@ msgstr ""
 "Au moins un/e coordinateur/trice doit être renseigné/e au sein de l'équipe "
 "de gestion."
 
-#: apps.py:18 const.py:269 models/configuration.py:493 models/purchase.py:158
+#: apps.py:18 const.py:269 models/configuration.py:496 models/purchase.py:158
 #: xlsx/xlsx_invoice.py:217
 msgid "Permanence"
 msgstr "Permanence"
@@ -1399,7 +1394,7 @@ msgstr "Gérer"
 msgid "Parameters ..."
 msgstr "Paramètres ..."
 
-#: cms_toolbar.py:32 models/configuration.py:452
+#: cms_toolbar.py:32 models/configuration.py:455
 msgid "Configuration"
 msgstr "Configuration"
 
@@ -1639,19 +1634,19 @@ msgstr "Ceci est le prochain solde. Le système est en train de le calculer."
 msgid "This is the latest bank total"
 msgstr "Ceci est le dernier solde."
 
-#: const.py:270 models/configuration.py:497
+#: const.py:270 models/configuration.py:500
 msgid "Closure"
 msgstr "Clôture"
 
-#: const.py:271 models/configuration.py:501
+#: const.py:271 models/configuration.py:504
 msgid "Delivery"
 msgstr "Livraison"
 
-#: const.py:273 models/configuration.py:509
+#: const.py:273 models/configuration.py:512
 msgid "Opening"
 msgstr "Offre"
 
-#: const.py:274 models/configuration.py:513
+#: const.py:274 models/configuration.py:516
 msgid "Distribution"
 msgstr "Distribution"
 
@@ -1672,7 +1667,7 @@ msgstr "✿"
 msgid "Pre-opening of orders"
 msgstr "Pré-ouverture des commandes"
 
-#: email/email_order.py:133
+#: email/email_order.py:132
 msgid ""
 "⚠ Mail not send to our producer {} because the minimum order value has not "
 "been reached."
@@ -1680,11 +1675,11 @@ msgstr ""
 "⚠ Mail non transmis au producteur {} car le minimum de commande n'a pas été "
 "atteint."
 
-#: email/email_order.py:226
+#: email/email_order.py:225
 msgid "Group invoices"
 msgstr "Factures du groupe"
 
-#: email/email_order.py:293
+#: email/email_order.py:292
 msgid "⚠ Order cancelled"
 msgstr "⚠ Commande annulée"
 
@@ -1770,7 +1765,7 @@ msgstr ""
 msgid "Login attempt counter"
 msgstr "Compteur de tentatives de login"
 
-#: models/configuration.py:31 models/customer.py:93 models/staff.py:93
+#: models/configuration.py:31 models/customer.py:93 models/staff.py:101
 msgid "Password reset on"
 msgstr "Mot de passe réinitialisé le"
 
@@ -1967,52 +1962,52 @@ msgstr ""
 msgid "Home"
 msgstr "Accueil"
 
-#: models/configuration.py:453
+#: models/configuration.py:456
 msgid "Configurations"
 msgstr "Configuration"
 
-#: models/configuration.py:495
+#: models/configuration.py:498
 msgid "Permanence of "
 msgstr "Permanence du "
 
-#: models/configuration.py:498
+#: models/configuration.py:501
 msgid "Closures"
 msgstr "Clôtures"
 
-#: models/configuration.py:499
+#: models/configuration.py:502
 msgid "Closure of "
 msgstr "Clôture du "
 
-#: models/configuration.py:502
+#: models/configuration.py:505
 msgid "Deliveries"
 msgstr "Livraisons"
 
-#: models/configuration.py:503
+#: models/configuration.py:506
 msgid "Delivery of "
 msgstr "Livraison du "
 
-#: models/configuration.py:506 models/permanence.py:1755
+#: models/configuration.py:509 models/permanence.py:1755
 #: xlsx/export_tools.py:41
 msgid "Orders"
 msgstr "Commandes"
 
-#: models/configuration.py:507
+#: models/configuration.py:510
 msgid "Order of "
 msgstr "Commande du "
 
-#: models/configuration.py:510
+#: models/configuration.py:513
 msgid "Openings"
 msgstr "Offres"
 
-#: models/configuration.py:511
+#: models/configuration.py:514
 msgid "Opening of "
 msgstr "Offre du "
 
-#: models/configuration.py:514
+#: models/configuration.py:517
 msgid "Distributions"
 msgstr "Distributions"
 
-#: models/configuration.py:515
+#: models/configuration.py:518
 msgid "Distribution of "
 msgstr "Distribution du "
 
@@ -2032,7 +2027,7 @@ msgstr "Photo"
 
 #: models/contract.py:53 models/customer.py:107 models/item.py:111
 #: models/lut.py:45 models/lut.py:77 models/lut.py:122 models/lut.py:162
-#: models/producer.py:106 models/staff.py:94
+#: models/producer.py:106 models/staff.py:102
 msgid "Active"
 msgstr "Actif"
 
@@ -2066,7 +2061,7 @@ msgstr "Adresse ✉ secondaire"
 msgid "Language"
 msgstr "Langue"
 
-#: models/customer.py:53 models/producer.py:51 models/staff.py:194
+#: models/customer.py:53 models/producer.py:51 models/staff.py:202
 #: xlsx/xlsx_order.py:39 xlsx/xlsx_order.py:98
 msgid "Phone1"
 msgstr "✆"
@@ -2948,55 +2943,59 @@ msgstr "Référant producteur"
 msgid "Offers in preparation manager"
 msgstr "Responsable principal/e des offres en préparation"
 
-#: models/staff.py:71
+#: models/staff.py:72
 msgid "Offers in preparation referent"
 msgstr "Assistant/e à l'encodage des offres en préparation"
 
-#: models/staff.py:74
+#: models/staff.py:76
 msgid "In copy of the offers in preparation"
 msgstr "En copie des offres en préparation"
 
-#: models/staff.py:77
+#: models/staff.py:79
 msgid "Billing offers manager"
 msgstr "Responsable principal/e des offres en facturation"
 
-#: models/staff.py:80
+#: models/staff.py:83
 msgid "Billing offers referent"
 msgstr "Assistant/e à l'encodage des offres en facturation"
 
-#: models/staff.py:83
+#: models/staff.py:87
 msgid "In copy of the billing offers"
 msgstr "En copie des offres en facturation"
 
-#: models/staff.py:86
+#: models/staff.py:90
 msgid "Webmaster"
 msgstr "Webmaster"
 
-#: models/staff.py:88
+#: models/staff.py:93
 msgid "Coordonnateur"
 msgstr "Coordonnateur/trice"
 
-#: models/staff.py:90
+#: models/staff.py:95
+msgid "Repanier administrator"
+msgstr "Administrateur de Repanier"
+
+#: models/staff.py:98
 msgid "Tester"
 msgstr "Testeur"
 
-#: models/staff.py:131
+#: models/staff.py:139
 msgid "Coordinator"
 msgstr "Coordonnateur/trice"
 
-#: models/staff.py:282
+#: models/staff.py:290
 msgid " 💡 who is also tester "
 msgstr " 💡 qui est aussi un testeur "
 
-#: models/staff.py:299
+#: models/staff.py:307
 msgid "STAFF"
 msgstr "RESPONSABLE"
 
-#: models/staff.py:309
+#: models/staff.py:317
 msgid "Staff member"
 msgstr "Responsable"
 
-#: models/staff.py:310
+#: models/staff.py:318
 msgid "Staff members"
 msgstr "Responsables"
 
@@ -4556,6 +4555,13 @@ msgstr "Contrôle du stock"
 #, python-format
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
+
+#~ msgid "Repanier tried to send a test email without success."
+#~ msgstr "Repanier a tenté d'envoyé un ✉ de test sans succès."
+
+#~ msgid "Inform customer responsible"
+#~ msgstr ""
+#~ "Informer le consommateur responsable des commandes passées par ses membres"
 
 #, fuzzy
 #~| msgid ""

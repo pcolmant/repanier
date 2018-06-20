@@ -132,7 +132,7 @@ class GroupWithUserDataForm(UserDataForm):
         required=False
     )
     inform_customer_responsible = forms.BooleanField(
-        label=_('Inform customer responsible'),
+        label=_('Inform the group of orders placed by its members'),
         required=False
     )
     transport = FormMoneyField(

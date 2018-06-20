@@ -79,7 +79,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         'Customer', verbose_name=_("Customer responsible"),
         help_text=_("Invoices are sent to this customer who is responsible for collecting the payments."),
         blank=True, null=True, default=None)
-    inform_customer_responsible = models.BooleanField(_("Inform customer responsible"), default=False)
+    inform_customer_responsible = models.BooleanField(_("Inform the group of orders placed by its members"), default=False)
     transport = ModelMoneyField(
         _("Delivery point shipping cost"),
         # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
