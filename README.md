@@ -51,10 +51,11 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
     apt-get upgrade -y
     apt-get install -y sudo
     ```
-3. Disable `apache` if enabled because we will use `nginx` and not `apache` to listen to port 80 and 443.
+3. Remove `apache` if enabled because we will use `nginx` and not `apache` to listen to port 80 and 443.
     ```commandline
     service apache2 stop
-    sudo update-rc.d apache2 disable
+    apt-get purge apache2 apache2-utils
+    sudo apt-get autoremove
     ```
 4. Be sure to have the right locales set. **This will be used to create the PostgreSQL data base**.
     ```commandline
