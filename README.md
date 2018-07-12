@@ -373,6 +373,16 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 10. Reset the pasword for the very first user whose mail is `eva.frank@no-spam.ws`
 11. Then log in as this user, create others customers, producers, products, ....
 
+How to activate https with Let's Encrypt
+----------------------------------------
+Validate the defaults when prompted
+
+    ```
+    sudo git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+    cd /opt/letsencrypt
+    sudo ./letsencrypt-auto
+    ```
+
 How to change superuser password
 --------------------------------
 `Repanier` users must be created and updated through the `Repanier` interface.
