@@ -3,13 +3,13 @@
 from django.contrib.sites.models import Site
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-from openpyxl.cell import get_column_letter
-from openpyxl.style import NumberFormat
-from openpyxl.styles import Border
-from openpyxl.workbook import Workbook
 
 from repanier.const import EMPTY_STRING
 from repanier.models.staff import Staff
+from repanier.packages.openpyxl.cell import get_column_letter
+from repanier.packages.openpyxl.style import NumberFormat
+from repanier.packages.openpyxl.styles import Border
+from repanier.packages.openpyxl.workbook import Workbook
 from repanier.tools import cap
 from repanier.xlsx.const import *
 

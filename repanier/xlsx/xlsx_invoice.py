@@ -4,12 +4,9 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from openpyxl import load_workbook
 
 import repanier.apps
-from repanier.xlsx.export_tools import *
 from repanier.const import *
-from repanier.models import Configuration
 from repanier.models import CustomerInvoice
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -18,8 +15,10 @@ from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
+from repanier.packages.openpyxl import load_workbook
 from repanier.tools import get_invoice_unit, get_reverse_invoice_unit, \
     create_or_update_one_purchase, reorder_offer_items, reorder_purchases
+from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
     get_header, get_row
 

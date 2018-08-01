@@ -3,8 +3,6 @@
 from django.conf import settings
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-from openpyxl.style import Fill
-from openpyxl.styles import Color
 
 import repanier.apps
 from repanier.const import *
@@ -16,6 +14,8 @@ from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
+from repanier.packages.openpyxl.style import Fill
+from repanier.packages.openpyxl.styles import Color
 from repanier.tools import get_base_unit, next_row
 from repanier.xlsx.export_tools import *
 from .xlsx_stock import export_permanence_stock
@@ -34,8 +34,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
         preparation_order = 1
         if len(deliveries_id) > 0:
             header = [
-                (_('Delivery point'), 20),
-                (_('Family'), 35),
+                (_('Delivery point'), 25),
+                (_('Family'), 30),
                 (_('Phone1'), 15),
                 (_('Phone2'), 15),
                 (_('Total with vat'), 15),
@@ -69,7 +69,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             "  {} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
                             customer.phone1 or EMPTY_STRING,
                             customer.phone2 or EMPTY_STRING,
-                            invoice.total_price_with_tax.amount,
+                            invoice.get_total_price_with_tax().amount,
                             # Used to send mail to customer with an order (via copy-paste to mail)
                             ";".join(
                                 [customer.user.email, customer.email2, EMPTY_STRING]
@@ -84,7 +84,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                                 c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             else:
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
-                                if col_num == 0:
+                                if col_num == 1:
                                     c.style.alignment.wrap_text = True
                                 else:
                                     c.style.alignment.wrap_text = False
@@ -126,7 +126,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         customer.long_basket_name,
                         customer.phone1 or EMPTY_STRING,
                         customer.phone2 or EMPTY_STRING,
-                        invoice.total_price_with_tax.amount,
+                        invoice.get_total_price_with_tax().amount,
                         # Used to send mail to customer with an order (via copy-paste to mail)
                         ";".join(
                             [customer.user.email, customer.email2, EMPTY_STRING]
@@ -265,8 +265,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 if invoice is None:
                     total_price_with_tax = REPANIER_MONEY_ZERO
                 else:
-                    total_price_with_tax = invoice.total_price_with_tax
-                    if invoice.total_price_with_tax < producer.minimum_order_value:
+                    total_price_with_tax = invoice.get_total_price_with_tax()
+                    if total_price_with_tax < producer.minimum_order_value:
                         minimum_order_amount_reached = _('Minimum order amount not reached')
                 row = [
                     producer.short_profile_name,
@@ -1146,7 +1146,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
 
 def export_customer(
         permanence=None,
-        customer=None,
+        customer_invoice=None,
         deliveries_id=(),
         deposit=False,
         xlsx_formula=True,
@@ -1171,30 +1171,31 @@ def export_customer(
     ]
     if len(deliveries_id) == 0:
         return export_customer_for_a_delivery(
-            customer, 0, None, deposit, header, permanence, wb,
+            customer_invoice, 0, None, deposit, header, permanence, wb,
             ws_preparation_title, yellowFill, xlsx_formula
         )
     else:
         for delivery_cpt, delivery_id in enumerate(deliveries_id):
             wb = export_customer_for_a_delivery(
-                customer, delivery_cpt, delivery_id, deposit, header, permanence, wb,
+                customer_invoice, delivery_cpt, delivery_id, deposit, header, permanence, wb,
                 ws_preparation_title, yellowFill, xlsx_formula
             )
         return wb
 
 
 def export_customer_for_a_delivery(
-        customer, delivery_cpt, delivery_id, deposit, header, permanence, wb, ws_preparation_title,
+        customer_invoice, delivery_cpt, delivery_id, deposit, header, permanence, wb, ws_preparation_title,
         yellowFill, xlsx_formula):
     from repanier.apps import REPANIER_SETTINGS_CONFIG
 
     language_code = translation.get_language()
-    if customer is not None:
+    if customer_invoice is not None:
+        customer = customer_invoice.customer
         translation.activate(customer.language)
         if deposit:
             purchase_set = Purchase.objects.filter(
                 permanence_id=permanence.id,
-                customer_id=customer.id,
+                customer_id=customer_invoice.customer_id,
                 producer__isnull=False,
                 offer_item__translations__language_code=customer.language,
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
@@ -1205,7 +1206,7 @@ def export_customer_for_a_delivery(
         else:
             purchase_set = Purchase.objects.filter(
                 permanence_id=permanence.id,
-                customer_id=customer.id,
+                customer_id=customer_invoice.customer_id,
                 producer__isnull=False,
                 offer_item__translations__language_code=customer.language,
             ).exclude(
@@ -1294,6 +1295,13 @@ def export_customer_for_a_delivery(
             first_purchase = True
             total_price = DECIMAL_ZERO
             something_ordered = False
+            if customer_invoice is None:
+                delta_transport_save = CustomerInvoice.objects.filter(
+                    permanence_id=purchase.permanence_id,
+                    customer_id=customer_save.id
+                ).only("delta_transport").first().delta_transport
+            else:
+                delta_transport_save=customer_invoice.delta_transport
             while purchase is not None and customer_save.id == purchase.customer_id:
                 department_for_customer_save__id = offer_item_save.department_for_customer_id
                 department_for_customer_save__short_name = offer_item_save.department_for_customer.short_name \
@@ -1414,6 +1422,17 @@ def export_customer_for_a_delivery(
                     #     page_break = Break(id=row_number)  # create Break obj
                     #     ws.page_breaks.append(page_break)
             if something_ordered:
+                if delta_transport_save.amount > DECIMAL_ZERO:
+                    # Show possible delivery costs
+                    row_num += 1
+                    c = ws.cell(row=row_num, column=4)
+                    c.value = "{}".format(_("Delivery costs"))
+                    c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
+                    c = ws.cell(row=row_num, column=9)
+                    c.value = delta_transport_save.amount
+                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    print("{}".format(delta_transport_save))
+                print("ici")
                 row_num += 1
                 c = ws.cell(row=row_num, column=4)
                 c.value = "{}".format(group_label)
@@ -1448,10 +1467,10 @@ def export_customer_for_a_delivery(
     return wb
 
 
-def generate_customer_xlsx(permanence, deliveries_id=(), customer=None, group=False):
-    if customer is not None:
+def generate_customer_xlsx(permanence, deliveries_id=(), customer_invoice=None, group=False):
+    if customer_invoice is not None:
         wb = export_customer(
-            permanence=permanence, customer=customer, xlsx_formula=False, wb=None
+            permanence=permanence, customer_invoice=customer_invoice, xlsx_formula=False, wb=None
         )
         return wb, None
     else:

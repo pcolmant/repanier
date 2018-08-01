@@ -3,16 +3,15 @@
 from django.db import transaction
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-from openpyxl import load_workbook
-from openpyxl.style import Fill
-from openpyxl.styles import Color
 
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
 from repanier.const import *
 from repanier.models.offeritem import OfferItemWoReceiver
-from repanier.models.producer import Producer
 from repanier.models.purchase import Purchase
-from repanier.tools import cap, next_row
+from repanier.packages.openpyxl import load_workbook
+from repanier.packages.openpyxl.style import Fill
+from repanier.packages.openpyxl.styles import Color
+from repanier.tools import next_row
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import *
 

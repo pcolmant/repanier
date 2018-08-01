@@ -5,14 +5,14 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-from openpyxl import load_workbook
-from openpyxl.style import Fill
-from openpyxl.styles import Color
 
 import repanier.apps
 from repanier.const import *
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
+from repanier.packages.openpyxl import load_workbook
+from repanier.packages.openpyxl.style import Fill
+from repanier.packages.openpyxl.styles import Color
 from repanier.tools import update_offer_item, next_row
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_row, get_header

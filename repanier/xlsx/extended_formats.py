@@ -3,7 +3,7 @@
 import tablib
 from import_export.formats.base_formats import TablibFormat, XLSX_IMPORT
 from django.utils.six import moves
-import openpyxl as openpyxl_1_8_6
+import repanier.packages.openpyxl as openpyxl_1_8_6
 
 
 class XLSX_OPENPYXL_1_8_6(TablibFormat):
@@ -13,7 +13,7 @@ class XLSX_OPENPYXL_1_8_6(TablibFormat):
     def can_import(self):
         return XLSX_IMPORT
 
-    def create_dataset(self, in_stream):
+    def create_dataset(self, in_stream, **kwargs):
         """
         Create dataset from first sheet.
         """
