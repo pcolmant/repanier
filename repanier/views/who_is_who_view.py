@@ -24,19 +24,19 @@ def who_is_who_view(request):
     if q is not None:
         customer_list = customer_list.filter(Q(long_basket_name__icontains=q) | Q(city__icontains=q))
     staff_list = Staff.objects.filter(
-        is_active=True, is_order_referent=False
+        is_active=True, can_be_contacted=True
     )
     try:
-        is_coordinator = request.user.is_coordinator
+        is_repanier_admin = request.user.is_repanier_admin
     except AttributeError:
-        is_coordinator = False
+        is_repanier_admin = False
     return render(
         request,
         "repanier/who_is_who.html",
         {
             'staff_list': staff_list,
             'customer_list': customer_list,
-            'coordinator': is_coordinator,
+            'coordinator': is_repanier_admin,
             'q': q
         }
     )

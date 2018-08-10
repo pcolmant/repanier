@@ -38,18 +38,18 @@ class CoordinatorsContactForm(RepanierForm):
         choices = []
         for staff in Staff.objects.filter(
                 is_active=True,
+                can_be_contacted=True,
                 translations__language_code=translation.get_language()
         ):
-            if staff.is_coordinator or staff.is_invoice_manager or staff.is_invoice_referent or staff.is_webmaster:
-                r = staff.customer_responsible
-                if r is not None:
-                    sender_function = staff.safe_translation_getter(
-                        'long_name', any_language=True, default=EMPTY_STRING
-                    )
-                    phone = " ({})".format(r.phone1 if r.phone1 else EMPTY_STRING)
-                    name = r.long_basket_name if r.long_basket_name else r.short_basket_name
-                    signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
-                    choices.append(("{}".format(staff.id), mark_safe(signature)))
+            r = staff.customer_responsible
+            if r is not None:
+                sender_function = staff.safe_translation_getter(
+                    'long_name', any_language=True, default=EMPTY_STRING
+                )
+                phone = " ({})".format(r.phone1 if r.phone1 else EMPTY_STRING)
+                name = r.long_basket_name if r.long_basket_name else r.short_basket_name
+                signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
+                choices.append(("{}".format(staff.id), mark_safe(signature)))
         self.fields["staff"].choices = choices
 
 
@@ -68,10 +68,10 @@ def send_mail_to_coordinators_view(request):
             selected_staff_members = form.cleaned_data.get('staff')
             for staff in Staff.objects.filter(
                     is_active=True,
+                    can_be_contacted=True,
                     id__in=selected_staff_members
             ).order_by('?'):
-                if staff.is_coordinator or staff.is_invoice_manager or staff.is_invoice_referent or staff.is_webmaster:
-                    to_email = list(set(to_email + staff.get_to_email))
+                to_email = list(set(to_email + staff.get_to_email))
 
             email = RepanierEmail(
                 strip_tags(form.cleaned_data.get('subject')),

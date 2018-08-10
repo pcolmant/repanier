@@ -200,7 +200,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
-        if user.is_order_manager or user.is_coordinator:
+        if user.is_order_manager:
             return True
         return False
 
@@ -300,7 +300,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if not permanence.with_delivery_point:
             # Perform the action directly. Do not ask to select any delivery point.
             response = None
-            wb = generate_customer_xlsx(permanence)[0]
+            wb = generate_customer_xlsx(permanence=permanence)[0]
             if wb is not None:
                 response = HttpResponse(
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -323,7 +323,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             else:
                 deliveries_to_be_exported = ()
             response = None
-            wb = generate_customer_xlsx(permanence, deliveries_id=deliveries_to_be_exported)[0]
+            wb = generate_customer_xlsx(permanence=permanence, deliveries_id=deliveries_to_be_exported)[0]
             if wb is not None:
                 response = HttpResponse(
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -661,10 +661,15 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
         translation.activate(cur_language)
 
-        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = send_email_to_who()
-        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = send_email_to_who()
+        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = send_email_to_who(
+            is_email_send=True
+        )
+        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = send_email_to_who(
+            is_email_send=True
+        )
         order_board_email_will_be_sent, order_board_email_will_be_sent_to = send_email_to_who(
-            repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, board=True
+            is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
+            board=True
         )
 
         form = CloseAndSendOrderForm(

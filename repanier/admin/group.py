@@ -203,16 +203,11 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     list_max_show_all = 16
 
     def has_delete_permission(self, request, customer=None):
-        user = request.user
-        if user.is_coordinator:
-            return True
-        return False
+        return request.user.is_repanier_admin
 
     def has_add_permission(self, request):
         user = request.user
-        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
-            return True
-        return False
+        return user.is_order_manager or user.is_invoice_manager
 
     def has_change_permission(self, request, staff=None):
         return self.has_delete_permission(request)

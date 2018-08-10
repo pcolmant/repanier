@@ -55,7 +55,7 @@ class ContractAdmin(TranslatableAdmin):
 
     def has_delete_permission(self, request, contract=None):
         user = request.user
-        if user.is_order_manager or user.is_invoice_manager or user.is_coordinator:
+        if user.is_order_manager or user.is_invoice_manager:
             return settings.REPANIER_SETTINGS_CONTRACT
         return False
 

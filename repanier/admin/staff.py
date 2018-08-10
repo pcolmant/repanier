@@ -37,42 +37,39 @@ class UserDataForm(TranslatableModelForm):
                         'language': get_language_info(settings.LANGUAGE_CODE)['name_local']})
 
         is_active = self.cleaned_data.get("is_active", False)
-        is_coordinator = is_active and self.cleaned_data.get("is_coordinator", False)
-        is_order_manager = is_active and self.cleaned_data.get("is_order_manager", False)
-        is_order_referent = is_active and self.cleaned_data.get("is_order_referent", False)
-        is_order_copy = is_active and self.cleaned_data.get("is_order_copy", False)
-        is_invoice_manager = is_active and self.cleaned_data.get("is_invoice_manager", False)
-        is_invoice_referent = is_active and self.cleaned_data.get("is_invoice_referent", False)
-        is_invoice_copy = is_active and self.cleaned_data.get("is_invoice_copy", False)
-        is_webmaster = is_active and self.cleaned_data.get("is_webmaster", False)
-        is_tester = is_active and self.cleaned_data.get("is_tester", False)
-        if is_active and not (is_coordinator or
-                is_order_manager or is_order_referent or is_order_copy or
-                is_invoice_manager or is_invoice_referent or is_invoice_copy or
+        is_repanier_admin = self.cleaned_data.get("is_repanier_admin", False)
+        is_order_manager = self.cleaned_data.get("is_order_manager", False)
+        is_invoice_manager = self.cleaned_data.get("is_invoice_manager", False)
+        is_webmaster = self.cleaned_data.get("is_webmaster", False)
+        is_other_manager = self.cleaned_data.get("is_other_manager", False)
+        if is_active and not (
+                is_repanier_admin or
+                is_order_manager or
+                is_invoice_manager or
                 is_webmaster or
-                is_tester):
+                is_other_manager):
             self.add_error(
                 None,
                 _('Members of the management team must assure at least one function')
             )
-        if is_order_manager:
-            qs = Staff.objects.filter(is_order_manager=True, is_active=True).order_by('?')
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.id)
-            if qs.exists():
-                self.add_error(
-                    'is_order_manager',
-                    _('One and only one member of the management team can assure this function')
-                )
-        if is_invoice_manager:
-            qs = Staff.objects.filter(is_invoice_manager=True, is_active=True).order_by('?')
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.id)
-            if qs.exists():
-                self.add_error(
-                    'is_invoice_manager',
-                    _('One and only one member of the management team can assure this function')
-                )
+        # if is_order_manager:
+        #     qs = Staff.objects.filter(is_order_manager=True, is_active=True).order_by('?')
+        #     if self.instance.id is not None:
+        #         qs = qs.exclude(id=self.instance.id)
+        #     if qs.exists():
+        #         self.add_error(
+        #             'is_order_manager',
+        #             _('One and only one member of the management team can assure this function')
+        #         )
+        # if is_invoice_manager:
+        #     qs = Staff.objects.filter(is_invoice_manager=True, is_active=True).order_by('?')
+        #     if self.instance.id is not None:
+        #         qs = qs.exclude(id=self.instance.id)
+        #     if qs.exists():
+        #         self.add_error(
+        #             'is_invoice_manager',
+        #             _('One and only one member of the management team can assure this function')
+        #         )
         # Check that the email is not already used
         email = self.cleaned_data["email"].lower()
         if email:
@@ -97,20 +94,15 @@ class UserDataForm(TranslatableModelForm):
                     _('At least one email address or one responsible customer must be set.')
                 )
 
-        if not is_coordinator:
-            qs = Staff.objects.filter(is_coordinator=True, is_active=True).order_by('?')
+        if not is_repanier_admin:
+            qs = Staff.objects.filter(is_repanier_admin=True, is_active=True).order_by('?')
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if not qs.exists():
                 self.add_error(
-                    'is_coordinator',
-                    _('At least one coordinator must be set within the management team')
+                    'is_repanier_admin',
+                    _('At least one Repanier administrator must be set within the management team')
                 )
-                if not is_active:
-                    self.add_error(
-                        'is_active',
-                        _('At least one coordinator must be set within the management team')
-                    )
 
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
@@ -155,13 +147,9 @@ class StaffWithUserDataAdmin(LUTAdmin):
     list_select_related = ('customer_responsible',)
     list_per_page = 16
     list_max_show_all = 16
-    _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        user = request.user
-        if user.is_coordinator:
-            return True
-        return False
+        return request.user.is_repanier_admin
 
     def has_add_permission(self, request):
         return self.has_delete_permission(request)
@@ -188,20 +176,12 @@ class StaffWithUserDataAdmin(LUTAdmin):
             'long_name',
             'email',
             'customer_responsible',
-            'is_coordinator',
+            'is_repanier_admin',
             'is_order_manager',
-            'is_order_referent',
-            'is_order_copy',
             'is_invoice_manager',
-            'is_invoice_referent',
-            'is_invoice_copy',
+            'is_other_manager',
             'is_webmaster',
-        ]
-        if settings.REPANIER_SETTINGS_TEST_MODE:
-            fields += [
-                'is_tester',
-            ]
-        fields += [
+            'can_be_contacted',
             'is_active'
         ]
         return fields

@@ -145,9 +145,8 @@ class RepanierAuthBackend(ModelBackend):
         if is_superuser:
             user.is_order_manager = True
             user.is_invoice_manager = True
-            user.is_order_referent = True
-            user.is_invoice_referent = True
-            user.is_coordinator = True
+            user.is_repanier_admin = True
+            user.is_repanier_staff = True
             user.is_webmaster = True
             user.customer_id = None
             user.staff_id = None
@@ -156,32 +155,28 @@ class RepanierAuthBackend(ModelBackend):
             if staff is None:
                 user.is_order_manager = False
                 user.is_invoice_manager = False
-                user.is_order_referent = False
-                user.is_invoice_referent = False
-                user.is_coordinator = False
+                user.is_repanier_admin = False
+                user.is_repanier_staff = False
                 user.is_webmaster = False
                 user.customer_id = customer.id
                 user.staff_id = None
                 user.subscribe_to_email = customer.subscribe_to_email
             else:
-                user.is_order_manager = staff.is_order_manager
-                user.is_invoice_manager = staff.is_invoice_manager
-                user.is_order_referent = staff.is_order_referent
-                user.is_invoice_referent = staff.is_invoice_referent
-                user.is_coordinator = staff.is_coordinator
-                user.is_webmaster = staff.is_webmaster
+                user.is_order_manager = staff.is_order_manager or staff.is_repanier_admin
+                user.is_invoice_manager = staff.is_invoice_manager or staff.is_repanier_admin
+                user.is_repanier_admin = staff.is_repanier_admin
+                user.is_repanier_staff = user.is_order_manager or user.is_invoice_manager
+                user.is_webmaster = staff.is_webmaster or staff.is_repanier_admin
                 user.staff_id = staff.id
                 user.subscribe_to_email = True
                 if customer is None:
                     user.customer_id = staff.customer_responsible_id
                 else:
                     user.customer_id = customer.id
-        user.is_order_staff = user.is_coordinator or user.is_order_manager or user.is_order_referent
-        user.is_invoice_staff = user.is_coordinator or user.is_invoice_manager or user.is_invoice_referent
-        user.is_repanier_staff = user.is_order_staff or user.is_invoice_staff
+        user.is_db_version_3 = True
 
     def get_user(self, user_id):
-        if self.user is not None and self.user.id == user_id and hasattr(self.user, 'is_repanier_staff'):
+        if self.user is not None and self.user.id == user_id and hasattr(self.user, 'is_db_version_3'):
             # Test "hasattr(self.user, 'is_order_manager')" to detect user without new attributes
             return self.user
         user_or_none = UserModel.objects.filter(pk=user_id).only("id", "password", "is_staff", "is_superuser").order_by(
@@ -199,7 +194,7 @@ class RepanierAuthBackend(ModelBackend):
                         staff = Staff.objects.filter(id=customer.as_staff_id).only(
                             "id",
                             "is_active", "is_order_manager", "is_invoice_manager",
-                            "is_order_referent", "is_invoice_referent", "is_coordinator",
+                            "is_repanier_admin",
                             "is_webmaster"
                         ).order_by('?').first()
                         if staff is not None and staff.is_active:
@@ -222,7 +217,7 @@ class RepanierAuthBackend(ModelBackend):
                     staff = Staff.objects.filter(user_id=user_or_none.id).only(
                         "id", "customer_responsible_id",
                         "is_active", "is_order_manager", "is_invoice_manager",
-                        "is_order_referent", "is_invoice_referent", "is_coordinator",
+                        "is_repanier_admin",
                         "is_webmaster"
                     ).order_by('?').first()
                     if staff is not None:

@@ -107,7 +107,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     def has_change_permission(self, request, obj=None):
         user = request.user
-        if user.is_invoice_manager or user.is_coordinator:
+        if user.is_invoice_manager:
             return True
         return False
 
@@ -356,7 +356,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     producer_invoice.calculated_invoiced_balance.amount = \
                         producer.get_calculated_invoiced_balance(permanence.id)
                 else:
-                    producer_invoice.calculated_invoiced_balance.amount = producer_invoice.total_price_with_tax.amount
+                    producer_invoice.calculated_invoiced_balance.amount = producer_invoice.get_total_price_with_tax().amount
                 # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
                 producer_invoice.to_be_invoiced_balance = producer_invoice.calculated_invoiced_balance
                 producer_invoice.save(update_fields=[
@@ -555,7 +555,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         template_invoice_customer_mail = template.render(context)
 
         invoice_customer_email_will_be_sent, invoice_customer_email_will_be_sent_to = send_email_to_who(
-            repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
+            is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
         )
 
         template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail)
@@ -569,7 +569,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         template_invoice_producer_mail = template.render(context)
 
         invoice_producer_email_will_be_sent, invoice_producer_email_will_be_sent_to = send_email_to_who(
-            repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
+            is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
         )
         if 'apply' in request.POST:
             form = InvoiceOrderForm(request.POST)

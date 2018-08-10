@@ -20,19 +20,19 @@ class RepanierToolbar(CMSToolbar):
         admin_menu = self.toolbar.get_or_create_menu(ADMIN_MENU_IDENTIFIER, _('Manage'))
         position = 0
         admin_menu.add_break('custom-break', position=position)
-        if user.is_coordinator or user.is_order_manager or user.is_invoice_manager:
+        if user.is_order_manager or user.is_invoice_manager:
             office_menu = admin_menu.get_or_create_menu(
                 'parameter-menu',
                 _('Parameters ...'),
                 position=position
             )
             # add_sideframe_item
-            if user.is_coordinator:
+            if user.is_repanier_admin:
                 url = reverse('admin:repanier_configuration_change', args=(1,))
                 office_menu.add_sideframe_item(_('Configuration'), url=url)
             url = reverse('admin:repanier_notification_change', args=(1,))
             office_menu.add_sideframe_item(_('"Flash" ad'), url=url)
-            if user.is_coordinator:
+            if user.is_repanier_admin:
                 url = reverse('admin:repanier_staff_changelist')
                 office_menu.add_sideframe_item(_('Management team'), url=url)
                 if settings.REPANIER_SETTINGS_DELIVERY_POINT:
@@ -69,11 +69,11 @@ class RepanierToolbar(CMSToolbar):
                 position += 1
                 url = "{}?is_active__exact=1".format(reverse('admin:repanier_contract_changelist'))
                 admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
-            if user.is_order_staff:
+            if user.is_order_manager:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')
                 admin_menu.add_sideframe_item(_("Offers in preparation"), url=url, position=position)
-            if user.is_invoice_staff:
+            if user.is_invoice_manager:
                 if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                     position += 1
                     url = reverse('admin:repanier_permanencedone_changelist')
