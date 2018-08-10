@@ -118,7 +118,6 @@ REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM = config.getboolean('REPANIER_SETT
                                                                   'REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM',
                                                                   fallback=True)
 REPANIER_SETTINGS_STOCK = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_STOCK', fallback=False)
-REPANIER_SETTINGS_TEST_MODE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_TEST_MODE', fallback=False)
 
 DJANGO_SETTINGS_ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):

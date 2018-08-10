@@ -58,37 +58,18 @@ class RepanierEmail(EmailMultiAlternatives):
             self.bcc = []
             email_send = self._send_email_with_error_log()
         else:
-            if settings.REPANIER_SETTINGS_TEST_MODE:
-                from repanier.apps import REPANIER_SETTINGS_TEST_MODE_ACTIVATED
-            else:
-                REPANIER_SETTINGS_TEST_MODE_ACTIVATED = False
-            if REPANIER_SETTINGS_TEST_MODE_ACTIVATED:
-                from repanier.tools import emails_of_testers
-                to_email = emails_of_testers()
-                if len(to_email) > 0:
-                    # Send the mail only if there is at least one tester
-                    self.body = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc, self.body)
-                    self.html_body = "--to : {}\n--cc : {}\n--bcc : {}\n{}".format(self.to, self.cc, self.bcc,
-                                                                                   self.html_body)
-                    self.to = to_email
-                    self.cc = []
-                    self.bcc = []
-                    email_send = self._send_email_with_error_log()
-                else:
-                    logger.info('############################ test mode, without tester...')
-            else:
-                # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
-                # for chunk in chunks:
-                # Remove duplicates
-                send_email_to = list(set(self.to + self.cc + self.bcc))
-                self.cc = []
-                self.bcc = []
-                email_send = True
-                if len(send_email_to) >= 1:
-                    for email_to in send_email_to:
-                        self.to = [email_to]
-                        email_send &= self._send_email_with_error_log()
-                        time.sleep(1)
+            # chunks = [email.to[x:x+100] for x in xrange(0, len(email.to), 100)]
+            # for chunk in chunks:
+            # Remove duplicates
+            send_email_to = list(set(self.to + self.cc + self.bcc))
+            self.cc = []
+            self.bcc = []
+            email_send = True
+            if len(send_email_to) >= 1:
+                for email_to in send_email_to:
+                    self.to = [email_to]
+                    email_send &= self._send_email_with_error_log()
+                    time.sleep(1)
         return email_send
 
     @debug_parameters
@@ -189,7 +170,6 @@ class RepanierEmail(EmailMultiAlternatives):
         return email_send
 
     def _send_error(self, subject, error_str, connection=None):
-        # from_email : GasAth Ptidej <GasAth Ptidej <ptidej-cde@repanier.be>>
         from_email = "from_email : {}".format(self.from_email)
         reply_to = "reply_to : {}".format(self.reply_to)
         to_email = "to : {}".format(self.to)

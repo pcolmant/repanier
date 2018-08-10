@@ -317,7 +317,6 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5).
 - REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form.
 - REPANIER_SETTINGS_STOCK (True, *False*) : Allows you to limit the available quantities of a product.
-- REPANIER_SETTINGS_TEST_MODE (True, *False*) : Lets sending emails to a limited number of management team testers.
 
 ## Install or update `Repanier`
 1. Git clone the `Repanier` project into the home folder of the user `repanier`
