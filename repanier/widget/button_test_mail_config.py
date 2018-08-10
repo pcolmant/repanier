@@ -10,8 +10,6 @@ class ButtonTestMailConfigWidget(Widget):
 
     def get_context(self, name, value, attrs):
         context = super(ButtonTestMailConfigWidget, self).get_context(name, value, attrs)
-        # context["url"] = "../../test_mail_config"  # urlresolvers.reverse("test_mail_config")
-
         return context
 
     # class Media:

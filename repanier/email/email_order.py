@@ -3,7 +3,6 @@
 from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
 from django.utils.translation import ugettext_lazy as _
-from openpyxl.writer.excel import save_virtual_workbook
 
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
@@ -13,6 +12,7 @@ from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.staff import Staff
+from repanier.packages.openpyxl.writer.excel import save_virtual_workbook
 from repanier.tools import *
 from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_xlsx
 
@@ -47,8 +47,8 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
         if not everything:
             abstract_ws = None
         else:
-            # Orders send to the preparation team, to the order_responsible and the staff.is_order_copy
-            wb, abstract_ws = generate_customer_xlsx(permanence, deliveries_id=deliveries_id)
+            # Orders send to the preparation team, to the order_responsible
+            wb, abstract_ws = generate_customer_xlsx(permanence=permanence, deliveries_id=deliveries_id)
             if wb is not None:
                 # At least one order
                 order_staff_mail = config.safe_translation_getter(
@@ -74,9 +74,9 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                             permanence_id=permanence.id).order_by('?'):
                         if permanence_board.customer:
                             to_email.append(permanence_board.customer.user.email)
-                    to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+                    to_email = list(set(to_email + order_responsible.get_to_email))
                 else:
-                    to_email = list(set(order_responsible.get_to_email + Staff.get_to_order_copy()))
+                    to_email = list(set(order_responsible.get_to_email))
 
                 email = RepanierEmail(
                     subject=order_staff_mail_subject,
@@ -124,7 +124,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
 
             to_email = []
             if producer_invoice is not None \
-                    and producer_invoice.total_price_with_tax < producer.minimum_order_value:
+                    and producer_invoice.get_total_price_with_tax() < producer.minimum_order_value:
                 html_body = "{}<br><br>{}".format(
                     order_producer_mail_subject, html_body
                 )
@@ -138,7 +138,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
                     to_email.append(producer.email2)
                 if producer.email3:
                     to_email.append(producer.email3)
-            to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+            to_email = list(set(to_email + order_responsible.get_to_email))
             email = RepanierEmail(
                 subject=order_producer_mail_subject,
                 html_body=html_body,
@@ -235,7 +235,7 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, order_resp
         to_email = [customer_responsible.user.email]
         if customer_responsible.email2:
             to_email.append(customer_responsible.email2)
-        to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+        to_email = list(set(to_email + order_responsible.get_to_email))
 
         email = RepanierEmail(
             subject=order_customer_mail_subject,
@@ -266,7 +266,7 @@ def export_order_2_1_customer(customer, filename, permanence, order_responsible=
     if customer_invoice is not None:
         if order_responsible is None:
             order_responsible = Staff.get_or_create_order_responsible()
-        wb = generate_customer_xlsx(permanence=permanence, customer=customer)[0]
+        wb = generate_customer_xlsx(permanence=permanence, customer_invoice=customer_invoice)[0]
         if wb is not None:
             to_email = [customer.user.email]
             if customer.email2:
@@ -316,7 +316,7 @@ def export_order_2_1_customer(customer, filename, permanence, order_responsible=
             html_body = template.render(context)
 
             if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+                to_email = list(set(to_email + order_responsible.get_to_email))
 
             email = RepanierEmail(
                 subject=order_customer_mail_subject,

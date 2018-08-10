@@ -13,7 +13,6 @@ from django.utils.translation import ugettext_lazy as _
 logger = logging.getLogger(__name__)
 
 REPANIER_SETTINGS_CONFIG = None
-REPANIER_SETTINGS_TEST_MODE_ACTIVATED = False
 REPANIER_SETTINGS_GROUP_NAME = None
 REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
 REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")

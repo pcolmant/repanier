@@ -64,31 +64,48 @@ class Staff(MPTTModel, TranslatableModel):
         _("Producer referent"),
         default=False)
 
-    is_order_manager = models.BooleanField(
-        _("Offers in preparation manager"),
-        default=False)
+    # TBD: Not replaced
     is_order_referent = models.BooleanField(
         _("Offers in preparation referent"),
         default=False)
+    # TBD: Not replaced
     is_order_copy = models.BooleanField(
         _("In copy of the offers in preparation"),
+        default=False)
+    # TBD: Not replaced
+    is_invoice_referent = models.BooleanField(
+        _("Billing offers referent"),
+        default=False)
+    # TBD: Not replaced
+    is_invoice_copy = models.BooleanField(
+        _("In copy of the billing offers"),
+        default=False)
+    # TBD: replaced by is_repanier_admin
+    is_coordinator = models.BooleanField(_("Coordonnateur"),
+                                         default=False)
+    # TBD: Not replaced
+    is_tester = models.BooleanField(_("Tester"),
+                                    default=False)
+
+    is_repanier_admin = models.BooleanField(
+        _("Repanier administrator"),
+        default=False)
+    is_order_manager = models.BooleanField(
+        _("Offers in preparation manager"),
         default=False)
     is_invoice_manager = models.BooleanField(
         _("Billing offers manager"),
         default=False)
-    is_invoice_referent = models.BooleanField(
-        _("Billing offers referent"),
+    is_webmaster = models.BooleanField(
+        _("Webmaster"),
         default=False)
-    is_invoice_copy = models.BooleanField(
-        _("In copy of the billing offers"),
+    is_other_manager = models.BooleanField(
+        _("Other responsibility"),
+        default=False)
+    can_be_contacted = models.BooleanField(
+        _("Can be contacted by customers"),
         default=False)
 
-    is_webmaster = models.BooleanField(_("Webmaster"),
-                                       default=False)
-    is_coordinator = models.BooleanField(_("Coordonnateur"),
-                                         default=False)
-    is_tester = models.BooleanField(_("Tester"),
-                                    default=False)
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None)
     is_active = models.BooleanField(_("Active"), default=True)
@@ -97,15 +114,15 @@ class Staff(MPTTModel, TranslatableModel):
     def get_or_create_any_coordinator(cls):
         coordinator = cls.objects.filter(
             is_active=True,
-            is_coordinator=True
+            is_repanier_admin=True
         ).order_by('id').first()
         if coordinator is None:
             # Set the first staff member as coordinator if possible
             coordinator = cls.objects.all().order_by('id').first()
             if coordinator is not None:
                 coordinator.is_active = True
-                coordinator.is_coordinator = True
-                coordinator.save(update_fields=["is_active", "is_coordinator"])
+                coordinator.is_repanier_admin = True
+                coordinator.save(update_fields=["is_active", "is_repanier_admin"])
         if coordinator is None:
             # Create the very first staff member
             from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
@@ -119,7 +136,7 @@ class Staff(MPTTModel, TranslatableModel):
             coordinator = Staff.objects.create(
                 user=user,
                 is_active=True,
-                is_coordinator=True,
+                is_repanier_admin=True,
                 is_webmaster=True,
                 customer_responsible=very_first_customer
             )
@@ -146,20 +163,6 @@ class Staff(MPTTModel, TranslatableModel):
         return order_responsible
 
     @classmethod
-    def get_to_order_copy(cls):
-        all_order_copy = cls.objects.filter(
-            is_active=True,
-            is_order_copy=True,
-        ).select_related("user").order_by('?').all()
-        to_order_copy = []
-        for order_copy in all_order_copy:
-            if order_copy.user.email:
-                to_order_copy.append(order_copy.user.email)
-            elif order_copy.customer_responsible is not None:
-                to_order_copy.append(order_copy.customer_responsible.user.email)
-        return to_order_copy
-
-    @classmethod
     def get_or_create_invoice_responsible(cls):
         invoice_responsible = cls.objects.filter(
             is_active=True,
@@ -170,20 +173,6 @@ class Staff(MPTTModel, TranslatableModel):
             invoice_responsible.is_invoice_manager = True
             invoice_responsible.save(update_fields=["is_invoice_manager"])
         return invoice_responsible
-
-    @classmethod
-    def get_to_invoice_copy(cls):
-        all_invoice_copy = cls.objects.filter(
-            is_active=True,
-            is_invoice_copy=True,
-        ).select_related("user").order_by('?').all()
-        to_invoice_copy = []
-        for invoice_copy in all_invoice_copy:
-            if invoice_copy.user.email:
-                to_invoice_copy.append(invoice_copy.user.email)
-            elif invoice_copy.customer_responsible is not None:
-                to_invoice_copy.append(invoice_copy.customer_responsible.user.email)
-        return to_invoice_copy
 
     def get_customer_phone1(self):
         try:
@@ -279,18 +268,15 @@ class Staff(MPTTModel, TranslatableModel):
 
     @property
     def title_for_admin(self):
-        tester = _(" 💡 who is also tester ") if self.is_tester and settings.REPANIER_SETTINGS_TEST_MODE else EMPTY_STRING
         if self.customer_responsible is not None:
-            return "{} : {}{} ({})".format(
+            return "{} : {} ({})".format(
                 self.safe_translation_getter('long_name', any_language=True),
                 self.customer_responsible.long_basket_name,
-                tester,
                 self.customer_responsible.phone1
             )
         else:
-            return "{}{}".format(
+            return "{}".format(
                 self.safe_translation_getter('long_name', any_language=True),
-                tester
             )
 
     objects = StaffManager()

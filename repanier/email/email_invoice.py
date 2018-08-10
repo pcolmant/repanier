@@ -40,7 +40,7 @@ def send_invoice(permanence_id):
                 if producer.email3:
                     to_email.append(producer.email3)
                 if to_email:
-                    to_email = list(set(to_email + invoice_responsible.get_to_email + Staff.get_to_invoice_copy()))
+                    to_email = list(set(to_email + invoice_responsible.get_to_email))
                     long_profile_name = producer.long_profile_name \
                         if producer.long_profile_name is not None else producer.short_profile_name
                     if Purchase.objects.filter(
@@ -92,7 +92,7 @@ def send_invoice(permanence_id):
                     to_email = [customer.user.email]
                     if customer.email2:
                         to_email.append(customer.email2)
-                    to_email = list(set(to_email + invoice_responsible.get_to_email + Staff.get_to_invoice_copy()))
+                    to_email = list(set(to_email + invoice_responsible.get_to_email))
 
                     invoice_customer_mail = config.safe_translation_getter(
                         'invoice_customer_mail', any_language=True, default=EMPTY_STRING

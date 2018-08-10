@@ -1,7 +1,6 @@
 {% load i18n %}
 {% spaceless %}
     {% with id=widget.attrs.id name=widget.name %}
-        {#<button onclick="test_mail_config(123);return false;">{% trans "Go go go" %}</button>#}
         <a id="{{ id }}" href="#"
            onclick="{{ id }}_test_mail_config();return false;">{% trans "Validate this mail server configuration." %}</a>
         <script type="text/javascript">

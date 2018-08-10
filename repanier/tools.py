@@ -31,6 +31,7 @@ from repanier.const import *
 logger = logging.getLogger(__name__)
 reader = codecs.getreader("utf-8")
 
+
 def sboolean(str_val, default_val=False):
     try:
         return bool(str_val)
@@ -54,13 +55,14 @@ if settings.DEBUG:
             logger.debug('Must-have arguments are: %s', list(args))
             logger.debug('Optional arguments are: %s', kwargs)
             return func(*args, **kwargs)
+
         return func_wrapper
 else:
     def debug_parameters(func):
         def func_wrapper(*args, **kwargs):
             return func(*args, **kwargs)
-        return func_wrapper
 
+        return func_wrapper
 
 
 def next_row(query_iterator):
@@ -71,14 +73,14 @@ def next_row(query_iterator):
         return
 
 
-def emails_of_testers():
-    from repanier.models.staff import Staff
-
-    tester_qs = Staff.objects.filter(is_tester=True, is_active=True).order_by("id")
-    testers = []
-    for tester in tester_qs:
-        testers += tester.get_to_email
-    return list(set(testers))
+# def emails_of_testers():
+#     from repanier.models.staff import Staff
+#
+#     tester_qs = Staff.objects.filter(is_tester=True, is_active=True).order_by("id")
+#     testers = []
+#     for tester in tester_qs:
+#         testers += tester.get_to_email
+#     return list(set(testers))
 
 
 @debug_parameters
@@ -123,34 +125,19 @@ def send_test_email(host=None, port=None, host_user=None, host_password=None, us
 
 
 def send_email_to_who(is_email_send=True, board=False):
-    if settings.REPANIER_SETTINGS_TEST_MODE:
-        from repanier.apps import REPANIER_SETTINGS_TEST_MODE_ACTIVATED
+    if settings.DEBUG:
+        return False, _("Debug mode : No email will be sent.")
     else:
-        REPANIER_SETTINGS_TEST_MODE_ACTIVATED = False
-    if not is_email_send:
-        if board:
-            if REPANIER_SETTINGS_TEST_MODE_ACTIVATED:
-                return True, _("This email will be sent to the following tester(s) : {}.").format(
-                    ", ".join(emails_of_testers()))
+        if is_email_send:
+            if board:
+                return True, _("This email will be sent to the preparation team and the staff.")
             else:
-                if settings.DEBUG:
-                    return False, _("No email will be sent.")
-                else:
-                    return True, _("This email will be sent to the staff.")
+                return True, _("This email will be sent to customers or producers depending of the case.")
         else:
-            return False, _("No email will be sent.")
-    else:
-        if REPANIER_SETTINGS_TEST_MODE_ACTIVATED:
-            return True, _("This email will be sent to the following tester(s) : {}.").format(
-                ", ".join(emails_of_testers()))
-        else:
-            if settings.DEBUG:
+            if board:
+                return True, _("This email will be sent to the staff.")
+            else:
                 return False, _("No email will be sent.")
-            else:
-                if board:
-                    return True, _("This email will be sent to the preparation team and the staff.")
-                else:
-                    return True, _("This email will be sent to customers or producers depending of the case.")
 
 
 def send_sms(sms_nr=None, sms_msg=None):
@@ -165,19 +152,13 @@ def send_sms(sms_nr=None, sms_msg=None):
                     valid_nr += sms_nr[i]
                 i += 1
             if len(valid_nr) == 10:
-                from repanier.apps import REPANIER_SETTINGS_CONFIG, REPANIER_SETTINGS_SMS_GATEWAY_MAIL
+                from repanier.apps import REPANIER_SETTINGS_SMS_GATEWAY_MAIL
                 if REPANIER_SETTINGS_SMS_GATEWAY_MAIL:
                     from repanier.email.email import RepanierEmail
-                    config = REPANIER_SETTINGS_CONFIG
-                    if config.email_is_custom:
-                        from_email = config.email_host_user
-                    else:
-                        from_email = settings.DEFAULT_FROM_EMAIL
                     # Send SMS with free gateway : Sms Gateway - Android.
                     email = RepanierEmail(
                         valid_nr,
                         html_body=sms_msg,
-                        from_email=from_email,
                         to=[apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ]
                     )
                     email.send_email()
@@ -875,12 +856,14 @@ def get_html_basket_message(customer, permanence, status):
     if status == PERMANENCE_OPENED:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             if permanence.with_delivery_point:
-                you_can_change = _("You can increase the order quantities as long as the orders are open for your delivery point.")
+                you_can_change = _(
+                    "You can increase the order quantities as long as the orders are open for your delivery point.")
             else:
                 you_can_change = _("You can increase the order quantities as long as the orders are open.")
         else:
             if permanence.with_delivery_point:
-                you_can_change = _("You can change the order quantities as long as the orders are open for your delivery point.")
+                you_can_change = _(
+                    "You can change the order quantities as long as the orders are open for your delivery point.")
             else:
                 you_can_change = _("You can change the order quantities as long as the orders are open.")
     else:

@@ -1330,7 +1330,7 @@ class Permanence(TranslatableModel):
                             operation_comment = self.get_permanence_display()
                         else:
                             if producer_invoice is not None:
-                                if producer_invoice.total_price_with_tax.amount == delta:
+                                if producer_invoice.get_total_price_with_tax().amount == delta:
                                     operation_comment = _("Delivery %(current_site)s - %(permanence)s. Thanks!") \
                                                         % {
                                                             'current_site': REPANIER_SETTINGS_GROUP_NAME,

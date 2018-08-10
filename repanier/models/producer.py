@@ -312,18 +312,19 @@ class Producer(models.Model):
             producer_id=self.id, invoice_sort_order__isnull=False
         ).order_by("-id").first()
         if producer_last_invoice is not None:
-            if producer_last_invoice.total_price_with_tax < DECIMAL_ZERO:
+            total_price_with_tax = producer_last_invoice.get_total_price_with_tax()
+            if total_price_with_tax < DECIMAL_ZERO:
                 return "<span style=\"color:#298A08\">{}</span>".format(
-                    number_format(producer_last_invoice.total_price_with_tax, 2))
-            elif producer_last_invoice.total_price_with_tax == DECIMAL_ZERO:
+                    number_format(total_price_with_tax, 2))
+            elif total_price_with_tax == DECIMAL_ZERO:
                 return "<span style=\"color:#32CD32\">{}</span>".format(
-                    number_format(producer_last_invoice.total_price_with_tax, 2))
-            elif producer_last_invoice.total_price_with_tax > 30:
+                    number_format(total_price_with_tax, 2))
+            elif total_price_with_tax > 30:
                 return "<span style=\"color:red\">{}</span>".format(
-                    number_format(producer_last_invoice.total_price_with_tax, 2))
+                    number_format(total_price_with_tax, 2))
             else:
                 return "<span style=\"color:#696969\">{}</span>".format(
-                    number_format(producer_last_invoice.total_price_with_tax, 2))
+                    number_format(total_price_with_tax, 2))
         else:
             return "<span style=\"color:#32CD32\">{}</span>".format(number_format(0, 2))
 

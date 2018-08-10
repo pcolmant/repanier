@@ -222,7 +222,7 @@ class Configuration(TranslatableModel):
         )
         config.init_email()
         config.save()
-        
+
         # Create firsts users
         Producer.get_or_create_group()
         customer_buyinggroup = Customer.get_or_create_group()
@@ -436,14 +436,45 @@ class Configuration(TranslatableModel):
             self.db_version = 1
         if self.db_version == 1:
             for user in User.objects.filter(is_staff=False).order_by('?'):
-                user.first_name=EMPTY_STRING
-                user.last_name=user.username[:30]
+                user.first_name = EMPTY_STRING
+                user.last_name = user.username[:30]
                 user.save()
             for user in User.objects.filter(is_staff=True, is_superuser=False).order_by('?'):
-                user.first_name=EMPTY_STRING
-                user.last_name=user.email[:30]
+                user.first_name = EMPTY_STRING
+                user.last_name = user.email[:30]
                 user.save()
             self.db_version = 2
+        if self.db_version == 2:
+            from repanier.models import Staff
+            Staff.objects.order_by('?').update(
+                is_repanier_admin=F('is_coordinator'),
+            )
+            Staff.objects.filter(
+                is_repanier_admin=True
+            ).order_by('?').update(
+                can_be_contacted=True,
+            )
+            Staff.objects.filter(
+                is_order_manager=True
+            ).order_by('?').update(
+                can_be_contacted=True,
+            )
+            Staff.objects.filter(
+                is_invoice_manager=True
+            ).order_by('?').update(
+                can_be_contacted=True,
+            )
+            Staff.objects.filter(
+                is_invoice_referent=True
+            ).order_by('?').update(
+                is_invoice_manager=True,
+            )
+            Staff.objects.filter(
+                is_order_referent=True
+            ).order_by('?').update(
+                is_order_manager=True,
+            )
+            self.db_version = 3
 
     def __str__(self):
         return self.group_name
@@ -479,10 +510,6 @@ def configuration_post_save(sender, **kwargs):
     config = kwargs["instance"]
     if config.id is not None:
         repanier.apps.REPANIER_SETTINGS_CONFIG = config
-        if settings.REPANIER_SETTINGS_TEST_MODE:
-            repanier.apps.REPANIER_SETTINGS_TEST_MODE_ACTIVATED = config.test_mode
-        else:
-            repanier.apps.REPANIER_SETTINGS_TEST_MODE_ACTIVATED = False
         site = Site.objects.get_current()
         if site is not None:
             site.name = config.group_name

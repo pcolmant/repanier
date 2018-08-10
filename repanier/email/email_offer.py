@@ -68,7 +68,7 @@ def send_pre_open_order(permanence_id):
                 to_email.append(producer.email2)
             if producer.email3:
                 to_email.append(producer.email3)
-            to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+            to_email = list(set(to_email + order_responsible.get_to_email))
             email = RepanierEmail(
                 subject=offer_producer_mail_subject,
                 html_body=html_body,
@@ -153,7 +153,7 @@ def send_open_order(permanence_id):
             'signature': order_responsible.get_html_signature
         })
         html_body = template.render(context)
-        to_email = list(set(to_email + order_responsible.get_to_email + Staff.get_to_order_copy()))
+        to_email = list(set(to_email + order_responsible.get_to_email))
         email = RepanierEmail(
             subject=offer_customer_mail_subject,
             html_body=html_body,
