@@ -103,8 +103,8 @@ class Configuration(TranslatableModel):
     )
     email_host_user = models.EmailField(
         _("Email host user"),
-        help_text=_("For @gmail.com : username@gmail.com"),
-        max_length=50, null=True, blank=True, default="username@gmail.com")
+        help_text=settings.DEFAULT_FROM_EMAIL,
+        max_length=50, null=True, blank=True, default=settings.DEFAULT_FROM_EMAIL)
     email_host_password = models.CharField(
         _("Email host password"),
         help_text=_(

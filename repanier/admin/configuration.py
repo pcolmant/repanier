@@ -1,17 +1,12 @@
 # -*- coding: utf-8
 from django import forms
 from django.conf import settings
-from django.conf.urls import url
-from django.core import urlresolvers
-from django.http import HttpResponseRedirect
-from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.const import EMPTY_STRING
 from repanier.models.configuration import Configuration
-from repanier.tools import send_test_email
 from repanier.widget.button_test_mail_config import ButtonTestMailConfigWidget
 
 
@@ -30,16 +25,19 @@ class ConfigurationDataForm(TranslatableModelForm):
         widget=forms.TextInput(attrs={'style': "width:100% !important"}))
     email_host_user = forms.CharField(
         label=_("Email host user"),
-        help_text=_("For @gmail.com : username@gmail.com"),
+        initial=settings.DEFAULT_FROM_EMAIL,
+        empty_value=settings.DEFAULT_FROM_EMAIL,
+        help_text=settings.DEFAULT_FROM_EMAIL,
         required=False,
-        widget=forms.EmailInput(attrs={'style': "width:100% !important"})
+        # widget=forms.EmailInput(attrs={'style': "width:100% !important"})
     )
     new_email_host_password = forms.CharField(
         label=_("Email host password"),
         help_text=_(
             "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
         required=False,
-        widget=forms.PasswordInput(attrs={'style': "width:100% !important"}))
+        # widget=forms.PasswordInput(attrs={'style': "width:100% !important"})
+    )
     sms_gateway_mail = forms.CharField(
         label=_("Sms gateway email"),
         help_text=_(
@@ -174,10 +172,13 @@ class ConfigurationAdmin(TranslatableAdmin):
             ]
 
         fields = [
+            'email_host_user',
             'email_is_custom',
             'send_test_mail_button',
-            ('email_host_user', 'new_email_host_password'),
-            ('email_host', 'email_port', 'email_use_tls')
+            'new_email_host_password',
+            'email_host',
+            'email_port',
+            'email_use_tls'
         ]
         fieldsets += [
             (_('Advanced mail server configuration'), {

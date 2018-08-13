@@ -219,22 +219,7 @@ class Staff(MPTTModel, TranslatableModel):
     def get_from_email(self):
         from repanier.apps import REPANIER_SETTINGS_CONFIG
         config = REPANIER_SETTINGS_CONFIG
-        if config.email_is_custom and config.email_host_user:
-            from_email = config.email_host_user
-        else:
-            staff_email = self.user.email
-            if staff_email:
-                if staff_email.endswith(settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION):
-                    from_email = staff_email
-                else:
-                    # The mail address of the staff member doesn't end with an allowed mail extension,
-                    # set a generic one
-                    from_email = settings.DEFAULT_FROM_EMAIL
-            else:
-                # No specific mail address for the staff member,
-                # set a generic one
-                from_email = settings.DEFAULT_FROM_EMAIL
-        return from_email
+        return self.user.email or config.email_host_user or settings.DEFAULT_FROM_EMAIL
 
     @cached_property
     def get_reply_to_email(self):
