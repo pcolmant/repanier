@@ -23,7 +23,6 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 
 class Configuration(TranslatableModel):
     group_name = models.CharField(_("Name of the group"), max_length=50, default=EMPTY_STRING)
-    test_mode = models.BooleanField(_("Test mode"), default=False)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
