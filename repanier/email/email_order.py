@@ -120,7 +120,7 @@ def email_order(permanence_id, everything=True, producers_id=(), deliveries_id=(
 
             producer_invoice = ProducerInvoice.objects.filter(
                 producer_id=producer.id, permanence_id=permanence.id
-            ).only("total_price_with_tax").order_by('?').first()
+            ).order_by('?').first()
 
             to_email = []
             if producer_invoice is not None \
