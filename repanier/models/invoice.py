@@ -3,7 +3,6 @@
 import datetime
 
 from django.conf import settings
-from django.core import urlresolvers
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -97,7 +96,8 @@ class CustomerInvoice(Invoice):
     # - confirm the order (if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER) and send a mail with the order to me
     # - mail send to XYZ
     # - order confirmed (if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER) and mail send to XYZ
-    is_order_confirm_send = models.BooleanField(_("Confirmation of the order send"), choices=settings.LUT_CONFIRM, default=False)
+    is_order_confirm_send = models.BooleanField(_("Confirmation of the order send"), choices=settings.LUT_CONFIRM,
+                                                default=False)
     invoice_sort_order = models.IntegerField(
         _("Invoice sort order"),
         default=None, blank=True, null=True, db_index=True)

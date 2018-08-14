@@ -206,7 +206,8 @@ class ModelMoneyField(models.DecimalField):
         return super(ModelMoneyField, self).get_db_prep_save(value, connection)
 
     def contribute_to_class(self, cls, name, private_only=False, virtual_only=NOT_PROVIDED):
-        super(ModelMoneyField, self).contribute_to_class(cls, name, private_only=private_only, virtual_only=virtual_only)
+        super(ModelMoneyField, self).contribute_to_class(cls, name, private_only=private_only,
+                                                         virtual_only=virtual_only)
         setattr(cls, self.name, MoneyFieldProxy(self))
 
 
