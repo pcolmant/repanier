@@ -3,11 +3,11 @@
 import uuid
 
 from django.conf import settings
-from django.core import urlresolvers
 from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -148,7 +148,7 @@ class Product(Item):
                 else:
                     new_line = EMPTY_STRING
                 # Important : linked to django.utils.dateparse.parse_date format
-                switch_is_into_offer = urlresolvers.reverse(
+                switch_is_into_offer = reverse(
                     'is_into_offer_content',
                     args=(self.id, contract.id, one_date_str)
                 )
@@ -189,7 +189,7 @@ class Product(Item):
                 )
             contract_dates = ",&nbsp;".join(contract_dates_array)
             if selected_dates_counter > 1:
-                switch_flexible_dates = urlresolvers.reverse(
+                switch_flexible_dates = reverse(
                     'flexible_dates',
                     args=(self.id, contract.id)
                 )
@@ -228,7 +228,7 @@ class Product(Item):
             is_into_offer = self.is_into_offer
             contract_dates = EMPTY_STRING
             flexible_dates_link = EMPTY_STRING
-        switch_is_into_offer = urlresolvers.reverse(
+        switch_is_into_offer = reverse(
             'is_into_offer', args=(self.id, contract.id if contract is not None else 0)
         )
         javascript = """

@@ -10,13 +10,14 @@ from urllib.parse import urljoin
 from urllib.request import urlopen
 
 from django.conf import settings
-from django.core import urlresolvers, mail
+from django.core import mail
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import F
 from django.http import Http404
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
 from django.utils.datetime_safe import new_datetime
@@ -826,7 +827,7 @@ def web_services_activated(reference_site=None):
     version = None
     if reference_site:
         try:
-            url = urljoin(reference_site, urlresolvers.reverse('version_rest'))
+            url = urljoin(reference_site, reverse('version_rest'))
             web_services = urlopen(url, timeout=0.5)
             rest_as_json = json.load(reader(web_services))
             if rest_as_json['version'] == '1':

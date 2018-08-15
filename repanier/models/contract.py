@@ -1,10 +1,10 @@
 # -*- coding: utf-8
 
 from django.conf import settings
-from django.core import urlresolvers
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
@@ -63,10 +63,11 @@ class Contract(TranslatableModel):
         # -2, boxes may not be used in contracts
         OfferItemWoReceiver.objects.filter(permanence_id=permanence.id).update(may_order=False)
         for contract_content in ContractContent.objects.filter(
-            contract_id=self.id,
-            permanences_dates__isnull=False
+                contract_id=self.id,
+                permanences_dates__isnull=False
         ).order_by('?'):
-            all_dates_str = sorted(list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates_str = sorted(
+                list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             if contract_content.flexible_dates:
                 permanences_dates_order = 0
                 for one_date_str in all_dates_str:
@@ -131,7 +132,7 @@ class Contract(TranslatableModel):
     @cached_property
     def get_producers(self):
         if len(self.producers.all()) > 0:
-            changelist_url = urlresolvers.reverse(
+            changelist_url = reverse(
                 'admin:repanier_product_changelist',
             )
             link = []
@@ -148,7 +149,8 @@ class Contract(TranslatableModel):
     @cached_property
     def get_dates(self):
         if self.permanences_dates:
-            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates_str = sorted(
+                list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_dates = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
@@ -220,14 +222,16 @@ def contract_pre_save(sender, **kwargs):
 
     if len(dates_to_remove_str) > 0 or len(dates_to_add_str) > 0:
         for contract_content in ContractContent.objects.filter(
-            contract=contract,
+                contract=contract,
         ).order_by('?'):
             if contract_content.permanences_dates:
-                all_dates_str = list(filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
+                all_dates_str = list(
+                    filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
             else:
                 all_dates_str = []
             if contract_content.not_permanences_dates:
-                all_not_dates_str = list(filter(None, contract_content.not_permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
+                all_not_dates_str = list(filter(None, contract_content.not_permanences_dates.split(
+                    settings.DJANGO_SETTINGS_DATES_SEPARATOR)))
             else:
                 all_not_dates_str = []
             for one_dates_to_remove_str in dates_to_remove_str:
@@ -243,7 +247,8 @@ def contract_pre_save(sender, **kwargs):
             else:
                 contract_content.permanences_dates = None
             if len(all_not_dates_str) > 0:
-                contract_content.not_permanences_dates = settings.DJANGO_SETTINGS_DATES_SEPARATOR.join(all_not_dates_str)
+                contract_content.not_permanences_dates = settings.DJANGO_SETTINGS_DATES_SEPARATOR.join(
+                    all_not_dates_str)
             else:
                 contract_content.not_permanences_dates = None
             contract_content.save()
@@ -267,7 +272,8 @@ class ContractContent(models.Model):
     @property
     def get_permanences_dates(self):
         if self.permanences_dates:
-            all_dates_str = sorted(list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+            all_dates_str = sorted(
+                list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
             all_days = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)

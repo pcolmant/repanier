@@ -3,7 +3,7 @@ from cms.cms_toolbars import ADMIN_MENU_IDENTIFIER
 from cms.toolbar_base import CMSToolbar
 from cms.toolbar_pool import toolbar_pool
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *

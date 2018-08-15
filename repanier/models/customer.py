@@ -5,7 +5,6 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core import urlresolvers
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -189,7 +188,7 @@ class Customer(models.Model):
         # New customer have no user during import of customers in admin.customer.CustomerResource
         try:
             return self.user.date_joined.strftime(settings.DJANGO_SETTINGS_DATE)
-        except User.DoesNotExist: # RelatedObjectDoesNotExist
+        except User.DoesNotExist:  # RelatedObjectDoesNotExist
             return EMPTY_STRING
 
     get_admin_date_joined.short_description = _("Date joined")
@@ -246,15 +245,15 @@ class Customer(models.Model):
         balance = self.get_admin_balance()
         if last_customer_invoice.exists():
             if balance.amount >= 30:
-                return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
+                return '<a href="' + reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:#32CD32\">{}</span>".format(balance)) + '</a>'
             elif balance.amount >= -10:
-                return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
+                return '<a href="' + reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:#696969\">{}</span>".format(balance)) + '</a>'
             else:
-                return '<a href="' + urlresolvers.reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
+                return '<a href="' + reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:red\">{}</span>".format(balance)) + '</a>'
         else:

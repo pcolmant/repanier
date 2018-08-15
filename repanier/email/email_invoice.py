@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
 
 from repanier.email.email import RepanierEmail

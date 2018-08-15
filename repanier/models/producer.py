@@ -4,12 +4,12 @@ import datetime
 import uuid
 
 from django.conf import settings
-from django.core import urlresolvers
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
@@ -112,7 +112,7 @@ class Producer(models.Model):
         producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
         if producer_buyinggroup is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
-            short_name=long_name[:25]
+            short_name = long_name[:25]
             producer_buyinggroup = Producer.objects.create(
                 short_profile_name=short_name,
                 long_profile_name=long_name,
@@ -146,7 +146,7 @@ class Producer(models.Model):
     def get_products(self):
         # This producer may have product's list
         if self.is_active:
-            changeproductslist_url = urlresolvers.reverse(
+            changeproductslist_url = reverse(
                 'admin:repanier_product_changelist',
             )
             link = "<a href=\"{}?is_active__exact=1&producer={}\" class=\"btn\">&nbsp;{}</a>".format(
@@ -278,19 +278,19 @@ class Producer(models.Model):
         balance = self.get_admin_balance()
         if last_producer_invoice_set.exists():
             if balance.amount < 0:
-                return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
+                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:#298A08\">{}</span>".format(-balance)) + '</a>'
             elif balance.amount == 0:
-                return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
+                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:#32CD32\">{}</span>".format(-balance)) + '</a>'
             elif balance.amount > 30:
-                return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
+                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:red\">{}</span>".format(-balance)) + '</a>'
             else:
-                return '<a href="' + urlresolvers.reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
+                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
                     self.id) + '" class="btn" target="_blank" >' + (
                            "<span style=\"color:#696969\">{}</span>".format(-balance)) + '</a>'
         else:

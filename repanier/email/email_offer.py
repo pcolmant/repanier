@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-from django.core.urlresolvers import reverse
 from django.template import Template, Context as TemplateContext
 # AttributeError: 'Context' object has no attribute 'render_context'
 # OK, i got the solution:

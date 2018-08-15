@@ -7,6 +7,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
 from django.db.models import F, Sum, Q
+from django.urls import reverse
 from django.utils.formats import number_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -381,7 +382,7 @@ class CustomerInvoice(Invoice):
                                 _(
                                     "Confirm this order and receive an email containing its summary."))
                     else:
-                        href = urlresolvers.reverse(
+                        href = reverse(
                             'order_view', args=(permanence.id,)
                         )
                         if self.status == PERMANENCE_OPENED:

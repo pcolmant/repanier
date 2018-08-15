@@ -6,10 +6,10 @@ from django import forms
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
-from django.core import urlresolvers
 from django.core.checks import messages
 from django.db import transaction
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 # from django.views.i18n import JavaScriptCatalog
@@ -253,12 +253,12 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     user_message = _('Nothing to confirm')
 
             redirect_to = "{}?permanence={}&customer={}".format(
-                urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
+                reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
         elif permanence_id is not None:
             redirect_to = "{}?permanence={}".format(
-                urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
+                reverse('admin:repanier_purchase_changelist', ), permanence_id)
         else:
-            redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
+            redirect_to = reverse('admin:repanier_purchase_changelist', )
         self.message_user(request, user_message, user_message_level)
         return HttpResponseRedirect(redirect_to)
 
@@ -287,12 +287,12 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     #                 user_message = _('Nothing to unconfirm')
     #
     #         redirect_to = "{}?permanence={}&customer={}".format(
-    #             urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
+    #             reverse('admin:repanier_purchase_changelist', ), permanence_id, customer_id)
     #     elif permanence_id is not None:
     #         redirect_to = "{}?permanence={}".format(
-    #             urlresolvers.reverse('admin:repanier_purchase_changelist', ), permanence_id)
+    #             reverse('admin:repanier_purchase_changelist', ), permanence_id)
     #     else:
-    #         redirect_to = urlresolvers.reverse('admin:repanier_purchase_changelist', )
+    #         redirect_to = reverse('admin:repanier_purchase_changelist', )
     #     self.message_user(request, user_message, user_message_level)
     #     return HttpResponseRedirect(redirect_to)
 

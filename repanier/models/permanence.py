@@ -5,10 +5,10 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.core import urlresolvers
 from django.core.cache import cache
 from django.db import models, transaction
 from django.db.models import F, Sum
+from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
@@ -146,7 +146,7 @@ class Permanence(TranslatableModel):
         if self.status == PERMANENCE_PLANNED:
             link = []
             if self.contract and len(self.contract.producers.all()) > 0:
-                changelist_url = urlresolvers.reverse(
+                changelist_url = reverse(
                     'admin:repanier_product_changelist',
                 )
                 for p in self.contract.producers.all():
@@ -156,7 +156,7 @@ class Permanence(TranslatableModel):
                             p.short_profile_name.replace(" ", "&nbsp;"))
                     )
             elif len(self.producers.all()) > 0:
-                changelist_url = urlresolvers.reverse(
+                changelist_url = reverse(
                     'admin:repanier_product_changelist',
                 )
                 for p in self.producers.all():
@@ -177,7 +177,7 @@ class Permanence(TranslatableModel):
                     link.append(p.short_profile_name.replace(" ", "&nbsp;"))
             msg_html = "<div class=\"wrap-text\">{}</div>".format(", ".join(link))
         elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
-            close_offeritem_changelist_url = urlresolvers.reverse(
+            close_offeritem_changelist_url = reverse(
                 'admin:repanier_offeritemclosed_changelist',
             )
 
@@ -216,10 +216,10 @@ class Permanence(TranslatableModel):
                 link_unicode = "{} ".format(LINK_UNICODE)
             else:
                 link_unicode = EMPTY_STRING
-            send_offeritem_changelist_url = urlresolvers.reverse(
+            send_offeritem_changelist_url = reverse(
                 'admin:repanier_offeritemsend_changelist',
             )
-            send_customer_changelist_url = urlresolvers.reverse(
+            send_customer_changelist_url = reverse(
                 'admin:repanier_customersend_changelist',
             )
             link = []
@@ -268,7 +268,7 @@ class Permanence(TranslatableModel):
                     # Such that they can be accessed by the producer and by the staff
                     link.append(
                         "<a href=\"{}?producer={}\" target=\"_blank\">{}</a>".format(
-                            urlresolvers.reverse('producer_invoice_view', args=(pi.id,)),
+                            reverse('producer_invoice_view', args=(pi.id,)),
                             pi.producer_id,
                             label.replace(' ', '&nbsp;')))
 
@@ -305,7 +305,7 @@ class Permanence(TranslatableModel):
         if self.status in [
             PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND
         ]:
-            changelist_url = urlresolvers.reverse(
+            changelist_url = reverse(
                 'admin:repanier_purchase_changelist',
             )
             link = []
@@ -356,7 +356,7 @@ class Permanence(TranslatableModel):
                 # Such that they can be accessed by the customer and by the staff
                 link.append(
                     "<a href=\"{}?customer={}\" target=\"_blank\">{}</a>".format(
-                        urlresolvers.reverse('customer_invoice_view', args=(ci.id,)),
+                        reverse('customer_invoice_view', args=(ci.id,)),
                         ci.customer_id,
                         label.replace(' ', '&nbsp;')
                     )
@@ -400,7 +400,7 @@ class Permanence(TranslatableModel):
                 r_link = EMPTY_STRING
                 r = permanenceboard_row.permanence_role
                 if r:
-                    r_url = urlresolvers.reverse(
+                    r_url = reverse(
                         'admin:repanier_lut_permanencerole_change',
                         args=(r.id,)
                     )
@@ -409,7 +409,7 @@ class Permanence(TranslatableModel):
                 c_link = EMPTY_STRING
                 c = permanenceboard_row.customer
                 if c:
-                    c_url = urlresolvers.reverse(
+                    c_url = reverse(
                         'admin:repanier_customer_change',
                         args=(c.id,)
                     )
@@ -1659,7 +1659,7 @@ class Permanence(TranslatableModel):
         else:
             message = self.get_status_display()
         if need_to_refresh_status:
-            url = urlresolvers.reverse(
+            url = reverse(
                 'display_status',
                 args=(self.id,)
             )

@@ -66,32 +66,32 @@ class BankAccountResource(resources.ModelResource):
                 raise ValueError(_("Only a customer or a producer may be entered."))
             if instance.producer is not None:
                 if BankAccount.objects.filter(
-                    producer=instance.producer,
-                    bank_amount_in=instance.bank_amount_in,
-                    bank_amount_out=instance.bank_amount_out,
-                    operation_date=instance.operation_date
+                        producer=instance.producer,
+                        bank_amount_in=instance.bank_amount_in,
+                        bank_amount_out=instance.bank_amount_out,
+                        operation_date=instance.operation_date
                 ).exists():
                     raise ValueError(_("This movement already exists."))
                 if BankAccount.objects.filter(
-                    producer=instance.producer,
-                    bank_amount_in=instance.bank_amount_in,
-                    bank_amount_out=instance.bank_amount_out,
-                    operation_comment=instance.operation_comment
+                        producer=instance.producer,
+                        bank_amount_in=instance.bank_amount_in,
+                        bank_amount_out=instance.bank_amount_out,
+                        operation_comment=instance.operation_comment
                 ).exists():
                     raise ValueError(_("This movement already exists."))
             if instance.customer is not None:
                 if BankAccount.objects.filter(
-                    customer=instance.customer,
-                    bank_amount_in=instance.bank_amount_in,
-                    bank_amount_out=instance.bank_amount_out,
-                    operation_date=instance.operation_date
+                        customer=instance.customer,
+                        bank_amount_in=instance.bank_amount_in,
+                        bank_amount_out=instance.bank_amount_out,
+                        operation_date=instance.operation_date
                 ).exists():
                     raise ValueError(_("This movement already exists."))
                 if BankAccount.objects.filter(
-                    customer=instance.customer,
-                    bank_amount_in=instance.bank_amount_in,
-                    bank_amount_out=instance.bank_amount_out,
-                    operation_comment=instance.operation_comment
+                        customer=instance.customer,
+                        bank_amount_in=instance.bank_amount_in,
+                        bank_amount_out=instance.bank_amount_out,
+                        operation_comment=instance.operation_comment
                 ).exists():
                     raise ValueError(_("This movement already exists."))
 
@@ -117,7 +117,7 @@ class BankAccountResource(resources.ModelResource):
             'producer_invoice'
         )
         export_order = fields
-        import_id_fields = ('id', )
+        import_id_fields = ('id',)
         skip_unchanged = True
         report_skipped = False
         use_transactions = False
@@ -148,8 +148,8 @@ class BankAccountDataForm(forms.ModelForm):
     )
     producer = ProducerModelChoiceField(
         queryset=Producer.objects.filter(
-                represent_this_buyinggroup=False, is_active=True
-            ),
+            represent_this_buyinggroup=False, is_active=True
+        ),
         label=_("Producer"),
         required=False,
         widget=apply_select2(forms.Select)
@@ -187,7 +187,7 @@ class BankAccountDataForm(forms.ModelForm):
                 self.fields["producer"].queryset = Producer.objects.filter(id=bank_account.producer_id)
 
             if (bank_account.customer_invoice is not None or bank_account.producer_invoice is not None) or (
-                            bank_account.customer is None and bank_account.producer is None):
+                    bank_account.customer is None and bank_account.producer is None):
                 self.fields["operation_date"].widget.attrs['readonly'] = True
                 self.fields["operation_date"].disabled = True
                 self.fields["bank_amount_in"].widget.attrs['readonly'] = True
@@ -241,7 +241,8 @@ class BankAccountDataForm(forms.ModelForm):
         if latest_total is not None:
             operation_date = self.cleaned_data.get("operation_date")
             if operation_date < latest_total.operation_date:
-                self.add_error('operation_date', _('The operation date must be greater or equal to the latest total operation date.'))
+                self.add_error('operation_date',
+                               _('The operation date must be greater or equal to the latest total operation date.'))
 
     class Meta:
         model = BankAccount
@@ -297,7 +298,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         return readonly_fields
 
     # def expenses_to_be_apportioned(self, request):
-    #     redirect_to = urlresolvers.reverse('admin:repanier_bankaccount_changelist', )
+    #     redirect_to = reverse('admin:repanier_bankaccount_changelist', )
     #     return HttpResponseRedirect(redirect_to)
 
     def get_actions(self, request):
@@ -321,4 +322,3 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
 
     # class Media:
     #     js = ('js/expenses_to_be_apportioned.js',)
-

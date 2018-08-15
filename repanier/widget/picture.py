@@ -1,8 +1,8 @@
 # -*- coding: utf-8
 
-from django.core import urlresolvers
 from django.core.files.storage import default_storage
 from django.forms import widgets
+from django.urls import reverse
 
 from repanier.const import EMPTY_STRING
 from repanier.picture.const import SIZE_M
@@ -19,7 +19,7 @@ class AjaxPictureWidget(widgets.TextInput):
 
     def get_context(self, name, value, attrs):
         context = super(AjaxPictureWidget, self).get_context(name, value, attrs)
-        context['upload_url'] = urlresolvers.reverse(
+        context['upload_url'] = reverse(
             'ajax_picture', args=(self.upload_to, self.size)
         )
         if value:
