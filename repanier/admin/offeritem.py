@@ -128,10 +128,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        user = request.user
-        if user.is_repanier_staff:
-            return True
-        return False
+        return request.user.is_repanier_staff
 
     def get_actions(self, request):
         actions = super(OfferItemClosedAdmin, self).get_actions(request)
