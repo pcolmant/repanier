@@ -282,7 +282,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         else:
             return
 
-    export_xlsx_offer.short_description = _("1 --- Check offer before opening")
+    export_xlsx_offer.short_description = _("1 --- Check the offer")
 
     def export_xlsx_customer_order(self, request, queryset):
         if 'cancel' in request.POST:
