@@ -1431,7 +1431,6 @@ def export_customer_for_a_delivery(
                     c = ws.cell(row=row_num, column=9)
                     c.value = delta_transport_save.amount
                     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
-                    print("{}".format(delta_transport_save))
                 row_num += 1
                 c = ws.cell(row=row_num, column=4)
                 c.value = "{}".format(group_label)
