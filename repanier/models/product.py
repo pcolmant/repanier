@@ -329,8 +329,6 @@ def product_pre_save(sender, **kwargs):
         product.customer_minimum_order_quantity = product.customer_increment_order_quantity
     if product.order_average_weight <= DECIMAL_ZERO:
         product.order_average_weight = DECIMAL_ONE
-    if product.limit_order_quantity_to_stock:
-        product.customer_alert_order_quantity = min(999, product.stock)
     if settings.REPANIER_SETTINGS_IS_MINIMALIST:
         if product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
                                       PRODUCT_ORDER_UNIT_LT]:
@@ -341,6 +339,8 @@ def product_pre_save(sender, **kwargs):
         else:
             product.customer_alert_order_quantity = (product.customer_minimum_order_quantity + (
                     product.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1))).quantize(THREE_DECIMALS)
+    if product.limit_order_quantity_to_stock:
+        product.customer_alert_order_quantity = min(999, product.stock)
     if not product.reference:
         product.reference = uuid.uuid1()
     # Update stock of boxes containing this product
