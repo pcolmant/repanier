@@ -204,7 +204,7 @@ class ProductDataForm(TranslatableModelForm):
             else:
                 # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
                 # if the pre-opening of offer is activated fro this producer.
-                limit_order_quantity_to_stock = self.cleaned_data.get("limit_order_quantity_to_stock", True)
+                limit_order_quantity_to_stock = self.cleaned_data.get("limit_order_quantity_to_stock", False)
                 if not limit_order_quantity_to_stock and producer is not None:
                     if producer.represent_this_buyinggroup:
                         self.add_error(
