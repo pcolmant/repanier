@@ -48,7 +48,6 @@ class RepanierEmail(EmailMultiAlternatives):
     def send_email(self, from_name=EMPTY_STRING):
         from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
 
-        email_send = False
         self.from_email = "{} <{}>".format(from_name or REPANIER_SETTINGS_GROUP_NAME, self.from_email)
         self.body = strip_tags(self.html_body)
 
@@ -126,9 +125,7 @@ class RepanierEmail(EmailMultiAlternatives):
                     try:
                         if not settings.DEBUG:
                             # Do not send mail in debug mode
-                            self.send()
-                        else:
-                            self.to = ['pcolmant@gmail.com']
+                            # self.to = ['ask.it@to.me']
                             self.send()
                         email_send = True
                     except SMTPRecipientsRefused as error_str:
