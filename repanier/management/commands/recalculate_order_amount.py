@@ -66,7 +66,7 @@ class Command(BaseCommand):
         #                 permanence_id=permanence.id,
         #             ).order_by('?').first()
         #             customer_invoice.delivery = delivery
-        #         customer_invoice.set_delivery(customer_invoice.delivery)
+        #         customer_invoice.set_order_delivery(customer_invoice.delivery)
         #         if customer_invoice.is_order_confirm_send:
         #             customer_invoice.confirm_order()
         #         customer_invoice.save()
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         #                 permanence_id=permanence.id,
         #             ).order_by('?').first()
         #             customer_invoice.delivery = delivery
-        #         customer_invoice.set_delivery(customer_invoice.delivery)
+        #         customer_invoice.set_order_delivery(customer_invoice.delivery)
         #         if customer_invoice.is_order_confirm_send:
         #             customer_invoice.confirm_order()
         #         customer_invoice.save()

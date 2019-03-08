@@ -2,7 +2,6 @@
 import threading
 
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
@@ -22,6 +21,7 @@ from repanier.admin.forms import InvoiceOrderForm, ProducerInvoicedFormSet, Perm
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.email import email_invoice
+from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -30,7 +30,7 @@ from repanier.models.lut import LUT_PermanenceRole
 from repanier.models.permanence import PermanenceDone
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
-from repanier.tools import send_email_to_who
+from repanier.tools import get_repanier_template_name, get_repanier_static_name
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.xlsx_invoice import export_bank, export_invoice, handle_uploaded_invoice
 from repanier.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchase
@@ -153,7 +153,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        return render(request, 'repanier/confirm_admin_action.html', {
+        template_name = get_repanier_template_name("confirm_admin_action.html")
+        return render(request, template_name, {
             'sub_title': _("Please, confirm the action : cancel delivery"),
             'action': 'cancel_delivery',
             'permanence': permanence,
@@ -217,7 +218,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
                 _("Accounting report"),
-                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+                settings.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
@@ -320,7 +321,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             customer__isnull=True
                         ).order_by('-id').first()
                         previous_latest_total_id = previous_latest_total.id if previous_latest_total is not None else 0
-                        return render(request, 'repanier/confirm_admin_bank_movement.html', {
+                        template_name = get_repanier_template_name("confirm_admin_bank_movement.html")
+                        return render(request, template_name, {
                             'sub_title': _(
                                 "Please make the following payments, whose bank movements have been generated"),
                             'action': 'generate_invoices',
@@ -378,7 +380,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
             producer_invoiced_formset = ProducerInvoicedFormSet(initial=producer_invoiced)
 
-        return render(request, 'repanier/confirm_admin_invoice.html', {
+        template_name = get_repanier_template_name("confirm_admin_invoice.html")
+        return render(request, template_name, {
             'sub_title': _("Please, confirm the action : generate the invoices"),
             'action': 'generate_invoices',
             'permanence': permanence,
@@ -412,7 +415,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        return render(request, 'repanier/confirm_admin_action.html', {
+        template_name = get_repanier_template_name("confirm_admin_action.html")
+        return render(request, template_name, {
             'sub_title': _("Please, confirm the action : generate archive"),
             'action': 'generate_archive',
             'permanence': permanence,
@@ -472,7 +476,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        return render(request, 'repanier/confirm_admin_action.html', {
+        template_name = get_repanier_template_name("confirm_admin_action.html")
+        return render(request, template_name, {
             'sub_title': _(
                 "Please, confirm the action : cancel the invoices") if permanence.status == PERMANENCE_INVOICED else _(
                 "Please, confirm the action : cancel the archiving") if permanence.status == PERMANENCE_ARCHIVED else _(
@@ -523,7 +528,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             }
         bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
         if bank_account_number is not None:
-            group_name = repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+            group_name = settings.REPANIER_SETTINGS_GROUP_NAME
             if permanence.short_name:
                 communication = "{} ({})".format(_('Short name'), permanence.short_name)
             else:
@@ -554,7 +559,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         })
         template_invoice_customer_mail = template.render(context)
 
-        invoice_customer_email_will_be_sent, invoice_customer_email_will_be_sent_to = send_email_to_who(
+        invoice_customer_email_will_be_sent, invoice_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
         )
 
@@ -568,7 +573,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         })
         template_invoice_producer_mail = template.render(context)
 
-        invoice_producer_email_will_be_sent, invoice_producer_email_will_be_sent_to = send_email_to_who(
+        invoice_producer_email_will_be_sent, invoice_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
         )
         if 'apply' in request.POST:
@@ -587,9 +592,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     'template_invoice_producer_mail': mark_safe(template_invoice_producer_mail),
                 }
             )
+        template_name = get_repanier_template_name(
+            'repanier/confirm_admin_send_invoice.html'
+        )
         return render(
             request,
-            'repanier/confirm_admin_send_invoice.html', {
+            template_name, {
                 'sub_title': _("Please, confirm the action : send invoices"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'send_invoices',
@@ -656,4 +664,4 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             request, permanence, form, change)
 
     class Media:
-        js = ('js/import_invoice.js',)
+        js = (get_repanier_static_name("js/import_invoice.js"),)

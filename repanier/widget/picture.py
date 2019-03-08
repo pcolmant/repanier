@@ -1,24 +1,24 @@
 # -*- coding: utf-8
-
 from django.core.files.storage import default_storage
 from django.forms import widgets
 from django.urls import reverse
 
 from repanier.const import EMPTY_STRING
 from repanier.picture.const import SIZE_M
+from repanier.tools import get_repanier_template_name
 
 
-class AjaxPictureWidget(widgets.TextInput):
-    template_name = 'repanier/widgets/picture.html'
+class RepanierPictureWidget(widgets.TextInput):
+    template_name = get_repanier_template_name("widgets/picture.html")
 
     def __init__(self, *args, **kwargs):
         self.upload_to = kwargs.pop('upload_to', 'pictures')
         self.size = kwargs.pop('size', SIZE_M)
         self.bootstrap = kwargs.pop('bootstrap', False)
-        super(AjaxPictureWidget, self).__init__(*args, **kwargs)
+        super(RepanierPictureWidget, self).__init__(*args, **kwargs)
 
     def get_context(self, name, value, attrs):
-        context = super(AjaxPictureWidget, self).get_context(name, value, attrs)
+        context = super(RepanierPictureWidget, self).get_context(name, value, attrs)
         context['upload_url'] = reverse(
             'ajax_picture', args=(self.upload_to, self.size)
         )

@@ -3,10 +3,11 @@
 from django import forms
 
 from repanier.const import EMPTY_STRING
+from repanier.tools import get_repanier_template_name
 
 
 class SelectBootstrapWidget(forms.Select):
-    template_name = 'repanier/widgets/select_bootstrap.html'
+    template_name = get_repanier_template_name("widgets/select_bootstrap.html")
 
     def get_context(self, name, value, attrs):
         context = super(SelectBootstrapWidget, self).get_context(name, value, attrs)

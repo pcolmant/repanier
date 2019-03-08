@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 # Filters in the right sidebar of the change list page of the admin
-from django.conf import settings
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
@@ -12,7 +11,7 @@ from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer, Product
-from repanier.tools import sint
+from repanier.tools import sint, get_admin_template_name
 
 
 class ProductFilterByProducer(SimpleListFilter):
@@ -21,7 +20,7 @@ class ProductFilterByProducer(SimpleListFilter):
     title = _("Producers")
     # Parameter for the filter that will be used in the URL query.
     parameter_name = 'producer'
-    template = 'admin/producer_filter.html'
+    template = get_admin_template_name('producer_filter.html')
 
     def lookups(self, request, model_admin):
         """
@@ -52,7 +51,7 @@ class ProductFilterByProducer(SimpleListFilter):
 class ContractFilterByProducer(SimpleListFilter):
     title = _("Producers")
     parameter_name = 'producer'
-    template = 'admin/producer_filter.html'
+    template = get_admin_template_name('producer_filter.html')
 
     def lookups(self, request, model_admin):
         return [(c.id, c.short_profile_name) for c in
@@ -69,7 +68,7 @@ class ContractFilterByProducer(SimpleListFilter):
 class ProductFilterByContract(SimpleListFilter):
     title = _("Commitments")
     parameter_name = 'commitment'
-    template = 'admin/contract_filter.html'
+    template = get_admin_template_name('contract_filter.html')
 
     def lookups(self, request, model_admin):
         return [(c.id, c.long_name) for c in
@@ -86,7 +85,7 @@ class ProductFilterByContract(SimpleListFilter):
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
     title = _("Departments")
     parameter_name = "department_for_customer"
-    template = "admin/department_filter.html"
+    template = get_admin_template_name('department_filter.html')
 
     def lookups(self, request, model_admin):
         producer_id = request.GET.get("producer")
@@ -105,9 +104,9 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
                     "department_for_customer__id")
 
         return [(d.id, d.short_name) for d in
-                    LUT_DepartmentForCustomer.objects.filter(
-                        product__in=inner_qs
-                    ).prefetch_related('translations')
+                LUT_DepartmentForCustomer.objects.filter(
+                    product__in=inner_qs
+                ).prefetch_related('translations')
                 ]
 
     def queryset(self, request, queryset):
@@ -128,7 +127,7 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
 class ProductFilterByProductioMode(SimpleListFilter):
     title = _("Productions modes")
     parameter_name = 'production_mode'
-    template = 'admin/production_mode_filter.html'
+    template = get_admin_template_name('production_mode_filter.html')
 
     def lookups(self, request, model_admin):
         return [(p.id, p.short_name) for p in
@@ -145,7 +144,7 @@ class ProductFilterByProductioMode(SimpleListFilter):
 class ProductFilterByPlacement(SimpleListFilter):
     title = _("Products placements")
     parameter_name = 'placement'
-    template = 'admin/placement_filter.html'
+    template = get_admin_template_name('placement_filter.html')
 
     def lookups(self, request, model_admin):
         return [(p[0], p[1]) for p in
@@ -162,11 +161,11 @@ class ProductFilterByPlacement(SimpleListFilter):
 class ProductFilterByVatLevel(SimpleListFilter):
     title = _("VAT")
     parameter_name = 'vat_level'
-    template = 'admin/vat_level_filter.html'
+    template = get_admin_template_name('vat_level_filter.html')
 
     def lookups(self, request, model_admin):
         return [(p[0], p[1]) for p in
-                LUT_ALL_VAT  # settings.LUT_VAT
+                LUT_ALL_VAT
                 ]
 
     def queryset(self, request, queryset):
@@ -179,7 +178,7 @@ class ProductFilterByVatLevel(SimpleListFilter):
 class PurchaseFilterByCustomer(SimpleListFilter):
     title = _("Customers")
     parameter_name = 'customer'
-    template = 'admin/customer_filter.html'
+    template = get_admin_template_name('customer_filter.html')
 
     def lookups(self, request, model_admin):
         permanence_id = request.GET.get('permanence', None)
@@ -189,7 +188,8 @@ class PurchaseFilterByCustomer(SimpleListFilter):
             if ci is not None:
                 if ci.is_order_confirm_send:
                     list_filter.append(
-                        (c.id, "{} {} ({})".format(settings.LOCK_UNICODE, c.short_basket_name, ci.get_total_price_with_tax())))
+                        (c.id, "{} {} ({})".format(settings.LOCK_UNICODE, c.short_basket_name,
+                                                   ci.get_total_price_with_tax())))
                 else:
                     list_filter.append((c.id, "{} ({})".format(c.short_basket_name, ci.total_price_with_tax)))
             else:
@@ -206,7 +206,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
 class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
     title = _("Producers")
     parameter_name = 'producer'
-    template = 'admin/producer_filter.html'
+    template = get_admin_template_name('producer_filter.html')
 
     def lookups(self, request, model_admin):
         permanence_id = request.GET.get('permanence', None)

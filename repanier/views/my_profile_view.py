@@ -1,51 +1,53 @@
 # -*- coding: utf-8
-
 from os import sep as os_sep
 
 from django.contrib.auth import (get_user_model)
 from django.contrib.auth.decorators import login_required
-from django.forms import widgets, HiddenInput
+from django.forms import widgets, HiddenInput, forms, fields
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from djng.forms import fields, NgFormValidationMixin
 
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.customer import Customer
 from repanier.picture.const import SIZE_S
-from repanier.views.forms import RepanierForm
-from repanier.widget.checkbox import CheckboxWidget
-from repanier.widget.picture import AjaxPictureWidget
+from repanier.tools import get_repanier_template_name
+from repanier.widget.checkbox import RepanierCheckboxWidget
+from repanier.widget.picture import RepanierPictureWidget
 
 
-class CustomerForm(RepanierForm):
+class CustomerForm(forms.Form):
     long_basket_name = fields.CharField(label=_("My name is"), max_length=100)
     zero_waste = fields.BooleanField(
-        label=EMPTY_STRING, required=False
+        label=EMPTY_STRING, required=False,
+        widget=RepanierCheckboxWidget(label=_('Family zero waste'))
     )
     email1 = fields.EmailField(label=_('My main email address, used to reset the password and connect to the site'))
     email2 = fields.EmailField(label=_('My secondary email address (does not allow to connect to the site)'),
                                required=False)
     show_mails_to_members = fields.BooleanField(
-        label=EMPTY_STRING, required=False
+        label=EMPTY_STRING, required=False,
+        widget=RepanierCheckboxWidget(label=_("I agree to show my email addresses in the \"who's who\""))
     )
     subscribe_to_email = fields.BooleanField(
-        label=EMPTY_STRING, required=False
+        label=EMPTY_STRING, required=False,
+        widget=RepanierCheckboxWidget(label=_('I agree to receive mails from this site'))
     )
 
     phone1 = fields.CharField(label=_('My main phone number'), max_length=25)
     phone2 = fields.CharField(label=_('My secondary phone number'), max_length=25, required=False)
     show_phones_to_members = fields.BooleanField(
-        label=EMPTY_STRING, required=False
+        label=EMPTY_STRING, required=False,
+        widget=RepanierCheckboxWidget(label=_("I agree to show my phone numbers in the \"who's who\""))
     )
     city = fields.CharField(label=_('My city'), max_length=50, required=False)
     address = fields.CharField(label=_('My address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                                required=False)
     picture = fields.CharField(
         label=_("My picture"),
-        widget=AjaxPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
+        widget=RepanierPictureWidget(upload_to="customer", size=SIZE_S, bootstrap=True),
         required=False)
 
     about_me = fields.CharField(label=_('About me'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
@@ -68,22 +70,9 @@ class CustomerForm(RepanierForm):
 
         self.request = kwargs.pop('request', None)
         super(CustomerForm, self).__init__(*args, **kwargs)
-        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-            self.fields["show_mails_to_members"].widget = CheckboxWidget(
-                label=_("I agree to show my email addresses in the \"who's who\""))
-            self.fields["show_phones_to_members"].widget = CheckboxWidget(
-                label=_("I agree to show my phone numbers in the \"who's who\""))
-        else:
+        if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
             self.fields["show_mails_to_members"].widget = HiddenInput()
             self.fields["show_phones_to_members"].widget = HiddenInput()
-        self.fields["subscribe_to_email"].widget = CheckboxWidget(
-            label=_('I agree to receive mails from this site'))
-        self.fields["zero_waste"].widget = CheckboxWidget(
-            label=_('Family zero waste'))
-
-
-class CustomerValidationForm(NgFormValidationMixin, CustomerForm):
-    pass
 
 
 @login_required()
@@ -100,8 +89,9 @@ def my_profile_view(request):
         membership_fee_valid_until = customer.membership_fee_valid_until
     else:
         membership_fee_valid_until = None
+    template_name = get_repanier_template_name("my_profile_form.html")
     if request.method == 'POST':  # If the form has been submitted...
-        form = CustomerValidationForm(request.POST, request=request)  # A form bound to the POST data
+        form = CustomerForm(request.POST, request=request)  # A form bound to the POST data
         if form.is_valid():  # All validation rules pass
             # Process the data in form.cleaned_data
             # ...
@@ -126,20 +116,22 @@ def my_profile_view(request):
                 if user is None or user.email != email:
                     # user.email != email for case unsensitive SQL query
                     customer.user.username = customer.user.email = email.lower()
+                    # customer.user.first_name = EMPTY_STRING
+                    # customer.user.last_name = customer.short_basket_name
                     customer.user.save()
                 # User feed back : Display email in lower case.
                 data = form.data.copy()
                 data["email1"] = customer.user.email
                 data["email2"] = customer.email2
-                form = CustomerValidationForm(data, request=request)
-            return render(request, "repanier/my_profile_form.html",
+                form = CustomerForm(data, request=request)
+            return render(request, template_name,
                           {
                               'form': form,
                               'membership_fee_valid_until': membership_fee_valid_until,
                               'display_who_is_who': REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
                               'update': True
                           })
-        return render(request, "repanier/my_profile_form.html",
+        return render(request, template_name,
                       {
                           'form': form,
                           'membership_fee_valid_until': membership_fee_valid_until,
@@ -147,7 +139,7 @@ def my_profile_view(request):
                           'update': False
                       })
     else:
-        form = CustomerValidationForm()  # An unbound form
+        form = CustomerForm()  # An unbound form
         field = form.fields["long_basket_name"]
         field.initial = customer.long_basket_name
         field = form.fields["phone1"]
@@ -177,7 +169,7 @@ def my_profile_view(request):
         field = form.fields["zero_waste"]
         field.initial = customer.zero_waste
 
-    return render(request, "repanier/my_profile_form.html",
+    return render(request, template_name,
                   {
                       'form': form,
                       'membership_fee_valid_until': membership_fee_valid_until,

@@ -1,10 +1,13 @@
 # -*- coding: utf-8
+
 from django.forms import NumberInput
+
 import repanier.apps
+from repanier.tools import get_repanier_template_name
 
 
 class MoneyWidget(NumberInput):
-    template_name = 'repanier/widgets/money.html'
+    template_name = get_repanier_template_name("widgets/money.html")
 
     def __init__(self, attrs=None):
         super(MoneyWidget, self).__init__(attrs=attrs)
@@ -17,5 +20,5 @@ class MoneyWidget(NumberInput):
 
     # class Media:
     #     css = {
-    #         'all': ('css/checkbox_widget.css',)
+    #         'all': ('css/checkbox.css',)
     #     }

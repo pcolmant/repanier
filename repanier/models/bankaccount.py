@@ -24,7 +24,7 @@ class BankAccount(models.Model):
     operation_date = models.DateField(_("Operation date"),
                                       db_index=True)
     operation_comment = models.CharField(
-        _("Operation comment"), max_length=100, null=True, blank=True)
+        _("Operation comment"), max_length=100, blank=True, default=EMPTY_STRING)
     operation_status = models.CharField(
         max_length=3,
         choices=LUT_BANK_TOTAL,
@@ -120,11 +120,10 @@ class BankAccount(models.Model):
         else:
             if self.customer is None:
                 # This is a total, show it
-                from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
                 if self.operation_status == BANK_LATEST_TOTAL:
-                    return "<b>=== {}</b>".format(REPANIER_SETTINGS_GROUP_NAME)
+                    return "<b>=== {}</b>".format(settings.REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    return "<b>--- {}</b>".format(REPANIER_SETTINGS_GROUP_NAME)
+                    return "<b>--- {}</b>".format(settings.REPANIER_SETTINGS_GROUP_NAME)
             return EMPTY_STRING
 
     get_producer.short_description = (_("Producer"))

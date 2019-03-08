@@ -1,0 +1,27 @@
+{% extends 'bs4/cms_page.html' %}
+{% load static cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
+{% block sub_content %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {% if update %}
+                    <div class="alert alert-success" role="alert">{% trans "Update done." %}</div>{% endif %}
+                <form name="{{ form.form_name }}" method="post" action="">
+                    {% csrf_token %}
+                    {% if display_who_is_who %}
+                        {% trans "All the information below is visible in the &quot;who&#39;s who&quot; except your phone numbers and email addresses for which you must validate your agreement." %}
+                    {% endif %}
+                    <p>{% if membership_fee_valid_until %}<i>{% trans "Your membership fee is valid until" %} :
+                        <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
+                    {{ form|crispy }}
+                    {% if not update %}
+                        <div class="form-group form-sticky-update-button">
+                            <button type="submit" class="btn btn-info pull-right">{% trans "Update" %}</button>
+                        </div>{% endif %}
+                </form>
+                {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
+                {% addtoblock "jshead" %}{{ form.media.js }}{% endaddtoblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

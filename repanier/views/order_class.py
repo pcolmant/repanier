@@ -2,10 +2,12 @@
 
 from django.conf import settings
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.views.generic import ListView
 
+from repanier.models import CustomerInvoice
 from repanier.const import EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.customer import Customer
@@ -14,14 +16,15 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.staff import Staff
-from repanier.tools import sint, permanence_ok_or_404, html_box_content
+from repanier.tools import sint, permanence_ok_or_404, html_box_content, get_repanier_template_name, \
+    get_html_basket_message
 
 
 class OrderView(ListView):
     context_object_name = "offeritem_list"
-    template_name = 'repanier/order_form.html'
+    template_name = get_repanier_template_name("order_form.html")
     success_url = '/'
-    paginate_by = 14
+    paginate_by = 18
     paginate_orphans = 2
 
     def __init__(self, **kwargs):
@@ -106,9 +109,7 @@ class OrderView(ListView):
         context["all_dates"] = self.all_dates
         context["date_id"] = self.date_id
         context["date_Selected"] = self.date_selected
-        context["notification"] = None if self.is_anonymous and \
-                                          not REPANIER_SETTINGS_NOTIFICATION.notification_is_public  else \
-            REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter('notification', any_language=True)
+        context["notification"] = REPANIER_SETTINGS_NOTIFICATION.get_notification_display()
         if self.first_page:
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 producer_set = Producer.objects.filter(permanence=self.permanence.id).only("id", "short_profile_name")
@@ -159,7 +160,41 @@ class OrderView(ListView):
         if self.is_box:
             offer_item = get_object_or_404(OfferItemWoReceiver, id=self.box_id)
             context['box_description'] = html_box_content(offer_item, self.user)
-        context['is_basket'] = "yes" if self.is_basket else EMPTY_STRING
+        if self.is_basket:
+            context['is_basket'] = "yes"
+            context['is_select_view'] = EMPTY_STRING
+            context['is_basket_view'] = 'active'
+
+            customer = Customer.objects.filter(
+                user_id=self.user.id, may_order=True).order_by('?').first()
+            if customer is None:
+                raise Http404
+            translation.activate(customer.language)
+            customer_invoice = CustomerInvoice.objects.filter(
+                permanence_id=self.permanence.id,
+                customer_id=customer.id
+            ).order_by('?').first()
+            if customer_invoice is None:
+                raise Http404
+            if customer_invoice.delivery is not None:
+                status = customer_invoice.delivery.status
+            else:
+                status = customer_invoice.status
+            basket_message = get_html_basket_message(
+                customer,
+                self.permanence,
+                status
+            )
+            html = customer_invoice.get_html_my_order_confirmation(
+                permanence=self.permanence,
+                is_basket=True,
+                basket_message=basket_message
+            )
+            context['span_btn_confirm_order'] = html['#span_btn_confirm_order']
+        else:
+            context['is_basket'] = EMPTY_STRING
+            context['is_select_view'] = 'active'
+            context['is_basket_view'] = EMPTY_STRING
         context['is_like'] = "yes" if self.is_like else EMPTY_STRING
 
         context['communication'] = self.communication

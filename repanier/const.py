@@ -1,10 +1,12 @@
 # -*- coding: utf-8
 from decimal import *
+
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+
 from repanier.fields.RepanierMoneyField import RepanierMoney
 
 WEBMASTER_GROUP = "webmaster"
-DEMO_EMAIL = "repanier@no-spam.ws"
 
 EMPTY_STRING = ""
 ONE_YEAR = 365
@@ -108,12 +110,16 @@ PRODUCT_ORDER_UNIT_TRANSPORTATION = '500'
 PRODUCT_ORDER_UNIT_SUBSCRIPTION = '600'
 
 LUT_PRODUCT_ORDER_UNIT = (
-    (PRODUCT_ORDER_UNIT_PC, _("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
+    (PRODUCT_ORDER_UNIT_PC, _(
+        "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _(
+        "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
     (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC,
+     _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
     (PRODUCT_ORDER_UNIT_KG, _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
+    (PRODUCT_ORDER_UNIT_PC_KG,
+     _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
     (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('Deposit taken back at the permanence.')),
@@ -124,12 +130,18 @@ LUT_PRODUCT_ORDER_UNIT = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_REVERSE = (
-    (_("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."), PRODUCT_ORDER_UNIT_PC),
-    (_("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."), PRODUCT_ORDER_UNIT_PC_PRICE_KG),
+    (_(
+        "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."),
+     PRODUCT_ORDER_UNIT_PC),
+    (_(
+        "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."),
+     PRODUCT_ORDER_UNIT_PC_PRICE_KG),
     (_("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."), PRODUCT_ORDER_UNIT_PC_PRICE_LT),
-    (_("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."), PRODUCT_ORDER_UNIT_PC_PRICE_PC),
+    (_("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."),
+     PRODUCT_ORDER_UNIT_PC_PRICE_PC),
     (_("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ..."), PRODUCT_ORDER_UNIT_KG),
-    (_("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."), PRODUCT_ORDER_UNIT_PC_KG),
+    (_("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."),
+     PRODUCT_ORDER_UNIT_PC_KG),
     (_("Sold in volume (in ℓ): non-conditioned liquids"), PRODUCT_ORDER_UNIT_LT),
     (_('Deposit taken back at the permanence.'),
      PRODUCT_ORDER_UNIT_DEPOSIT),
@@ -142,12 +154,16 @@ LUT_PRODUCT_ORDER_UNIT_REVERSE = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
-    (PRODUCT_ORDER_UNIT_PC, _("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
+    (PRODUCT_ORDER_UNIT_PC, _(
+        "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _(
+        "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
     (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC,
+     _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
     (PRODUCT_ORDER_UNIT_KG, _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
+    (PRODUCT_ORDER_UNIT_PC_KG,
+     _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
     (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _('Deposit taken back at the permanence.')),
@@ -156,12 +172,16 @@ LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION = (
 )
 
 LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION = (
-    (PRODUCT_ORDER_UNIT_PC, _("Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
+    (PRODUCT_ORDER_UNIT_PC, _(
+        "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _(
+        "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ...")),
     (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ...")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC,
+     _("Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ...")),
     (PRODUCT_ORDER_UNIT_KG, _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ...")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
+    (PRODUCT_ORDER_UNIT_PC_KG,
+     _("Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ...")),
     (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
     (PRODUCT_ORDER_UNIT_DEPOSIT,
      _("Deposit taken back at the permanence.")),
@@ -239,9 +259,78 @@ LUT_ALL_VAT_REVERSE = (
     (_('VAT 21%'), VAT_600),
 )
 
+##################### REPANIER VAT/RATE
+
+if settings.REPANIER_SETTINGS_COUNTRY == "ch":
+    # Switzerland
+    DICT_VAT_DEFAULT = VAT_325
+    LUT_VAT = (
+        (VAT_100, _('---------')),
+        (VAT_325, _('VAT 2.5%')),
+        (VAT_350, _('VAT 3.8%')),
+        (VAT_430, _('VAT 8%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('---------'), VAT_100),
+        (_('VAT 2.5%'), VAT_325),
+        (_('VAT 3.8%'), VAT_350),
+        (_('VAT 8%'), VAT_430),
+    )
+elif settings.REPANIER_SETTINGS_COUNTRY == "fr":
+    # France
+    DICT_VAT_DEFAULT = VAT_375
+    LUT_VAT = (
+        (VAT_100, _('---------')),
+        (VAT_315, _('VAT 2.1%')),
+        (VAT_375, _('VAT 5.5%')),
+        (VAT_460, _('VAT 10%')),
+        (VAT_590, _('VAT 20%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('---------'), VAT_100),
+        (_('VAT 2.1%'), VAT_315),
+        (_('VAT 5.5%'), VAT_375),
+        (_('VAT 10%'), VAT_460),
+        (_('VAT 20%'), VAT_590),
+    )
+elif settings.REPANIER_SETTINGS_COUNTRY == "es":
+    # Espagne
+    DICT_VAT_DEFAULT = VAT_460
+    LUT_VAT = (
+        (VAT_100, _('---------')),
+        (VAT_360, _('VAT 4%')),
+        (VAT_460, _('VAT 10%')),
+        (VAT_600, _('VAT 21%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('---------'), VAT_100),
+        (_('VAT 4%'), VAT_360),
+        (_('VAT 10%'), VAT_460),
+        (_('VAT 21%'), VAT_600),
+    )
+else:
+    # Belgium
+    DICT_VAT_DEFAULT = VAT_400
+    LUT_VAT = (
+        (VAT_100, _('---------')),
+        (VAT_400, _('VAT 6%')),
+        (VAT_500, _('VAT 12%')),
+        (VAT_600, _('VAT 21%')),
+    )
+
+    LUT_VAT_REVERSE = (
+        (_('---------'), VAT_100),
+        (_('VAT 6%'), VAT_400),
+        (_('VAT 12%'), VAT_500),
+        (_('VAT 21%'), VAT_600),
+    )
+
 BANK_NOT_LATEST_TOTAL = '100'
 BANK_MEMBERSHIP_FEE = '150'
-BANK_COMPENSATION = '200' # BANK_COMPENSATION may occurs in previous release of Repanier
+BANK_COMPENSATION = '200'  # BANK_COMPENSATION may occurs in previous release of Repanier
 BANK_PROFIT = '210'
 BANK_TAX = '220'
 BANK_CALCULATED_INVOICE = '250'

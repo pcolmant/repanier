@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
+
 from django.conf import settings
 
+
 def repanier_settings(request):
- return {'BOOTSTRAP_CSS': settings.REPANIER_SETTINGS_BOOTSTRAP_CSS}
+    from repanier.apps import REPANIER_SETTINGS_HOME_SITE
+
+    return {
+        'REPANIER_BOOTSTRAP_CSS': settings.REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH,
+        'REPANIER_CUSTOM_CSS': settings.REPANIER_SETTINGS_CUSTOM_CSS_PATH,
+        'REPANIER_BRANDING_CSS': settings.REPANIER_SETTINGS_BRANDING_CSS_PATH,
+        'REPANIER_GROUP_NAME': settings.REPANIER_SETTINGS_GROUP_NAME,
+        'REPANIER_HOME_SITE': REPANIER_SETTINGS_HOME_SITE,
+        'REPANIER_DISPLAY_LANGUAGE': settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE
+    }

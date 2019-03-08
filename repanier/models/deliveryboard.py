@@ -12,7 +12,10 @@ from repanier.const import LUT_PERMANENCE_STATUS, PERMANENCE_PLANNED, PERMANENCE
 
 class DeliveryBoard(TranslatableModel):
     translations = TranslatedFields(
-        delivery_comment=models.CharField(_("Comment"), max_length=50, blank=True),
+        delivery_comment=models.CharField(
+            _("Comment"),
+            max_length=50, blank=True, default=EMPTY_STRING
+        ),
     )
 
     delivery_point = models.ForeignKey(

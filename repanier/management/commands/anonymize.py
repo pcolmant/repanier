@@ -50,13 +50,6 @@ class Command(BaseCommand):
             exit()
         config.bank_account = "BE99 9999 9999 9999"
         config.vat_id = EMPTY_STRING
-        config.sms_gateway_mail = EMPTY_STRING
-        config.email_is_custom = False
-        config.email_host = "smtp.gmail.com"
-        config.email_port = 587
-        config.email_use_tls = True
-        config.email_host_user = "username@gmail.com"
-        config.email_host_password = EMPTY_STRING
         config.save()
         config.init_email()
         for customer in Customer.objects.all().order_by('?'):
@@ -66,8 +59,6 @@ class Command(BaseCommand):
             print("Customer anonymized : {}".format(customer))
         for staff in Staff.objects.all().order_by('?'):
             staff.anonymize()
-            staff.user.set_password(None)
-            staff.user.save()
             print("Staff anonymized : {}".format(staff))
         coordinator_password = options['coordinator_password'][0]
         coordinator_email = options['coordinator_email'][0].lower()

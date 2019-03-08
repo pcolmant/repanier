@@ -1,9 +1,8 @@
 # -*- coding: utf-8
-
+import logging
 from urllib.parse import parse_qsl
 
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
@@ -29,12 +28,13 @@ from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
-from repanier.tools import sint
+from repanier.tools import sint, get_repanier_static_name
 from repanier.widget.select_admin_delivery import SelectAdminDeliveryWidget
-from repanier.widget.select_admin_permanence import SelectAdminPermanenceWidget
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, \
     ChoiceWidget, FourDecimalsWidget, TwoMoneysWidget, DateWidgetExcel
+
+logger = logging.getLogger(__name__)
 
 
 class PurchaseResource(resources.ModelResource):
@@ -90,6 +90,19 @@ class PurchaseResource(resources.ModelResource):
 class PurchaseForm(forms.ModelForm):
     product = forms.ChoiceField(label=_("Product"), widget=Select2(select2attrs={'width': '450px'}))
     delivery = forms.ChoiceField(label=_("Delivery point"), widget=SelectAdminDeliveryWidget())
+    quantity = forms.DecimalField(
+        min_value=DECIMAL_ZERO,
+        label=_("Qty"),
+        max_digits=9, decimal_places=4, required=True, initial=0)
+
+    def __init__(self, *args, **kwargs):
+        super(PurchaseForm, self).__init__(*args, **kwargs)
+        purchase = self.instance
+        if purchase.id is not None:
+            if purchase.status < PERMANENCE_SEND:
+                self.fields["quantity"].initial = purchase.quantity_ordered
+            else:
+                self.fields["quantity"].initial = purchase.quantity_invoiced
 
     def clean_product(self):
         product_id = sint(self.cleaned_data.get("product"), 0)
@@ -111,22 +124,18 @@ class PurchaseForm(forms.ModelForm):
             # Don't bother validating the formset unless each form is valid on its own
             return
         if self.instance.id is None:
-            quantity_ordered = self.cleaned_data.get("quantity_ordered", DECIMAL_ZERO)
-            quantity_invoiced = self.cleaned_data.get("quantity_invoiced", DECIMAL_ZERO)
-            if quantity_ordered == quantity_invoiced == DECIMAL_ZERO:
+            quantity = self.cleaned_data.get("quantity", DECIMAL_ZERO)
+            if quantity == DECIMAL_ZERO:
                 self.add_error(
-                    "quantity_ordered",
+                    "quantity",
                     _('The quantity must be different than zero.'))
-                self.add_error(
-                    "quantity_invoiced",
-                    _('The quantity must be different than zero.'))
-        self._validate_unique = False
+        # self._validate_unique = False
 
     class Meta:
         model = Purchase
         fields = "__all__"
         widgets = {
-            'permanence': SelectAdminPermanenceWidget(),
+            # 'permanence': SelectAdminPermanenceWidget(),
             'customer': Select2(select2attrs={'width': '450px'})
         }
 
@@ -235,7 +244,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 ).order_by('?').first()
                 if customer_invoice is not None:
                     if customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send:
-                        filename = "{0}-{1}.xlsx".format(
+                        filename = "{}-{}.xlsx".format(
                             _("Order"),
                             permanence
                         )
@@ -308,17 +317,18 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         if permanence_id is not None:
             if Permanence.objects.filter(id=permanence_id, with_delivery_point=True).order_by('?').exists():
                 fields_basic = [
-                    'permanence', 'delivery',
+                    'permanence',
+                    'delivery',
                     'customer', 'product',
-                    'quantity_ordered',
-                    'quantity_invoiced', 'comment', 'is_updated_on'
+                    'quantity',
+                    'comment', 'is_updated_on'
                 ]
             else:
                 fields_basic = [
                     'permanence',
                     'customer', 'product',
-                    'quantity_ordered',
-                    'quantity_invoiced', 'comment', 'is_updated_on'
+                    'quantity',
+                    'comment', 'is_updated_on'
                 ]
         else:
             fields_basic = []
@@ -331,7 +341,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         if purchase is not None:
             status = purchase.status
             if status > PERMANENCE_SEND:
-                return ['quantity_ordered', 'quantity_invoiced', 'is_updated_on']
+                return ['quantity', 'is_updated_on']
         return ['is_updated_on']
 
     def get_form(self, request, purchase=None, **kwargs):
@@ -476,20 +486,25 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 # New : product_or_offer_item_id is a product_id
                 product = Product.objects.filter(id=product_or_offer_item_id).order_by('?').first()
                 offer_item = product.get_or_create_offer_item(purchase.permanence)
-                # Select one purchase
-                previous_purchase = Purchase.objects.filter(
-                    customer=purchase.customer,
-                    offer_item=offer_item,
-                    is_box_content=False
-                ).order_by('?')
-                if previous_purchase.exists():
-                    # add to it
-                    previous_purchase = previous_purchase.first()
-                    purchase.id = previous_purchase.id
-                    if status != PERMANENCE_SEND:
-                        purchase.quantity_ordered += previous_purchase.quantity_ordered
-                    else:
-                        purchase.quantity_invoiced += previous_purchase.quantity_invoiced
+            if status < PERMANENCE_SEND:
+                purchase.quantity_ordered = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+            else:
+                purchase.quantity_invoiced = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+            # if purchase.id is None:
+            #     # Select one purchase
+            #     previous_purchase = Purchase.objects.filter(
+            #         customer=purchase.customer,
+            #         offer_item=offer_item,
+            #         is_box_content=False
+            #     ).order_by('?')
+            #     if previous_purchase.exists():
+            #         # add to it
+            #         previous_purchase = previous_purchase.first()
+            #         purchase.id = previous_purchase.id
+            #         if status < PERMANENCE_SEND:
+            #             purchase.quantity_ordered += previous_purchase.quantity_ordered
+            #         else:
+            #             purchase.quantity_invoiced += previous_purchase.quantity_invoiced
             if offer_item is not None:
                 purchase.offer_item = offer_item
                 purchase.status = status
@@ -503,7 +518,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     permanence_id=purchase.permanence_id
                 ).order_by('?').first()
                 customer_invoice.status = status
-                customer_invoice.set_delivery(delivery)
+                customer_invoice.set_order_delivery(delivery)
+                customer_invoice.calculate_order_price()
                 customer_invoice.confirm_order()
                 customer_invoice.save()
 
@@ -520,7 +536,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 pass
         return actions
 
-    def get_import_formats(self):
+    @staticmethod
+    def get_import_formats():
         """
         Returns available import formats.
         """
@@ -528,4 +545,5 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
     class Media:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            js = ('js/is_order_confirm_send.js',)
+            logger.debug("purchase admin media : {}".format(get_repanier_static_name("js/is_order_confirm_send.js")))
+            js = (get_repanier_static_name("js/is_order_confirm_send.js"),)

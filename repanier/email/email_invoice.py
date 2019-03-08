@@ -2,6 +2,7 @@
 
 from django.template import Template, Context as TemplateContext
 
+from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.permanence import Permanence
@@ -13,7 +14,7 @@ from repanier.tools import *
 
 def send_invoice(permanence_id):
     from repanier.apps import REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER, \
-        REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER, \
+        REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER, \
         REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
@@ -48,7 +49,7 @@ def send_invoice(permanence_id):
                         invoice_producer_mail = config.safe_translation_getter(
                             'invoice_producer_mail', any_language=True, default=EMPTY_STRING
                         )
-                        invoice_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
+                        invoice_producer_mail_subject = "{} - {}".format(settings.REPANIER_SETTINGS_GROUP_NAME, permanence)
 
                         template = Template(invoice_producer_mail)
                         context = TemplateContext({
@@ -65,9 +66,7 @@ def send_invoice(permanence_id):
                         email = RepanierEmail(
                             subject=invoice_producer_mail_subject,
                             html_body=html_body,
-                            from_email=invoice_responsible.get_from_email,
-                            to=to_email,
-                            reply_to=invoice_responsible.get_reply_to_email
+                            to=to_email
                         )
                         email.send_email()
 
@@ -96,7 +95,7 @@ def send_invoice(permanence_id):
                     invoice_customer_mail = config.safe_translation_getter(
                         'invoice_customer_mail', any_language=True, default=EMPTY_STRING
                     )
-                    invoice_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
+                    invoice_customer_mail_subject = "{} - {}".format(settings.REPANIER_SETTINGS_GROUP_NAME, permanence)
                     customer_last_balance, _, customer_payment_needed, customer_order_amount = payment_message(
                         customer, permanence)
                     template = Template(invoice_customer_mail)
@@ -122,7 +121,6 @@ def send_invoice(permanence_id):
                     email = RepanierEmail(
                         subject=invoice_customer_mail_subject,
                         html_body=html_body,
-                        from_email=invoice_responsible.get_from_email,
                         to=to_email,
                         show_customer_may_unsubscribe=True
                     )

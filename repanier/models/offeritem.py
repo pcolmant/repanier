@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F
@@ -19,13 +18,14 @@ from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.item import Item
-from repanier.tools import create_or_update_one_purchase
 
 
 class OfferItem(Item):
     translations = TranslatedFields(
-        long_name=models.CharField(_("Long name"), max_length=100,
-                                   default=EMPTY_STRING, blank=True, null=True),
+        long_name=models.CharField(
+            _("Long name"),
+            max_length=100, default=EMPTY_STRING, blank=True
+        ),
         cache_part_a=HTMLField(default=EMPTY_STRING, blank=True),
         cache_part_b=HTMLField(default=EMPTY_STRING, blank=True),
         # Language dependant customer sort order for optimization
@@ -94,14 +94,14 @@ class OfferItem(Item):
         null=True, blank=True, default=None
     )
     permanences_dates = models.TextField(
-        null=True, blank=True, default=None)
+        blank=True, default=EMPTY_STRING)
     # Opposite of permaneces_date used to know when the related product is not into offer
     not_permanences_dates = models.TextField(
-        null=True, blank=True, default=None)
+        blank=True, default=EMPTY_STRING)
     # Number of permanences where this product is placed.
     # Used to compute the price during order phase
     permanences_dates_counter = models.IntegerField(
-        null=True, blank=True, default=1)
+        blank=False, default=1)
     # Important : permanences_dates_order is used to
     # group together offer item's of the same product of a contract
     # with different purchases dates on the order form
@@ -192,8 +192,14 @@ class OfferItem(Item):
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
     def get_html_like(self, user):
-        return mark_safe("<span class=\"glyphicon glyphicon-heart{}\" onclick=\"like_ajax({});return false;\"></span>".format(
-            EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id))
+        if settings.REPANIER_SETTINGS_TEMPLATE == 'bs3':
+            return mark_safe(
+                "<span class=\"glyphicon glyphicon-heart{}\" onclick=\"like_ajax({});return false;\"></span>".format(
+                    EMPTY_STRING if self.product.likes.filter(id=user.id).only("id").exists() else "-empty", self.id))
+        else:
+            return mark_safe(
+                "<span class=\"fa{} fa-heart\" onclick=\"like_ajax({});return false;\"></span>".format(
+                    "s" if self.product.likes.filter(id=user.id).only("id").exists() else "r", self.id))
 
     @cached_property
     def get_not_permanences_dates(self):
@@ -333,9 +339,9 @@ def offer_item_pre_save(sender, **kwargs):
                                   offer_item.price_list_multiplier)
     if offer_item.manage_replenishment:
         if (offer_item.previous_add_2_stock != offer_item.add_2_stock or
-                    offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
-                    offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
-            ):
+                offer_item.previous_producer_unit_price != offer_item.producer_unit_price.amount or
+                offer_item.previous_unit_deposit != offer_item.unit_deposit.amount
+        ):
             previous_producer_price = ((offer_item.previous_producer_unit_price +
                                         offer_item.previous_unit_deposit) * offer_item.previous_add_2_stock)
             producer_price = ((offer_item.producer_unit_price.amount +

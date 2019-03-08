@@ -1,9 +1,11 @@
 # -*- coding: utf-8
 from django.forms import Widget
 
+from repanier.tools import get_repanier_template_name
+
 
 class ButtonTestMailConfigWidget(Widget):
-    template_name = 'repanier/widgets/button_test_mail_config.html'
+    template_name = get_repanier_template_name("widgets/button_test_mail_config.html")
 
     def __init__(self, attrs=None):
         super(ButtonTestMailConfigWidget, self).__init__(attrs=attrs)

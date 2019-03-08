@@ -21,7 +21,6 @@ from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, ODS, JSON, XLS
 from import_export.widgets import CharWidget
 
-import repanier.apps
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
@@ -103,20 +102,20 @@ class UserDataForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
         change = (self.instance.id is not None)
-        username = self.data['short_basket_name']
+        short_basket_name = self.data['short_basket_name']
         email = self.data['email'].lower()
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = username
+            user.username = email
             user.email = email
             user.first_name = EMPTY_STRING
-            user.last_name = username
+            user.last_name = short_basket_name
             user.save()
         else:
             user = user_model.objects.create_user(
                 username=email, email=email, password=None,
-                first_name=EMPTY_STRING, last_name=username)
+                first_name=EMPTY_STRING, last_name=short_basket_name)
         self.user = user
         return self.instance
 
@@ -216,7 +215,7 @@ def create__customer_action(year):
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
                 "{} {}".format(_('Invoice'), year),
-                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+                settings.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
@@ -385,14 +384,12 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_form(self, request, customer=None, **kwargs):
         form = super(CustomerWithUserDataAdmin, self).get_form(request, customer, **kwargs)
-        username_field = form.base_fields['short_basket_name']
         email_field = form.base_fields['email']
 
         if customer is not None:
             user_model = get_user_model()
             user = user_model.objects.get(id=customer.user_id)
             # username_field.initial = getattr(user, user_model.USERNAME_FIELD)
-            username_field.initial = user.username
             email_field.initial = user.email
             # One folder by customer to avoid picture names conflicts
             picture_field = form.base_fields["picture"]
@@ -400,7 +397,6 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 picture_field.widget.upload_to = "{}{}{}".format("customer", os_sep, customer.id)
         else:
             # Clean data displayed
-            username_field.initial = EMPTY_STRING
             email_field.initial = EMPTY_STRING
         return form
 
@@ -424,7 +420,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 if customer.price_list_multiplier < DECIMAL_ONE:
                     customer_price = \
                         _(' in addition to the %(discount)s%% personal discount rate on to the pricelist') % {
-                            'discount': Decimal((DECIMAL_ONE - customer.price_list_multiplier) * 100).quantize(TWO_DECIMALS)
+                            'discount': Decimal((DECIMAL_ONE - customer.price_list_multiplier) * 100).quantize(
+                                TWO_DECIMALS)
                         }
                 elif customer.price_list_multiplier > DECIMAL_ONE:
                     customer_price = \

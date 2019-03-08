@@ -3,6 +3,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
+from repanier.const import PERMANENCE_PLANNED, PERMANENCE_OPENED, LIMIT_ORDER_QTY_ITEM
 from repanier.models import ContractContent
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer

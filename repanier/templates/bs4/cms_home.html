@@ -1,0 +1,28 @@
+{% extends "bs4/base.html" %}
+{% load cms_tags repanier_tags %}
+
+{% block base_content %}
+    <div class="container">
+        <!-- Example row of columns -->
+        <div class="row">
+            <div class="col-lg-6">
+                {% repanier_permanences %}
+            </div>
+            <div class="col-lg-6">
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-body">
+                                    {% placeholder 'home-col-1' %}
+                                    {% placeholder 'home-col-2' %}
+                                    {% placeholder 'home-col-3' %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% load cms_tags sekizai_tags menu_tags i18n l10n static repanier_tags %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
+{% addtoblock "css" %}<link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">{% endaddtoblock %}
+{% addtoblock "jshead" %}<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
+{% addtoblock "jshead" %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
+{% addtoblock "js" %}<script src="{% static "repanier/bs3/fluidvids/fluidvids.js" %}"></script>{% endaddtoblock %}
+{% addtoblock "lastjs" %}{% spaceless %}
+    <script>
+    fluidvids.init({
+      selector: ['iframe'],
+      players: ['www.youtube.com', 'player.vimeo.com']
+    });
+    </script>
+{% endspaceless %}{% endaddtoblock %}
+{% addtoblock "css" %}{% spaceless %}
+{#    django CMS toolbar adjustment#}
+    {% if request.toolbar %}
+    <style>
+    .cms-toolbar-expanded .navbar-custom {
+        margin-top: 45px;
+    }
+    </style>
+    {% endif %}
+{% endspaceless %}{% endaddtoblock %}
+{%get_current_language as LANGUAGE_CODE%}
+<!DOCTYPE html>
+<html lang="{{LANGUAGE_CODE}}" ng-app="repanier">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+{#    <meta name="description" content="{% page_attribute 'meta_description' %}">#}
+    <title>{% page_attribute "title" %}</title>
+    {% render_block "css"  %}
+    {% render_block "jshead" %}
+    <script type="text/javascript">
+{#      ensuring django namespace is set correctly#}
+      window.django = window.django || undefined;
+{#      ensuring jQuery namespace is set correctly#}
+      window.jQuery = (django && django.jQuery) ? django.jQuery : window.jQuery || undefined;
+{#      ensuring Class namespace is set correctly#}
+      window.Class = window.Class || undefined;
+{#      ensuring CMS namespace is set correctly#}
+      var CMS = {
+        '$': (typeof jQuery === 'function') ? jQuery : undefined,
+        'Class': (typeof Class === 'function') ? Class : undefined,
+        'API': {}
+      };
+      var my_app  = undefined;
+      if( typeof angular !== "undefined") {
+        my_app  = angular.module('repanier', ['djng.forms']);
+      }
+    </script>
+   </head>
+  <body>
+    <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
+<a name="#top"></a><section>
+{#    {% cms_toolbar %}#}
+    {% spaceless %}
+    {# <!-- Header and Nav --> #}
+    <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
+        <div class="navbar-header visible-xs-inline-block">
+          <a href="#" class="btn btn-info" onclick="openNav()">
+            <span class="sr-only">{% trans "Toggle navigation" %}</span>
+            <span class="glyphicon glyphicon-list"></span>
+          </a>
+          {% if not permanence_id %}
+              <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
+          {% else %}
+              <span id="link_to_order_or_filter_view"></span>
+              {% if user.is_authenticated %}
+                  <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right" style="margin-right: 10px;">
+                      <span id="prepared_amount_visible_xs"></span>
+                  </a>
+              {%  endif %}
+          {%  endif %}
+        </div>
+      <div class="container-menu">
+        <div id="mySideNav" class="sidenav collapse navbar-collapse">
+          {# <!-- Left Nav Section --> #}
+          <ul class="nav navbar-nav navbar-left">
+            <li>
+              <a href="{{ REPANIER_HOME_SITE }}"><span class="glyphicon glyphicon glyphicon-home"></span></a>
+              <button type="button" class="visible-xs-inline-block pull-right btn btn-sm closebtn"
+                      onclick="closeNav()">&times;</button>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav">
+            {% show_menu 0 1 1 1 %}
+          </ul>
+          {# <!-- Right Nav Section --> #}
+          <ul class="nav navbar-nav navbar-right">
+            {% repanier_user_bs3 permanence_id=0 %}
+            {% if REPANIER_DISPLAY_LANGUAGE %}
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                {% language_chooser "native" %}
+              </ul>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+    {% addtoblock "js" %}{% spaceless %}
+        <script type="text/javascript">
+            function openNav() {
+                $("#mySideNav").show()
+            }
+            function closeNav() {
+                $("#mySideNav").hide()
+            }
+        </script>
+    {% endspaceless %}{% endaddtoblock %}
+    <a name="content"></a><section>
+    {% block base_content%}{% endblock %}
+    </section>
+    <div class="footer">
+        <div class="container-fluid">
+            <p class="text-muted">
+                {% static_placeholder "footer" %}
+            </p>
+        </div>
+    </div>
+    {% endspaceless %}
+    {% render_block "js" %}
+    {% render_block "lastjs"  %}
+  </body>
+</html>

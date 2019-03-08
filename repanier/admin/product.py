@@ -1,10 +1,8 @@
 # -*- coding: utf-8
-
 from os import sep as os_sep
 from urllib.parse import parse_qsl
 
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.core.checks import messages
 from django.db.models import F
@@ -28,7 +26,7 @@ from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.task import task_product
-from repanier.tools import sint, update_offer_item
+from repanier.tools import sint, update_offer_item, get_repanier_template_name, get_repanier_static_name
 from repanier.widget.select_admin_order_unit import SelectAdminOrderUnitWidget
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, TranslatedForeignKeyWidget, \
@@ -299,8 +297,8 @@ class ProductDataForm(TranslatableModelForm):
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     form = ProductDataForm
     resource_class = ProductResource
-    list_display = ('__str__',)
-    list_display_links = ('__str__',)
+    list_display = ('get_long_name_with_producer',)
+    list_display_links = ('get_long_name_with_producer',)
     readonly_fields = ('is_updated_on',)
     list_select_related = ('producer', 'department_for_customer')
     list_per_page = 16
@@ -352,9 +350,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
+        template_name = get_repanier_template_name("confirm_admin_duplicate_product.html")
         return render(
             request,
-            'repanier/confirm_admin_duplicate_product.html', {
+            template_name, {
                 'sub_title': _("Please, confirm the action : duplicate product"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'duplicate_product',
@@ -365,7 +364,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     duplicate_product.short_description = _('Duplicate')
 
     def get_list_display(self, request):
-        list_display = ['get_html_is_into_offer', '__str__']
+        list_display = ['get_html_admin_is_into_offer', 'get_long_name_with_producer']
         list_editable = ['producer_unit_price']
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ['language_column']
@@ -501,7 +500,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         producer_field.widget.attrs['readonly'] = True
         department_for_customer_field.widget.can_delete_related = False
         # TODO : Make it dependent of the producer country
-        vat_level_field.widget.choices = settings.LUT_VAT
+        vat_level_field.widget.choices = LUT_VAT
 
         if "production_mode" in form.base_fields:
             production_mode_field = form.base_fields["production_mode"]
@@ -569,10 +568,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         self._contract = contract
         return super(ProductAdmin, self).changelist_view(request, extra_context=extra_context)
 
-    def get_html_is_into_offer(self, product):
+    def get_html_admin_is_into_offer(self, product):
         return product.get_html_admin_is_into_offer(self._contract)
 
-    get_html_is_into_offer.short_description = (_("In offer"))
+    get_html_admin_is_into_offer.short_description = (_("In offer"))
+    get_html_admin_is_into_offer.admin_order_field = 'is_into_offer'
 
     def save_model(self, request, product, form, change):
         super(ProductAdmin, self).save_model(
@@ -596,4 +596,4 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
 
     class Media:
-        js = ('js/confirm_exit.js',)
+        js = (get_repanier_static_name("js/confirm_exit.js"),)

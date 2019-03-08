@@ -3,7 +3,6 @@
 import datetime
 import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
@@ -22,7 +21,7 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.picture.const import SIZE_S
-from repanier.picture.fields import AjaxPictureField
+from repanier.picture.fields import RepanierPictureField
 
 
 class Customer(models.Model):
@@ -32,10 +31,10 @@ class Customer(models.Model):
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
 
     short_basket_name = models.CharField(
-        _("Short name"), max_length=25, null=False, default=EMPTY_STRING,
+        _("Short name"), max_length=25, blank=False, default=EMPTY_STRING,
         db_index=True, unique=True)
     long_basket_name = models.CharField(
-        _("Long name"), max_length=100, null=True, default=EMPTY_STRING)
+        _("Long name"), max_length=100, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
         _("Secondary email"), null=True, blank=True, default=EMPTY_STRING)
     language = models.CharField(
@@ -44,34 +43,43 @@ class Customer(models.Model):
         default=settings.LANGUAGE_CODE,
         verbose_name=_("Language"))
 
-    picture = AjaxPictureField(
+    picture = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="customer", size=SIZE_S)
     phone1 = models.CharField(
         _("Phone1"),
-        max_length=25,
-        null=True, blank=True, default=EMPTY_STRING)
+        max_length=25, blank=True, default=EMPTY_STRING)
     phone2 = models.CharField(
-        _("Phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
-    bank_account1 = models.CharField(_("Main bank account"), max_length=100, null=True, blank=True,
-                                     default=EMPTY_STRING)
-    bank_account2 = models.CharField(_("Secondary bank account"), max_length=100, null=True, blank=True,
-                                     default=EMPTY_STRING)
+        _("Phone2"),
+        max_length=25, blank=True, default=EMPTY_STRING)
+    bank_account1 = models.CharField(
+        _("Main bank account"),
+        max_length=100, blank=True, default=EMPTY_STRING)
+    bank_account2 = models.CharField(
+        _("Secondary bank account"),
+        max_length=100, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("VAT id"),
+        max_length=20, blank=True, default=EMPTY_STRING)
     address = models.TextField(
-        _("Address"), null=True, blank=True, default=EMPTY_STRING)
+        _("Address"),
+        blank=True, default=EMPTY_STRING)
     city = models.CharField(
-        _("City"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
+        _("City"),
+        max_length=50, blank=True, default=EMPTY_STRING)
     about_me = models.TextField(
-        _("About me"), null=True, blank=True, default=EMPTY_STRING)
+        _("About me"),
+        blank=True, default=EMPTY_STRING)
     memo = models.TextField(
-        _("Memo"), null=True, blank=True, default=EMPTY_STRING)
+        _("Memo"),
+        blank=True, default=EMPTY_STRING)
     show_mails_to_members = models.BooleanField(
-        _("Show my mail to other members"), default=False)
+        _("Show my mail to other members"),
+        default=False)
     show_phones_to_members = models.BooleanField(
-        _("Show my phone to other members"), default=False)
+        _("Show my phone to other members"),
+        default=False)
     membership_fee_valid_until = models.DateField(
         _("Membership fee valid until"),
         default=datetime.date.today
@@ -126,7 +134,7 @@ class Customer(models.Model):
             if user is None:
                 user = User.objects.create_user(
                     username=short_name,
-                    email="{}{}".format(long_name, settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION),
+                    email=settings.DEFAULT_FROM_EMAIL,
                     password=uuid.uuid1().hex,
                     first_name=EMPTY_STRING, last_name=long_name)
             customer_buyinggroup = Customer.objects.create(
@@ -199,6 +207,47 @@ class Customer(models.Model):
 
     get_admin_balance.short_description = (_("Balance"))
     get_admin_balance.allow_tags = False
+
+    def get_phone1(self, for_members=True, prefix=EMPTY_STRING):
+        # return ", phone1" if prefix = ", "
+        if for_members and not self.show_phones_to_members:
+            return EMPTY_STRING
+        if not self.phone1:
+            return EMPTY_STRING
+        return "{}{}".format(prefix, self.phone1)
+
+    def get_phone2(self, for_members=True, prefix=EMPTY_STRING):
+        if for_members and not self.show_phones_to_members:
+            return EMPTY_STRING
+        if not self.phone2:
+            return EMPTY_STRING
+        return "{}{}".format(prefix, self.phone2)
+
+    def get_phones(self, for_members=True, sep=", "):
+        if for_members and not self.show_mails_to_members:
+            return EMPTY_STRING
+        return sep.join(
+            [self.phone1, self.phone2, EMPTY_STRING]
+        ) if self.phone2 else sep.join(
+            [self.phone1, EMPTY_STRING]
+        )
+
+
+    def get_email1(self, for_members=True, prefix=EMPTY_STRING):
+        if for_members and not self.show_mails_to_members:
+            return EMPTY_STRING
+        if not self.user.email:
+            return EMPTY_STRING
+        return "{}{}".format(prefix, self.user.email)
+
+    def get_emails(self, for_members=True, sep="; "):
+        if for_members and not self.show_mails_to_members:
+            return EMPTY_STRING
+        return sep.join(
+            [self.user.email, self.email2, EMPTY_STRING]
+        ) if self.email2 else sep.join(
+            [self.user.email, EMPTY_STRING]
+        )
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -379,11 +428,6 @@ class Customer(models.Model):
             msg_confirmation = _("An email containing this order summary has been sent to {}.").format(sent_to)
         return msg_confirmation
 
-    @property
-    def who_is_who_display(self):
-        return self.picture or self.show_mails_to_members or self.show_phones_to_members \
-               or (self.about_me is not None and len(self.about_me.strip()) > 1)
-
     def get_html_unsubscribe_mail_footer(self):
         return mark_safe(
             "<br><br><hr/><br><a href=\"{}\">{}</a>".format(
@@ -409,7 +453,8 @@ class Customer(models.Model):
             )
         )
 
-    def _get_unsubscribe_site(self):
+    @staticmethod
+    def _get_unsubscribe_site():
         return settings.ALLOWED_HOSTS[0]
 
     def make_token(self):
@@ -479,10 +524,6 @@ def customer_pre_save(sender, **kwargs):
         customer.is_group = False
     if customer.email2 is not None:
         customer.email2 = customer.email2.lower()
-    if customer.vat_id is not None and len(customer.vat_id.strip()) == 0:
-        customer.vat_id = None
-    if customer.bank_account1 is not None and len(customer.bank_account1.strip()) == 0:
-        customer.bank_account1 = None
     if customer.bank_account1:
         # Prohibit to have two customers with same bank account
         other_bank_account1 = Customer.objects.filter(
@@ -491,9 +532,7 @@ def customer_pre_save(sender, **kwargs):
         if customer.id is not None:
             other_bank_account1 = other_bank_account1.exclude(id=customer.id)
         if other_bank_account1.exists():
-            customer.bank_account1 = None
-    if customer.bank_account2 is not None and len(customer.bank_account2.strip()) == 0:
-        customer.bank_account2 = None
+            customer.bank_account1 = EMPTY_STRING
     if customer.bank_account2:
         # Prohibit to have two customers with same bank account
         other_bank_account2 = Customer.objects.filter(
@@ -502,7 +541,7 @@ def customer_pre_save(sender, **kwargs):
         if customer.id is not None:
             other_bank_account2 = other_bank_account2.exclude(id=customer.id)
         if other_bank_account2.exists():
-            customer.bank_account2 = None
+            customer.bank_account2 = EMPTY_STRING
     if not customer.is_active:
         customer.may_order = False
     if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE and customer.price_list_multiplier <= DECIMAL_ZERO:

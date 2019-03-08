@@ -23,32 +23,33 @@ class RepanierAuthBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         user_username = UserModel.objects.filter(
             Q(
-                username__iexact=username[:150]
+                last_name__iexact=username[:150]
             ) | Q(
                 email__iexact=username
             )
         ).order_by('?').first()
         is_superuser = False
-        staff = customer = None
+        # staff = customer = None
+        customer = None
         login_attempt_counter = DECIMAL_THREE
         if user_username is not None:
             username = user_username.username
             customer = Customer.objects.filter(
-                user=user_username
+                user_id=user_username.id
             ).order_by('?').first()
             if customer is None:
-                staff = Staff.objects.filter(
-                    user=user_username
-                ).order_by('?').first()
-                if staff is None:
-                    is_superuser = True
-                    login_attempt_counter = Configuration.objects.filter(
-                        id=DECIMAL_ONE
-                    ).only(
-                        'login_attempt_counter'
-                    ).first().login_attempt_counter
-                else:
-                    login_attempt_counter = staff.login_attempt_counter
+                # staff = Staff.objects.filter(
+                #     user_id=user_username.id
+                # ).order_by('?').first()
+                # if staff is None:
+                is_superuser = True
+                login_attempt_counter = Configuration.objects.filter(
+                    id=DECIMAL_ONE
+                ).only(
+                    'login_attempt_counter'
+                ).first().login_attempt_counter
+                # else:
+                #     login_attempt_counter = staff.login_attempt_counter
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
@@ -62,11 +63,11 @@ class RepanierAuthBackend(ModelBackend):
                         login_attempt_counter=F('login_attempt_counter') +
                                               DECIMAL_ONE
                     )
-                elif staff is not None:
-                    Staff.objects.filter(id=staff.id).update(
-                        login_attempt_counter=F('login_attempt_counter') +
-                                              DECIMAL_ONE
-                    )
+                # elif staff is not None:
+                #     Staff.objects.filter(id=staff.id).update(
+                #         login_attempt_counter=F('login_attempt_counter') +
+                #                               DECIMAL_ONE
+                #     )
                 elif is_superuser:
                     Configuration.objects.filter(id=DECIMAL_ONE).update(
                         login_attempt_counter=F('login_attempt_counter') +
@@ -98,11 +99,11 @@ class RepanierAuthBackend(ModelBackend):
                         Customer.objects.filter(id=customer.id).update(
                             language=translation.get_language()
                         )
-                elif staff is not None:
-                    if login_attempt_counter > DECIMAL_ZERO:
-                        Staff.objects.filter(id=staff.id).update(
-                            login_attempt_counter=DECIMAL_ZERO
-                        )
+                # elif staff is not None:
+                #     if login_attempt_counter > DECIMAL_ZERO:
+                #         Staff.objects.filter(id=staff.id).update(
+                #             login_attempt_counter=DECIMAL_ZERO
+                #         )
                 elif is_superuser:
                     if login_attempt_counter > DECIMAL_ZERO:
                         Configuration.objects.filter(id=DECIMAL_ONE).update(

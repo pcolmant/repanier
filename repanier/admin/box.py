@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-
 from urllib.parse import parse_qsl
 
 from django import forms
@@ -10,20 +9,20 @@ from django.contrib.admin import TabularInline
 from django.forms import ModelForm, BaseInlineFormSet
 from django.forms.formsets import DELETION_FIELD_NAME
 from django.shortcuts import render
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import Select2
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
-from repanier.const import DECIMAL_ZERO, PERMANENCE_PLANNED, DECIMAL_MAX_STOCK, PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE
+from repanier.const import DECIMAL_ZERO, PERMANENCE_PLANNED, DECIMAL_MAX_STOCK, PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, \
+    LUT_VAT
 from repanier.models import Producer
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.task import task_box
-from repanier.tools import update_offer_item
+from repanier.tools import update_offer_item, get_repanier_template_name
 
 
 class BoxContentInlineFormSet(BaseInlineFormSet):
@@ -243,9 +242,10 @@ class BoxAdmin(TranslatableAdmin):
             user_message, user_message_level = task_box.admin_duplicate(queryset)
             self.message_user(request, user_message, user_message_level)
             return
+        template_name = get_repanier_template_name("confirm_admin_duplicate_box.html")
         return render(
             request,
-            'repanier/confirm_admin_duplicate_box.html', {
+            template_name, {
                 'sub_title': _("Please, confirm the action : duplicate box"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'duplicate_box',
@@ -296,7 +296,7 @@ class BoxAdmin(TranslatableAdmin):
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs['readonly'] = True
         # TODO : Make it dependent of the producer country
-        vat_level_field.widget.choices = settings.LUT_VAT
+        vat_level_field.widget.choices = LUT_VAT
 
         # One folder by producer for clarity
         if hasattr(picture_field.widget, 'upload_to'):

@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404
@@ -9,6 +8,7 @@ from django.views.decorators.csrf import csrf_protect
 
 from repanier.models.customer import Customer
 from repanier.models.staff import Staff
+from repanier.tools import get_repanier_template_name
 
 
 @login_required()
@@ -30,9 +30,10 @@ def who_is_who_view(request):
         is_repanier_admin = request.user.is_repanier_admin
     except AttributeError:
         is_repanier_admin = False
+    template_name = get_repanier_template_name("who_is_who.html")
     return render(
         request,
-        "repanier/who_is_who.html",
+        template_name,
         {
             'staff_list': staff_list,
             'customer_list': customer_list,

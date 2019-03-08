@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import os
 
 from django import forms
 from django.conf import settings
@@ -12,18 +13,22 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
-from djng.styling.bootstrap3.forms import Bootstrap3Form
 
-from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, LUT_PRODUCER_PRODUCT_ORDER_UNIT, EMPTY_STRING, DEMO_EMAIL
+from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, LUT_PRODUCER_PRODUCT_ORDER_UNIT, EMPTY_STRING, LUT_VAT
 from repanier.email.email import RepanierEmail
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_ProductionMode
 from repanier.models.staff import Staff
 from repanier.picture.const import SIZE_M
-from repanier.widget.picture import AjaxPictureWidget
+from repanier.tools import get_repanier_template_name
+from repanier.widget.picture import RepanierPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
+
+template_password_reset_email = get_repanier_template_name(
+    os.path.join("registration", "password_reset_email.html")
+)
 
 
 class AuthRepanierPasswordResetForm(PasswordResetForm):
@@ -33,14 +38,13 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
         subject = loader.render_to_string(subject_template_name, context)
-        html_body = loader.render_to_string('repanier/registration/password_reset_email.html', context)
+        html_body = loader.render_to_string(template_password_reset_email, context)
 
         if settings.REPANIER_SETTINGS_DEMO:
-            to_email = DEMO_EMAIL
+            to_email = settings.REPANIER_DEMO_EMAIL
         email = RepanierEmail(
             subject,
             html_body=html_body,
-            from_email=from_email,
             to=[to_email],
             show_customer_may_unsubscribe=False,
             send_even_if_unsubscribed=True
@@ -67,7 +71,7 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
 
 class AuthRepanierSetPasswordForm(SetPasswordForm):
     def send_mail(self, subject_template_name, email_template_name,
-                  context, from_email, to_email, html_email_template_name=None):
+                  context, to_email, html_email_template_name=None):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
@@ -76,15 +80,14 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
         subject = EMPTY_STRING.join(subject.splitlines())
         body = loader.render_to_string(email_template_name, context)
 
-        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        email_message = EmailMultiAlternatives(subject, body, [to_email, ])
         if html_email_template_name is not None:
             html_email = loader.render_to_string(html_email_template_name, context)
             email_message.attach_alternative(html_email, 'text/html')
 
         email_message.send()
 
-    def save(self, commit=True, use_https=False, request=None,
-             from_email=settings.DEFAULT_FROM_EMAIL):
+    def save(self, commit=True, use_https=False, request=None):
         super(AuthRepanierSetPasswordForm, self).save(commit)
         if commit:
             now = timezone.now()
@@ -93,16 +96,16 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
                     login_attempt_counter=DECIMAL_ZERO,
                     password_reset_on=now
                 )
-            elif self.user.is_staff:
-                staff = Staff.objects.filter(
-                    user=self.user, is_active=True
-                ).order_by('?').first()
-                if staff is not None:
-                    Staff.objects.filter(id=staff.id).update(
-                        login_attempt_counter=DECIMAL_ZERO,
-                        password_reset_on=now
-                    )
             else:
+                if self.user.is_staff:
+                    staff = Staff.objects.filter(
+                        user=self.user.staff_id, is_active=True
+                    ).order_by('?').first()
+                    if staff is not None:
+                        Staff.objects.filter(id=staff.id).update(
+                            login_attempt_counter=DECIMAL_ZERO,
+                            password_reset_on=now
+                        )
                 customer = Customer.objects.filter(
                     user=self.user, is_active=True
                 ).order_by('?').first()
@@ -121,22 +124,22 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
                 'user': self.user,
                 'protocol': 'https' if use_https else 'http',
             }
-            self.send_mail('repanier/registration/password_reset_done_subject.txt',
-                           'repanier/registration/password_reset_done_email.html',
-                           context, from_email, self.user.email,
+            self.send_mail(get_repanier_template_name('registration/password_reset_done_subject.txt'),
+                           get_repanier_template_name('registration/password_reset_done_email.html'),
+                           context, self.user.email,
                            html_email_template_name=None)
         return self.user
 
 
-class RepanierForm(Bootstrap3Form):
-    form_name = 'repanier_form'
-    required_css_class = 'djng-field-required'
-
-    class Media:
-        js = (
-            'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js',
-            'djng/js/django-angular.js'
-        )
+# class RepanierForm(Bootstrap3Form):
+#     form_name = 'repanier_form'
+#     required_css_class = 'djng-field-required'
+#
+#     class Media:
+#         js = (
+#             'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js',
+#             'djng/js/django-angular.js'
+#         )
 
 
 class ProducerProductForm(forms.Form):
@@ -174,13 +177,13 @@ class ProducerProductForm(forms.Form):
         max_digits=7, decimal_places=1)
     vat_level = forms.ChoiceField(
         label=_("Tax"),
-        choices=settings.LUT_VAT,
+        choices=LUT_VAT,
         widget=SelectBootstrapWidget,
         required=True
     )
     picture = forms.CharField(
         label=_("Picture"),
-        widget=AjaxPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
+        widget=RepanierPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
         required=False)
     offer_description = forms.CharField(label=_('Offer description'), widget=TextEditorWidget, required=False)
 

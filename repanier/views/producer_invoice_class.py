@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-
 from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
@@ -9,10 +8,11 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.producer import Producer
+from repanier.tools import get_repanier_template_name
 
 
 class ProducerInvoiceView(DetailView):
-    template_name = 'repanier/producer_invoice_form.html'
+    template_name = get_repanier_template_name("producer_invoice_form.html")
     model = ProducerInvoice
     uuid = None
 

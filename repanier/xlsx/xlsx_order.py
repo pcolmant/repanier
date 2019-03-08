@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-from django.conf import settings
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
@@ -46,6 +45,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 customer_set = Customer.objects.filter(
                     customerinvoice__permanence_id=permanence.id,
                     represent_this_buyinggroup=False,
+                    is_group=False,
                     customerinvoice__delivery_id=delivery.id
                 )
                 for customer in customer_set:
@@ -67,15 +67,11 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         row = [
                             "{} - {}".format(delivery_ref, delivery.get_delivery_display()),
                             "  {} - {}{}".format(customer.preparation_order, customer.long_basket_name, confirmed),
-                            customer.phone1 or EMPTY_STRING,
-                            customer.phone2 or EMPTY_STRING,
+                            customer.get_phone1(),
+                            customer.get_phone2(),
                             invoice.get_total_price_with_tax().amount,
                             # Used to send mail to customer with an order (via copy-paste to mail)
-                            ";".join(
-                                [customer.user.email, customer.email2, EMPTY_STRING]
-                            ) if customer.email2 else ";".join(
-                                [customer.user.email, EMPTY_STRING]
-                            )
+                            customer.get_emails()
                         ]
                         for col_num in range(len(row)):
                             c = ws.cell(row=row_num, column=col_num)
@@ -124,15 +120,11 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     row = [
                         "{} - {}{}".format(customer.preparation_order, customer.short_basket_name, confirmed),
                         customer.long_basket_name,
-                        customer.phone1 or EMPTY_STRING,
-                        customer.phone2 or EMPTY_STRING,
+                        customer.get_phone1(),
+                        customer.get_phone2(),
                         invoice.get_total_price_with_tax().amount,
                         # Used to send mail to customer with an order (via copy-paste to mail)
-                        ";".join(
-                            [customer.user.email, customer.email2, EMPTY_STRING]
-                        ) if customer.email2 else ";".join(
-                            [customer.user.email, EMPTY_STRING]
-                        )
+                        customer.get_emails()
                     ]
                     for col_num in range(len(row)):
                         c = ws.cell(row=row_num, column=col_num)
@@ -183,8 +175,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     row = [
                         (next_permanence.permanence_date, NumberFormat.FORMAT_DATE_DMYSLASH),
                         (customer.long_basket_name, NumberFormat.FORMAT_TEXT),
-                        (customer.phone1 or EMPTY_STRING, NumberFormat.FORMAT_TEXT),
-                        (customer.phone2 or EMPTY_STRING, NumberFormat.FORMAT_TEXT),
+                        (customer.get_phone1(), NumberFormat.FORMAT_TEXT),
+                        (customer.get_phone2(), NumberFormat.FORMAT_TEXT),
                         (permanenceboard.permanence_role.short_name, NumberFormat.FORMAT_TEXT),
                     ]
                     for col_num in range(len(row)):
@@ -195,8 +187,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         if permanence_date_save != next_permanence.permanence_date:
                             c.style.font.bold = True
                             permanence_date_save = next_permanence.permanence_date
-                            for col_num in range(6):
-                                c = ws.cell(row=row_num, column=col_num)
+                            for _col_num in range(6):
+                                c = ws.cell(row=row_num, column=_col_num)
                                 c.style.borders.top.border_style = Border.BORDER_THIN
                     row_num += 1
 
@@ -229,8 +221,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 row = [
                     staff_function,
                     customer_responsible.long_basket_name,
-                    customer_responsible.phone1,
-                    customer_responsible.phone2
+                    customer_responsible.get_phone1(),
                 ]
                 for col_num in range(len(row)):
                     c = ws.cell(row=row_num, column=col_num)
@@ -271,8 +262,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 row = [
                     producer.short_profile_name,
                     producer.long_profile_name,
-                    producer.phone1 or EMPTY_STRING,
-                    producer.phone2 or EMPTY_STRING,
+                    producer.get_phone1(),
+                    producer.get_phone2(),
                     total_price_with_tax.amount,
                     minimum_order_amount_reached
                 ]
@@ -469,9 +460,8 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                             qty = purchase.get_producer_quantity()
                             if qty != DECIMAL_ZERO:
                                 base_unit = get_base_unit(
-                                    qty,
                                     purchase.offer_item.order_unit,
-                                    purchase.status
+                                    qty
                                 )
                                 c = ws.cell(row=row_num, column=0)
                                 c.value = purchase.id
@@ -599,9 +589,8 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                                 qty = purchase.get_producer_quantity()
                                 if qty != DECIMAL_ZERO:
                                     base_unit = get_base_unit(
-                                        qty,
                                         offer_item_save.order_unit,
-                                        purchase.status
+                                        qty
                                     )
                                     c = ws.cell(row=row_num, column=0)
                                     c.value = purchase.id
@@ -771,9 +760,8 @@ def export_producer_by_product(permanence, producer, wb=None):
                             qty = purchase.get_producer_quantity()
                         if qty != DECIMAL_ZERO:
                             base_unit = get_base_unit(
-                                qty,
                                 offer_item.order_unit,
-                                status
+                                qty
                             )
                             c = ws.cell(row=row_num, column=0)
                             c.value = "{}".format(purchase.customer.short_basket_name)
@@ -837,7 +825,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 price_qty = qty
                                 c.value = "=ROUND(B{}*(F{}+G{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                             purchase_price = (
-                                price_qty * (unit_price + unit_deposit)
+                                    price_qty * (unit_price + unit_deposit)
                             ).quantize(TWO_DECIMALS)
                             c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -858,12 +846,11 @@ def export_producer_by_product(permanence, producer, wb=None):
                             if offer_item.order_average_weight > DECIMAL_ZERO:
                                 qty = (qty / offer_item.order_average_weight).quantize(TWO_DECIMALS)
                         base_unit = get_base_unit(
-                            qty,
                             offer_item.order_unit,
-                            status
+                            qty
                         )
                         c = ws.cell(row=row_num, column=0)
-                        c.value = "{}".format(repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                        c.value = "{}".format(settings.REPANIER_SETTINGS_GROUP_NAME)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=1)
@@ -920,7 +907,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             price_qty = qty
                             c.value = "=ROUND(B{}*(F{}+G{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                         purchase_price = (
-                            price_qty * (unit_price + unit_deposit)
+                                price_qty * (unit_price + unit_deposit)
                         ).quantize(TWO_DECIMALS)
                         c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -965,10 +952,10 @@ def export_producer_by_product(permanence, producer, wb=None):
             if col_num == 1:
                 if producer.producer_price_are_wo_vat:
                     c.value = "{} {} {}".format(_("Total Price"), _("wo tax"),
-                                                repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                                                settings.REPANIER_SETTINGS_GROUP_NAME)
                 else:
                     c.value = "{} {} {}".format(_("Total Price"), _("w tax"),
-                                                repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                                                settings.REPANIER_SETTINGS_GROUP_NAME)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 7:
                 c.value = "=" + "+".join(formula_main_total)
@@ -1050,9 +1037,8 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 if qty != DECIMAL_ZERO:
                     offer_item_save = purchase.offer_item
                     base_unit = get_base_unit(
-                        qty,
                         purchase.offer_item.order_unit,
-                        purchase.status
+                        qty
                     )
                     c = ws.cell(row=row_num, column=0)
                     c.value = qty
@@ -1127,10 +1113,10 @@ def export_producer_by_customer(permanence, producer, wb=None):
             if col_num == 0:
                 if producer.producer_price_are_wo_vat:
                     c.value = "{} {} {}".format(_("Total Price"), _("wo tax"),
-                                                repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                                                settings.REPANIER_SETTINGS_GROUP_NAME)
                 else:
                     c.value = "{} {} {}".format(_("Total Price"), _("w tax"),
-                                                repanier.apps.REPANIER_SETTINGS_GROUP_NAME)
+                                                settings.REPANIER_SETTINGS_GROUP_NAME)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 6:
                 c.value = "=" + "+".join(formula_main_total)
@@ -1280,7 +1266,8 @@ def export_customer_for_a_delivery(
         if delivery_id is not None:
             c = ws.cell(row=row_num, column=4)
             c.style.font.bold = True
-            c.value = "{}".format(DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display())
+            c.value = "{}".format(
+                DeliveryBoard.objects.filter(id=delivery_id).order_by('?').first().get_delivery_display())
             row_num += 1
         if ws_preparation_title is not None and xlsx_formula:
             if delivery_id is None:
@@ -1301,13 +1288,13 @@ def export_customer_for_a_delivery(
                     customer_id=customer_save.id
                 ).only("delta_transport").first().delta_transport
             else:
-                delta_transport_save=customer_invoice.delta_transport
+                delta_transport_save = customer_invoice.delta_transport
             while purchase is not None and customer_save.id == purchase.customer_id:
                 department_for_customer_save__id = offer_item_save.department_for_customer_id
                 department_for_customer_save__short_name = offer_item_save.department_for_customer.short_name \
                     if offer_item_save.department_for_customer is not None else None
                 while purchase is not None and customer_save.id == purchase.customer_id and \
-                                offer_item_save.department_for_customer_id == department_for_customer_save__id:
+                        offer_item_save.department_for_customer_id == department_for_customer_save__id:
                     if placement_save != offer_item_save.placement:
                         hide_column_placement = False
                     if producer_save != offer_item_save.producer:
@@ -1316,9 +1303,8 @@ def export_customer_for_a_delivery(
                     if deposit or qty != DECIMAL_ZERO:
                         something_ordered = True
                         base_unit = get_base_unit(
-                            qty,
                             offer_item_save.order_unit,
-                            purchase.status
+                            qty
                         )
                         c = ws.cell(row=row_num, column=0)
                         c.value = purchase.id
@@ -1388,7 +1374,7 @@ def export_customer_for_a_delivery(
                                 price_qty = qty
                                 c.value = "=ROUND(F{}*(H{}+I{}),2)".format(row_num + 1, row_num + 1, row_num + 1)
                             purchases_price = (
-                                price_qty * (customer_unit_price + unit_deposit)
+                                    price_qty * (customer_unit_price + unit_deposit)
                             ).quantize(TWO_DECIMALS)
                             if not xlsx_formula:
                                 c.value = purchases_price

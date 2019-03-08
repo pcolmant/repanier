@@ -5,13 +5,14 @@ from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
 
-from repanier.models.invoice import CustomerInvoice
 from repanier.models.bankaccount import BankAccount
+from repanier.models.invoice import CustomerInvoice
 from repanier.models.purchase import Purchase
+from repanier.tools import get_repanier_template_name
 
 
 class CustomerInvoiceView(DetailView):
-    template_name = 'repanier/customer_invoice_form.html'
+    template_name = get_repanier_template_name("customer_invoice_form.html")
     model = CustomerInvoice
 
     def get_object(self, queryset=None):

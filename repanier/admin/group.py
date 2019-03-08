@@ -5,6 +5,7 @@ from collections import OrderedDict
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db.models import Q
@@ -14,7 +15,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from import_export.formats.base_formats import CSV, ODS, JSON, XLS
 
-import repanier.apps
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
 from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormMoneyField
@@ -26,7 +26,7 @@ from repanier.xlsx.xlsx_invoice import export_invoice
 
 
 class UserDataForm(forms.ModelForm):
-    email = forms.EmailField(label=_('Email'))
+    email = forms.EmailField(label=_('Email'), required=True)
     user = None
 
     def __init__(self, *args, **kwargs):
@@ -37,28 +37,28 @@ class UserDataForm(forms.ModelForm):
             # Don't bother validating the formset unless each form is valid on its own
             return
         # cleaned_data = super(UserDataForm, self).clean()
-        username_field_name = 'short_basket_name'
-        username = self.cleaned_data.get(username_field_name)
+        short_basket_name_field = 'short_basket_name'
+        username = self.cleaned_data.get(short_basket_name_field)
         user_error1 = _('The given short_basket_name must be set')
         user_error2 = _('The given short_basket_name is used by another user')
         if not username:
-            self.add_error(username_field_name, user_error1)
+            self.add_error(short_basket_name_field, user_error1)
         # Check that the email is set
-        if not "email" in self.cleaned_data:
-            self.add_error('email', _('The given email must be set'))
-        else:
-            email = self.cleaned_data["email"]
-            user_model = get_user_model()
-            qs = user_model.objects.filter(email=email, is_staff=False).order_by('?')
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.user_id)
-            if qs.exists():
-                self.add_error('email', _('The email {} is already used by another user.').format(email))
-            qs = user_model.objects.filter(username=username).order_by('?')
-            if self.instance.id is not None:
-                qs = qs.exclude(id=self.instance.user_id)
-            if qs.exists():
-                self.add_error(username_field_name, user_error2)
+        # if not "email" in self.cleaned_data:
+        #     self.add_error('email', _('The given email must be set'))
+        # else:
+        email = self.cleaned_data["email"].lower()
+        user_model = get_user_model()
+        qs = user_model.objects.filter(email=email, is_staff=False).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.user_id)
+        if qs.exists():
+            self.add_error('email', _('The email {} is already used by another user.').format(email))
+        qs = user_model.objects.filter(username=username).order_by('?')
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.user_id)
+        if qs.exists():
+            self.add_error(short_basket_name_field, user_error2)
         bank_account1 = self.cleaned_data["bank_account1"]
         if bank_account1:
             qs = Group.objects.filter(
@@ -82,20 +82,20 @@ class UserDataForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         super(UserDataForm, self).save(*args, **kwargs)
         change = (self.instance.id is not None)
-        username = self.data['short_basket_name']
+        short_basket_name = self.data['short_basket_name']
         email = self.data['email'].lower()
         user_model = get_user_model()
         if change:
             user = user_model.objects.get(id=self.instance.user_id)
-            user.username = user.email = email
+            user.username = email
+            user.email = email
             user.first_name = EMPTY_STRING
-            user.last_name = username
-
+            user.last_name = short_basket_name
             user.save()
         else:
             user = user_model.objects.create_user(
                 username=email, email=email, password=None,
-                first_name=EMPTY_STRING, last_name=username)
+                first_name=EMPTY_STRING, last_name=short_basket_name)
         self.user = user
         return self.instance
 
@@ -111,7 +111,7 @@ def create__group_action(year):
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
                 "{} {}".format(_('Invoice'), year),
-                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+                settings.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
@@ -128,7 +128,7 @@ class GroupWithUserDataForm(UserDataForm):
             represent_this_buyinggroup=False
         ),
         label=_('Members'),
-        widget=admin.widgets.FilteredSelectMultiple(_('Members'), False),
+        widget=FilteredSelectMultiple(_('Members'), False),
         required=False
     )
     inform_customer_responsible = forms.BooleanField(
@@ -285,20 +285,17 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             return readonly_fields
         return []
 
-    def get_form(self, request, customer=None, **kwargs):
-        form = super(GroupWithUserDataAdmin, self).get_form(request, customer, **kwargs)
-        username_field = form.base_fields['short_basket_name']
+    def get_form(self, request, group=None, **kwargs):
+        form = super(GroupWithUserDataAdmin, self).get_form(request, group, **kwargs)
         email_field = form.base_fields['email']
 
-        if customer is not None:
+        if group is not None:
             user_model = get_user_model()
-            user = user_model.objects.get(id=customer.user_id)
+            user = user_model.objects.get(id=group.user_id)
             # username_field.initial = getattr(user, user_model.USERNAME_FIELD)
-            username_field.initial = user.username
             email_field.initial = user.email
         else:
             # Clean data displayed
-            username_field.initial = EMPTY_STRING
             email_field.initial = EMPTY_STRING
         return form
 
@@ -327,7 +324,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         delivery_point.is_active = True
         delivery_point.transport = form.cleaned_data['transport']
         delivery_point.min_transport = form.cleaned_data['min_transport']
-        delivery_point.short_name = form.user.username
+        delivery_point.short_name = form.data['short_basket_name']
         delivery_point.save()
         Customer.objects.filter(
             delivery_point_id=delivery_point.id
@@ -341,7 +338,8 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             price_list_multiplier=DECIMAL_ONE
         )
 
-    def get_import_formats(self):
+    @staticmethod
+    def get_import_formats():
         """
         Returns available import formats.
         """

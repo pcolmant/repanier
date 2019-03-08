@@ -1,0 +1,146 @@
+{% load i18n %}
+{% spaceless %}
+<select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %} onchange="{{ widget.name }}_select(this.value)">{% for group_name, group_choices, group_index in widget.optgroups %}{% if group_name %}
+  <optgroup label="{{ group_name }}">{% endif %}{% for option in group_choices %}
+  {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
+  </optgroup>{% endif %}{% endfor %}
+</select>
+<script type="text/javascript">
+    django.jQuery(document).ready(function() { {{ widget.name }}_select("{{ widget.value|first }}");});
+    function {{ widget.name }}_select(value) {
+        (function($){
+            switch (value) {
+                case "100":
+                    $("div.field-box.field-unit_deposit").show();
+                    $("div.field-box.field-order_average_weight").hide();
+                    $("div.field-box.field-customer_minimum_order_quantity").show();
+                    $("div.field-box.field-customer_increment_order_quantity").hide();
+                    $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").hide();
+                    $("div.form-row.field-customer_increment_order_quantity").hide();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
+                    $("div.field-box.field-customer_unit_price").show();
+                    $("div.form-row.field-wrapped").hide();
+                    break;
+                case "105":
+                case "110":
+                case "115":
+                    $("div.field-box.field-unit_deposit").show();
+                    $("div.field-box.field-order_average_weight").show();
+                    $("div.field-box.field-customer_minimum_order_quantity").show();
+                    $("div.field-box.field-customer_increment_order_quantity").hide();
+                    $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").hide();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
+                    $("div.field-box.field-customer_unit_price").show();
+                    $("div.form-row.field-wrapped").hide();
+                    break;
+                case "140":
+                    $("div.field-box.field-unit_deposit").hide();
+                    $("div.field-box.field-order_average_weight").show();
+                    $("div.field-box.field-customer_minimum_order_quantity").show();
+                    $("div.field-box.field-customer_increment_order_quantity").show();
+                    $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").show();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
+                    $("div.field-box.field-customer_unit_price").show();
+                    $("div.form-row.field-wrapped").show();
+                    break;
+                case "120":
+                case "150":
+                    $("div.field-box.field-unit_deposit").hide();
+                    $("div.field-box.field-order_average_weight").hide();
+                    $("div.field-box.field-customer_minimum_order_quantity").show();
+                    $("div.field-box.field-customer_increment_order_quantity").show();
+                    $("div.field-box.field-customer_alert_order_quantity").show();
+                    $("div.form-row.field-customer_minimum_order_quantity").show();
+                    $("div.form-row.field-customer_increment_order_quantity").show();
+                    $("div.form-row.field-customer_alert_order_quantity").show();
+                    $("div.field-box.field-customer_unit_price").show();
+                    $("div.form-row.field-wrapped").show();
+                    break;
+                case "300":
+                case "400":
+                case "500":
+                    $("div.field-box.field-unit_deposit").hide();
+                    $("div.field-box.field-order_average_weight").hide();
+                    $("div.field-box.field-customer_minimum_order_quantity").hide();
+                    $("div.field-box.field-customer_increment_order_quantity").hide();
+                    $("div.field-box.field-customer_alert_order_quantity").hide();
+                    $("div.form-row.field-customer_minimum_order_quantity").hide();
+                    $("div.form-row.field-customer_increment_order_quantity").hide();
+                    $("div.form-row.field-customer_alert_order_quantity").hide();
+                    $("div.field-box.field-customer_unit_price").hide();
+                    $("div.form-row.field-wrapped").hide();
+                    break;
+                case "600":
+                    $("div.field-box.field-unit_deposit").hide();
+                    $("div.field-box.field-order_average_weight").hide();
+                    $("div.field-box.field-customer_minimum_order_quantity").hide();
+                    $("div.field-box.field-customer_increment_order_quantity").hide();
+                    $("div.field-box.field-customer_alert_order_quantity").hide();
+                    $("div.form-row.field-customer_minimum_order_quantity").hide();
+                    $("div.form-row.field-customer_increment_order_quantity").hide();
+                    $("div.form-row.field-customer_alert_order_quantity").hide();
+                    $("div.field-box.field-customer_unit_price").show();
+                    $("div.form-row.field-wrapped").hide();
+                    break;
+            }
+            switch (value) {
+                case "105":
+                    $("div.field-box.field-order_average_weight label").html("{% trans "Piece weight in kg" %}");
+                    break;
+                case "110":
+                    $("div.field-box.field-order_average_weight label").html("{% trans "Piece content in l" %}");
+                    break;
+                case "115":
+                    $("div.field-box.field-order_average_weight label").html("{% trans "Number of pieces in a pack" %}");
+                    break;
+                case "140":
+                    $("div.field-box.field-order_average_weight label").html("{% trans "Average weight in kg of a piece" %}");
+                    break;
+            }
+            switch (value) {
+                case "100":
+                case "105":
+                case "110":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one piece" %}");
+                    $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one piece" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed as number of pieces" %}");
+                    break;
+                case "115":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one pack" %}");
+                    $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one pack" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed in number of pack(s)" %}");
+                    break;
+                case "120":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one kg" %}");
+                    $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one kg" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity in kg (0.05 = 50 grams)" %}");
+                    break;
+                case "140":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one kg" %}");
+                    $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one kg" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed as number of pieces" %}");
+                    break;
+                case "150":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one l" %}");
+                    $("div.field-box.field-customer_unit_price label").html("{% trans "Customer price for one l" %}");
+                    $("div.field-box.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed in ℓ (0.75 = 75 cℓ)" %}");
+                    break;
+                case "300":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one deposit" %}");
+                    break;
+                case "500":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one transportation" %}");
+                    break;
+                case "600":
+                    $("div.field-box.field-producer_unit_price label").html("{% trans "Producer price for one subscription" %}");
+                    break;
+            }
+        }(django.jQuery))
+    }
+</script>
+{% endspaceless %}

@@ -6,10 +6,11 @@ from django.views.generic import ListView
 
 from repanier.const import PERMANENCE_SEND, EMPTY_STRING
 from repanier.models.permanenceboard import PermanenceBoard
+from repanier.tools import get_repanier_template_name
 
 
 class PermanenceView(ListView):
-    template_name = 'repanier/task_form.html'
+    template_name = get_repanier_template_name("task_form.html")
     success_url = '/'
     paginate_by = 50
     paginate_orphans = 5

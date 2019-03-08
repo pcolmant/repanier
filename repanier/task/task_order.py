@@ -3,7 +3,6 @@ import datetime
 import logging
 import uuid
 
-from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from django.utils import translation
@@ -58,7 +57,6 @@ def automatically_open():
 
 
 def common_to_pre_open_and_open(permanence):
-
     if permanence.contract is not None:
         permanence.contract.get_or_create_offer_item(permanence, reset_add_2_stock=True)
     else:
@@ -152,6 +150,7 @@ def back_to_scheduled(permanence):
     permanence.back_to_scheduled()
     permanence.set_status(old_status=(PERMANENCE_OPENED,), new_status=PERMANENCE_PLANNED)
 
+
 @transaction.atomic
 def automatically_closed():
     translation.activate(settings.LANGUAGE_CODE)
@@ -179,7 +178,7 @@ def automatically_closed():
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_html_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
 @debug_parameters
-def close_and_send_order(permanence_id, everything=True, producers_id=(), deliveries_id=()):
+def close_and_send_order(permanence_id, everything=True, deliveries_id=()):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
 
@@ -189,32 +188,18 @@ def close_and_send_order(permanence_id, everything=True, producers_id=(), delive
     if permanence.with_delivery_point:
         if len(deliveries_id) == 0:
             return
-        if len(producers_id) > 0:
-            return
-    else:
-        if len(deliveries_id) > 0:
-            return
-        if not everything:
-            if len(producers_id) == 0:
-                return
-
-            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                return
 
     permanence.set_status(old_status=(PERMANENCE_OPENED,), new_status=PERMANENCE_WAIT_FOR_CLOSED, everything=everything,
-                          producers_id=producers_id,
                           deliveries_id=deliveries_id)
-    permanence.close_order(everything=everything, producers_id=producers_id, deliveries_id=deliveries_id)
+    permanence.close_order(everything=everything,
+                           deliveries_id=deliveries_id)
     permanence.set_status(old_status=(PERMANENCE_WAIT_FOR_CLOSED,), new_status=PERMANENCE_CLOSED, everything=everything,
-                          producers_id=producers_id,
                           deliveries_id=deliveries_id)
     permanence.set_status(old_status=(PERMANENCE_CLOSED,), new_status=PERMANENCE_WAIT_FOR_SEND, everything=everything,
-                          producers_id=producers_id,
                           deliveries_id=deliveries_id)
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
-    email_order.email_order(permanence.id, everything=everything, producers_id=producers_id,
+    email_order.email_order(permanence.id, everything=everything,
                             deliveries_id=deliveries_id)
     permanence.set_status(old_status=(PERMANENCE_WAIT_FOR_SEND,), new_status=PERMANENCE_SEND, everything=everything,
-                          producers_id=producers_id,
                           deliveries_id=deliveries_id)

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 
 from django import template
 from django.conf import settings
@@ -7,7 +6,8 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMANENCE_OPENED
+from repanier.const import EMPTY_STRING, PERMANENCE_CLOSED, DECIMAL_ZERO, PERMANENCE_OPENED, PERMANENCE_SEND
+from repanier.models import Permanence
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
@@ -20,30 +20,58 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=False)
-def repanier_home(*args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_HOME_SITE
-    return REPANIER_SETTINGS_HOME_SITE
-
-
-@register.simple_tag(takes_context=False)
 def repanier_admins(*args, **kwargs):
     return mark_safe(
         ", ".join(["{0} <<a href=\"mailto:{1}\">{1}</a>>".format(admin[0], admin[1]) for admin in settings.ADMINS]))
 
 
 @register.simple_tag(takes_context=False)
-def repanier_group_name(*args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
-    return REPANIER_SETTINGS_GROUP_NAME
+def repanier_notification(*args, **kwargs):
+    from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
+
+    return REPANIER_SETTINGS_NOTIFICATION.get_html_notification_card_display()
 
 
 @register.simple_tag(takes_context=False)
-def repanier_bootstrap_static(*args, **kwargs):
-    return "{}bootstrap{}css{}{}".format(settings.STATIC_URL, os.sep, os.sep, settings.REPANIER_SETTINGS_BOOTSTRAP_CSS)
+def repanier_permanences(*args, **kwargs):
+    permanences_cards = []
+    for permanence in Permanence.objects.filter(status=PERMANENCE_OPENED) \
+            .only("id", "permanence_date", "with_delivery_point") \
+            .order_by('permanence_date', 'id'):
+        permanences_cards.append(permanence.get_html_permanence_card_display())
+
+    displayed_permanence_counter = 0
+    for permanence in Permanence.objects.filter(
+            status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+            master_permanence__isnull=True
+    ).only("id", "permanence_date").order_by('-permanence_date'):
+        displayed_permanence_counter += 1
+        permanences_cards.append(permanence.get_html_permanence_card_display())
+        if displayed_permanence_counter > 4:
+            break
+
+    return mark_safe("""
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div class="card container-activities">
+                        <div class="card-header">
+			                <h2 class="card-title">{card_title}</h2>
+		                </div>
+                        {html}
+                    </div>
+                </div>
+            </div>
+        </div>
+        """.format(
+        card_title=("No offer to display") if len(permanences_cards) == 0 else _("Offer") if len(
+            permanences_cards) == 1 else _("Offers"),
+        html='<div class="dropdown-divider"></div>'.join(permanences_cards)
+    ))
 
 
 @register.simple_tag(takes_context=True)
-def repanier_user(context, *args, **kwargs):
+def repanier_user_bs3(context, *args, **kwargs):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
     request = context["request"]
@@ -70,14 +98,9 @@ def repanier_user(context, *args, **kwargs):
             ))
             nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                 reverse('send_mail_to_coordinators_view'),
-                _('Send mail to coordinators')
+                _('Inform')
             ))
             if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-                if user.subscribe_to_email:
-                    nodes.append("<li><a href=\"{}\">{}</a></li>".format(
-                        reverse('send_mail_to_all_members_view'),
-                        _('Send mail to all members')
-                    ))
                 nodes.append("<li><a href=\"{}\">{}</a></li>".format(
                     reverse('who_is_who_view'),
                     _("Who's who")
@@ -132,12 +155,109 @@ def repanier_user(context, *args, **kwargs):
     return mark_safe("".join(nodes))
 
 
+@register.simple_tag(takes_context=True)
+def repanier_user_bs4(context, *args, **kwargs):
+    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+
+    request = context["request"]
+    user = request.user
+    nodes = []
+    if user.is_authenticated:
+        if not user.is_staff:
+            nodes = []
+            nodes.append("""
+                <li id="li_my_name" class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{}</a>
+                <div class="dropdown-menu dropdown-menu-right">
+                """.format(
+                user.last_name or '<span id = "my_name"></ span>'
+            ))
+
+            if user.customer_id is not None:
+
+                nodes.append(
+                    '<a class="dropdown-item" href="{}"><span class="fa fa-external-link-alt"></span> {}</a>'.format(
+                        reverse("logout"), _("Logout")
+                    ))
+                nodes.append('<div class="dropdown-divider"></div>')
+                if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+                    last_customer_invoice = CustomerInvoice.objects.filter(
+                        customer__user_id=request.user.id,
+                        invoice_sort_order__isnull=False) \
+                        .only("balance", "date_balance") \
+                        .order_by('-invoice_sort_order').first()
+                    if last_customer_invoice is not None:
+                        if last_customer_invoice.balance < DECIMAL_ZERO:
+                            my_balance = _('My balance : <font color="red">%(balance)s</font> at %(date)s') % {
+                                'balance': last_customer_invoice.balance,
+                                'date': last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                        else:
+                            my_balance = _('My balance : <font color="green">%(balance)s</font> at %(date)s') % {
+                                'balance': last_customer_invoice.balance,
+                                'date': last_customer_invoice.date_balance.strftime(settings.DJANGO_SETTINGS_DATE)}
+                    else:
+                        my_balance = _('My balance')
+                    nodes.append("<a class=\"dropdown-item\" href=\"{}\">{}</a>".format(
+                        reverse("customer_invoice_view", args=(0,)),
+                        my_balance
+                    ))
+                nodes.append("<a class=\"dropdown-item\" href=\"{}\">{}</a>".format(
+                    reverse('my_profile_view'),
+                    _('My profile')
+                ))
+            if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+                nodes.append("<a class=\"dropdown-item\" href=\"{}\">{}</a>".format(
+                    reverse('who_is_who_view'),
+                    _("Who's who")
+                ))
+            nodes.append("<a class=\"dropdown-item\" href=\"{}\">{}</a>".format(
+                reverse('send_mail_to_coordinators_view'),
+                _('Inform')
+            ))
+            nodes.append("</div></li>")
+
+    else:
+        p_offer_uuid = kwargs.get("offer_uuid", None)
+        if len(p_offer_uuid) == 36:
+            producer = Producer.objects.filter(offer_uuid=p_offer_uuid).only("long_profile_name").order_by('?').first()
+            if producer is not None:
+                nodes = ["<li><a href=\"#\">{}</a></li>".format(
+                    producer.long_profile_name
+                )]
+        else:
+            nodes = [
+                "<li class=\"nav-item dropdown\"><a href=\"{}\" class=\"nav-link\"><span class=\"fa fa-plug\"></span> {}</a></li>".format(
+                    reverse("login_form"),
+                    _("Log in")
+                )]
+
+    return mark_safe("".join(nodes))
+
+
 @register.simple_tag(takes_context=False)
-def repanier_display_languages(*args, **kwargs):
-    from django.conf import settings
-    if len(settings.LANGUAGES) > 1:
-        return "yes"
-    return
+def repanier_permanence_title(*args, **kwargs):
+    result = EMPTY_STRING
+    p_permanence_id = sint(kwargs.get('permanence_id', 0))
+    if p_permanence_id > 0:
+        permanence = Permanence.objects.filter(id=p_permanence_id).order_by('?').first()
+        if permanence is not None:
+            result = permanence.get_permanence_display()
+        else:
+            result = EMPTY_STRING
+    return result
+
+
+@register.simple_tag(takes_context=False)
+def repanier_html_permanence_title(*args, **kwargs):
+    result = EMPTY_STRING
+    p_permanence_id = sint(kwargs.get('permanence_id', 0))
+    if p_permanence_id > 0:
+        permanence = Permanence.objects.filter(id=p_permanence_id).order_by('?').first()
+        if permanence is not None:
+            result = permanence.get_html_permanence_title_display()
+        else:
+            result = EMPTY_STRING
+    return result
 
 
 @register.simple_tag(takes_context=False)

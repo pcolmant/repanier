@@ -11,23 +11,23 @@ from django.urls import reverse_lazy
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import *
 from .settings import *
 
+EMPTY_STRING = ""
 gettext = lambda s: s
 logger = logging.getLogger(__name__)
 
 
-def get_allowed_mail_extension(site_name):
-    try:
-        component = site_name.split(".")
-        if component[-1] == "local":
-            allowed_mail_extension = "@repanier.be"
-        else:
-            allowed_mail_extension = "@{}.{}".format(component[-2], component[-1])
-    except:
-        allowed_mail_extension = "@repanier.be"
-    return allowed_mail_extension
+# def get_allowed_mail_extension(site_name):
+#     try:
+#         component = site_name.split(".")
+#         if component[-1] == "local":
+#             allowed_mail_extension = "@repanier.be"
+#         else:
+#             allowed_mail_extension = "@{}.{}".format(component[-2], component[-1])
+#     except:
+#         allowed_mail_extension = "@repanier.be"
+#     return allowed_mail_extension
 
 
 def get_group_name(site_name):
@@ -44,11 +44,13 @@ os.sys.path.insert(0, PROJECT_PATH)
 logger.info("Python path is : %s", sys.path)
 
 config = configparser.RawConfigParser(allow_no_value=True)
-conf_file_name = "{}{}{}.ini".format(
-    PROJECT_DIR,
-    os.sep,
-    DJANGO_SETTINGS_SITE_NAME
+conf_file_name = "{}.ini".format(
+    os.path.join(
+        PROJECT_DIR,
+        DJANGO_SETTINGS_SITE_NAME
+    )
 )
+
 try:
     # Open the file with the correct encoding
     with codecs.open(conf_file_name, 'r', encoding='utf-8') as f:
@@ -58,8 +60,8 @@ except IOError:
     logger.exception("Unable to open %s settings", conf_file_name)
     raise SystemExit(-1)
 
-DJANGO_SETTINGS_ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
-DJANGO_SETTINGS_ADMIN_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_NAME')
+ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
+ADMIN_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_NAME')
 DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE', fallback="/var/tmp/django-cache")
 DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE',
                                              fallback="django.db.backends.postgresql")
@@ -68,16 +70,16 @@ DJANGO_SETTINGS_DATABASE_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_D
 DJANGO_SETTINGS_DATABASE_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PASSWORD')
 DJANGO_SETTINGS_DATABASE_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_PORT', fallback=5432)
 DJANGO_SETTINGS_DATABASE_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_USER')
-DJANGO_SETTINGS_DEBUG = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG', fallback=False)
+DEBUG = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG', fallback=False)
 DJANGO_SETTINGS_DEBUG_TOOLBAR = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DEBUG_TOOLBAR', fallback=False)
-DJANGO_SETTINGS_EMAIL_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST')
-DJANGO_SETTINGS_EMAIL_HOST_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD')
-DJANGO_SETTINGS_EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_USER')
-DJANGO_SETTINGS_EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT', fallback=587)
-DJANGO_SETTINGS_EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS', fallback=True)
+EMAIL_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST')
+EMAIL_HOST_PASSWORD = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_PASSWORD')
+SERVER_EMAIL = EMAIL_HOST_USER = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_HOST_USER')
+EMAIL_PORT = config.getint('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_PORT', fallback=587)
+EMAIL_USE_TLS = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_EMAIL_USE_TLS', fallback=True)
 DJANGO_SETTINGS_LANGUAGE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LANGUAGE', fallback="fr")
 DJANGO_SETTINGS_LOGGING = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_LOGGING',
-                                            fallback=False) or DJANGO_SETTINGS_DEBUG
+                                            fallback=False) or DEBUG
 DJANGO_SETTINGS_SESSION = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_SESSION', fallback="/var/tmp/django-session")
 
 REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOOTSTRAP_CSS',
@@ -85,9 +87,9 @@ REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get('REPANIER_SETTINGS', 'REPANIER_SETT
 REPANIER_SETTINGS_BOX = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_BOX', fallback=False)
 REPANIER_SETTINGS_CONTRACT = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_CONTRACT', fallback=False)
 REPANIER_SETTINGS_COORDINATOR_EMAIL = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_EMAIL',
-                                                 fallback=DJANGO_SETTINGS_ADMIN_EMAIL)
+                                                 fallback=ADMIN_EMAIL)
 REPANIER_SETTINGS_COORDINATOR_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_NAME',
-                                                fallback=DJANGO_SETTINGS_ADMIN_NAME)
+                                                fallback=ADMIN_NAME)
 REPANIER_SETTINGS_COORDINATOR_PHONE = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COORDINATOR_PHONE',
                                                  fallback="+32 499 96 64 32")
 REPANIER_SETTINGS_COUNTRY = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_COUNTRY', fallback="be")
@@ -111,25 +113,33 @@ REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean('REPANIER_SETTINGS', 'REPANI
                                                     fallback=False)
 REPANIER_SETTINGS_PRODUCT_REFERENCE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_REFERENCE',
                                                      fallback=False)
+REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO',
+                                                fallback=EMAIL_HOST_USER)
+
 REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_ROUND_INVOICES',
                                                      fallback=False)
 
 REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM = config.getboolean('REPANIER_SETTINGS',
                                                                   'REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM',
                                                                   fallback=True)
+REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_SMS_GATEWAY_MAIL',
+                                                fallback=EMPTY_STRING)
 REPANIER_SETTINGS_STOCK = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_STOCK', fallback=False)
+REPANIER_SETTINGS_TEMPLATE = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_TEMPLATE', fallback="bs3")
 
-DJANGO_SETTINGS_ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []
 for name in config.options('ALLOWED_HOSTS'):
     allowed_host = config.get('ALLOWED_HOSTS', name)
     if allowed_host.startswith("demo"):
         REPANIER_SETTINGS_DEMO = True
-    DJANGO_SETTINGS_ALLOWED_HOSTS.append(allowed_host)
+    ALLOWED_HOSTS.append(allowed_host)
 logger.info("Settings loaded from: %s", conf_file_name)
-logger.info("Allowed hosts: %s", DJANGO_SETTINGS_ALLOWED_HOSTS)
-REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
+logger.info("Allowed hosts: %s", ALLOWED_HOSTS)
+# REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
 REPANIER_SETTINGS_GROUP_NAME = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_GROUP_NAME',
-                                          fallback=get_group_name(DJANGO_SETTINGS_ALLOWED_HOSTS[0]))
+                                          fallback=get_group_name(ALLOWED_HOSTS[0]))
+DEFAULT_FROM_EMAIL = "{} <{}>".format(REPANIER_SETTINGS_GROUP_NAME, EMAIL_HOST_USER)
+REPANIER_DEMO_EMAIL = "repanier@no-spam.ws"
 
 DJANGO_SETTINGS_DATES_SEPARATOR = ","
 DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
@@ -160,6 +170,34 @@ MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
 STATIC_ROOT = STATIC_DIR
 STATIC_URL = "{}{}{}".format(os.sep, "static", os.sep)
 
+
+def get_repanier_css_name(template_name):
+    return os.path.join(
+        "repanier",
+        REPANIER_SETTINGS_TEMPLATE,
+        template_name
+    )
+
+
+REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(os.path.join(
+    "bootstrap",
+    "css",
+    REPANIER_SETTINGS_BOOTSTRAP_CSS
+))
+
+
+REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(os.path.join(
+    "css",
+    "custom.css"
+))
+
+REPANIER_SETTINGS_BRANDING_CSS_PATH = get_repanier_css_name(os.path.join(
+    "css",
+    "branding.css"
+))
+
+logger.debug("------- bootstrap path dir : %s", REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH)
+
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
     LOCK_UNICODE = "🔑"  # "✓"  # "✉"
@@ -172,17 +210,14 @@ LUT_CONFIRM = (
 
 
 ###################### DEBUG
-DEBUG = DJANGO_SETTINGS_DEBUG
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
-TEMPLATE_DEBUG = False
 
 ADMINS = (
     (
-        DJANGO_SETTINGS_ADMIN_NAME,
-        DJANGO_SETTINGS_ADMIN_EMAIL
+        ADMIN_NAME,
+        ADMIN_EMAIL
     ),
 )
-SERVER_EMAIL = "{}{}".format(DJANGO_SETTINGS_ADMIN_NAME, REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION)
 ######################
 
 DATABASES = {
@@ -195,12 +230,6 @@ DATABASES = {
         'PORT': DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
     }
 }
-EMAIL_HOST = DJANGO_SETTINGS_EMAIL_HOST
-EMAIL_HOST_USER = DJANGO_SETTINGS_EMAIL_HOST_USER
-EMAIL_HOST_PASSWORD = DJANGO_SETTINGS_EMAIL_HOST_PASSWORD
-EMAIL_PORT = DJANGO_SETTINGS_EMAIL_PORT
-EMAIL_USE_TLS = DJANGO_SETTINGS_EMAIL_USE_TLS
-EMAIL_USE_SSL = not DJANGO_SETTINGS_EMAIL_USE_TLS
 ###################### I18N
 
 TIME_ZONE = 'Europe/Brussels'
@@ -212,12 +241,8 @@ NUMBER_GROUPING = 3
 DECIMAL_SEPARATOR = ','
 
 SITE_ID = 1
-ALLOWED_HOSTS = DJANGO_SETTINGS_ALLOWED_HOSTS
 ROOT_URLCONF = "{}.urls".format(DJANGO_SETTINGS_SITE_NAME)
 WSGI_APPLICATION = "{}.wsgi.application".format(DJANGO_SETTINGS_SITE_NAME)
-EMAIL_SUBJECT_PREFIX = '[' + DJANGO_SETTINGS_ALLOWED_HOSTS[0] + ']'
-# DEFAULT_FROM_EMAIL Used by PASSWORD RESET
-DEFAULT_FROM_EMAIL = "no-reply{}".format(REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION)
 
 USE_X_FORWARDED_HOST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -277,6 +302,7 @@ INSTALLED_APPS = (
     'easy_select2',
     'djng',
     'recurrence',
+    'crispy_forms'
 )
 
 # https://docs.djangoproject.com/fr/1.9/ref/middleware/
@@ -312,7 +338,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(PROJECT_DIR, "templates"),
+            os.path.join(PROJECT_PATH, "repanier", "templates", REPANIER_SETTINGS_TEMPLATE),
+            # "/home/repanier/prd1/_0_prd_example/repanier/templates/bs3",
         ],
         # 'APP_DIRS': True,
         'OPTIONS': {
@@ -334,12 +361,18 @@ TEMPLATES = [
                 ('django.template.loaders.cached.Loader', [
                     'django.template.loaders.filesystem.Loader',
                     'django.template.loaders.app_directories.Loader',
-                    # 'django.template.loaders.eggs.Loader'
+                    'django.template.loaders.eggs.Loader'
                 ]),
             ],
+            'debug': DEBUG,
         },
     },
 ]
+
+if REPANIER_SETTINGS_TEMPLATE == 'bs3':
+    CRISPY_TEMPLATE_PACK = 'bootstrap3'
+else:
+    CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # TODO : Investigate why jref has added this. This cause admin pblm : the checkbox appear above the description.
 # FORM_RENDERER = 'djng.forms.renderers.DjangoAngularBootstrap3Templates'
@@ -378,7 +411,7 @@ CKEDITOR_SETTINGS = {
     # 'format_tags'          : 'p;h4;h5;test',
     'format_tags': 'p;h2;h3;h4;h5',
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
-    'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS),
+    'contentsCss': '{}{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH),
     # NOTE: Some versions of CKEditor will pre-sanitize your text before
     # passing it to the web server, rendering the above settings useless.
     # To ensure this does not happen, you may need to add
@@ -403,7 +436,7 @@ CKEDITOR_SETTINGS_MODEL2 = {
     # 'extraPlugins': 'simplebox',
     'forcePasteAsPlainText': 'true',
     # 'skin': 'moono',
-    # 'contentsCss': '{}bootstrap/css/{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS),
+    'contentsCss': '{}{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH),
     'removeFormatTags': 'iframe,big,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,u,var',
     'basicEntities': False,
     'entities': False,
@@ -758,19 +791,20 @@ CACSCADE_WORKAREA_GLOSSARY = {
 ######################## CMS
 
 CMS_CACHE_DURATIONS = {
-    'content': 300,  # default 60
-    'menus': 5,  # default 3600
+    'content': 60,  # default 60
+    'menus': 60,  # default 3600
     'permissions': 3600  # default: 3600
 }
 
 CMS_TEMPLATE_HOME = 'cms_home.html'
+CMS_TEMPLATE_PAGE = 'cms_page.html'
 CMS_TEMPLATE_SUB_PAGE = 'cms_subpage.html'
 CMS_TEMPLATES = (
     (CMS_TEMPLATE_SUB_PAGE, gettext("Internal page with menu on left")),
-    ('cms_page.html', gettext("Internal page")),
+    (CMS_TEMPLATE_PAGE, gettext("Internal page")),
     (CMS_TEMPLATE_HOME, gettext("Home page")),
-    ('cms_bootstrap_page.html', gettext("Bootstrap page")),
-    ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
+    # ('cms_bootstrap_page.html', gettext("Bootstrap page")),
+    # ('cms_bootstrap_subpage.html', gettext("Bootstrap page with menu on left"))
 )
 CMS_TEMPLATE_INHERITANCE = False
 
@@ -784,7 +818,7 @@ CMS_PAGE_WIZARD_CONTENT_PLACEHOLDER = 'subpage_content'
 CMS_TEMPLATE_HOME_HERO = """
 <h3>Lorem ipsum</h3>
 <p>Lorem ipsum.</p>
-<p class="text-muted"><span class="glyphicon glyphicon-pushpin"></span>&nbsp;Lorem ipsum.</p>
+<p class="text-muted">Lorem ipsum.</p>
 <h3>Lorem ipsum</h3>
 <p class="text-muted">Lorem ipsum.</p>
 """
@@ -982,72 +1016,3 @@ CMS_PLACEHOLDER_CONF = {
         ]
     },
 }
-
-##################### REPANIER VAT/RATE
-
-if REPANIER_SETTINGS_COUNTRY == "ch":
-    # Switzerland
-    DICT_VAT_DEFAULT = VAT_325
-    LUT_VAT = (
-        (VAT_100, _('---------')),
-        (VAT_325, _('VAT 2.5%')),
-        (VAT_350, _('VAT 3.8%')),
-        (VAT_430, _('VAT 8%')),
-    )
-
-    LUT_VAT_REVERSE = (
-        (_('---------'), VAT_100),
-        (_('VAT 2.5%'), VAT_325),
-        (_('VAT 3.8%'), VAT_350),
-        (_('VAT 8%'), VAT_430),
-    )
-elif REPANIER_SETTINGS_COUNTRY == "fr":
-    # France
-    DICT_VAT_DEFAULT = VAT_375
-    LUT_VAT = (
-        (VAT_100, _('---------')),
-        (VAT_315, _('VAT 2.1%')),
-        (VAT_375, _('VAT 5.5%')),
-        (VAT_460, _('VAT 10%')),
-        (VAT_590, _('VAT 20%')),
-    )
-
-    LUT_VAT_REVERSE = (
-        (_('---------'), VAT_100),
-        (_('VAT 2.1%'), VAT_315),
-        (_('VAT 5.5%'), VAT_375),
-        (_('VAT 10%'), VAT_460),
-        (_('VAT 20%'), VAT_590),
-    )
-elif REPANIER_SETTINGS_COUNTRY == "es":
-    # Espagne
-    DICT_VAT_DEFAULT = VAT_460
-    LUT_VAT = (
-        (VAT_100, _('---------')),
-        (VAT_360, _('VAT 4%')),
-        (VAT_460, _('VAT 10%')),
-        (VAT_600, _('VAT 21%')),
-    )
-
-    LUT_VAT_REVERSE = (
-        (_('---------'), VAT_100),
-        (_('VAT 4%'), VAT_360),
-        (_('VAT 10%'), VAT_460),
-        (_('VAT 21%'), VAT_600),
-    )
-else:
-    # Belgium
-    DICT_VAT_DEFAULT = VAT_400
-    LUT_VAT = (
-        (VAT_100, _('---------')),
-        (VAT_400, _('VAT 6%')),
-        (VAT_500, _('VAT 12%')),
-        (VAT_600, _('VAT 21%')),
-    )
-
-    LUT_VAT_REVERSE = (
-        (_('---------'), VAT_100),
-        (_('VAT 6%'), VAT_400),
-        (_('VAT 12%'), VAT_500),
-        (_('VAT 21%'), VAT_600),
-    )

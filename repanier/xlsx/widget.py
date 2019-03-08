@@ -2,7 +2,6 @@
 
 import datetime
 
-from django.conf import settings
 from django.utils import datetime_safe
 from django.utils.encoding import smart_text
 from import_export.widgets import CharWidget, ForeignKeyWidget, DecimalWidget, ManyToManyWidget, \

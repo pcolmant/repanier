@@ -3,7 +3,6 @@
 import datetime
 import uuid
 
-from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum
@@ -22,16 +21,16 @@ from repanier.models.invoice import ProducerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
-from repanier.picture.fields import AjaxPictureField
+from repanier.picture.fields import RepanierPictureField
 from repanier.tools import update_offer_item
 
 
 class Producer(models.Model):
     short_profile_name = models.CharField(
-        _("Short name"), max_length=25, null=False, default=EMPTY_STRING,
+        _("Short name"), max_length=25, blank=False, default=EMPTY_STRING,
         db_index=True, unique=True)
     long_profile_name = models.CharField(
-        _("Long name"), max_length=100, null=True, default=EMPTY_STRING)
+        _("Long name"), max_length=100, blank=True, default=EMPTY_STRING)
     email = models.EmailField(
         _("Email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
@@ -43,36 +42,48 @@ class Producer(models.Model):
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
         verbose_name=_("Language"))
-    picture = AjaxPictureField(
+    picture = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="producer", size=SIZE_L)
     phone1 = models.CharField(
         _("Phone1"),
-        max_length=25,
-        null=True, blank=True, default=EMPTY_STRING)
+        max_length=25, blank=True, default=EMPTY_STRING)
     phone2 = models.CharField(
-        _("Phone2"), max_length=25, null=True, blank=True, default=EMPTY_STRING)
-    bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
+        _("Phone2"),
+        max_length=25, blank=True, default=EMPTY_STRING)
+    bank_account = models.CharField(
+        _("Bank account"),
+        max_length=100, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("VAT id"),
+        max_length=20, blank=True, default=EMPTY_STRING)
     fax = models.CharField(
-        _("Fax"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
-    address = models.TextField(_("Address"), null=True, blank=True, default=EMPTY_STRING)
+        _("Fax"),
+        max_length=100, blank=True, default=EMPTY_STRING)
+    address = models.TextField(
+        _("Address"), blank=True, default=EMPTY_STRING)
     city = models.CharField(
-        _("City"), max_length=50, null=True, blank=True, default=EMPTY_STRING)
+        _("City"),
+        max_length=50, blank=True, default=EMPTY_STRING)
     memo = models.TextField(
-        _("Memo"), null=True, blank=True, default=EMPTY_STRING)
+        _("Memo"),
+        blank=True, default=EMPTY_STRING)
     reference_site = models.URLField(
-        _("Reference site"), null=True, blank=True, default=EMPTY_STRING)
-    web_services_activated = models.BooleanField(_('Web services activated'), default=False)
+        _("Reference site"),
+        null=True, blank=True, default=EMPTY_STRING)
+    web_services_activated = models.BooleanField(
+        _('Web services activated'),
+        default=False)
     # uuid used to access to producer invoices without login
     uuid = models.CharField(
-        "uuid", max_length=36, null=True, default=EMPTY_STRING,
+        "uuid",
+        max_length=36, default=EMPTY_STRING,
         db_index=True
     )
     offer_uuid = models.CharField(
-        "uuid", max_length=36, null=True, default=EMPTY_STRING,
+        "uuid",
+        max_length=36, default=EMPTY_STRING,
         db_index=True
     )
     offer_filled = models.BooleanField(_("Offer filled"), default=False)
@@ -139,6 +150,17 @@ class Producer(models.Model):
                     membership_fee_product.save()
                 translation.activate(cur_language)
         return producer_buyinggroup
+
+    def get_phone1(self, prefix=EMPTY_STRING):
+        # return ", phone1" if prefix = ", "
+        if not self.phone1:
+            return EMPTY_STRING
+        return "{}{}".format(prefix, self.phone1)
+
+    def get_phone2(self, prefix=EMPTY_STRING):
+        if not self.phone2:
+            return EMPTY_STRING
+        return "{}{}".format(prefix, self.phone2)
 
     def get_negative_balance(self):
         return - self.balance
@@ -421,8 +443,6 @@ def producer_pre_save(sender, **kwargs):
         producer.price_list_multiplier = DECIMAL_ONE
     if not producer.uuid:
         producer.uuid = uuid.uuid1()
-    if producer.bank_account is not None and len(producer.bank_account.strip()) == 0:
-        producer.bank_account = None
 
 
 @receiver(post_save, sender=Producer)

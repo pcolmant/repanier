@@ -223,7 +223,8 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 (_("Quantity"), 10, qty, '#,##0.????',
                  True if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG else False),
                 (_("Unit"), 10, unit, NumberFormat.FORMAT_TEXT, False),
-                (_("Deposit"), 10, purchase.offer_item.unit_deposit.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                (_("Deposit"), 10, purchase.offer_item.unit_deposit.amount,
+                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
                  False)]
             if hide_producer_prices:
                 row += [
@@ -235,7 +236,8 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 row += [
                     (_("Producer unit price"), 10, purchase.get_producer_unit_price(),
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("Purchase price"), 10, purchase.purchase_price.amount, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                    (_("Purchase price"), 10, purchase.purchase_price.amount,
+                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
                      False),
                     (_("VAT"), 10, purchase.producer_vat.amount,
                      repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False)
@@ -265,7 +267,8 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                     (_("VAT level"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
-                (_("Comment"), 30, EMPTY_STRING if purchase.comment is None else purchase.comment, NumberFormat.FORMAT_TEXT,
+                (_("Comment"), 30, purchase.comment,
+                 NumberFormat.FORMAT_TEXT,
                  False),
                 (_("Invoice status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
                 (_("Customer"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
@@ -351,11 +354,10 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     return wb
 
 
-@transaction.atomic
 def import_invoice_sheet(worksheet, invoice_reference=None,
-                          customer_2_id_dict=None,
-                          producer=None
-                          ):
+                         customer_2_id_dict=None,
+                         producer=None
+                         ):
     error = False
     error_msg = None
     header = get_header(worksheet)
@@ -384,39 +386,40 @@ def import_invoice_sheet(worksheet, invoice_reference=None,
                         error = True
                         error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                         break
-                    product_reference = row[_("Reference")]
+                    product_reference = row[_("Reference")] or EMPTY_STRING
                     unit = row[_("Unit")]
                     order_unit = get_reverse_invoice_unit(unit)
                     vat = row[_("VAT level")]
                     vat_level = lut_reverse_vat[vat]
-                    product = Product.objects.filter(producer_id=producer.id, reference=product_reference).order_by('?').first()
+                    product = Product.objects.filter(producer_id=producer.id, reference=product_reference).order_by(
+                        '?').first()
                     if product is None:
                         product = Product.objects.create(
                             producer=producer,
                             reference=product_reference,
                         )
-                    product.long_name = row[_("Product")]
+                    long_name = row[_("Product")]
                     # The producer unit price is the imported customer unit price
-                    # If the group get a reduction, this one must be mentionned into the producer admin screen
+                    # If the group get a reduction, this one must be mentioned into the producer admin screen
                     # into the "price_list_multiplier" field
                     product.producer_unit_price = row[_("Customer unit price")]
                     product.unit_deposit = row[_("Deposit")]
                     product.order_unit = order_unit
                     product.vat_level = vat_level
                     product.wrapped = row[_("Wrapped")]
-                    product.save()
                     qty_and_price_display = product.get_qty_and_price_display(customer_price=False)
-                    if product.long_name.endswith(qty_and_price_display):
-                        product.long_name = product.long_name[:-len(qty_and_price_display)]
-                        product.save()
+                    if long_name.endswith(qty_and_price_display):
+                        long_name = long_name[:-len(qty_and_price_display)]
+                    product.long_name = long_name[:100]
+                    product.save()
                     offer_item = product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
                     create_or_update_one_purchase(
-                        customer_id,
-                        offer_item,
-                        q_order=Decimal(row[_("Quantity")]),
+                        customer_id=customer_id,
+                        offer_item=offer_item,
                         status=PERMANENCE_SEND,
+                        q_order=Decimal(row[_("Quantity")]),
                         batch_job=True, is_box_content=False,
-                        comment=row[_("Comment")]
+                        comment=row[_("Comment")] or EMPTY_STRING
                     )
                     import_counter += 1
 

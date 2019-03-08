@@ -5,10 +5,11 @@ from django.utils.safestring import mark_safe
 
 from repanier.const import PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND, PERMANENCE_PLANNED
 from repanier.models.deliveryboard import DeliveryBoard
+from repanier.tools import get_repanier_template_name
 
 
 class SelectAdminDeliveryWidget(forms.Select):
-    template_name = 'repanier/widgets/select_admin_purchase_qty.html'
+    template_name = get_repanier_template_name("widgets/select_admin_purchase_qty.html")
 
     def get_context(self, name, value, attrs):
         context = super(SelectAdminDeliveryWidget, self).get_context(name, value, attrs)

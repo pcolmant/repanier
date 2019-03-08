@@ -1,0 +1,13 @@
+{% load cms_tags sekizai_tags i18n l10n %}
+<form id="producer_product_description_form" class="form-horizontal">
+    <div class="modal-header">
+        {% trans "The orders are openend" %}
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    </div>
+    <div class="modal-body">
+        {% trans "It's too late to modify your offer." %}
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+    </div>
+</form>

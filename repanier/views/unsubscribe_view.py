@@ -1,11 +1,11 @@
 # -*- coding: utf-8
-
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
 from repanier.models.customer import Customer
+from repanier.tools import get_repanier_template_name
 
 
 @csrf_protect
@@ -26,6 +26,7 @@ def unsubscribe_view(request, customer_id, token):
         # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
         if customer.subscribe_to_email:
             Customer.objects.filter(id=customer.id).order_by('?').update(subscribe_to_email=False)
-        return render(request, 'repanier/registration/unsubscribe.html')
+        template_name = get_repanier_template_name("registration/unsubscribe.html")
+        return render(request, template_name)
     else:
         return HttpResponseRedirect("/")

@@ -14,7 +14,9 @@ from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence import Permanence
-from repanier.tools import sint, sboolean, my_basket
+from repanier.tools import sint, sboolean, my_basket, get_repanier_template_name, get_html_basket_message
+
+template_communication_confirm_order = get_repanier_template_name("communication_confirm_order.html")
 
 
 @never_cache
@@ -42,14 +44,6 @@ def delivery_ajax(request):
     if customer_invoice is None:
         raise Http404
     json_dict = {}
-    # if (customer_invoice.status == PERMANENCE_OPENED and not customer_invoice.is_order_confirm_send) \
-    #         or (customer_invoice.total_price_with_tax == DECIMAL_ZERO):
-    #     customer_invoice.status = PERMANENCE_OPENED
-    #     customer_invoice.set_delivery(delivery)
-    #     customer_invoice.save()
-    #     # IMPORTANT : Set the status of the may be already existing purchase to "Open" so that
-    #     # the total_price_with_tax will be correctly calculated on the customer order screen.
-    #     Purchase.objects.filter(customer_invoice=customer_invoice).order_by('?').update(status=PERMANENCE_OPENED)
     if customer_invoice.status == PERMANENCE_OPENED:
         delivery_id = sint(request.GET.get('delivery', 0))
         if customer.delivery_point is not None:
@@ -79,26 +73,30 @@ def delivery_ajax(request):
         if delivery is None:
             raise Http404
         if customer_invoice.delivery != delivery:
-            # if customer_invoice.delivery is not None:
-            #     invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
-            #     json_dict = my_basket(customer_invoice.is_order_confirm_send,
-            #                           customer_invoice.get_total_price_with_tax())
-            # else:
-            #     invoice_confirm_status_is_changed = False
-            customer_invoice.set_delivery(delivery)
+            customer_invoice.set_order_delivery(delivery)
+            customer_invoice.calculate_order_price()
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
             customer_invoice.save()
             if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and invoice_confirm_status_is_changed:
-                html = render_to_string(
-                    'repanier/communication_confirm_order.html')
+                html = render_to_string(template_communication_confirm_order)
                 json_dict["#communicationModal"] = mark_safe(html)
 
             json_dict.update(
                 my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
 
     is_basket = sboolean(request.GET.get('is_basket', False))
+    if customer_invoice.delivery is not None:
+        status = customer_invoice.delivery.status
+    else:
+        status = customer_invoice.status
+    basket_message = get_html_basket_message(
+        customer,
+        permanence,
+        status
+    )
     json_dict.update(customer_invoice.get_html_my_order_confirmation(
         permanence=permanence,
-        is_basket=is_basket
+        is_basket=is_basket,
+        basket_message=basket_message
     ))
     return JsonResponse(json_dict)

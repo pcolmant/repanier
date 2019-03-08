@@ -14,7 +14,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.picture.const import SIZE_XS
-from repanier.picture.fields import AjaxPictureField
+from repanier.picture.fields import RepanierPictureField
 
 
 class LUT_ProductionModeQuerySet(TranslatableQuerySet):
@@ -33,11 +33,16 @@ class LUT_ProductionModeManager(TreeManager, TranslatableManager):
 class LUT_ProductionMode(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
-                              default=EMPTY_STRING),
+        short_name=models.CharField(
+            _("Short name"),
+            max_length=50, default=EMPTY_STRING
+        ),
+        description=HTMLField(
+            _("Description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING
+        ),
     )
-    picture2 = AjaxPictureField(
+    picture2 = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="label", size=SIZE_XS)
@@ -70,9 +75,14 @@ class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
 class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
-                              default=EMPTY_STRING),
+        short_name=models.CharField(
+            _("Short name"),
+            max_length=50, default=EMPTY_STRING
+        ),
+        description=HTMLField(
+            _("Description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING
+        ),
     )
     is_active = models.BooleanField(_("Active"), default=True)
     customer_responsible = models.ForeignKey(
@@ -121,9 +131,14 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     is_active = models.BooleanField(_("Active"), default=True)
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
-                              default=EMPTY_STRING),
+        short_name=models.CharField(
+            _("Short name"),
+            max_length=50, default=EMPTY_STRING
+        ),
+        description=HTMLField(
+            _("Description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING
+        ),
     )
     objects = LUT_ProductionModeManager()
 
@@ -151,9 +166,14 @@ class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
 class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     translations = TranslatedFields(
-        short_name=models.CharField(_("Short name"), max_length=50, default=EMPTY_STRING),
-        description=HTMLField(_("Description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True,
-                              default=EMPTY_STRING),
+        short_name=models.CharField(
+            _("Short name"),
+            max_length=50, default=EMPTY_STRING
+        ),
+        description=HTMLField(
+            _("Description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2', blank=True, default=EMPTY_STRING
+        ),
     )
 
     is_counted_as_participation = models.BooleanField(

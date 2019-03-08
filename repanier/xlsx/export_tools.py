@@ -38,12 +38,12 @@ def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     if orders_responsible:
         c = orders_responsible.customer_responsible
         if c is not None:
-            s1 = "{}: {}, {}".format(_("Orders"), c.long_basket_name, c.phone1)
+            s1 = "{}: {}{}".format(_("Orders"), c.long_basket_name, c.get_phone1(prefix=", "))
     s2 = EMPTY_STRING
     if invoices_responsible:
         c = invoices_responsible.customer_responsible
         if c is not None:
-            s2 = "{}: {}, {}".format(_("Invoices"), c.long_basket_name, c.phone1)
+            s2 = "{}: {}{}".format(_("Invoices"), c.long_basket_name, c.get_phone1(prefix=", "))
     separator = chr(10) + " "
     worksheet.header_footer.right_header.text = separator.join((s1, s2))
     return worksheet

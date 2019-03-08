@@ -3,9 +3,9 @@
 from collections import OrderedDict
 
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.db.models import Q
 from django.forms import Textarea
 from django.http import HttpResponse
@@ -22,7 +22,7 @@ from repanier.const import *
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
-from repanier.tools import web_services_activated
+from repanier.tools import web_services_activated, get_repanier_static_name
 from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
@@ -111,7 +111,7 @@ def create__producer_action(year):
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
                 "{} {}".format(_('Payment'), year),
-                repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+                settings.REPANIER_SETTINGS_GROUP_NAME
             )
             wb.save(response)
             return response
@@ -126,7 +126,7 @@ class ProducerDataForm(forms.ModelForm):
     permanences = forms.ModelMultipleChoiceField(
         Permanence.objects.filter(status=PERMANENCE_PLANNED),
         label="{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
-        widget=admin.widgets.FilteredSelectMultiple(repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False),
+        widget=FilteredSelectMultiple(repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False),
         required=False
     )
     reference_site = forms.URLField(
@@ -405,4 +405,4 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     class Media:
         if settings.REPANIER_SETTINGS_STOCK:
-            js = ('js/export_import_stock.js',)
+            js = (get_repanier_static_name("js/export_import_stock.js"),)

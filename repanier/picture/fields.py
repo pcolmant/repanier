@@ -4,10 +4,10 @@ from django.db.models import Field, NOT_PROVIDED
 from django.db.models.fields.files import FileDescriptor, FieldFile
 
 from repanier.picture.const import SIZE_M
-from repanier.widget.picture import AjaxPictureWidget
+from repanier.widget.picture import RepanierPictureWidget
 
 
-class AjaxPictureField(Field):
+class RepanierPictureField(Field):
     storage = default_storage
     attr_class = FieldFile
     descriptor_class = FileDescriptor
@@ -17,15 +17,15 @@ class AjaxPictureField(Field):
         size = kwargs.pop('size', SIZE_M)
         bootstrap = kwargs.pop('bootstrap', False)
 
-        self.widget = AjaxPictureWidget(
+        self.widget = RepanierPictureWidget(
             upload_to=upload_to,
             size=size,
             bootstrap=bootstrap
         )
-        super(AjaxPictureField, self).__init__(*args, **kwargs)
+        super(RepanierPictureField, self).__init__(*args, **kwargs)
 
     def contribute_to_class(self, cls, name, private_only=False, virtual_only=NOT_PROVIDED):
-        super(AjaxPictureField, self).contribute_to_class(cls, name, private_only=private_only, virtual_only=virtual_only)
+        super(RepanierPictureField, self).contribute_to_class(cls, name, private_only=private_only, virtual_only=virtual_only)
         setattr(cls, self.name, self.descriptor_class(self))
 
     def get_prep_value(self, value):
@@ -41,4 +41,9 @@ class AjaxPictureField(Field):
     def formfield(self, **kwargs):
         defaults = {'widget': self.widget}
         defaults.update(kwargs)
-        return super(AjaxPictureField, self).formfield(**defaults)
+        return super(RepanierPictureField, self).formfield(**defaults)
+
+
+class AjaxPictureField(RepanierPictureField):
+    # Needed for "makemigration" of old Repanier instance
+    pass

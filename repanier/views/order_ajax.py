@@ -16,7 +16,7 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import create_or_update_one_cart_item, sint, sboolean, my_basket, get_html_selected_value, \
-    get_html_selected_box_value, get_html_basket_message
+    get_html_selected_box_value, get_html_basket_message, get_repanier_template_name
 
 
 @never_cache
@@ -50,18 +50,19 @@ def order_ajax(request):
                 customer=customer,
                 offer_item_id=offer_item_id,
                 value_id=value_id,
-                batch_job=False
+                batch_job=False,
+                comment=EMPTY_STRING
             )
             offer_item = OfferItemWoReceiver.objects.filter(
                 id=offer_item_id
             ).order_by('?').first()
             if purchase is None:
                 json_dict["#offer_item{}".format(offer_item.id)] = get_html_selected_value(offer_item, DECIMAL_ZERO,
-                                                                                               is_open=True)
+                                                                                           is_open=True)
             else:
                 json_dict["#offer_item{}".format(offer_item.id)] = get_html_selected_value(offer_item,
-                                                                                               purchase.quantity_ordered,
-                                                                                               is_open=True)
+                                                                                           purchase.quantity_ordered,
+                                                                                           is_open=True)
             if updated and offer_item.is_box:
                 # update the content
                 for content in BoxContent.objects.filter(
@@ -109,8 +110,8 @@ def order_ajax(request):
             ).order_by('?').first()
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
             if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and invoice_confirm_status_is_changed:
-                html = render_to_string(
-                    'repanier/communication_confirm_order.html')
+                template_name = get_repanier_template_name("communication_confirm_order.html")
+                html = render_to_string(template_name)
                 json_dict["#communicationModal"] = mark_safe(html)
                 customer_invoice.save()
 

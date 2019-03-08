@@ -1,0 +1,213 @@
+{% extends 'bs4/base_wo_cms_toolbar.html' %}
+{% load cms_tags sekizai_tags i18n l10n repanier_tags %}
+{% block base_content %}
+    <div class="container-repanier">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    {# {% debug %} #}
+                    <h4>{{ producer.long_profile_name }}</h4>
+                    {% if object %}
+                        <h4><span class="fas fa-sign-out-alt" aria-hidden="true"></span> {% trans "Previous balance" %}
+                            : {{ object.get_negative_previous_balance }}
+                            <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small>
+                            <br></h4>
+                    {% endif %}
+                    {% if offer_item_set %}
+                        <span class="fas fa-minus" aria-hidden="true"></span> {% trans "Purchases" %}
+                        {{ object.permanence }} : {{ object.get_total_price_with_tax }}
+                        {% if object.get_total_vat != 0 or object.get_total_deposit != 0 or object.delta_transport != 0 %}
+                            <small>
+                                . {% trans "This price include" %} <span class="fas fa-arrow-right"></span>
+                                {% if object.get_total_vat != 0 %}{% trans "VAT" %} :
+                                    {{ object.get_total_vat }}{% endif %}
+                                {% if object.get_total_deposit != 0 %}
+                                    {% if object.get_total_vat != 0 %}; {% endif %}
+                                    {% trans "Deposit" %} : {{ object.get_total_deposit }}
+                                {% endif %}
+                                {% if object.delta_transport != 0 %}
+                                    {% if object.get_total_vat != 0 or object.get_total_deposit != 0 %}; {% endif %}
+                                    {% trans "Shipping cost" %} : {{ object.delta_transport }}
+                                {% endif %}
+                            </small>
+                            <br>
+                            {% if object.delta_price_with_tax != 0 %}
+                                {% if object.delta_price_with_tax < 0 %}{% trans "Reduction granted" %}{% else %}
+                                    {% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                    {% for bank_account in bank_account_set %}
+                        {% if bank_account.bank_amount_in != 0 %}
+                            <span class="fas fa-minus" aria-hidden="true"></span> {% trans "Provision" %} :
+                            {% if bank_account.operation_comment %}
+                                {{ bank_account.operation_comment }}
+                            {% else %}
+                                {% trans "Refund" %}
+                            {% endif %} : {{ bank_account.bank_amount_in }}
+                            <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
+                        {% endif %}
+                        {% if bank_account.bank_amount_out != 0 %}
+                            <span class="fas fa-plus" aria-hidden="true"></span> {% trans "Refund" %} :
+                            {% if bank_account.operation_comment %}
+                                {{ bank_account.operation_comment }}
+                            {% else %}
+                                {% trans "Payment" %}
+                            {% endif %} : {{ bank_account.bank_amount_out }}
+                            <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="panel">
+                        {% if object %}
+                            <h4><span class="fas fa-sign-in-alt" aria-hidden="true"></span> {% trans "New balance" %}
+                                : {{ object.get_negative_balance }}
+                                <small>({{ object.date_balance | date:"DATE_FORMAT" }}
+                                    {% if not next_producer_invoice_id and object.invoice_sort_order %} -
+                                        {% trans "last sale" %}{% endif %})
+                                </small>
+                            </h4>
+                        {% else %}
+                            <h4><span class="fas fa-sign-in-alt" aria-hidden="true"></span> {% trans "New balance" %}
+                                : {{ producer.get_negative_balance }}
+                                <small>({{ producer.date_balance | date:"DATE_FORMAT" }}
+                                    {% if not next_producer_invoice_id %} - {% trans "last sale" %}{% endif %})
+                                </small>
+                            </h4>
+                        {% endif %}
+                        <span id="basket_message">{{ basket_message }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="btn-group">
+                        {% if previous_producer_invoice_id %}
+                            <a href="
+
+
+
+                                    {% if uuid %}{% url 'producer_invoice_uuid_view' previous_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' previous_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                               class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                    class="fas fa-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                        {% endif %}
+                        {% if next_producer_invoice_id %}
+                            <a href="
+
+
+
+                                    {% if uuid %}{% url 'producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+                               class="btn btn-disabled"> {% trans "Invoice" %} </a>
+                        {% else %}
+                            <span class="btn btn-disabled">{% trans "Invoice" %}</span>
+                        {% endif %}
+                        {% if next_producer_invoice_id %}
+                            <a href="
+
+
+
+
+                                    {% if uuid %}{% url 'producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                               class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span
+                                    class="fas fa-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <p/>
+            <div class="row">
+                <div class=col">
+                    {% if offer_item_set %}
+                        <table class="table table-hover table-bordered">
+                            <thead>
+                            <tr>
+                                <th>
+                                    {% trans "reference" %}
+                                </th>
+                                <th>
+                                    {% trans "Product" %}
+                                </th>
+                                <th>
+                                    {% trans "Qty" %}
+                                </th>
+                                <th>
+                                    {% trans "Unit price" %}
+                                </th>
+                                <th>
+                                    {% trans "Total price" %}
+                                </th>
+                            <tr>
+                            </thead>
+                            <tbody>
+                            {% for offer_item in offer_item_set %}
+                                <tr>
+                                    <td>
+                                        {% if offer_item.reference|length < 36 %}
+                                            {{ offer_item.reference }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ offer_item.get_long_name_with_producer_price }}
+                                    </td>
+                                    <td align="right">
+                                        {{ offer_item.get_producer_qty_invoiced }}
+                                    </td>
+                                    <td align="right">
+                                        {{ offer_item.get_producer_unit_price_invoiced }}
+                                        {% if offer_item.unit_deposit != 0 %},
+                                            ♻ {{ offer_item.unit_deposit }}{% endif %}
+                                    </td>
+                                    <td align="right">
+                                        {{ offer_item.get_producer_row_price_invoiced }}
+                                    </td>
+                                <tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <h4>{% trans "No purchase found" %}</h4>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hidden-xs">
+        <br>
+    </div>
+    {% addtoblock "lastjs" %}
+        <script type="text/javascript">
+            $(document).ready(function () {
+                lien = '{% url 'order_name' %}';
+                $.ajax({
+                    url: lien,
+                    cache: false,
+                    async: false,
+                    success: function (result) {
+                        $.each(result, function (key, val) {
+                            $(key).html(val);
+                        });
+                    }
+                });
+            });
+        </script>
+    {% endaddtoblock %}
+    {% addtoblock "lastjs" %}
+        {% if not next_producer_invoice_id %}
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    var lien = '{% url 'producer_basket_message_form_ajax' producer.id producer.uuid %}';
+                    $.ajax({
+                        url: lien,
+                        cache: false,
+                        dataType: 'json',
+                        async: true,
+                        success: function (result) {
+                            $.each(result, function (key, val) {
+                                $(key).html(val);
+                            });
+                        }
+                    });
+                });
+            </script>
+        {% endif %}
+    {% endaddtoblock %}
+{% endblock %}

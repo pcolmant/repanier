@@ -1,33 +1,26 @@
 # -*- coding: utf-8
-
 import threading
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.forms import widgets
+from django.forms import widgets, forms, fields, Select
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.html import strip_tags
-from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-from djng.forms import fields, NgFormValidationMixin
 
-from repanier.const import EMPTY_STRING
 from repanier.email.email import RepanierEmail
 from repanier.models.staff import Staff
-from repanier.views.forms import RepanierForm
-from repanier.widget.checkbox_select_multiple import CheckboxSelectMultipleWidget
+from repanier.tools import get_repanier_template_name
 
 
-class CoordinatorsContactForm(RepanierForm):
+class CoordinatorsContactForm(forms.Form):
     staff = fields.MultipleChoiceField(
-        label=EMPTY_STRING,
+        label=_("Send an email to"),
         choices=(),
-        widget=CheckboxSelectMultipleWidget(
-            label=_("This message will only be sent to the member(s) of the management team that you select below:")
-        )
+        widget=Select()
     )
     your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
@@ -41,28 +34,17 @@ class CoordinatorsContactForm(RepanierForm):
                 can_be_contacted=True,
                 translations__language_code=translation.get_language()
         ):
-            r = staff.customer_responsible
-            if r is not None:
-                sender_function = staff.safe_translation_getter(
-                    'long_name', any_language=True, default=EMPTY_STRING
-                )
-                phone = " ({})".format(r.phone1 if r.phone1 else EMPTY_STRING)
-                name = r.long_basket_name if r.long_basket_name else r.short_basket_name
-                signature = "<b>{}</b> : {}{}".format(sender_function, name, phone)
-                choices.append(("{}".format(staff.id), mark_safe(signature)))
+            choices.append(("{}".format(staff.id), staff.get_title))
         self.fields["staff"].choices = choices
-
-
-class CoordinatorsContactValidationForm(NgFormValidationMixin, CoordinatorsContactForm):
-    pass
 
 
 @login_required()
 @csrf_protect
 @never_cache
 def send_mail_to_coordinators_view(request):
+    template_name = get_repanier_template_name("send_mail_to_coordinators.html")
     if request.method == 'POST':
-        form = CoordinatorsContactValidationForm(request.POST)
+        form = CoordinatorsContactForm(request.POST)
         if form.is_valid():
             to_email = [request.user.email]
             selected_staff_members = form.cleaned_data.get('staff')
@@ -76,7 +58,6 @@ def send_mail_to_coordinators_view(request):
             email = RepanierEmail(
                 strip_tags(form.cleaned_data.get('subject')),
                 html_body=strip_tags(form.cleaned_data.get('message')),
-                from_email=settings.DEFAULT_FROM_EMAIL,
                 to=to_email,
                 show_customer_may_unsubscribe=False,
                 send_even_if_unsubscribed=True
@@ -86,13 +67,13 @@ def send_mail_to_coordinators_view(request):
             email = form.fields["your_email"]
             email.initial = request.user.email
             email.widget.attrs['readonly'] = True
-            return render(request, "repanier/send_mail_to_coordinators.html",
+            return render(request, template_name,
                           {'form': form, 'send': True})
     else:
-        form = CoordinatorsContactValidationForm()
+        form = CoordinatorsContactForm()
 
         email = form.fields["your_email"]
         email.initial = request.user.email
         email.widget.attrs['readonly'] = True
 
-    return render(request, "repanier/send_mail_to_coordinators.html", {'form': form, 'send': None})
+    return render(request, template_name, {'form': form, 'send': None})

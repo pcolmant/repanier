@@ -1,14 +1,13 @@
 # -*- coding: utf-8
 
-from django.conf import settings
 from django.utils import timezone
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.xlsx.export_tools import *
 from repanier.const import *
 from repanier.models.product import Product
 from repanier.tools import next_row
+from repanier.xlsx.export_tools import *
 
 
 def export_customer_prices(producer_qs, wb=None, producer_prices=True):
@@ -67,4 +66,3 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
         row_num += 1
         product = next_row(products)
     return wb
-

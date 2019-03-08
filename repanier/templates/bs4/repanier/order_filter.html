@@ -1,0 +1,12 @@
+{% extends 'bs4/cms_order_page.html' %}
+{% load cms_tags sekizai_tags i18n l10n %}
+{% block notification %}{% endblock notification %}
+{% block login %}{% endblock login %}
+{% block may_order %}{{ block.super }}{% endblock may_order %}
+{% block permanence_description %}{% endblock permanence_description %}
+{% block confirm_basket %}{% endblock confirm_basket %}
+{% block product_filter %}{{ block.super }}{% endblock product_filter %}
+{% block product_list %}{% endblock product_list %}
+{% block order_modal %}{% endblock order_modal %}
+{% block my_order_js %}{% endblock my_order_js %}
+{% block link_to_filter_js %}{% endblock link_to_filter_js %}

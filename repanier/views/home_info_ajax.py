@@ -14,7 +14,7 @@ from repanier.models.permanence import Permanence
 
 @never_cache
 @require_GET
-def home_info_ajax(request):
+def home_info_bs3_ajax(request):
     if request.is_ajax():
         from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
         permanences = []
@@ -26,10 +26,10 @@ def home_info_ajax(request):
                 format_html(
                     '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
                     reverse('order_view', args=(permanence.id,)),
-                    permanence.get_permanence_customer_display()
+                    permanence.get_permanence_display()
                 )
             )
-            if permanence.offer_description_on_home_page and permanence.offer_description:
+            if permanence.offer_description:
                 if permanence.picture:
                     permanences.append(
                         format_html(
@@ -43,7 +43,7 @@ def home_info_ajax(request):
                                 </div>
                             """
                             ,
-                            permanence.get_permanence_customer_display(),
+                            permanence.get_permanence_display(),
                             settings.MEDIA_URL,
                             permanence.picture,
                             mark_safe(permanence.offer_description)
@@ -73,27 +73,23 @@ def home_info_ajax(request):
         else:
             permanences_info_html = EMPTY_STRING
 
-        if REPANIER_SETTINGS_NOTIFICATION.notification_is_public or request.user.is_authenticated:
-            notification = REPANIER_SETTINGS_NOTIFICATION.safe_translation_getter(
-                'notification', any_language=True, default=EMPTY_STRING)
-            if notification:
-                notification_html = """
-                    <div class="container">
-                        <div class="row">
-                            <div class="panel-group">
-                                <div class="panel panel-default">
-                                    <div class="panel-body">
-                                        {notification}
-                                    </div>
+        notification = REPANIER_SETTINGS_NOTIFICATION.get_notification_display()
+        if notification:
+            notification_html = """
+                <div class="container">
+                    <div class="row">
+                        <div class="panel-group">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    {notification}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    """.format(
-                    notification=notification,
-                )
-            else:
-                notification_html = EMPTY_STRING
+                </div>
+                """.format(
+                notification=notification,
+            )
         else:
             notification_html = EMPTY_STRING
 

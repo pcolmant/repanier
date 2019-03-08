@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-from django.conf import settings
 from django.db import models, transaction
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
@@ -14,7 +13,7 @@ from recurrence.fields import RecurrenceField
 
 from repanier.const import *
 from repanier.picture.const import SIZE_L
-from repanier.picture.fields import AjaxPictureField
+from repanier.picture.fields import RepanierPictureField
 from repanier.tools import get_recurrence_dates, clean_offer_item
 
 
@@ -22,7 +21,7 @@ class Contract(TranslatableModel):
     translations = TranslatedFields(
         long_name=models.CharField(
             _("Long name"), max_length=100,
-            default=EMPTY_STRING, blank=True, null=True
+            default=EMPTY_STRING, blank=True,
         ),
     )
     first_permanence_date = models.DateField(
@@ -46,7 +45,7 @@ class Contract(TranslatableModel):
         verbose_name=_("Customers"),
         blank=True
     )
-    picture2 = AjaxPictureField(
+    picture2 = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="contract", size=SIZE_L)

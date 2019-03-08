@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-
 from os import sep as os_sep
 
 from django.conf import settings
@@ -11,7 +10,7 @@ from repanier.const import ONE_DECIMAL, TWO_DECIMALS, DECIMAL_ZERO, PRODUCT_ORDE
     PERMANENCE_PRE_OPEN
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer
-from repanier.tools import clean_offer_item
+from repanier.tools import clean_offer_item, get_repanier_template_name
 from repanier.views.forms import ProducerProductForm
 
 
@@ -22,9 +21,10 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
     producer = Producer.objects.filter(offer_uuid=offer_uuid, is_active=True, producer_pre_opening=True).only(
         'id').order_by('?').first()
     if producer is None:
+        template_name = get_repanier_template_name("pre_order_closed_form.html")
         return render(
             request,
-            "repanier/pre_order_closed_form.html",
+            template_name,
         )
     offer_item = get_object_or_404(OfferItem, id=offer_item_id)
     if offer_item.producer_id != producer.id:
@@ -53,7 +53,7 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
                     if product.order_average_weight <= DECIMAL_ZERO:
                         product.order_average_weight = DECIMAL_ONE
                     product.producer_unit_price = (
-                        product.producer_unit_price.amount * product.order_average_weight
+                            product.producer_unit_price.amount * product.order_average_weight
                     ).quantize(TWO_DECIMALS)
                     product.stock = product.customer_alert_order_quantity = product.stock / product.order_average_weight
                 product.unit_deposit = form.cleaned_data.get('unit_deposit')
@@ -101,7 +101,8 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
                 field = form.fields["producer_unit_price"]
                 if customer_increment_order_quantity > DECIMAL_ZERO:
                     field.initial = (
-                    offer_item.producer_unit_price.amount / customer_increment_order_quantity).quantize(TWO_DECIMALS)
+                            offer_item.producer_unit_price.amount / customer_increment_order_quantity).quantize(
+                        TWO_DECIMALS)
                 else:
                     field.initial = offer_item.producer_unit_price.amount
                 field = form.fields["stock"]
@@ -117,9 +118,10 @@ def pre_order_update_product_ajax(request, offer_uuid=None, offer_item_id=None):
             field.widget.upload_to = "{}{}{}".format("product", os_sep, offer_item.producer_id)
             update = None
 
+        template_name = get_repanier_template_name('pre_order_update_product_form.html')
         return render(
             request,
-            "repanier/pre_order_update_product_form.html",
+            template_name,
             {'form': form, 'offer_uuid': offer_uuid, 'offer_item': offer_item, 'update': update}
         )
     raise Http404

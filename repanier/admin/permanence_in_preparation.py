@@ -1,8 +1,8 @@
 # -*- coding: utf-8
+import logging
 import threading
 
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.core.checks import messages
 from django.db import transaction
@@ -23,6 +23,7 @@ import repanier.apps
 from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
+from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models import Contract
 from repanier.models.box import Box
@@ -36,9 +37,11 @@ from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
 from repanier.task.task_order import pre_open_order, open_order, close_and_send_order
-from repanier.tools import send_email_to_who, get_board_composition, get_recurrence_dates
+from repanier.tools import get_board_composition, get_recurrence_dates, get_repanier_template_name
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
+
+logger = logging.getLogger(__name__)
 
 
 class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
@@ -71,8 +74,8 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         formset = super(PermanenceBoardInline, self).get_formset(request, obj, **kwargs)
         form = formset.form
         widget = form.base_fields['permanence_role'].widget
-        widget.can_add_related = False
-        widget.can_change_related = False
+        widget.can_add_related = True
+        widget.can_change_related = True
         widget.can_delete_related = False
         widget = form.base_fields['customer'].widget
         widget.can_add_related = False
@@ -228,8 +231,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             ('permanence_date', 'picture'),
             'automatically_closed',
             'short_name',
-            'offer_description',
-            'offer_description_on_home_page'
+            'offer_description'
         ]
         if settings.REPANIER_SETTINGS_CONTRACT:
             fields.append('contract')
@@ -333,9 +335,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 )
                 wb.save(response)
             return response
+        template_name = get_repanier_template_name("confirm_admin_export_customer_order.html")
         return render(
             request,
-            'repanier/confirm_admin_export_customer_order.html', {
+            template_name, {
                 'sub_title': _("Please, confirm the action : Export customer orders"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'export_xlsx_customer_order',
@@ -424,7 +427,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 template_offer_mail.append(language_code)
                 template_offer_mail.append(template.render(context))
             translation.activate(cur_language)
-            email_will_be_sent, email_will_be_sent_to = send_email_to_who(True)
+            email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
         else:
             template_offer_mail = []
             template_cancel_order_mail = []
@@ -478,7 +481,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     template_cancel_order_mail.append(language_code)
                     template_cancel_order_mail.append(template.render(context))
             translation.activate(cur_language)
-            email_will_be_sent, email_will_be_sent_to = send_email_to_who()
+            email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
         if 'apply' in request.POST or 'apply-wo-mail' in request.POST:
             form = OpenAndSendOfferForm(request.POST)
             if form.is_valid():
@@ -513,9 +516,12 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         "<br>==============<br>".join(template_cancel_order_mail)),
                 }
             )
+        template_name = get_repanier_template_name(
+            'confirm_admin_open_and_send_offer.html'
+        )
         return render(
             request,
-            'repanier/confirm_admin_open_and_send_offer.html', {
+            template_name, {
                 'sub_title': _("Please, confirm the action : open and send offers"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'open_and_send_offer',
@@ -541,33 +547,20 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
-        only_deliveries = permanence.with_delivery_point
         if 'apply' in request.POST:
-            all_deliveries = True if request.POST.get("all-deliveries", False) else False
+            all_deliveries = True if request.POST.get("all-deliveries", True) else False
             deliveries_to_be_send = request.POST.getlist("deliveries", [])
-            all_producers = True if request.POST.get("all-producers", False) else False
-            producers_to_be_send = request.POST.getlist("producers", [])
-            if only_deliveries:
-                if not all_deliveries and len(deliveries_to_be_send) == 0:
-                    user_message = _("You must select at least one delivery point.")
-                    user_message_level = messages.WARNING
-                    self.message_user(request, user_message, user_message_level)
-                    return
-            else:
-                if not all_producers and len(producers_to_be_send) == 0:
-                    user_message = _("You must select at least one producer.")
-                    user_message_level = messages.WARNING
-                    self.message_user(request, user_message, user_message_level)
-                    return
-                if not all_producers and settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                    user_message = _("You must select all producers because the customers must confirm orders.")
-                    user_message_level = messages.WARNING
-                    self.message_user(request, user_message, user_message_level)
-                    return
-            everything = all_producers or all_deliveries
-            # close_and_send_order(permanence.id, everything, producers_to_be_send, deliveries_to_be_send)
+            logger.debug("all_deliveries : {}".format(request.POST.get("all-deliveries")))
+            logger.debug("all_deliveries : {}".format(all_deliveries))
+            logger.debug("deliveries_to_be_send : {}".format(request.POST.getlist("deliveries", [])))
+            if permanence.with_delivery_point and not all_deliveries and len(deliveries_to_be_send) == 0:
+                user_message = _("You must select at least one delivery point.")
+                user_message_level = messages.WARNING
+                self.message_user(request, user_message, user_message_level)
+                return
+            # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
             t = threading.Thread(target=close_and_send_order,
-                                 args=(permanence.id, everything, producers_to_be_send, deliveries_to_be_send))
+                                 args=(permanence.id, all_deliveries, deliveries_to_be_send))
             t.start()
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
@@ -601,7 +594,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
             bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
             if bank_account_number is not None:
-                group_name = repanier.apps.REPANIER_SETTINGS_GROUP_NAME
+                group_name = settings.REPANIER_SETTINGS_GROUP_NAME
+
                 if permanence.short_name:
                     communication = "{} ({})".format(_('Short name'), permanence.short_name)
                 else:
@@ -661,13 +655,13 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
         translation.activate(cur_language)
 
-        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = send_email_to_who(
+        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=True
         )
-        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = send_email_to_who(
+        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=True
         )
-        order_board_email_will_be_sent, order_board_email_will_be_sent_to = send_email_to_who(
+        order_board_email_will_be_sent, order_board_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
             board=True
         )
@@ -681,29 +675,23 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 'template_order_staff_mail': mark_safe("<br>==============<br>".join(template_order_staff_mail)),
             }
         )
-        if only_deliveries:
-            # /!\ If one delivery point has been closed, I may not close anymore by producer
-            producers = Producer.objects.none()
+        if permanence.with_delivery_point:
             deliveries = DeliveryBoard.objects.filter(
                 permanence_id=permanence.id,
                 status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED]
             )
         else:
-            producers = Producer.objects.filter(
-                producerinvoice__permanence_id=permanence.id,
-                producerinvoice__status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED]
-            )
             deliveries = DeliveryBoard.objects.none()
+        template_name = get_repanier_template_name("confirm_admin_send_order.html")
         return render(
             request,
-            'repanier/confirm_admin_send_order.html', {
+            template_name, {
                 'sub_title': _("Please, confirm the action : send orders"),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'close_and_send_order',
                 'permanence': permanence,
-                'only_deliveries': only_deliveries,
+                'with_delivery_point': permanence.with_delivery_point,
                 'deliveries': deliveries,
-                'producers': producers,
                 'form': form,
                 'order_customer_email_will_be_sent': order_customer_email_will_be_sent,
                 'order_customer_email_will_be_sent_to': order_customer_email_will_be_sent_to,
@@ -734,7 +722,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        return render(request, 'repanier/confirm_admin_action.html', {
+        template_name = get_repanier_template_name("confirm_admin_action.html")
+        return render(request, template_name, {
             'sub_title': _("Please, confirm the action : back to scheduled"),
             'action': 'back_to_scheduled',
             'permanence': permanence,
@@ -775,7 +764,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             return HttpResponseRedirect(request.get_full_path())
         else:
             form = GeneratePermanenceForm()
-        return render(request, 'repanier/confirm_admin_generate_permanence.html', {
+        template_name = get_repanier_template_name("confirm_admin_generate_permanence.html")
+        return render(request, template_name, {
             'sub_title': _("How many weekly permanence(s) do you want to generate from this ?"),
             'action': 'generate_permanence',
             'permanence': permanence,

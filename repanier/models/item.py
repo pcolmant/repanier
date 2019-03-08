@@ -11,10 +11,10 @@ from repanier.const import DECIMAL_ZERO, PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER
     DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC, \
     TWO_DECIMALS, PRODUCT_ORDER_UNIT_LT, DICT_VAT, DICT_VAT_RATE, FOUR_DECIMALS, PRODUCT_ORDER_UNIT_DEPOSIT, \
     LUT_PRODUCT_ORDER_UNIT, PRODUCT_ORDER_UNIT_PC, LUT_PRODUCT_PLACEMENT, PRODUCT_PLACEMENT_BASKET, LUT_ALL_VAT, \
-    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK
+    LIMIT_ORDER_QTY_ITEM, DECIMAL_MAX_STOCK, DICT_VAT_DEFAULT
 from repanier.fields.RepanierMoneyField import RepanierMoney, ModelMoneyField
 from repanier.picture.const import SIZE_L
-from repanier.picture.fields import AjaxPictureField
+from repanier.picture.fields import RepanierPictureField
 
 
 class Item(TranslatableModel):
@@ -28,13 +28,13 @@ class Item(TranslatableModel):
         blank=True, null=True,
         on_delete=models.PROTECT)
 
-    picture2 = AjaxPictureField(
+    picture2 = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True, blank=True,
         upload_to="product", size=SIZE_L)
     reference = models.CharField(
-        _("Reference"), max_length=36,
-        blank=True, null=True)
+        _("Reference"),
+        max_length=36, blank=True, default=EMPTY_STRING)
 
     order_unit = models.CharField(
         max_length=3,
@@ -66,8 +66,8 @@ class Item(TranslatableModel):
         validators=[MinValueValidator(0)])
     vat_level = models.CharField(
         max_length=3,
-        choices=LUT_ALL_VAT,  # settings.LUT_VAT,
-        default=settings.DICT_VAT_DEFAULT,
+        choices=LUT_ALL_VAT,
+        default=DICT_VAT_DEFAULT,
         verbose_name=_("Tax level"))
 
     wrapped = models.BooleanField(
@@ -385,15 +385,15 @@ class Item(TranslatableModel):
                 return "{}; {}".format(qty_display, unit_price)
         else:
             if self.unit_deposit.amount > DECIMAL_ZERO:
-                return "{} + ♻ {}".format(
+                return "; {} + ♻ {}".format(
                     unit_price, self.unit_deposit)
             else:
-                return "{}".format(unit_price)
+                return "; {}".format(unit_price)
 
     def get_long_name(self, customer_price=True):
         qty_and_price_display = self.get_qty_and_price_display(customer_price)
         if qty_and_price_display:
-            result = "{} {}".format(self.safe_translation_getter('long_name', any_language=True), qty_and_price_display)
+            result = "{}{}".format(self.safe_translation_getter('long_name', any_language=True), qty_and_price_display)
         else:
             result = "{}".format(self.safe_translation_getter('long_name', any_language=True))
         return result

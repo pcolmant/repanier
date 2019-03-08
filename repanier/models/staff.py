@@ -1,12 +1,6 @@
 # -*- coding: utf-8
-import uuid
 
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.db import models
-from django.db.models.signals import post_delete
-from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import translation
@@ -38,18 +32,23 @@ class StaffManager(TreeManager, TranslatableManager):
 
 class Staff(MPTTModel, TranslatableModel):
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, verbose_name=_("Login"))
+    # user = models.OneToOneField(
+    #     settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
-        on_delete=models.PROTECT, blank=True, null=True, default=None)
+        on_delete=models.PROTECT, null=True, default=None, blank=False)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
     translations = TranslatedFields(
-        long_name=models.CharField(_("Long name"), max_length=100, db_index=True, null=True, default=EMPTY_STRING),
-        function_description=HTMLField(_("Function description"), configuration='CKEDITOR_SETTINGS_MODEL2',
-                                       blank=True, default=EMPTY_STRING),
+        long_name=models.CharField(
+            _("Long name"),
+            max_length=100, db_index=True, blank=True, default=EMPTY_STRING
+        ),
+        function_description=HTMLField(
+            _("Function description"),
+            configuration='CKEDITOR_SETTINGS_MODEL2',
+            blank=True, default=EMPTY_STRING),
     )
     # TBD: replaced by is_order_manager
     is_reply_to_order_email = models.BooleanField(
@@ -103,8 +102,8 @@ class Staff(MPTTModel, TranslatableModel):
         _("Other responsibility"),
         default=False)
     can_be_contacted = models.BooleanField(
-        _("Can be contacted by customers"),
-        default=False)
+        _("Can be contacted"),
+        default=True)
 
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None)
@@ -125,16 +124,15 @@ class Staff(MPTTModel, TranslatableModel):
                 coordinator.save(update_fields=["is_active", "is_repanier_admin"])
         if coordinator is None:
             # Create the very first staff member
-            from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
             from repanier.models.customer import Customer
             very_first_customer = Customer.get_or_create_the_very_first_customer()
-            user_model = get_user_model()
-            user = user_model.objects.create_user(
-                username="{}{}".format(uuid.uuid1(), settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION),
-                email=EMPTY_STRING, password=None,
-                first_name=EMPTY_STRING, last_name=EMPTY_STRING)
+            # user_model = get_user_model()
+            # user = user_model.objects.create_user(
+            #     username="{}{}".format(uuid.uuid1(), settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION), ???
+            #     email=EMPTY_STRING, password=None,
+            #     first_name=EMPTY_STRING, last_name=EMPTY_STRING)
             coordinator = Staff.objects.create(
-                user=user,
+                # user=user,
                 is_active=True,
                 is_repanier_admin=True,
                 is_webmaster=True,
@@ -174,107 +172,59 @@ class Staff(MPTTModel, TranslatableModel):
             invoice_responsible.save(update_fields=["is_invoice_manager"])
         return invoice_responsible
 
-    def get_customer_phone1(self):
-        try:
-            return self.customer_responsible.phone1
-        except:
-            return "----"
-
-    get_customer_phone1.short_description = (_("Phone1"))
-
     @cached_property
     def get_html_signature(self):
-        from repanier.apps import REPANIER_SETTINGS_GROUP_NAME
-
         function_name = self.safe_translation_getter(
             'long_name', any_language=True, default=EMPTY_STRING
         )
         if self.customer_responsible is not None:
             customer = self.customer_responsible
             customer_name = customer.long_basket_name or customer.short_basket_name
-            customer_phone = []
-            if customer.phone1:
-                customer_phone.append(customer.phone1)
-            if customer.phone2:
-                customer_phone.append(customer.phone2)
-            customer_phone_str = " / ".join(customer_phone)
-            if customer_phone_str:
-                customer_contact_info = "{} - {}".format(customer_name, customer_phone_str)
-            else:
-                customer_contact_info = customer_name
+            customer_contact_info = "{}{}".format(customer_name, customer.get_phone1(for_members=False, prefix=" - "))
             html_signature = mark_safe(
                 "{}<br>{}<br>{}".format(
-                    customer_contact_info, function_name, REPANIER_SETTINGS_GROUP_NAME
+                    customer_contact_info, function_name, settings.REPANIER_SETTINGS_GROUP_NAME
                 )
             )
         else:
             html_signature = mark_safe(
                 "{}<br>{}".format(
-                    function_name, REPANIER_SETTINGS_GROUP_NAME
+                    function_name, settings.REPANIER_SETTINGS_GROUP_NAME
                 )
             )
         return html_signature
 
     @cached_property
-    def get_from_email(self):
-        from repanier.apps import REPANIER_SETTINGS_CONFIG
-        config = REPANIER_SETTINGS_CONFIG
-        return self.user.email or config.email_host_user or settings.DEFAULT_FROM_EMAIL
-
-    @cached_property
-    def get_reply_to_email(self):
-        if self.user.email:
-            reply_to_email = [self.user.email]
-        elif self.customer_responsible is not None:
-            reply_to_email = [self.customer_responsible.user.email]
-        else:
-            from repanier.apps import REPANIER_SETTINGS_CONFIG
-            config = REPANIER_SETTINGS_CONFIG
-            if config.email_is_custom and config.email_host_user:
-                reply_to_email = [config.email_host_user]
-            else:
-                reply_to_email = settings.DEFAULT_FROM_EMAIL
-        return reply_to_email
-
-    @cached_property
     def get_to_email(self):
-        if self.user.email:
-            to_email = [self.user.email]
-        elif self.customer_responsible is not None:
-            to_email = [self.customer_responsible.user.email]
+        if self.customer_responsible is not None:
+            to_email = [self.customer_responsible.user.email, ]
         else:
-            from repanier.apps import REPANIER_SETTINGS_CONFIG
-            config = REPANIER_SETTINGS_CONFIG
-            if config.email_is_custom and config.email_host_user:
-                to_email = [config.email_host_user]
-            else:
-                to_email = []
+            to_email = [settings.DEFAULT_FROM_EMAIL, ]
         return to_email
 
     @property
-    def title_for_admin(self):
+    def get_title(self):
         if self.customer_responsible is not None:
             return "{} : {} ({})".format(
-                self.safe_translation_getter('long_name', any_language=True),
+                self,
                 self.customer_responsible.long_basket_name,
-                self.customer_responsible.phone1
+                self.customer_responsible.get_phone1(for_members=False)
             )
         else:
-            return "{}".format(
-                self.safe_translation_getter('long_name', any_language=True),
-            )
+            return "{}".format(self)
 
     objects = StaffManager()
 
     def anonymize(self):
-        self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id).lower()
-        self.user.first_name = EMPTY_STRING
-        self.user.last_name = self.safe_translation_getter('long_name', any_language=True)
-        self.user.set_password(None)
-        self.user.save()
+        pass
+        # self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id).lower()
+        # self.user.first_name = EMPTY_STRING
+        # self.user.last_name = "{}".format(self)
+        # self.user.set_password(None)
+        # self.user.save()
 
     def __str__(self):
-        return self.safe_translation_getter('long_name', any_language=True)
+        return self.safe_translation_getter('long_name', any_language=True, default=EMPTY_STRING)
 
     class Meta:
         verbose_name = _("Staff member")
@@ -287,19 +237,19 @@ def staff_pre_save(sender, **kwargs):
     staff.login_attempt_counter = DECIMAL_ZERO
 
 
-@receiver(post_save, sender=Staff)
-def staff_post_save(sender, **kwargs):
-    staff = kwargs["instance"]
-    if staff.id is not None:
-        user = staff.user
-        user.groups.clear()
-        if staff.is_webmaster:
-            group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
-            user.groups.add(group_id)
+# @receiver(post_save, sender=Staff)
+# def staff_post_save(sender, **kwargs):
+#     staff = kwargs["instance"]
+#     if staff.id is not None:
+#         user = staff.user
+#         user.groups.clear()
+#         if staff.is_webmaster:
+#             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+#             user.groups.add(group_id)
 
 
-@receiver(post_delete, sender=Staff)
-def staff_post_delete(sender, **kwargs):
-    staff = kwargs["instance"]
-    user = staff.user
-    user.delete()
+# @receiver(post_delete, sender=Staff)
+# def staff_post_delete(sender, **kwargs):
+#     staff = kwargs["instance"]
+#     user = staff.user
+#     user.delete()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8
+import logging
+
 from cms.toolbar_pool import toolbar_pool
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.cache import cache
@@ -8,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F
-from django.db.models.signals import post_save, pre_save, post_init
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template import Template
 from django.utils.safestring import mark_safe
@@ -20,9 +21,13 @@ from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNo
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 
+logger = logging.getLogger(__name__)
+
 
 class Configuration(TranslatableModel):
-    group_name = models.CharField(_("Name of the group"), max_length=50, default=EMPTY_STRING)
+    group_name = models.CharField(
+        _("Name of the group"),
+        max_length=50, default=settings.REPANIER_SETTINGS_GROUP_NAME)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
@@ -33,6 +38,9 @@ class Configuration(TranslatableModel):
         choices=LUT_PERMANENCE_NAME,
         default=PERMANENCE_NAME_PERMANENCE,
         verbose_name=_("Offers name"))
+    # email = models.EmailField(
+    #     _("Email"), blank=False, default=settings.DJANGO_SETTINGS_EMAIL_HOST_USER)
+
     currency = models.CharField(
         max_length=3,
         choices=LUT_CURRENCY,
@@ -54,15 +62,10 @@ class Configuration(TranslatableModel):
         _("Allow the anonymous visitor to see the customer order screen"), default=True)
     display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
     xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
-    bank_account = models.CharField(_("Bank account"), max_length=100, null=True, blank=True, default=EMPTY_STRING)
+    bank_account = models.CharField(_("Bank account"), max_length=100, blank=True, default=EMPTY_STRING)
     vat_id = models.CharField(
-        _("VAT id"), max_length=20, null=True, blank=True, default=EMPTY_STRING)
+        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING)
     page_break_on_customer_check = models.BooleanField(_("Page break on customer check"), default=False)
-    sms_gateway_mail = models.EmailField(
-        _("Sms gateway email"),
-        help_text=_(
-            "To actually send sms, use for e.g. on a GSM : https://play.google.com/store/apps/details?id=eu.apksoft.android.smsgateway"),
-        max_length=50, null=True, blank=True, default=EMPTY_STRING)
     membership_fee = ModelMoneyField(
         _("Membership fee"),
         default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
@@ -71,45 +74,10 @@ class Configuration(TranslatableModel):
         help_text=_("Number of month(s). 0 mean : no membership fee."),
         default=DECIMAL_ZERO, max_digits=3, decimal_places=0,
         validators=[MinValueValidator(0)])
-    home_site = models.URLField(_("Home site"), null=True, blank=True, default=EMPTY_STRING)
+    home_site = models.URLField(_("Home site"), blank=True, default="/")
     permanence_of_last_cancelled_invoice = models.ForeignKey(
         'Permanence',
         on_delete=models.PROTECT, blank=True, null=True)
-    transport = ModelMoneyField(
-        _("Shipping cost"),
-        help_text=_("This amount is added to order less than min_transport."),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
-        validators=[MinValueValidator(0)])
-    min_transport = ModelMoneyField(
-        _("Minium order amount for free shipping cost"),
-        help_text=_("This is the minimum order amount to avoid shipping cost."),
-        default=DECIMAL_ZERO, max_digits=5, decimal_places=2,
-        validators=[MinValueValidator(0)])
-    email_is_custom = models.BooleanField(
-        _("Email is customised"), default=False)
-    email_host = models.CharField(
-        _("Email host"),
-        help_text=_("For @gmail.com, see: https://mail.google.com/mail/u/0/#settings/fwdandpop and activate POP"),
-        max_length=50, null=True, blank=True, default="smtp.gmail.com")
-    email_port = models.IntegerField(
-        _("Email port"),
-        help_text=_("Usually 587 for @gmail.com, otherwise 25"),
-        blank=True, null=True,
-        default=587)
-    email_use_tls = models.BooleanField(
-        _("Email use tls"),
-        help_text=_("TLS is used otherwise SSL is used"),
-        default=True
-    )
-    email_host_user = models.EmailField(
-        _("Email host user"),
-        help_text=settings.DEFAULT_FROM_EMAIL,
-        max_length=50, null=True, blank=True, default=settings.DEFAULT_FROM_EMAIL)
-    email_host_password = models.CharField(
-        _("Email host password"),
-        help_text=_(
-            "For @gmail.com, you must generate an application password, see: https://security.google.com/settings/security/apppasswords"),
-        max_length=25, null=True, blank=True, default=EMPTY_STRING)
     db_version = models.PositiveSmallIntegerField(default=0)
     translations = TranslatedFields(
         group_label=models.CharField(_("Label to mention on the invoices of the group"),
@@ -207,14 +175,13 @@ class Configuration(TranslatableModel):
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
         if config is not None:
             return config
-        group_name = settings.REPANIER_SETTINGS_GROUP_NAME
         site = Site.objects.get_current()
         if site is not None:
-            site.name = group_name
-            site.domain = group_name
+            site.name = settings.REPANIER_SETTINGS_GROUP_NAME
+            site.domain = settings.ALLOWED_HOSTS[0]
             site.save()
         config = Configuration.objects.create(
-            group_name=group_name,
+            group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
             name=PERMANENCE_NAME_PERMANENCE,
             bank_account="BE99 9999 9999 9999",
             currency=CURRENCY_EUR
@@ -396,6 +363,7 @@ class Configuration(TranslatableModel):
                 pass
 
     def upgrade_db(self):
+        logger.debug("######## upgrade_db")
         if self.db_version == 0:
             from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
             # Staff.objects.rebuild()
@@ -474,6 +442,170 @@ class Configuration(TranslatableModel):
                 is_order_manager=True,
             )
             self.db_version = 3
+        if self.db_version == 3:
+            from repanier.models import BankAccount, Configuration, Customer, OfferItemWoReceiver, Producer, \
+                ProducerInvoice, Product, PurchaseWoReceiver
+            BankAccount.objects.filter(
+                operation_comment__isnull=True
+            ).order_by('?').update(
+                operation_comment=EMPTY_STRING
+            )
+            Configuration.objects.filter(
+                bank_account__isnull=True
+            ).order_by('?').update(
+                bank_account=EMPTY_STRING
+            )
+            Configuration.objects.filter(
+                home_site__isnull=True
+            ).order_by('?').update(
+                home_site="/"
+            )
+            Configuration.objects.filter(
+                vat_id__isnull=True
+            ).order_by('?').update(
+                vat_id=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                about_me__isnull=True
+            ).order_by('?').update(
+                about_me=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                address__isnull=True
+            ).order_by('?').update(
+                address=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                bank_account1__isnull=True
+            ).order_by('?').update(
+                bank_account1=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                bank_account2__isnull=True
+            ).order_by('?').update(
+                bank_account2=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                city__isnull=True
+            ).order_by('?').update(
+                city=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                long_basket_name__isnull=True
+            ).order_by('?').update(
+                long_basket_name=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                memo__isnull=True
+            ).order_by('?').update(
+                memo=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                phone1__isnull=True
+            ).order_by('?').update(
+                phone1=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                phone2__isnull=True
+            ).order_by('?').update(
+                phone2=EMPTY_STRING
+            )
+            Customer.objects.filter(
+                vat_id__isnull=True
+            ).order_by('?').update(
+                vat_id=EMPTY_STRING
+            )
+            OfferItemWoReceiver.objects.filter(
+                not_permanences_dates__isnull=True
+            ).order_by('?').update(
+                not_permanences_dates=EMPTY_STRING
+            )
+            OfferItemWoReceiver.objects.filter(
+                permanences_dates__isnull=True
+            ).order_by('?').update(
+                permanences_dates=EMPTY_STRING
+            )
+            OfferItemWoReceiver.objects.filter(
+                permanences_dates_counter__isnull=True
+            ).order_by('?').update(
+                permanences_dates_counter=1
+            )
+            OfferItemWoReceiver.objects.filter(
+                reference__isnull=True
+            ).order_by('?').update(
+                reference=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                address__isnull=True
+            ).order_by('?').update(
+                address=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                bank_account__isnull=True
+            ).order_by('?').update(
+                bank_account=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                city__isnull=True
+            ).order_by('?').update(
+                city=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                fax__isnull=True
+            ).order_by('?').update(
+                fax=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                long_profile_name__isnull=True
+            ).order_by('?').update(
+                long_profile_name=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                memo__isnull=True
+            ).order_by('?').update(
+                memo=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                offer_uuid__isnull=True
+            ).order_by('?').update(
+                offer_uuid=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                phone1__isnull=True
+            ).order_by('?').update(
+                phone1=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                phone2__isnull=True
+            ).order_by('?').update(
+                phone2=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                uuid__isnull=True
+            ).order_by('?').update(
+                uuid=EMPTY_STRING
+            )
+            Producer.objects.filter(
+                vat_id__isnull=True
+            ).order_by('?').update(
+                vat_id=EMPTY_STRING
+            )
+            ProducerInvoice.objects.filter(
+                invoice_reference__isnull=True
+            ).order_by('?').update(
+                invoice_reference=EMPTY_STRING
+            )
+            Product.objects.filter(
+                reference__isnull=True
+            ).order_by('?').update(
+                reference=EMPTY_STRING
+            )
+            PurchaseWoReceiver.objects.filter(
+                comment__isnull=True
+            ).order_by('?').update(
+                comment=EMPTY_STRING
+            )
+            self.db_version = 4
 
     def __str__(self):
         return self.group_name
@@ -483,101 +615,91 @@ class Configuration(TranslatableModel):
         verbose_name_plural = _("Configurations")
 
 
-@receiver(post_init, sender=Configuration)
-def configuration_post_init(sender, **kwargs):
-    config = kwargs["instance"]
-    if config.id is not None:
-        config.previous_email_host_password = config.email_host_password
-    else:
-        config.previous_email_host_password = EMPTY_STRING
-    config.email_host_password = EMPTY_STRING
+# @receiver(post_init, sender=Configuration)
+# def configuration_post_init(sender, **kwargs):
+#     config = kwargs["instance"]
+#     if config.id is not None:
+#         config.previous_email_host_password = config.email_host_password
+#     else:
+#         config.previous_email_host_password = EMPTY_STRING
+#     config.email_host_password = EMPTY_STRING
 
 
-@receiver(pre_save, sender=Configuration)
-def configuration_pre_save(sender, **kwargs):
-    config = kwargs["instance"]
-    if not config.bank_account:
-        config.bank_account = None
-    if config.email_is_custom and not config.email_host_password:
-        config.email_host_password = config.previous_email_host_password
+# @receiver(pre_save, sender=Configuration)
+# def configuration_pre_save(sender, **kwargs):
+#     config = kwargs["instance"]
+#     if not config.bank_account:
+#         config.bank_account = None
 
 
 @receiver(post_save, sender=Configuration)
 def configuration_post_save(sender, **kwargs):
     import repanier.cms_toolbar
+    from repanier import apps
 
     config = kwargs["instance"]
     if config.id is not None:
-        repanier.apps.REPANIER_SETTINGS_CONFIG = config
-        site = Site.objects.get_current()
-        if site is not None:
-            site.name = config.group_name
-            site.domain = settings.ALLOWED_HOSTS[0]
-            site.save()
-        repanier.apps.REPANIER_SETTINGS_GROUP_NAME = config.group_name
+        apps.REPANIER_SETTINGS_CONFIG = config
         if config.name == PERMANENCE_NAME_PERMANENCE:
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence of ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Permanence")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Permanence of ")
         elif config.name == PERMANENCE_NAME_CLOSURE:
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Closure")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure of ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Closure")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Closure of ")
         elif config.name == PERMANENCE_NAME_DELIVERY:
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Delivery")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery of ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Delivery")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Delivery of ")
         elif config.name == PERMANENCE_NAME_ORDER:
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Order")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order of ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Order")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Order of ")
         elif config.name == PERMANENCE_NAME_OPENING:
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Opening")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Openings")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Opening of ")
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Opening")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Openings")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Opening of ")
         else:
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Distribution")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
-        repanier.apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
-        repanier.apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
-        repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
-        repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
-        repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = config.send_invoice_mail_to_producer
-        repanier.apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
-        repanier.apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
-        repanier.apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
-        if config.bank_account is not None and len(config.bank_account.strip()) == 0:
-            repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT = None
-        else:
-            repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT = config.bank_account
-        if config.vat_id is not None and len(config.vat_id.strip()) == 0:
-            repanier.apps.REPANIER_SETTINGS_VAT_ID = None
-        else:
-            repanier.apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
-        repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = config.page_break_on_customer_check
-        repanier.apps.REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.sms_gateway_mail
-        repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
-        repanier.apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
+            apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Distribution")
+            apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
+            apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
+        apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
+        apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
+        apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
+        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
+        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = config.send_invoice_mail_to_producer
+        apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
+        apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
+        apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
+        # if config.bank_account is not None and len(config.bank_account.strip()) == 0:
+        #     apps.REPANIER_SETTINGS_BANK_ACCOUNT = None
+        # else:
+        apps.REPANIER_SETTINGS_BANK_ACCOUNT = config.bank_account
+        # if config.vat_id is not None and len(config.vat_id.strip()) == 0:
+        #     apps.REPANIER_SETTINGS_VAT_ID = None
+        # else:
+        apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
+        apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = config.page_break_on_customer_check
+        apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
+        apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
         if config.currency == CURRENCY_LOC:
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "✿"
-            repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * \"-\"??_ ;_ @_ "
+            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "✿"
+            apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * \"-\"??_ ;_ @_ "
         elif config.currency == CURRENCY_CHF:
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = 'Fr.'
-            repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * \"-\"??_ ;_ @_ "
+            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = 'Fr.'
+            apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * \"-\"??_ ;_ @_ "
         else:
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "€"
-            repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT = True
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * \"-\"??_ ;_ @_ "
-        if config.home_site is not None and len(config.home_site.strip()) == 0:
-            repanier.apps.REPANIER_SETTINGS_HOME_SITE = "/"
+            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "€"
+            apps.REPANIER_SETTINGS_AFTER_AMOUNT = True
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * \"-\"??_ ;_ @_ "
+        if config.home_site:
+            apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
         else:
-            repanier.apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
-        repanier.apps.REPANIER_SETTINGS_TRANSPORT = config.transport
-        repanier.apps.REPANIER_SETTINGS_MIN_TRANSPORT = config.min_transport
-
+            apps.REPANIER_SETTINGS_HOME_SITE = "/"
+        # config.email = settings.DJANGO_SETTINGS_EMAIL_HOST_USER
         menu_pool.clear()
         toolbar_pool.unregister(repanier.cms_toolbar.RepanierToolbar)
         toolbar_pool.register(repanier.cms_toolbar.RepanierToolbar)

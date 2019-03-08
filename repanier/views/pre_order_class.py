@@ -1,6 +1,4 @@
 # -*- coding: utf-8
-
-from django.db.models import Q
 from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
@@ -9,10 +7,11 @@ from repanier.const import PERMANENCE_PRE_OPEN
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
+from repanier.tools import get_repanier_template_name
 
 
 class PreOrderView(DetailView):
-    template_name = 'repanier/pre_order_form.html'
+    template_name = get_repanier_template_name("pre_order_form.html")
     model = Permanence
     producer = None
     offer_uuid = None

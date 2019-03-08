@@ -111,9 +111,11 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
 
 class CustomerSendForm(forms.ModelForm):
     offer_purchase_price = FormMoneyField(
-        label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False,
+        initial=REPANIER_MONEY_ZERO)
     offer_selling_price = FormMoneyField(
-        label=_("Invoiced to the consumer including tax"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Invoiced to the consumer including tax"), max_digits=8, decimal_places=2, required=False,
+        initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
         label=_("Apply the rule of 3"), required=False, initial=False)
 
@@ -138,7 +140,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     list_max_show_all = 16
     inlines = [CustomerPurchaseSendInline]
     list_display = ['producer', 'customer', 'get_html_producer_price_purchased']
-    list_display_links = ['customer',]
+    list_display_links = ['customer', ]
     search_fields = ('customer__short_basket_name',)
     ordering = ('customer',)
 
@@ -229,7 +231,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
             purchase_form_instance = purchase_form.instance
             try:
                 offer_item = purchase_form_instance.offer_item
-            except OfferItem.DoesNotExist: # RelatedObjectDoesNotExist
+            except OfferItem.DoesNotExist:  # RelatedObjectDoesNotExist
                 offer_item = None
             if offer_item is None:
                 purchase_form.repanier_is_valid = False
@@ -240,7 +242,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 if purchase.purchase_price != previous_purchase_price:
                     if purchase.get_producer_unit_price() != DECIMAL_ZERO:
                         purchase.quantity_invoiced = (
-                        purchase.purchase_price.amount / purchase.get_producer_unit_price()) \
+                                purchase.purchase_price.amount / purchase.get_producer_unit_price()) \
                             .quantize(FOUR_DECIMALS)
                     else:
                         purchase.quantity_invoiced = DECIMAL_ZERO
@@ -283,10 +285,10 @@ class CustomerSendAdmin(admin.ModelAdmin):
                                     delta = rule_of_3_target - adjusted_invoice
                                     if selling_price:
                                         purchase.quantity_invoiced = (
-                                            delta / purchase.get_customer_unit_price()).quantize(FOUR_DECIMALS)
+                                                delta / purchase.get_customer_unit_price()).quantize(FOUR_DECIMALS)
                                     else:
                                         purchase.quantity_invoiced = (
-                                            delta / purchase.get_producer_unit_price()).quantize(FOUR_DECIMALS)
+                                                delta / purchase.get_producer_unit_price()).quantize(FOUR_DECIMALS)
                                 else:
                                     purchase.quantity_invoiced = DECIMAL_ZERO
                             else:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8
-from django.conf import settings
+import logging
+
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
@@ -15,8 +16,9 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.box import BoxContent
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
 from repanier.models.offeritem import OfferItemWoReceiver
-from repanier.models.permanence import Permanence
 from repanier.tools import cap
+
+logger = logging.getLogger(__name__)
 
 
 class Purchase(models.Model):
@@ -94,9 +96,21 @@ class Purchase(models.Model):
     is_resale_price_fixed = models.BooleanField(_("Customer prices are set by the producer"),
                                                 default=False)
     comment = models.CharField(
-        _("Comment"), max_length=100, default=EMPTY_STRING, blank=True, null=True)
+        _("Comment"),
+        max_length=100, blank=True, default=EMPTY_STRING)
     is_updated_on = models.DateTimeField(
-        _("Updated on"), auto_now=True, db_index=True)
+        _("Updated on"),
+        auto_now=True, db_index=True)
+
+    def set_customer_price_list_multiplier(self):
+        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
+            if self.is_resale_price_fixed \
+                    or self.offer_item.price_list_multiplier < DECIMAL_ONE:
+                self.price_list_multiplier = DECIMAL_ONE
+            else:
+                self.price_list_multiplier = self.customer.price_list_multiplier
+        else:
+            self.price_list_multiplier = DECIMAL_ONE
 
     def get_customer_unit_price(self):
         offer_item = self.offer_item
@@ -194,6 +208,7 @@ class Purchase(models.Model):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
+        # logger.info("purchase save : {}".format(self.pk))
         if not self.pk:
             # This code only happens if the objects is not in the database yet.
             # Otherwise it would have pk
@@ -207,7 +222,8 @@ class Purchase(models.Model):
                     customer_charged_id=self.customer_id,
                     status=self.status
                 )
-                customer_invoice.set_delivery(delivery=None)
+                customer_invoice.set_order_delivery(delivery=None)
+                customer_invoice.calculate_order_price()
                 customer_invoice.save()
             self.customer_invoice = customer_invoice
             producer_invoice = ProducerInvoice.objects.filter(
@@ -279,6 +295,7 @@ class Purchase(models.Model):
 @receiver(post_init, sender=Purchase)
 def purchase_post_init(sender, **kwargs):
     purchase = kwargs["instance"]
+    # logger.info("purchase post init : {}".format(purchase.id))
     if purchase.id is not None:
         purchase.previous_quantity_ordered = purchase.quantity_ordered
         purchase.previous_quantity_invoiced = purchase.quantity_invoiced
@@ -303,6 +320,7 @@ def purchase_post_init(sender, **kwargs):
 @receiver(pre_save, sender=Purchase)
 def purchase_pre_save(sender, **kwargs):
     purchase = kwargs["instance"]
+    # logger.info("purchase pre save : {}".format(purchase.id))
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
         delta_quantity = quantity - purchase.previous_quantity_ordered
@@ -324,17 +342,8 @@ def purchase_pre_save(sender, **kwargs):
             )
     else:
         purchase.is_resale_price_fixed = purchase.offer_item.is_resale_price_fixed
-        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-            if purchase.is_resale_price_fixed \
-                    or purchase.offer_item.price_list_multiplier < DECIMAL_ONE:
-                purchase.price_list_multiplier = DECIMAL_ONE
-            else:
-                purchase.price_list_multiplier = purchase.customer.price_list_multiplier
-        else:
-            purchase.price_list_multiplier = DECIMAL_ONE
-
+        purchase.set_customer_price_list_multiplier()
         unit_deposit = purchase.get_unit_deposit()
-
         purchase.purchase_price.amount = (
                 (purchase.get_producer_unit_price() + unit_deposit) * quantity).quantize(TWO_DECIMALS)
         purchase.selling_price.amount = (
@@ -369,11 +378,12 @@ def purchase_pre_save(sender, **kwargs):
             )
             purchase.offer_item = OfferItemWoReceiver.objects.filter(
                 id=purchase.offer_item_id).order_by('?').first()
-            CustomerInvoice.objects.filter(id=purchase.customer_invoice.id).update(
+            CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
                 total_price_with_tax=F('total_price_with_tax') + delta_selling_price,
                 total_vat=F('total_vat') + delta_selling_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
+
             CustomerProducerInvoice.objects.filter(id=purchase.customer_producer_invoice_id).update(
                 total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
                 total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price
@@ -388,20 +398,6 @@ def purchase_pre_save(sender, **kwargs):
                 total_vat=F('total_vat') + delta_purchase_vat,
                 total_deposit=F('total_deposit') + delta_deposit
             )
-            if purchase.offer_item.price_list_multiplier < DECIMAL_ONE or purchase.price_list_multiplier < DECIMAL_ONE:
-                Permanence.objects.filter(id=purchase.permanence_id).update(
-                    total_purchase_with_tax=F('total_purchase_with_tax') + delta_selling_price,
-                    total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price,
-                    total_purchase_vat=F('total_purchase_vat') + delta_selling_vat,
-                    total_selling_vat=F('total_selling_vat') + delta_selling_vat,
-                )
-            else:
-                Permanence.objects.filter(id=purchase.permanence_id).update(
-                    total_purchase_with_tax=F('total_purchase_with_tax') + delta_purchase_price,
-                    total_selling_with_tax=F('total_selling_with_tax') + delta_selling_price,
-                    total_purchase_vat=F('total_purchase_vat') + delta_purchase_vat,
-                    total_selling_vat=F('total_selling_vat') + delta_selling_vat,
-                )
     # Do not do it twice
     purchase.previous_quantity_ordered = purchase.quantity_ordered
     purchase.previous_quantity_invoiced = purchase.quantity_invoiced

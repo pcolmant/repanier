@@ -18,9 +18,8 @@ from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.permanenceboard import PermanenceBoard
-from repanier.models.staff import Staff
 from repanier.tools import sboolean, sint, \
-    permanence_ok_or_404, my_basket, get_html_basket_message
+    permanence_ok_or_404, my_basket, get_html_basket_message, get_repanier_template_name
 
 
 @never_cache
@@ -52,7 +51,8 @@ def order_init_ajax(request):
             status=permanence.status,
             customer_charged_id=customer.id,
         )
-        customer_invoice.set_delivery(delivery=None)
+        customer_invoice.set_order_delivery(delivery=None)
+        customer_invoice.calculate_order_price()
         customer_invoice.save()
 
     if customer_invoice is None:
@@ -73,15 +73,18 @@ def order_init_ajax(request):
             basket_message = "{}".format(
                 _('The orders are closed.')
             )
-    json_dict = customer_invoice.get_html_my_order_confirmation(
-        permanence=permanence,
-        is_basket=basket,
-        basket_message=basket_message
-    )
+    if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
+        json_dict = customer_invoice.get_html_my_order_confirmation(
+            permanence=permanence,
+            is_basket=basket,
+            basket_message=basket_message
+        )
+    else:
+        json_dict = {}
     if customer.may_order:
         if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
             for producer_invoice in ProducerInvoice.objects.filter(
-                permanence_id=permanence.id
+                    permanence_id=permanence.id
             ).only(
                 "total_price_with_tax", "status"
             ).order_by('?'):
@@ -105,9 +108,11 @@ def order_init_ajax(request):
                     ).count()
                 else:
                     count_activity = None
+                template_name = get_repanier_template_name("communication_permanence_board.html")
                 html = render_to_string(
-                    'repanier/communication_permanence_board.html',
-                    {'permanence_boards': permanence_boards, 'count_activity': count_activity})
+                    template_name,
+                    {'permanence_boards': permanence_boards, 'count_activity': count_activity}
+                )
                 json_dict["#communicationModal"] = mark_safe(html)
     json_dict.update(my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
     return JsonResponse(json_dict)

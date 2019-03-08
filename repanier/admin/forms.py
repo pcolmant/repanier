@@ -4,9 +4,10 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
 from recurrence.forms import RecurrenceField
 
-from repanier.models.producer import Producer
 from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.models.producer import Producer
+from repanier.tools import get_repanier_template_name
 
 
 class OpenAndSendOfferForm(forms.Form):
@@ -48,10 +49,10 @@ class GeneratePermanenceForm(forms.Form):
 class InvoiceOrderForm(forms.Form):
     template_invoice_customer_mail = forms.CharField(
         label=_("Email content"), widget=TextEditorWidget,
-                                                     required=False)
+        required=False)
     template_invoice_producer_mail = forms.CharField(
         label=_("Email content"), widget=TextEditorWidget,
-                                                     required=False)
+        required=False)
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -59,7 +60,7 @@ class InvoiceOrderForm(forms.Form):
 
 
 class PermanenceInvoicedForm(forms.Form):
-    payment_date = forms.DateField(label=_("Payment date"), required=True) #, widget=AdminDateWidget())
+    payment_date = forms.DateField(label=_("Payment date"), required=True)  # , widget=AdminDateWidget())
 
     def __init__(self, *args, **kwargs):
         self.payment_date = kwargs.pop('payment_date', None)
@@ -69,15 +70,16 @@ class PermanenceInvoicedForm(forms.Form):
 
 
 class ImportXlsxForm(forms.Form):
-    template = 'repanier/import_xlsx.html'
+    template = get_repanier_template_name('import_xlsx.html')
     file_to_import = forms.FileField(label=_('File to import'), allow_empty_file=False)
 
 
 class ImportInvoiceForm(ImportXlsxForm):
-    template = 'repanier/import_invoice_xlsx.html'
+    template = get_repanier_template_name('import_invoice_xlsx.html')
     # Important : The length of invoice_reference must be the same as of permanence.short_name
     invoice_reference = forms.CharField(label=_("Invoice reference"), max_length=50, required=False)
-    producer = forms.ModelChoiceField(label=_('Producer'), queryset=Producer.objects.filter(is_active=True).all(), required=False)
+    producer = forms.ModelChoiceField(label=_('Producer'), queryset=Producer.objects.filter(is_active=True).all(),
+                                      required=False)
 
     def __init__(self, *args, **kwargs):
         super(ImportInvoiceForm, self).__init__(*args, **kwargs)
@@ -88,9 +90,11 @@ class ProducerInvoicedForm(forms.Form):
     selected = forms.BooleanField(required=False)
     short_profile_name = forms.CharField(label=_("Short name"), max_length=25, required=False)
     calculated_invoiced_balance = FormMoneyField(
-        label=_("Amount due to the producer as calculated by Repanier"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Amount due to the producer as calculated by Repanier"), max_digits=8, decimal_places=2, required=False,
+        initial=REPANIER_MONEY_ZERO)
     to_be_invoiced_balance = FormMoneyField(
-        label=_("Amount claimed by the producer"), max_digits=8, decimal_places=2, required=False, initial=REPANIER_MONEY_ZERO)
+        label=_("Amount claimed by the producer"), max_digits=8, decimal_places=2, required=False,
+        initial=REPANIER_MONEY_ZERO)
     invoice_reference = forms.CharField(label=_("Invoice reference"), max_length=100, required=False)
 
     def __init__(self, *args, **kwargs):

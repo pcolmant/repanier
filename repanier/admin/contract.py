@@ -1,8 +1,7 @@
 # -*- coding: utf-8
 from django import forms
 from django.conf import settings
-from django.contrib import admin
-from django.utils import translation
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext_lazy as _, get_language_info
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -17,7 +16,7 @@ class ContractDataForm(TranslatableModelForm):
     producers = forms.ModelMultipleChoiceField(
         Producer.objects.filter(is_active=True),
         label=_('Producers'),
-        widget=admin.widgets.FilteredSelectMultiple(_('Producers'), False),
+        widget=FilteredSelectMultiple(_('Producers'), False),
         required=True
     )
 

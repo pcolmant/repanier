@@ -7,13 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import DECIMAL_ZERO
 from repanier.email.email_order import export_order_2_1_customer
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence import Permanence
-from repanier.models.staff import Staff
-from repanier.tools import sint, my_basket, get_html_basket_message
+from repanier.tools import sint, my_basket, get_html_basket_message, permanence_ok_or_404
 
 
 @never_cache
@@ -30,8 +28,7 @@ def btn_confirm_order_ajax(request):
     translation.activate(customer.language)
     permanence_id = sint(request.GET.get('permanence', 0))
     permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
-    if permanence is None:
-        raise Http404
+    permanence_ok_or_404(permanence)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,
         customer_id=customer.id,
@@ -40,7 +37,7 @@ def btn_confirm_order_ajax(request):
     ).order_by('?').first()
     if customer_invoice is None:
         raise Http404
-    filename = "{0}-{1}.xlsx".format(
+    filename = "{}-{}.xlsx".format(
         _("Order"),
         permanence
     )

@@ -2,7 +2,6 @@
 
 import uuid
 
-from django.conf import settings
 from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import pre_save, post_save
@@ -112,6 +111,9 @@ class Product(Item):
             self.id,
             self.get_html_is_into_offer(contract)
         ))
+
+    get_html_admin_is_into_offer.short_description = (_("In offer"))
+    get_html_admin_is_into_offer.admin_order_field = 'is_into_offer'
 
     def get_html_is_into_offer(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon

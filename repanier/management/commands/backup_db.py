@@ -29,7 +29,7 @@ class Command(BaseCommand):
         result = call("pg_dump -Fc -U {} {} | gzip".format(db_user, db_name), stdout=backup_file, shell=True)
         if result == 0:
             migrations_files = NamedTemporaryFile(prefix="{}-mig.bak.".format(db_name), suffix='.gz')
-            repanier_path = "{}{}{}".format(os.path.dirname(settings.PROJECT_DIR), os.sep, "repanier")
+            repanier_path = os.path.join(os.path.dirname(settings.PROJECT_DIR), "repanier")
             result = call("cd {} && tar -zcf {} migrations{}*.py".format(repanier_path, migrations_files.name, os.sep),
                           stdout=migrations_files, shell=True)
 
@@ -37,7 +37,6 @@ class Command(BaseCommand):
                 email = EmailMultiAlternatives(
                     subject="Backup {}".format(db_name),
                     body="Backup of the DB : {}".format(db_name),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[v for k, v in settings.ADMINS]
                 )
                 email.attach_file(os.path.abspath(backup_file.name),

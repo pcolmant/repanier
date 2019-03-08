@@ -9,7 +9,9 @@ from django.views.decorators.http import require_GET
 
 from repanier.const import PERMANENCE_OPENED, PERMANENCE_SEND
 from repanier.models.offeritem import OfferItem
-from repanier.tools import permanence_ok_or_404, sint
+from repanier.tools import permanence_ok_or_404, sint, get_repanier_template_name
+
+template_order_product_description = get_repanier_template_name("order_product_description.html")
 
 
 @require_GET
@@ -21,7 +23,7 @@ def customer_product_description_ajax(request):
         permanence_ok_or_404(permanence)
         if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
             html = render_to_string(
-                'repanier/order_product_description.html',
+                template_order_product_description,
                 {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL}
             )
             return JsonResponse({"#orderModal": mark_safe(html)})

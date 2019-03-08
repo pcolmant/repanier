@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+{% block content %}
+    <script type="text/javascript" src="{% static 'repanier/bs3/js/toggle.js' %}"></script>
+    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
+    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
+    <h4>{{ sub_title }}</h4>
+    <p></p>
+    <form action="" method="post">{% csrf_token %}
+        <h6>{{ permanence }}{% if permanence.with_delivery_point %},
+            {% trans "export orders from selected delivery points" %} :{% endif %}</h6>
+        <div class="submit-row">
+            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
+            </button>
+        </div>
+        {% if permanence.with_delivery_point %}
+            <fieldset class="module aligned ">
+                <div class="submit-row">
+                    <div class="form-group">
+                        <input id="all-deliveries" name="all-deliveries"
+                               onClick="toggle_all('all-deliveries', 'deliverie_form');"
+                               autocomplete="off" type="checkbox" checked>
+                        <div class="btn-group">
+                            <label for="all-deliveries" class="btn btn-primary btn-sm">
+                                <span class="glyphicon glyphicon-ok"></span>
+                                <span>&nbsp;</span>
+                            </label>
+                            <label for="all-deliveries" class="btn active btn-sm">
+                                {% trans "Select all deliveries." %}
+                            </label>
+                        </div>
+                    </div>
+                    <hr class="colorgraph">
+                    {% for delivery in deliveries %}
+                        <span class="form-group">
+                            <input id="deliveries-{{ forloop.counter0 }}" name="deliveries" class="deliverie_form"
+                                   onClick="toggle('all-deliveries', 'deliveries-{{ forloop.counter0 }}', 'deliverie_form');"
+                                   value="{{ delivery.id|unlocalize }}" autocomplete="off" type="checkbox" checked>
+                            <div class="btn-group">
+                                <label for="deliveries-{{ forloop.counter0 }}" class="btn btn-info btn-xs">
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                    <span>&nbsp;</span>
+                                </label>
+                                <label for="deliveries-{{ forloop.counter0 }}" class="btn active btn-xs">
+                                    {{ delivery }}
+                                </label>
+                            </div>
+                        </span>
+                    {% endfor %}
+                </div>
+            </fieldset>
+        {% endif %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

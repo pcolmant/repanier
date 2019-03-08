@@ -14,19 +14,20 @@ from django.views.decorators.debug import sensitive_post_parameters
 from repanier.auth_backend import RepanierAuthBackend
 from repanier.const import EMPTY_STRING
 from repanier.models.staff import Staff
-from repanier.tools import sint
+from repanier.tools import sint, get_repanier_template_name
 
 
 @sensitive_post_parameters()
 @csrf_protect
 @never_cache
-def login_view(request, template_name='repanier/registration/login.html',
+def login_view(request, template_name=EMPTY_STRING,
                redirect_field_name=REDIRECT_FIELD_NAME,
                authentication_form=AuthenticationForm,
                extra_context=None):
     """
     Displays the login form and handles the login action.
     """
+    template_name = get_repanier_template_name('registration/login.html')
     redirect_to = request.POST.get(
         redirect_field_name,
         request.GET.get(redirect_field_name, EMPTY_STRING)
@@ -51,7 +52,8 @@ def login_view(request, template_name='repanier/registration/login.html',
             if user.is_authenticated:
 
                 if user.is_staff:
-                    return HttpResponseRedirect("{}?{}".format(redirect_to, get_cms_setting('CMS_TOOLBAR_URL__EDIT_ON')))
+                    return HttpResponseRedirect(
+                        "{}?{}".format(redirect_to, get_cms_setting('CMS_TOOLBAR_URL__EDIT_ON')))
 
                 staff_qs = Staff.objects.filter(
                     customer_responsible_id=user.customer_id,

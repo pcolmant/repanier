@@ -21,6 +21,5 @@ class NotificationAdmin(TranslatableAdmin):
 
     def get_fields(self, request, obj=None):
         return [
-            'notification_is_public',
             'notification'
         ]

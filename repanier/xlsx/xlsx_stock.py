@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 
-from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import translation
@@ -405,7 +404,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
             product = next_row(products)
         row_num += 1
         c = ws.cell(row=row_num, column=4)
-        c.value = "{}".format(_("Total"),)
+        c.value = "{}".format(_("Total"), )
         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
         c.style.font.bold = True
         c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT

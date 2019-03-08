@@ -44,7 +44,7 @@ These prerequisites enhance the security of your server and configure it with th
 If you use a different distribution than Debian 9, take a look at [cookiecutter-django](https://github.com/pydanny/cookiecutter-django/tree/master/%7B%7Bcookiecutter.project_slug%7D%7D/utility).
 If you want to install `Repanier` on a container, a good starting point is [Today I Learned – A Brief Intro to Docker for Djangonauts](https://www.revsys.com/tidbits/brief-intro-docker-djangonauts/)
 
-1. Login as `root` using a ssh session.
+1. Log in as `root` using a ssh session.
 2. Update Linux and install `sudo`.
     ```commandline
     apt-get update
@@ -316,6 +316,7 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_PRODUCT_REFERENCE (True, *False*) : If True, Repanier lets you define reference at product level and use them to communicate with the producer.
 - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5).
 - REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form.
+- REPANIER_SETTINGS_SMS_GATEWAY_MAIL (*EMPTY_STRING*, ) : Email address of a sms gateway service.
 - REPANIER_SETTINGS_STOCK (True, *False*) : Allows you to limit the available quantities of a product.
 
 ## Install or update `Repanier`

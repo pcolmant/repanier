@@ -79,12 +79,13 @@ class PermanenceMenu(Menu):
         return nodes
 
     def append_permanence(self, is_anonymous, permanence, nodes, master_id, submenu_id):
+
         path = reverse('order_view', args=(permanence.id,))
         if not is_anonymous and permanence.status > PERMANENCE_OPENED:
             path = path + "?is_basket=yes"
         submenu_id += 1
         node = NavigationNode(
-            permanence.get_permanence_customer_display(),
+            permanence.get_html_permanence_display(),
             path,
             id=submenu_id, parent_id=master_id,
             visible=True

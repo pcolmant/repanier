@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-
 from os import sep as os_sep
 
 from django.http import Http404
@@ -7,14 +6,13 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 
-from repanier.views.forms import ProducerProductForm
 from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, PRODUCT_ORDER_UNIT_PC_PRICE_KG, TWO_DECIMALS, ONE_DECIMAL, \
     PRODUCT_ORDER_UNIT_PC_KG, PERMANENCE_PRE_OPEN, EMPTY_STRING, VAT_400
-from repanier.models.offeritem import OfferItem
-from repanier.models.product import Product
-from repanier.models.producer import Producer
 from repanier.models.permanence import Permanence
-from repanier.tools import clean_offer_item
+from repanier.models.producer import Producer
+from repanier.models.product import Product
+from repanier.tools import get_repanier_template_name
+from repanier.views.forms import ProducerProductForm
 
 
 @never_cache
@@ -24,9 +22,10 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
     producer = Producer.objects.filter(offer_uuid=offer_uuid, is_active=True, producer_pre_opening=True).only(
         'id').order_by('?').first()
     if producer is None:
+        template_name = get_repanier_template_name("pre_order_closed_form.html")
         return render(
             request,
-            "repanier/pre_order_closed_form.html",
+            template_name,
         )
 
     permanence = get_object_or_404(Permanence, id=permanence_id)
@@ -107,10 +106,11 @@ def pre_order_create_product_ajax(request, permanence_id=None, offer_uuid=None):
             field = form.fields["picture"]
             field.widget.upload_to = "{}{}{}".format("product", os_sep, producer.id)
             update = None
+        template_name = get_repanier_template_name('pre_order_create_product_form.html')
         return render(
             request,
-            "repanier/pre_order_create_product_form.html",
-            {'form'    : form, 'permanence_id': permanence_id, 'offer_uuid': offer_uuid, 'offer_item': offer_item,
-             'producer': producer, 'update' : update}
+            template_name,
+            {'form': form, 'permanence_id': permanence_id, 'offer_uuid': offer_uuid, 'offer_item': offer_item,
+             'producer': producer, 'update': update}
         )
     raise Http404

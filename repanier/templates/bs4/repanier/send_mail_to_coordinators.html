@@ -1,0 +1,23 @@
+{% extends 'bs4/cms_page.html' %}
+{% load cms_tags sekizai_tags i18n l10n crispy_forms_tags %}
+{% block sub_content %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {% if send %}
+                    <div class="alert alert-success" role="alert">{% trans "The mail has been send" %}</div>{% endif %}
+                <form name="{{ form.form_name }}" method="post" action="">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    {% if not send %}
+                        <div class="form-group form-sticky-update-button">
+                            <button type="submit" class="btn btn-info pull-right">{% trans "Send email" %}</button>
+                        </div>
+                    {% endif %}
+                </form>
+                {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}
+                {% addtoblock "jshead" %}{{ form.media.js }}{% endaddtoblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

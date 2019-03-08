@@ -7,6 +7,7 @@ from django.template import Template, Context as TemplateContext
 # is the "bad One" this lib has a Context object too. Thanks for anyone reading!
 from django.utils.translation import ugettext_lazy as _
 
+from repanier.const import EMPTY_STRING, PRODUCT_ORDER_UNIT_DEPOSIT
 from repanier.email.email import RepanierEmail
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItemWoReceiver
@@ -17,7 +18,7 @@ from repanier.tools import *
 
 
 def send_pre_open_order(permanence_id):
-    from repanier.apps import REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_CONFIG
+    from repanier.apps import REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
@@ -34,7 +35,7 @@ def send_pre_open_order(permanence_id):
         offer_description = permanence.safe_translation_getter(
             'offer_description', any_language=True, default=EMPTY_STRING
         )
-        offer_producer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
+        offer_producer_mail_subject = "{} - {}".format(settings.REPANIER_SETTINGS_GROUP_NAME, permanence)
 
         template = Template(offer_producer_mail)
         producer_set = Producer.objects.filter(
@@ -71,20 +72,18 @@ def send_pre_open_order(permanence_id):
             email = RepanierEmail(
                 subject=offer_producer_mail_subject,
                 html_body=html_body,
-                from_email=order_responsible.get_from_email,
-                reply_to=order_responsible.get_reply_to_email,
                 to=to_email
             )
             email.send_email()
             send_sms(
-                sms_nr=producer.phone1,
-                sms_msg="{} : {} - {}".format(REPANIER_SETTINGS_GROUP_NAME,
+                sms_nr=producer.get_phone1(),
+                sms_msg="{} : {} - {}".format(settings.REPANIER_SETTINGS_GROUP_NAME,
                                               permanence, _("Pre-opening of orders")))
     translation.activate(cur_language)
 
 
 def send_open_order(permanence_id):
-    from repanier.apps import REPANIER_SETTINGS_GROUP_NAME, REPANIER_SETTINGS_CONFIG
+    from repanier.apps import REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
@@ -109,7 +108,7 @@ def send_open_order(permanence_id):
         offer_customer_mail = config.safe_translation_getter(
             'offer_customer_mail', any_language=True, default=EMPTY_STRING
         )
-        offer_customer_mail_subject = "{} - {}".format(REPANIER_SETTINGS_GROUP_NAME, permanence)
+        offer_customer_mail_subject = "{} - {}".format(settings.REPANIER_SETTINGS_GROUP_NAME, permanence)
         offer_producer = ', '.join([p.short_profile_name for p in permanence.producers.all()])
         qs = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id, is_active=True,
@@ -134,8 +133,8 @@ def send_open_order(permanence_id):
                     src="https:/{1}{2}{3}"/>
                 """
                 ,
-                permanence.get_permanence_customer_display(),
-                settings.DJANGO_SETTINGS_ALLOWED_HOSTS[0],
+                permanence.get_permanence_display(),
+                settings.ALLOWED_HOSTS[0],
                 settings.MEDIA_URL,
                 permanence.picture,
             )
@@ -156,8 +155,6 @@ def send_open_order(permanence_id):
         email = RepanierEmail(
             subject=offer_customer_mail_subject,
             html_body=html_body,
-            from_email=order_responsible.get_from_email,
-            reply_to=order_responsible.get_reply_to_email,
             to=to_email,
             show_customer_may_unsubscribe=True
         )

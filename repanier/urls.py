@@ -11,6 +11,8 @@ from repanier.rest.permanence import permanences_rest, permanence_producer_produ
 from repanier.rest.producer import producers_list, producer_detail
 from repanier.rest.product import products_rest, product_rest
 from repanier.rest.version import version_rest
+# from django.views.i18n import JavaScriptCatalog
+from repanier.tools import get_repanier_template_name
 from repanier.views.basket_message_form_ajax import customer_basket_message_form_ajax, producer_basket_message_form_ajax
 from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
 from repanier.views.customer_invoice_class import CustomerInvoiceView
@@ -22,7 +24,7 @@ from repanier.views.display_status_ajax import display_status
 from repanier.views.download_customer_invoice import download_customer_invoice
 from repanier.views.flexible_dates import flexible_dates
 from repanier.views.forms import AuthRepanierSetPasswordForm, AuthRepanierPasswordResetForm
-from repanier.views.home_info_ajax import home_info_ajax
+from repanier.views.home_info_ajax import home_info_bs3_ajax
 from repanier.views.is_into_offer_ajax import is_into_offer, is_into_offer_content
 from repanier.views.like_ajax import like_ajax
 from repanier.views.login_view import login_view
@@ -39,15 +41,14 @@ from repanier.views.pre_order_class import PreOrderView
 from repanier.views.pre_order_create_product_ajax import pre_order_create_product_ajax
 from repanier.views.pre_order_update_product_ajax import pre_order_update_product_ajax
 from repanier.views.producer_invoice_class import ProducerInvoiceView
-from repanier.views.send_mail_to_all_members_view import send_mail_to_all_members_view
+# from repanier.views.send_mail_to_all_members_view import send_mail_to_all_members_view
 from repanier.views.send_mail_to_coordinators_view import send_mail_to_coordinators_view
 from repanier.views.task_class import PermanenceView
 from repanier.views.task_form_ajax import task_form_ajax
 from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
-
-# from django.views.i18n import JavaScriptCatalog
+from repanier.views.order_description_view import order_description_view
 
 urlpatterns = [
     url(r'^go_repanier/$', login_view, name='login_form'),
@@ -57,24 +58,23 @@ urlpatterns = [
             'post_reset_redirect': 'done/',
             # The form bellow is responsible of sending the recovery email
             'password_reset_form': AuthRepanierPasswordResetForm,
-            'template_name': 'repanier/registration/password_reset_form.html',
-            'from_email': settings.DEFAULT_FROM_EMAIL,
+            'template_name': get_repanier_template_name('registration/password_reset_form.html')
         },
         name='admin_password_reset'),
     url(r'^coordi/password_reset/done/$', auth_views.password_reset_done,
         {
-            'template_name': 'repanier/registration/password_reset_done.html'
+            'template_name': get_repanier_template_name('registration/password_reset_done.html')
         },
         name='password_reset_done'),
     url(r'^reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>.+)/$', auth_views.password_reset_confirm,
         {
             'set_password_form': AuthRepanierSetPasswordForm,
-            'template_name': 'repanier/registration/password_reset_confirm.html'
+            'template_name': get_repanier_template_name('registration/password_reset_confirm.html')
         },
         name='password_reset_confirm'),
     url(r'^reset/done/$', auth_views.password_reset_complete,
         {
-            'template_name': 'repanier/registration/password_reset_complete.html'
+            'template_name': get_repanier_template_name('registration/password_reset_complete.html')
         },
         name='password_reset_complete'),
 
@@ -89,13 +89,14 @@ urlpatterns = [
     url(r'^like/(?P<permanence_id>\d+)/$', never_cache(OrderView.as_view()), {'like': True},
         name='like_view'),
     url(r'^order-filter/(?P<permanence_id>\d+)/$', order_filter_view, name='order_filter_view'),
+    url(r'^order-description/(?P<permanence_id>\d+)/$', order_description_view, name='order_description_view'),
 
     url(r'^ajax/order/$', order_ajax, name='order_ajax'),
     url(r'^ajax/delivery/$', delivery_ajax, name='delivery_ajax'),
     url(r'^ajax/my-cart_amount/(?P<permanence_id>\d+)/$', my_cart_amount_ajax, name='my_cart_amount_ajax'),
     url(r'^ajax/my-balance/$', my_balance_ajax, name='my_balance'),
     url(r'^ajax/order-name/$', customer_name_ajax, name='order_name'),
-    url(r'^ajax/home-info/$', home_info_ajax, name='home_info'),
+    url(r'^ajax/home-info-bs3/$', home_info_bs3_ajax, name='home_info_bs3'),
     url(r'^ajax/order-init/$', order_init_ajax, name='order_init_ajax'),
     url(r'^ajax/order-select/$', order_select_ajax, name='order_select_ajax'),
     url(r'^ajax/delivery-select/$', delivery_select_ajax, name='delivery_select_ajax'),
@@ -138,7 +139,7 @@ urlpatterns = [
         never_cache(PreOrderView.as_view()), name='pre_order_uuid_view'),
 
     url(r'^coordinators/$', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
-    url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
+    # url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
     url(r'^who/$', who_is_who_view, name='who_is_who_view'),
     url(r'^me/$', my_profile_view, name='my_profile_view'),
     # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
