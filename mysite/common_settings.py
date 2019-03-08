@@ -6,8 +6,8 @@ import os
 import sys
 
 from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
-from cmsplugin_cascade.utils import format_lazy
 from django.urls import reverse_lazy
+from django.utils.text import format_lazy
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
 
