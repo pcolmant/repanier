@@ -51,13 +51,14 @@ class RepanierEmail(EmailMultiAlternatives):
 
         customer = Customer.get_customer_from_valid_email(email_to)
         if customer is not None:
-            if not self.send_even_if_unsubscribed and not customer.subscribe_to_email:
-                return False
-            elif customer.user.last_login is not None:
-                max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=426)
-                if customer.user.last_login < max_2_years_in_the_past:
-                    # Do not spam someone who has never logged in since more than 1 year and 2 months
+            if not self.send_even_if_unsubscribed:
+                if not customer.subscribe_to_email:
                     return False
+                elif customer.user.last_login is not None:
+                    max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=426)
+                    if customer.user.last_login < max_2_years_in_the_past:
+                        # Do not spam someone who has never logged in since more than 1 year and 2 months
+                        return False
 
         self.alternatives = []
         if customer is not None and self.show_customer_may_unsubscribe:
