@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import logging
 import os
 
 from django import forms
@@ -25,6 +26,8 @@ from repanier.tools import get_repanier_template_name
 from repanier.widget.picture import RepanierPictureWidget
 from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
+
+logger = logging.getLogger(__name__)
 
 template_password_reset_email = get_repanier_template_name(
     os.path.join("registration", "password_reset_email.html")
@@ -56,7 +59,6 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         """Given an email, return matching user(s) who should receive a reset.
 
         """
-
         if email:
             return User.objects.filter(
                 Q(
