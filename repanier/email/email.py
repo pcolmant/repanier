@@ -155,7 +155,6 @@ class RepanierEmail(EmailMultiAlternatives):
             )
             body = """
                         [{REPANIER_SETTINGS_GROUP_NAME} : {ALLOWED_HOSTS}]
-                        INTERNAL_IPS : {INTERNAL_IPS}
                         DJANGO_SETTINGS_LANGUAGE : {DJANGO_SETTINGS_LANGUAGE}
                         DJANGO_SETTINGS_LOGGING : {DJANGO_SETTINGS_LOGGING}
                         REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : {REPANIER_SETTINGS_BCC_ALL_EMAIL_TO}
@@ -182,7 +181,6 @@ class RepanierEmail(EmailMultiAlternatives):
                         """"".format(
                 REPANIER_SETTINGS_GROUP_NAME=settings.REPANIER_SETTINGS_GROUP_NAME,
                 ALLOWED_HOSTS=settings.ALLOWED_HOSTS[0],
-                INTERNAL_IPS=settings.INTERNAL_IPS,
                 DJANGO_SETTINGS_LANGUAGE=settings.DJANGO_SETTINGS_LANGUAGE,
                 DJANGO_SETTINGS_LOGGING=settings.DJANGO_SETTINGS_LOGGING,
                 REPANIER_SETTINGS_BCC_ALL_EMAIL_TO=settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO,
