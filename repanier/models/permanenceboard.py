@@ -12,9 +12,11 @@ from repanier.const import EMPTY_STRING
 class PermanenceBoard(models.Model):
     customer = models.ForeignKey(
         'Customer', verbose_name=_("Customer"),
-        null=True, blank=True, db_index=True, on_delete=models.PROTECT)
+        null=True, blank=True, db_index=True,
+        on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME)
+        'Permanence', verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME,
+        on_delete=models.CASCADE)
     # permanence_date duplicated to quickly calculate # participation of lasts 12 months
     permanence_date = models.DateField(_("Permanence date"), db_index=True)
     permanence_role = models.ForeignKey(

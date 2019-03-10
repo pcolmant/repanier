@@ -362,7 +362,10 @@ def product_post_save(sender, **kwargs):
 
 
 class Product_Translation(TranslatedFieldsModel):
-    master = models.ForeignKey('Product', related_name='translations', null=True)
+    master = models.ForeignKey(
+        'Product', related_name='translations', null=True,
+        on_delete=models.CASCADE
+    )
     long_name = models.CharField(_("Long name"), max_length=100)
     offer_description = HTMLField(_("Offer_description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True)
 

@@ -31,7 +31,10 @@ class LUT_ProductionModeManager(TreeManager, TranslatableManager):
 
 
 class LUT_ProductionMode(MPTTModel, TranslatableModel):
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children',
+        on_delete=models.CASCADE
+    )
     translations = TranslatedFields(
         short_name=models.CharField(
             _("Short name"),
@@ -73,7 +76,10 @@ class LUT_DeliveryPointManager(TreeManager, TranslatableManager):
 
 
 class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children',
+        on_delete=models.CASCADE
+    )
     translations = TranslatedFields(
         short_name=models.CharField(
             _("Short name"),
@@ -88,8 +94,11 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     customer_responsible = models.ForeignKey(
         'Customer', verbose_name=_("Customer responsible"),
         help_text=_("Invoices are sent to this customer who is responsible for collecting the payments."),
-        blank=True, null=True, default=None)
-    inform_customer_responsible = models.BooleanField(_("Inform the group of orders placed by its members"), default=False)
+        blank=True, null=True, default=None,
+        on_delete=models.CASCADE
+    )
+    inform_customer_responsible = models.BooleanField(_("Inform the group of orders placed by its members"),
+                                                      default=False)
     transport = ModelMoneyField(
         _("Delivery point shipping cost"),
         # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
@@ -128,7 +137,10 @@ class LUT_DepartmentForCustomerManager(TreeManager, TranslatableManager):
 
 
 class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children',
+        on_delete=models.CASCADE
+    )
     is_active = models.BooleanField(_("Active"), default=True)
     translations = TranslatedFields(
         short_name=models.CharField(
@@ -164,7 +176,10 @@ class LUT_PermanenceRoleManager(TreeManager, TranslatableManager):
 
 
 class LUT_PermanenceRole(MPTTModel, TranslatableModel):
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children',
+        on_delete=models.CASCADE
+    )
     translations = TranslatedFields(
         short_name=models.CharField(
             _("Short name"),

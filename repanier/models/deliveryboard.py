@@ -22,7 +22,8 @@ class DeliveryBoard(TranslatableModel):
         'LUT_DeliveryPoint', verbose_name=_("Delivery point"),
         db_index=True, on_delete=models.PROTECT)
     permanence = models.ForeignKey(
-        'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME)
+        'Permanence', verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        on_delete=models.CASCADE)
 
     status = models.CharField(
         max_length=3,

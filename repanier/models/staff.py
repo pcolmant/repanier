@@ -31,7 +31,10 @@ class StaffManager(TreeManager, TranslatableManager):
 
 
 class Staff(MPTTModel, TranslatableModel):
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children',
+        on_delete=models.CASCADE
+    )
     # user = models.OneToOneField(
     #     settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
@@ -235,7 +238,6 @@ class Staff(MPTTModel, TranslatableModel):
 def staff_pre_save(sender, **kwargs):
     staff = kwargs["instance"]
     staff.login_attempt_counter = DECIMAL_ZERO
-
 
 # @receiver(post_save, sender=Staff)
 # def staff_post_save(sender, **kwargs):

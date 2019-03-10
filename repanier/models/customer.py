@@ -25,7 +25,9 @@ from repanier.picture.fields import RepanierPictureField
 
 
 class Customer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, db_index=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, db_index=True,
+        on_delete=models.CASCADE)
     login_attempt_counter = models.DecimalField(
         _("Login attempt counter"),
         default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
@@ -110,11 +112,13 @@ class Customer(models.Model):
     delivery_point = models.ForeignKey(
         'LUT_DeliveryPoint',
         verbose_name=_("Delivery point"),
-        blank=True, null=True, default=None)
+        blank=True, null=True, default=None,
+        on_delete=models.CASCADE)
     is_active = models.BooleanField(_("Active"), default=True)
     as_staff = models.ForeignKey(
         'Staff',
-        blank=True, null=True, default=None)
+        blank=True, null=True, default=None,
+        on_delete=models.CASCADE)
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR
     is_anonymized = models.BooleanField(default=False)
     is_group = models.BooleanField(_("Group"), default=False)
@@ -231,7 +235,6 @@ class Customer(models.Model):
         ) if self.phone2 else sep.join(
             [self.phone1, EMPTY_STRING]
         )
-
 
     def get_email1(self, for_members=True, prefix=EMPTY_STRING):
         if for_members and not self.show_mails_to_members:
