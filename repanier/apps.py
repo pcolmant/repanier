@@ -166,10 +166,7 @@ class RepanierConfig(AppConfig):
                 config = Configuration.init_repanier()
             config.upgrade_db()
             config.save()
-
-            logger.debug(sys.argv)
-            if sys.argv[0] == "uwsgi":  # Maybe better != manage.py',
-                RepanierEmail.send_startup_email()
+            RepanierEmail.send_startup_email(sys.argv[0])
 
 
         except Exception as error_str:
