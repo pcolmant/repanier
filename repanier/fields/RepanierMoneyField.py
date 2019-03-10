@@ -4,7 +4,6 @@ from decimal import *
 
 from django.conf import settings
 from django.db import models
-from django.db.models import NOT_PROVIDED
 from django.db.models.expressions import BaseExpression, Expression
 from django.forms import DecimalField
 
@@ -205,9 +204,8 @@ class ModelMoneyField(models.DecimalField):
             value = value.amount
         return super(ModelMoneyField, self).get_db_prep_save(value, connection)
 
-    def contribute_to_class(self, cls, name, private_only=False, virtual_only=NOT_PROVIDED):
-        super(ModelMoneyField, self).contribute_to_class(cls, name, private_only=private_only,
-                                                         virtual_only=virtual_only)
+    def contribute_to_class(self, cls, name, private_only=False):
+        super(ModelMoneyField, self).contribute_to_class(cls, name, private_only=private_only)
         setattr(cls, self.name, MoneyFieldProxy(self))
 
 
