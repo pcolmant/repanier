@@ -76,10 +76,14 @@ class ImportXlsxForm(forms.Form):
 
 class ImportInvoiceForm(ImportXlsxForm):
     template = get_repanier_template_name('import_invoice_xlsx.html')
-    # Important : The length of invoice_reference must be the same as of permanence.short_name
-    invoice_reference = forms.CharField(label=_("Invoice reference"), max_length=50, required=False)
-    producer = forms.ModelChoiceField(label=_('Producer'), queryset=Producer.objects.filter(is_active=True).all(),
-                                      required=False)
+    # Important : Here, the length of invoice_reference must be the same as of permanence.short_name
+    invoice_reference = forms.CharField(
+        label=_("Invoice reference"), max_length=50, required=False
+    )
+    producer = forms.ModelChoiceField(
+        label=_('Producer'), queryset=Producer.objects.filter(is_active=True).all(),
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(ImportInvoiceForm, self).__init__(*args, **kwargs)
@@ -95,7 +99,9 @@ class ProducerInvoicedForm(forms.Form):
     to_be_invoiced_balance = FormMoneyField(
         label=_("Amount claimed by the producer"), max_digits=8, decimal_places=2, required=False,
         initial=REPANIER_MONEY_ZERO)
-    invoice_reference = forms.CharField(label=_("Invoice reference"), max_length=100, required=False)
+    invoice_reference = forms.CharField(
+        label=_("Invoice reference"), max_length=100, required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(ProducerInvoicedForm, self).__init__(*args, **kwargs)

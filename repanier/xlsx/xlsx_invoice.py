@@ -354,7 +354,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     return wb
 
 
-def import_invoice_sheet(worksheet, invoice_reference=None,
+def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                          customer_2_id_dict=None,
                          producer=None
                          ):
