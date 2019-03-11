@@ -15,6 +15,7 @@ from repanier.email import email_order
 from repanier.models.box import Box
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.offeritem import OfferItemWoReceiver
+from repanier.models.invoice import ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -138,6 +139,18 @@ def open_order(permanence_id, do_not_send_any_mail=False):
             may_order=True
     ).order_by().distinct("producer_id"):
         permanence.producers.add(offer_item.producer_id)
+
+    for producer in permanence.producers.all():
+        producer_invoice = ProducerInvoice.objects.filter(
+            permanence_id=permanence.id,
+            producer_id=producer.id
+        ).order_by('?')
+        if not producer_invoice.exists():
+            ProducerInvoice.objects.create(
+                permanence_id=permanence.id,
+                producer_id=producer.id,
+                status=PERMANENCE_WAIT_FOR_OPEN
+            )
 
     if not do_not_send_any_mail:
         email_offer.send_open_order(permanence_id)
