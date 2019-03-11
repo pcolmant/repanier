@@ -42,12 +42,12 @@ def order_select_ajax(request):
         offer_item_id=offer_item_id,
         is_box_content=False
     ).order_by('?').only('quantity_ordered').first()
-    producer_invocie = ProducerInvoice.objects.filter(
+    producer_invoice = ProducerInvoice.objects.filter(
         permanence_id=offer_item.permanence_id,
         producer_id=offer_item.producer_id,
         status=PERMANENCE_OPENED
     ).order_by('?')
-    if producer_invocie.exists():
+    if producer_invoice.exists():
         # The orders are opened for this producer and this permanence
         if offer_item.may_order:
             # This offer_item may be ordered
