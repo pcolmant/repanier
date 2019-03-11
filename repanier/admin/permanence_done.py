@@ -295,13 +295,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                 producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
                                     'to_be_invoiced_balance')
                                 producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
-                                    'invoice_reference')
-                                if not producer_invoice.invoice_reference:
-                                    producer_invoice.invoice_reference = None
+                                    'invoice_reference', EMPTY_STRING)
                                 producer_invoice.to_be_paid = True
                             else:
                                 producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
-                                producer_invoice.invoice_reference = None
+                                producer_invoice.invoice_reference = EMPTY_STRING
                                 producer_invoice.to_be_paid = False
                             producer_invoice.delta_vat = DECIMAL_ZERO
                             producer_invoice.delta_deposit = DECIMAL_ZERO
