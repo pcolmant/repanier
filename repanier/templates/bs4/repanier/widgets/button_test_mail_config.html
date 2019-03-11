@@ -1,8 +1,11 @@
 {% load i18n %}
 {% spaceless %}
     {% with id=widget.attrs.id name=widget.name %}
-        <input type="submit" id="{{ id }}" href="#"
-           onclick="{{ id }}_test_mail_config();return false;" value="{% trans "Validate this mail server configuration." %}">
+{#        <input type="submit" id="{{ id }}" href="#"#}
+{#           onclick="{{ id }}_test_mail_config();return false;" value="{% trans "Send a test email" %}">#}
+        <a id="{{ id }}" href="#"
+           onclick="{{ id }}_test_mail_config();return false;">{% trans "Send a test email" %}</a>
+
         <script type="text/javascript">
             var {{ id }}_jQuery;
             if (typeof django === 'undefined') {
@@ -33,15 +36,8 @@
                         return csrftoken;
                     }
 
-                    $('#{{ id }}').html('{% trans "Please wait... This mail server configuration is being validated." %}');
-                    var id_email_host = $("#id_email_host").val();
-                    var id_email_port = $("#id_email_port").val();
-                    var id_email_use_tls = $("#id_email_use_tls").is(':checked');
-                    var id_email_host_user = $("#id_email_host_user").val();
-                    var id_new_email_host_password = $("#id_new_email_host_password").val();
-                    {#            {% autoescape off %}#}
-                    {#            var lien = '{% url 'test_mail_config_ajax' "'+id_email_host+'" "'+id_email_port+'" "'+id_email_use_tls+'" "'+id_email_host_user+'" "'+id_new_email_host_password+'" %}';#}
-                    {#            {% endautoescape %}#}
+                    $('#{{ id }}').html('{% trans "Please wait..." %}');
+                    var id_email = $("#id_email").val();
                     var lien = '{% url 'test_mail_config_ajax' %}';
                     var csrftoken = getCsrftoken();
                     $.ajaxSetup({
@@ -54,12 +50,7 @@
                         url: lien,
                         data: {
                             'id': '{{ id }}',
-                            'id_email_host': id_email_host,
-                            'id_email_port': id_email_port,
-                            'id_email_use_tls': id_email_use_tls,
-                            'id_email_host_user': id_email_host_user,
-                            'id_new_email_host_password': id_new_email_host_password
-
+                            'id_email': id_email
                         },
                         cache: false,
                         success: function (result) {
