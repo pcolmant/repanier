@@ -99,15 +99,6 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
                     password_reset_on=now
                 )
             else:
-                if self.user.is_staff:
-                    staff = Staff.objects.filter(
-                        user=self.user.staff_id, is_active=True
-                    ).order_by('?').first()
-                    if staff is not None:
-                        Staff.objects.filter(id=staff.id).update(
-                            login_attempt_counter=DECIMAL_ZERO,
-                            password_reset_on=now
-                        )
                 customer = Customer.objects.filter(
                     user=self.user, is_active=True
                 ).order_by('?').first()
