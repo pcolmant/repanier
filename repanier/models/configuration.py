@@ -7,7 +7,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, connection
 from django.db.models import F
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -364,6 +364,7 @@ class Configuration(TranslatableModel):
 
     def upgrade_db(self):
         logger.debug("######## upgrade_db")
+
         if self.db_version == 0:
             from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
             # Staff.objects.rebuild()
@@ -440,170 +441,6 @@ class Configuration(TranslatableModel):
                 is_order_referent=True
             ).order_by('?').update(
                 is_order_manager=True,
-            )
-            self.db_version = 3
-        if self.db_version == 3:
-            from repanier.models import BankAccount, Configuration, Customer, OfferItemWoReceiver, Producer, \
-                ProducerInvoice, Product, PurchaseWoReceiver
-            BankAccount.objects.filter(
-                operation_comment__isnull=True
-            ).order_by('?').update(
-                operation_comment=EMPTY_STRING
-            )
-            Configuration.objects.filter(
-                bank_account__isnull=True
-            ).order_by('?').update(
-                bank_account=EMPTY_STRING
-            )
-            Configuration.objects.filter(
-                home_site__isnull=True
-            ).order_by('?').update(
-                home_site="/"
-            )
-            Configuration.objects.filter(
-                vat_id__isnull=True
-            ).order_by('?').update(
-                vat_id=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                about_me__isnull=True
-            ).order_by('?').update(
-                about_me=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                address__isnull=True
-            ).order_by('?').update(
-                address=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                bank_account1__isnull=True
-            ).order_by('?').update(
-                bank_account1=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                bank_account2__isnull=True
-            ).order_by('?').update(
-                bank_account2=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                city__isnull=True
-            ).order_by('?').update(
-                city=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                long_basket_name__isnull=True
-            ).order_by('?').update(
-                long_basket_name=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                memo__isnull=True
-            ).order_by('?').update(
-                memo=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                phone1__isnull=True
-            ).order_by('?').update(
-                phone1=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                phone2__isnull=True
-            ).order_by('?').update(
-                phone2=EMPTY_STRING
-            )
-            Customer.objects.filter(
-                vat_id__isnull=True
-            ).order_by('?').update(
-                vat_id=EMPTY_STRING
-            )
-            OfferItemWoReceiver.objects.filter(
-                not_permanences_dates__isnull=True
-            ).order_by('?').update(
-                not_permanences_dates=EMPTY_STRING
-            )
-            OfferItemWoReceiver.objects.filter(
-                permanences_dates__isnull=True
-            ).order_by('?').update(
-                permanences_dates=EMPTY_STRING
-            )
-            OfferItemWoReceiver.objects.filter(
-                permanences_dates_counter__isnull=True
-            ).order_by('?').update(
-                permanences_dates_counter=1
-            )
-            OfferItemWoReceiver.objects.filter(
-                reference__isnull=True
-            ).order_by('?').update(
-                reference=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                address__isnull=True
-            ).order_by('?').update(
-                address=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                bank_account__isnull=True
-            ).order_by('?').update(
-                bank_account=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                city__isnull=True
-            ).order_by('?').update(
-                city=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                fax__isnull=True
-            ).order_by('?').update(
-                fax=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                long_profile_name__isnull=True
-            ).order_by('?').update(
-                long_profile_name=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                memo__isnull=True
-            ).order_by('?').update(
-                memo=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                offer_uuid__isnull=True
-            ).order_by('?').update(
-                offer_uuid=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                phone1__isnull=True
-            ).order_by('?').update(
-                phone1=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                phone2__isnull=True
-            ).order_by('?').update(
-                phone2=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                uuid__isnull=True
-            ).order_by('?').update(
-                uuid=EMPTY_STRING
-            )
-            Producer.objects.filter(
-                vat_id__isnull=True
-            ).order_by('?').update(
-                vat_id=EMPTY_STRING
-            )
-            ProducerInvoice.objects.filter(
-                invoice_reference__isnull=True
-            ).order_by('?').update(
-                invoice_reference=EMPTY_STRING
-            )
-            Product.objects.filter(
-                reference__isnull=True
-            ).order_by('?').update(
-                reference=EMPTY_STRING
-            )
-            PurchaseWoReceiver.objects.filter(
-                comment__isnull=True
-            ).order_by('?').update(
-                comment=EMPTY_STRING
             )
             self.db_version = 4
 
