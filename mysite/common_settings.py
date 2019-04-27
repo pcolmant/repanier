@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 
-from cmsplugin_cascade.extra_fields.config import PluginExtraFieldsConfig
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
 from django.utils.translation import get_language_info
@@ -14,7 +13,12 @@ from django.utils.translation import ugettext_lazy as _
 from .settings import *
 
 EMPTY_STRING = ""
-gettext = lambda s: s
+# gettext = lambda s: s
+
+
+def gettext(s): return s
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,6 +67,8 @@ except IOError:
 ADMIN_EMAIL = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_EMAIL')
 ADMIN_NAME = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_ADMIN_NAME')
 DJANGO_SETTINGS_CACHE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CACHE', fallback="/var/tmp/django-cache")
+DJANGO_SETTINGS_CMS_FILER = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CMS_FILER', fallback=False)
+DJANGO_SETTINGS_CMS_CASCADE = config.getboolean('DJANGO_SETTINGS', 'DJANGO_SETTINGS_CMS_CASCADE', fallback=False)
 DJANGO_SETTINGS_DATABASE_ENGINE = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_ENGINE',
                                              fallback="django.db.backends.postgresql")
 DJANGO_SETTINGS_DATABASE_HOST = config.get('DJANGO_SETTINGS', 'DJANGO_SETTINGS_DATABASE_HOST', fallback="127.0.0.1")
@@ -112,9 +118,9 @@ REPANIER_SETTINGS_PRE_OPENING = config.getboolean('REPANIER_SETTINGS', 'REPANIER
 REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_LABEL',
                                                     fallback=False)
 REPANIER_SETTINGS_PRODUCT_REFERENCE = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_PRODUCT_REFERENCE',
-                                                     fallback=False)
+                                                        fallback=False)
 REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO = config.get('REPANIER_SETTINGS', 'REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO',
-                                                fallback=EMAIL_HOST_USER)
+                                                  fallback=EMAIL_HOST_USER)
 
 REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean('REPANIER_SETTINGS', 'REPANIER_SETTINGS_ROUND_INVOICES',
                                                      fallback=False)
@@ -185,7 +191,6 @@ REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(os.path.join(
     REPANIER_SETTINGS_BOOTSTRAP_CSS
 ))
 
-
 REPANIER_SETTINGS_CUSTOM_CSS_PATH = get_repanier_css_name(os.path.join(
     "css",
     "custom.css"
@@ -200,14 +205,13 @@ logger.debug("------- bootstrap path dir : %s", REPANIER_SETTINGS_BOOTSTRAP_CSS_
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-    LOCK_UNICODE = "🔑"  # "✓"  # "✉"
+    LOCK_UNICODE = "📧"  # "🔑"  # "✓"  # "✉" "📧"
 else:
     LOCK_UNICODE = EMPTY_STRING
 
 LUT_CONFIRM = (
     (True, LOCK_UNICODE), (False, EMPTY_STRING)
 )
-
 
 ###################### DEBUG
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
@@ -258,10 +262,10 @@ LOCALE_PATHS = (
 INSTALLED_APPS = (
     'repanier',  # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
     'djangocms_admin_style',  # note this needs to be above the 'django.contrib.admin' entry
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.admin',
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'django.contrib.staticfiles',
@@ -269,21 +273,10 @@ INSTALLED_APPS = (
 
     'djangocms_text_ckeditor',  # note this needs to be above the 'cms' entry
     # 'django_select2',
-    'cmsplugin_filer_file',  # TODO : remove cmsplugin which is replaced by djangocms_file
-    'cmsplugin_filer_folder',  # TODO : remove cmsplugin which is replaced by djangocms_file
-    'cmsplugin_filer_link',  # TODO : remove cmsplugin which is replaced by djangocms_link
-    'cmsplugin_filer_image',  # TODO : remove cmsplugin which is replaced by djangocms_picture
-    'cmsplugin_filer_video',  # TODO : remove cmsplugin which is replaced by djangocms_video
     'djangocms_link',
     'djangocms_file',
     'djangocms_picture',
     'djangocms_video',
-    'cmsplugin_cascade',
-    'cmsplugin_cascade.clipboard',  # optional
-    'cmsplugin_cascade.extra_fields',  # optional
-    'cmsplugin_cascade.icon',  # optional
-    # 'cmsplugin_cascade.sharable',  # optional
-    # 'cmsplugin_cascade.segmentation',  # optional
     'cms',
     # 'cms_bootstrap3',
     'menus',
@@ -305,7 +298,50 @@ INSTALLED_APPS = (
     'crispy_forms'
 )
 
-# https://docs.djangoproject.com/fr/1.9/ref/middleware/
+# set djangocms and filer plugins as cmsplugin for ckeditor
+# and such remove access to cmsplugin_filer and cmsplugin_cascade plugins from ckeditor cmsplugin
+text_only_plugins = [
+    'LinkPlugin', # djangocms_link
+    'PicturePlugin', # djangocms_picture
+    'FilePlugin', # filer
+    'FolderPlugin', # filer
+    'VideoPlayerPlugin' # djangocms_video
+]
+
+if DJANGO_SETTINGS_CMS_FILER:
+    try:
+        import cmsplugin_filer_utils
+
+        # TODO : remove cmsplugin which is replaced by djangocms_file / link / picture / video
+        INSTALLED_APPS += (
+            'cmsplugin_filer_file',
+            'cmsplugin_filer_folder',
+            'cmsplugin_filer_link',
+            'cmsplugin_filer_image',
+            'cmsplugin_filer_video',
+        )
+    except ImportError:
+        pass  # module doesn't exist
+
+cascade_is_installed = False
+if DJANGO_SETTINGS_CMS_CASCADE:
+    try:
+        # TODO : remove cmsplugin cascade
+        import cmsplugin_cascade
+
+        INSTALLED_APPS += (
+            'cmsplugin_cascade',
+            'cmsplugin_cascade.clipboard',
+            'cmsplugin_cascade.extra_fields',
+            'cmsplugin_cascade.icon',
+            'cmsplugin_cascade.sharable',
+            'cmsplugin_cascade.segmentation',
+        )
+
+        cascade_is_installed = True
+    except ImportError:
+        pass  # module doesn't exist
+
 # http://docs.django-cms.org/en/develop/how_to/caching.html
 
 MIDDLEWARE = (
@@ -360,8 +396,7 @@ TEMPLATES = [
             'loaders': [
                 ('django.template.loaders.cached.Loader', [
                     'django.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
-                    'django.template.loaders.eggs.Loader'
+                    'django.template.loaders.app_directories.Loader'
                 ]),
             ],
             'debug': DEBUG,
@@ -374,9 +409,6 @@ if REPANIER_SETTINGS_TEMPLATE == 'bs3':
 else:
     CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-# TODO : Investigate why jref has added this. This cause admin pblm : the checkbox appear above the description.
-# FORM_RENDERER = 'djng.forms.renderers.DjangoAngularBootstrap3Templates'
-
 CMS_PERMISSION = False  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
 CMS_PUBLIC_FOR = 'all'
 CMS_SHOW_START_DATE = False
@@ -385,6 +417,7 @@ CMS_SEO_FIELDS = False
 CMS_URL_OVERWRITE = True
 CMS_MENU_TITLE_OVERWRITE = True
 CMS_REDIRECTS = True
+DJANGOCMS_PICTURE_RESPONSIVE_IMAGES = True
 
 CKEDITOR_SETTINGS = {
     'language': '{{ language }}',
@@ -407,8 +440,6 @@ CKEDITOR_SETTINGS = {
         ['Source']
     ],
     'forcePasteAsPlainText': 'true',
-    # 'skin': 'moono',
-    # 'format_tags'          : 'p;h4;h5;test',
     'format_tags': 'p;h2;h3;h4;h5',
     # format_test = { element : 'span', attributes : { 'class' : 'test' }, styles: { color: 'blue'}, 'name': 'Test Name' };
     'contentsCss': '{}{}'.format(STATIC_URL, REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH),
@@ -422,9 +453,12 @@ CKEDITOR_SETTINGS = {
     # Do not dispaly the HTML Path below the edit window
     'removePlugins': 'elementspath',
     # 'stylesSet' : 'my_styles:{}js/ckeditor-styles.js'.format(STATIC_URL),
-    'stylesSet': format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config')),
+    # 'stylesSet': format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config')),
 
 }
+
+if cascade_is_installed:
+    CKEDITOR_SETTINGS['stylesSet'] = format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config'))
 
 CKEDITOR_SETTINGS_MODEL2 = {
     'language': '{{ language }}',
@@ -498,43 +532,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-################# Django_sass_compressor
-
-# INSTALLED_APPS += (
-#     'sass_processor',
-# )
-
-# STATICFILES_FINDERS += (
-#     'sass_processor.finders.CssFinder',
-# )
-
-# SASS_PROCESSOR_AUTO_INCLUDE = False
-# SASS_PRECISION = 8
-# SASS_PROCESSOR_INCLUDE_DIRS = [
-#     os.path.join(PROJECT_PATH, "bootstrap-sass-3.3.7", "assets", "stylesheets"),
-# ]
-
-
-################# Django_compressor
-
-# INSTALLED_APPS += (
-#     'compressor',
-# )
-#
-# STATICFILES_FINDERS += (
-#     'compressor.finders.CompressorFinder',
-# )
-#
-# COMPRESS_ENABLED = True
-# COMPRESS_OUTPUT_DIR = "compressor"
-# COMPRESS_STORAGE = 'compressor.storage.GzipCompressorFileStorage'
-# COMPRESS_PARSER = "compressor.parser.HtmlParser"
-# COMPRESS_OFFLINE = False
-
-# COMPRESS_PRECOMPILERS = (
-#     ('text/x-scss', 'django_libsass.SassCompiler'),
-# )
-
 ##################### DJANGO REST_FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
@@ -567,7 +564,7 @@ if DJANGO_SETTINGS_LOGGING:
         },
         'loggers': {
             'django.db.backends': {
-                'level': 'INFO',
+                'level': 'DEBUG', # 'INFO',
                 'handlers': ['console'],
             },
             'repanier': {
@@ -578,7 +575,6 @@ if DJANGO_SETTINGS_LOGGING:
     }
 
 ####################### LANGUAGE
-# if DJANGO_SETTINGS_LANGUAGE == 'fr':
 
 LANGUAGE_CODE = 'fr'
 LANGUAGES = [
@@ -730,64 +726,6 @@ CACHES = {
     }
 }
 
-##################### DJANGOCMS-CASCADE
-CMSPLUGIN_CASCADE_PLUGINS = (
-    # 'cmsplugin_cascade.segmentation',
-    'cmsplugin_cascade.generic',
-    'cmsplugin_cascade.leaflet',
-    'cmsplugin_cascade.link',
-    # 'cmsplugin_cascade.sharable',
-    'cmsplugin_cascade.bootstrap3',
-
-)
-
-CMSPLUGIN_CASCADE = {
-    'alien_plugins': ('TextPlugin', 'TextLinkPlugin',),
-    'plugins_with_extra_fields': {
-        'BootstrapRowPlugin': PluginExtraFieldsConfig(inline_styles={
-            'extra_fields:Margins': ['margin-top', 'margin-bottom'],
-            'extra_units:Margins': 'px,em'}),
-        'BootstrapJumbotronPlugin': PluginExtraFieldsConfig(inline_styles={
-            'extra_fields:Margins': ['padding-top', 'padding-bottom', 'margin-bottom'],
-            'extra_units:Margins': 'px,em'}),
-    },
-    # 'bootstrap3'               : (
-    #     ('xs', (768, 'mobile', _("mobile phones"), 750, 768)),
-    #     ('sm', (768, 'tablet', _("tablets"), 750, 992)),
-    #     ('md', (992, 'laptop', _("laptops"), 970, 1200)),
-    #     ('lg', (1200, 'desktop', _("large desktops"), 1170, 2500)),
-    # ),
-    # 'segmentation_mixins'      : (
-    #     (
-    #         'cmsplugin_cascade.segmentation.mixins.EmulateUserModelMixin',
-    #         'cmsplugin_cascade.segmentation.mixins.EmulateUserAdminMixin',
-    #     ),
-    # ),
-    # 'plugins_with_sharables': {
-    #     'BootstrapImagePlugin': ('image_shapes', 'image_width_responsive', 'image_width_fixed',
-    #                              'image_height', 'resize_options',),
-    #     'BootstrapPicturePlugin': ('image_shapes', 'responsive_heights', 'image_size', 'resize_options',),
-    #     'BootstrapButtonPlugin': ('button_type', 'button_size', 'button_options', 'icon_font',),
-    #     'TextLinkPlugin': ('link', 'target',),
-    # },
-    # 'exclude_hiding_plugin' : ('SegmentPlugin', 'Badge'),
-    'exclude_hiding_plugin': ('Badge'),
-    'allow_plugin_hiding': True,
-    'leaflet': {'default_position': {'lat': 50.0, 'lng': 12.0, 'zoom': 6}},
-}
-
-CACSCADE_WORKAREA_GLOSSARY = {
-    'breakpoints': ['xs', 'sm', 'md', 'lg'],
-    'container_max_widths': {'xs': 750, 'sm': 750, 'md': 970, 'lg': 1170},
-    'fluid': False,
-    'media_queries': {
-        'xs': ['(max-width: 768px)'],
-        'sm': ['(min-width: 768px)', '(max-width: 992px)'],
-        'md': ['(min-width: 992px)', '(max-width: 1200px)'],
-        'lg': ['(min-width: 1200px)'],
-    },
-}
-
 ######################## CMS
 
 CMS_CACHE_DURATIONS = {
@@ -869,13 +807,7 @@ CMS_PLACEHOLDER_CONF = {
         'plugins': [
             'TextPlugin',
         ],
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
+        'text_only_plugins': text_only_plugins,
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -890,13 +822,7 @@ CMS_PLACEHOLDER_CONF = {
         'plugins': [
             'TextPlugin',
         ],
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
+        'text_only_plugins': text_only_plugins,
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -912,13 +838,7 @@ CMS_PLACEHOLDER_CONF = {
         'plugins': [
             'TextPlugin',
         ],
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
+        'text_only_plugins': text_only_plugins,
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -934,13 +854,7 @@ CMS_PLACEHOLDER_CONF = {
         'plugins': [
             'TextPlugin',
         ],
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
+        'text_only_plugins': text_only_plugins,
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -956,13 +870,7 @@ CMS_PLACEHOLDER_CONF = {
         'plugins': [
             'TextPlugin',
         ],
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
+        'text_only_plugins': text_only_plugins,
         'default_plugins': [
             {
                 'plugin_type': 'TextPlugin',
@@ -977,30 +885,11 @@ CMS_PLACEHOLDER_CONF = {
             },
         ]
     },
-    'bootstrap_content': {
-        'name': gettext('Bootstrap Content'),
-        'plugins': ['BootstrapContainerPlugin', 'BootstrapJumbotronPlugin'],
-        'parent_classes': {'BootstrapContainerPlugin': None, 'BootstrapJumbotronPlugin': None},
-        'glossary': CACSCADE_WORKAREA_GLOSSARY,
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
-    },
 
     'footer': {
         'name': gettext('Footer'),
         'plugins': ['TextPlugin'],
-        'text_only_plugins': [
-            'LinkPlugin',
-            'PicturePlugin',
-            'FilePlugin',
-            'FolderPlugin',
-            'VideoPlayerPlugin'
-        ],
+        'text_only_plugins': text_only_plugins,
         'limits': {
             'TextPlugin': 1,
         },
