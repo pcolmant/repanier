@@ -27,7 +27,7 @@ Licence : GPL v3
 # Howto contribute to `Repanier`?
 
 
-  * [Contact the `repanier` discourse community](https://discourse.repanier.be/)
+  * [Contact the `repanier` community](https://forum.repanier.be/)
   * [Send a mail to support@repanier.be](mailt:support@repanier.be)
   * [Propose a pull request](https://github.com/pcolmant/repanier/pulls)
   * [Interface Web pour gérer les instances Repanier](https://gitlab.domainepublic.net/quenenni/repanier_gui/)
@@ -353,6 +353,7 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
     ```commandline
     cd ~/prd1/_0_prd_example
     python manage.py collectstatic
+    python manage.py empty_null_fields
     python manage.py makemigrations repanier
     python manage.py migrate
     ```
