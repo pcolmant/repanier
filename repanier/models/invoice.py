@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import F, Sum, Q
 from django.urls import reverse
 from django.utils.formats import number_format
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -726,11 +727,10 @@ class CustomerProducerInvoice(models.Model):
 
     def get_html_producer_price_purchased(self):
         if self.total_purchase_with_tax != DECIMAL_ZERO:
-            return mark_safe(_("<b>%(price)s</b>") % {'price': self.total_purchase_with_tax})
+            return format_html("<b>{}</b>", self.total_purchase_with_tax)
         return EMPTY_STRING
 
     get_html_producer_price_purchased.short_description = (_("Producer amount invoiced"))
-    get_html_producer_price_purchased.allow_tags = True
     get_html_producer_price_purchased.admin_order_field = 'total_purchase_with_tax'
 
     def __str__(self):

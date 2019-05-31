@@ -52,7 +52,6 @@ class Box(Product):
         return self.get_long_name()
 
     get_box_admin_display.short_description = _("Box")
-    get_box_admin_display.allow_tags = False
 
     def __str__(self):
         # return super(Box, self).display()
@@ -101,7 +100,6 @@ class BoxContent(models.Model):
         return self.calculated_customer_content_price + self.calculated_content_deposit
 
     get_calculated_customer_content_price.short_description = (_("Calculated consumer tariff"))
-    get_calculated_customer_content_price.allow_tags = False
 
     def __str__(self):
         return EMPTY_STRING

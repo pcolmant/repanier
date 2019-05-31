@@ -12,6 +12,7 @@ from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -194,7 +195,6 @@ class Customer(models.Model):
         return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)
 
     get_admin_date_balance.short_description = (_("Date balance"))
-    get_admin_date_balance.allow_tags = False
 
     def get_admin_date_joined(self):
         # New customer have no user during import of customers in admin.customer.CustomerResource
@@ -204,13 +204,11 @@ class Customer(models.Model):
             return EMPTY_STRING
 
     get_admin_date_joined.short_description = _("Date joined")
-    get_admin_date_joined.allow_tags = False
 
     def get_admin_balance(self):
         return self.balance + self.get_bank_not_invoiced() - self.get_order_not_invoiced()
 
     get_admin_balance.short_description = (_("Balance"))
-    get_admin_balance.allow_tags = False
 
     def get_phone1(self, for_members=True, prefix=EMPTY_STRING):
         # return ", phone1" if prefix = ", "
@@ -314,27 +312,35 @@ class Customer(models.Model):
         balance = self.get_admin_balance()
         if last_customer_invoice.exists():
             if balance.amount >= 30:
-                return '<a href="' + reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:#32CD32\">{}</span>".format(balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?customer={}" class="btn" target="_blank" ><span style="color:#32CD32">{}</span></a>',
+                    reverse('customer_invoice_view', args=(0,)),
+                    str(self.id),
+                    balance
+                )
             elif balance.amount >= -10:
-                return '<a href="' + reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:#696969\">{}</span>".format(balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?customer={}" class="btn" target="_blank" ><span style="color:#696969">{}</span></a>',
+                    reverse('customer_invoice_view', args=(0,)),
+                    str(self.id),
+                    balance
+                )
             else:
-                return '<a href="' + reverse('customer_invoice_view', args=(0,)) + '?customer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:red\">{}</span>".format(balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?customer={}" class="btn" target="_blank" ><span style="color:red">{}</span></a>',
+                    reverse('customer_invoice_view', args=(0,)),
+                    str(self.id),
+                    balance
+                )
         else:
             if balance.amount >= 30:
-                return "<span style=\"color:#32CD32\">{}</span>".format(balance)
+                return format_html('<span style="color:#32CD32">{}</span>', balance)
             elif balance.amount >= -10:
-                return "<span style=\"color:#696969\">{}</span>".format(balance)
+                return format_html('<span style="color:#696969">{}</span>', balance)
             else:
-                return "<span style=\"color:red\">{}</span>".format(balance)
+                return format_html('<span style="color:red">{}</span>', balance)
 
     get_balance.short_description = _("Balance")
-    get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
 
     def get_html_on_hold_movement(self, bank_not_invoiced=None, order_not_invoiced=None,
@@ -385,7 +391,6 @@ class Customer(models.Model):
             return last_membership_fee.first().selling_price
 
     get_last_membership_fee.short_description = _("Last membership fee")
-    get_last_membership_fee.allow_tags = False
 
     def last_membership_fee_date(self):
         from repanier.models.purchase import Purchase
@@ -398,7 +403,6 @@ class Customer(models.Model):
             return last_membership_fee.first().customer_invoice.date_balance
 
     last_membership_fee_date.short_description = _("Last membership fee date")
-    last_membership_fee_date.allow_tags = False
 
     def get_last_membership_fee_date(self):
         # Format it for the admin
@@ -409,7 +413,6 @@ class Customer(models.Model):
         return EMPTY_STRING
 
     get_last_membership_fee_date.short_description = _("Last membership fee date")
-    get_last_membership_fee_date.allow_tags = False
 
     def get_participation(self):
         now = timezone.now()
@@ -421,7 +424,6 @@ class Customer(models.Model):
         ).order_by('?').count()
 
     get_participation.short_description = _("Participation")
-    get_participation.allow_tags = False
 
     def get_purchase(self):
         now = timezone.now()
@@ -433,7 +435,6 @@ class Customer(models.Model):
         ).count()
 
     get_purchase.short_description = _("Purchase")
-    get_purchase.allow_tags = False
 
     def my_order_confirmation_email_send_to(self):
         if self.email2:

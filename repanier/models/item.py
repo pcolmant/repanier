@@ -409,7 +409,6 @@ class Item(TranslatableModel):
             return 'N/A'
 
     get_long_name_with_producer.short_description = (_("Long name"))
-    get_long_name_with_producer.allow_tags = False
     get_long_name_with_producer.admin_order_field = 'translations__long_name'
 
     def __str__(self):

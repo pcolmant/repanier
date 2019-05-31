@@ -304,7 +304,6 @@ class OfferItem(Item):
         return mark_safe(self.get_long_name_with_producer(is_html=True))
 
     get_html_long_name_with_producer.short_description = (_("Offer items"))
-    get_html_long_name_with_producer.allow_tags = True
     get_html_long_name_with_producer.admin_order_field = 'translations__long_name'
 
     def __str__(self):

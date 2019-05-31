@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.formats import number_format
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -168,16 +169,15 @@ class Producer(models.Model):
     def get_products(self):
         # This producer may have product's list
         if self.is_active:
-            changeproductslist_url = reverse(
-                'admin:repanier_product_changelist',
+            return format_html(
+                '<a href="{}?is_active__exact=1&producer={}" class="btn">&nbsp;{}</a>',
+                reverse('admin:repanier_product_changelist',),
+                str(self.id),
+                _("Products")
             )
-            link = "<a href=\"{}?is_active__exact=1&producer={}\" class=\"btn\">&nbsp;{}</a>".format(
-                changeproductslist_url, str(self.id), _("Products"))
-            return link
         return EMPTY_STRING
 
     get_products.short_description = EMPTY_STRING
-    get_products.allow_tags = True
 
     def get_admin_date_balance(self):
         if self.id is not None:
@@ -191,7 +191,6 @@ class Producer(models.Model):
             return timezone.now().date()
 
     get_admin_date_balance.short_description = _("Date_balance")
-    get_admin_date_balance.allow_tags = False
 
     def get_admin_balance(self):
         if self.id is not None:
@@ -200,7 +199,6 @@ class Producer(models.Model):
             return REPANIER_MONEY_ZERO
 
     get_admin_balance.short_description = _("Balance")
-    get_admin_balance.allow_tags = False
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -208,7 +206,11 @@ class Producer(models.Model):
                 producer_id=self.id,
                 status__gte=PERMANENCE_OPENED,
                 status__lte=PERMANENCE_SEND
-            ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
+            ).order_by('?').aggregate(
+                Sum('total_price_with_tax'),
+                Sum('delta_price_with_tax'),
+                Sum('delta_transport')
+            )
             if result_set["total_price_with_tax__sum"] is not None:
                 order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
             else:
@@ -225,7 +227,10 @@ class Producer(models.Model):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = BankAccount.objects.filter(
                 producer_id=self.id, producer_invoice__isnull=True
-            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
+            ).order_by('?').aggregate(
+                Sum('bank_amount_in'),
+                Sum('bank_amount_out')
+            )
             if result_set["bank_amount_in__sum"] is not None:
                 bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
             else:
@@ -290,7 +295,6 @@ class Producer(models.Model):
         return calculated_invoiced_balance
 
     get_calculated_invoiced_balance.short_description = _("Balance")
-    get_calculated_invoiced_balance.allow_tags = False
 
     def get_balance(self):
         last_producer_invoice_set = ProducerInvoice.objects.filter(
@@ -300,33 +304,44 @@ class Producer(models.Model):
         balance = self.get_admin_balance()
         if last_producer_invoice_set.exists():
             if balance.amount < 0:
-                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:#298A08\">{}</span>".format(-balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#298A08">{}</span></a>',
+                    reverse('producer_invoice_view', args=(0,)),
+                    str(self.id),
+                    -balance
+                )
             elif balance.amount == 0:
-                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:#32CD32\">{}</span>".format(-balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#32CD32">{}</span></a>',
+                    reverse('producer_invoice_view', args=(0,)),
+                    str(self.id),
+                    -balance
+                )
             elif balance.amount > 30:
-                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:red\">{}</span>".format(-balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:red">{}</span></a>',
+                    reverse('producer_invoice_view', args=(0,)),
+                    str(self.id),
+                    -balance
+                )
             else:
-                return '<a href="' + reverse('producer_invoice_view', args=(0,)) + '?producer=' + str(
-                    self.id) + '" class="btn" target="_blank" >' + (
-                           "<span style=\"color:#696969\">{}</span>".format(-balance)) + '</a>'
+                return format_html(
+                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#696969">{}</span></a>',
+                    reverse('producer_invoice_view', args=(0,)),
+                    str(self.id),
+                    -balance
+                )
         else:
             if balance.amount < 0:
-                return "<span style=\"color:#298A08\">{}</span>".format(-balance)
+                return format_html('<span style="color:#298A08">{}</span>', -balance)
             elif balance.amount == 0:
-                return "<span style=\"color:#32CD32\">{}</span>".format(-balance)
+                return format_html('<span style="color:#32CD32">{}</span>', -balance)
             elif balance.amount > 30:
-                return "<span style=\"color:red\">{}</span>".format(-balance)
+                return format_html('<span style="color:red">{}</span>', -balance)
             else:
-                return "<span style=\"color:#696969\">{}</span>".format(-balance)
+                return format_html('<span style="color:#696969">{}</span>', -balance)
 
     get_balance.short_description = _("Balance")
-    get_balance.allow_tags = True
     get_balance.admin_order_field = 'balance'
 
     def get_last_invoice(self):
@@ -336,22 +351,17 @@ class Producer(models.Model):
         if producer_last_invoice is not None:
             total_price_with_tax = producer_last_invoice.get_total_price_with_tax()
             if total_price_with_tax < DECIMAL_ZERO:
-                return "<span style=\"color:#298A08\">{}</span>".format(
-                    number_format(total_price_with_tax, 2))
+                return format_html('<span style="color:#298A08">{}</span>', number_format(total_price_with_tax, 2))
             elif total_price_with_tax == DECIMAL_ZERO:
-                return "<span style=\"color:#32CD32\">{}</span>".format(
-                    number_format(total_price_with_tax, 2))
+                return format_html('<span style="color:#32CD32">{}</span>', number_format(total_price_with_tax, 2))
             elif total_price_with_tax > 30:
-                return "<span style=\"color:red\">{}</span>".format(
-                    number_format(total_price_with_tax, 2))
+                return format_html('<span style="color:red">{}</span>', number_format(total_price_with_tax, 2))
             else:
-                return "<span style=\"color:#696969\">{}</span>".format(
-                    number_format(total_price_with_tax, 2))
+                return format_html('<span style="color:#696969">{}</span>', number_format(total_price_with_tax, 2))
         else:
-            return "<span style=\"color:#32CD32\">{}</span>".format(number_format(0, 2))
+            return format_html('<span style="color:#32CD32">{}</span>', number_format(0, 2))
 
     get_last_invoice.short_description = _("Last invoice")
-    get_last_invoice.allow_tags = True
 
     def get_html_on_hold_movement(self):
         bank_not_invoiced = self.get_bank_not_invoiced()

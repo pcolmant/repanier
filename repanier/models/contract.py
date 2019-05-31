@@ -161,13 +161,11 @@ class Contract(TranslatableModel):
         return EMPTY_STRING
 
     get_dates.short_description = (_("Permanences"))
-    get_dates.allow_tags = True
 
     def get_contract_admin_display(self):
         return "{} ({})".format(self.safe_translation_getter('long_name', any_language=True), self.get_dates)
 
     get_contract_admin_display.short_description = _("Commitments")
-    get_contract_admin_display.allow_tags = False
 
     def __str__(self):
         return "{}".format(self.safe_translation_getter('long_name', any_language=True))

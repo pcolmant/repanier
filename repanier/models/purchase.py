@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import F
 from django.db.models.signals import post_init, pre_save
 from django.dispatch import receiver
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -153,11 +154,10 @@ class Purchase(models.Model):
 
     def get_html_producer_unit_price(self):
         if self.offer_item is not None:
-            return mark_safe(_("<b>%(price)s</b>") % {'price': self.get_producer_unit_price()})
+            return format_html("<b>{}</b>", self.get_producer_unit_price())
         return EMPTY_STRING
 
     get_html_producer_unit_price.short_description = (_("Producer unit price"))
-    get_html_producer_unit_price.allow_tags = True
 
     def get_html_unit_deposit(self):
         if self.offer_item is not None:

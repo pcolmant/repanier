@@ -1245,7 +1245,10 @@ class Permanence(TranslatableModel):
             producer = producer_invoice.producer
             result_set = BankAccount.objects.filter(
                 producer_id=producer.id, producer_invoice__isnull=True
-            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
+            ).order_by('?').aggregate(
+                Sum('bank_amount_in'),
+                Sum('bank_amount_out')
+            )
             if result_set["bank_amount_in__sum"] is not None:
                 bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
             else:

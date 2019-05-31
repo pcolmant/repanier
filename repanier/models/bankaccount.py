@@ -4,7 +4,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
@@ -97,8 +96,10 @@ class BankAccount(models.Model):
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
-            return mark_safe(
-                "<i>{}</i>".format(self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING))
+            return format_html(
+                "<i>{}</i>",
+                self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING
+            )
         else:
             return self.bank_amount_in if self.bank_amount_in.amount != DECIMAL_ZERO else EMPTY_STRING
 
@@ -107,8 +108,10 @@ class BankAccount(models.Model):
 
     def get_bank_amount_out(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
-            return mark_safe("<i>{}</i>".format(
-                self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING))
+            return format_html(
+                "<i>{}</i>",
+                self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING
+            )
         else:
             return self.bank_amount_out if self.bank_amount_out.amount != DECIMAL_ZERO else EMPTY_STRING
 
@@ -128,7 +131,6 @@ class BankAccount(models.Model):
             return EMPTY_STRING
 
     get_producer.short_description = (_("Producer"))
-    get_producer.allow_tags = True
     get_producer.admin_order_field = 'producer'
 
     def get_customer(self):
@@ -152,7 +154,6 @@ class BankAccount(models.Model):
             return EMPTY_STRING
 
     get_customer.short_description = (_("Customer"))
-    get_customer.allow_tags = True
     get_customer.admin_order_field = 'customer'
 
     class Meta:

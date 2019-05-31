@@ -198,7 +198,7 @@ class Configuration(TranslatableModel):
             customer_buyinggroup=customer_buyinggroup,
             very_first_customer=very_first_customer
         )
-
+        very_first_customer = Customer.get_or_create_the_very_first_customer()
         coordinator = Staff.get_or_create_any_coordinator()
         Staff.get_or_create_order_responsible()
         Staff.get_or_create_invoice_responsible()
@@ -268,7 +268,7 @@ class Configuration(TranslatableModel):
         )
         api.publish_page(
             page=page,
-            user=coordinator.user,
+            user=coordinator.customer_responsible.user,
             language=settings.LANGUAGE_CODE)
 
         return config
