@@ -9,7 +9,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/srv
+      - .:/repanier
   db:
    image: postgres:latest
    ports:
