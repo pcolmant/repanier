@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, ODS, JSON, XLS
+from import_export.formats.base_formats import CSV, ODS, JSON, XLS, XLSX
 
 from repanier.admin.admin_filter import BankAccountFilterByStatus
 from repanier.const import *
@@ -14,7 +14,6 @@ from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice, CustomerInvoice
 from repanier.models.producer import Producer
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, TwoMoneysWidget, ProducerNameWidget, CustomerNameWidget, DateWidgetExcel
 
 
@@ -318,7 +317,13 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, XLSX) if f().can_import()]
+
+    def get_export_formats(self):
+        """
+        Returns available export formats.
+        """
+        return [f for f in (CSV, XLSX) if f().can_export()]
 
     # class Media:
     #     js = ('js/expenses_to_be_apportioned.js',)
