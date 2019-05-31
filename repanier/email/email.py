@@ -205,17 +205,11 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_STOCK=settings.REPANIER_SETTINGS_STOCK,
                 REPANIER_SETTINGS_TEMPLATE=settings.REPANIER_SETTINGS_TEMPLATE
             )
-        else:
-            subject = "{} : {}".format(
-                argv_0,
-                settings.ALLOWED_HOSTS[0]
+            RepanierEmail.send_test_email(
+                settings.ADMIN_EMAIL,
+                subject=subject,
+                body=body
             )
-            body = EMPTY_STRING
-        RepanierEmail.send_test_email(
-            settings.ADMIN_EMAIL,
-            subject=subject,
-            body=body
-        )
 
     @classmethod
     def send_email_to_who(cls, is_email_send=True, board=False):
