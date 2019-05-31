@@ -99,9 +99,9 @@ class CustomerInvoiceView(DetailView):
         return context
 
     def get_queryset(self):
-        pk = self.kwargs.get('pk', None)
+        pk = self.kwargs.get('pk', 0)
         if self.request.user.is_staff:
-            if (pk is None) or (pk == '0'):
+            if pk == 0:
                 customer_id = self.request.GET.get('customer', None)
                 last_customer_invoice = CustomerInvoice.objects.filter(
                     customer_id=customer_id, invoice_sort_order__isnull=False
@@ -112,7 +112,7 @@ class CustomerInvoiceView(DetailView):
                 invoice_sort_order__isnull=False
             ).order_by('-invoice_sort_order')
         else:
-            if (pk is None) or (pk == '0'):
+            if pk == 0:
                 last_customer_invoice = CustomerInvoice.objects.filter(
                     customer__user_id=self.request.user.id,
                     invoice_sort_order__isnull=False

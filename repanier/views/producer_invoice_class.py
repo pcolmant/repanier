@@ -82,8 +82,8 @@ class ProducerInvoiceView(DetailView):
                     raise Http404
             else:
                 raise Http404
-        pk = self.kwargs.get('pk', None)
-        if (pk is None) or (pk == '0'):
+        pk = self.kwargs.get('pk', 0)
+        if pk == 0:
             last_producer_invoice = ProducerInvoice.objects.filter(
                 producer_id=producer_id, invoice_sort_order__isnull=False
             ).only("id").order_by("-invoice_sort_order").first()

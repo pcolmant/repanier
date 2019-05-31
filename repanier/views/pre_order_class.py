@@ -65,8 +65,8 @@ class PreOrderView(DetailView):
         return context
 
     def get_queryset(self):
-        pk = self.kwargs.get('pk', None)
-        if (pk is None) or (pk == '0'):
+        pk = self.kwargs.get('pk', 0)
+        if pk == 0:
             permanence_pre_opened = Permanence.objects.filter(
                 status=PERMANENCE_PRE_OPEN
             ).order_by("-is_updated_on").only("id").first()
