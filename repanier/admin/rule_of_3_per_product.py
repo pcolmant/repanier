@@ -4,7 +4,7 @@ from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, DecimalField
 from django.forms import BaseInlineFormSet
 from django.utils import translation
 from django.utils.formats import number_format
@@ -408,7 +408,8 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 offer_item_id=offer_item.id,
                 is_box_content=False
             ).order_by('?').aggregate(
-                Sum('quantity_invoiced')
+                Sum('quantity_invoiced'),
+                output_field=DecimalField(max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
             )
             if result_set["quantity_invoiced__sum"] is not None:
                 qty_invoiced = result_set["quantity_invoiced__sum"]
