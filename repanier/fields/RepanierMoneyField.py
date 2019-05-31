@@ -150,6 +150,9 @@ class RepanierMoney(object):
         # Important : used by /django/core/validators.py
         return self.amount.as_tuple()
 
+    def is_finite(self):
+        return self.amount.is_finite()
+
 
 class MoneyFieldProxy(object):
     def __init__(self, field):
