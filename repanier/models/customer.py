@@ -259,15 +259,27 @@ class Customer(models.Model):
                 status__gte=PERMANENCE_OPENED,
                 status__lte=PERMANENCE_SEND,
                 customer_charged_id=self.id
-            ).order_by('?').aggregate(Sum('total_price_with_tax'), Sum('delta_price_with_tax'), Sum('delta_transport'))
-            if result_set["total_price_with_tax__sum"] is not None:
-                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
-            else:
-                order_not_invoiced = REPANIER_MONEY_ZERO
-            if result_set["delta_price_with_tax__sum"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
-            if result_set["delta_transport__sum"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
+            ).order_by('?').aggregate(
+                total_price=Sum(
+                    'total_price_with_tax',
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                delta_price=Sum(
+                    'delta_price_with_tax',
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                delta_transport=Sum(
+                    'delta_transport',
+                    output_field=ModelMoneyField(max_digits=5, decimal_places=2, default=DECIMAL_ZERO)
+                )
+            )
+            total_price = result_set["total_price"] \
+                if result_set["total_price"] is not None else REPANIER_MONEY_ZERO
+            delta_price = result_set["delta_price"] \
+                if result_set["delta_price"] is not None else REPANIER_MONEY_ZERO
+            delta_transport = result_set["delta_transport"] \
+                if result_set["delta_transport"] is not None else REPANIER_MONEY_ZERO
+            order_not_invoiced = total_price + delta_price + delta_transport
         else:
             order_not_invoiced = REPANIER_MONEY_ZERO
         return order_not_invoiced
@@ -276,15 +288,20 @@ class Customer(models.Model):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = BankAccount.objects.filter(
                 customer_id=self.id, customer_invoice__isnull=True
-            ).order_by('?').aggregate(Sum('bank_amount_in'), Sum('bank_amount_out'))
-            if result_set["bank_amount_in__sum"] is not None:
-                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
-            else:
-                bank_in = REPANIER_MONEY_ZERO
-            if result_set["bank_amount_out__sum"] is not None:
-                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-            else:
-                bank_out = REPANIER_MONEY_ZERO
+            ).order_by('?').aggregate(
+                bank_in=Sum(
+                    'bank_amount_in',
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                bank_out=Sum(
+                    'bank_amount_out',
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                )
+            )
+            bank_in = result_set["bank_in"] \
+                if result_set["bank_in"] is not None else REPANIER_MONEY_ZERO
+            bank_out = result_set["bank_out"] \
+                if result_set["bank_out"] is not None else REPANIER_MONEY_ZERO
             bank_not_invoiced = bank_in - bank_out
         else:
             bank_not_invoiced = REPANIER_MONEY_ZERO
