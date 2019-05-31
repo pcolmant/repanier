@@ -10,11 +10,9 @@ from django.db import connection
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.email.email import RepanierEmail
-
 logger = logging.getLogger(__name__)
 
-DJANGO_IS_MIGRATION_RUNNING = 'makemigrations' in sys.argv or 'migrate' in sys.argv
+DJANGO_IS_MIGRATION_RUNNING = "makemigrations" in sys.argv or "migrate" in sys.argv
 REPANIER_SETTINGS_AFTER_AMOUNT = None
 REPANIER_SETTINGS_BANK_ACCOUNT = None
 REPANIER_SETTINGS_CONFIG = None
@@ -37,8 +35,6 @@ REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = None
 REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = None
 REPANIER_SETTINGS_VAT_ID = None
 REPANIER_SETTINGS_XLSX_PORTRAIT = None
-# DJANGO_IS_MIGRATION_RUNNING = 'makemigrations' in sys.argv or 'migrate' in sys.argv
-
 
 
 class RepanierConfig(AppConfig):
@@ -46,6 +42,8 @@ class RepanierConfig(AppConfig):
     verbose_name = "Repanier"
 
     def ready(self):
+        import repanier.signals  # noqa
+
         # https://docs.python.org/3/library/decimal.html#working-with-threads
         DefaultContext.rounding = ROUND_HALF_UP
         setcontext(DefaultContext)
@@ -58,7 +56,7 @@ class RepanierConfig(AppConfig):
         while not db_started:
             try:
                 db_started = connection.cursor() is not None
-            except:
+            except Exception:
                 logger.info("waiting for database connection")
                 time.sleep(1)
 
@@ -69,7 +67,6 @@ class RepanierConfig(AppConfig):
 
         from repanier.models.configuration import Configuration
         from repanier.models.notification import Notification
-        from repanier.models.lut import LUT_DepartmentForCustomer
         from repanier.const import DECIMAL_ONE, WEBMASTER_GROUP
 
         try:
@@ -89,25 +86,38 @@ class RepanierConfig(AppConfig):
 
             # Create groups with correct rights
             # WEBMASTER
-            webmaster_group = Group.objects.filter(name=WEBMASTER_GROUP).only('id').order_by('?').first()
+            webmaster_group = (
+                Group.objects.filter(name=WEBMASTER_GROUP)
+                .only("id")
+                .order_by("?")
+                .first()
+            )
             if webmaster_group is None:
                 webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
-            content_types = ContentType.objects.exclude(
-                app_label__in=[
-                    'repanier',
-                    'admin',
-                    'auth',
-                    'contenttypes',
-                    'menus',
-                    'reversion',
-                    'sessions',
-                    'sites',
-                ]
-            ).only('id').order_by('?')
-            permissions = Permission.objects.filter(
-                content_type__in=content_types
-            ).only('id').order_by('?')
+            content_types = (
+                ContentType.objects.exclude(
+                    app_label__in=[
+                        "repanier",
+                        "admin",
+                        "auth",
+                        "contenttypes",
+                        "menus",
+                        "reversion",
+                        "sessions",
+                        "sites",
+                    ]
+                )
+                .only("id")
+                .order_by("?")
+            )
+            permissions = (
+                Permission.objects.filter(content_type__in=content_types)
+                .only("id")
+                .order_by("?")
+            )
             webmaster_group.permissions.set(permissions)
+
+            from repanier.email.email import RepanierEmail
 
             RepanierEmail.send_startup_email(sys.argv[0])
 
@@ -115,4 +125,3 @@ class RepanierConfig(AppConfig):
             logger.error("##################################")
             logger.error(error_str)
             logger.error("##################################")
-            other = _("Other qty")
