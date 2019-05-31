@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, ODS, JSON, XLS
+from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import ForeignKeyWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -28,7 +28,6 @@ from repanier.models.product import Product
 from repanier.task import task_product
 from repanier.tools import sint, update_offer_item, get_repanier_template_name, get_repanier_static_name
 from repanier.widget.select_admin_order_unit import SelectAdminOrderUnitWidget
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, TranslatedForeignKeyWidget, \
     DecimalBooleanWidget, ChoiceWidget, ThreeDecimalsWidget, TranslatedManyToManyWidget, TwoMoneysWidget
 
@@ -593,7 +592,13 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, XLSX) if f().can_import()]
+
+    def get_export_formats(self):
+        """
+        Returns available export formats.
+        """
+        return [f for f in (CSV, XLSX) if f().can_export()]
 
     class Media:
         js = (get_repanier_static_name("js/confirm_exit.js"),)

@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, ODS, JSON, XLS
+from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
 
 import repanier.apps
@@ -23,7 +23,6 @@ from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.tools import web_services_activated, get_repanier_static_name
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.widget import IdWidget, TwoDecimalsWidget, \
     DecimalBooleanWidget, TwoMoneysWidget, DateWidgetExcel
@@ -401,7 +400,13 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, XLSX) if f().can_import()]
+
+    def get_export_formats(self):
+        """
+        Returns available export formats.
+        """
+        return [f for f in (CSV, XLSX) if f().can_export()]
 
     class Media:
         if settings.REPANIER_SETTINGS_STOCK:

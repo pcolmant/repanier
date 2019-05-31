@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 from import_export import resources, fields
 from import_export.admin import ExportMixin
-from import_export.formats.base_formats import CSV, ODS, JSON, XLS
+from import_export.formats.base_formats import CSV, XLSX
 
 from repanier.admin.admin_filter import PurchaseFilterByProducerForThisPermanence, \
     PurchaseFilterByCustomer, PurchaseFilterByPermanence
@@ -30,7 +30,6 @@ from repanier.models.product import Product
 from repanier.models.purchase import Purchase
 from repanier.tools import sint, get_repanier_static_name
 from repanier.widget.select_admin_delivery import SelectAdminDeliveryWidget
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, \
     ChoiceWidget, FourDecimalsWidget, TwoMoneysWidget, DateWidgetExcel
 
@@ -536,12 +535,11 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 pass
         return actions
 
-    @staticmethod
-    def get_import_formats():
+    def get_export_formats(self):
         """
-        Returns available import formats.
+        Returns available export formats.
         """
-        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, XLSX) if f().can_export()]
 
     class Media:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:

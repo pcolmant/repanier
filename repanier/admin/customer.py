@@ -18,13 +18,12 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, ODS, JSON, XLS
+from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
 
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.widget import IdWidget, OneToOneWidget, \
     DecimalBooleanWidget, ZeroDecimalsWidget, TwoMoneysWidget, TranslatedForeignKeyWidget, DateWidgetExcel
 from repanier.xlsx.xlsx_invoice import export_invoice
@@ -456,4 +455,10 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()]
+        return [f for f in (CSV, XLSX) if f().can_import()]
+
+    def get_export_formats(self):
+        """
+        Returns available export formats.
+        """
+        return [f for f in (CSV, XLSX) if f().can_export()]
