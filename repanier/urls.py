@@ -170,6 +170,7 @@ else:
 
     from django.urls import path
 
+    # https://consideratecode.com/2018/05/02/django-2-0-url-to-path-cheatsheet/
     urlpatterns = [
         path('go_repanier/', login_view, name='login_form'),
         path('leave_repanier/', logout_view, name='logout'),
@@ -234,7 +235,7 @@ else:
         path(
             'ajax/pre-order-update-product/<uuid:offer_uuid>/<int:offer_item_id>/',
             pre_order_update_product_ajax, name='pre_order_update_product_ajax'),
-        path('ajax/upload-picture/<str:upload_to>/(<int:size>)/', ajax_picture, name='ajax_picture'),
+        path('ajax/upload-picture/<path:upload_to>/<int:size>/', ajax_picture, name='ajax_picture'),
         path('ajax/btn-confirm-order/', btn_confirm_order_ajax, name='btn_confirm_order_ajax'),
         path('ajax/display-status/<int:permanence_id>/', display_status, name='display_status'),
         path('ajax/like/', like_ajax, name='like_ajax'),
