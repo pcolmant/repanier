@@ -32,13 +32,19 @@ class Box(Product):
 
     def get_calculated_price(self):
         result_set = BoxContent.objects.filter(box_id=self.id).aggregate(
-            Sum('calculated_customer_content_price'),
-            Sum('calculated_content_deposit')
+            price=Sum(
+                'calculated_customer_content_price',
+                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            ),
+            deposit=Sum(
+                'calculated_content_deposit',
+                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            )
         )
-        box_price = result_set["calculated_customer_content_price__sum"] \
-            if result_set["calculated_customer_content_price__sum"] is not None else DECIMAL_ZERO
-        box_deposit = result_set["calculated_content_deposit__sum"] \
-            if result_set["calculated_content_deposit__sum"] is not None else DECIMAL_ZERO
+        box_price = result_set["price"] \
+            if result_set["price"] is not None else REPANIER_MONEY_ZERO
+        box_deposit = result_set["deposit"] \
+            if result_set["deposit"] is not None else REPANIER_MONEY_ZERO
 
         return box_price, box_deposit
 
