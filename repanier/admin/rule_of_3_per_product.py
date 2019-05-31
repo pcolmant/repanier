@@ -301,9 +301,12 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         for formset in formsets:
             # option.py -> construct_change_message doesn't test the presence of those array not created at form initialisation...
-            if not hasattr(formset, 'new_objects'): formset.new_objects = []
-            if not hasattr(formset, 'changed_objects'): formset.changed_objects = []
-            if not hasattr(formset, 'deleted_objects'): formset.deleted_objects = []
+            if not hasattr(formset, 'new_objects'):
+                formset.new_objects = []
+            if not hasattr(formset, 'changed_objects'):
+                formset.changed_objects = []
+            if not hasattr(formset, 'deleted_objects'):
+                formset.deleted_objects = []
         offer_item = OfferItem.objects.filter(id=form.instance.id).order_by('?').first()
         formset = formsets[0]
         for purchase_form in formset:
@@ -408,13 +411,13 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 offer_item_id=offer_item.id,
                 is_box_content=False
             ).order_by('?').aggregate(
-                Sum('quantity_invoiced'),
-                output_field=DecimalField(max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+                qty_invoiced=Sum(
+                    'quantity_invoiced',
+                    output_field=DecimalField(max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+                )
             )
-            if result_set["quantity_invoiced__sum"] is not None:
-                qty_invoiced = result_set["quantity_invoiced__sum"]
-            else:
-                qty_invoiced = DECIMAL_ZERO
+            qty_invoiced = result_set["qty_invoiced"] \
+                if result_set["qty_invoiced"] is not None else DECIMAL_ZERO
             taken_from_stock = qty_invoiced if qty_invoiced < offer_item.stock else offer_item.stock
             new_add_2_stock = taken_from_stock + qty_delivered - qty_invoiced
             if new_add_2_stock < DECIMAL_ZERO:
