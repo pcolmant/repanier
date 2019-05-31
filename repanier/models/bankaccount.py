@@ -3,6 +3,7 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -121,9 +122,9 @@ class BankAccount(models.Model):
             if self.customer is None:
                 # This is a total, show it
                 if self.operation_status == BANK_LATEST_TOTAL:
-                    return "<b>=== {}</b>".format(settings.REPANIER_SETTINGS_GROUP_NAME)
+                    return format_html("<b>=== {}</b>", settings.REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    return "<b>--- {}</b>".format(settings.REPANIER_SETTINGS_GROUP_NAME)
+                    return format_html("<b>--- {}</b>", settings.REPANIER_SETTINGS_GROUP_NAME)
             return EMPTY_STRING
 
     get_producer.short_description = (_("Producer"))
@@ -140,14 +141,14 @@ class BankAccount(models.Model):
                 if self.operation_status == BANK_LATEST_TOTAL:
 
                     if REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-                        return "<b>{}</b>".format(REPANIER_SETTINGS_BANK_ACCOUNT)
+                        return format_html("<b>{}</b>", REPANIER_SETTINGS_BANK_ACCOUNT)
                     else:
-                        return "<b>{}</b>".format("==============")
+                        return format_html("<b>{}</b>", "==============")
                 else:
                     if REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-                        return "<b>{}</b>".format(REPANIER_SETTINGS_BANK_ACCOUNT)
+                        return format_html("<b>{}</b>", REPANIER_SETTINGS_BANK_ACCOUNT)
                     else:
-                        return "<b>{}</b>".format("--------------")
+                        return format_html("<b>{}</b>", "--------------")
             return EMPTY_STRING
 
     get_customer.short_description = (_("Customer"))
