@@ -1,12 +1,12 @@
-Django==2.2.1
+Django==2.2.2
 django-cms==3.6.0
 # https://github.com/divio/django-cms/archive/develop.zip
 Pillow==6.0.0
-PyYAML==5.1
+PyYAML==5.1.1
 Unidecode==1.0.23
 django-debug-toolbar==1.11
 diff-match-patch==20181111
-django-classy-tags==0.8.0
+django-classy-tags==0.9.0
 django-crispy-forms==1.7.2
 django-easy-select2==1.5.5
 django-filer==1.5.0
