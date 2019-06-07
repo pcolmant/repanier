@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import django
 from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
@@ -65,7 +66,10 @@ class PreOrderView(DetailView):
         return context
 
     def get_queryset(self):
-        pk = self.kwargs.get('pk', 0)
+        if django.VERSION[0] < 2:
+            pk = int(self.kwargs.get('pk', 0))
+        else:
+            pk = self.kwargs.get('pk', 0)
         if pk == 0:
             permanence_pre_opened = Permanence.objects.filter(
                 status=PERMANENCE_PRE_OPEN

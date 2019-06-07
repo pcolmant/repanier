@@ -1,4 +1,5 @@
 # -*- coding: utf-8
+import django
 from django.http import Http404
 from django.utils import translation
 from django.views.generic import DetailView
@@ -82,7 +83,10 @@ class ProducerInvoiceView(DetailView):
                     raise Http404
             else:
                 raise Http404
-        pk = self.kwargs.get('pk', 0)
+        if django.VERSION[0] < 2:
+            pk = int(self.kwargs.get('pk', 0))
+        else:
+            pk = self.kwargs.get('pk', 0)
         if pk == 0:
             last_producer_invoice = ProducerInvoice.objects.filter(
                 producer_id=producer_id, invoice_sort_order__isnull=False

@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-
+import django
 from django.conf import settings
 from django.http import Http404
 from django.utils import translation
@@ -99,7 +99,10 @@ class CustomerInvoiceView(DetailView):
         return context
 
     def get_queryset(self):
-        pk = self.kwargs.get('pk', 0)
+        if django.VERSION[0] < 2:
+            pk = int(self.kwargs.get('pk', 0))
+        else:
+            pk = self.kwargs.get('pk', 0)
         if self.request.user.is_staff:
             if pk == 0:
                 customer_id = self.request.GET.get('customer', None)
