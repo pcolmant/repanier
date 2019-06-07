@@ -40,32 +40,29 @@
         <div class="panel-group" id="accordion">
             {% for customer in customer_list %}
                 <div class="panel panel-default">
-                    <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse"
-                         data-target="#collapse{{ customer.id|unlocalize }}">
+                    <div class="panel-heading">
                         <h4 class="panel-title">
                             {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}
                                 ){% endif %}</h4>
                     </div>
-                    <div id="collapse{{ customer.id|stringformat:"d" }}" class="panel-collapse collapse">
-                        <div class="panel-body bg-primary">
-                            <div class="col-xs-2">
-                                {% if customer.picture %}
-                                    <img class="img-rounded" style="margin: 5px;"
-                                         alt="{{ customer.long_basket_name }}"
-                                         title="{{ customer.long_basket_name }}"
-                                         src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+                    <div class="panel-body">
+                        <div class="col-xs-2">
+                            {% if customer.picture %}
+                                <img class="img-rounded" style="margin: 5px;"
+                                     alt="{{ customer.long_basket_name }}"
+                                     title="{{ customer.long_basket_name }}"
+                                     src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+                            {% endif %}
+                        </div>
+                        <div class="col-xs-10">
+                            {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
+                                <br>{% endif %}
+                            {% if customer.show_phones_to_members %}{% trans "Phone" %} :
+                                {{ customer.get_phones }}
+                                <br>{% endif %}
+                            {% if customer.show_mails_to_members %}{% trans "Email" %} :
+                                {{ customer.get_emails }}
                                 {% endif %}
-                            </div>
-                            <div class="col-xs-10">
-                                {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
-                                    <br>{% endif %}
-                                {% if customer.show_phones_to_members %}{% trans "Phone" %} :
-                                    {{ customer.get_phones }}
-                                    <br>{% endif %}
-                                {% if customer.show_mails_to_members %}{% trans "Email" %} :
-                                    {{ customer.get_emails }}
-                                    {% endif %}
-                            </div>
                         </div>
                     </div>
                 </div>
