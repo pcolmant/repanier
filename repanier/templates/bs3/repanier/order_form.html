@@ -1,5 +1,6 @@
 {% extends 'bs3/cms_order_page.html' %}
-{% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags repanier_tags %}
+{% load cms_tags sekizai_tags i18n l10n thumbnail filer_image_tags repanier_tags %}
+{#{% load cms_tags sekizai_tags i18n l10n thumbnail filer_tags filer_image_tags repanier_tags %}#}
 {% block notification %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock notification %}
 {% block login %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock login %}
 {% block may_order %}{% if not page_obj.has_previous %}{{ block.super }}{% endif %}{% endblock may_order %}
