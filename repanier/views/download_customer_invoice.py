@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-
+from django.conf import settings
 from django.http import Http404
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
@@ -7,7 +7,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
 from repanier.models.invoice import CustomerInvoice
-# from repanier.xlsx.xlsx_purchase import export_purchase
 from repanier.xlsx.xlsx_invoice import export_invoice
 
 
@@ -36,8 +35,9 @@ def download_customer_invoice(request, customer_invoice_id):
                 wb=None)
             response = HttpResponse(
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                _("Accounting report"),
+            response['Content-Disposition'] = "attachment; filename={0}-{1}-{2}.xlsx".format(
+                _("Purchases"),
+                customer_invoice_id,
                 settings.REPANIER_SETTINGS_GROUP_NAME
             )
             if wb is not None:
