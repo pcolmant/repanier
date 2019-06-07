@@ -19,8 +19,7 @@ from repanier.tools import get_repanier_template_name
 class CoordinatorsContactForm(forms.Form):
     staff = fields.MultipleChoiceField(
         label=_("Send an email to"),
-        choices=(),
-        widget=Select()
+        choices=()
     )
     your_email = fields.EmailField(label=_('My email address'))
     subject = fields.CharField(label=_('Subject'), max_length=100)
@@ -34,7 +33,7 @@ class CoordinatorsContactForm(forms.Form):
                 can_be_contacted=True,
                 translations__language_code=translation.get_language()
         ):
-            choices.append(("{}".format(staff.id), staff.get_title))
+            choices.append((staff.id, staff.get_title))
         self.fields["staff"].choices = choices
 
 
