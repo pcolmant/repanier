@@ -7,7 +7,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
-from django.db import models, connection
+from django.db import models
 from django.db.models import F
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -504,6 +504,14 @@ class Configuration(TranslatableModel):
                 is_order_manager=True,
             )
             self.db_version = 4
+        if self.db_version == 4:
+            from repanier.models import Customer
+            Customer.objects.filter(
+                city="NONE"
+            ).order_by('?').update(
+                city=EMPTY_STRING,
+            )
+            self.db_version = 5
 
     def __str__(self):
         return self.group_name
