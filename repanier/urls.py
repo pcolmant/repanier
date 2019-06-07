@@ -140,7 +140,7 @@ if django.VERSION[0] < 2:
         url(r'^pre-order/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
             never_cache(PreOrderView.as_view()), name='pre_order_uuid_view'),
 
-        url(r'^coordinators/$', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
+        url(r'^inform/$', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
         # url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
         url(r'^who/$', who_is_who_view, name='who_is_who_view'),
         url(r'^me/$', my_profile_view, name='my_profile_view'),
@@ -257,7 +257,7 @@ else:
         path('pre-order/<uuid:offer_uuid>/',
             never_cache(PreOrderView.as_view()), name='pre_order_uuid_view'),
 
-        path('coordinators/', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
+        path('inform/', send_mail_to_coordinators_view, name='send_mail_to_coordinators_view'),
         # url(r'^members/$', send_mail_to_all_members_view, name='send_mail_to_all_members_view'),
         path('who/', who_is_who_view, name='who_is_who_view'),
         path('me/', my_profile_view, name='my_profile_view'),
