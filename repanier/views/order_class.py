@@ -7,8 +7,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.views.generic import ListView
 
-from repanier.models import CustomerInvoice
 from repanier.const import EMPTY_STRING
+from repanier.models import CustomerInvoice
 from repanier.models.box import BoxContent
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer
@@ -96,6 +96,7 @@ class OrderView(ListView):
             self.communication = True
         else:
             self.communication = False
+
         return super(OrderView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -175,7 +176,15 @@ class OrderView(ListView):
                 customer_id=customer.id
             ).order_by('?').first()
             if customer_invoice is None:
-                raise Http404
+                customer_invoice = CustomerInvoice.objects.create(
+                    permanence_id=self.permanence.id,
+                    customer_id=customer.id,
+                    status=self.permanence.status,
+                    customer_charged_id=customer.id,
+                )
+                customer_invoice.set_order_delivery(delivery=None)
+                customer_invoice.calculate_order_price()
+                customer_invoice.save()
             if customer_invoice.delivery is not None:
                 status = customer_invoice.delivery.status
             else:
@@ -248,7 +257,8 @@ class OrderView(ListView):
             else:
                 qs = OfferItemWoReceiver.objects.filter(
                     Q(
-                        permanence_id=self.permanence.id, is_active=True,
+                        permanence_id=self.permanence.id,
+                        is_active=True,
                         is_box=False,  # Don't display boxes -> Added from customers reactions.
                         may_order=True,  # Don't display technical products.
                         translations__language_code=translation.get_language()
