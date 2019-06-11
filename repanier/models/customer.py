@@ -260,15 +260,15 @@ class Customer(models.Model):
             ).order_by('?').aggregate(
                 total_price=Sum(
                     'total_price_with_tax',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
                 ),
                 delta_price=Sum(
                     'delta_price_with_tax',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
                 ),
                 delta_transport=Sum(
                     'delta_transport',
-                    output_field=ModelMoneyField(max_digits=5, decimal_places=2, default=DECIMAL_ZERO)
+                    output_field=ModelMoneyField(max_digits=5, decimal_places=2, default=REPANIER_MONEY_ZERO)
                 )
             )
             total_price = result_set["total_price"] \
@@ -289,11 +289,11 @@ class Customer(models.Model):
             ).order_by('?').aggregate(
                 bank_in=Sum(
                     'bank_amount_in',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
                 ),
                 bank_out=Sum(
                     'bank_amount_out',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
                 )
             )
             bank_in = result_set["bank_in"] \

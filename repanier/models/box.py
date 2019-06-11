@@ -34,11 +34,11 @@ class Box(Product):
         result_set = BoxContent.objects.filter(box_id=self.id).aggregate(
             price=Sum(
                 'calculated_customer_content_price',
-                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
             ),
             deposit=Sum(
                 'calculated_content_deposit',
-                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
             )
         )
         box_price = result_set["price"] \
