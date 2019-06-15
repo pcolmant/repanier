@@ -33,7 +33,7 @@ from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stoc
 
 class ProducerResource(resources.ModelResource):
     id = fields.Field(attribute='id', widget=IdWidget(), readonly=True)
-    phone1 = fields.Field(attribute='phone1', default='1234', widget=CharWidget(), readonly=False)
+    phone1 = fields.Field(attribute='phone1', widget=CharWidget(), readonly=False)
     phone2 = fields.Field(attribute='phone2', widget=CharWidget(), readonly=False)
     price_list_multiplier = fields.Field(
         attribute='price_list_multiplier', default=DECIMAL_ONE,
