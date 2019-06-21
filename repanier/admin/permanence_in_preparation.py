@@ -5,6 +5,7 @@ import threading
 from django import forms
 from django.contrib import admin
 from django.core.checks import messages
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
@@ -20,7 +21,11 @@ from parler.forms import TranslatableModelForm
 from parler.utils.context import switch_language
 
 import repanier.apps
-from repanier.admin.forms import OpenAndSendOfferForm, CloseAndSendOrderForm, GeneratePermanenceForm
+from repanier.admin.forms import (
+    OpenAndSendOfferForm,
+    CloseAndSendOrderForm,
+    GeneratePermanenceForm,
+)
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.email.email import RepanierEmail
@@ -37,7 +42,11 @@ from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
 from repanier.task.task_order import pre_open_order, open_order, close_and_send_order
-from repanier.tools import get_board_composition, get_recurrence_dates, get_repanier_template_name
+from repanier.tools import (
+    get_board_composition,
+    get_recurrence_dates,
+    get_repanier_template_name,
+)
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
 
@@ -134,26 +143,32 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "delivery_point":
             kwargs["queryset"] = LUT_DeliveryPoint.objects.filter(
-                is_active=True, rght=F('lft') + 1
+                is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(DeliveryBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        return super(DeliveryBoardInline, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 class PermanenceInPreparationForm(TranslatableModelForm):
     short_name = forms.CharField(
         label=_("Offer name"),
-        widget=forms.TextInput(attrs={'style': "width:100% !important"}),
-        required=False
+        widget=forms.TextInput(attrs={"style": "width:100% !important"}),
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):
         super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
-        if settings.REPANIER_SETTINGS_CONTRACT:
-            if "contract" in self.fields:
-                contract_field = self.fields["contract"]
-                contract_field.widget.can_add_related = False
-                contract_field.widget.can_change_related = False
-                contract_field.widget.can_delete_related = False
+        if settings.REPANIER_SETTINGS_CONTRACT and "contract" in self.fields:
+            contract_field = self.fields["contract"]
+            contract_field.widget.can_add_related = False
+            contract_field.widget.can_change_related = False
+            contract_field.widget.can_delete_related = False
+            contract = Contract.objects.all().first()
+            contract_field.initial = contract.pk if contract else None
+            permanence_date_field = self.fields["permanence_date"]
+            permanence_date_field.widget = forms.HiddenInput()
+            permanence_date_field.initial = timezone.now().date()
 
     def clean(self):
         if any(self.errors):
@@ -214,43 +229,42 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return self.has_delete_permission(request, obj)
 
     def get_list_display(self, request):
-        list_display = [
-            'get_permanence_admin_display',
-        ]
+        list_display = ["get_permanence_admin_display"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            list_display += [
-                'language_column',
-            ]
+            list_display += ["language_column"]
         list_display += [
-            'get_producers', 'get_customers', 'get_board', 'get_html_status_display',
+            "get_producers",
+            "get_customers",
+            "get_board",
+            "get_html_status_display",
         ]
         return list_display
 
     def get_fields(self, request, permanence=None):
         fields = [
-            ('permanence_date', 'picture'),
-            'automatically_closed',
-            'short_name',
-            'offer_description'
+            ("permanence_date", "picture"),
+            "automatically_closed",
+            "short_name",
+            "offer_description",
         ]
         if settings.REPANIER_SETTINGS_CONTRACT:
-            fields.append('contract')
-        fields += [
-            'producers'
-        ]
+            fields = ["contract"] + fields
+        else:
+            fields += ["producers"]
+
         if settings.REPANIER_SETTINGS_BOX:
-            fields.append('boxes')
+            fields.append("boxes")
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
         if permanence is not None and permanence.status > PERMANENCE_PLANNED:
-            readonly_fields = ['status', 'producers']
+            readonly_fields = ["status", "producers"]
             if settings.REPANIER_SETTINGS_CONTRACT:
-                readonly_fields += ['contract']
+                readonly_fields += ["contract"]
             if settings.REPANIER_SETTINGS_BOX:
-                readonly_fields += ['boxes']
+                readonly_fields += ["boxes"]
             return readonly_fields
-        return ['status']
+        return ["status"]
 
     def get_formsets_with_inlines(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
