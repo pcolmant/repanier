@@ -10,12 +10,25 @@ from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.html import format_html
 from django.utils.formats import number_format
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
-from repanier.const import *
+from repanier.const import (
+    EMPTY_STRING,
+    DECIMAL_ZERO,
+    DECIMAL_ONE,
+    VAT_100,
+    REPANIER_MONEY_ZERO,
+    PRODUCT_ORDER_UNIT_DEPOSIT,
+    PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+    PERMANENCE_OPENED,
+    PERMANENCE_SEND,
+    TWO_DECIMALS,
+)
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
@@ -164,17 +177,18 @@ class Producer(models.Model):
         return "{}{}".format(prefix, self.phone2)
 
     def get_negative_balance(self):
-        return - self.balance
+        return -self.balance
 
     def get_products(self):
         # This producer may have product's list
         if self.is_active:
-            return format_html(
-                '<a href="{}?is_active__exact=1&producer={}" class="btn">&nbsp;{}</a>',
-                reverse('admin:repanier_product_changelist',),
-                str(self.id),
-                _("Products")
+
+            changeproductslist_url = reverse("admin:repanier_product_changelist")
+            link = '<a href="{}?is_active__exact=1&producer={}" class="btn">&nbsp;{}</a>'.format(
+                changeproductslist_url, str(self.id), _("Products")
             )
+            return format_html(link)
+
         return EMPTY_STRING
 
     get_products.short_description = EMPTY_STRING
@@ -299,10 +313,21 @@ class Producer(models.Model):
     def get_balance(self):
         last_producer_invoice_set = ProducerInvoice.objects.filter(
             producer_id=self.id, invoice_sort_order__isnull=False
-        ).order_by('?')
+        ).order_by("?")
 
         balance = self.get_admin_balance()
+
+        if balance.amount < 0:
+            color = "#298A08"
+        elif balance.amount == 0:
+            color = "#32CD32"
+        elif balance.amount > 30:
+            color = "red"
+        else:
+            color = "#696969"
+
         if last_producer_invoice_set.exists():
+<<<<<<< HEAD
             if balance.amount < 0:
                 return format_html(
                     '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#298A08">{}</span></a>',
@@ -343,14 +368,37 @@ class Producer(models.Model):
 
     get_balance.short_description = _("Balance")
     get_balance.admin_order_field = 'balance'
+=======
+            link = "{url}?producer={link}".format(
+                url=reverse("producer_invoice_view", args=(0,)), pk=str(self.id)
+            )
+            balance_text = '<a href="{link}" class="btn" target="_blank" ><span style="color:{color}">{balance}</span></a>'.format(
+                balance=-balance, color=color, link=link
+            )
+        else:
+            balance_text = '<span style="color:{color}">{balance}</span>'.format(
+                balance=-balance, color=color
+            )
+
+        return format_html(balance_text)
+
+    get_balance.short_description = _("Balance")
+    get_balance.allow_tags = True
+    get_balance.admin_order_field = "balance"
+>>>>>>> fix: use format_html to prevent HTML-escaping in django admin
 
     def get_last_invoice(self):
-        producer_last_invoice = ProducerInvoice.objects.filter(
-            producer_id=self.id, invoice_sort_order__isnull=False
-        ).order_by("-id").first()
+        producer_last_invoice = (
+            ProducerInvoice.objects.filter(
+                producer_id=self.id, invoice_sort_order__isnull=False
+            )
+            .order_by("-id")
+            .first()
+        )
         if producer_last_invoice is not None:
             total_price_with_tax = producer_last_invoice.get_total_price_with_tax()
             if total_price_with_tax < DECIMAL_ZERO:
+<<<<<<< HEAD
                 return format_html('<span style="color:#298A08">{}</span>', number_format(total_price_with_tax, 2))
             elif total_price_with_tax == DECIMAL_ZERO:
                 return format_html('<span style="color:#32CD32">{}</span>', number_format(total_price_with_tax, 2))
@@ -360,6 +408,25 @@ class Producer(models.Model):
                 return format_html('<span style="color:#696969">{}</span>', number_format(total_price_with_tax, 2))
         else:
             return format_html('<span style="color:#32CD32">{}</span>', number_format(0, 2))
+=======
+                return '<span style="color:#298A08">{}</span>'.format(
+                    number_format(total_price_with_tax, 2)
+                )
+            elif total_price_with_tax == DECIMAL_ZERO:
+                return '<span style="color:#32CD32">{}</span>'.format(
+                    number_format(total_price_with_tax, 2)
+                )
+            elif total_price_with_tax > 30:
+                return '<span style="color:red">{}</span>'.format(
+                    number_format(total_price_with_tax, 2)
+                )
+            else:
+                return '<span style="color:#696969">{}</span>'.format(
+                    number_format(total_price_with_tax, 2)
+                )
+        else:
+            return '<span style="color:#32CD32">{}</span>'.format(number_format(0, 2))
+>>>>>>> fix: use format_html to prevent HTML-escaping in django admin
 
     get_last_invoice.short_description = _("Last invoice")
 
