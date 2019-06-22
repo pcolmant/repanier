@@ -82,8 +82,11 @@ class RepanierEmail(EmailMultiAlternatives):
             attempt_counter += 1
             try:
                 if settings.DEBUG:
-                    # self.send()
-                    logger.debug("send email to : {}".format(email_to))
+                    if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
+                        self.to = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
+                        self.send()
+                    else:
+                        logger.debug("send email to : {}".format(email_to))
                 else:
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
