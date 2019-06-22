@@ -109,10 +109,11 @@ def order_ajax(request):
                 customer_id=customer.id
             ).order_by('?').first()
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
-            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and invoice_confirm_status_is_changed:
-                template_name = get_repanier_template_name("communication_confirm_order.html")
-                html = render_to_string(template_name)
-                json_dict["#communicationModal"] = mark_safe(html)
+            if invoice_confirm_status_is_changed:
+                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                    template_name = get_repanier_template_name("communication_confirm_order.html")
+                    html = render_to_string(template_name)
+                    json_dict["#communicationModal"] = mark_safe(html)
                 customer_invoice.save()
 
             json_dict.update(
