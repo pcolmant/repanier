@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, DecimalField
 from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.urls import reverse
@@ -260,24 +260,24 @@ class Customer(models.Model):
             ).order_by('?').aggregate(
                 total_price=Sum(
                     'total_price_with_tax',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
                 ),
                 delta_price=Sum(
                     'delta_price_with_tax',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
                 ),
                 delta_transport=Sum(
                     'delta_transport',
-                    output_field=ModelMoneyField(max_digits=5, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                    output_field=DecimalField(max_digits=5, decimal_places=2, default=DECIMAL_ZERO)
                 )
             )
             total_price = result_set["total_price"] \
-                if result_set["total_price"] is not None else REPANIER_MONEY_ZERO
+                if result_set["total_price"] is not None else DECIMAL_ZERO
             delta_price = result_set["delta_price"] \
-                if result_set["delta_price"] is not None else REPANIER_MONEY_ZERO
+                if result_set["delta_price"] is not None else DECIMAL_ZERO
             delta_transport = result_set["delta_transport"] \
-                if result_set["delta_transport"] is not None else REPANIER_MONEY_ZERO
-            order_not_invoiced = total_price + delta_price + delta_transport
+                if result_set["delta_transport"] is not None else DECIMAL_ZERO
+            order_not_invoiced = RepanierMoney(total_price + delta_price + delta_transport)
         else:
             order_not_invoiced = REPANIER_MONEY_ZERO
         return order_not_invoiced
@@ -289,21 +289,21 @@ class Customer(models.Model):
             ).order_by('?').aggregate(
                 bank_in=Sum(
                     'bank_amount_in',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
                 ),
                 bank_out=Sum(
                     'bank_amount_out',
-                    output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
                 )
             )
             bank_in = result_set["bank_in"] \
-                if result_set["bank_in"] is not None else REPANIER_MONEY_ZERO
+                if result_set["bank_in"] is not None else DECIMAL_ZERO
             bank_out = result_set["bank_out"] \
-                if result_set["bank_out"] is not None else REPANIER_MONEY_ZERO
+                if result_set["bank_out"] is not None else DECIMAL_ZERO
             bank_not_invoiced = bank_in - bank_out
         else:
-            bank_not_invoiced = REPANIER_MONEY_ZERO
-        return bank_not_invoiced
+            bank_not_invoiced = DECIMAL_ZERO
+        return RepanierMoney(bank_not_invoiced)
 
     def get_balance(self):
         last_customer_invoice = CustomerInvoice.objects.filter(

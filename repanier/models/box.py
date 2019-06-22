@@ -2,7 +2,7 @@
 
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, DecimalField
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -34,19 +34,19 @@ class Box(Product):
         result_set = BoxContent.objects.filter(box_id=self.id).aggregate(
             price=Sum(
                 'calculated_customer_content_price',
-                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
             ),
             deposit=Sum(
                 'calculated_content_deposit',
-                output_field=ModelMoneyField(max_digits=8, decimal_places=2, default=REPANIER_MONEY_ZERO)
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
             )
         )
         box_price = result_set["price"] \
-            if result_set["price"] is not None else REPANIER_MONEY_ZERO
+            if result_set["price"] is not None else DECIMAL_ZERO
         box_deposit = result_set["deposit"] \
-            if result_set["deposit"] is not None else REPANIER_MONEY_ZERO
+            if result_set["deposit"] is not None else DECIMAL_ZERO
 
-        return box_price, box_deposit
+        return RepanierMoney(box_price), RepanierMoney(box_deposit)
 
     def get_box_admin_display(self):
         return self.get_long_name()
