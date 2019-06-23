@@ -8,6 +8,7 @@ from django.utils.dateparse import parse_date
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 from parler.models import TranslatableModel, TranslatedFields
 from recurrence.fields import RecurrenceField
 
@@ -74,37 +75,57 @@ class Contract(TranslatableModel):
                     offer_item_qs = OfferItem.objects.filter(
                         permanence_id=permanence.id,
                         product_id=contract_content.product_id,
-                        permanences_dates=one_date_str
-                    ).order_by('?')
+                        permanences_dates=one_date_str,
+                    )
                     if not offer_item_qs.exists():
+                        not_permanences_dates = (
+                            contract_content.not_permanences_dates
+                            if contract_content.not_permanences_dates is not None
+                            else EMPTY_STRING
+                        )
                         OfferItemWoReceiver.objects.create(
                             permanence_id=permanence.id,
                             product_id=contract_content.product_id,
                             producer_id=contract_content.product.producer_id,
                             contract_id=self.id,
                             permanences_dates=one_date_str,
-                            not_permanences_dates=contract_content.not_permanences_dates,
+                            not_permanences_dates=not_permanences_dates,
                             permanences_dates_counter=1,
-                            permanences_dates_order=permanences_dates_order
+                            permanences_dates_order=permanences_dates_order,
                         )
-                        clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+                        clean_offer_item(
+                            permanence,
+                            offer_item_qs,
+                            reset_add_2_stock=reset_add_2_stock,
+                        )
                     else:
                         offer_item = offer_item_qs.first()
                         offer_item.contract_id = self.id
                         offer_item.permanences_dates_order = permanences_dates_order
-                        offer_item.not_permanences_dates = contract_content.not_permanences_dates
+                        offer_item.not_permanences_dates = (
+                            contract_content.not_permanences_dates
+                        )
                         if reset_add_2_stock:
                             offer_item.may_order = True
-                        offer_item.save(update_fields=[
-                            "contract", "may_order", "permanences_dates_order", "not_permanences_dates"
-                        ])
-                        clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+                        offer_item.save(
+                            update_fields=[
+                                "contract",
+                                "may_order",
+                                "permanences_dates_order",
+                                "not_permanences_dates",
+                            ]
+                        )
+                        clean_offer_item(
+                            permanence,
+                            offer_item_qs,
+                            reset_add_2_stock=reset_add_2_stock,
+                        )
             else:
                 offer_item_qs = OfferItem.objects.filter(
                     permanence_id=permanence.id,
                     product_id=contract_content.product_id,
-                    permanences_dates=contract_content.permanences_dates
-                ).order_by('?')
+                    permanences_dates=contract_content.permanences_dates,
+                )
                 if not offer_item_qs.exists():
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
