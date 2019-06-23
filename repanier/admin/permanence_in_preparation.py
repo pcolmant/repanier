@@ -232,12 +232,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         list_display = ["get_permanence_admin_display"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
-        list_display += [
-            "get_producers",
-            "get_customers",
-            "get_board",
-            "get_html_status_display",
-        ]
+        list_display += ["get_producers", "get_board", "get_html_status_display"]
         return list_display
 
     def get_fields(self, request, permanence=None):
