@@ -13,17 +13,20 @@ from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
-from repanier.const import *
-from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.const import *  # noqa
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
-from repanier.models.invoice import CustomerInvoice, CustomerProducerInvoice, ProducerInvoice
-from repanier.models.lut import LUT_DeliveryPoint
+from repanier.models.invoice import (
+    CustomerInvoice,
+    CustomerProducerInvoice,
+    ProducerInvoice,
+)
 from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
@@ -364,14 +367,25 @@ class Permanence(TranslatableModel):
             )
             return mark_safe(msg_html)
         else:
-            return mark_safe("<div class=\"wrap-text\">{}</div>".format(_("No purchase")))
+            return mark_safe('<div class="wrap-text">{}</div>'.format(_("No purchase")))
 
-    get_customers.short_description = (_("Purchases by"))
+    get_customers.short_description = _("Purchases by")
+
+    def get_purchases_changelist_link(self):
+        link = "{url}?permanence={pk}".format(
+            url=reverse("admin:repanier_purchase_changelist"), pk=self.pk
+        )
+
+        return mark_safe(
+            '<a href="{link}">{msg}</a>'.format(link=link, msg=_("Manage purchases"))
+        )
+
+    get_purchases_changelist_link.short_description = _("Manage purchases")
 
     @cached_property
     def get_board(self):
         permanenceboard_set = PermanenceBoard.objects.filter(
-            permanence=self, permanence_role__rght=F('permanence_role__lft') + 1
+            permanence=self, permanence_role__rght=F("permanence_role__lft") + 1
         ).order_by("permanence_role__tree_id", "permanence_role__lft")
         first_board = True
         board = EMPTY_STRING
