@@ -9,7 +9,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.db.models import Q
 from django.forms import Textarea
 from django.http import HttpResponse
@@ -401,9 +400,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super(CustomerWithUserDataAdmin, self).get_queryset(request)
-        qs = qs.filter(
-            is_group=False
-        )
+        qs = qs.filter(is_group=False)
         return qs
 
     def save_model(self, request, customer, form, change):

@@ -56,16 +56,25 @@ logger = logging.getLogger(__name__)
 class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     model = PermanenceBoard
     ordering = ("permanence_role__tree_id", "permanence_role__lft")
-    fields = ['permanence_role', 'customer']
+    fields = ["permanence_role", "customer"]
     extra = 0
     _has_add_or_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
         if self._has_add_or_delete_permission is None:
             try:
-                parent_object = PermanenceInPreparation.objects.filter(id=request.resolver_match.args[0]).only(
-                    "status").order_by('?').first()
-                if parent_object is not None and parent_object.status == PERMANENCE_PLANNED:
+                parent_object = (
+                    PermanenceInPreparation.objects.filter(
+                        id=request.resolver_match.args[0]
+                    )
+                    .only("status")
+                    .order_by("?")
+                    .first()
+                )
+                if (
+                    parent_object is not None
+                    and parent_object.status == PERMANENCE_PLANNED
+                ):
                     self._has_add_or_delete_permission = True
                 else:
                     self._has_add_or_delete_permission = False
@@ -82,11 +91,11 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     def get_formset(self, request, obj=None, **kwargs):
         formset = super(PermanenceBoardInline, self).get_formset(request, obj, **kwargs)
         form = formset.form
-        widget = form.base_fields['permanence_role'].widget
+        widget = form.base_fields["permanence_role"].widget
         widget.can_add_related = True
         widget.can_change_related = True
         widget.can_delete_related = False
-        widget = form.base_fields['customer'].widget
+        widget = form.base_fields["customer"].widget
         widget.can_add_related = False
         widget.can_change_related = False
         widget.can_delete_related = False
@@ -790,7 +799,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if db_field.name == "contract":
             kwargs["queryset"] = Contract.objects.filter(is_active=True)
         return super(PermanenceInPreparationAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs)
+            db_field, request, **kwargs
+        )
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":
