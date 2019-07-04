@@ -1,0 +1,68 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+{% block content %}
+    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
+    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
+<style type="text/css">
+.form-group input[type="checkbox"] {
+    display: none;
+}
+.form-group input[type="checkbox"] + .btn-group > label span {
+    width: 20px;
+}
+.form-group input[type="checkbox"] + .btn-group > label span:first-child {
+    display: none;
+}
+.form-group input[type="checkbox"] + .btn-group > label span:last-child {
+    display: inline-block;
+}
+.form-group input[type="checkbox"]:checked + .btn-group > label span:first-child {
+    display: inline-block;
+}
+.form-group input[type="checkbox"]:checked + .btn-group > label span:last-child {
+    display: none;
+}
+.colorgraph {
+  height: 5px;
+  border-top: 0;
+  background: #c4e17f;
+  border-radius: 5px;
+  background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
+  background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
+  background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
+  background-image: linear-gradient(to right, #c4e17f, #62c2e4);
+}
+</style>
+
+    <h4>{{ sub_title }}</h4>
+    <p></p>
+    <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+        <fieldset class="module aligned ">
+        <div class="form-group">
+            <b>{% trans "The importation concern :" %}</b> {% for object in queryset.all  %}{{ object }}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>{% if not forloop.last %}, {% endif %}{% endfor %}
+            <br>
+            <label for="id_file_to_import"><b>{% trans "File to import :"%}</b></label><input id="id_file_to_import" name="file_to_import" type="file" />
+        </div>
+        <div class="form-group">
+            <div class="fieldWrapper">
+                {{ form.invoice_reference.errors }}
+                {{ form.invoice_reference.label_tag }}
+                {{ form.invoice_reference }}
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="fieldWrapper">
+                {{ form.producer.errors }}
+                {{ form.producer.label_tag }}
+                {{ form.producer }}
+            </div>
+        </div>
+        </fieldset>
+        <div class="submit-row">
+            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Perform the import" %}</h6></button>
+        </div>
+
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

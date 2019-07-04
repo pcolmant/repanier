@@ -1,0 +1,38 @@
+{% load staticfiles i18n %}
+<link href="{% static "easy_select2/vendor/select2/css/select2.min.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<link href="{% static "easy_select2/css/easy_select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
+<script type="text/javascript">var go_from_select = function(opt) { window.location = window.location.pathname + opt };</script>
+<script type="text/javascript" src="{% static "easy_select2/js/init.js" %}"></script>
+<script type="text/javascript" src="{% static "easy_select2/js/easy_select2.js" %}"></script>
+{#<script type="text/javascript" src="{% static "easy_select2/js/lookup_override.1.8.js" %}"></script>#}
+<script type="text/javascript" src="{% static "easy_select2/vendor/select2/js/select2.min.js" %}"></script>
+<h3>{% blocktrans with title as filter_title %} By {{ filter_title }} {% endblocktrans %}</h3>
+{#<a href="{% url 'admin:repanier_contract_changelist' %}" class="btn addlink" style="width:69%">&nbsp;{{ title }}</a>#}
+<ul class="admin-filter-{{ title|cut:' ' }}">
+{% if choices %}
+    <li>
+    <select style="width: 95%;" id="id_filter_contract"
+        onchange="go_from_select(this.options[this.selectedIndex].value)">
+    {% for choice in choices %}
+        <option{% if choice.selected %} selected="selected"{% endif %}
+         value="{{ choice.query_string|iriencode }}">{{ choice.display }}</option>
+    {% endfor %}
+    </select>
+    <div class="field-easy-select2"
+                   style="display:none"
+                   id="id_filter_contract"
+                   ></div>
+    </li>
+{% endif %}
+</ul>
+{% spaceless %}
+<script type="text/javascript">
+(function($) {
+    $(document).ready(function($) {
+        if(location.pathname.indexOf('change') <= -1) {
+            $(".object-tools").append('<li><a href="{% url 'admin:repanier_contract_changelist' %}">{{ title }}</a></li>');
+        }
+    });
+})(django.jQuery);
+</script>
+{% endspaceless %}

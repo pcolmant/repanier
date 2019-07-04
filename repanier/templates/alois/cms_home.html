@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load cms_tags repanier_tags %}
+
+{% block base_content %}
+    {% repanier_permanences %}
+    <div class="container jumbotron">
+        {% placeholder "home-hero" %}
+    </div>
+{% endblock %}
