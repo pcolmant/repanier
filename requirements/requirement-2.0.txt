@@ -1,4 +1,5 @@
 Django==2.2.2
+django-angular==2.2
 django-cms==3.6.0
 # https://github.com/divio/django-cms/archive/develop.zip
 Pillow==6.0.0
@@ -35,7 +36,6 @@ odfpy==1.4.0
 olefile==0.46
 # moved to repanier.packages : openpyxl==1.8.6, with bug fix on worker.worksheet.py lines 103-106
 openpyxl==2.6.2
-pkg-resources==0.0.0
 psycopg2-binary==2.8.2
 pyaml==17.8.0
 python-dateutil==2.8.0
