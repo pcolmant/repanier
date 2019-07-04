@@ -7,7 +7,7 @@ services:
     depends_on:
       - db
     ports:
-      - "0.0.0.0:8000:8000"
+      - "0.0.0.0:${DJANGO_PORT}:8000"
     volumes:
       - .:/repanier
   anaconda:
