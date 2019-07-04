@@ -761,147 +761,43 @@ CMS_TEMPLATE_HOME_HERO = """
 <p class="text-muted">Lorem ipsum.</p>
 """
 
-CMS_TEMPLATE_HOME_COL_1 = """
-<div class="panel panel-info">
-<div class="panel-heading"><h4>Lorem ipsum</h4></div>
-<div class="panel-body">
-<ul class="list-group">
-<li class="list-group-item">Lorem ipsum.</li>
-<li class="list-group-item">Lorem ipsum.</li>
-</ul>
-</div>
-</div>
-"""
-
-CMS_TEMPLATE_HOME_COL_2 = """
-<div class="panel panel-danger">
-<div class="panel-heading"><h4>Lorem ipsum</h4></div>
-<div class="panel-body">
-<ul class="list-group">
-<li class="list-group-item">Lorem ipsum.</li>
-<li class="list-group-item">Lorem ipsum.</li>
-</ul>
-</div>
-</div>
-"""
-
-CMS_TEMPLATE_HOME_COL_3 = """
-<div class="panel panel-warning">
-<div class="panel-heading"><h4>Lorem ipsum</h4></div>
-<div class="panel-body">
-<ul class="list-group">
-<li class="list-group-item">Lorem ipsum.</li>
-<li class="list-group-item">Lorem ipsum.</li>
-</ul>
-</div>
-</div>
-"""
-
 CMS_TEMPLATE_FOOTER = """
 Lorem ipsum dolor sit amet
 """
 
 CMS_PLACEHOLDER_CONF = {
-    'home-hero': {
-        'name': gettext('Hero'),
-        'plugins': [
-            'TextPlugin',
+    "home-hero": {
+        "name": gettext("Hero"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_HERO}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body': CMS_TEMPLATE_HOME_HERO
-                },
-            },
-        ]
     },
-    'home-col-1': {
-        'name': gettext('Column 1'),
-        'plugins': [
-            'TextPlugin',
-        ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
+    "subpage_content": {
+        "name": gettext("Content"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
             {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_1
-                },
-            },
-        ]
-    },
-    'home-col-2': {
-        'name': gettext('Column 2'),
-        'plugins': [
-            'TextPlugin',
-        ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_2
-                },
-            },
-        ]
-    },
-    'home-col-3': {
-        'name': gettext('Column 3'),
-        'plugins': [
-            'TextPlugin',
-        ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_3
-                },
-            },
-        ]
-    },
-    'subpage_content': {
-        'name': gettext('Content'),
-        'plugins': [
-            'TextPlugin',
-        ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        """
+                "plugin_type": "TextPlugin",
+                "values": {
+                    "body": """
                         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed luctus tortor quis imperdiet egestas. Proin mollis sem ipsum, nec facilisis nibh cursus eu. Sed convallis cursus venenatis. Maecenas rutrum, elit ut ornare lobortis, mi dolor placerat elit, at laoreet sapien urna vitae arcu. Phasellus consectetur tincidunt ullamcorper. Sed et enim at lacus cursus rhoncus. Vestibulum porttitor velit non ante ullamcorper, ut gravida ipsum vestibulum. Aenean sed condimentum nisi. Quisque sagittis mauris non leo tincidunt vulputate. Ut euismod ante purus, sed pulvinar nisl volutpat quis. Maecenas consequat mi vitae libero egestas varius. Nam in tempor augue, sit amet pulvinar purus.</p>
                         <p>Vestibulum sed elit mollis, dapibus ligula in, ultricies purus. Proin fermentum blandit ultrices. Suspendisse vitae nisi mollis, viverra ipsum vitae, adipiscing lorem. Curabitur vestibulum orci felis, nec pretium arcu elementum a. Curabitur blandit fermentum tellus at consequat. Sed eget tempor elit. Donec in elit purus.</p>
                         <p>Morbi vulputate dolor sed nibh ullamcorper, eget molestie justo adipiscing. Fusce faucibus vel quam eu ultrices. Sed aliquet fringilla tristique. Vestibulum sit amet nunc tincidunt turpis tristique ullamcorper. Nam tempor mi felis, ac vulputate quam varius eget. Nunc blandit nulla vel metus lacinia, sit amet posuere lectus viverra. Praesent vel tortor facilisis, imperdiet orci sed, auctor erat.</p>
                         """
                 },
-            },
-        ]
+            }
+        ],
     },
-
-    'footer': {
-        'name': gettext('Footer'),
-        'plugins': ['TextPlugin'],
-        'text_only_plugins': text_only_plugins,
-        'limits': {
-            'TextPlugin': 1,
-        },
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_FOOTER
-
-                },
-            },
-        ]
+    "footer": {
+        "name": gettext("Footer"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "limits": {"TextPlugin": 1},
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_FOOTER}}
+        ],
     },
 }

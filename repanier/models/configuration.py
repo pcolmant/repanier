@@ -211,6 +211,7 @@ class Configuration(TranslatableModel):
         from cms.models import StaticPlaceholder
         from cms.constants import X_FRAME_OPTIONS_DENY
         from cms import api
+
         page = api.create_page(
             title=_("Home"),
             soft_root=False,
@@ -230,27 +231,10 @@ class Configuration(TranslatableModel):
         placeholder = page.placeholders.get(slot="home-hero")
         api.add_plugin(
             placeholder=placeholder,
-            plugin_type='TextPlugin',
+            plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_HERO)
-        placeholder = page.placeholders.get(slot="home-col-1")
-        api.add_plugin(
-            placeholder=placeholder,
-            plugin_type='TextPlugin',
-            language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_COL_1)
-        placeholder = page.placeholders.get(slot="home-col-2")
-        api.add_plugin(
-            placeholder=placeholder,
-            plugin_type='TextPlugin',
-            language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_COL_2)
-        placeholder = page.placeholders.get(slot="home-col-3")
-        api.add_plugin(
-            placeholder=placeholder,
-            plugin_type='TextPlugin',
-            language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_COL_3)
+            body=settings.CMS_TEMPLATE_HOME_HERO,
+        )
         static_placeholder = StaticPlaceholder(
             code="footer",
             # site_id=1
