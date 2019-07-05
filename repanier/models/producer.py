@@ -12,7 +12,6 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
 from django.utils.formats import number_format
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -41,100 +40,120 @@ from repanier.tools import update_offer_item
 
 class Producer(models.Model):
     short_profile_name = models.CharField(
-        _("Short name"), max_length=25, blank=False, default=EMPTY_STRING,
-        db_index=True, unique=True)
+        _("Short name"),
+        max_length=25,
+        blank=False,
+        default=EMPTY_STRING,
+        db_index=True,
+        unique=True,
+    )
     long_profile_name = models.CharField(
-        _("Long name"), max_length=100, blank=True, default=EMPTY_STRING)
-    email = models.EmailField(
-        _("Email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Long name"), max_length=100, blank=True, default=EMPTY_STRING
+    )
+    email = models.EmailField(_("Email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+    )
     email3 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING)
+        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+    )
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
-        verbose_name=_("Language"))
+        verbose_name=_("Language"),
+    )
     picture = RepanierPictureField(
         verbose_name=_("Picture"),
-        null=True, blank=True,
-        upload_to="producer", size=SIZE_L)
-    phone1 = models.CharField(
-        _("Phone1"),
-        max_length=25, blank=True, default=EMPTY_STRING)
-    phone2 = models.CharField(
-        _("Phone2"),
-        max_length=25, blank=True, default=EMPTY_STRING)
-    bank_account = models.CharField(
-        _("Bank account"),
-        max_length=100, blank=True, default=EMPTY_STRING)
-    vat_id = models.CharField(
-        _("VAT id"),
-        max_length=20, blank=True, default=EMPTY_STRING)
-    fax = models.CharField(
-        _("Fax"),
-        max_length=100, blank=True, default=EMPTY_STRING)
-    address = models.TextField(
-        _("Address"), blank=True, default=EMPTY_STRING)
-    city = models.CharField(
-        _("City"),
-        max_length=50, blank=True, default=EMPTY_STRING)
-    memo = models.TextField(
-        _("Memo"),
-        blank=True, default=EMPTY_STRING)
-    reference_site = models.URLField(
-        _("Reference site"),
-        null=True, blank=True, default=EMPTY_STRING)
-    web_services_activated = models.BooleanField(
-        _('Web services activated'),
-        default=False)
-    # uuid used to access to producer invoices without login
-    uuid = models.CharField(
-        "uuid",
-        max_length=36, default=EMPTY_STRING,
-        db_index=True
+        null=True,
+        blank=True,
+        upload_to="producer",
+        size=SIZE_L,
     )
+    phone1 = models.CharField(
+        _("Phone1"), max_length=25, blank=True, default=EMPTY_STRING
+    )
+    phone2 = models.CharField(
+        _("Phone2"), max_length=25, blank=True, default=EMPTY_STRING
+    )
+    bank_account = models.CharField(
+        _("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
+    )
+    vat_id = models.CharField(
+        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
+    )
+    fax = models.CharField(_("Fax"), max_length=100, blank=True, default=EMPTY_STRING)
+    address = models.TextField(_("Address"), blank=True, default=EMPTY_STRING)
+    city = models.CharField(_("City"), max_length=50, blank=True, default=EMPTY_STRING)
+    memo = models.TextField(_("Memo"), blank=True, default=EMPTY_STRING)
+    reference_site = models.URLField(
+        _("Reference site"), null=True, blank=True, default=EMPTY_STRING
+    )
+    web_services_activated = models.BooleanField(
+        _("Web services activated"), default=False
+    )
+    # uuid used to access to producer invoices without login
+    uuid = models.CharField("uuid", max_length=36, default=EMPTY_STRING, db_index=True)
     offer_uuid = models.CharField(
-        "uuid",
-        max_length=36, default=EMPTY_STRING,
-        db_index=True
+        "uuid", max_length=36, default=EMPTY_STRING, db_index=True
     )
     offer_filled = models.BooleanField(_("Offer filled"), default=False)
     invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
     manage_replenishment = models.BooleanField(_("Manage replenishment"), default=False)
     producer_pre_opening = models.BooleanField(_("Pre-open the orders"), default=False)
-    producer_price_are_wo_vat = models.BooleanField(_("Producer price are wo vat"), default=False)
-    sort_products_by_reference = models.BooleanField(_("Sort products by reference"), default=False)
+    producer_price_are_wo_vat = models.BooleanField(
+        _("Producer price are wo vat"), default=False
+    )
+    sort_products_by_reference = models.BooleanField(
+        _("Sort products by reference"), default=False
+    )
 
     price_list_multiplier = models.DecimalField(
-        _("Coefficient applied to the producer tariff to calculate the consumer tariff"),
-        help_text=_("This multiplier is applied to each price automatically imported/pushed."),
-        default=DECIMAL_ONE, max_digits=5, decimal_places=4, blank=True,
-        validators=[MinValueValidator(0)])
-    is_resale_price_fixed = models.BooleanField(_("The resale price is set by the producer"),
-                                                default=False)
+        _(
+            "Coefficient applied to the producer tariff to calculate the consumer tariff"
+        ),
+        help_text=_(
+            "This multiplier is applied to each price automatically imported/pushed."
+        ),
+        default=DECIMAL_ONE,
+        max_digits=5,
+        decimal_places=4,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    is_resale_price_fixed = models.BooleanField(
+        _("The resale price is set by the producer"), default=False
+    )
     minimum_order_value = ModelMoneyField(
         _("Minimum order value"),
         help_text=_("0 mean : no minimum order value."),
-        max_digits=8, decimal_places=2, default=DECIMAL_ZERO,
-        validators=[MinValueValidator(0)])
+        max_digits=8,
+        decimal_places=2,
+        default=DECIMAL_ZERO,
+        validators=[MinValueValidator(0)],
+    )
 
-    date_balance = models.DateField(
-        _("Date_balance"), default=datetime.date.today)
+    date_balance = models.DateField(_("Date_balance"), default=datetime.date.today)
     balance = ModelMoneyField(
-        _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+    )
     initial_balance = ModelMoneyField(
-        _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+    )
     represent_this_buyinggroup = models.BooleanField(
-        _("Represent this buyinggroup"), default=False)
+        _("Represent this buyinggroup"), default=False
+    )
     is_active = models.BooleanField(_("Active"), default=True)
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR
     is_anonymized = models.BooleanField(default=False)
 
     @classmethod
     def get_or_create_group(cls):
-        producer_buyinggroup = Producer.objects.filter(represent_this_buyinggroup=True).order_by('?').first()
+        producer_buyinggroup = (
+            Producer.objects.filter(represent_this_buyinggroup=True)
+            .order_by("?")
+            .first()
+        )
         if producer_buyinggroup is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
@@ -142,18 +161,17 @@ class Producer(models.Model):
                 short_profile_name=short_name,
                 long_profile_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
-                represent_this_buyinggroup=True
+                represent_this_buyinggroup=True,
             )
             # Create this to also prevent the deletion of the producer representing the buying group
             membership_fee_product = Product.objects.filter(
-                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-                is_active=True
-            ).order_by('?')
+                order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, is_active=True
+            ).order_by("?")
             if not membership_fee_product.exists():
                 membership_fee_product = Product.objects.create(
                     producer_id=producer_buyinggroup.id,
                     order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-                    vat_level=VAT_100
+                    vat_level=VAT_100,
                 )
                 cur_language = translation.get_language()
                 for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
@@ -195,9 +213,14 @@ class Producer(models.Model):
 
     def get_admin_date_balance(self):
         if self.id is not None:
-            bank_account = BankAccount.objects.filter(
-                producer_id=self.id, producer_invoice__isnull=True
-            ).order_by("-operation_date").only("operation_date").first()
+            bank_account = (
+                BankAccount.objects.filter(
+                    producer_id=self.id, producer_invoice__isnull=True
+                )
+                .order_by("-operation_date")
+                .only("operation_date")
+                .first()
+            )
             if bank_account is not None:
                 return bank_account.operation_date
             return self.date_balance
@@ -208,7 +231,11 @@ class Producer(models.Model):
 
     def get_admin_balance(self):
         if self.id is not None:
-            return self.balance - self.get_bank_not_invoiced() + self.get_order_not_invoiced()
+            return (
+                self.balance
+                - self.get_bank_not_invoiced()
+                + self.get_order_not_invoiced()
+            )
         else:
             return REPANIER_MONEY_ZERO
 
@@ -216,21 +243,29 @@ class Producer(models.Model):
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = ProducerInvoice.objects.filter(
-                producer_id=self.id,
-                status__gte=PERMANENCE_OPENED,
-                status__lte=PERMANENCE_SEND
-            ).order_by('?').aggregate(
-                Sum('total_price_with_tax'),
-                Sum('delta_price_with_tax'),
-                Sum('delta_transport')
+            result_set = (
+                ProducerInvoice.objects.filter(
+                    producer_id=self.id,
+                    status__gte=PERMANENCE_OPENED,
+                    status__lte=PERMANENCE_SEND,
+                )
+                .order_by("?")
+                .aggregate(
+                    Sum("total_price_with_tax"),
+                    Sum("delta_price_with_tax"),
+                    Sum("delta_transport"),
+                )
             )
             if result_set["total_price_with_tax__sum"] is not None:
-                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+                order_not_invoiced = RepanierMoney(
+                    result_set["total_price_with_tax__sum"]
+                )
             else:
                 order_not_invoiced = REPANIER_MONEY_ZERO
             if result_set["delta_price_with_tax__sum"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
+                order_not_invoiced += RepanierMoney(
+                    result_set["delta_price_with_tax__sum"]
+                )
             if result_set["delta_transport__sum"] is not None:
                 order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
         else:
@@ -239,11 +274,12 @@ class Producer(models.Model):
 
     def get_bank_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = BankAccount.objects.filter(
-                producer_id=self.id, producer_invoice__isnull=True
-            ).order_by('?').aggregate(
-                Sum('bank_amount_in'),
-                Sum('bank_amount_out')
+            result_set = (
+                BankAccount.objects.filter(
+                    producer_id=self.id, producer_invoice__isnull=True
+                )
+                .order_by("?")
+                .aggregate(Sum("bank_amount_in"), Sum("bank_amount_out"))
             )
             if result_set["bank_amount_in__sum"] is not None:
                 bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
@@ -263,47 +299,52 @@ class Producer(models.Model):
         bank_not_invoiced = self.get_bank_not_invoiced()
         # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
-        result_set = OfferItemWoReceiver.objects.filter(
-            permanence_id=permanence_id,
-            producer_id=self.id,
-            price_list_multiplier__lt=1
-        ).exclude(
-            order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT
-        ).order_by('?').aggregate(
-            Sum('total_selling_with_tax')
+        result_set = (
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=permanence_id,
+                producer_id=self.id,
+                price_list_multiplier__lt=1,
+            )
+            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
+            .order_by("?")
+            .aggregate(Sum("total_selling_with_tax"))
         )
         if result_set["total_selling_with_tax__sum"] is not None:
             payment_needed = result_set["total_selling_with_tax__sum"]
         else:
             payment_needed = DECIMAL_ZERO
-        result_set = OfferItemWoReceiver.objects.filter(
-            permanence_id=permanence_id,
-            producer_id=self.id,
-            price_list_multiplier__gte=1,
-        ).exclude(
-            order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT
-        ).order_by('?').aggregate(
-            Sum('total_purchase_with_tax'),
+        result_set = (
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=permanence_id,
+                producer_id=self.id,
+                price_list_multiplier__gte=1,
+            )
+            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
+            .order_by("?")
+            .aggregate(Sum("total_purchase_with_tax"))
         )
         if result_set["total_purchase_with_tax__sum"] is not None:
             payment_needed += result_set["total_purchase_with_tax__sum"]
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
         if self.manage_replenishment:
             for offer_item in OfferItemWoReceiver.objects.filter(
-                    is_active=True,
-                    permanence_id=permanence_id,
-                    producer_id=self.id,
-                    manage_replenishment=True,
-            ).order_by('?'):
-                invoiced_qty, taken_from_stock, customer_qty = offer_item.get_producer_qty_stock_invoiced()
-                if offer_item.price_list_multiplier < DECIMAL_ONE:  # or offer_item.is_resale_price_fixed:
+                is_active=True,
+                permanence_id=permanence_id,
+                producer_id=self.id,
+                manage_replenishment=True,
+            ).order_by("?"):
+                invoiced_qty, taken_from_stock, customer_qty = (
+                    offer_item.get_producer_qty_stock_invoiced()
+                )
+                if (
+                    offer_item.price_list_multiplier < DECIMAL_ONE
+                ):  # or offer_item.is_resale_price_fixed:
                     unit_price = offer_item.customer_unit_price.amount
                 else:
                     unit_price = offer_item.producer_unit_price.amount
                 if taken_from_stock > DECIMAL_ZERO:
                     delta_price_with_tax = (
-                            (unit_price + offer_item.unit_deposit.amount)
-                            * taken_from_stock
+                        (unit_price + offer_item.unit_deposit.amount) * taken_from_stock
                     ).quantize(TWO_DECIMALS)
                     calculated_invoiced_balance -= delta_price_with_tax
         return calculated_invoiced_balance
@@ -327,65 +368,19 @@ class Producer(models.Model):
             color = "#696969"
 
         if last_producer_invoice_set.exists():
-<<<<<<< HEAD
-            if balance.amount < 0:
-                return format_html(
-                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#298A08">{}</span></a>',
-                    reverse('producer_invoice_view', args=(0,)),
-                    str(self.id),
-                    -balance
-                )
-            elif balance.amount == 0:
-                return format_html(
-                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#32CD32">{}</span></a>',
-                    reverse('producer_invoice_view', args=(0,)),
-                    str(self.id),
-                    -balance
-                )
-            elif balance.amount > 30:
-                return format_html(
-                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:red">{}</span></a>',
-                    reverse('producer_invoice_view', args=(0,)),
-                    str(self.id),
-                    -balance
-                )
-            else:
-                return format_html(
-                    '<a href="{}?producer={}" class="btn" target="_blank" ><span style="color:#696969">{}</span></a>',
-                    reverse('producer_invoice_view', args=(0,)),
-                    str(self.id),
-                    -balance
-                )
-        else:
-            if balance.amount < 0:
-                return format_html('<span style="color:#298A08">{}</span>', -balance)
-            elif balance.amount == 0:
-                return format_html('<span style="color:#32CD32">{}</span>', -balance)
-            elif balance.amount > 30:
-                return format_html('<span style="color:red">{}</span>', -balance)
-            else:
-                return format_html('<span style="color:#696969">{}</span>', -balance)
-
-    get_balance.short_description = _("Balance")
-    get_balance.admin_order_field = 'balance'
-=======
-            link = "{url}?producer={link}".format(
-                url=reverse("producer_invoice_view", args=(0,)), pk=str(self.id)
-            )
-            balance_text = '<a href="{link}" class="btn" target="_blank" ><span style="color:{color}">{balance}</span></a>'.format(
-                balance=-balance, color=color, link=link
+            return format_html(
+                '<a href="{}?producer={}" class="btn" target="_blank"><span style="color:{}">{}</span></a>',
+                reverse("producer_invoice_view", args=(0,)),
+                str(self.id),
+                color,
+                -balance,
             )
         else:
-            balance_text = '<span style="color:{color}">{balance}</span>'.format(
-                balance=-balance, color=color
-            )
-
-        return format_html(balance_text)
+            return format_html('<span style="color:{}">{}</span>', color, -balance)
 
     get_balance.short_description = _("Balance")
     get_balance.allow_tags = True
     get_balance.admin_order_field = "balance"
->>>>>>> fix: use format_html to prevent HTML-escaping in django admin
 
     def get_last_invoice(self):
         producer_last_invoice = (
@@ -398,35 +393,29 @@ class Producer(models.Model):
         if producer_last_invoice is not None:
             total_price_with_tax = producer_last_invoice.get_total_price_with_tax()
             if total_price_with_tax < DECIMAL_ZERO:
-<<<<<<< HEAD
-                return format_html('<span style="color:#298A08">{}</span>', number_format(total_price_with_tax, 2))
-            elif total_price_with_tax == DECIMAL_ZERO:
-                return format_html('<span style="color:#32CD32">{}</span>', number_format(total_price_with_tax, 2))
-            elif total_price_with_tax > 30:
-                return format_html('<span style="color:red">{}</span>', number_format(total_price_with_tax, 2))
-            else:
-                return format_html('<span style="color:#696969">{}</span>', number_format(total_price_with_tax, 2))
-        else:
-            return format_html('<span style="color:#32CD32">{}</span>', number_format(0, 2))
-=======
-                return '<span style="color:#298A08">{}</span>'.format(
-                    number_format(total_price_with_tax, 2)
+                return format_html(
+                    '<span style="color:#298A08">{}</span>',
+                    number_format(total_price_with_tax, 2),
                 )
             elif total_price_with_tax == DECIMAL_ZERO:
-                return '<span style="color:#32CD32">{}</span>'.format(
-                    number_format(total_price_with_tax, 2)
+                return format_html(
+                    '<span style="color:#32CD32">{}</span>',
+                    number_format(total_price_with_tax, 2),
                 )
             elif total_price_with_tax > 30:
-                return '<span style="color:red">{}</span>'.format(
-                    number_format(total_price_with_tax, 2)
+                return format_html(
+                    '<span style="color:red">{}</span>',
+                    number_format(total_price_with_tax, 2),
                 )
             else:
-                return '<span style="color:#696969">{}</span>'.format(
-                    number_format(total_price_with_tax, 2)
+                return format_html(
+                    '<span style="color:#696969">{}</span>',
+                    number_format(total_price_with_tax, 2),
                 )
         else:
-            return '<span style="color:#32CD32">{}</span>'.format(number_format(0, 2))
->>>>>>> fix: use format_html to prevent HTML-escaping in django admin
+            return format_html(
+                '<span style="color:#32CD32">{}</span>', number_format(0, 2)
+            )
 
     get_last_invoice.short_description = _("Last invoice")
 
@@ -434,27 +423,23 @@ class Producer(models.Model):
         bank_not_invoiced = self.get_bank_not_invoiced()
         order_not_invoiced = self.get_order_not_invoiced()
 
-        if order_not_invoiced.amount != DECIMAL_ZERO or bank_not_invoiced.amount != DECIMAL_ZERO:
+        if (
+            order_not_invoiced.amount != DECIMAL_ZERO
+            or bank_not_invoiced.amount != DECIMAL_ZERO
+        ):
             if order_not_invoiced.amount != DECIMAL_ZERO:
                 if bank_not_invoiced.amount == DECIMAL_ZERO:
-                    producer_on_hold_movement = \
-                        _('This balance does not take account of any unbilled sales %(other_order)s.') % {
-                            'other_order': order_not_invoiced
-                        }
+                    producer_on_hold_movement = _(
+                        "This balance does not take account of any unbilled sales %(other_order)s."
+                    ) % {"other_order": order_not_invoiced}
                 else:
-                    producer_on_hold_movement = \
-                        _(
-                            'This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s.') \
-                        % {
-                            'bank': bank_not_invoiced,
-                            'other_order': order_not_invoiced
-                        }
+                    producer_on_hold_movement = _(
+                        "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                    ) % {"bank": bank_not_invoiced, "other_order": order_not_invoiced}
             else:
-                producer_on_hold_movement = \
-                    _(
-                        'This balance does not take account of any unrecognized payments %(bank)s.') % {
-                        'bank': bank_not_invoiced
-                    }
+                producer_on_hold_movement = _(
+                    "This balance does not take account of any unrecognized payments %(bank)s."
+                ) % {"bank": bank_not_invoiced}
             return mark_safe(producer_on_hold_movement)
 
         return EMPTY_STRING
@@ -491,9 +476,12 @@ class Producer(models.Model):
     class Meta:
         verbose_name = _("Producer")
         verbose_name_plural = _("Producers")
-        ordering = ("-represent_this_buyinggroup", "short_profile_name",)
+        ordering = ("-represent_this_buyinggroup", "short_profile_name")
         indexes = [
-            models.Index(fields=["-represent_this_buyinggroup", "short_profile_name"], name='producer_order_idx'),
+            models.Index(
+                fields=["-represent_this_buyinggroup", "short_profile_name"],
+                name="producer_order_idx",
+            )
         ]
 
 
@@ -525,6 +513,6 @@ def producer_pre_save(sender, **kwargs):
 @receiver(post_save, sender=Producer)
 def producer_post_save(sender, **kwargs):
     producer = kwargs["instance"]
-    for a_product in Product.objects.filter(producer_id=producer.id).order_by('?'):
+    for a_product in Product.objects.filter(producer_id=producer.id).order_by("?"):
         a_product.save()
     update_offer_item(producer_id=producer.id)

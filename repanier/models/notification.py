@@ -67,8 +67,9 @@ class Notification(TranslatableModel):
                 }});
                 </script>
                 """.format(
-                    html=EMPTY_STRING.join(html)
-                ))
+                        html=EMPTY_STRING.join(html)
+                    )
+                )
         return EMPTY_STRING
 
     def __str__(self):
