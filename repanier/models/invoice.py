@@ -583,7 +583,7 @@ class CustomerInvoice(Invoice):
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_charged_id,
                     customer_charged_id=self.customer_charged_id,
-                    status=self.status
+                    status=new_permanence.status
                 )
                 customer_invoice.set_order_delivery(delivery=None)
                 customer_invoice.calculate_order_price()
@@ -593,7 +593,7 @@ class CustomerInvoice(Invoice):
             customer_id=self.customer_id,
             master_permanence_id=self.permanence_id,
             customer_charged_id=self.customer_charged_id,
-            status=self.status
+            status=new_permanence.status
         )
 
     def cancel_if_unconfirmed(self, permanence):

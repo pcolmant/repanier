@@ -213,9 +213,11 @@ class Permanence(TranslatableModel):
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
-                    label = "{}{} ({})".format(link_unicode,
-                                               pi.producer.short_profile_name, pi.get_total_price_with_tax(),
-                                               )
+                    label = "{}{} ({})".format(
+                        link_unicode,
+                        pi.producer.short_profile_name,
+                        pi.get_total_price_with_tax(),
+                    )
                     link.append(
                         "<a href=\"{}?permanence={}&producer={}\">&nbsp;{}</a>".format(
                             changelist_url, self.id, pi.producer_id, label.replace(' ', '&nbsp;')
@@ -690,7 +692,8 @@ class Permanence(TranslatableModel):
                 permanence_id=self.id,
                 producer_id__in=producers_to_move
             ).order_by('?').update(
-                permanence_id=new_permanence.id
+                permanence_id=new_permanence.id,
+                status=PERMANENCE_SEND
             )
             CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id,
@@ -727,6 +730,7 @@ class Permanence(TranslatableModel):
                 ).order_by('?').update(
                     permanence_id=new_permanence.id,
                     customer_invoice_id=new_customer_invoice.id,
+                    status=PERMANENCE_SEND
                 )
 
             new_permanence.recalculate_order_amount(re_init=True)
@@ -1404,14 +1408,12 @@ class Permanence(TranslatableModel):
                 offer_item.previous_add_2_stock = DECIMAL_ZERO
                 offer_item.save()
 
+        purchase_set = Purchase.objects \
+            .filter(permanence_id=self.id) \
+            .order_by('?')
         if offer_item_qs is not None:
-            purchase_set = Purchase.objects \
-                .filter(permanence_id=self.id, offer_item__in=offer_item_qs) \
-                .order_by('?')
-        else:
-            purchase_set = Purchase.objects \
-                .filter(permanence_id=self.id) \
-                .order_by('?')
+            purchase_set = purchase_set \
+                .filter(offer_item__in=offer_item_qs)
 
         for a_purchase in purchase_set.select_related("offer_item", "customer_invoice"):
             # Recalculate the total_price_with_tax of ProducerInvoice,
