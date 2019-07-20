@@ -43,7 +43,6 @@ odfpy==1.4.0 # pin version number. used by tablib. see tablib requirements
 olefile==0.46
 # moved to repanier.packages : openpyxl==1.8.6, with bug fix on worker.worksheet.py lines 103-106
 openpyxl==2.6.1 # pin version number. used by tablib. see tablib requirements
-pkg-resources==0.0.0
 psycopg2==2.7.5
 PyYAML ==5.1.1 # pin version number. used by tablib. see tablib requirements
 python-dateutil==2.8.0
