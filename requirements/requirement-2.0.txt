@@ -31,13 +31,13 @@ djangorestframework==3.9.4
 easy-thumbnails==2.6
 html5lib>=0.999999999
 jsonfield==2.0.2
-odfpy==1.4.0
+odfpy==1.4.0 # pin version number. used by tablib. see tablib requirements
 olefile==0.46
 # moved to repanier.packages : openpyxl==1.8.6, with bug fix on worker.worksheet.py lines 103-106
-openpyxl==2.6.2
+openpyxl==2.6.2 # pin version number. used by tablib. see tablib requirements
 pkg-resources==0.0.0
 psycopg2-binary==2.8.2
-pyaml==17.8.0
+PyYAML ==5.1.1 # pin version number. used by tablib. see tablib requirements
 python-dateutil==2.8.0
 pytz==2019.1
 rcssmin==1.0.6
@@ -47,5 +47,5 @@ sqlparse==0.2.4
 tablib==0.13.0
 uWSGI==2.0.18
 unicodecsv==0.14.1
-xlrd==1.2.0
-xlwt==1.3.0
+xlrd==1.2.0 # pin version number. used by tablib. see tablib requirements
+xlwt==1.3.0 # pin version number. used by tablib. see tablib requirements
