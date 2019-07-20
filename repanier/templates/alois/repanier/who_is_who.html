@@ -1,0 +1,78 @@
+{% extends "../cms_page.html" %}
+{% load cms_tags sekizai_tags i18n l10n %}
+{% block sub_content %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {% for staff in staff_list %}
+                    <b>{{ staff.long_name }}</b>{% if staff.customer_responsible %} :
+                    {% if staff.customer_responsible.long_basket_name %}
+                        {{ staff.customer_responsible.long_basket_name }}
+                    {% else %}
+                        {{ staff.customer_responsible.short_basket_name }}
+                    {% endif %}
+                    ({{ staff.customer_responsible.get_phone1 }})
+                {% endif %}
+                    <br>
+                {% endfor %}
+                <br>
+                <div class="row">
+                    <div class="col-11 col-md-5 col-lg-3">
+                        <form id="search_form" class="form-horizontal" class="navbar-form" role="search" method="post">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                {% if q != None %}
+                                    <input type="search" autosave="repanier" class="form-control" value="{{ q }}"
+                                           name="q">
+                                {% else %}
+                                    <input type="search" autosave="repanier" class="form-control"
+                                           placeholder="{% trans "Search" %}"
+                                           name="q">
+                                {% endif %}
+                                <div class="input-group-btn">
+                                    <button class="btn btn-info" type="submit"><i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <br>
+                <p>{% trans "If you want to show information about you, then" %} <a
+                        href="{% url 'my_profile_view' %}">{% trans "update your profil" %}</a>.</p>
+                {% for customer in customer_list %}
+                    <div class="container p-2">
+                        <div class="row">
+                            <div class="col">
+                                {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}
+                                    ){% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1">
+                            </div>
+                            <div class="col">
+                                {% if customer.picture %}
+                                    <img class="rounded" style="margin: 5px;"
+                                         alt="{{ customer.long_basket_name }}"
+                                         title="{{ customer.long_basket_name }}"
+                                         src="{{ MEDIA_URL }}{{ customer.picture }}"/><br>
+                                {% endif %}
+                                {% if customer.about_me and customer.about_me.strip %}<i class="fas fa-info-circle"></i>
+                                    :
+                                    {{ customer.about_me | safe }}<br>{% endif %}
+                                {% if customer.show_phones_to_members %}<i class="fas fa-phone"></i> :
+                                    {{ customer.get_phones }}
+                                    <br>{% endif %}
+                                {% if customer.show_mails_to_members %}<i class="far fa-envelope"></i> :
+                                    {{ customer.get_emails }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                {#        </div>#}
+            </div>
+        </div>
+    </div>
+{% endblock %}

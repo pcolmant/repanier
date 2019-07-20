@@ -1,0 +1,624 @@
+{% extends "cms_page.html" %}
+{% load cms_tags sekizai_tags thumbnail filer_image_tags repanier_tags static i18n l10n %}
+
+{% block sub_content %}
+    <div class="container">
+        {% block may_order %}
+            {% spaceless %}
+            {% if user.is_authenticated %}
+                {% if not may_order %}
+                    <div class="card">
+                        <div class="card-header">
+                            {% trans "The ordering functionality is not activated in your account. <br> If you wish to order, please contact the managers of your group." %}
+                        </div>
+                    </div>
+                {% else %}
+                        <ul class="nav nav-pills">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link {{ is_select_view }} dropdown-toggle" data-toggle="dropdown" href="{% url "order_view" permanence_id %}" role="button" aria-haspopup="true" aria-expanded="false"><i
+                                        class="fas fa-shopping-basket"></i>&nbsp;<span>{% trans "Offers" %}</span></a>
+                                    <div class="dropdown-menu" x-placement="bottom-start"
+                                         style="position: absolute; transform: translate3d(0px, 40px, 0px); top: 0; left: 0; will-change: transform;">
+                                        <a href="{% url "order_view" permanence_id %}" class="dropdown-item{% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %} active{% endif %}">{% trans "All products" %}</a>
+                                        <a class="dropdown-item disabled">Mon panier</a>
+                                        <a href="{% url "order_view" permanence_id %}?is_like=yes" class="dropdown-item{% if is_like %} active{% endif %}"><span>{% trans "My favorites" %} <i class="fas fa-heart"></i></span></a>
+                                        <a class="dropdown-item active" href="#ModalOrderFilter" data-toggle="modal" id="LinkModalFilter">Filtrer</a>
+                                    </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ is_basket_view }}" href="{% url "order_view" permanence_id %}?is_basket=yes"><i
+                                        class="fas fa-check"></i>&nbsp;<span>{% trans "Confirm" %}</span></a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link " href="{% url "permanence_view" %}"><i
+                                    class="fas fa-tasks"></i>&nbsp;<span>{% trans "Tasks" %}</span></a></li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ is_description_view }}" href="{% url "order_description_view" permanence_id %}"><i
+                                    class="fas fa-info-circle"></i>&nbsp;<span>{% trans "Description" %}</span></a></li>
+                        </ul>
+                {% endif %}
+            {% endif %}
+            {% endspaceless %}
+        {% endblock may_order %}
+        {% block permanence_description %}{% spaceless %}
+            <div class="card">
+                {% if permanence.offer_description and permanence.offer_description.strip %}
+                    <div class="card-header">
+                        <h1 class="card-title">{{ permanence.get_html_permanence_display }}</h1>
+                    </div>
+                    <div class="card-body">
+                        {% if permanence.picture %}
+                            <img class="img-fluid rounded" style="float: left; margin: 5px;"
+                                 alt="{{ permanence.get_permanence_display }}"
+                                 title="{{ permanence.get_permanence_customer_display }}"
+                                 src="{{ MEDIA_URL }}{{ permanence.picture }}"/>
+                            <div class="clearfix d-lg-none d-md-none d-xl-none d-xs-block d-sm-block"></div>{% endif %}
+                        {{ permanence.offer_description | safe }}
+                    </div>
+                {% else %}
+                    <div class="card-header">
+                        <h1 class="card-title">{{ permanence.get_html_permanence_display }}</h1>
+                    </div>
+                {% endif %}
+            </div>
+        {% endspaceless %}{% endblock permanence_description %}
+        {% block confirm_basket %}{% if is_basket_view %}{% spaceless %}
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">{% trans "Details of your order" %}</h1>
+                </div>
+                <div class="card-body">
+                    <span id="span_btn_confirm_order">{{ span_btn_confirm_order }}</span>
+                </div>
+            </div>
+            {% addtoblock "lastjs" %}{% spaceless %}
+                <script type="text/javascript">
+                    {#            saved_delivery_val is a fix for firefox throwings mouseover repeatingly #}
+                    var saved_delivery_id = -1;
+
+                    function delivery_ajax() {
+                        var delivery = $("#delivery");
+                        var delivery_val = $("option:selected", delivery).val();
+
+                        var lien = '{% url 'delivery_ajax' %}?is_basket=True&delivery=' + delivery_val + "&permanence=" + {{ permanence_id|unlocalize }};
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    if (key === "#communicationModal") {
+                                        $(key).html(val).modal('show');
+                                    } else {
+                                        $(key).html(val);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    function show_select_delivery_list_ajax(delivery_id) {
+                        if (saved_delivery_id !== delivery_id) {
+                            saved_delivery_id = delivery_id;
+                            var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence_id|unlocalize }} +'{% if is_basket %}&is_basket=yes{% endif %}';
+                            $.ajax({
+                                url: lien2,
+                                cache: false,
+                                dataType: 'json',
+                                async: false,
+                                success: function (result) {
+                                    $.each(result, function (key, val) {
+                                        $(key).html(val);
+                                    });
+                                }
+                            });
+                        }
+                    }
+
+                    function btn_receive_order_email() {
+                        var receive_email = $("#btn_confirm_order");
+                        receive_email.attr("disabled", true);
+                        receive_email.html('<span class="fas fa-sync-alt fa-spin"></span> ' + '{% trans "Your order is being processed..." %}');
+
+                        var lien = '{% url 'btn_confirm_order_ajax' %}?permanence=' + {{ permanence_id|unlocalize }};
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
+                            }
+                        });
+                        saved_delivery_id = -1;
+
+                    }
+                </script>
+            {% endspaceless %}{% endaddtoblock %}
+        {% endspaceless %}{% endif %}{% endblock confirm_basket %}
+        <div class="row">
+            <div class="col-md-3">
+                {% block product_filter %}{% if user.is_authenticated and is_select_view %}{% spaceless %}
+                    {% addtoblock "jshead" %}<script src="{% static "repanier/alois/js/order_init.js" %}"></script>{% endaddtoblock %}
+                    <div class="slide slide-left" id="filtersSlidePanel">
+                        <div class="slide-body">
+                            <div id="filtersAccordion" class="accordion">
+                                <div class="card">
+                                    <div id="filtersMe" class="list-group">
+                                        <a href="{% url "order_view" permanence_id %}"
+                                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %} active{% endif %}">
+                                            <span>{% trans "All products" %}</span></a>
+                                        <a href="{% url "order_view" permanence_id %}?is_like=yes"
+                                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if is_like %} active{% endif %}">
+                                            <span>{% trans "My favorites" %} <i class="fas fa-heart"></i></span>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% if producer_set %}
+                                    <div class="card">
+                                        <div class="card-header" data-toggle="collapse" aria-expanded="true"
+                                             data-target="#filtersProducers"
+                                             aria-controls="filtersProducers">
+                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Producers" %}</h2></a>
+                                        </div>
+                                        <div id="filtersProducers" class="list-group collapse{% if department_id == "all" and date_id == "all" %} show{% endif %}"
+                                             data-parent="#filtersAccordion">
+                                            <a href="{% url "order_view" permanence_id %}?date={{ date_id }}"
+                                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if producer_id == "all" %} active{% endif %}">
+                                                {% trans "All producers" %}
+                                            </a>
+                                            {% for producer in producer_set.all %}
+                                                <div id="filtersProducers" class="list-group collapse show"
+                                                     data-parent="#filtersAccordion">
+                                                    <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer.id|unlocalize }}"
+                                                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if producer.id == producer_id|add:0 %} active{% endif %}">
+                                                        {{ producer.short_profile_name | truncatechars:15 }}&nbsp;
+                                                        <span id="order_procent{{ producer.id|unlocalize }}"
+                                                            class="badge badge-success"></span>
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if box_set %}
+                                    <div class="card">
+                                        <div class="card-header" data-toggle="collapse" aria-expanded="true"
+                                             data-target="#filtersBoxes"
+                                             aria-controls="filtersBoxes">
+                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Boxes" %}</h2></a>
+                                        </div>
+                                         <div id="filtersBoxes" class="list-group collapse show"
+                                             data-parent="#filtersAccordion">
+                                            {% for box in box_set.all %}
+                                                <a href="{% url "order_view" permanence_id %}?box={{ box.id|unlocalize }}"
+                                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if box.id == box_id|add:0 %} active{% endif %}">
+                                                    {{ box.long_name | truncatechars:20 }}&nbsp;
+                                                    <span class="fas fa-shopping-bag"></span></a>
+                                            {% endfor %}
+                                         </div>
+                                    </div>
+                                {% endif %}
+                                {% if department_set %}
+                                    <div class="card">
+                                        <div class="card-header" data-toggle="collapse" aria-expanded="false"
+                                             data-target="#filtersDepartments"
+                                             aria-controls="filtersDepartments">
+                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Departments" %}</h2></a>
+                                        </div>
+                                        <div id="filtersDepartments" class="list-group collapse{% if department_id != "all" %} show{% endif %}"
+                                             data-parent="#filtersAccordion">
+                                            <a href="{% url "order_view" permanence_id %}?date={{ date_id }}"
+                                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if department_id == "all" %} active{% endif %}">
+                                                {% trans "All departments" %}
+                                            </a>
+                                            {% for department in department_set.all %}
+                                                {% if department.level > 0 %}
+                                                    {% ifchanged department.parent_id %}
+                                                        <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&department={{ department.parent_id|unlocalize }}"
+                                                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if department.parent_id == department_id|add:0 %} active{% endif %}">
+                                                            {{ department.parent.short_name }}
+                                                        </a>
+                                                    {% endifchanged %}
+                                                {% endif %}
+                                                <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&department={{ department.id|unlocalize }}"
+                                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if department.level > 0 %} sub-item{% endif %}{% if department.id == department_id|add:0 %} active{% endif %}">
+                                                    {{ department.short_name }}
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if all_dates %}
+                                    <div class="card">
+                                        <div class="card-header" data-toggle="collapse" aria-expanded="false"
+                                             data-target="#filtersDates"
+                                             aria-controls="filtersDates">
+                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Dates" %}</h2></a>
+                                        </div>
+                                        <div id="filtersDates" class="list-group collapse{% if date_id != "all" %} show{% endif %}" data-parent="#filtersAccordion">
+                                            <a href="{% url "order_view" permanence_id %}?date=all&producer={{ producer_id }}&department={{ department_id }}" class="list-group-item list-group-item-action{% if date_id == "all" %} active{% endif %}">
+                                                {% trans "All dates" %}
+                                            </a>
+                                            {% for one_date in all_dates %}
+                                                <a href="{% url "order_view" permanence_id %}?date={{ forloop.counter0 }}&producer={{ producer_id }}&department={{ department_id }}" class="list-group-item list-group-item-action{% if date_id == forloop.counter0 %} active{% endif %}">
+                                                    {{ one_date }}
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="card">
+                                    <div class="card-header" data-toggle="collapse" aria-expanded="false"
+                                         data-target="#filterSearch"
+                                         aria-controls="filterSearch">
+                                        <a href="javascript:void(0);"><h2 class="card-title">{% trans "Search" %}</h2></a>
+                                    </div>
+                                    <div id="filterSearch" class="card-body collapse{% if q %} show{% endif %}" data-parent="#filtersAccordion">
+                                                                    {#            q : {{ q }}<br>#}
+                                        {#            producer_id : {{ producer_id }}<br>#}
+                                        {#            department_id : {{ department_id }}<br>#}
+                                        {#            box_id : {{ box_id }}<br>#}
+                                        {#            is_like : {{ is_like }}<br>#}
+                                        {#            is_basket : {{ is_basket }}<br>#}
+                                        {#            is_box : {{ is_box }}<br>#}
+                                        <form action="{% url "order_view" permanence_id %}?date={{ date_id }}" id="search_form"
+                                                  class="form-horizontal navbar-form" role="search" method="get">
+                                            {% csrf_token %}
+                                            <div class="input-group">
+                                                {% if q %}
+                                                    <input type="search" autosave="repanier" class="form-control"
+                                                           aria-describedby="button-search"
+                                                           value="{{ q }}"
+                                                           name="q">
+                                                {% else %}
+                                                    <input type="search" autosave="repanier" class="form-control"
+                                                           aria-describedby="button-search"
+                                                           placeholder="{% trans "Search" %}"
+                                                           name="q">
+                                                {% endif %}
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-primary" type="submit" id="button-search"><i
+                                                            class="fas fa-search"></i></button>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="producer" value="{{ producer_id }}">
+                                            <input type="hidden" name="department" value="{{ department_id }}">
+                                            <input type="hidden" name="box" value="{{ box_id }}">
+                                            <input type="hidden" name="is_like" value="{{ is_like }}">
+                                            <input type="hidden" name="is_basket" value="{{ is_basket }}">
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endspaceless %}{% endif %}{% endblock product_filter %}
+            </div>
+            <div class="col-md-9">
+            {% block product_list %}{% if may_order or display_anonymous_order_form %}{% spaceless %}
+
+                            {% if offeritem_list %}
+                                {% addtoblock "jshead" %}
+                                    <script src="{{ STATIC_URL }}repanier/alois/waypoints/jquery.waypoints.min.js"></script>
+                                {% endaddtoblock %}
+                                {% addtoblock "jshead" %}
+                                    <script src="{{ STATIC_URL }}repanier/alois/waypoints/shortcuts/infinite.min.js"></script>
+                                {% endaddtoblock %}
+                                <div class="container">
+                                    <div class="infinite-container">
+                                        {% for offer in offeritem_list %}
+                                            {% cycle '<div class="infinite-item"><div class="col"><div class="row">' ' ' ' ' as item_start  silent %}
+                                            {% cycle ' ' ' ' 'd-none d-lg-block d-xl-none' as hr_tag silent %}
+                                            {% cycle ' ' ' ' '</div><hr/></div></div>' as item_end  silent %}
+                                            {{ item_start }}
+                                            <div class="col-xs-12 col-sm-6 col-lg-2">
+                                                {% if offer.picture %}
+                                                    {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
+                                                    <div data-toggle="modal" data-target="#orderModal"
+                                                         data-id="{{ offer.id|unlocalize }}"
+                                                         data-product="{{ offer.get_long_name }}"
+                                                         data-picture="{{ product_thumbnail.url }}">
+                                                {% else %}
+                                                    <div data-toggle="modal" data-target="#orderModal"
+                                                         data-id="{{ offer.id|unlocalize }}"
+                                                         data-product="{{ offer.get_long_name }}" data-picture="">
+                                                {% endif %}
+                                                {{ offer.cache_part_a | safe }}
+                                                </div>
+                                                {% if offer.permanences_dates %}
+                                                    {{ offer.cache_part_b | safe }}
+                                                    {% if may_order and not offer.is_box %}
+                                                        {% repanier_btn_like offer_item=offer %}{% endif %}
+                                                {% endif %}
+                                                </div>
+                                                <div class="col-xs-12 col-sm-6 col-lg-2"
+                                                     data-id="{{ offer.id|unlocalize }}"
+                                                     data-product="{{ offer.get_long_name }}">
+                                                    {% if offer.permanences_dates %}
+                                                        {% if offer.get_not_permanences_dates %}
+                                                            <div class="text-warning">
+                                                                <small>({{ offer.get_not_permanences_dates }})
+                                                                </small>
+                                                            </div>{% endif %}
+                                                        {% if may_order %}
+                                                            {% repanier_select_offer_item offer_item=offer date=date_id %}{% endif %}
+                                                    {% else %}
+                                                        {% if may_order %}
+                                                            {% repanier_select_offer_item offer_item=offer %}{% endif %}
+                                                        {{ offer.cache_part_b | safe }}
+                                                        {% if may_order and not offer.is_box %}
+                                                            {% repanier_btn_like offer_item=offer %}{% endif %}
+                                                    {% endif %}
+                                                </div>
+                                                {% if offer.is_box %}
+                                                    <div class="clearfix"></div>
+                                                    <div class="col">
+                                                        {{ box_description |safe }}
+                                                    </div>
+                                                {% endif %}
+                                                {% if is_box %}
+                                                    <div class="clearfix {% cycle ' ' 'd-none d-sm-block d-md-none-block d-none d-md-block d-lg-none-block' %}"></div>
+                                                    <hr class="d-none d-sm-block d-md-none d-block d-sm-none d-none d-md-block d-lg-none {% cycle 'd-none d-lg-block d-xl-none' ' ' %}"/>
+                                                {% endif %}
+                                                {% if forloop.last %}
+                                                    {# Close infinite-item div #}
+                                                    </div>
+                                                    <hr/></div></div>
+                                                {% else %}
+                                                    {{ item_end }}
+                                                {% endif %}
+                                        {% endfor %}
+                                </div>
+                                {% if page_obj.has_next %}
+                                    <div class="loading" style="display: none;">
+                                        <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}"
+                                           class="infinite-more-link btn btn-info not-active"><span
+                                                class="fas fa-sync-alt fa-spin"></span>&nbsp;{% trans "Loading..." %}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                                <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top"><i
+                                        class="fas fa-chevron-up"></i></a>
+                                <script>
+                                    {#                https://www.w3schools.com/howto/howto_js_scroll_to_top.asp#}
+                                    window.onscroll = function () {
+                                        scrollFunction()
+                                    };
+
+                                    function scrollFunction() {
+                                        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                                            document.getElementById("backToTop").style.display = "block";
+                                        } else {
+                                            document.getElementById("backToTop").style.display = "none";
+                                        }
+                                    }
+
+                                    var infinite = new Waypoint.Infinite({
+                                        element: $('.infinite-container')[0],
+                                        offset: function () {
+                                            return Waypoint.viewportHeight() - this.element.clientHeight + 3500
+                                        },
+                                        onBeforePageLoad: function () {
+                                            $('.loading').show();
+                                        },
+                                        onAfterPageLoad: function ($items) {
+                                            $('.loading').hide();
+                                            {#$('.loaded').show();#}
+                                        }
+                                    });
+                                </script>
+                            {% else %}
+                                <h3>{% trans "No offer found" %}</h3>
+                            {% endif %}
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                {% endspaceless %}{% endif %}{% endblock product_list %}
+            </div>
+        </div>
+    </div>
+    {% block order_modal %}{% if may_order or display_anonymous_order_form %}{% spaceless %}
+        {#        Communication Modal starts#}
+        <div id="communicationModal" class="modal fade" tabindex="-1" role="dialog"
+             aria-labelledby="communicationModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-info" data-dismiss="modal"
+                                aria-hidden="true">{% trans "Close" %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {#        Communication modal ends#}
+        {#        Order Modal starts#}
+        <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="orderModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-info" data-dismiss="modal"
+                                aria-hidden="true">{% trans "Close" %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {#        Order modal ends#}
+        {#        Other qty Modal starts#}
+        <div id="otherQtyModal" class="modal fade" tabindex="-1" role="dialog"
+             aria-labelledby="otherQtyModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="otherQtyModalLabel"></h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <span id="otherQtyDetails">
+                          {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
+                          <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
+                          <span class="fas fa-phone"></span>  <b>{{ staff_order.customer_responsible.get_phone1 }}</b><br>
+                          <a href="mailto:{{ staff_order.user.email }}"
+                             style="color : inherit;">{{ staff_order.user.email }}</a><br>
+                        </span>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-info" data-dismiss="modal"
+                                aria-hidden="true">{% trans "Close" %}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {# Other qty modal ends #}
+    {% endspaceless %}{% endif %}{% endblock order_modal %}
+    {% block my_cart_amount_js %}{% if may_order %}{% spaceless %}
+        {% addtoblock "lastjs" %}
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    var lien = '{% url "my_cart_amount_ajax" permanence_id %}';
+                    $.ajax({
+                        url: lien,
+                        cache: false,
+                        dataType: 'json',
+                        success: function (result) {
+                            $.each(result, function (key, val) {
+                                $(key).html(val);
+                            });
+                        }
+                    });
+                    $("#li_my_basket").show();
+                });
+            </script>
+        {% endaddtoblock %}
+    {% endspaceless %}{% endif %}{% endblock my_cart_amount_js %}
+    {% block my_order_js %}
+        {% addtoblock "lastjs" %}{% spaceless %}
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    $('#orderModal').modal({
+                        keyboard: true,
+                        backdrop: false,
+                        show: false
+                    }).on('show.bs.modal', function (event) {
+                        t_row = $(event.relatedTarget);
+                        var getIdFromRow = t_row.data('id');
+                        var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
+                            }
+                        });
+                    });
+                });
+            </script>
+        {% endspaceless %}{% endaddtoblock %}
+        {% if may_order %}
+            {% addtoblock "lastjs" %}{% spaceless %}
+                <script type="text/javascript">
+                    {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
+                    var saved_offer_item_id = -1;
+                    $(document).ready(function () {
+                        var lien = '{% url 'order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            dataType: 'json',
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    if (key === "#communicationModal") {
+                                        $(key).html(val).modal('show');
+                                    } else {
+                                        $(key).html(val);
+                                    }
+                                });
+                            }
+                        });
+                        $("#li_my_basket").show();
+                        $('#btn_receive_email').on('click', function (event) {
+                            event.preventDefault(); // To prevent following the link (optional)
+                            $("#receive_email").hide();
+                        });
+                    });
+
+                    function order_ajax(offer_item_id) {
+                        saved_offer_item_id = -1;
+                        var offer_item = $("#offer_item" + offer_item_id);
+                        var offer_item_val = $("option:selected", offer_item).val();
+
+                        if (offer_item_val === 'other_qty') {
+                            var getProductFromRow = offer_item.closest('div').data('product');
+                            $('#otherQtyModalLabel').html(getProductFromRow);
+                            $('#otherQtyModal').modal('show');
+                        } else {
+                            var lien = '{% url 'order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if is_basket %}&is_basket=yes{%  endif %}";
+                            $.ajax({
+                                url: lien,
+                                cache: false,
+                                success: function (result) {
+                                    $.each(result, function (key, val) {
+                                        if (key === "#communicationModal") {
+                                            $(key).html(val).modal('show');
+                                        } else {
+                                            $(key).html(val);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+
+                    function show_select_order_list_ajax(offer_item_id) {
+                        if (saved_offer_item_id !== offer_item_id) {
+                            saved_offer_item_id = offer_item_id;
+                            var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + offer_item_id;
+                            $.ajax({
+                                url: lien1,
+                                cache: false,
+                                dataType: 'json',
+                                async: false,
+                                success: function (result) {
+                                    $.each(result, function (key, val) {
+                                        $(key).html(val);
+                                    });
+                                }
+                            });
+                        }
+                    }
+
+                    function like_ajax(offer_item_id) {
+                        var lien = '{% url 'like_ajax' %}?offer_item=' + offer_item_id;
+                        $.ajax({
+                            url: lien,
+                            cache: false,
+                            success: function (result) {
+                                $.each(result, function (key, val) {
+                                    $(key).html(val);
+                                });
+                            }
+                        });
+                    }
+                </script>
+            {% endspaceless %}{% endaddtoblock %}
+        {% endif %}
+    {% endblock my_order_js %}
+{% endblock sub_content %}

@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+{% block content %}
+    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
+    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
+    <h4>{{ sub_title }}</h4>
+    <p></p>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.media }}
+        <h6>{{ permanence }}</h6>
+        <fieldset class="module aligned ">
+        <div class="form-row">
+{#            <div class="field-box">#}
+{#                <div class="fieldWrapper">#}
+{#                    {{ form.repeat_counter.errors }}#}
+{#                    {{ form.repeat_counter.label_tag }} {{ form.repeat_counter }}#}
+{#                    {% if form.repeat_counter.help_text %}#}
+{#                    <p class="help">{{ form.repeat_counter.help_text|safe }}</p>#}
+{#                    {% endif %}#}
+{#                </div>#}
+{#            </div>#}
+{#            <div class="field-box">#}
+{#                <div class="fieldWrapper">#}
+{#                    {{ form.repeat_step.errors }}#}
+{#                    {{ form.repeat_step.label_tag }} {{ form.repeat_step }}#}
+{#                    {% if form.repeat_step.help_text %}#}
+{#                    <p class="help">{{ form.repeat_step.help_text|safe }}</p>#}
+{#                    {% endif %}#}
+{#                </div>#}
+{#            </div>#}
+            <div class="field-box">
+                <div class="fieldWrapper">
+                    {{ form.recurrences.errors }}
+                    {{ form.recurrences.label_tag }} {{ form.recurrences }}
+                    {% if form.recurrences.help_text %}
+                    <p class="help">{{ form.recurrences.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        </fieldset>
+        <div class="submit-row">
+            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
+        </div>
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

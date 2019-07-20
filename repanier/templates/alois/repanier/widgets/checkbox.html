@@ -1,0 +1,6 @@
+{% spaceless %}
+    <div class="checkbox-repanier">
+            <input type="checkbox" name="{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}>
+            <span class="cr"><span class="cr-icon fas fa-check"></span></span>{{ repanier_label }}
+    </div>
+{% endspaceless %}

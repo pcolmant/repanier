@@ -27,17 +27,21 @@ logger = logging.getLogger(__name__)
 class Configuration(TranslatableModel):
     group_name = models.CharField(
         _("Name of the group"),
-        max_length=50, default=settings.REPANIER_SETTINGS_GROUP_NAME)
+        max_length=50,
+        default=settings.REPANIER_SETTINGS_GROUP_NAME,
+    )
     login_attempt_counter = models.DecimalField(
-        _("Login attempt counter"),
-        default=DECIMAL_ZERO, max_digits=2, decimal_places=0)
+        _("Login attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
+    )
     password_reset_on = models.DateTimeField(
-        _("Password reset on"), null=True, blank=True, default=None)
+        _("Password reset on"), null=True, blank=True, default=None
+    )
     name = models.CharField(
         max_length=3,
         choices=LUT_PERMANENCE_NAME,
         default=PERMANENCE_NAME_PERMANENCE,
-        verbose_name=_("Offers name"))
+        verbose_name=_("Offers name"),
+    )
     # email = models.EmailField(
     #     _("Email"), blank=False, default=settings.DJANGO_SETTINGS_EMAIL_HOST_USER)
 
@@ -45,123 +49,194 @@ class Configuration(TranslatableModel):
         max_length=3,
         choices=LUT_CURRENCY,
         default=CURRENCY_EUR,
-        verbose_name=_("Currency"))
+        verbose_name=_("Currency"),
+    )
     max_week_wo_participation = models.DecimalField(
         _("Alert the customer after this number of weeks without participation"),
         help_text=_("0 mean : never display a pop up."),
-        default=DECIMAL_ZERO, max_digits=2, decimal_places=0,
-        validators=[MinValueValidator(0)])
-    send_abstract_order_mail_to_customer = models.BooleanField(_("Send abstract order mail to customers"),
-                                                               default=False)
+        default=DECIMAL_ZERO,
+        max_digits=2,
+        decimal_places=0,
+        validators=[MinValueValidator(0)],
+    )
+    send_abstract_order_mail_to_customer = models.BooleanField(
+        _("Send abstract order mail to customers"), default=False
+    )
     send_order_mail_to_board = models.BooleanField(
-        _("Send an order distribution email to members registered for a task"), default=True)
-    send_invoice_mail_to_customer = models.BooleanField(_("Send invoice mail to customers"), default=True)
-    send_invoice_mail_to_producer = models.BooleanField(_("Send invoice mail to producers"), default=False)
+        _("Send an order distribution email to members registered for a task"),
+        default=True,
+    )
+    send_invoice_mail_to_customer = models.BooleanField(
+        _("Send invoice mail to customers"), default=True
+    )
+    send_invoice_mail_to_producer = models.BooleanField(
+        _("Send invoice mail to producers"), default=False
+    )
     invoice = models.BooleanField(_("Enable accounting module"), default=True)
     display_anonymous_order_form = models.BooleanField(
-        _("Allow the anonymous visitor to see the customer order screen"), default=True)
-    display_who_is_who = models.BooleanField(_("Display the \"who's who\""), default=True)
-    xlsx_portrait = models.BooleanField(_("Always generate XLSX files in portrait mode"), default=False)
-    bank_account = models.CharField(_("Bank account"), max_length=100, blank=True, default=EMPTY_STRING)
+        _("Allow the anonymous visitor to see the customer order screen"), default=True
+    )
+    display_who_is_who = models.BooleanField(
+        _('Display the "who\'s who"'), default=True
+    )
+    xlsx_portrait = models.BooleanField(
+        _("Always generate XLSX files in portrait mode"), default=False
+    )
+    bank_account = models.CharField(
+        _("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
+    )
     vat_id = models.CharField(
-        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING)
-    page_break_on_customer_check = models.BooleanField(_("Page break on customer check"), default=False)
+        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
+    )
+    page_break_on_customer_check = models.BooleanField(
+        _("Page break on customer check"), default=False
+    )
     membership_fee = ModelMoneyField(
-        _("Membership fee"),
-        default=DECIMAL_ZERO, max_digits=8, decimal_places=2)
+        _("Membership fee"), default=DECIMAL_ZERO, max_digits=8, decimal_places=2
+    )
     membership_fee_duration = models.DecimalField(
         _("Membership fee duration"),
         help_text=_("Number of month(s). 0 mean : no membership fee."),
-        default=DECIMAL_ZERO, max_digits=3, decimal_places=0,
-        validators=[MinValueValidator(0)])
+        default=DECIMAL_ZERO,
+        max_digits=3,
+        decimal_places=0,
+        validators=[MinValueValidator(0)],
+    )
     home_site = models.URLField(_("Home site"), blank=True, default="/")
     permanence_of_last_cancelled_invoice = models.ForeignKey(
-        'Permanence',
-        on_delete=models.PROTECT, blank=True, null=True)
+        "Permanence", on_delete=models.PROTECT, blank=True, null=True
+    )
     db_version = models.PositiveSmallIntegerField(default=0)
     translations = TranslatedFields(
-        group_label=models.CharField(_("Label to mention on the invoices of the group"),
-                                     max_length=100,
-                                     default=EMPTY_STRING,
-                                     blank=True),
-        how_to_register=HTMLField(_("How to register"),
-                                  help_text=EMPTY_STRING,
-                                  configuration='CKEDITOR_SETTINGS_MODEL2',
-                                  default=EMPTY_STRING,
-                                  blank=True),
-        offer_customer_mail=HTMLField(_("Contents of the order opening email sent to consumers authorized to order"),
-                                      help_text=EMPTY_STRING,
-                                      configuration='CKEDITOR_SETTINGS_MODEL2',
-                                      default=EMPTY_STRING,
-                                      blank=True),
-        offer_producer_mail=HTMLField(_("Email content"),
-                                      help_text=EMPTY_STRING,
-                                      configuration='CKEDITOR_SETTINGS_MODEL2',
-                                      default=EMPTY_STRING,
-                                      blank=True),
-        order_customer_mail=HTMLField(_("Content of the order confirmation email sent to the consumers concerned"),
-                                      help_text=EMPTY_STRING,
-                                      configuration='CKEDITOR_SETTINGS_MODEL2',
-                                      default=EMPTY_STRING,
-                                      blank=True),
-        cancel_order_customer_mail=HTMLField(
-            _("Content of the email in case of cancellation of the order sent to the consumers concerned"),
-            help_text=EMPTY_STRING,
-            configuration='CKEDITOR_SETTINGS_MODEL2',
+        group_label=models.CharField(
+            _("Label to mention on the invoices of the group"),
+            max_length=100,
             default=EMPTY_STRING,
-            blank=True),
-        order_staff_mail=HTMLField(_("Content of the order distribution email sent to the members enrolled to a task"),
-                                   help_text=EMPTY_STRING,
-                                   configuration='CKEDITOR_SETTINGS_MODEL2',
-                                   default=EMPTY_STRING,
-                                   blank=True),
-        order_producer_mail=HTMLField(_("Content of the order confirmation email sent to the producers concerned"),
-                                      help_text=EMPTY_STRING,
-                                      configuration='CKEDITOR_SETTINGS_MODEL2',
-                                      default=EMPTY_STRING,
-                                      blank=True),
-        invoice_customer_mail=HTMLField(_("Content of the invoice confirmation email sent to the customers concerned"),
-                                        help_text=EMPTY_STRING,
-                                        configuration='CKEDITOR_SETTINGS_MODEL2',
-                                        default=EMPTY_STRING,
-                                        blank=True),
-        invoice_producer_mail=HTMLField(_("Content of the payment confirmation email sent to the producers concerned"),
-                                        help_text=EMPTY_STRING,
-                                        configuration='CKEDITOR_SETTINGS_MODEL2',
-                                        default=EMPTY_STRING,
-                                        blank=True),
+            blank=True,
+        ),
+        how_to_register=HTMLField(
+            _("How to register"),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        offer_customer_mail=HTMLField(
+            _(
+                "Contents of the order opening email sent to consumers authorized to order"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        offer_producer_mail=HTMLField(
+            _("Email content"),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        order_customer_mail=HTMLField(
+            _(
+                "Content of the order confirmation email sent to the consumers concerned"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        cancel_order_customer_mail=HTMLField(
+            _(
+                "Content of the email in case of cancellation of the order sent to the consumers concerned"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        order_staff_mail=HTMLField(
+            _(
+                "Content of the order distribution email sent to the members enrolled to a task"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        order_producer_mail=HTMLField(
+            _(
+                "Content of the order confirmation email sent to the producers concerned"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        invoice_customer_mail=HTMLField(
+            _(
+                "Content of the invoice confirmation email sent to the customers concerned"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
+        invoice_producer_mail=HTMLField(
+            _(
+                "Content of the payment confirmation email sent to the producers concerned"
+            ),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        ),
     )
 
     def clean(self):
         try:
             template = Template(self.offer_customer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.offer_customer_mail, error_str)))
+            raise ValidationError(
+                mark_safe("{} : {}".format(self.offer_customer_mail, error_str))
+            )
         try:
             template = Template(self.offer_producer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.offer_producer_mail, error_str)))
+            raise ValidationError(
+                mark_safe("{} : {}".format(self.offer_producer_mail, error_str))
+            )
         try:
             template = Template(self.order_customer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.order_customer_mail, error_str)))
+            raise ValidationError(
+                mark_safe("{} : {}".format(self.order_customer_mail, error_str))
+            )
         try:
             template = Template(self.order_staff_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.order_staff_mail, error_str)))
+            raise ValidationError(
+                mark_safe("{} : {}".format(self.order_staff_mail, error_str))
+            )
         try:
             template = Template(self.order_producer_mail)
         except Exception as error_str:
-            raise ValidationError(mark_safe("{} : {}".format(self.order_producer_mail, error_str)))
+            raise ValidationError(
+                mark_safe("{} : {}".format(self.order_producer_mail, error_str))
+            )
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             try:
                 template = Template(self.invoice_customer_mail)
             except Exception as error_str:
-                raise ValidationError(mark_safe("{} : {}".format(self.invoice_customer_mail, error_str)))
+                raise ValidationError(
+                    mark_safe("{} : {}".format(self.invoice_customer_mail, error_str))
+                )
             try:
                 template = Template(self.invoice_producer_mail)
             except Exception as error_str:
-                raise ValidationError(mark_safe("{} : {}".format(self.invoice_producer_mail, error_str)))
+                raise ValidationError(
+                    mark_safe("{} : {}".format(self.invoice_producer_mail, error_str))
+                )
 
     @classmethod
     def init_repanier(cls):
@@ -185,7 +260,7 @@ class Configuration(TranslatableModel):
             group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
             name=PERMANENCE_NAME_PERMANENCE,
             bank_account="BE99 9999 9999 9999",
-            currency=CURRENCY_EUR
+            currency=CURRENCY_EUR,
         )
         config.init_email()
         config.save()
@@ -197,7 +272,7 @@ class Configuration(TranslatableModel):
 
         BankAccount.open_account(
             customer_buyinggroup=customer_buyinggroup,
-            very_first_customer=very_first_customer
+            very_first_customer=very_first_customer,
         )
         very_first_customer = Customer.get_or_create_the_very_first_customer()
         coordinator = Staff.get_or_create_any_coordinator()
@@ -211,6 +286,7 @@ class Configuration(TranslatableModel):
         from cms.models import StaticPlaceholder
         from cms.constants import X_FRAME_OPTIONS_DENY
         from cms import api
+
         page = api.create_page(
             title=_("Home"),
             soft_root=False,
@@ -219,7 +295,7 @@ class Configuration(TranslatableModel):
             published=True,
             parent=None,
             xframe_options=X_FRAME_OPTIONS_DENY,
-            in_navigation=True
+            in_navigation=True,
         )
         try:
             # New in CMS 3.5
@@ -230,27 +306,10 @@ class Configuration(TranslatableModel):
         placeholder = page.placeholders.get(slot="home-hero")
         api.add_plugin(
             placeholder=placeholder,
-            plugin_type='TextPlugin',
+            plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_HERO)
-        placeholder = page.placeholders.get(slot="home-col-1")
-        api.add_plugin(
-            placeholder=placeholder,
-            plugin_type='TextPlugin',
-            language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_COL_1)
-        placeholder = page.placeholders.get(slot="home-col-2")
-        api.add_plugin(
-            placeholder=placeholder,
-            plugin_type='TextPlugin',
-            language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_COL_2)
-        placeholder = page.placeholders.get(slot="home-col-3")
-        api.add_plugin(
-            placeholder=placeholder,
-            plugin_type='TextPlugin',
-            language=settings.LANGUAGE_CODE,
-            body=settings.CMS_TEMPLATE_HOME_COL_3)
+            body=settings.CMS_TEMPLATE_HOME_HERO,
+        )
         static_placeholder = StaticPlaceholder(
             code="footer",
             # site_id=1
@@ -258,79 +317,162 @@ class Configuration(TranslatableModel):
         static_placeholder.save()
         api.add_plugin(
             placeholder=static_placeholder.draft,
-            plugin_type='TextPlugin',
+            plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
-            body='hello world footer'
+            body="hello world footer",
         )
         static_placeholder.publish(
-            request=None,
-            language=settings.LANGUAGE_CODE,
-            force=True
+            request=None, language=settings.LANGUAGE_CODE, force=True
         )
         api.publish_page(
             page=page,
             user=coordinator.customer_responsible.user,
-            language=settings.LANGUAGE_CODE)
+            language=settings.LANGUAGE_CODE,
+        )
 
         if LUT_DepartmentForCustomer.objects.count() == 0:
             # Generate a template of LUT_DepartmentForCustomer
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Vegetable"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Basket of vegetables"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Salad"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Tomato"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Potato"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Green"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Cabbage"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Basket of vegetables"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Salad"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Tomato"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Potato"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Green"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Cabbage"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Fruit"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Basket of fruits"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Apple"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Pear"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Plum"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Basket of fruits"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Apple"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Pear"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Plum"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Bakery"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Flour"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Bread"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Pastry"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Flour"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Bread"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Pastry"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Butchery"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Delicatessen"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Chicken"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Pork"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Beef"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Beef and pork"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Veal"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Lamb"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Delicatessen"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Chicken"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Pork"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Beef"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Beef and pork"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Veal"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Lamb"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Grocery"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Takeaway"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Pasta"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Chocolate"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Takeaway"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Pasta"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Chocolate"), parent=parent
+            )
             LUT_DepartmentForCustomer.objects.create(short_name=_("Oil"), parent=parent)
             LUT_DepartmentForCustomer.objects.create(short_name=_("Egg"), parent=parent)
             LUT_DepartmentForCustomer.objects.create(short_name=_("Jam"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Cookie"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Cookie"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Creamery"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Dairy"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Cow cheese"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Goat cheese"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Sheep cheese"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Mixed cheese"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Dairy"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Cow cheese"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Goat cheese"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Sheep cheese"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Mixed cheese"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Cup of icecream"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream per liter"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream in frisco"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream cake"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Cup of icecream"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Icecream per liter"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Icecream in frisco"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Icecream cake"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Cup of sorbet"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet per liter"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Cup of sorbet"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Sorbet per liter"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Drink"))
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Juice"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Coffee"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Juice"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Coffee"), parent=parent
+            )
             LUT_DepartmentForCustomer.objects.create(short_name=_("Tea"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Herbal tea"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Wine"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Aperitif"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Liqueurs"), parent=parent)
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Herbal tea"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Wine"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Aperitif"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Liqueurs"), parent=parent
+            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Hygiene"))
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Deposit"))
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Subscription"))
+            parent = LUT_DepartmentForCustomer.objects.create(
+                short_name=_("Subscription")
+            )
 
         return config
 
@@ -427,90 +569,84 @@ class Configuration(TranslatableModel):
         logger.debug("######## upgrade_db")
 
         if self.db_version == 0:
-            from repanier.models import Product, OfferItemWoReceiver, BankAccount, Permanence, Staff
+            from repanier.models import (
+                Product,
+                OfferItemWoReceiver,
+                BankAccount,
+                Permanence,
+                Staff,
+            )
+
             # Staff.objects.rebuild()
-            Product.objects.filter(
-                is_box=True
-            ).order_by('?').update(
+            Product.objects.filter(is_box=True).order_by("?").update(
                 limit_order_quantity_to_stock=True
             )
             OfferItemWoReceiver.objects.filter(
                 permanence__status__gte=PERMANENCE_SEND,
-                order_unit=PRODUCT_ORDER_UNIT_PC_KG
-            ).order_by('?').update(
-                use_order_unit_converted=True
-            )
-            for bank_account in BankAccount.objects.filter(
+                order_unit=PRODUCT_ORDER_UNIT_PC_KG,
+            ).order_by("?").update(use_order_unit_converted=True)
+            for bank_account in (
+                BankAccount.objects.filter(
                     permanence__isnull=False,
                     producer__isnull=True,
-                    customer__isnull=True
-            ).order_by('?').only("id", "permanence_id"):
+                    customer__isnull=True,
+                )
+                .order_by("?")
+                .only("id", "permanence_id")
+            ):
                 Permanence.objects.filter(
-                    id=bank_account.permanence_id,
-                    invoice_sort_order__isnull=True
-                ).order_by('?').update(invoice_sort_order=bank_account.id)
+                    id=bank_account.permanence_id, invoice_sort_order__isnull=True
+                ).order_by("?").update(invoice_sort_order=bank_account.id)
             for permanence in Permanence.objects.filter(
-                    status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
-                    invoice_sort_order__isnull=True
-            ).order_by('?'):
+                status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
+                invoice_sort_order__isnull=True,
+            ).order_by("?"):
                 bank_account = BankAccount.get_closest_to(permanence.permanence_date)
                 if bank_account is not None:
                     permanence.invoice_sort_order = bank_account.id
-                    permanence.save(update_fields=['invoice_sort_order'])
-            Staff.objects.order_by('?').update(
-                is_order_manager=F('is_reply_to_order_email'),
-                is_invoice_manager=F('is_reply_to_invoice_email'),
-                is_order_referent=F('is_contributor')
+                    permanence.save(update_fields=["invoice_sort_order"])
+            Staff.objects.order_by("?").update(
+                is_order_manager=F("is_reply_to_order_email"),
+                is_invoice_manager=F("is_reply_to_invoice_email"),
+                is_order_referent=F("is_contributor"),
             )
             self.db_version = 1
         if self.db_version == 1:
-            for user in User.objects.filter(is_staff=False).order_by('?'):
+            for user in User.objects.filter(is_staff=False).order_by("?"):
                 user.first_name = EMPTY_STRING
                 user.last_name = user.username[:30]
                 user.save()
-            for user in User.objects.filter(is_staff=True, is_superuser=False).order_by('?'):
+            for user in User.objects.filter(is_staff=True, is_superuser=False).order_by(
+                "?"
+            ):
                 user.first_name = EMPTY_STRING
                 user.last_name = user.email[:30]
                 user.save()
             self.db_version = 2
         if self.db_version == 2:
             from repanier.models import Staff
-            Staff.objects.order_by('?').update(
-                is_repanier_admin=F('is_coordinator'),
+
+            Staff.objects.order_by("?").update(is_repanier_admin=F("is_coordinator"))
+            Staff.objects.filter(is_repanier_admin=True).order_by("?").update(
+                can_be_contacted=True
             )
-            Staff.objects.filter(
-                is_repanier_admin=True
-            ).order_by('?').update(
-                can_be_contacted=True,
+            Staff.objects.filter(is_order_manager=True).order_by("?").update(
+                can_be_contacted=True
             )
-            Staff.objects.filter(
-                is_order_manager=True
-            ).order_by('?').update(
-                can_be_contacted=True,
+            Staff.objects.filter(is_invoice_manager=True).order_by("?").update(
+                can_be_contacted=True
             )
-            Staff.objects.filter(
+            Staff.objects.filter(is_invoice_referent=True).order_by("?").update(
                 is_invoice_manager=True
-            ).order_by('?').update(
-                can_be_contacted=True,
             )
-            Staff.objects.filter(
-                is_invoice_referent=True
-            ).order_by('?').update(
-                is_invoice_manager=True,
-            )
-            Staff.objects.filter(
-                is_order_referent=True
-            ).order_by('?').update(
-                is_order_manager=True,
+            Staff.objects.filter(is_order_referent=True).order_by("?").update(
+                is_order_manager=True
             )
             self.db_version = 4
         if self.db_version == 4:
             from repanier.models import Customer
-            Customer.objects.filter(
-                city="NONE"
-            ).order_by('?').update(
-                city=EMPTY_STRING,
-            )
+
+            Customer.objects.filter(city="NONE").order_by("?").update(city=EMPTY_STRING)
             self.db_version = 5
 
     def __str__(self):
@@ -570,12 +706,24 @@ def configuration_post_save(sender, **kwargs):
             apps.REPANIER_SETTINGS_PERMANENCE_NAME = _("Distribution")
             apps.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
             apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME = _("Distribution of ")
-        apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = config.max_week_wo_participation
-        apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = config.send_abstract_order_mail_to_customer
-        apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = config.send_order_mail_to_board
-        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = config.send_invoice_mail_to_customer
-        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = config.send_invoice_mail_to_producer
-        apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = config.display_anonymous_order_form
+        apps.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = (
+            config.max_week_wo_participation
+        )
+        apps.REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER = (
+            config.send_abstract_order_mail_to_customer
+        )
+        apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD = (
+            config.send_order_mail_to_board
+        )
+        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER = (
+            config.send_invoice_mail_to_customer
+        )
+        apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER = (
+            config.send_invoice_mail_to_producer
+        )
+        apps.REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM = (
+            config.display_anonymous_order_form
+        )
         apps.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
         apps.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
         # if config.bank_account is not None and len(config.bank_account.strip()) == 0:
@@ -586,21 +734,29 @@ def configuration_post_save(sender, **kwargs):
         #     apps.REPANIER_SETTINGS_VAT_ID = None
         # else:
         apps.REPANIER_SETTINGS_VAT_ID = config.vat_id
-        apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = config.page_break_on_customer_check
+        apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK = (
+            config.page_break_on_customer_check
+        )
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE = config.membership_fee
         apps.REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION = config.membership_fee_duration
         if config.currency == CURRENCY_LOC:
             apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "✿"
             apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * \"-\"??_ ;_ @_ "
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = (
+                '_ ✿ * #,##0.00_ ;_ ✿ * -#,##0.00_ ;_ ✿ * "-"??_ ;_ @_ '
+            )
         elif config.currency == CURRENCY_CHF:
-            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = 'Fr.'
+            apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "Fr."
             apps.REPANIER_SETTINGS_AFTER_AMOUNT = False
-            apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * \"-\"??_ ;_ @_ "
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = (
+                '_ Fr\. * #,##0.00_ ;_ Fr\. * -#,##0.00_ ;_ Fr\. * "-"??_ ;_ @_ '
+            )
         else:
             apps.REPANIER_SETTINGS_CURRENCY_DISPLAY = "€"
             apps.REPANIER_SETTINGS_AFTER_AMOUNT = True
-            apps.REPANIER_SETTINGS_CURRENCY_XLSX = "_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * \"-\"??_ ;_ @_ "
+            apps.REPANIER_SETTINGS_CURRENCY_XLSX = (
+                '_ € * #,##0.00_ ;_ € * -#,##0.00_ ;_ € * "-"??_ ;_ @_ '
+            )
         if config.home_site:
             apps.REPANIER_SETTINGS_HOME_SITE = config.home_site
         else:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8
 
-from decimal import *
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
 from django.db import models
@@ -10,7 +10,7 @@ from django.forms import DecimalField
 import repanier.apps
 from repanier.widget.money import MoneyWidget
 
-DECIMAL_ZERO = Decimal('0')
+DECIMAL_ZERO = Decimal("0")
 
 
 class RepanierMoney(object):
@@ -18,7 +18,7 @@ class RepanierMoney(object):
         if not isinstance(amount, Decimal):
             amount = Decimal(str(amount))
         self.decimal_places = decimal_places
-        self.rounding = Decimal('10') ** -self.decimal_places  # 2 places --> '0.01'
+        self.rounding = Decimal("10") ** -self.decimal_places  # 2 places --> '0.01'
         self.amount = amount.quantize(self.rounding, ROUND_HALF_UP)
 
     def __float__(self):
@@ -35,27 +35,41 @@ class RepanierMoney(object):
 
     def __add__(self, other):
         if isinstance(other, RepanierMoney):
-            return RepanierMoney(amount=self.amount + other.amount, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=self.amount + other.amount, decimal_places=self.decimal_places
+            )
         else:
-            return RepanierMoney(amount=self.amount + other, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=self.amount + other, decimal_places=self.decimal_places
+            )
 
     def __sub__(self, other):
         return self.__add__(-other)
 
     def __mul__(self, other):
         if isinstance(other, RepanierMoney):
-            return RepanierMoney(amount=self.amount * other.amount, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=self.amount * other.amount, decimal_places=self.decimal_places
+            )
         else:
-            return RepanierMoney(amount=self.amount * other, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=self.amount * other, decimal_places=self.decimal_places
+            )
 
     def __truediv__(self, other):
         if isinstance(other, RepanierMoney):
-            return RepanierMoney(amount=self.amount / other.amount, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=self.amount / other.amount, decimal_places=self.decimal_places
+            )
         else:
-            return RepanierMoney(amount=self.amount / other, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=self.amount / other, decimal_places=self.decimal_places
+            )
 
     def __abs__(self):
-        return RepanierMoney(amount=abs(self.amount), decimal_places=self.decimal_places)
+        return RepanierMoney(
+            amount=abs(self.amount), decimal_places=self.decimal_places
+        )
 
     def __rmod__(self, other):
         """
@@ -68,17 +82,24 @@ class RepanierMoney(object):
         USD 10.00
         """
         if isinstance(other, RepanierMoney):
-            raise TypeError('Invalid __rmod__ operation')
+            raise TypeError("Invalid __rmod__ operation")
         else:
-            return RepanierMoney(amount=Decimal(self.amount * (other / 100)), decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=Decimal(self.amount * (other / 100)),
+                decimal_places=self.decimal_places,
+            )
 
     __radd__ = __add__
 
     def __rsub__(self, other):
         if isinstance(other, RepanierMoney):
-            return RepanierMoney(amount=other.amount - self.amount, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=other.amount - self.amount, decimal_places=self.decimal_places
+            )
         else:
-            return RepanierMoney(amount=other - self.amount, decimal_places=self.decimal_places)
+            return RepanierMoney(
+                amount=other - self.amount, decimal_places=self.decimal_places
+            )
 
     __rmul__ = __mul__
     __rtruediv__ = __truediv__
@@ -86,20 +107,23 @@ class RepanierMoney(object):
     # _______________________________________
     # Override comparison operators
     def __eq__(self, other):
-        return (isinstance(other, RepanierMoney)
-                and (self.amount == other.amount)) or self.amount == other
+        return (
+            isinstance(other, RepanierMoney) and (self.amount == other.amount)
+        ) or self.amount == other
 
     def __ne__(self, other):
         result = self.__eq__(other)
         return not result
 
     def __lt__(self, other):
-        return (isinstance(other, RepanierMoney)
-                and (self.amount < other.amount)) or self.amount < other
+        return (
+            isinstance(other, RepanierMoney) and (self.amount < other.amount)
+        ) or self.amount < other
 
     def __gt__(self, other):
-        return (isinstance(other, RepanierMoney)
-                and (self.amount > other.amount)) or self.amount > other
+        return (
+            isinstance(other, RepanierMoney) and (self.amount > other.amount)
+        ) or self.amount > other
 
     def __le__(self, other):
         return self < other or self == other
@@ -118,8 +142,8 @@ class RepanierMoney(object):
             build(" {}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
 
         # Decimals
-        for i in range(self.decimal_places):
-            build(next() if digits else '0')
+        for i in range(self.decimal_places):  # noqa
+            build(next() if digits else "0")
 
         # Decimal points
         if self.decimal_places:
@@ -127,7 +151,7 @@ class RepanierMoney(object):
 
         # Grouped number
         if not digits:
-            build('0')
+            build("0")
         else:
             i = 0
             while digits:
@@ -151,6 +175,7 @@ class RepanierMoney(object):
         return self.amount.as_tuple()
 
     def is_finite(self):
+        # Important : used by /django/core/validators.py
         return self.amount.is_finite()
 
 
@@ -166,7 +191,7 @@ class MoneyFieldProxy(object):
 
     def __get__(self, obj, type=None):
         if obj is None:
-            raise AttributeError('Can only be accessed via an instance.')
+            raise AttributeError("Can only be accessed via an instance.")
         if isinstance(obj.__dict__[self.field.name], BaseExpression):
             return obj.__dict__[self.field.name]
         if not isinstance(obj.__dict__[self.field.name], RepanierMoney):
@@ -175,7 +200,9 @@ class MoneyFieldProxy(object):
 
     def __set__(self, obj, value):
         if isinstance(value, tuple):
-            value = RepanierMoney(amount=value[0], decimal_places=self.field.decimal_places)
+            value = RepanierMoney(
+                amount=value[0], decimal_places=self.field.decimal_places
+            )
         if isinstance(value, RepanierMoney):
             obj.__dict__[self.field.name] = value.amount
         elif isinstance(value, BaseExpression):
@@ -188,7 +215,7 @@ class MoneyFieldProxy(object):
 
 class ModelMoneyField(models.DecimalField):
     def formfield(self, **kwargs):
-        kwargs.update({'form_class': FormMoneyField})
+        kwargs.update({"form_class": FormMoneyField})
         return super(ModelMoneyField, self).formfield(**kwargs)
 
     def to_python(self, value):
@@ -208,7 +235,9 @@ class ModelMoneyField(models.DecimalField):
         return super(ModelMoneyField, self).get_db_prep_save(value, connection)
 
     def contribute_to_class(self, cls, name, private_only=False):
-        super(ModelMoneyField, self).contribute_to_class(cls, name, private_only=private_only)
+        super(ModelMoneyField, self).contribute_to_class(
+            cls, name, private_only=private_only
+        )
         setattr(cls, self.name, MoneyFieldProxy(self))
 
 
@@ -217,11 +246,13 @@ class FormMoneyField(DecimalField):
 
     def to_python(self, value):
         # Important : Do not validate if self.disabled
-        value = (not self.disabled and super(FormMoneyField, self).to_python(value)) or DECIMAL_ZERO
+        value = (
+            not self.disabled and super(FormMoneyField, self).to_python(value)
+        ) or DECIMAL_ZERO
         return RepanierMoney(value)
 
     def prepare_value(self, value):
         try:
             return value.amount
-        except:
+        except Exception:
             return value

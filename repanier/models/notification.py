@@ -16,42 +16,44 @@ from repanier.tools import cap
 
 class Notification(TranslatableModel):
     translations = TranslatedFields(
-        notification=HTMLField(_("Notification"),
-                               help_text=EMPTY_STRING,
-                               configuration='CKEDITOR_SETTINGS_MODEL2',
-                               default=EMPTY_STRING,
-                               blank=True),
-
+        notification=HTMLField(
+            _("Notification"),
+            help_text=EMPTY_STRING,
+            configuration="CKEDITOR_SETTINGS_MODEL2",
+            default=EMPTY_STRING,
+            blank=True,
+        )
     )
 
     def get_notification_display(self):
         return self.safe_translation_getter(
-            'notification', any_language=True, default=EMPTY_STRING
+            "notification", any_language=True, default=EMPTY_STRING
         )
 
     def get_html_notification_card_display(self):
-        if settings.REPANIER_SETTINGS_TEMPLATE == "bs4":
+        if settings.REPANIER_SETTINGS_TEMPLATE != "bs3":
             notification = self.get_notification_display()
             if notification:
                 html = []
                 html.append(
                     format_html(
                         '<div class="card-body">{}</div>',
-                        self.get_notification_display()
+                        self.get_notification_display(),
                     )
                 )
-                return mark_safe("""
+                return mark_safe(
+                    """
                 <div class="container-repanier">
-                <div class="container">
-                    <div class="row">
-                        <div class="col">
-                            <div class="card card-flash">
-                                {html}
-                                <a href="#" class="card-close"><i class="far fa-times-circle"></i></a>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col">
+                                <div class="card card-flash">
+                                    {html}
+                                    <a href="#" class="card-close"><i class="far fa-times-circle"></i></a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 </div>
                 <script type="text/javascript">
                 // Close card
@@ -65,8 +67,9 @@ class Notification(TranslatableModel):
                 }});
                 </script>
                 """.format(
-                    html=EMPTY_STRING.join(html)
-                ))
+                        html=EMPTY_STRING.join(html)
+                    )
+                )
         return EMPTY_STRING
 
     def __str__(self):

@@ -780,6 +780,9 @@ msgstr ""
 msgid "Delivery point"
 msgstr "Point de livraison"
 
+msgid "Create purchases for all contract openings"
+msgstr "Créer une commande pour toutes les dates du contrat de solidarité"
+
 #: admin/permanence_in_preparation.py:703
 msgid "Please, confirm the action : send orders"
 msgstr "Veuillez confirmer votre demande de transmettre les commandes."
@@ -2745,6 +2748,10 @@ msgstr "Pas d'achat"
 #: models/permanence.py:384
 msgid "Purchases by"
 msgstr "Achats par"
+
+#: models/permanence.py:384
+msgid "Manage purchases"
+msgstr "Gestion des achats"
 
 #: models/permanence.py:435
 msgid "No task"
