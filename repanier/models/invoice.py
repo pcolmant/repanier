@@ -5,7 +5,7 @@ import datetime
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
-from django.db.models import F, Sum, Q
+from django.db.models import F, Sum, Q, DecimalField
 from django.urls import reverse
 from django.utils.formats import number_format
 from django.utils.html import format_html
@@ -151,24 +151,24 @@ class CustomerInvoice(Invoice):
 
         from repanier.models.purchase import PurchaseWoReceiver
 
-        result = False
         result_set = PurchaseWoReceiver.objects.filter(
             permanence_id=self.permanence_id,
             customer_invoice_id=self.id
         ).order_by('?').aggregate(
-            Sum('quantity_ordered'),
-            Sum('quantity_invoiced'),
+            qty_ordered=Sum(
+                'quantity_ordered',
+                output_field=DecimalField(max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+            ),
+            qty_invoiced=Sum(
+                'quantity_invoiced',
+                output_field=DecimalField(max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
+            )
         )
-        if result_set["quantity_ordered__sum"] is not None:
-            sum_quantity_ordered = result_set["quantity_ordered__sum"]
-            if sum_quantity_ordered != DECIMAL_ZERO:
-                result = True
-        if result_set["quantity_invoiced__sum"] is not None:
-            sum_quantity_invoiced = result_set["quantity_invoiced__sum"]
-            if sum_quantity_invoiced != DECIMAL_ZERO:
-                result = True
-        return result
-
+        qty_ordered = result_set["qty_ordered"] \
+            if result_set["qty_ordered"] is not None else DECIMAL_ZERO
+        qty_invoiced = result_set["qty_invoiced"] \
+            if result_set["qty_invoiced"] is not None else DECIMAL_ZERO
+        return qty_ordered != DECIMAL_ZERO or qty_invoiced != DECIMAL_ZERO
 
     def get_html_my_order_confirmation(self, permanence, is_basket=False, basket_message=EMPTY_STRING):
 
@@ -482,29 +482,32 @@ class CustomerInvoice(Invoice):
                     customer_invoice__customer_charged_id=self.customer_id,
                     is_resale_price_fixed=False
                 ).order_by('?').aggregate(
-                    Sum('customer_vat'),
-                    Sum('deposit'),
-                    Sum('selling_price')
+                    customer_vat = Sum(
+                        'customer_vat',
+                        output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+                    ),
+                    deposit = Sum(
+                        'deposit',
+                        output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                    ),
+                    selling_price = Sum(
+                        'selling_price',
+                        output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                    )
                 )
 
-                if result_set["customer_vat__sum"] is not None:
-                    total_vat = result_set["customer_vat__sum"]
-                else:
-                    total_vat = DECIMAL_ZERO
-                if result_set["deposit__sum"] is not None:
-                    total_deposit = result_set["deposit__sum"]
-                else:
-                    total_deposit = DECIMAL_ZERO
-                if result_set["selling_price__sum"] is not None:
-                    total_price_with_tax = result_set["selling_price__sum"]
-                else:
-                    total_price_with_tax = DECIMAL_ZERO
+                total_vat = result_set["customer_vat"] \
+                    if result_set["customer_vat"] is not None else DECIMAL_ZERO
+                total_deposit = result_set["deposit"] \
+                    if result_set["deposit"] is not None else DECIMAL_ZERO
+                total_selling_price_with_tax = result_set["selling_price"] \
+                    if result_set["selling_price"] is not None else DECIMAL_ZERO
 
-                total_price_with_tax_wo_deposit = total_price_with_tax - total_deposit
+                total_selling_price_with_tax_wo_deposit = total_selling_price_with_tax - total_deposit
                 self.delta_price_with_tax.amount = (
                         (
-                                total_price_with_tax_wo_deposit * self.price_list_multiplier
-                        ).quantize(TWO_DECIMALS) - total_price_with_tax_wo_deposit
+                                total_selling_price_with_tax_wo_deposit * self.price_list_multiplier
+                        ).quantize(TWO_DECIMALS) - total_selling_price_with_tax_wo_deposit
                 )
                 self.delta_vat.amount = -(
                         (total_vat * self.price_list_multiplier
@@ -515,9 +518,18 @@ class CustomerInvoice(Invoice):
                 permanence_id=self.permanence_id,
                 customer_invoice__customer_charged_id=self.customer_id,
             ).order_by('?').aggregate(
-                Sum('customer_vat'),
-                Sum('deposit'),
-                Sum('selling_price')
+                customer_vat=Sum(
+                    'customer_vat',
+                    output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+                ),
+                deposit=Sum(
+                    'deposit',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                selling_price=Sum(
+                    'selling_price',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                )
             )
         else:
             # It's an invoice of a member of a group
@@ -528,22 +540,27 @@ class CustomerInvoice(Invoice):
                 permanence_id=self.permanence_id,
                 customer_id=self.customer_id,
             ).order_by('?').aggregate(
-                Sum('customer_vat'),
-                Sum('deposit'),
-                Sum('selling_price')
+                customer_vat=Sum(
+                    'customer_vat',
+                    output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+                ),
+                deposit=Sum(
+                    'deposit',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                selling_price=Sum(
+                    'selling_price',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                )
             )
-        if result_set["customer_vat__sum"] is not None:
-            self.total_vat.amount = result_set["customer_vat__sum"]
-        else:
-            self.total_vat.amount = DECIMAL_ZERO
-        if result_set["deposit__sum"] is not None:
-            self.total_deposit.amount = result_set["deposit__sum"]
-        else:
-            self.total_deposit.amount = DECIMAL_ZERO
-        if result_set["selling_price__sum"] is not None:
-            self.total_price_with_tax.amount = result_set["selling_price__sum"]
-        else:
-            self.total_price_with_tax.amount = DECIMAL_ZERO
+
+        self.total_vat.amount = result_set["customer_vat"] \
+            if result_set["customer_vat"] is not None else DECIMAL_ZERO
+        self.total_deposit.amount = result_set["deposit"] \
+            if result_set["deposit"] is not None else DECIMAL_ZERO
+        self.total_price_with_tax.amount = result_set["selling_price"] \
+            if result_set["selling_price"] is not None else DECIMAL_ZERO
+
         if settings.REPANIER_SETTINGS_ROUND_INVOICES:
             total_price = self.total_price_with_tax.amount + self.delta_price_with_tax.amount
             total_price_gov_be = round_gov_be(total_price)
@@ -583,7 +600,7 @@ class CustomerInvoice(Invoice):
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_charged_id,
                     customer_charged_id=self.customer_charged_id,
-                    status=self.status
+                    status=new_permanence.status
                 )
                 customer_invoice.set_order_delivery(delivery=None)
                 customer_invoice.calculate_order_price()
@@ -593,7 +610,7 @@ class CustomerInvoice(Invoice):
             customer_id=self.customer_id,
             master_permanence_id=self.permanence_id,
             customer_charged_id=self.customer_charged_id,
-            status=self.status
+            status=new_permanence.status
         )
 
     def cancel_if_unconfirmed(self, permanence):

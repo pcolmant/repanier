@@ -6,7 +6,7 @@ import logging
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import models, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
@@ -828,8 +828,12 @@ class Permanence(TranslatableModel):
             new_permanence = self.create_child(PERMANENCE_SEND)
             new_permanence.producers.add(*producers_to_move)
             ProducerInvoice.objects.filter(
-                permanence_id=self.id, producer_id__in=producers_to_move
-            ).order_by("?").update(permanence_id=new_permanence.id)
+                permanence_id=self.id,
+                producer_id__in=producers_to_move
+            ).order_by('?').update(
+                permanence_id=new_permanence.id,
+                status=PERMANENCE_SEND
+            )
             CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
             ).order_by("?").update(permanence_id=new_permanence.id)
@@ -865,6 +869,7 @@ class Permanence(TranslatableModel):
                 ).order_by("?").update(
                     permanence_id=new_permanence.id,
                     customer_invoice_id=new_customer_invoice.id,
+                    status=PERMANENCE_SEND
                 )
 
             new_permanence.recalculate_order_amount(re_init=True)
@@ -974,39 +979,41 @@ class Permanence(TranslatableModel):
             )
             producer_invoice.save()
 
-        result_set = (
-            PurchaseWoReceiver.objects.filter(
-                permanence_id=self.id,
-                is_box_content=False,
-                offer_item__price_list_multiplier__gte=DECIMAL_ONE,
-                producer__represent_this_buyinggroup=False,
-            )
-            .order_by("?")
-            .aggregate(
-                Sum("purchase_price"),
-                Sum("selling_price"),
-                Sum("producer_vat"),
-                Sum("customer_vat"),
-            )
+        result_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.id,
+            is_box_content=False,
+            offer_item__price_list_multiplier__gte=DECIMAL_ONE,
+            producer__represent_this_buyinggroup=False
+        ).order_by('?').aggregate(
+            purchase_price=Sum(
+                'purchase_price',
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            ),
+            selling_price=Sum(
+                'selling_price',
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            ),
+            producer_vat=Sum(
+                'producer_vat',
+                output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+            ),
+            customer_vat=Sum(
+                'customer_vat',
+                output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+            ),
         )
-        if result_set["purchase_price__sum"] is not None:
-            sum_purchase_price = result_set["purchase_price__sum"]
-        else:
-            sum_purchase_price = DECIMAL_ZERO
-        if result_set["selling_price__sum"] is not None:
-            sum_selling_price = result_set["selling_price__sum"]
-        else:
-            sum_selling_price = DECIMAL_ZERO
-        if result_set["producer_vat__sum"] is not None:
-            sum_producer_vat = result_set["producer_vat__sum"]
-        else:
-            sum_producer_vat = DECIMAL_ZERO
-        if result_set["customer_vat__sum"] is not None:
-            sum_customer_vat = result_set["customer_vat__sum"]
-        else:
-            sum_customer_vat = DECIMAL_ZERO
-        purchases_delta_vat = sum_customer_vat - sum_producer_vat
-        purchases_delta_price_with_tax = sum_selling_price - sum_purchase_price
+
+        total_purchase_price_with_tax = result_set["purchase_price"] \
+            if result_set["purchase_price"] is not None else DECIMAL_ZERO
+        total_selling_price_with_tax = result_set["selling_price"] \
+            if result_set["selling_price"] is not None else DECIMAL_ZERO
+        total_customer_vat = result_set["customer_vat"] \
+            if result_set["customer_vat"] is not None else DECIMAL_ZERO
+        total_producer_vat = result_set["producer_vat"] \
+            if result_set["producer_vat"] is not None else DECIMAL_ZERO
+
+        purchases_delta_vat = total_customer_vat - total_producer_vat
+        purchases_delta_price_with_tax = total_selling_price_with_tax - total_purchase_price_with_tax
 
         purchases_delta_price_wo_tax = (
             purchases_delta_price_with_tax - purchases_delta_vat
@@ -1425,33 +1432,32 @@ class Permanence(TranslatableModel):
         ).select_related("producer"):
             # We have to pay something
             producer = producer_invoice.producer
-            result_set = (
-                BankAccount.objects.filter(
-                    producer_id=producer.id, producer_invoice__isnull=True
-                )
-                .order_by("?")
-                .aggregate(Sum("bank_amount_in"), Sum("bank_amount_out"))
+            result_set = BankAccount.objects.filter(
+                producer_id=producer.id, producer_invoice__isnull=True
+            ).order_by('?').aggregate(
+                bank_amount_in=Sum(
+                    'bank_amount_in',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                bank_amount_out=Sum(
+                    'bank_amount_out',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
             )
-            if result_set["bank_amount_in__sum"] is not None:
-                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
-            else:
-                bank_in = REPANIER_MONEY_ZERO
-            if result_set["bank_amount_out__sum"] is not None:
-                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-            else:
-                bank_out = REPANIER_MONEY_ZERO
-            bank_not_invoiced = bank_out - bank_in
 
-            if (
-                producer.balance.amount != DECIMAL_ZERO
-                or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO
-                or bank_not_invoiced != DECIMAL_ZERO
-            ):
+            total_bank_amount_in = result_set["bank_amount_in"] \
+                if result_set["bank_amount_in"] is not None else DECIMAL_ZERO
+            total_bank_amount_out = result_set["bank_amount_out"] \
+                if result_set["bank_amount_out"] is not None else DECIMAL_ZERO
+            bank_not_invoiced = total_bank_amount_out - total_bank_amount_in
 
-                delta = (
-                    producer_invoice.to_be_invoiced_balance.amount
-                    - bank_not_invoiced.amount
-                ).quantize(TWO_DECIMALS)
+            if producer.balance.amount != DECIMAL_ZERO \
+                    or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO \
+                    or bank_not_invoiced != DECIMAL_ZERO:
+
+                delta = (producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced).quantize(
+                    TWO_DECIMALS)
+
                 if delta > DECIMAL_ZERO:
 
                     if producer_invoice.invoice_reference:
@@ -1565,7 +1571,7 @@ class Permanence(TranslatableModel):
             ), "offer_item_qs must be set to None when send_to_producer or re_init"
             ProducerInvoice.objects.filter(permanence_id=self.id).update(
                 total_price_with_tax=DECIMAL_ZERO,
-                total_vat=DECIMAL_ZERO,
+                total_vat=CIMAL_ZERO,
                 total_deposit=DECIMAL_ZERO,
             )
             CustomerInvoice.objects.filter(permanence_id=self.id).update(
@@ -1595,12 +1601,12 @@ class Permanence(TranslatableModel):
                 offer_item.previous_add_2_stock = DECIMAL_ZERO
                 offer_item.save()
 
+        purchase_set = Purchase.objects \
+            .filter(permanence_id=self.id) \
+            .order_by('?')
         if offer_item_qs is not None:
-            purchase_set = Purchase.objects.filter(
-                permanence_id=self.id, offer_item__in=offer_item_qs
-            ).order_by("?")
-        else:
-            purchase_set = Purchase.objects.filter(permanence_id=self.id).order_by("?")
+            purchase_set = purchase_set \
+                .filter(offer_item__in=offer_item_qs)
 
         for a_purchase in purchase_set.select_related("offer_item", "customer_invoice"):
             # Recalculate the total_price_with_tax of ProducerInvoice,
