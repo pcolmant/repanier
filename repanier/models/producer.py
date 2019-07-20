@@ -5,7 +5,7 @@ import uuid
 
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, DecimalField
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -207,18 +207,27 @@ class Producer(models.Model):
                 status__gte=PERMANENCE_OPENED,
                 status__lte=PERMANENCE_SEND
             ).order_by('?').aggregate(
-                Sum('total_price_with_tax'),
-                Sum('delta_price_with_tax'),
-                Sum('delta_transport')
+                total_price_with_tax=Sum(
+                    'total_price_with_tax',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                delta_price_with_tax=Sum(
+                    'delta_price_with_tax',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                delta_transport=Sum(
+                    'delta_transport',
+                    output_field=DecimalField(max_digits=5, decimal_places=2, default=DECIMAL_ZERO)
+                )
             )
-            if result_set["total_price_with_tax__sum"] is not None:
-                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax__sum"])
+            if result_set["total_price_with_tax"] is not None:
+                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax"])
             else:
                 order_not_invoiced = REPANIER_MONEY_ZERO
-            if result_set["delta_price_with_tax__sum"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax__sum"])
-            if result_set["delta_transport__sum"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_transport__sum"])
+            if result_set["delta_price_with_tax"] is not None:
+                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax"])
+            if result_set["delta_transport"] is not None:
+                order_not_invoiced += RepanierMoney(result_set["delta_transport"])
         else:
             order_not_invoiced = REPANIER_MONEY_ZERO
         return order_not_invoiced
@@ -228,18 +237,21 @@ class Producer(models.Model):
             result_set = BankAccount.objects.filter(
                 producer_id=self.id, producer_invoice__isnull=True
             ).order_by('?').aggregate(
-                Sum('bank_amount_in'),
-                Sum('bank_amount_out')
+                bank_amount_in=Sum(
+                    'bank_amount_in',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                bank_amount_out=Sum(
+                    'bank_amount_out',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
             )
-            if result_set["bank_amount_in__sum"] is not None:
-                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
-            else:
-                bank_in = REPANIER_MONEY_ZERO
-            if result_set["bank_amount_out__sum"] is not None:
-                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-            else:
-                bank_out = REPANIER_MONEY_ZERO
-            bank_not_invoiced = bank_in - bank_out
+
+            total_bank_amount_in = result_set["bank_amount_in"] \
+                if result_set["bank_amount_in"] is not None else DECIMAL_ZERO
+            total_bank_amount_out = result_set["bank_amount_out"] \
+                if result_set["bank_amount_out"] is not None else DECIMAL_ZERO
+            bank_not_invoiced = RepanierMoney(total_bank_amount_out - total_bank_amount_in)
         else:
             bank_not_invoiced = REPANIER_MONEY_ZERO
 
@@ -256,12 +268,15 @@ class Producer(models.Model):
         ).exclude(
             order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT
         ).order_by('?').aggregate(
-            Sum('total_selling_with_tax')
+            total_selling_price_with_tax=Sum(
+                'total_selling_with_tax',
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            )
         )
-        if result_set["total_selling_with_tax__sum"] is not None:
-            payment_needed = result_set["total_selling_with_tax__sum"]
-        else:
-            payment_needed = DECIMAL_ZERO
+
+        payment_needed = result_set["total_selling_price_with_tax"] \
+            if result_set["total_selling_price_with_tax"] is not None else DECIMAL_ZERO
+
         result_set = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
             producer_id=self.id,
@@ -269,10 +284,15 @@ class Producer(models.Model):
         ).exclude(
             order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT
         ).order_by('?').aggregate(
-            Sum('total_purchase_with_tax'),
+            total_purchase_price_with_tax=Sum(
+                'total_purchase_with_tax',
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            )
         )
+
         if result_set["total_purchase_with_tax__sum"] is not None:
             payment_needed += result_set["total_purchase_with_tax__sum"]
+
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
         if self.manage_replenishment:
             for offer_item in OfferItemWoReceiver.objects.filter(

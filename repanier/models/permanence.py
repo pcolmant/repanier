@@ -6,7 +6,7 @@ import logging
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import models, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
@@ -834,29 +834,35 @@ class Permanence(TranslatableModel):
             offer_item__price_list_multiplier__gte=DECIMAL_ONE,
             producer__represent_this_buyinggroup=False
         ).order_by('?').aggregate(
-            Sum('purchase_price'),
-            Sum('selling_price'),
-            Sum('producer_vat'),
-            Sum('customer_vat'),
+            purchase_price=Sum(
+                'purchase_price',
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            ),
+            selling_price=Sum(
+                'selling_price',
+                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+            ),
+            producer_vat=Sum(
+                'producer_vat',
+                output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+            ),
+            customer_vat=Sum(
+                'customer_vat',
+                output_field=DecimalField(max_digits=8, decimal_places=4, default=DECIMAL_ZERO)
+            ),
         )
-        if result_set["purchase_price__sum"] is not None:
-            sum_purchase_price = result_set["purchase_price__sum"]
-        else:
-            sum_purchase_price = DECIMAL_ZERO
-        if result_set["selling_price__sum"] is not None:
-            sum_selling_price = result_set["selling_price__sum"]
-        else:
-            sum_selling_price = DECIMAL_ZERO
-        if result_set["producer_vat__sum"] is not None:
-            sum_producer_vat = result_set["producer_vat__sum"]
-        else:
-            sum_producer_vat = DECIMAL_ZERO
-        if result_set["customer_vat__sum"] is not None:
-            sum_customer_vat = result_set["customer_vat__sum"]
-        else:
-            sum_customer_vat = DECIMAL_ZERO
-        purchases_delta_vat = sum_customer_vat - sum_producer_vat
-        purchases_delta_price_with_tax = sum_selling_price - sum_purchase_price
+
+        total_purchase_price_with_tax = result_set["purchase_price"] \
+            if result_set["purchase_price"] is not None else DECIMAL_ZERO
+        total_selling_price_with_tax = result_set["selling_price"] \
+            if result_set["selling_price"] is not None else DECIMAL_ZERO
+        total_customer_vat = result_set["customer_vat"] \
+            if result_set["customer_vat"] is not None else DECIMAL_ZERO
+        total_producer_vat = result_set["producer_vat"] \
+            if result_set["producer_vat"] is not None else DECIMAL_ZERO
+
+        purchases_delta_vat = total_customer_vat - total_producer_vat
+        purchases_delta_price_with_tax = total_selling_price_with_tax - total_purchase_price_with_tax
 
         purchases_delta_price_wo_tax = purchases_delta_price_with_tax - purchases_delta_vat
 
@@ -1250,22 +1256,27 @@ class Permanence(TranslatableModel):
             result_set = BankAccount.objects.filter(
                 producer_id=producer.id, producer_invoice__isnull=True
             ).order_by('?').aggregate(
-                Sum('bank_amount_in'),
-                Sum('bank_amount_out')
+                bank_amount_in=Sum(
+                    'bank_amount_in',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
+                bank_amount_out=Sum(
+                    'bank_amount_out',
+                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+                ),
             )
-            if result_set["bank_amount_in__sum"] is not None:
-                bank_in = RepanierMoney(result_set["bank_amount_in__sum"])
-            else:
-                bank_in = REPANIER_MONEY_ZERO
-            if result_set["bank_amount_out__sum"] is not None:
-                bank_out = RepanierMoney(result_set["bank_amount_out__sum"])
-            else:
-                bank_out = REPANIER_MONEY_ZERO
-            bank_not_invoiced = bank_out - bank_in
 
-            if producer.balance.amount != DECIMAL_ZERO or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO or bank_not_invoiced != DECIMAL_ZERO:
+            total_bank_amount_in = result_set["bank_amount_in"] \
+                if result_set["bank_amount_in"] is not None else DECIMAL_ZERO
+            total_bank_amount_out = result_set["bank_amount_out"] \
+                if result_set["bank_amount_out"] is not None else DECIMAL_ZERO
+            bank_not_invoiced = total_bank_amount_out - total_bank_amount_in
 
-                delta = (producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced.amount).quantize(
+            if producer.balance.amount != DECIMAL_ZERO \
+                    or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO \
+                    or bank_not_invoiced != DECIMAL_ZERO:
+
+                delta = (producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced).quantize(
                     TWO_DECIMALS)
                 if delta > DECIMAL_ZERO:
 
