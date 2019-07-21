@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 from decimal import *
+from typing import Any, Union
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -11,7 +12,7 @@ WEBMASTER_GROUP = "webmaster"
 EMPTY_STRING = ""
 ONE_YEAR = 365
 
-DECIMAL_ZERO = Decimal('0')
+DECIMAL_ZERO = Decimal('0')  # type: Union[Union[Decimal, Decimal], Any]
 DECIMAL_ONE = Decimal('1')
 DECIMAL_TWO = Decimal('2')
 DECIMAL_THREE = Decimal('3')
