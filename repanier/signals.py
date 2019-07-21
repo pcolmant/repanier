@@ -22,9 +22,9 @@ def offer_item_post_init(sender, **kwargs):
 @receiver(pre_save, sender=OfferItem)
 def offer_item_pre_save(sender, **kwargs):
     offer_item = kwargs["instance"]
-    import ipdb
+    # import ipdb
 
-    ipdb.set_trace()
+    # ipdb.set_trace()
     offer_item.recalculate_prices(
         offer_item.producer_price_are_wo_vat,
         offer_item.is_resale_price_fixed,
