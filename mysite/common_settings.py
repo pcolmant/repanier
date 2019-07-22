@@ -325,6 +325,7 @@ INSTALLED_APPS = (
     "djangocms_file",
     "djangocms_picture",
     "djangocms_video",
+    "django_extensions",
     "cms",
     # 'cms_bootstrap3',
     "menus",
