@@ -22,19 +22,19 @@ def btn_confirm_order_ajax(request):
         raise Http404
     user = request.user
     customer = Customer.objects.filter(
-        user_id=user.id, may_order=True).order_by('?').first()
+        user_id=user.id, may_order=True).first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)
     permanence_id = sint(request.GET.get('permanence', 0))
-    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
+    permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence_ok_or_404(permanence)
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence_id,
         customer_id=customer.id,
         is_order_confirm_send=False,
         is_group=False,
-    ).order_by('?').first()
+    ).first()
     if customer_invoice is None:
         raise Http404
     filename = "{}-{}.xlsx".format(

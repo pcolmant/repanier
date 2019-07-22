@@ -26,10 +26,14 @@ from repanier.tools import sboolean, sint, \
 @require_GET
 @login_required
 def order_init_ajax(request):
+    """
+    Open an order for a customer when arriving on the order page (i.e. create the corresponding `CustomerInvoice`)
+    """
+
     if not request.is_ajax():
         raise Http404
     permanence_id = sint(request.GET.get('pe', 0))
-    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
+    permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence_ok_or_404(permanence)
     user = request.user
     customer = Customer.objects.filter(
@@ -37,13 +41,13 @@ def order_init_ajax(request):
     ).only(
         "id", "vat_id", "short_basket_name", "email2", "delivery_point",
         "balance", "date_balance", "may_order"
-    ).order_by('?').first()
+    ).first()
     if customer is None:
         raise Http404
     customer_invoice = CustomerInvoice.objects.filter(
         permanence_id=permanence.id,
         customer_id=customer.id
-    ).order_by('?').first()
+    ).first()
     if customer_invoice is None:
         customer_invoice = CustomerInvoice.objects.create(
             permanence_id=permanence.id,
@@ -87,7 +91,7 @@ def order_init_ajax(request):
                     permanence_id=permanence.id
             ).only(
                 "total_price_with_tax", "status"
-            ).order_by('?'):
+            ):
                 json_dict.update(producer_invoice.get_order_json())
         communication = sboolean(request.GET.get('co', False))
         if communication:

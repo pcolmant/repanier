@@ -809,30 +809,22 @@ def get_html_basket_message(customer, permanence, status):
     payment_msg = const.EMPTY_STRING
     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
         customer, permanence)
-    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-        if customer_last_balance:
-            invoice_msg = "<br>{} {}".format(
-                customer_last_balance,
-                customer_on_hold_movement
-            )
+    if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING and customer_last_balance:
+        invoice_msg = "<br>{} {}".format(
+            customer_last_balance,
+            customer_on_hold_movement
+        )
     if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None:
         payment_msg = "<br>{}".format(
             customer_payment_needed
         )
 
     if status == const.PERMANENCE_OPENED:
-        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            if permanence.with_delivery_point:
-                you_can_change = _(
-                    "You can increase the order quantities as long as the orders are open for your delivery point.")
-            else:
-                you_can_change = _("You can increase the order quantities as long as the orders are open.")
+        if permanence.with_delivery_point:
+            you_can_change = _(
+                "You can change the order quantities as long as the orders are open for your delivery point.")
         else:
-            if permanence.with_delivery_point:
-                you_can_change = _(
-                    "You can change the order quantities as long as the orders are open for your delivery point.")
-            else:
-                you_can_change = _("You can change the order quantities as long as the orders are open.")
+            you_can_change = _("You can change the order quantities as long as the orders are open.")
     else:
         if permanence.with_delivery_point:
             you_can_change = _('The orders are closed for your delivery point.')

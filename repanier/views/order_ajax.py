@@ -23,12 +23,16 @@ from repanier.tools import create_or_update_one_cart_item, sint, sboolean, my_ba
 @require_GET
 @login_required
 def order_ajax(request):
+    """
+    Add a selected offer item to a customer order (i.e. update the customer's invoice and the producer's invoice)
+    """
+
     if not request.is_ajax():
         raise Http404
     user = request.user
     customer = Customer.objects.filter(
         user_id=user.id, may_order=True
-    ).order_by('?').first()
+    ).first()
     if customer is None:
         raise Http404
     offer_item_id = sint(request.GET.get('offer_item', 0))
@@ -37,14 +41,14 @@ def order_ajax(request):
     qs = CustomerInvoice.objects.filter(
         permanence__offeritem=offer_item_id,
         customer_id=customer.id,
-        status=PERMANENCE_OPENED).order_by('?')
+        status=PERMANENCE_OPENED)
     json_dict = {}
     if qs.exists():
         qs = ProducerInvoice.objects.filter(
             permanence__offeritem=offer_item_id,
             producer__offeritem=offer_item_id,
             status=PERMANENCE_OPENED
-        ).order_by('?')
+        )
         if qs.exists():
             purchase, updated = create_or_update_one_cart_item(
                 customer=customer,
@@ -55,7 +59,7 @@ def order_ajax(request):
             )
             offer_item = OfferItemWoReceiver.objects.filter(
                 id=offer_item_id
-            ).order_by('?').first()
+            ).first()
             if purchase is None:
                 json_dict["#offer_item{}".format(offer_item.id)] = get_html_selected_value(offer_item, DECIMAL_ZERO,
                                                                                            is_open=True)
@@ -69,18 +73,18 @@ def order_ajax(request):
                         box=offer_item.product_id
                 ).only(
                     "product_id"
-                ).order_by('?'):
+                ):
                     box_offer_item = OfferItemWoReceiver.objects.filter(
                         product_id=content.product_id,
                         permanence_id=offer_item.permanence_id
-                    ).order_by('?').first()
+                    ).first()
                     if box_offer_item is not None:
                         # Select one purchase
                         purchase = PurchaseWoReceiver.objects.filter(
                             customer_id=customer.id,
                             offer_item_id=box_offer_item.id,
                             is_box_content=False
-                        ).order_by('?').only('quantity_ordered').first()
+                        ).only('quantity_ordered').first()
                         if purchase is not None:
                             json_dict["#offer_item{}".format(box_offer_item.id)] = get_html_selected_value(
                                 box_offer_item,
@@ -91,7 +95,7 @@ def order_ajax(request):
                             customer_id=customer.id,
                             offer_item_id=box_offer_item.id,
                             is_box_content=True
-                        ).order_by('?').only('quantity_ordered').first()
+                        ).only('quantity_ordered').first()
                         if box_purchase is not None:
                             json_dict["#box_offer_item{}".format(box_offer_item.id)] = get_html_selected_box_value(
                                 box_offer_item,
@@ -101,13 +105,13 @@ def order_ajax(request):
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 producer_invoice = ProducerInvoice.objects.filter(
                     producer_id=offer_item.producer_id, permanence_id=offer_item.permanence_id
-                ).only("total_price_with_tax").order_by('?').first()
+                ).only("total_price_with_tax").first()
                 json_dict.update(producer_invoice.get_order_json())
 
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=offer_item.permanence_id,
                 customer_id=customer.id
-            ).order_by('?').first()
+            ).first()
             invoice_confirm_status_is_changed = customer_invoice.cancel_confirm_order()
             if invoice_confirm_status_is_changed:
                 if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
@@ -120,7 +124,7 @@ def order_ajax(request):
                 my_basket(customer_invoice.is_order_confirm_send, customer_invoice.get_total_price_with_tax()))
             permanence = Permanence.objects.filter(
                 id=offer_item.permanence_id
-            ).order_by('?').first()
+            ).first()
 
             if is_basket:
                 basket_message = get_html_basket_message(customer, permanence, PERMANENCE_OPENED)
