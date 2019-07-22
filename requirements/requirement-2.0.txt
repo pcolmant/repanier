@@ -8,7 +8,6 @@ diff-match-patch==20181111
 django-classy-tags==0.9.0
 django-crispy-forms==1.7.2
 django-easy-select2==1.5.5
-django-extensions==2.1.9
 django-filer==1.5.0
 django-formtools==2.1
 django-import-export==1.2.0
@@ -48,4 +47,3 @@ uWSGI==2.0.18
 unicodecsv==0.14.1
 xlrd==1.2.0 # pin version number. used by tablib. see tablib requirements
 xlwt==1.3.0 # pin version number. used by tablib. see tablib requirements
-ipdb
