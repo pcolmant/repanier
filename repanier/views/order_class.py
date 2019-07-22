@@ -27,31 +27,29 @@ class OrderView(ListView):
     paginate_by = 18
     paginate_orphans = 2
 
-    def __init__(self, **kwargs):
-        super(OrderView, self).__init__(**kwargs)
-        self.user = None
-        self.first_page = False
-        self.producer_id = 'all'
-        self.department_id = 'all'
-        self.box_id = 'all'
-        self.is_box = False
-        self.communication = 0
-        self.q = None
-        self.is_basket = False
-        self.is_like = False
-        self.is_anonymous = True
-        self.may_order = False
-        self.permanence = None
-        self.all_dates = []
-        self.date_id = "all"
-        self.date_selected = None
+    user = None
+    first_page = False
+    producer_id = 'all'
+    department_id = 'all'
+    box_id = 'all'
+    is_box = False
+    communication = 0
+    q = None
+    is_basket = False
+    is_like = False
+    is_anonymous = True
+    may_order = False
+    permanence = None
+    all_dates = []
+    date_id = "all"
+    date_selected = None
 
     def get(self, request, *args, **kwargs):
         self.first_page = kwargs.get('page', True)
         permanence_id = sint(kwargs.get('permanence_id', 0))
         self.permanence = Permanence.objects.filter(id=permanence_id).only(
             "id", "status", "permanence_date", "with_delivery_point", "contract"
-        ).order_by('?').first()
+        ).first()
         permanence_ok_or_404(self.permanence)
         self.user = request.user
         self.is_basket = self.request.GET.get('is_basket', False)
@@ -69,7 +67,7 @@ class OrderView(ListView):
                 else:
                     self.date_id = date_id
                     self.date_selected = self.all_dates[date_id]
-        customer_may_order = Customer.objects.filter(user_id=self.user.id, is_active=True).order_by('?').exists()
+        customer_may_order = Customer.objects.filter(user_id=self.user.id, is_active=True).exists()
         if self.user.is_anonymous or not customer_may_order:
             self.is_anonymous = True
             self.may_order = False
@@ -167,14 +165,14 @@ class OrderView(ListView):
             context['is_basket_view'] = 'active'
 
             customer = Customer.objects.filter(
-                user_id=self.user.id, may_order=True).order_by('?').first()
+                user_id=self.user.id, may_order=True).first()
             if customer is None:
                 raise Http404
             translation.activate(customer.language)
             customer_invoice = CustomerInvoice.objects.filter(
                 permanence_id=self.permanence.id,
                 customer_id=customer.id
-            ).order_by('?').first()
+            ).first()
             if customer_invoice is None:
                 customer_invoice = CustomerInvoice.objects.create(
                     permanence_id=self.permanence.id,
@@ -223,7 +221,7 @@ class OrderView(ListView):
                 id=self.box_id,
                 permanence_id=self.permanence.id,
                 may_order=True
-            ).only('product_id').order_by('?').first()
+            ).only('product_id').first()
             if offer_item is not None and offer_item.product_id is not None:
                 box_id = offer_item.product_id
             else:
@@ -278,7 +276,7 @@ class OrderView(ListView):
                 if self.department_id != 'all':
                     department = LUT_DepartmentForCustomer.objects.filter(
                         id=self.department_id
-                    ).order_by('?').only("lft", "rght", "tree_id").first()
+                    ).only("lft", "rght", "tree_id").first()
                     if department is not None:
                         tmp_qs = qs.filter(department_for_customer__lft__gte=department.lft,
                                            department_for_customer__rght__lte=department.rght,
@@ -294,9 +292,9 @@ class OrderView(ListView):
                     translations__long_name__icontains=self.q,
                     translations__language_code=translation.get_language()
                 )
+        if self.is_like:
+            qs = qs.filter(product__likes__id=self.user.id)
         qs = qs.order_by(
             "translations__order_sort_order"
         )
-        if self.is_like:
-            qs = qs.filter(product__likes__id=self.user.id)
         return qs.distinct()

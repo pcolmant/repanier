@@ -294,19 +294,16 @@
                                 <div class="container">
                                     <div class="infinite-container">
                                         {% for offer in offeritem_list %}
-                                            {% cycle '<div class="infinite-item"><div class="col"><div class="row">' ' ' ' ' as item_start silent %}
-                                            {% cycle ' ' ' ' 'd-none d-lg-block d-xl-none' as hr_tag silent %}
-                                            {% cycle ' ' ' ' '</div><hr/></div></div>' as item_end  silent %}
-                                            {{ item_start }}
-                                            {% include "repanier/widgets/render_offer_item.html" %}
-                                            {% if forloop.last %}
-                                                {# Close infinite-item div #}
+                                            <div class="infinite-item">
+                                                <div class="col">
+                                                    <div class="row">
+                                                        {% include "repanier/widgets/render_offer_item.html" %}
+                                                    </div>
+                                                    <hr/>
                                                 </div>
-                                                <hr/></div></div>
-                                            {% else %}
-                                                {{ item_end }}
-                                            {% endif %}
+                                            </div>
                                         {% endfor %}
+                                    </div>
                                 </div>
                                 {% if page_obj.has_next %}
                                     <div class="loading" style="display: none;">
