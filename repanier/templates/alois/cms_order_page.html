@@ -57,7 +57,7 @@
                     <h1 class="card-title">{% trans "Details of your order" %}</h1>
                 </div>
                 <div class="card-body">
-                    <span id="span_btn_confirm_order">{{ span_btn_confirm_order }}</span>
+                    <div id="span_btn_confirm_order">{{ span_btn_confirm_order }}</div>
                 </div>
             </div>
             {% addtoblock "lastjs" %}{% spaceless %}
@@ -499,6 +499,9 @@
                     });
 
                     function order_ajax(offer_item_id) {
+                        /*
+                            Add the given OfferItem to basket
+                        */
                         saved_offer_item_id = -1;
                         var offer_item = $("#offer_item" + offer_item_id);
                         var offer_item_val = $("option:selected", offer_item).val();
