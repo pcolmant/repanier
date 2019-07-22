@@ -2,7 +2,6 @@ Django==2.2.3
 django-cms==3.6.0
 # https://github.com/divio/django-cms/archive/develop.zip
 Pillow==6.0.0
-PyYAML==5.1.1
 Unidecode==1.0.23
 django-debug-toolbar==2.0
 diff-match-patch==20181111

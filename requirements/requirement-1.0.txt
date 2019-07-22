@@ -9,7 +9,6 @@ cmsplugin-filer==1.1.3
 Django==1.11.22
 # Django==2.1.7
 Pillow==5.4.1
-PyYAML==5.1
 Unidecode==1.0.23
 django-debug-toolbar==1.11
 diff-match-patch==20181111
