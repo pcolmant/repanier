@@ -300,73 +300,23 @@
                             {% if offeritem_list %}
                                 {% addtoblock "jshead" %}
                                     <script src="{{ STATIC_URL }}repanier/alois/waypoints/jquery.waypoints.min.js"></script>
-                                {% endaddtoblock %}
-                                {% addtoblock "jshead" %}
                                     <script src="{{ STATIC_URL }}repanier/alois/waypoints/shortcuts/infinite.min.js"></script>
                                 {% endaddtoblock %}
                                 <div class="container">
                                     <div class="infinite-container">
                                         {% for offer in offeritem_list %}
-                                            {% cycle '<div class="infinite-item"><div class="col"><div class="row">' ' ' ' ' as item_start  silent %}
+                                            {% cycle '<div class="infinite-item"><div class="col"><div class="row">' ' ' ' ' as item_start silent %}
                                             {% cycle ' ' ' ' 'd-none d-lg-block d-xl-none' as hr_tag silent %}
                                             {% cycle ' ' ' ' '</div><hr/></div></div>' as item_end  silent %}
                                             {{ item_start }}
-                                            <div class="col-xs-12 col-sm-6 col-lg-2">
-                                                {% if offer.picture %}
-                                                    {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                                                    <div data-toggle="modal" data-target="#orderModal"
-                                                         data-id="{{ offer.id|unlocalize }}"
-                                                         data-product="{{ offer.get_long_name }}"
-                                                         data-picture="{{ product_thumbnail.url }}">
-                                                {% else %}
-                                                    <div data-toggle="modal" data-target="#orderModal"
-                                                         data-id="{{ offer.id|unlocalize }}"
-                                                         data-product="{{ offer.get_long_name }}" data-picture="">
-                                                {% endif %}
-                                                {{ offer.cache_part_a | safe }}
+                                            {% include "repanier/widgets/render_offer_item.html" %}
+                                            {% if forloop.last %}
+                                                {# Close infinite-item div #}
                                                 </div>
-                                                {% if offer.permanences_dates %}
-                                                    {{ offer.cache_part_b | safe }}
-                                                    {% if may_order and not offer.is_box %}
-                                                        {% repanier_btn_like offer_item=offer %}{% endif %}
-                                                {% endif %}
-                                                </div>
-                                                <div class="col-xs-12 col-sm-6 col-lg-2"
-                                                     data-id="{{ offer.id|unlocalize }}"
-                                                     data-product="{{ offer.get_long_name }}">
-                                                    {% if offer.permanences_dates %}
-                                                        {% if offer.get_not_permanences_dates %}
-                                                            <div class="text-warning">
-                                                                <small>({{ offer.get_not_permanences_dates }})
-                                                                </small>
-                                                            </div>{% endif %}
-                                                        {% if may_order %}
-                                                            {% repanier_select_offer_item offer_item=offer date=date_id %}{% endif %}
-                                                    {% else %}
-                                                        {% if may_order %}
-                                                            {% repanier_select_offer_item offer_item=offer %}{% endif %}
-                                                        {{ offer.cache_part_b | safe }}
-                                                        {% if may_order and not offer.is_box %}
-                                                            {% repanier_btn_like offer_item=offer %}{% endif %}
-                                                    {% endif %}
-                                                </div>
-                                                {% if offer.is_box %}
-                                                    <div class="clearfix"></div>
-                                                    <div class="col">
-                                                        {{ box_description |safe }}
-                                                    </div>
-                                                {% endif %}
-                                                {% if is_box %}
-                                                    <div class="clearfix {% cycle ' ' 'd-none d-sm-block d-md-none-block d-none d-md-block d-lg-none-block' %}"></div>
-                                                    <hr class="d-none d-sm-block d-md-none d-block d-sm-none d-none d-md-block d-lg-none {% cycle 'd-none d-lg-block d-xl-none' ' ' %}"/>
-                                                {% endif %}
-                                                {% if forloop.last %}
-                                                    {# Close infinite-item div #}
-                                                    </div>
-                                                    <hr/></div></div>
-                                                {% else %}
-                                                    {{ item_end }}
-                                                {% endif %}
+                                                <hr/></div></div>
+                                            {% else %}
+                                                {{ item_end }}
+                                            {% endif %}
                                         {% endfor %}
                                 </div>
                                 {% if page_obj.has_next %}
@@ -451,8 +401,7 @@
                     <div class="modal-body">
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-info" data-dismiss="modal"
-                                aria-hidden="true">{% trans "Close" %}</button>
+                        <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
                     </div>
                 </div>
             </div>
@@ -535,7 +484,7 @@
         {% if may_order %}
             {% addtoblock "lastjs" %}{% spaceless %}
                 <script type="text/javascript">
-                    {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
+                    {# saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
                     var saved_offer_item_id = -1;
                     $(document).ready(function () {
                         var lien = '{% url 'order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
