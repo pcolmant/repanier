@@ -6,8 +6,6 @@ import uuid
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, DecimalField
-from django.db.models.signals import pre_save, post_save
-from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
@@ -35,7 +33,6 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
-from repanier.tools import update_offer_item
 
 
 class Producer(models.Model):
@@ -243,22 +240,32 @@ class Producer(models.Model):
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = ProducerInvoice.objects.filter(
-                producer_id=self.id,
-                status__gte=PERMANENCE_OPENED,
-                status__lte=PERMANENCE_SEND
-            ).order_by('?').aggregate(
-                total_price_with_tax=Sum(
-                    'total_price_with_tax',
-                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-                ),
-                delta_price_with_tax=Sum(
-                    'delta_price_with_tax',
-                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-                ),
-                delta_transport=Sum(
-                    'delta_transport',
-                    output_field=DecimalField(max_digits=5, decimal_places=2, default=DECIMAL_ZERO)
+            result_set = (
+                ProducerInvoice.objects.filter(
+                    producer_id=self.id,
+                    status__gte=PERMANENCE_OPENED,
+                    status__lte=PERMANENCE_SEND,
+                )
+                .order_by("?")
+                .aggregate(
+                    total_price_with_tax=Sum(
+                        "total_price_with_tax",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                        ),
+                    ),
+                    delta_price_with_tax=Sum(
+                        "delta_price_with_tax",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                        ),
+                    ),
+                    delta_transport=Sum(
+                        "delta_transport",
+                        output_field=DecimalField(
+                            max_digits=5, decimal_places=2, default=DECIMAL_ZERO
+                        ),
+                    ),
                 )
             )
             if result_set["total_price_with_tax"] is not None:
@@ -275,24 +282,40 @@ class Producer(models.Model):
 
     def get_bank_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = BankAccount.objects.filter(
-                producer_id=self.id, producer_invoice__isnull=True
-            ).order_by('?').aggregate(
-                bank_amount_in=Sum(
-                    'bank_amount_in',
-                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-                ),
-                bank_amount_out=Sum(
-                    'bank_amount_out',
-                    output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
-                ),
+            result_set = (
+                BankAccount.objects.filter(
+                    producer_id=self.id, producer_invoice__isnull=True
+                )
+                .order_by("?")
+                .aggregate(
+                    bank_amount_in=Sum(
+                        "bank_amount_in",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                        ),
+                    ),
+                    bank_amount_out=Sum(
+                        "bank_amount_out",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                        ),
+                    ),
+                )
             )
 
-            total_bank_amount_in = result_set["bank_amount_in"] \
-                if result_set["bank_amount_in"] is not None else DECIMAL_ZERO
-            total_bank_amount_out = result_set["bank_amount_out"] \
-                if result_set["bank_amount_out"] is not None else DECIMAL_ZERO
-            bank_not_invoiced = RepanierMoney(total_bank_amount_out - total_bank_amount_in)
+            total_bank_amount_in = (
+                result_set["bank_amount_in"]
+                if result_set["bank_amount_in"] is not None
+                else DECIMAL_ZERO
+            )
+            total_bank_amount_out = (
+                result_set["bank_amount_out"]
+                if result_set["bank_amount_out"] is not None
+                else DECIMAL_ZERO
+            )
+            bank_not_invoiced = RepanierMoney(
+                total_bank_amount_out - total_bank_amount_in
+            )
         else:
             bank_not_invoiced = REPANIER_MONEY_ZERO
 
@@ -303,32 +326,45 @@ class Producer(models.Model):
         # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
 
-        result_set = OfferItemWoReceiver.objects.filter(
-            permanence_id=permanence_id,
-            producer_id=self.id,
-            price_list_multiplier__lt=1
-        ).exclude(
-            order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT
-        ).order_by('?').aggregate(
-            total_selling_price_with_tax=Sum(
-                'total_selling_with_tax',
-                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        result_set = (
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=permanence_id,
+                producer_id=self.id,
+                price_list_multiplier__lt=1,
+            )
+            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
+            .order_by("?")
+            .aggregate(
+                total_selling_price_with_tax=Sum(
+                    "total_selling_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                    ),
+                )
             )
         )
 
-        payment_needed = result_set["total_selling_price_with_tax"] \
-            if result_set["total_selling_price_with_tax"] is not None else DECIMAL_ZERO
+        payment_needed = (
+            result_set["total_selling_price_with_tax"]
+            if result_set["total_selling_price_with_tax"] is not None
+            else DECIMAL_ZERO
+        )
 
-        result_set = OfferItemWoReceiver.objects.filter(
-            permanence_id=permanence_id,
-            producer_id=self.id,
-            price_list_multiplier__gte=1,
-        ).exclude(
-            order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT
-        ).order_by('?').aggregate(
-            total_purchase_price_with_tax=Sum(
-                'total_purchase_with_tax',
-                output_field=DecimalField(max_digits=8, decimal_places=2, default=DECIMAL_ZERO)
+        result_set = (
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=permanence_id,
+                producer_id=self.id,
+                price_list_multiplier__gte=1,
+            )
+            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
+            .order_by("?")
+            .aggregate(
+                total_purchase_price_with_tax=Sum(
+                    "total_purchase_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+                    ),
+                )
             )
         )
 
@@ -493,36 +529,3 @@ class Producer(models.Model):
                 name="producer_order_idx",
             )
         ]
-
-
-@receiver(pre_save, sender=Producer)
-def producer_pre_save(sender, **kwargs):
-    producer = kwargs["instance"]
-    if producer.represent_this_buyinggroup:
-        # The buying group may not be de activated
-        producer.is_active = True
-    if producer.email:
-        producer.email = producer.email.lower()
-    if producer.email2:
-        producer.email2 = producer.email2.lower()
-    if producer.email3:
-        producer.email3 = producer.email3.lower()
-    if producer.producer_pre_opening:
-        # Used to make difference between the stock of the group and the stock of the producer
-        producer.manage_replenishment = False
-        producer.is_resale_price_fixed = False
-    elif producer.manage_replenishment:
-        # Needed to compute ProducerInvoice.total_price_with_tax
-        producer.invoice_by_basket = False
-    if producer.price_list_multiplier <= DECIMAL_ZERO:
-        producer.price_list_multiplier = DECIMAL_ONE
-    if not producer.uuid:
-        producer.uuid = uuid.uuid1()
-
-
-@receiver(post_save, sender=Producer)
-def producer_post_save(sender, **kwargs):
-    producer = kwargs["instance"]
-    for a_product in Product.objects.filter(producer_id=producer.id).order_by("?"):
-        a_product.save()
-    update_offer_item(producer_id=producer.id)

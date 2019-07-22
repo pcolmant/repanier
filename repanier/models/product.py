@@ -1,11 +1,6 @@
 # -*- coding: utf-8
 
-import uuid
-
 from django.db import models, transaction
-from django.db.models import F
-from django.db.models.signals import pre_save, post_save
-from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
@@ -24,21 +19,15 @@ class Product(Item):
     long_name = TranslatedField()
     offer_description = TranslatedField()
     production_mode = models.ManyToManyField(
-        'LUT_ProductionMode',
-        verbose_name=_("Production mode"),
-        blank=True)
-    permanences = models.ManyToManyField(
-        'Permanence',
-        through='OfferItem',
-        blank=True)
+        "LUT_ProductionMode", verbose_name=_("Production mode"), blank=True
+    )
+    permanences = models.ManyToManyField("Permanence", through="OfferItem", blank=True)
     contracts = models.ManyToManyField(
-        'Contract',
-        through='ContractContent',
-        blank=True)
+        "Contract", through="ContractContent", blank=True
+    )
     is_into_offer = models.BooleanField(_("In offer"), default=True)
-    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='likes')
-    is_updated_on = models.DateTimeField(
-        _("Updated on"), auto_now=True, blank=True)
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="likes")
+    is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, blank=True)
 
     @property
     def total_likes(self):
@@ -57,42 +46,48 @@ class Product(Item):
         offer_item_qs = OfferItem.objects.filter(
             permanence_id=permanence.id,
             product_id=self.id,
-            permanences_dates=EMPTY_STRING
-        ).order_by('?')
+            permanences_dates=EMPTY_STRING,
+        ).order_by("?")
         if not offer_item_qs.exists():
             OfferItemWoReceiver.objects.create(
                 permanence_id=permanence.id,
                 product_id=self.id,
                 producer_id=self.producer_id,
-                permanences_dates=EMPTY_STRING
+                permanences_dates=EMPTY_STRING,
             )
-            clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+            clean_offer_item(
+                permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock
+            )
         else:
             offer_item = offer_item_qs.first()
             offer_item.contract = None
             offer_item.permanences_dates_order = 0
             if reset_add_2_stock:
                 offer_item.may_order = True
-            offer_item.save(update_fields=["contract", "may_order", "permanences_dates_order"])
+            offer_item.save(
+                update_fields=["contract", "may_order", "permanences_dates_order"]
+            )
         if self.is_box:
             # Add box products
-            for box_content in BoxContent.objects.filter(
-                    box=self.id
-            ).order_by('?'):
+            for box_content in BoxContent.objects.filter(box=self.id).order_by("?"):
                 box_offer_item_qs = OfferItem.objects.filter(
                     permanence_id=permanence.id,
                     product_id=box_content.product_id,
-                    permanences_dates=EMPTY_STRING
-                ).order_by('?')
+                    permanences_dates=EMPTY_STRING,
+                ).order_by("?")
                 if not box_offer_item_qs.exists():
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
                         product_id=box_content.product_id,
                         producer_id=box_content.product.producer_id,
                         permanences_dates=EMPTY_STRING,
-                        is_box_content=True
+                        is_box_content=True,
                     )
-                    clean_offer_item(permanence, box_offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+                    clean_offer_item(
+                        permanence,
+                        box_offer_item_qs,
+                        reset_add_2_stock=reset_add_2_stock,
+                    )
                 else:
                     box_offer_item = box_offer_item_qs.first()
                     box_offer_item.is_box_content = True
@@ -101,33 +96,53 @@ class Product(Item):
                     if reset_add_2_stock:
                         box_offer_item.may_order = True
                     box_offer_item.save(
-                        update_fields=["is_box_content", "contract", "may_order", "permanences_dates_order"])
+                        update_fields=[
+                            "is_box_content",
+                            "contract",
+                            "may_order",
+                            "permanences_dates_order",
+                        ]
+                    )
 
         offer_item = offer_item_qs.first()
         return offer_item
 
     def get_html_admin_is_into_offer(self, contract=None):
-        return mark_safe("<div id=\"is_into_offer_{}\">{}</div>".format(
-            self.id,
-            self.get_html_is_into_offer(contract)
-        ))
+        return mark_safe(
+            '<div id="is_into_offer_{}">{}</div>'.format(
+                self.id, self.get_html_is_into_offer(contract)
+            )
+        )
 
-    get_html_admin_is_into_offer.short_description = (_("In offer"))
-    get_html_admin_is_into_offer.admin_order_field = 'is_into_offer'
+    get_html_admin_is_into_offer.short_description = _("In offer")
+    get_html_admin_is_into_offer.admin_order_field = "is_into_offer"
 
     def get_html_is_into_offer(self, contract=None, contract_content=None):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
+
         css_class = ' class = "btn"'
         if contract is not None or contract_content is not None:
             css_class = EMPTY_STRING
             if contract_content is None:
-                contract_content = ContractContent.objects.filter(
-                    product=self,
-                    contract=contract
-                ).order_by('?').first()
-            if contract_content is not None and contract_content.permanences_dates is not None:
-                all_dates_str = sorted(list(
-                    filter(None, contract_content.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+                contract_content = (
+                    ContractContent.objects.filter(product=self, contract=contract)
+                    .order_by("?")
+                    .first()
+                )
+            if (
+                contract_content is not None
+                and contract_content.permanences_dates is not None
+            ):
+                all_dates_str = sorted(
+                    list(
+                        filter(
+                            None,
+                            contract_content.permanences_dates.split(
+                                settings.DJANGO_SETTINGS_DATES_SEPARATOR
+                            ),
+                        )
+                    )
+                )
                 is_into_offer = len(all_dates_str) > 0
                 flexible_dates = contract_content.flexible_dates
             else:
@@ -136,7 +151,15 @@ class Product(Item):
                 flexible_dates = False
             if contract.permanences_dates is not None:
                 contract_all_dates_str = sorted(
-                    list(filter(None, contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+                    list(
+                        filter(
+                            None,
+                            contract.permanences_dates.split(
+                                settings.DJANGO_SETTINGS_DATES_SEPARATOR
+                            ),
+                        )
+                    )
+                )
             else:
                 contract_all_dates_str = []
             contract_dates_array = []
@@ -151,8 +174,7 @@ class Product(Item):
                     new_line = EMPTY_STRING
                 # Important : linked to django.utils.dateparse.parse_date format
                 switch_is_into_offer = reverse(
-                    'is_into_offer_content',
-                    args=(self.id, contract.id, one_date_str)
+                    "is_into_offer_content", args=(self.id, contract.id, one_date_str)
                 )
                 javascript = """
                     (function($) {{
@@ -167,8 +189,7 @@ class Product(Item):
                             }});
                     }})(django.jQuery);
                 """.format(
-                    LINK=switch_is_into_offer,
-                    PRODUCT_ID=self.id
+                    LINK=switch_is_into_offer, PRODUCT_ID=self.id
                 )
                 if one_date_str in all_dates_str:
                     color = "green"
@@ -184,16 +205,13 @@ class Product(Item):
                     javascript,
                     color,
                     icon,
-                    one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)
+                    one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH),
                 )
-                contract_dates_array.append(
-                    link
-                )
+                contract_dates_array.append(link)
             contract_dates = ",&nbsp;".join(contract_dates_array)
             if selected_dates_counter > 1:
                 switch_flexible_dates = reverse(
-                    'flexible_dates',
-                    args=(self.id, contract.id)
+                    "flexible_dates", args=(self.id, contract.id)
                 )
                 javascript = """
                                     (function($) {{
@@ -208,21 +226,20 @@ class Product(Item):
                                             }});
                                     }})(django.jQuery);
                                 """.format(
-                    LINK=switch_flexible_dates,
-                    PRODUCT_ID=self.id
+                    LINK=switch_flexible_dates, PRODUCT_ID=self.id
                 )
                 if flexible_dates:
                     color = EMPTY_STRING
                     flexible_dates_display = " {}".format(_("Flexible dates"))
                 else:
                     color = EMPTY_STRING
-                    flexible_dates_display = " {} {}".format(selected_dates_counter, _("Fixed dates"))
+                    flexible_dates_display = " {} {}".format(
+                        selected_dates_counter, _("Fixed dates")
+                    )
                 flexible_dates_link = """
                         <a href="#" onclick="{};return false;" style="color:{} !important;">{}</a>
                     """.format(
-                    javascript,
-                    color,
-                    flexible_dates_display,
+                    javascript, color, flexible_dates_display
                 )
             else:
                 flexible_dates_link = EMPTY_STRING
@@ -231,7 +248,7 @@ class Product(Item):
             contract_dates = EMPTY_STRING
             flexible_dates_link = EMPTY_STRING
         switch_is_into_offer = reverse(
-            'is_into_offer', args=(self.id, contract.id if contract is not None else 0)
+            "is_into_offer", args=(self.id, contract.id if contract is not None else 0)
         )
         javascript = """
                 (function($) {{
@@ -246,17 +263,16 @@ class Product(Item):
                         }});
                 }})(django.jQuery);
                 """.format(
-            LINK=switch_is_into_offer,
-            PRODUCT_ID=self.id
+            LINK=switch_is_into_offer, PRODUCT_ID=self.id
         )
         # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
-        link = "<div id=\"is_into_offer_{}\"><a href=\"#\" onclick=\"{};return false;\"{}>{}</a>{}{}</div>".format(
+        link = '<div id="is_into_offer_{}"><a href="#" onclick="{};return false;"{}>{}</a>{}{}</div>'.format(
             self.id,
             javascript,
             css_class,
             _boolean_icon(is_into_offer),
             flexible_dates_link,
-            contract_dates
+            contract_dates,
         )
         return mark_safe(link)
 
@@ -269,7 +285,7 @@ class Product(Item):
                 qty=1,
                 order_unit=self.order_unit,
                 for_customer=False,
-                without_price_display=True
+                without_price_display=True,
             )
         return qty_display
 
@@ -279,95 +295,17 @@ class Product(Item):
     class Meta:
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
-        unique_together = ("producer", "reference",)
-
-
-@receiver(pre_save, sender=Product)
-def product_pre_save(sender, **kwargs):
-    product = kwargs["instance"]
-    producer = product.producer
-
-    if product.order_unit not in [PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-                                  PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
-        product.unit_deposit = DECIMAL_ZERO
-    if product.order_unit == PRODUCT_ORDER_UNIT_PC:
-        product.order_average_weight = 1
-    elif product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-                                    PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_PC]:
-        product.order_average_weight = DECIMAL_ZERO
-    if product.order_unit in [
-        PRODUCT_ORDER_UNIT_DEPOSIT,
-        PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-        PRODUCT_ORDER_UNIT_SUBSCRIPTION
-    ]:
-        # No VAT on those products
-        product.vat_level = VAT_100
-    if product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
-                                  PRODUCT_ORDER_UNIT_LT]:
-        product.wrapped = False
-    product.recalculate_prices(
-        producer.producer_price_are_wo_vat,
-        producer.is_resale_price_fixed,
-        producer.price_list_multiplier
-    )
-
-    if settings.REPANIER_SETTINGS_STOCK:
-        if producer.producer_pre_opening or producer.represent_this_buyinggroup:
-            product.producer_order_by_quantity = DECIMAL_ZERO
-            product.limit_order_quantity_to_stock = True
-            # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
-            product.is_into_offer = False if product.stock <= DECIMAL_ZERO else product.is_into_offer
-        if product.is_box:
-            product.limit_order_quantity_to_stock = True
-    else:
-        product.limit_order_quantity_to_stock = False
-
-    if not product.is_active:
-        product.is_into_offer = False
-
-    if product.customer_increment_order_quantity <= DECIMAL_ZERO:
-        product.customer_increment_order_quantity = DECIMAL_ONE
-    if product.customer_minimum_order_quantity <= DECIMAL_ZERO:
-        product.customer_minimum_order_quantity = product.customer_increment_order_quantity
-    if product.order_average_weight <= DECIMAL_ZERO:
-        product.order_average_weight = DECIMAL_ONE
-    if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-        if product.order_unit not in [PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_KG,
-                                      PRODUCT_ORDER_UNIT_LT]:
-            if product.order_unit == PRODUCT_ORDER_UNIT_PC:
-                product.customer_minimum_order_quantity = DECIMAL_ONE
-            product.customer_alert_order_quantity = (
-                    product.customer_minimum_order_quantity * LIMIT_ORDER_QTY_ITEM).quantize(THREE_DECIMALS)
-        else:
-            product.customer_alert_order_quantity = (product.customer_minimum_order_quantity + (
-                    product.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1))).quantize(THREE_DECIMALS)
-    if product.limit_order_quantity_to_stock:
-        product.customer_alert_order_quantity = min(999, product.stock)
-    if not product.reference:
-        product.reference = uuid.uuid1()
-    # Update stock of boxes containing this product
-    # for box_content in product.box_content.all():
-    #     if box_content.box is not None:
-    #         box_content.box.save_update_stock()
-
-
-@receiver(post_save, sender=Product)
-def product_post_save(sender, **kwargs):
-    product = kwargs["instance"]
-    from repanier.models.box import BoxContent
-    BoxContent.objects.filter(product_id=product.id).update(
-        calculated_customer_content_price=F('content_quantity') * product.customer_unit_price.amount,
-        calculated_content_deposit=F('content_quantity') * product.unit_deposit.amount,
-    )
+        unique_together = ("producer", "reference")
 
 
 class Product_Translation(TranslatedFieldsModel):
     master = models.ForeignKey(
-        'Product', related_name='translations', null=True,
-        on_delete=models.CASCADE
+        "Product", related_name="translations", null=True, on_delete=models.CASCADE
     )
     long_name = models.CharField(_("Long name"), max_length=100)
-    offer_description = HTMLField(_("Offer_description"), configuration='CKEDITOR_SETTINGS_MODEL2', blank=True)
+    offer_description = HTMLField(
+        _("Offer_description"), configuration="CKEDITOR_SETTINGS_MODEL2", blank=True
+    )
 
     class Meta:
-        unique_together = ('language_code', 'master')
+        unique_together = ("language_code", "master")

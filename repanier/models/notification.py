@@ -1,9 +1,5 @@
 # -*- coding: utf-8
 
-from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.urls import reverse
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -78,14 +74,3 @@ class Notification(TranslatableModel):
     class Meta:
         verbose_name = _("Notification")
         verbose_name_plural = _("Notifications")
-
-
-@receiver(post_save, sender=Notification)
-def configuration_post_save(sender, **kwargs):
-    from repanier import apps
-
-    notification = kwargs["instance"]
-    if notification.id is not None:
-        apps.REPANIER_SETTINGS_NOTIFICATION = notification
-    else:
-        apps.REPANIER_SETTINGS_NOTIFICATION = EMPTY_STRING
