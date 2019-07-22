@@ -1,0 +1,9 @@
+{% load i18n %}
+<p>
+    <label for="delivery">{% trans 'Delivery' %}</label>
+    <select name="delivery" id="delivery" onmouseover="show_select_delivery_list_ajax({{ delivery_id }})" onchange="delivery_ajax()" class="form-control">
+        <option value="{{ delivery_id }}" selected>{{ label }}</option>
+    </select>
+    {% if msg_transport %}{{ msg_transport }}<br>{% endif %}
+    {% if msg_price %}{{ msg_price }}<br>{% endif %}
+</p>
