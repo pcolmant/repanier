@@ -341,70 +341,68 @@ def repanier_select_task(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     result = EMPTY_STRING
-    customer_is_active = (
-        Customer.objects.filter(user_id=user.id, is_active=True).order_by("?").exists()
+    customer_is_active = Customer.objects.filter(
+        user_id=user.id, is_active=True
+    ).exists()
+    if not customer_is_active:
+        mark_safe(result)
+
+    p_task_id = sint(kwargs.get("task_id", 0))
+
+    permanence_board = (
+        PermanenceBoard.objects.filter(id=p_task_id)
+        .select_related("customer", "permanence_role", "permanence")
+        .first()
     )
-    if customer_is_active:
-        p_task_id = sint(kwargs.get("task_id", 0))
-        if p_task_id > 0:
-            permanence_board = (
-                PermanenceBoard.objects.filter(id=p_task_id)
-                .select_related("customer", "permanence_role", "permanence")
-                .order_by("?")
-                .first()
+    if permanence_board is None:
+        return mark_safe(result)
+
+    if permanence_board.customer is not None:
+        if (
+            permanence_board.customer.user_id == user.id
+            and permanence_board.customers_may_register()
+        ):
+            result = """
+            <b><i>
+            <select name="value" id="task{task_id}"
+            onchange="task_ajax({task_id})" class="form-control">
+            <option value="0">---</option>
+            <option value="1" selected>{long_basket_name}</option>
+            </select>
+            </i></b>
+            """.format(
+                task_id=permanence_board.id,
+                long_basket_name=user.customer.long_basket_name,
             )
-            if permanence_board is not None:
-                if permanence_board.customer is not None:
-                    if (
-                        permanence_board.customer.user_id == user.id
-                        and permanence_board.permanence.status <= PERMANENCE_CLOSED
-                    ):
-                        result = """
-                        <b><i>
-                        <select name="value" id="task{task_id}"
-                        onchange="task_ajax({task_id})" class="form-control">
-                        <option value="0">---</option>
-                        <option value="1" selected>{long_basket_name}</option>
-                        </select>
-                        </i></b>
-                        """.format(
-                            task_id=permanence_board.id,
-                            long_basket_name=user.customer.long_basket_name,
-                        )
-                    else:
-                        result = """
-                        <select name="value" id="task{task_id}"
-                        class="form-control">
-                        <option value="0" selected>{long_basket_name}</option>
-                        </select>
-                        """.format(
-                            task_id=permanence_board.id,
-                            long_basket_name=permanence_board.customer.long_basket_name,
-                        )
-                else:
-                    if permanence_board.permanence_role.customers_may_register:
-                        if permanence_board.permanence.status <= PERMANENCE_CLOSED:
-                            result = """
-                            <b><i>
-                            <select name="value" id="task{task_id}"
-                            onchange="task_ajax({task_id})" class="form-control">
-                            <option value="0" selected>---</option>
-                            <option value="1">{long_basket_name}</option>
-                            </select>
-                            </i></b>
-                            """.format(
-                                task_id=permanence_board.id,
-                                long_basket_name=user.customer.long_basket_name,
-                            )
-                        else:
-                            result = """
-                            <select name="value" id="task{task_id}"
-                            class="form-control">
-                            <option value="0" selected>---</option>
-                            </select>
-                            """.format(
-                                task_id=permanence_board.id
-                            )
+        else:
+            result = """
+            <select name="value" id="task{task_id}" class="form-control" disabled>
+            <option value="0" selected>{long_basket_name}</option>
+            </select>
+            """.format(
+                task_id=permanence_board.id,
+                long_basket_name=permanence_board.customer.long_basket_name,
+            )
+    elif permanence_board.customers_may_register():
+        result = """
+            <b><i>
+            <select name="value" id="task{task_id}"
+            onchange="task_ajax({task_id})" class="form-control">
+            <option value="0" selected>---</option>
+            <option value="1">{long_basket_name}</option>
+            </select>
+            </i></b>
+            """.format(
+            task_id=permanence_board.id, long_basket_name=user.customer.long_basket_name
+        )
+    else:
+        result = """
+        <select name="value" id="task{task_id}"class="form-control" disabled>
+        <option value="0" selected >{message}</option>
+        </select>
+        """.format(
+            task_id=permanence_board.id, message=_("Registrations closed")
+        )
     return mark_safe(result)
 
 
