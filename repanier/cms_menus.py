@@ -79,8 +79,12 @@ class PermanenceMenu(Menu):
 =======
         for permanence in (
             Permanence.objects.filter(
+<<<<<<< HEAD
                 status__in=[, PERMANENCE_CLOSED, PERMANENCE_SEND, , PERMANENCE_CLOSED, PERMANENCE_SEND],
 >>>>>>> clean: use status PERMANENCE_SEND for show/not show of PermanenceView link in menu
+=======
+                status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+>>>>>>> fix: typo in cms_menu
                 master_permanence__isnull=True,
             )
             .only("id", "permanence_date")
