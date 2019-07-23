@@ -54,7 +54,7 @@ class Notification(TranslatableModel):
                 <script type="text/javascript">
                 // Close card
                 $(".card-close").click(function(){{
-                    $(this).parent().slideUp(300);
+                    $(this).parent().fadeOut(300);
                     $("a").click(function(){{
                         // Stop displaying flash in next pages
                         $(this).attr('href',$(this).attr('href')+"?flash=0");

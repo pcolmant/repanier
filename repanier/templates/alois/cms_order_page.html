@@ -13,7 +13,7 @@
                         </div>
                     </div>
                 {% else %}
-                        <ul class="nav nav-pills">
+                        <ul class="nav nav-pills nav--order">
                             <li class="nav-item">
                                 <a class="nav-link {{ is_basket_view }}" href="{% url "order_view" permanence_id %}?is_basket=yes"><i
                                         class="fas fa-check"></i>&nbsp;<span>{% trans "Confirm" %}</span></a>
@@ -147,7 +147,7 @@
                                         <div class="card-header" data-toggle="collapse" aria-expanded="true"
                                              data-target="#filtersProducers"
                                              aria-controls="filtersProducers">
-                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Producers" %}</h2></a>
+                                            <a class="card-title" href="javascript:void(0);">{% trans "Producers" %}</a>
                                         </div>
                                         <div id="filtersProducers" class="list-group collapse{% if department_id == "all" and date_id == "all" %} show{% endif %}"
                                              data-parent="#filtersAccordion">
@@ -192,7 +192,7 @@
                                         <div class="card-header" data-toggle="collapse" aria-expanded="false"
                                              data-target="#filtersDepartments"
                                              aria-controls="filtersDepartments">
-                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Departments" %}</h2></a>
+                                            <a class="card-title" href="javascript:void(0);">{% trans "Departments" %}</a>
                                         </div>
                                         <div id="filtersDepartments" class="list-group collapse{% if department_id != "all" %} show{% endif %}"
                                              data-parent="#filtersAccordion">
@@ -222,7 +222,7 @@
                                         <div class="card-header" data-toggle="collapse" aria-expanded="false"
                                              data-target="#filtersDates"
                                              aria-controls="filtersDates">
-                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Dates" %}</h2></a>
+                                            <a class="card-title" href="javascript:void(0);">{% trans "Dates" %}</a>
                                         </div>
                                         <div id="filtersDates" class="list-group collapse{% if date_id != "all" %} show{% endif %}" data-parent="#filtersAccordion">
                                             <a href="{% url "order_view" permanence_id %}?date=all&producer={{ producer_id }}&department={{ department_id }}" class="list-group-item list-group-item-action{% if date_id == "all" %} active{% endif %}">
@@ -240,7 +240,7 @@
                                     <div class="card-header" data-toggle="collapse" aria-expanded="false"
                                          data-target="#filterSearch"
                                          aria-controls="filterSearch">
-                                        <a href="javascript:void(0);"><h2 class="card-title">{% trans "Search" %}</h2></a>
+                                        <a class="card-title" href="javascript:void(0);">{% trans "Search" %}</a>
                                     </div>
                                     <div id="filterSearch" class="card-body collapse{% if q %} show{% endif %}" data-parent="#filtersAccordion">
                                                                     {#            q : {{ q }}<br>#}
@@ -254,17 +254,11 @@
                                                   class="form-horizontal navbar-form" role="search" method="get">
                                             {% csrf_token %}
                                             <div class="input-group">
-                                                {% if q %}
-                                                    <input type="search" autosave="repanier" class="form-control"
-                                                           aria-describedby="button-search"
-                                                           value="{{ q }}"
-                                                           name="q">
-                                                {% else %}
-                                                    <input type="search" autosave="repanier" class="form-control"
-                                                           aria-describedby="button-search"
-                                                           placeholder="{% trans "Search" %}"
-                                                           name="q">
-                                                {% endif %}
+                                                <input type="search" autosave="repanier" class="form-control"
+                                                       aria-describedby="button-search"
+                                                       {% if q %}value="{{ q }}"{% endif %}
+                                                       placeholder="{% trans "Search" %}"
+                                                       name="q">
                                                 <div class="input-group-append">
                                                     <button class="btn btn-primary" type="submit" id="button-search"><i
                                                             class="fas fa-search"></i></button>

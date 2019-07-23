@@ -217,80 +217,78 @@ def repanier_user_bs4(context, *args, **kwargs):
     user = request.user
     nodes = []
     if user.is_authenticated:
-        if not user.is_staff:
-            nodes = []
+        nodes = []
+        nodes.append(
+            """
+            <li id="li_my_name" class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{}</a>
+            <div class="dropdown-menu dropdown-menu-right">
+            """.format(
+                user.last_name or '<span id = "my_name"></ span>'
+            )
+        )
+
+        if user.customer_id is not None:
+
             nodes.append(
-                """
-                <li id="li_my_name" class="nav-item dropdown">
-                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{}</a>
-                <div class="dropdown-menu dropdown-menu-right">
-                """.format(
-                    user.last_name or '<span id = "my_name"></ span>'
+                '<a class="dropdown-item" href="{}"><span class="fa fa-external-link-alt"></span> {}</a>'.format(
+                    reverse("logout"), _("Logout")
                 )
             )
-
-            if user.customer_id is not None:
-
-                nodes.append(
-                    '<a class="dropdown-item" href="{}"><span class="fa fa-external-link-alt"></span> {}</a>'.format(
-                        reverse("logout"), _("Logout")
+            nodes.append('<div class="dropdown-divider"></div>')
+            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+                last_customer_invoice = (
+                    CustomerInvoice.objects.filter(
+                        customer__user_id=request.user.id,
+                        invoice_sort_order__isnull=False,
                     )
+                    .only("balance", "date_balance")
+                    .order_by("-invoice_sort_order")
+                    .first()
                 )
-                nodes.append('<div class="dropdown-divider"></div>')
-                if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-                    last_customer_invoice = (
-                        CustomerInvoice.objects.filter(
-                            customer__user_id=request.user.id,
-                            invoice_sort_order__isnull=False,
-                        )
-                        .only("balance", "date_balance")
-                        .order_by("-invoice_sort_order")
-                        .first()
-                    )
-                    if last_customer_invoice is not None:
-                        if last_customer_invoice.balance < DECIMAL_ZERO:
-                            my_balance = _(
-                                'My balance : <font color="red">%(balance)s</font> at %(date)s'
-                            ) % {
-                                "balance": last_customer_invoice.balance,
-                                "date": last_customer_invoice.date_balance.strftime(
-                                    settings.DJANGO_SETTINGS_DATE
-                                ),
-                            }
-                        else:
-                            my_balance = _(
-                                'My balance : <font color="green">%(balance)s</font> at %(date)s'
-                            ) % {
-                                "balance": last_customer_invoice.balance,
-                                "date": last_customer_invoice.date_balance.strftime(
-                                    settings.DJANGO_SETTINGS_DATE
-                                ),
-                            }
+                if last_customer_invoice is not None:
+                    if last_customer_invoice.balance < DECIMAL_ZERO:
+                        my_balance = _(
+                            'My balance : <font color="red">%(balance)s</font> at %(date)s'
+                        ) % {
+                            "balance": last_customer_invoice.balance,
+                            "date": last_customer_invoice.date_balance.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                        }
                     else:
-                        my_balance = _("My balance")
-                    nodes.append(
-                        '<a class="dropdown-item" href="{}">{}</a>'.format(
-                            reverse("customer_invoice_view", args=(0,)), my_balance
-                        )
-                    )
+                        my_balance = _(
+                            'My balance : <font color="green">%(balance)s</font> at %(date)s'
+                        ) % {
+                            "balance": last_customer_invoice.balance,
+                            "date": last_customer_invoice.date_balance.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                        }
+                else:
+                    my_balance = _("My balance")
                 nodes.append(
                     '<a class="dropdown-item" href="{}">{}</a>'.format(
-                        reverse("my_profile_view"), _("My profile")
-                    )
-                )
-            if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-                nodes.append(
-                    '<a class="dropdown-item" href="{}">{}</a>'.format(
-                        reverse("who_is_who_view"), _("Who's who")
+                        reverse("customer_invoice_view", args=(0,)), my_balance
                     )
                 )
             nodes.append(
                 '<a class="dropdown-item" href="{}">{}</a>'.format(
-                    reverse("send_mail_to_coordinators_view"), _("Inform")
+                    reverse("my_profile_view"), _("My profile")
                 )
             )
-            nodes.append("</div></li>")
-
+        if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
+            nodes.append(
+                '<a class="dropdown-item" href="{}">{}</a>'.format(
+                    reverse("who_is_who_view"), _("Who's who")
+                )
+            )
+        nodes.append(
+            '<a class="dropdown-item" href="{}">{}</a>'.format(
+                reverse("send_mail_to_coordinators_view"), _("Inform")
+            )
+        )
+        nodes.append("</div></li>")
     else:
         p_offer_uuid = kwargs.get("offer_uuid", None)
         if len(p_offer_uuid) == 36:

@@ -666,7 +666,7 @@ if DJANGO_SETTINGS_LOGGING:
         },
         "loggers": {
             "django.db.backends": {
-                "level": "DEBUG",  # 'INFO',
+                "level": 'INFO',
                 "handlers": ["console"],
             },
             "repanier": {"level": "DEBUG", "handlers": ["console"]},
