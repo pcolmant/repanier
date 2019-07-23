@@ -312,18 +312,27 @@ def repanier_html_permanence_title(*args, **kwargs):
 def repanier_display_task(*args, **kwargs):
     result = EMPTY_STRING
     p_task_id = sint(kwargs.get("task_id", 0))
-    if p_task_id > 0:
-        permanence_board = (
-            PermanenceBoard.objects.filter(id=p_task_id)
-            .select_related("permanence_role")
-            .order_by("?")
-            .first()
-        )
-        if permanence_board is not None:
-            if permanence_board.permanence_role.customers_may_register:
-                result = permanence_board.permanence_role
-            else:
-                result = "<p><b>{}</b></p>".format(permanence_board.permanence_role)
+    permanence_board = (
+        PermanenceBoard.objects.filter(id=p_task_id)
+        .select_related("permanence_role")
+        .first()
+    )
+    from django.utils.encoding import force_text
+
+    if permanence_board is not None:
+        if permanence_board.permanence_role.customers_may_register:
+            result = " ".join(
+                [
+                    str(permanence_board.permanence_role),
+                    force_text(_("at")),
+                    permanence_board.permanence_date.strftime(
+                        settings.DJANGO_SETTINGS_DATE
+                    ),
+                ]
+            )
+        else:
+            result = "<p><b>{}</b></p>".format(permanence_board.permanence_role)
+
     return mark_safe(result)
 
 

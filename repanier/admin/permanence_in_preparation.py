@@ -68,7 +68,6 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
                         id=request.resolver_match.args[0]
                     )
                     .only("status")
-                    .order_by("?")
                     .first()
                 )
                 if (
@@ -111,6 +110,15 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         return super(PermanenceBoardInline, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if not self.has_view_or_change_permission(request):
+            queryset = queryset.none()
+        # from the admin, edit only 'master' PermanenceBoardInline
+        # modification for "childs" corresponding to contract distribution will
+        # be handled by signals wired to PermanenceBoard model
+        return queryset.filter(master_permanence_board__isnull=True)
 
 
 class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline):
@@ -691,8 +699,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 self.message_user(request, user_message, user_message_level)
                 return
             # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
-            t = threading.Thread(target=close_and_send_order,
-                                 args=(permanence.id, all_deliveries, deliveries_to_be_send))
+            t = threading.Thread(
+                target=close_and_send_order,
+                args=(permanence.id, all_deliveries, deliveries_to_be_send),
+            )
             t.start()
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
