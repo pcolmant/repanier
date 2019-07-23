@@ -401,26 +401,48 @@ def repanier_select_task(context, *args, **kwargs):
 
 @register.simple_tag(takes_context=True)
 def repanier_select_offer_item(context, *args, **kwargs):
+    """
+    Returns the `select` HTML-element to be displayed next to each product `OfferItem`.
+
+    The `select` is pre-filled with the `PurchaseWoReceiver` linked to the `OfferItem`.
+    """
+
     request = context["request"]
     user = request.user
     offer_item = kwargs.get("offer_item")
-    date = kwargs.get("date", EMPTY_STRING)
-    result = []
-    if offer_item.may_order:
-        # Important : offer_item.permanences_dates_order is used to
-        # group together offer item's of the same product of a contract
-        # with different purchases dates on the order form
-        # 0   : No group needed
-        # 1   : Master of a group
-        # > 1 : Displayed with the master of the group (filtered in order_class.py)
-        select_offer_item(offer_item, result, user)
-        if offer_item.permanences_dates_order == 1 and date == "all":
-            for sub_offer_item in OfferItemWoReceiver.objects.filter(
-                permanence_id=offer_item.permanence_id,
-                product_id=offer_item.product_id,
-                permanences_dates_order__gt=1,
-            ).order_by("permanences_dates_order"):
-                select_offer_item(sub_offer_item, result, user)
+    is_basket = kwargs.get("is_basket", EMPTY_STRING)
+    date = kwargs.get("date")
+    result = "{select_block}{box_block}"
+
+    # Important : offer_item.permanences_dates_order is used to
+    # group together offer item's of the same product of a contract
+    # with different purchases dates on the order form
+    # 0   : No group needed
+    # 1   : Master of a group
+    # > 1 : Displayed with the master of the group (was filtered out in order_class.py `permanences_dates_order__lte=1`)
+    if not offer_item.may_order:
+        select_block = EMPTY_STRING
+    # ! do not render the whole group if the item is in the basket
+    # ! do not render the whole group if the date filter is on
+    elif (
+        offer_item.may_order
+        and offer_item.permanences_dates_order == 1
+        and not is_basket
+        and (date is None or date == "all")
+    ):
+        offer_item_group = OfferItemWoReceiver.objects.filter(
+            permanence_id=offer_item.permanence_id, product_id=offer_item.product_id
+        ).order_by("permanences_dates_order")
+        select_block = "<br>".join(
+            [
+                get_select_for_offer_item(offer_item, user, is_basket)
+                for offer_item in offer_item_group
+            ]
+        )
+    else:
+        select_block = get_select_for_offer_item(offer_item, user, is_basket=is_basket)
+
+    box_block = EMPTY_STRING
     if offer_item.is_box_content:
         box_purchase = (
             PurchaseWoReceiver.objects.filter(
@@ -428,63 +450,58 @@ def repanier_select_offer_item(context, *args, **kwargs):
                 offer_item_id=offer_item.id,
                 is_box_content=True,
             )
-            .order_by("?")
             .only("quantity_ordered")
             .first()
         )
-        if box_purchase is None:
-            quantity_ordered = DECIMAL_ZERO
-        else:
-            quantity_ordered = box_purchase.quantity_ordered
-        html = get_html_selected_box_value(offer_item, quantity_ordered)
-        result.append(
-            '<select id="box_offer_item{id}" name="box_offer_item{id}" disabled class="form-control">{option}</select>'.format(
-                result=result, id=offer_item.id, option=html
-            )
+        quantity_ordered = (
+            box_purchase.quantity_ordered if box_purchase is not None else DECIMAL_ZERO
         )
-    return mark_safe(EMPTY_STRING.join(result))
+        html = get_html_selected_box_value(offer_item, quantity_ordered)
+        box_block = '<select id="box_offer_item{id}" name="box_offer_item{id}" disabled class="form-control">{option}</select>'.format(
+            result=result, id=offer_item.id, option=html
+        )
+
+    return mark_safe(result.format(box_block=box_block, select_block=select_block))
 
 
-def select_offer_item(offer_item, result, user):
+def get_select_for_offer_item(offer_item, user, is_basket):
     purchase = (
         PurchaseWoReceiver.objects.filter(
             customer_id=user.customer, offer_item_id=offer_item.id, is_box_content=False
         )
-        .order_by("?")
         .only("quantity_ordered")
         .first()
     )
-    if purchase is not None:
-        is_open = purchase.status == PERMANENCE_OPENED
-        html = get_html_selected_value(
-            offer_item, purchase.quantity_ordered, is_open=is_open
-        )
+    quantity_ordered = purchase.quantity_ordered if purchase else DECIMAL_ZERO
+
+    if is_basket:
+        is_selectable = False
+    elif purchase is not None:
+        is_selectable = purchase.status == PERMANENCE_OPENED
     else:
-        is_open = (
-            ProducerInvoice.objects.filter(
-                permanence__offeritem=offer_item.id,
-                producer__offeritem=offer_item.id,
-                status=PERMANENCE_OPENED,
-            )
-            .order_by("?")
-            .exists()
-        )
-        html = get_html_selected_value(offer_item, DECIMAL_ZERO, is_open=is_open)
+        is_selectable = ProducerInvoice.objects.filter(
+            permanence__offeritem=offer_item.id,
+            producer__offeritem=offer_item.id,
+            status=PERMANENCE_OPENED,
+        ).exists()
+
+    options_html = get_html_selected_value(
+        offer_item, quantity_ordered, is_open=is_selectable
+    )
+
+    # display the list of dates the select will create a purchase for (several dates in case of a contract with non-flexible dates)
     if offer_item.permanences_dates_counter > 0:
-        permanences_date = offer_item.get_html_permanences_dates
+        date_block = offer_item.get_html_permanences_dates
     else:
-        permanences_date = EMPTY_STRING
-    if is_open:
-        result.append(
-            '{dates}<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" class="form-control">{option}</select>'.format(
-                dates=permanences_date, id=offer_item.id, option=html
-            )
+        date_block = EMPTY_STRING
+
+    if is_selectable:
+        return '{date_block}<select name="offer_item{id}" id="offer_item{id}" onchange="order_ajax({id})" onmouseover="show_select_order_list_ajax({id})" class="form-control">{option}</select>'.format(
+            id=offer_item.id, option=options_html, date_block=date_block
         )
     else:
-        result.append(
-            '{dates}<select name="offer_item{id}" id="offer_item{id}" class="form-control">{option}</select>'.format(
-                dates=permanences_date, id=offer_item.id, option=html
-            )
+        return '{date_block}<select name="offer_item{id}" id="offer_item{id}" class="form-control" disabled>{option}</select>'.format(
+            id=offer_item.id, option=options_html, date_block=date_block
         )
 
 

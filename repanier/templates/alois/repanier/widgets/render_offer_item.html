@@ -16,7 +16,7 @@
 </div>
 {% if offer.permanences_dates %}
     {{ offer.cache_part_b | safe }}
-    {% if may_order and not offer.is_box %}
+    {% if may_order and not offer.is_box and not is_basket %}
         {% repanier_btn_like offer_item=offer %}
     {% endif %}
 {% endif %}
@@ -24,23 +24,14 @@
 <div class="col-xs-12 col-md-3"
      data-id="{{ offer.id|unlocalize }}"
      data-product="{{ offer.get_long_name }}">
-    {% if offer.permanences_dates %}
-        {% if offer.get_not_permanences_dates %}
-            <div class="text-warning">
-                <small>({{ offer.get_not_permanences_dates }})</small>
-            </div>
-        {% endif %}
-        {% if may_order %}
-            {% repanier_select_offer_item offer_item=offer date=date_id %}
-        {% endif %}
-    {% else %}
-        {% if may_order %}
-            {% repanier_select_offer_item offer_item=offer %}{% endif %}
-        {{ offer.cache_part_b | safe }}
-        {% if may_order and not offer.is_box %}
-            {% repanier_btn_like offer_item=offer %}
-        {% endif %}
+    {% if offer.permanences_dates and offer.get_not_permanences_dates %}
+        <div class="text-warning">
+            <small>({{ offer.get_not_permanences_dates }})</small>
+        </div>
     {% endif %}
+    {% if may_order %}
+        {% repanier_select_offer_item offer_item=offer is_basket=is_basket date=date_id %}{% endif %}
+    {{ offer.cache_part_b | safe }}
 </div>
 {% if offer.is_box %}
     <div class="clearfix"></div>
