@@ -210,25 +210,21 @@ class CustomerInvoice(Invoice):
 
         from repanier.models.purchase import PurchaseWoReceiver
 
-        result_set = (
-            PurchaseWoReceiver.objects.filter(
-                permanence_id=self.permanence_id, customer_invoice_id=self.id
-            )
-            .order_by("?")
-            .aggregate(
-                qty_ordered=Sum(
-                    "quantity_ordered",
-                    output_field=DecimalField(
-                        max_digits=9, decimal_places=4, default=DECIMAL_ZERO
-                    ),
+        result_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.permanence_id, customer_invoice_id=self.id
+        ).aggregate(
+            qty_ordered=Sum(
+                "quantity_ordered",
+                output_field=DecimalField(
+                    max_digits=9, decimal_places=4, default=DECIMAL_ZERO
                 ),
-                qty_invoiced=Sum(
-                    "quantity_invoiced",
-                    output_field=DecimalField(
-                        max_digits=9, decimal_places=4, default=DECIMAL_ZERO
-                    ),
+            ),
+            qty_invoiced=Sum(
+                "quantity_invoiced",
+                output_field=DecimalField(
+                    max_digits=9, decimal_places=4, default=DECIMAL_ZERO
                 ),
-            )
+            ),
         )
         qty_ordered = (
             result_set["qty_ordered"]
@@ -265,18 +261,20 @@ class CustomerInvoice(Invoice):
                             delivery_point__customer_responsible__isnull=True,
                             status=PERMANENCE_OPENED,
                         )
-                    ).order_by("?")
+                    )
+
                 else:
                     qs = DeliveryBoard.objects.filter(
                         permanence_id=permanence.id,
                         delivery_point__customer_responsible__isnull=True,
                         status=PERMANENCE_OPENED,
-                    ).order_by("?")
+                    )
+
                 if qs.exists():
                     label = "{}".format(_("Please, select a delivery point"))
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
-                    ).order_by("?").update(status=PERMANENCE_OPENED)
+                    ).update(status=PERMANENCE_OPENED)
                 else:
                     label = "{}".format(
                         _("No delivery point is open for you. You can not place order.")
@@ -286,7 +284,8 @@ class CustomerInvoice(Invoice):
                     # 2 / task_order.close_send_order will delete any CLOSED orders without any delivery point
                     CustomerInvoice.objects.filter(
                         permanence_id=permanence.id, customer_id=self.customer_id
-                    ).order_by("?").update(status=PERMANENCE_CLOSED)
+                    ).update(status=PERMANENCE_CLOSED)
+
             if self.customer_id != self.customer_charged_id:
                 msg_price = msg_transport = EMPTY_STRING
             else:
@@ -550,13 +549,11 @@ class CustomerInvoice(Invoice):
             if self.permanence.with_delivery_point:
                 # If the customer is member of a group set the group as default delivery point
                 delivery_point = self.customer.delivery_point
-                delivery = (
-                    DeliveryBoard.objects.filter(
-                        delivery_point=delivery_point, permanence=self.permanence
-                    )
-                    .order_by("?")
-                    .first()
-                )
+
+                delivery = DeliveryBoard.objects.filter(
+                    delivery_point=delivery_point, permanence=self.permanence
+                ).first()
+
             else:
                 delivery_point = None
         else:
@@ -584,7 +581,7 @@ class CustomerInvoice(Invoice):
                     customer_invoice_charged = CustomerInvoice.objects.filter(
                         permanence_id=self.permanence_id,
                         customer_id=customer_responsible.id,
-                    ).order_by("?")
+                    )
                     if not customer_invoice_charged.exists():
                         CustomerInvoice.objects.create(
                             permanence_id=self.permanence_id,
@@ -610,33 +607,30 @@ class CustomerInvoice(Invoice):
             #   self.customer_charged_id = self.customer_id
             #   self.price_list_multiplier may vary
             if self.price_list_multiplier != DECIMAL_ONE:
-                result_set = (
-                    PurchaseWoReceiver.objects.filter(
-                        permanence_id=self.permanence_id,
-                        customer_invoice__customer_charged_id=self.customer_id,
-                        is_resale_price_fixed=False,
-                    )
-                    .order_by("?")
-                    .aggregate(
-                        customer_vat=Sum(
-                            "customer_vat",
-                            output_field=DecimalField(
-                                max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                            ),
+
+                result_set = PurchaseWoReceiver.objects.filter(
+                    permanence_id=self.permanence_id,
+                    customer_invoice__customer_charged_id=self.customer_id,
+                    is_resale_price_fixed=False,
+                ).aggregate(
+                    customer_vat=Sum(
+                        "customer_vat",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=4, default=DECIMAL_ZERO
                         ),
-                        deposit=Sum(
-                            "deposit",
-                            output_field=DecimalField(
-                                max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                            ),
+                    ),
+                    deposit=Sum(
+                        "deposit",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                         ),
-                        selling_price=Sum(
-                            "selling_price",
-                            output_field=DecimalField(
-                                max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                            ),
+                    ),
+                    selling_price=Sum(
+                        "selling_price",
+                        output_field=DecimalField(
+                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                         ),
-                    )
+                    ),
                 )
 
                 total_vat = (
@@ -666,63 +660,56 @@ class CustomerInvoice(Invoice):
                     - total_vat
                 )
 
-            result_set = (
-                PurchaseWoReceiver.objects.filter(
-                    permanence_id=self.permanence_id,
-                    customer_invoice__customer_charged_id=self.customer_id,
-                )
-                .order_by("?")
-                .aggregate(
-                    customer_vat=Sum(
-                        "customer_vat",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                        ),
+            result_set = PurchaseWoReceiver.objects.filter(
+                permanence_id=self.permanence_id,
+                customer_invoice__customer_charged_id=self.customer_id,
+            ).aggregate(
+                customer_vat=Sum(
+                    "customer_vat",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=4, default=DECIMAL_ZERO
                     ),
-                    deposit=Sum(
-                        "deposit",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                deposit=Sum(
+                    "deposit",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    selling_price=Sum(
-                        "selling_price",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                selling_price=Sum(
+                    "selling_price",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
         else:
             # It's an invoice of a member of a group
             #   self.customer_charged_id != self.customer_id
             #   self.customer_charged_id == owner of the group
             #   assertion : self.price_list_multiplier always == DECIMAL_ONE
-            result_set = (
-                PurchaseWoReceiver.objects.filter(
-                    permanence_id=self.permanence_id, customer_id=self.customer_id
-                )
-                .order_by("?")
-                .aggregate(
-                    customer_vat=Sum(
-                        "customer_vat",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                        ),
+
+            result_set = PurchaseWoReceiver.objects.filter(
+                permanence_id=self.permanence_id, customer_id=self.customer_id
+            ).aggregate(
+                customer_vat=Sum(
+                    "customer_vat",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=4, default=DECIMAL_ZERO
                     ),
-                    deposit=Sum(
-                        "deposit",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                deposit=Sum(
+                    "deposit",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    selling_price=Sum(
-                        "selling_price",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                selling_price=Sum(
+                    "selling_price",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
 
         self.total_vat.amount = (
@@ -773,14 +760,10 @@ class CustomerInvoice(Invoice):
 
     def create_child(self, new_permanence):
         if self.customer_id != self.customer_charged_id:
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    permanence_id=self.permanence_id,
-                    customer_id=self.customer_charged_id,
-                )
-                .only("id")
-                .order_by("?")
-            )
+            customer_invoice = CustomerInvoice.objects.filter(
+                permanence_id=self.permanence_id, customer_id=self.customer_charged_id
+            ).only("id")
+
             if not customer_invoice.exists():
                 customer_invoice = CustomerInvoice.objects.create(
                     permanence_id=self.permanence_id,
@@ -815,7 +798,8 @@ class CustomerInvoice(Invoice):
             )
             purchase_qs = PurchaseWoReceiver.objects.filter(
                 customer_invoice_id=self.id, is_box_content=False
-            ).order_by("?")
+            )
+
             for a_purchase in purchase_qs.select_related("customer"):
                 create_or_update_one_cart_item(
                     customer=a_purchase.customer,
