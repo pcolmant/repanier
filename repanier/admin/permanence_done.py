@@ -491,180 +491,220 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             user_message = _("The selected invoice has been canceled.")
                             user_message_level = messages.INFO
                         else:
-                            user_message = (
-                                _("You mus first cancel the invoices of {} whose date is {}.").format(
-                                    last_bank_account_total.permanence,
-                                    last_bank_account_total.permanence.permanence_date.strftime(
-                                        settings.DJANGO_SETTINGS_DATE))
+                            user_message = _(
+                                "You mus first cancel the invoices of {} whose date is {}."
+                            ).format(
+                                last_bank_account_total.permanence,
+                                last_bank_account_total.permanence.permanence_date.strftime(
+                                    settings.DJANGO_SETTINGS_DATE
+                                ),
                             )
                             user_message_level = messages.ERROR
                     else:
-                        user_message = _("The selected invoice is not the latest invoice.")
+                        user_message = _(
+                            "The selected invoice is not the latest invoice."
+                        )
                         user_message_level = messages.ERROR
                 else:
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
-                    permanence.set_status(old_status=(PERMANENCE_INVOICED,), new_status=PERMANENCE_SEND)
+                    permanence.set_status(
+                        old_status=(PERMANENCE_INVOICED,), new_status=PERMANENCE_SEND
+                    )
             else:
-                permanence.set_status(old_status=(PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED,),
-                                      new_status=PERMANENCE_SEND)
+                permanence.set_status(
+                    old_status=(PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED),
+                    new_status=PERMANENCE_SEND,
+                )
                 user_message = _("The selected invoice has been restored.")
                 user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         template_name = get_repanier_template_name("confirm_admin_action.html")
-        return render(request, template_name, {
-            'sub_title': _(
-                "Please, confirm the action : cancel the invoices") if permanence.status == PERMANENCE_INVOICED else _(
-                "Please, confirm the action : cancel the archiving") if permanence.status == PERMANENCE_ARCHIVED else _(
-                "Please, confirm the action : restore the delivery"),
-            'action': action,
-            'permanence': permanence,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-        })
+        return render(
+            request,
+            template_name,
+            {
+                "sub_title": _("Please, confirm the action : cancel the invoices")
+                if permanence.status == PERMANENCE_INVOICED
+                else _("Please, confirm the action : cancel the archiving")
+                if permanence.status == PERMANENCE_ARCHIVED
+                else _("Please, confirm the action : restore the delivery"),
+                "action": action,
+                "permanence": permanence,
+                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+            },
+        )
 
     def cancel_invoices(self, request, permanence_qs):
-        return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_invoices')
+        return self.cancel_invoice_or_archive_or_cancelled(
+            request, permanence_qs, "cancel_invoices"
+        )
 
-    cancel_invoices.short_description = _('Cancel the last invoice or the last cancellation of delivery')
+    cancel_invoices.short_description = _(
+        "Cancel the last invoice or the last cancellation of delivery"
+    )
 
     def cancel_archive(self, request, permanence_qs):
-        return self.cancel_invoice_or_archive_or_cancelled(request, permanence_qs, 'cancel_archive')
+        return self.cancel_invoice_or_archive_or_cancelled(
+            request, permanence_qs, "cancel_archive"
+        )
 
-    cancel_archive.short_description = _('Cancel archiving')
+    cancel_archive.short_description = _("Cancel archiving")
 
     def send_invoices(self, request, permanence_qs):
-        if 'cancel' in request.POST:
+        if "cancel" in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
         if permanence.status != PERMANENCE_INVOICED:
-            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
-                'permanence': permanence}
+            user_message = _(
+                "The status of %(permanence)s prohibit you to perform this action."
+            ) % {"permanence": permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
-        template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_customer_mail)
+        template = Template(
+            repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_customer_mail
+        )
         invoice_description = permanence.safe_translation_getter(
-            'invoice_description', any_language=True, default=EMPTY_STRING
+            "invoice_description", any_language=True, default=EMPTY_STRING
         )
         staff = Staff.get_or_create_invoice_responsible()
 
         # TODO : Align on tools.payment_message
-        customer_order_amount = \
-            _('The amount of your order is %(amount)s.') % {
-                'amount': RepanierMoney(123.45)
-            }
-        customer_last_balance = \
-            _('The balance of your account as of %(date)s is %(balance)s.') % {
-                'date': timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
-                'balance': RepanierMoney(123.45)
-            }
+        customer_order_amount = _("The amount of your order is %(amount)s.") % {
+            "amount": RepanierMoney(123.45)
+        }
+        customer_last_balance = _(
+            "The balance of your account as of %(date)s is %(balance)s."
+        ) % {
+            "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
+            "balance": RepanierMoney(123.45),
+        }
         bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
         if bank_account_number is not None:
             group_name = settings.REPANIER_SETTINGS_GROUP_NAME
             if permanence.short_name:
-                communication = "{} ({})".format(_('Short name'), permanence.short_name)
+                communication = "{} ({})".format(_("Short name"), permanence.short_name)
             else:
-                communication = _('Short name')
-            customer_payment_needed = "<font color=\"#bd0926\">{}</font>".format(
+                communication = _("Short name")
+            customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
                 _(
-                    'Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
-                    'payment': RepanierMoney(123.45),
-                    'name': group_name,
-                    'number': bank_account_number,
-                    'communication': communication
+                    "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+                )
+                % {
+                    "payment": RepanierMoney(123.45),
+                    "name": group_name,
+                    "number": bank_account_number,
+                    "communication": communication,
                 }
             )
         else:
             customer_payment_needed = EMPTY_STRING
-        context = TemplateContext({
-            'name': _('Long name'),
-            'long_basket_name': _('Long name'),
-            'basket_name': _('Short name'),
-            'short_basket_name': _('Short name'),
-            'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-            'last_balance_link': mark_safe("<a href=\"#\">{}</a>".format(customer_last_balance)),
-            'last_balance': customer_last_balance,
-            'order_amount': mark_safe(customer_order_amount),
-            'payment_needed': mark_safe(customer_payment_needed),
-            'invoice_description': mark_safe(invoice_description),
-            'signature': staff.get_html_signature,
-        })
+        context = TemplateContext(
+            {
+                "name": _("Long name"),
+                "long_basket_name": _("Long name"),
+                "basket_name": _("Short name"),
+                "short_basket_name": _("Short name"),
+                "permanence_link": mark_safe('<a href="#">{}</a>'.format(permanence)),
+                "last_balance_link": mark_safe(
+                    '<a href="#">{}</a>'.format(customer_last_balance)
+                ),
+                "last_balance": customer_last_balance,
+                "order_amount": mark_safe(customer_order_amount),
+                "payment_needed": mark_safe(customer_payment_needed),
+                "invoice_description": mark_safe(invoice_description),
+                "signature": staff.get_html_signature,
+            }
+        )
         template_invoice_customer_mail = template.render(context)
 
         invoice_customer_email_will_be_sent, invoice_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
         )
 
-        template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail)
+        template = Template(
+            repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail
+        )
 
-        context = TemplateContext({
-            'name': _('Long name'),
-            'long_profile_name': _('Long name'),
-            'permanence_link': mark_safe("<a href=\"#\">{}</a>".format(permanence)),
-            'signature': staff.get_html_signature,
-        })
+        context = TemplateContext(
+            {
+                "name": _("Long name"),
+                "long_profile_name": _("Long name"),
+                "permanence_link": mark_safe('<a href="#">{}</a>'.format(permanence)),
+                "signature": staff.get_html_signature,
+            }
+        )
         template_invoice_producer_mail = template.render(context)
 
         invoice_producer_email_will_be_sent, invoice_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
         )
-        if 'apply' in request.POST:
+        if "apply" in request.POST:
             form = InvoiceOrderForm(request.POST)
             if form.is_valid():
-                t = threading.Thread(target=email_invoice.send_invoice, args=(permanence.id,))
+                t = threading.Thread(
+                    target=email_invoice.send_invoice, args=(permanence.id,)
+                )
                 t.start()
-                user_message = _("Emails containing the invoices will be send to the customers and the producers.")
+                user_message = _(
+                    "Emails containing the invoices will be send to the customers and the producers."
+                )
                 user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
         else:
             form = InvoiceOrderForm(
                 initial={
-                    'template_invoice_customer_mail': mark_safe(template_invoice_customer_mail),
-                    'template_invoice_producer_mail': mark_safe(template_invoice_producer_mail),
+                    "template_invoice_customer_mail": mark_safe(
+                        template_invoice_customer_mail
+                    ),
+                    "template_invoice_producer_mail": mark_safe(
+                        template_invoice_producer_mail
+                    ),
                 }
             )
-        template_name = get_repanier_template_name(
-            'repanier/confirm_admin_send_invoice.html'
-        )
+        template_name = get_repanier_template_name("confirm_admin_send_invoice.html")
         return render(
             request,
-            template_name, {
-                'sub_title': _("Please, confirm the action : send invoices"),
-                'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-                'action': 'send_invoices',
-                'permanence': permanence,
-                'form': form,
-                'invoice_customer_email_will_be_sent': invoice_customer_email_will_be_sent,
-                'invoice_customer_email_will_be_sent_to': invoice_customer_email_will_be_sent_to,
-                'invoice_producer_email_will_be_sent': invoice_producer_email_will_be_sent,
-                'invoice_producer_email_will_be_sent_to': invoice_producer_email_will_be_sent_to
-            })
+            template_name,
+            {
+                "sub_title": _("Please, confirm the action : send invoices"),
+                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action": "send_invoices",
+                "permanence": permanence,
+                "form": form,
+                "invoice_customer_email_will_be_sent": invoice_customer_email_will_be_sent,
+                "invoice_customer_email_will_be_sent_to": invoice_customer_email_will_be_sent_to,
+                "invoice_producer_email_will_be_sent": invoice_producer_email_will_be_sent,
+                "invoice_producer_email_will_be_sent_to": invoice_producer_email_will_be_sent_to,
+            },
+        )
 
-    send_invoices.short_description = _('5 --- Send invoices')
+    send_invoices.short_description = _("5 --- Send invoices")
 
     def get_actions(self, request):
         actions = super(PermanenceDoneAdmin, self).get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            del actions['generate_archive']
-            del actions['cancel_archive']
+            del actions["generate_archive"]
+            del actions["cancel_archive"]
         else:
-            del actions['export_xlsx']
-            del actions['import_xlsx']
-            del actions['generate_invoices']
-            del actions['preview_invoices']
-            del actions['send_invoices']
-            del actions['cancel_invoices']
+            del actions["export_xlsx"]
+            del actions["import_xlsx"]
+            del actions["generate_invoices"]
+            del actions["preview_invoices"]
+            del actions["send_invoices"]
+            del actions["cancel_invoices"]
 
         if not actions:
             try:
-                self.list_display.remove('action_checkbox')
+                self.list_display.remove("action_checkbox")
             except ValueError:
                 pass
             except AttributeError:
