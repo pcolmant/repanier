@@ -4829,6 +4829,9 @@ msgstr "Contrôle du stock"
 msgid "Row %(row_num)d : A required column is missing."
 msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 
+msgid "at"
+msgstr "le"
+
 #~ msgid "Select"
 #~ msgstr "Sélectionner"
 

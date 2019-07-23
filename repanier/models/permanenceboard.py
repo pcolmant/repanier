@@ -21,12 +21,24 @@ class PermanenceBoard(models.Model):
         verbose_name=repanier.apps.REPANIER_SETTINGS_PERMANENCE_NAME,
         on_delete=models.CASCADE,
     )
-    # permanence_date duplicated to quickly calculate # participation of lasts 12 months
-    permanence_date = models.DateField(_("Permanence date"), db_index=True)
+    permanence_date = models.DateField(
+        _("Permanence date"),
+        help_text="Date of distribution/task execution. Maybe different from permanence_date in case of solidarity contract for example.",
+    )
     permanence_role = models.ForeignKey(
         "LUT_PermanenceRole",
         verbose_name=_("Permanence role"),
         on_delete=models.PROTECT,
+    )
+    master_permanence_board = models.ForeignKey(
+        "PermanenceBoard",
+        verbose_name=_("Master permanence board"),
+        related_name="child_permanence_boards",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        help_text="Link all PermanenceBoards for a distribution of a given contract"
+        "to the initial PermanenceBoard created thanks to the admin ModelInline",
     )
     is_registered_on = models.DateTimeField(_("Registered on"), null=True, blank=True)
 
