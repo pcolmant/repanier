@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 import repanier.apps
 from repanier.const import EMPTY_STRING
@@ -42,10 +43,18 @@ class PermanenceBoard(models.Model):
     )
     is_registered_on = models.DateTimeField(_("Registered on"), null=True, blank=True)
 
+    def customers_may_register(self):
+        return (
+            self.permanence_date > timezone.now().date()
+            and self.permanence_role.customers_may_register
+        )
+
     class Meta:
         verbose_name = _("Permanence board")
         verbose_name_plural = _("Permanences board")
-        unique_together = ("permanence", "permanence_role", "customer")
+        # a customer maybe registered for the same role at different `permanence_date` of the same `permanence`
+        # however he can't be at the same role at the same `permanence_date`
+        unique_together = ("permanence_date", "permanence_role", "customer")
         index_together = [["permanence_date", "permanence", "permanence_role"]]
 
     def __str__(self):

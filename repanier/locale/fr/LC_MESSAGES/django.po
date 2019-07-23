@@ -5145,3 +5145,6 @@ msgstr "le"
 
 #~ msgid "By multiple of"
 #~ msgstr "Conditionné par"
+
+msgid "Registrations closed"
+msgstr "Il n'est plus possible de s'inscrire"

@@ -3,6 +3,7 @@ import logging
 
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
 
@@ -35,12 +36,9 @@ class PermanenceMenu(Menu):
         submenu_id = master_id
 
         separator = False
-        permanence_board_set = (
-            PermanenceBoard.objects.filter(
-                permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
-            )
-            .only("id")
-            .order_by("?")
+
+        permanence_board_set = PermanenceBoard.objects.filter(
+            permanence_date__gte=timezone.now().date()
         )
         if permanence_board_set.exists():
             submenu_id += 1
