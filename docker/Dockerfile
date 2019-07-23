@@ -5,7 +5,8 @@ RUN apt-get update && apt-get -y install gettext && apt-get clean
 
 WORKDIR /repanier
 
-COPY requirements/requirement-2.0.txt /repanier/requirements/requirements.txt
+COPY requirements/requirement-2.0.txt /repanier/requirements/requirement-2.0.txt
+COPY requirements/requirement-2.0-dev.txt /repanier/requirements/requirements.txt
 RUN pip install -r requirements/requirements.txt
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
