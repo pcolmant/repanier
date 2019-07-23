@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
 
-from repanier.const import *
+from repanier.const import PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND
 from repanier.models import Permanence
 from repanier.models import PermanenceBoard
 
@@ -35,13 +35,11 @@ class PermanenceMenu(Menu):
         submenu_id = master_id
 
         separator = False
-        permanence_board_set = (
-            PermanenceBoard.objects.filter(
-                permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
-            )
-            .only("id")
-            .order_by("?")
+
+        permanence_board_set = PermanenceBoard.objects.filter(
+            permanence__status__lte=PERMANENCE_OPENED
         )
+
         if permanence_board_set.exists():
             submenu_id += 1
             node = NavigationNode(
@@ -73,16 +71,25 @@ class PermanenceMenu(Menu):
 
         first_pass = True
         closed_separator = separator
+<<<<<<< HEAD
 
         for permanence in (
             Permanence.objects.filter(
                 status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+=======
+        for permanence in (
+            Permanence.objects.filter(
+                status__in=[, PERMANENCE_CLOSED, PERMANENCE_SEND, , PERMANENCE_CLOSED, PERMANENCE_SEND],
+>>>>>>> clean: use status PERMANENCE_SEND for show/not show of PermanenceView link in menu
                 master_permanence__isnull=True,
             )
             .only("id", "permanence_date")
             .order_by("-permanence_date")
         ):
+<<<<<<< HEAD
 
+=======
+>>>>>>> clean: use status PERMANENCE_SEND for show/not show of PermanenceView link in menu
             displayed_permanence_counter += 1
             if first_pass and closed_separator:
                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
