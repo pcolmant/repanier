@@ -5,7 +5,6 @@ from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
-from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
@@ -24,15 +23,12 @@ from repanier.admin.forms import (
     ImportXlsxForm,
     ImportInvoiceForm,
 )
-from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
 from repanier.email import email_invoice
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
 from repanier.models.bankaccount import BankAccount
-from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.lut import LUT_PermanenceRole
 from repanier.models.permanence import PermanenceDone
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.staff import Staff
@@ -47,33 +43,11 @@ from repanier.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchas
 from repanier.xlsx.xlsx_stock import export_permanence_stock
 
 
-class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
-    model = PermanenceBoard
-    ordering = ("permanence_role__tree_id", "permanence_role__lft")
-    fields = ['permanence_role', 'customer']
-    extra = 1
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    def has_add_permission(self, request):
-        return True
-
-    def has_change_permission(self, request, obj=None):
-        return True
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "customer":
-            kwargs["queryset"] = Customer.objects.filter(may_order=True)
-        if db_field.name == "permanence_role":
-            kwargs["queryset"] = LUT_PermanenceRole.objects.filter(is_active=True, rght=F('lft') + 1).order_by(
-                "tree_id", "lft")
-        return super(PermanenceBoardInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
-
 class PermanenceDoneForm(TranslatableModelForm):
-    short_name = forms.CharField(label=_("Offer name"),
-                                 widget=forms.TextInput(attrs={'style': "width:100% !important"}))
+    short_name = forms.CharField(
+        label=_("Offer name"),
+        widget=forms.TextInput(attrs={"style": "width:100% !important"}),
+    )
 
     class Meta:
         model = PermanenceDone
@@ -88,7 +62,6 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     # exclude = ['offer_description', ]
     list_per_page = 10
     list_max_show_all = 10
-    inlines = [PermanenceBoardInline]
     date_hierarchy = "permanence_date"
     list_display = ["get_permanence_admin_display"]
     ordering = ("-invoice_sort_order", "-permanence_date")
@@ -119,71 +92,96 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     def get_list_display(self, request):
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            return ('get_permanence_admin_display', 'language_column', 'get_producers',
-                    'get_customers', 'get_board', 'get_html_status_display')
+            return (
+                "get_permanence_admin_display",
+                "language_column",
+                "get_producers",
+                "get_customers",
+                "get_board",
+                "get_html_status_display",
+            )
         else:
-            return ('get_permanence_admin_display', 'get_producers',
-                    'get_customers', 'get_board', 'get_html_status_display')
+            return (
+                "get_permanence_admin_display",
+                "get_producers",
+                "get_customers",
+                "get_board",
+                "get_html_status_display",
+            )
 
     def get_urls(self):
         urls = super(PermanenceDoneAdmin, self).get_urls()
         my_urls = [
-            url(r'^import_invoice/$', self.admin_site.admin_view(self.add_delivery)),
+            url(r"^import_invoice/$", self.admin_site.admin_view(self.add_delivery))
         ]
         return my_urls + urls
 
     def add_delivery(self, request):
         return import_xslx_view(
-            self, admin, request, None, _("Import an invoice"),
-            handle_uploaded_invoice, action='add_delivery', form_klass=ImportInvoiceForm
+            self,
+            admin,
+            request,
+            None,
+            _("Import an invoice"),
+            handle_uploaded_invoice,
+            action="add_delivery",
+            form_klass=ImportInvoiceForm,
         )
 
     def cancel_delivery(self, request, permanence_qs):
-        if 'cancel' in request.POST:
+        if "cancel" in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
         if permanence is None or permanence.status not in [
-            PERMANENCE_CLOSED, PERMANENCE_SEND
+            PERMANENCE_CLOSED,
+            PERMANENCE_SEND,
         ]:
-            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
-                'permanence': permanence}
+            user_message = _(
+                "The status of %(permanence)s prohibit you to perform this action."
+            ) % {"permanence": permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
-        if 'apply' in request.POST:
+        if "apply" in request.POST:
             permanence.cancel_delivery()
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         template_name = get_repanier_template_name("confirm_admin_action.html")
-        return render(request, template_name, {
-            'sub_title': _("Please, confirm the action : cancel delivery"),
-            'action': 'cancel_delivery',
-            'permanence': permanence,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-        })
+        return render(
+            request,
+            template_name,
+            {
+                "sub_title": _("Please, confirm the action : cancel delivery"),
+                "action": "cancel_delivery",
+                "permanence": permanence,
+                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+            },
+        )
 
     cancel_delivery.short_description = _("Cancel delivery")
 
     def export_xlsx(self, request, permanence_qs):
         permanence = permanence_qs.first()
         if permanence.status != PERMANENCE_SEND:
-            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
-                'permanence': permanence}
+            user_message = _(
+                "The status of %(permanence)s prohibit you to perform this action."
+            ) % {"permanence": permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
         wb = export_purchase(permanence=permanence, wb=None)
         if wb is not None:
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = "attachment; filename={0}-{1}.xlsx".format(
-                _("Invoices"),
-                permanence
+            response = HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+            response[
+                "Content-Disposition"
+            ] = "attachment; filename={0}-{1}.xlsx".format(_("Invoices"), permanence)
             wb.save(response)
             return response
         else:
@@ -249,28 +247,32 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     preview_invoices.short_description = _("4 --- Export accounting report")
 
     def generate_invoices(self, request, permanence_qs):
-        if 'done' in request.POST:
+        if "done" in request.POST:
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
-        elif 'cancel' in request.POST:
+        elif "cancel" in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         permanence = permanence_qs.first()
         if permanence.status != PERMANENCE_SEND:
-            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
-                'permanence': permanence}
+            user_message = _(
+                "The status of %(permanence)s prohibit you to perform this action."
+            ) % {"permanence": permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
 
         max_payment_date = timezone.now().date()
-        bank_account = BankAccount.objects.filter(
-            operation_status=BANK_LATEST_TOTAL
-        ).only("operation_date").order_by("-id").first()
+        bank_account = (
+            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
+            .only("operation_date")
+            .order_by("-id")
+            .first()
+        )
         if bank_account is not None:
             if bank_account.operation_date > max_payment_date:
                 max_payment_date = bank_account.operation_date
@@ -282,38 +284,53 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
         if max_payment_date < min_payment_date:
             max_payment_date = min_payment_date
-        if 'apply' in request.POST and admin.ACTION_CHECKBOX_NAME in request.POST:
+        if "apply" in request.POST and admin.ACTION_CHECKBOX_NAME in request.POST:
             permanence_form = PermanenceInvoicedForm(request.POST)
             producer_invoiced_formset = ProducerInvoicedFormSet(request.POST)
             if permanence_form.is_valid() and producer_invoiced_formset.is_valid():
-                payment_date = permanence_form.cleaned_data.get('payment_date')
+                payment_date = permanence_form.cleaned_data.get("payment_date")
                 if payment_date < min_payment_date or payment_date > max_payment_date:
                     permanence_form.add_error(
-                        'payment_date',
-                        _('The payment date must be between %(min_payment_date)s and %(max_payment_date)s.') % {
-                            'min_payment_date': min_payment_date.strftime(settings.DJANGO_SETTINGS_DATE),
-                            'max_payment_date': max_payment_date.strftime(settings.DJANGO_SETTINGS_DATE)
-                        }
+                        "payment_date",
+                        _(
+                            "The payment date must be between %(min_payment_date)s and %(max_payment_date)s."
+                        )
+                        % {
+                            "min_payment_date": min_payment_date.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                            "max_payment_date": max_payment_date.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                        },
                     )
                 else:
                     at_least_one_selected = False
                     for producer_invoiced_form in producer_invoiced_formset:
                         if producer_invoiced_form.is_valid():
-                            selected = producer_invoiced_form.cleaned_data.get('selected')
-                            short_profile_name = producer_invoiced_form.cleaned_data.get('short_profile_name')
-                            producer_invoice = ProducerInvoice.objects.filter(
-                                permanence_id=permanence.id,
-                                invoice_sort_order__isnull=True,
-                                producer__short_profile_name=short_profile_name,
-                            ).order_by(
-                                '?'
-                            ).first()
+                            selected = producer_invoiced_form.cleaned_data.get(
+                                "selected"
+                            )
+                            short_profile_name = producer_invoiced_form.cleaned_data.get(
+                                "short_profile_name"
+                            )
+                            producer_invoice = (
+                                ProducerInvoice.objects.filter(
+                                    permanence_id=permanence.id,
+                                    invoice_sort_order__isnull=True,
+                                    producer__short_profile_name=short_profile_name,
+                                )
+                                .order_by("?")
+                                .first()
+                            )
                             if selected:
                                 at_least_one_selected = True
                                 producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
-                                    'to_be_invoiced_balance')
+                                    "to_be_invoiced_balance"
+                                )
                                 producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
-                                    'invoice_reference', EMPTY_STRING)
+                                    "invoice_reference", EMPTY_STRING
+                                )
                                 producer_invoice.to_be_paid = True
                             else:
                                 producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
@@ -377,53 +394,73 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         return
         else:
             producer_invoiced = []
-            for producer_invoice in ProducerInvoice.objects.filter(
-                    permanence_id=permanence.id,
-                    invoice_sort_order__isnull=True,
-            ).order_by("producer").select_related("producer"):
+            for producer_invoice in (
+                ProducerInvoice.objects.filter(
+                    permanence_id=permanence.id, invoice_sort_order__isnull=True
+                )
+                .order_by("producer")
+                .select_related("producer")
+            ):
                 producer = producer_invoice.producer
                 if not producer.represent_this_buyinggroup:
                     # We have already pay to much (look at the bank movements).
                     # So we do not need to pay anything
-                    producer_invoice.calculated_invoiced_balance.amount = \
-                        producer.get_calculated_invoiced_balance(permanence.id)
+                    producer_invoice.calculated_invoiced_balance.amount = producer.get_calculated_invoiced_balance(
+                        permanence.id
+                    )
                 else:
-                    producer_invoice.calculated_invoiced_balance.amount = producer_invoice.get_total_price_with_tax().amount
+                    producer_invoice.calculated_invoiced_balance.amount = (
+                        producer_invoice.get_total_price_with_tax().amount
+                    )
                 # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
-                producer_invoice.to_be_invoiced_balance = producer_invoice.calculated_invoiced_balance
-                producer_invoice.save(update_fields=[
-                    'calculated_invoiced_balance',
-                    'to_be_invoiced_balance'
-                ])
-                producer_invoiced.append({
-                    'selected': True,
-                    'short_profile_name': producer_invoice.producer.short_profile_name,
-                    'calculated_invoiced_balance': producer_invoice.calculated_invoiced_balance,
-                    'to_be_invoiced_balance': producer_invoice.to_be_invoiced_balance,
-                    'invoice_reference': producer_invoice.invoice_reference
-                })
+                producer_invoice.to_be_invoiced_balance = (
+                    producer_invoice.calculated_invoiced_balance
+                )
+                producer_invoice.save(
+                    update_fields=[
+                        "calculated_invoiced_balance",
+                        "to_be_invoiced_balance",
+                    ]
+                )
+                producer_invoiced.append(
+                    {
+                        "selected": True,
+                        "short_profile_name": producer_invoice.producer.short_profile_name,
+                        "calculated_invoiced_balance": producer_invoice.calculated_invoiced_balance,
+                        "to_be_invoiced_balance": producer_invoice.to_be_invoiced_balance,
+                        "invoice_reference": producer_invoice.invoice_reference,
+                    }
+                )
             if permanence.payment_date is not None:
                 # In this case we have also, permanence.status > PERMANENCE_SEND
-                permanence_form = PermanenceInvoicedForm(payment_date=permanence.payment_date)
+                permanence_form = PermanenceInvoicedForm(
+                    payment_date=permanence.payment_date
+                )
             else:
                 permanence_form = PermanenceInvoicedForm(payment_date=max_payment_date)
 
-            producer_invoiced_formset = ProducerInvoicedFormSet(initial=producer_invoiced)
+            producer_invoiced_formset = ProducerInvoicedFormSet(
+                initial=producer_invoiced
+            )
 
         template_name = get_repanier_template_name("confirm_admin_invoice.html")
-        return render(request, template_name, {
-            'sub_title': _("Please, confirm the action : generate the invoices"),
-            'action': 'generate_invoices',
-            'permanence': permanence,
-            'permanence_form': permanence_form,
-            'producer_invoiced_formset': producer_invoiced_formset,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-        })
+        return render(
+            request,
+            template_name,
+            {
+                "sub_title": _("Please, confirm the action : generate the invoices"),
+                "action": "generate_invoices",
+                "permanence": permanence,
+                "permanence_form": permanence_form,
+                "producer_invoiced_formset": producer_invoiced_formset,
+                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+            },
+        )
 
-    generate_invoices.short_description = _('3 --- Generate invoices')
+    generate_invoices.short_description = _("3 --- Generate invoices")
 
     def generate_archive(self, request, permanence_qs):
-        if 'cancel' in request.POST:
+        if "cancel" in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
@@ -434,30 +471,35 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             PERMANENCE_CLOSED,
             PERMANENCE_SEND,
         ]:
-            user_message = _("The status of %(permanence)s prohibit you to perform this action.") % {
-                'permanence': permanence}
+            user_message = _(
+                "The status of %(permanence)s prohibit you to perform this action."
+            ) % {"permanence": permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
 
-        if 'apply' in request.POST:
+        if "apply" in request.POST:
             permanence.archive()
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return
         template_name = get_repanier_template_name("confirm_admin_action.html")
-        return render(request, template_name, {
-            'sub_title': _("Please, confirm the action : generate archive"),
-            'action': 'generate_archive',
-            'permanence': permanence,
-            'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
-        })
+        return render(
+            request,
+            template_name,
+            {
+                "sub_title": _("Please, confirm the action : generate archive"),
+                "action": "generate_archive",
+                "permanence": permanence,
+                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+            },
+        )
 
-    generate_archive.short_description = _('Archive')
+    generate_archive.short_description = _("Archive")
 
     def cancel_invoice_or_archive_or_cancelled(self, request, permanence_qs, action):
-        if 'cancel' in request.POST:
+        if "cancel" in request.POST:
             user_message = _("Action canceled by the user.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
@@ -475,7 +517,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
 
-        if 'apply' in request.POST:
+        if "apply" in request.POST:
             if permanence.status == PERMANENCE_INVOICED:
                 last_bank_account_total = (
                     BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
@@ -716,8 +758,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         extra_context = extra_context or {}
         # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
         # Finally I found the use of EMPTY_STRING nicer on the UI
-        extra_context['module_name'] = EMPTY_STRING
-        return super(PermanenceDoneAdmin, self).changelist_view(request, extra_context=extra_context)
+        extra_context["module_name"] = EMPTY_STRING
+        return super(PermanenceDoneAdmin, self).changelist_view(
+            request, extra_context=extra_context
+        )
 
     def get_queryset(self, request):
         qs = super(PermanenceDoneAdmin, self).get_queryset(request)
@@ -733,11 +777,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             )
 
     def save_model(self, request, permanence, form, change):
-        if change and ('permanence_date' in form.changed_data):
+        if change and ("permanence_date" in form.changed_data):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
-                permanence_date=permanence.permanence_date)
-        super(PermanenceDoneAdmin, self).save_model(
-            request, permanence, form, change)
+                permanence_date=permanence.permanence_date
+            )
+        super(PermanenceDoneAdmin, self).save_model(request, permanence, form, change)
 
     class Media:
         js = (get_repanier_static_name("js/import_invoice.js"),)
