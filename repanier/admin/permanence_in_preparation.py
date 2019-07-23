@@ -992,7 +992,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         form.instance.save(update_fields=["with_delivery_point"])
 
     def save_model(self, request, permanence, form, change):
-        if change and ("permanence_date" in form.changed_data):
+        if permanence.contract:
+            permanence.permanence_date = permanence.contract.first_permanence_date
+
+        if (
+            not permanence.contract
+            and change
+            and ("permanence_date" in form.changed_data)
+        ):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date
             )
