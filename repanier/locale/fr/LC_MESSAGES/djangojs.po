@@ -45,3 +45,6 @@ msgstr "✗ - ne pas confirmer"
 #: static/js/is_order_confirm_send.js:5
 msgid "✓🔐"
 msgstr "🔑 - confirmer et vérrouiller"
+
+msgid "No offer to display"
+msgstr "Pas d'offres ouvertes"

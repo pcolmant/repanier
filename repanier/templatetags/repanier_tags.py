@@ -89,7 +89,7 @@ def repanier_permanences(*args, **kwargs):
             </div>
         </div>
         """.format(
-            card_title=("No offer to display")
+            card_title=_("No offer to display")
             if len(permanences_cards) == 0
             else _("Offer")
             if len(permanences_cards) == 1
@@ -273,7 +273,7 @@ def repanier_user_bs4(context, *args, **kwargs):
             get_repanier_template_name("widgets/header_user_dropdown.html"),
             {
                 "user": user,
-                "my_balance": my_balance,
+                "my_balance": mark_safe(my_balance),
                 "producer": producer,
                 "display_who_is_who": REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
                 "manage_accounting": settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
