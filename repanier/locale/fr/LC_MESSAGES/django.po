@@ -5148,3 +5148,6 @@ msgstr "le"
 
 msgid "Registrations closed"
 msgstr "Il n'est plus possible de s'inscrire"
+
+msgid "<strong>Choose either (a) a contract (several distributions according to the contract's content) or (b) producer(s) and an offer date</strong>"
+msgstr "<strong>Choisissez soit (a) un contrat définissant dates et producteurs ou (b) un/des producteur(s) et une date de permanence unique"

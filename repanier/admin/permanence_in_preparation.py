@@ -194,9 +194,6 @@ class PermanenceInPreparationForm(TranslatableModelForm):
             contract_field.widget.can_delete_related = False
             contract = Contract.objects.all().first()
             contract_field.initial = contract.pk if contract else None
-            permanence_date_field = self.fields["permanence_date"]
-            permanence_date_field.widget = forms.HiddenInput()
-            permanence_date_field.initial = timezone.now().date()
 
     def clean(self):
         if any(self.errors):
@@ -274,21 +271,40 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         list_display += ["get_board", "get_html_status_display"]
         return list_display
 
-    def get_fields(self, request, permanence=None):
-        fields = [
-            ("permanence_date", "picture"),
-            "automatically_closed",
-            "short_name",
-            "offer_description",
-        ]
+    def get_fieldsets(self, request, permanence=None):
+
         if settings.REPANIER_SETTINGS_CONTRACT:
-            fields = ["contract"] + fields
+            fields = ["short_name", "picture", "automatically_closed"]
+            fieldsets = [(None, {"fields": fields})]
+            fields = ["contract", "permanence_date", "producers"]
+            fieldsets.append(
+                (
+                    "Type d'offre",
+                    {
+                        "fields": fields,
+                        "description": _(
+                            "<strong>Choose either (a) a contract (several distributions according to the contract's content)"
+                            " or (b) producer(s) and an offer date</strong>"
+                        ),
+                        "classes": ("fieldset-flash",),
+                    },
+                )
+            )
+            fieldsets.append((None, {"fields": ["offer_description"]}))
         else:
-            fields += ["producers"]
+            fields = [
+                "short_name",
+                ("permanence_date", "picture"),
+                "automatically_closed",
+                "producers",
+                "offer_description",
+            ]
+            fieldsets = [(None, {"fields": fields})]
 
         if settings.REPANIER_SETTINGS_BOX:
-            fields.append("boxes")
-        return fields
+            fieldsets.append((None, {"fields": ["boxes"]}))
+
+        return fieldsets
 
     def get_readonly_fields(self, request, permanence=None):
         if permanence is not None and permanence.status > PERMANENCE_PLANNED:
