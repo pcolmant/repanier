@@ -72,29 +72,16 @@ class PermanenceMenu(Menu):
 
         first_pass = True
         closed_separator = separator
-<<<<<<< HEAD
 
         for permanence in (
             Permanence.objects.filter(
                 status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
-=======
-        for permanence in (
-            Permanence.objects.filter(
-<<<<<<< HEAD
-                status__in=[, PERMANENCE_CLOSED, PERMANENCE_SEND, , PERMANENCE_CLOSED, PERMANENCE_SEND],
->>>>>>> clean: use status PERMANENCE_SEND for show/not show of PermanenceView link in menu
-=======
-                status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
->>>>>>> fix: typo in cms_menu
                 master_permanence__isnull=True,
             )
             .only("id", "permanence_date")
             .order_by("-permanence_date")
         ):
-<<<<<<< HEAD
 
-=======
->>>>>>> clean: use status PERMANENCE_SEND for show/not show of PermanenceView link in menu
             displayed_permanence_counter += 1
             if first_pass and closed_separator:
                 submenu_id = self.append_separator(nodes, master_id, submenu_id)
