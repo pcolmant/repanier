@@ -325,7 +325,7 @@ INSTALLED_APPS = (
     "djangocms_file",
     "djangocms_picture",
     "djangocms_video",
-    "django_extensions",
+    # "django_extensions", # Need only to be present on dev environment
     "cms",
     # 'cms_bootstrap3',
     "menus",
