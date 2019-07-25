@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 from django.utils import translation
@@ -30,7 +31,7 @@ def order_description_view(request, permanence_id):
     is_basket = request.GET.get('is_basket', EMPTY_STRING)
     is_like = request.GET.get('is_like', EMPTY_STRING)
     if permanence.contract is not None:
-        all_dates = permanence.contract.permanences_dates.split(',')
+        all_dates = permanence.contract.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR)
         len_all_dates = len(all_dates)
         if len_all_dates < 2:
             date_id = 'all'
