@@ -764,14 +764,14 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         # Important : Needed to pass contract to product.get_html_is_into_offer()
         # in the list_display of 'get_html_is_into_offer'
         # and in 'deselect_is_into_offer'
-        contract_id = sint(request.GET.get("commitment", 0))
-
-        if settings.REPANIER_SETTINGS_CONTRACT and contract_id:
-            contract = Contract.objects.get(pk=contract_id)
-        elif (
-            settings.REPANIER_SETTINGS_CONTRACT and Contract.objects.all().count() == 1
-        ):
-            contract = Contract.objects.all().first()
+        if settings.REPANIER_SETTINGS_CONTRACT:
+            contract_id = sint(request.GET.get("commitment", 0))
+            if contract_id:
+                contract = Contract.objects.get(pk=contract_id)
+            elif Contract.objects.all().count() == 1:
+                contract = Contract.objects.all().first()
+            else:
+                contract = None
         else:
             contract = None
         self._contract = contract
