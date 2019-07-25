@@ -820,11 +820,18 @@ def get_html_basket_message(customer, permanence, status):
         )
 
     if status == const.PERMANENCE_OPENED:
-        if permanence.with_delivery_point:
-            you_can_change = _(
-                "You can change the order quantities as long as the orders are open for your delivery point.")
+        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+            if permanence.with_delivery_point:
+                you_can_change = _(
+                    "You can increase the order quantities as long as the orders are open for your delivery point.")
+            else:
+                you_can_change = _("You can increase the order quantities as long as the orders are open.")
         else:
-            you_can_change = _("You can change the order quantities as long as the orders are open.")
+            if permanence.with_delivery_point:
+                you_can_change = _(
+                    "You can change the order quantities as long as the orders are open for your delivery point.")
+            else:
+                you_can_change = _("You can change the order quantities as long as the orders are open.")
     else:
         if permanence.with_delivery_point:
             you_can_change = _('The orders are closed for your delivery point.')
