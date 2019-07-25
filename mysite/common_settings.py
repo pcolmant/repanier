@@ -830,6 +830,42 @@ CMS_TEMPLATE_HOME_HERO = """
 <p class="text-muted">Lorem ipsum.</p>
 """
 
+CMS_TEMPLATE_HOME_COL_1 = """
+<div class="panel panel-info">
+<div class="panel-heading"><h4>Lorem ipsum</h4></div>
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">Lorem ipsum.</li>
+<li class="list-group-item">Lorem ipsum.</li>
+</ul>
+</div>
+</div>
+"""
+
+CMS_TEMPLATE_HOME_COL_2 = """
+<div class="panel panel-danger">
+<div class="panel-heading"><h4>Lorem ipsum</h4></div>
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">Lorem ipsum.</li>
+<li class="list-group-item">Lorem ipsum.</li>
+</ul>
+</div>
+</div>
+"""
+
+CMS_TEMPLATE_HOME_COL_3 = """
+<div class="panel panel-warning">
+<div class="panel-heading"><h4>Lorem ipsum</h4></div>
+<div class="panel-body">
+<ul class="list-group">
+<li class="list-group-item">Lorem ipsum.</li>
+<li class="list-group-item">Lorem ipsum.</li>
+</ul>
+</div>
+</div>
+"""
+
 CMS_TEMPLATE_FOOTER = """
 Lorem ipsum dolor sit amet
 """
@@ -842,6 +878,54 @@ CMS_PLACEHOLDER_CONF = {
         "default_plugins": [
             {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_HERO}}
         ],
+    },
+    'home-col-1': {
+        'name': gettext('Column 1'),
+        'plugins': [
+            'TextPlugin',
+        ],
+        'text_only_plugins': text_only_plugins,
+        'default_plugins': [
+            {
+                'plugin_type': 'TextPlugin',
+                'values': {
+                    'body':
+                        CMS_TEMPLATE_HOME_COL_1
+                },
+            },
+        ]
+    },
+    'home-col-2': {
+        'name': gettext('Column 2'),
+        'plugins': [
+            'TextPlugin',
+        ],
+        'text_only_plugins': text_only_plugins,
+        'default_plugins': [
+            {
+                'plugin_type': 'TextPlugin',
+                'values': {
+                    'body':
+                        CMS_TEMPLATE_HOME_COL_2
+                },
+            },
+        ]
+    },
+    'home-col-3': {
+        'name': gettext('Column 3'),
+        'plugins': [
+            'TextPlugin',
+        ],
+        'text_only_plugins': text_only_plugins,
+        'default_plugins': [
+            {
+                'plugin_type': 'TextPlugin',
+                'values': {
+                    'body':
+                        CMS_TEMPLATE_HOME_COL_3
+                },
+            },
+        ]
     },
     "subpage_content": {
         "name": gettext("Content"),
