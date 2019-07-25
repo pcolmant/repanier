@@ -197,6 +197,11 @@ REPANIER_SETTINGS_STOCK = config.getboolean(
 REPANIER_SETTINGS_TEMPLATE = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_TEMPLATE", fallback="bs3"
 )
+# IMPORTANT :
+# CONTRACT may not be used with delivery nor box
+if REPANIER_SETTINGS_CONTRACT:
+    REPANIER_SETTINGS_BOX = False
+    REPANIER_SETTINGS_DELIVERY_POINT = False
 
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
