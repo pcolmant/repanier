@@ -127,10 +127,11 @@ class PurchaseForm(forms.ModelForm):
     product = forms.ChoiceField(
         label=_("Product"), widget=Select2(select2attrs={"width": "450px"})
     )
-
-    add_for_contract = forms.BooleanField(
-        label=_("Create purchases for all contract openings"), initial=True
-    )
+    if settings.REPANIER_SETTINGS_CONTRACT:
+        # TODO : Lets the user select a date instead of "add_for_contract"
+        add_for_contract = forms.BooleanField(
+            label=_("Create purchases for all contract openings"), initial=True
+        )
 
     delivery = forms.ChoiceField(
         label=_("Delivery point"), widget=SelectAdminDeliveryWidget()
@@ -143,14 +144,6 @@ class PurchaseForm(forms.ModelForm):
         required=True,
         initial=0,
     )
-
-    class Meta:
-        model = Purchase
-        fields = "__all__"
-        widgets = {
-            # 'permanence': SelectAdminPermanenceWidget(),
-            "customer": Select2(select2attrs={"width": "450px"})
-        }
 
     def __init__(self, *args, **kwargs):
         super(PurchaseForm, self).__init__(*args, **kwargs)
@@ -392,35 +385,61 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     #     return HttpResponseRedirect(redirect_to)
 
     def get_fieldsets(self, request, purchase=None):
-        permanence_id = purchase.permanence_id if purchase is not None else None
-        preserved_filters = request.GET.get("_changelist_filters", None)
 
-        if preserved_filters is not None and purchase is None:
-            param = dict(parse_qsl(preserved_filters))
-            if "permanence" in param:
-                permanence_id = param["permanence"]
-
-        fields_basic = []
+        permanence_id = None
+        if purchase is None:
+            preserved_filters = request.GET.get("_changelist_filters", None)
+            if preserved_filters is not None:
+                param = dict(parse_qsl(preserved_filters))
+                if "permanence" in param:
+                    permanence_id = param["permanence"]
+        else:
+            permanence_id = purchase.permanence_id
 
         if permanence_id is not None:
-            fields_basic = [
-                "permanence",
-                "customer",
-                "product",
-                "quantity",
-                "comment",
-                "is_updated_on",
-            ]
-            permanence = Permanence.objects.filter(id=permanence_id).first()
-            if permanence and permanence.with_delivery_point:
-                fields_basic = fields_basic[:1] + ["delivery"] + fields_basic[1:]
-
-            if permanence and permanence.contract and purchase is None:
-                fields_basic = (
-                    fields_basic[:1] + ["add_for_contract"] + fields_basic[1:]
-                )
-
+            # CONTRACT may not be used with delivery_point nor box, see common_settings
+            if (
+                Permanence.objects.filter(id=permanence_id, with_delivery_point=True)
+                .order_by("?")
+                .exists()
+            ):
+                fields_basic = [
+                    "permanence",
+                    "delivery",
+                    "customer",
+                    "product",
+                    "quantity",
+                    "comment",
+                    "is_updated_on",
+                ]
+            elif (
+                Permanence.objects.filter(id=permanence_id, contract_id__isnull=False)
+                .order_by("?")
+                .exists()
+            ):
+                # TODO : Lets the user select a date instead of "add_for_contract"
+                fields_basic = [
+                    "permanence",
+                    "add_for_contract",
+                    "customer",
+                    "product",
+                    "quantity",
+                    "comment",
+                    "is_updated_on",
+                ]
+            else:
+                fields_basic = [
+                    "permanence",
+                    "customer",
+                    "product",
+                    "quantity",
+                    "comment",
+                    "is_updated_on",
+                ]
+        else:
+            fields_basic = []
         fieldsets = ((None, {"fields": fields_basic}),)
+
         return fieldsets
 
     def get_readonly_fields(self, request, purchase=None):
@@ -571,69 +590,105 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     def save_model(self, request, purchase, form, change):
         status = purchase.permanence.status
         delivery = None
-        offer_items_for_contract = None
-        if form.cleaned_data.get("delivery"):
+        if "delivery" in form.fields:
             delivery_id = form.cleaned_data.get("delivery")
-            delivery = (
-                DeliveryBoard.objects.filter(id=delivery_id).only("status").first()
-            )
-            if delivery is not None:
-                status = delivery.status
+            if delivery_id != EMPTY_STRING:
+                delivery = (
+                    DeliveryBoard.objects.filter(id=delivery_id)
+                    .only("status")
+                    .order_by("?")
+                    .first()
+                )
+                if delivery is not None:
+                    status = delivery.status
 
-        # Forbidden to change invoiced permanence
         if status > PERMANENCE_SEND:
+            # The purchase is maybe already invoiced
+            # Do not update it
+            # It is forbidden to change invoiced permanence
             return
-
-        if status < PERMANENCE_SEND:
-            purchase.quantity_ordered = form.cleaned_data.get("quantity", DECIMAL_ZERO)
-        else:
-            purchase.quantity_invoiced = form.cleaned_data.get("quantity", DECIMAL_ZERO)
 
         product_or_offer_item_id = form.cleaned_data.get("product")
         if purchase.id is not None:
             # Update : product_or_offer_item_id is an offer_item_id
-            offer_item = OfferItem.objects.filter(
-                id=product_or_offer_item_id, permanence_id=purchase.permanence_id
-            ).first()
+            offer_item = (
+                OfferItem.objects.filter(
+                    id=product_or_offer_item_id, permanence_id=purchase.permanence_id
+                )
+                .order_by("?")
+                .first()
+            )
         else:
             # New : product_or_offer_item_id is a product_id
-            product = Product.objects.filter(id=product_or_offer_item_id).first()
-            if form.cleaned_data.get("add_for_contract"):
-                offer_items_for_contract = product.offeritem_set.filter(
-                    permanence=purchase.permanence, may_order=True
-                )
+            product = (
+                Product.objects.filter(id=product_or_offer_item_id)
+                .order_by("?")
+                .first()
+            )
+            if settings.REPANIER_SETTINGS_CONTRACT:
+                # TODO : Get or create on offer item for the selected date of the contract linked to the permanence
+                # if form.cleaned_data.get("add_for_contract"):
+                #     offer_items_for_contract = product.offeritem_set.filter(
+                #         permanence=purchase.permanence, may_order=True
+                #     )
+                #     if offer_items_for_contract is not None:
+                #         for offer_item in offer_items_for_contract:
+                #             import copy
+                #
+                #             copied_purchase = copy.deepcopy(purchase)
+                #             copied_purchase.offer_item = offer_item
+                #             copied_purchase.status = status
+                #             copied_purchase.producer = offer_item.producer
+                #             copied_purchase.permanence.producers.add(offer_item.producer)
+                #             copied_purchase.save()
+                #             copied_purchase.save_box()
+                offer_item = None
             else:
                 offer_item = product.get_or_create_offer_item(purchase.permanence)
 
-        if offer_items_for_contract is not None:
-            for offer_item in offer_items_for_contract:
-                import copy
+        if offer_item is not None:
 
-                copied_purchase = copy.deepcopy(purchase)
-                copied_purchase.offer_item = offer_item
-                copied_purchase.status = status
-                copied_purchase.producer = offer_item.producer
-                copied_purchase.permanence.producers.add(offer_item.producer)
-                copied_purchase.save()
-                copied_purchase.save_box()
-
-        elif offer_item is not None:
             purchase.offer_item = offer_item
+            if status < PERMANENCE_SEND:
+                purchase.quantity_ordered = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+            else:
+                purchase.quantity_invoiced = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+            # if purchase.id is None:
+            #     # Select one purchase
+            #     previous_purchase = Purchase.objects.filter(
+            #         customer=purchase.customer,
+            #         offer_item=offer_item,
+            #         is_box_content=False
+            #     ).order_by('?')
+            #     if previous_purchase.exists():
+            #         # add to it
+            #         previous_purchase = previous_purchase.first()
+            #         purchase.id = previous_purchase.id
+            #         if status < PERMANENCE_SEND:
+            #             purchase.quantity_ordered += previous_purchase.quantity_ordered
+            #         else:
+            #             purchase.quantity_invoiced += previous_purchase.quantity_invoiced
+
+
             purchase.status = status
             purchase.producer = offer_item.producer
             purchase.permanence.producers.add(offer_item.producer)
             purchase.save()
             purchase.save_box()
-
-        # The customer_invoice is created with "purchase.save()"
-        customer_invoice = CustomerInvoice.objects.filter(
-            customer_id=purchase.customer_id, permanence_id=purchase.permanence_id
-        ).first()
-        customer_invoice.status = status
-        customer_invoice.set_order_delivery(delivery)
-        customer_invoice.calculate_order_price()
-        customer_invoice.confirm_order()
-        customer_invoice.save()
+            # The customer_invoice may be created with "purchase.save()"
+            customer_invoice = (
+                CustomerInvoice.objects.filter(
+                    customer_id=purchase.customer_id,
+                    permanence_id=purchase.permanence_id,
+                )
+                .order_by("?")
+                .first()
+            )
+            customer_invoice.status = status
+            customer_invoice.set_order_delivery(delivery)
+            customer_invoice.calculate_order_price()
+            customer_invoice.confirm_order()
+            customer_invoice.save()
 
     def get_actions(self, request):
         actions = super(PurchaseAdmin, self).get_actions(request)
