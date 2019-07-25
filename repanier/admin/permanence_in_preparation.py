@@ -258,9 +258,12 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         list_display = ["get_permanence_admin_display"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
+        list_display += ["get_producers"]
         if settings.REPANIER_SETTINGS_CONTRACT:
             list_display += ["contract"]
-        list_display += ["get_producers", "get_board", "get_customers", "get_html_status_display"]
+        else:
+            list_display += ["get_customers"]
+        list_display += ["get_board", "get_html_status_display"]
         return list_display
 
     def get_fields(self, request, permanence=None):
@@ -687,10 +690,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 user_message_level = messages.WARNING
                 self.message_user(request, user_message, user_message_level)
                 return
-            close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
-            # t = threading.Thread(target=close_and_send_order,
-            #                      args=(permanence.id, all_deliveries, deliveries_to_be_send))
-            # t.start()
+            # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
+            t = threading.Thread(target=close_and_send_order,
+                                 args=(permanence.id, all_deliveries, deliveries_to_be_send))
+            t.start()
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
