@@ -21,16 +21,16 @@ from repanier.tools import permanence_ok_or_404, get_repanier_template_name, sin
 def order_description_view(request, permanence_id):
     user = request.user
     customer = Customer.objects.filter(
-        user_id=user.id, may_order=True).order_by('?').first()
+        user_id=user.id, may_order=True).first()
     if customer is None:
         raise Http404
     translation.activate(customer.language)
-    permanence = Permanence.objects.filter(id=permanence_id).order_by('?').first()
+    permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence_ok_or_404(permanence)
     is_basket = request.GET.get('is_basket', EMPTY_STRING)
     is_like = request.GET.get('is_like', EMPTY_STRING)
     if permanence.contract is not None:
-        all_dates = permanence.contract.all_dates
+        all_dates = permanence.contract.permanences_dates.split(',')
         len_all_dates = len(all_dates)
         if len_all_dates < 2:
             date_id = 'all'

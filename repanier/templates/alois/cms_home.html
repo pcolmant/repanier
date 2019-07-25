@@ -2,8 +2,12 @@
 {% load cms_tags repanier_tags %}
 
 {% block base_content %}
-    {% repanier_permanences %}
-    <div class="container jumbotron">
-        {% placeholder "home-hero" %}
+    <div class="row">
+        <div class="col-md-6">
+            {% repanier_permanences %}
+        </div>
+        <div class="col-md-6">
+            {% placeholder "home-hero" %}
+        </div>
     </div>
 {% endblock %}

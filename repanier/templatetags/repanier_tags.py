@@ -5,6 +5,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.template.loader import render_to_string
 
 from repanier.const import (
     EMPTY_STRING,
@@ -20,7 +21,12 @@ from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver
-from repanier.tools import sint, get_html_selected_value, get_html_selected_box_value
+from repanier.tools import (
+    sint,
+    get_html_selected_value,
+    get_html_selected_box_value,
+    get_repanier_template_name,
+)
 
 register = template.Library()
 
@@ -215,81 +221,43 @@ def repanier_user_bs4(context, *args, **kwargs):
 
     request = context["request"]
     user = request.user
-    nodes = []
-    if user.is_authenticated:
-        if not user.is_staff:
-            nodes = []
-            nodes.append(
-                """
-                <li id="li_my_name" class="nav-item dropdown">
-                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{}</a>
-                <div class="dropdown-menu dropdown-menu-right">
-                """.format(
-                    user.last_name or '<span id = "my_name"></ span>'
-                )
-            )
+    producer = None
+    my_balance = EMPTY_STRING
 
-            if user.customer_id is not None:
+    if user.is_authenticated and user.customer_id is not None:
 
-                nodes.append(
-                    '<a class="dropdown-item" href="{}"><span class="fa fa-external-link-alt"></span> {}</a>'.format(
-                        reverse("logout"), _("Logout")
-                    )
+        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            last_customer_invoice = (
+                CustomerInvoice.objects.filter(
+                    customer__user_id=request.user.id, invoice_sort_order__isnull=False
                 )
-                nodes.append('<div class="dropdown-divider"></div>')
-                if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-                    last_customer_invoice = (
-                        CustomerInvoice.objects.filter(
-                            customer__user_id=request.user.id,
-                            invoice_sort_order__isnull=False,
-                        )
-                        .only("balance", "date_balance")
-                        .order_by("-invoice_sort_order")
-                        .first()
-                    )
-                    if last_customer_invoice is not None:
-                        if last_customer_invoice.balance < DECIMAL_ZERO:
-                            my_balance = _(
-                                'My balance : <font color="red">%(balance)s</font> at %(date)s'
-                            ) % {
-                                "balance": last_customer_invoice.balance,
-                                "date": last_customer_invoice.date_balance.strftime(
-                                    settings.DJANGO_SETTINGS_DATE
-                                ),
-                            }
-                        else:
-                            my_balance = _(
-                                'My balance : <font color="green">%(balance)s</font> at %(date)s'
-                            ) % {
-                                "balance": last_customer_invoice.balance,
-                                "date": last_customer_invoice.date_balance.strftime(
-                                    settings.DJANGO_SETTINGS_DATE
-                                ),
-                            }
-                    else:
-                        my_balance = _("My balance")
-                    nodes.append(
-                        '<a class="dropdown-item" href="{}">{}</a>'.format(
-                            reverse("customer_invoice_view", args=(0,)), my_balance
-                        )
-                    )
-                nodes.append(
-                    '<a class="dropdown-item" href="{}">{}</a>'.format(
-                        reverse("my_profile_view"), _("My profile")
-                    )
-                )
-            if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-                nodes.append(
-                    '<a class="dropdown-item" href="{}">{}</a>'.format(
-                        reverse("who_is_who_view"), _("Who's who")
-                    )
-                )
-            nodes.append(
-                '<a class="dropdown-item" href="{}">{}</a>'.format(
-                    reverse("send_mail_to_coordinators_view"), _("Inform")
-                )
+                .only("balance", "date_balance")
+                .order_by("-invoice_sort_order")
+                .first()
             )
-            nodes.append("</div></li>")
+            if (
+                last_customer_invoice is not None
+                and last_customer_invoice.balance < DECIMAL_ZERO
+            ):
+                my_balance = _(
+                    'My balance : <font color="red">%(balance)s</font> at %(date)s'
+                ) % {
+                    "balance": last_customer_invoice.balance,
+                    "date": last_customer_invoice.date_balance.strftime(
+                        settings.DJANGO_SETTINGS_DATE
+                    ),
+                }
+            elif last_customer_invoice:
+                my_balance = _(
+                    'My balance : <font color="green">%(balance)s</font> at %(date)s'
+                ) % {
+                    "balance": last_customer_invoice.balance,
+                    "date": last_customer_invoice.date_balance.strftime(
+                        settings.DJANGO_SETTINGS_DATE
+                    ),
+                }
+            else:
+                my_balance = _("My balance")
 
     else:
         p_offer_uuid = kwargs.get("offer_uuid", None)
@@ -297,21 +265,21 @@ def repanier_user_bs4(context, *args, **kwargs):
             producer = (
                 Producer.objects.filter(offer_uuid=p_offer_uuid)
                 .only("long_profile_name")
-                .order_by("?")
                 .first()
             )
-            if producer is not None:
-                nodes = [
-                    '<li><a href="#">{}</a></li>'.format(producer.long_profile_name)
-                ]
-        else:
-            nodes = [
-                '<li class="nav-item dropdown"><a href="{}" class="nav-link"><span class="fa fa-plug"></span> {}</a></li>'.format(
-                    reverse("login_form"), _("Log in")
-                )
-            ]
 
-    return mark_safe("".join(nodes))
+    return mark_safe(
+        render_to_string(
+            get_repanier_template_name("widgets/header_user_dropdown.html"),
+            {
+                "user": user,
+                "my_balance": my_balance,
+                "producer": producer,
+                "display_who_is_who": REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
+                "manage_accounting": settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
+            },
+        )
+    )
 
 
 @register.simple_tag(takes_context=False)

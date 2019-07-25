@@ -47,6 +47,10 @@ def purchase_post_init(sender, **kwargs):
 
 @receiver(pre_save, sender=Purchase)
 def purchase_pre_save(sender, **kwargs):
+    """
+    Update the invoices (customer + producer) linked to a purchase when saving it.
+    """
+
     purchase = kwargs["instance"]
     # logger.info("purchase pre save : {}".format(purchase.id))
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
@@ -122,11 +126,9 @@ def purchase_pre_save(sender, **kwargs):
                 total_selling_with_tax=F("total_selling_with_tax")
                 + delta_selling_price,
             )
-            purchase.offer_item = (
-                OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id)
-                .order_by("?")
-                .first()
-            )
+            purchase.offer_item = OfferItemWoReceiver.objects.filter(
+                id=purchase.offer_item_id
+            ).first()
             CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
                 total_price_with_tax=F("total_price_with_tax") + delta_selling_price,
                 total_vat=F("total_vat") + delta_selling_vat,

@@ -342,7 +342,6 @@ INSTALLED_APPS = (
     "import_export",
     "rest_framework",
     "easy_select2",
-    "djng",
     "recurrence",
     "crispy_forms",
 )
@@ -665,10 +664,7 @@ if DJANGO_SETTINGS_LOGGING:
             }
         },
         "loggers": {
-            "django.db.backends": {
-                "level": "DEBUG",  # 'INFO',
-                "handlers": ["console"],
-            },
+            "django.db.backends": {"level": "INFO", "handlers": ["console"]},
             "repanier": {"level": "DEBUG", "handlers": ["console"]},
         },
     }

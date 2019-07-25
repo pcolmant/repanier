@@ -1854,15 +1854,13 @@ class Permanence(TranslatableModel):
             return mark_safe(
                 """
             <a href="{href}" class="card-body offer">
-                <h3>{title}</h3>
+                <h4>{title}</h4>
                 <div class="excerpt">{offer_description}</div>
-                <div class="text-right"><span class="read-more">&gt; {see_more}</span></div>
             </a>
             """.format(
                     href=reverse("order_view", args=(self.id,)),
                     title=self.get_html_permanence_display(),
-                    offer_description=offer_description.words(30, html=True),
-                    see_more=_("See more"),
+                    offer_description=offer_description.words(30, html=True)
                 )
             )
         return EMPTY_STRING

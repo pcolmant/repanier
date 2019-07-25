@@ -1,0 +1,10 @@
+anaconda:
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  ports:
+    - "19360:19360"
+  volumes:
+    - /Users/Alois/config/Anaconda:/opt/anaconda
+    - .:/repanier
+  command: ["/opt/anaconda/anaconda_server/docker/start", "python", "19360", "repanier", "/repanier"]

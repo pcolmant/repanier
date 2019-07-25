@@ -13,18 +13,7 @@
                         </div>
                     </div>
                 {% else %}
-                        <ul class="nav nav-pills">
-                            <li class="nav-item dropdown">
-                                <a class="nav-link {{ is_select_view }} dropdown-toggle" data-toggle="dropdown" href="{% url "order_view" permanence_id %}" role="button" aria-haspopup="true" aria-expanded="false"><i
-                                        class="fas fa-shopping-basket"></i>&nbsp;<span>{% trans "Offers" %}</span></a>
-                                    <div class="dropdown-menu" x-placement="bottom-start"
-                                         style="position: absolute; transform: translate3d(0px, 40px, 0px); top: 0; left: 0; will-change: transform;">
-                                        <a href="{% url "order_view" permanence_id %}" class="dropdown-item{% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %} active{% endif %}">{% trans "All products" %}</a>
-                                        <a class="dropdown-item disabled">Mon panier</a>
-                                        <a href="{% url "order_view" permanence_id %}?is_like=yes" class="dropdown-item{% if is_like %} active{% endif %}"><span>{% trans "My favorites" %} <i class="fas fa-heart"></i></span></a>
-                                        <a class="dropdown-item active" href="#ModalOrderFilter" data-toggle="modal" id="LinkModalFilter">Filtrer</a>
-                                    </div>
-                            </li>
+                        <ul class="nav nav-pills nav--order">
                             <li class="nav-item">
                                 <a class="nav-link {{ is_basket_view }}" href="{% url "order_view" permanence_id %}?is_basket=yes"><i
                                         class="fas fa-check"></i>&nbsp;<span>{% trans "Confirm" %}</span></a>
@@ -68,7 +57,7 @@
                     <h1 class="card-title">{% trans "Details of your order" %}</h1>
                 </div>
                 <div class="card-body">
-                    <span id="span_btn_confirm_order">{{ span_btn_confirm_order }}</span>
+                    <div id="span_btn_confirm_order">{{ span_btn_confirm_order }}</div>
                 </div>
             </div>
             {% addtoblock "lastjs" %}{% spaceless %}
@@ -158,7 +147,7 @@
                                         <div class="card-header" data-toggle="collapse" aria-expanded="true"
                                              data-target="#filtersProducers"
                                              aria-controls="filtersProducers">
-                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Producers" %}</h2></a>
+                                            <a class="card-title" href="javascript:void(0);">{% trans "Producers" %}</a>
                                         </div>
                                         <div id="filtersProducers" class="list-group collapse{% if department_id == "all" and date_id == "all" %} show{% endif %}"
                                              data-parent="#filtersAccordion">
@@ -203,7 +192,7 @@
                                         <div class="card-header" data-toggle="collapse" aria-expanded="false"
                                              data-target="#filtersDepartments"
                                              aria-controls="filtersDepartments">
-                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Departments" %}</h2></a>
+                                            <a class="card-title" href="javascript:void(0);">{% trans "Departments" %}</a>
                                         </div>
                                         <div id="filtersDepartments" class="list-group collapse{% if department_id != "all" %} show{% endif %}"
                                              data-parent="#filtersAccordion">
@@ -233,7 +222,7 @@
                                         <div class="card-header" data-toggle="collapse" aria-expanded="false"
                                              data-target="#filtersDates"
                                              aria-controls="filtersDates">
-                                            <a href="javascript:void(0);"><h2 class="card-title">{% trans "Dates" %}</h2></a>
+                                            <a class="card-title" href="javascript:void(0);">{% trans "Dates" %}</a>
                                         </div>
                                         <div id="filtersDates" class="list-group collapse{% if date_id != "all" %} show{% endif %}" data-parent="#filtersAccordion">
                                             <a href="{% url "order_view" permanence_id %}?date=all&producer={{ producer_id }}&department={{ department_id }}" class="list-group-item list-group-item-action{% if date_id == "all" %} active{% endif %}">
@@ -251,7 +240,7 @@
                                     <div class="card-header" data-toggle="collapse" aria-expanded="false"
                                          data-target="#filterSearch"
                                          aria-controls="filterSearch">
-                                        <a href="javascript:void(0);"><h2 class="card-title">{% trans "Search" %}</h2></a>
+                                        <a class="card-title" href="javascript:void(0);">{% trans "Search" %}</a>
                                     </div>
                                     <div id="filterSearch" class="card-body collapse{% if q %} show{% endif %}" data-parent="#filtersAccordion">
                                                                     {#            q : {{ q }}<br>#}
@@ -265,17 +254,11 @@
                                                   class="form-horizontal navbar-form" role="search" method="get">
                                             {% csrf_token %}
                                             <div class="input-group">
-                                                {% if q %}
-                                                    <input type="search" autosave="repanier" class="form-control"
-                                                           aria-describedby="button-search"
-                                                           value="{{ q }}"
-                                                           name="q">
-                                                {% else %}
-                                                    <input type="search" autosave="repanier" class="form-control"
-                                                           aria-describedby="button-search"
-                                                           placeholder="{% trans "Search" %}"
-                                                           name="q">
-                                                {% endif %}
+                                                <input type="search" autosave="repanier" class="form-control"
+                                                       aria-describedby="button-search"
+                                                       {% if q %}value="{{ q }}"{% endif %}
+                                                       placeholder="{% trans "Search" %}"
+                                                       name="q">
                                                 <div class="input-group-append">
                                                     <button class="btn btn-primary" type="submit" id="button-search"><i
                                                             class="fas fa-search"></i></button>
@@ -510,6 +493,9 @@
                     });
 
                     function order_ajax(offer_item_id) {
+                        /*
+                            Add the given OfferItem to basket
+                        */
                         saved_offer_item_id = -1;
                         var offer_item = $("#offer_item" + offer_item_id);
                         var offer_item_val = $("option:selected", offer_item).val();

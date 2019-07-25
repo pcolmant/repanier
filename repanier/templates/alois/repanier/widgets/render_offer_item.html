@@ -1,6 +1,6 @@
 {% load cms_tags sekizai_tags thumbnail filer_image_tags repanier_tags i18n l10n %}
 
-<div class="col-xs-12 col-md-6">
+<div class="col-xs-12 col-md-3">
 {% if offer.picture %}
     {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
     <div data-toggle="modal" data-target="#orderModal"
@@ -21,7 +21,7 @@
     {% endif %}
 {% endif %}
 </div>
-<div class="col-xs-12 col-md-6"
+<div class="col-xs-12 col-md-3"
      data-id="{{ offer.id|unlocalize }}"
      data-product="{{ offer.get_long_name }}">
     {% if offer.permanences_dates %}

@@ -4466,7 +4466,7 @@ msgstr ""
 
 #: views/my_profile_view.py:32
 msgid "I agree to show my email addresses in the \"who's who\""
-msgstr "J'acceptes de montrer mes adresses mail dans le \"qui est qui\""
+msgstr "J'accepte de montrer mes adresses mail dans le \"qui est qui\""
 
 #: views/my_profile_view.py:36
 msgid "I agree to receive mails from this site"
