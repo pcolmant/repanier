@@ -5,6 +5,8 @@ venv
 cache
 .ropeproject
 
+mysite.ini
+
 # for now on each instance manages its migrations on its own
 repanier/migrations/*
 
