@@ -5,4 +5,9 @@ venv
 cache
 .ropeproject
 
+# for now on each instance manages its migrations on its own
+repanier/migrations/*
+
+node_modules/*
+
 *sublime-*

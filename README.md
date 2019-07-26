@@ -40,7 +40,7 @@ And even to install several `Repanier` websites on a server.
 
 ## Linux prerequisites to run only once
 
-These prerequisites enhance the security of your server and configure it with the minimum libraries required for the installation of `Repanier`. 
+These prerequisites enhance the security of your server and configure it with the minimum libraries required for the installation of `Repanier`.
 If you use a different distribution than Debian 9, take a look at [cookiecutter-django](https://github.com/pydanny/cookiecutter-django/tree/master/%7B%7Bcookiecutter.project_slug%7D%7D/utility).
 If you want to install `Repanier` on a container, a good starting point is [Today I Learned – A Brief Intro to Docker for Djangonauts](https://www.revsys.com/tidbits/brief-intro-docker-djangonauts/)
 
@@ -161,7 +161,7 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     CREATE DATABASE _0_prd_example WITH TEMPLATE = template0 OWNER = _0_prd_example ENCODING = 'UTF8' LC_COLLATE = 'fr_BE.UTF-8' LC_CTYPE = 'fr_BE.UTF-8';
     \q  <---- to leave postgresql
     ```
-    I have not investigated why but `user`, `role` and `owner` must be set to the same value. 
+    I have not investigated why but `user`, `role` and `owner` must be set to the same value.
 2. Goto the virtualenv and activate it
     ```commandline
     cd ~/prd1
@@ -178,7 +178,7 @@ A recommended naming convention for a Django `Repanier` website is _counter_envi
     sudo chgrp -R www-data media
     sudo chmod -R g+w media
     ```
-    
+
 ## Configure nginx to answer to `example.com` dns name
 
 ```commandline
@@ -228,7 +228,7 @@ sudo nano /etc/nginx/sites-available/_0_prd_example
         location / {
             include                 uwsgi_params;
             uwsgi_param             HTTP_X_FORWARDED_HOST $server_name;
-            # With NAT on virtualbox, if you NAT local port 8080 to 80 on virtual server 
+            # With NAT on virtualbox, if you NAT local port 8080 to 80 on virtual server
             #     replace HTTP_X_FORWARDED_HOST $server_name;
             #     with HTTP_X_FORWARDED_HOST $server_name:8080;
             uwsgi_pass              unix:///tmp/_0_prd_example.sock;
@@ -293,13 +293,13 @@ nano ~/prd1/_0_prd_example/_0_prd_example/_0_prd_example.ini
     [ALLOWED_HOSTS]
     1:example.com
 A common mistake here is to use a non valid `example.com` DNS name on a production environnement, i.e. without DJANGO_SETTINGS_DEBUG=True
-If you are on a local PC/MAC/.. do not forget to add 
+If you are on a local PC/MAC/.. do not forget to add
 example.com  127.0.0.1
-to your "hosts" file. 
+to your "hosts" file.
 On Windows, it's usually : C:\WINDOWS\system32\drivers\etc\hosts
 Always on windows, remember to open a shell as an Administrator to edit C:\WINDOWS\system32\drivers\etc\hosts with notepad
 
-Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here above `_0_prd_example.ini` 
+Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here above `_0_prd_example.ini`
 - REPANIER_SETTINGS_BOOTSTRAP_CSS  (*bootstrap.css*, bootstrap_my_own.css, bootstrap_another.css) : Allows you to change the look of the site.
 - REPANIER_SETTINGS_BOX (True, *False*) : Allows you to sell multiple products together.
 - REPANIER_SETTINGS_CONTRACT (True, *False*) : Allows you to operate in * GASAP * mode, with contracts.
@@ -365,7 +365,7 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
     ```commandline
     sudo rm -rf /var/tmp/django-cache/*
     ```
-8. Restart (`restart`) nginx and uwsgi -- or Reload (`reload`) if no DNS/certificate change 
+8. Restart (`restart`) nginx and uwsgi -- or Reload (`reload`) if no DNS/certificate change
     ```commandline
     sudo nginx -t && sudo service nginx restart
     sudo service uwsgi restart
@@ -453,5 +453,3 @@ Due to the `GDPR`, the backup db script also anonymize old and inactive customer
 /home/repanier/prd1/_0_prd_example/cron/close_orders.sh
 /home/repanier/prd1/_0_prd_example/cron/delete_pending_purchases.sh
 ```
-
-
