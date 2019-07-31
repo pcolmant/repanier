@@ -313,7 +313,7 @@ SESSION_FILE_PATH = DJANGO_SETTINGS_SESSION
 ##################### Django & Django CMS
 LOCALE_PATHS = (os.path.join(PROJECT_DIR, "locale"),)
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     "repanier",  # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
     "djangocms_admin_style",  # note this needs to be above the 'django.contrib.admin' entry
     "django.contrib.admin",
@@ -330,7 +330,6 @@ INSTALLED_APPS = (
     "djangocms_file",
     "djangocms_picture",
     "djangocms_video",
-    # "django_extensions", # Need only to be present on dev environment
     "cms",
     # 'cms_bootstrap3',
     "menus",
@@ -349,7 +348,10 @@ INSTALLED_APPS = (
     "easy_select2",
     "recurrence",
     "crispy_forms",
-)
+]
+
+if DEBUG:
+    INSTALLED_APPS += ["django_extensions"]
 
 # set djangocms and filer plugins as cmsplugin for ckeditor
 # and such remove access to cmsplugin_filer and cmsplugin_cascade plugins from ckeditor cmsplugin
@@ -656,6 +658,7 @@ DATE_INPUT_FORMATS = (DJANGO_SETTINGS_DATE, "%d/%m/%Y", "%Y-%m-%d")
 DATETIME_INPUT_FORMATS = (DJANGO_SETTINGS_DATETIME,)
 
 ##################### LOGGING
+debug_level = "DEBUG" if DEBUG else "INFO"
 if DJANGO_SETTINGS_LOGGING:
     LOGGING = {
         "version": 1,
@@ -663,14 +666,14 @@ if DJANGO_SETTINGS_LOGGING:
         "formatters": {"console": {"format": "%(levelname)s %(name)s %(message)s"}},
         "handlers": {
             "console": {
-                "level": "DEBUG",
+                "level": debug_level,
                 "class": "logging.StreamHandler",
                 "formatter": "console",
             }
         },
         "loggers": {
-            "django.db.backends": {"level": "INFO", "handlers": ["console"]},
-            "repanier": {"level": "DEBUG", "handlers": ["console"]},
+            "django.db.backends": {"level": debug_level, "handlers": ["console"]},
+            "repanier": {"level": debug_level, "handlers": ["console"]},
         },
     }
 
@@ -880,53 +883,29 @@ CMS_PLACEHOLDER_CONF = {
             {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_HERO}}
         ],
     },
-    'home-col-1': {
-        'name': gettext('Column 1'),
-        'plugins': [
-            'TextPlugin',
+    "home-col-1": {
+        "name": gettext("Column 1"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_COL_1}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_1
-                },
-            },
-        ]
     },
-    'home-col-2': {
-        'name': gettext('Column 2'),
-        'plugins': [
-            'TextPlugin',
+    "home-col-2": {
+        "name": gettext("Column 2"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_COL_2}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_2
-                },
-            },
-        ]
     },
-    'home-col-3': {
-        'name': gettext('Column 3'),
-        'plugins': [
-            'TextPlugin',
+    "home-col-3": {
+        "name": gettext("Column 3"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_COL_3}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_3
-                },
-            },
-        ]
     },
     "subpage_content": {
         "name": gettext("Content"),
