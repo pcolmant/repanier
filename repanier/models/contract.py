@@ -18,38 +18,31 @@ from repanier.tools import clean_offer_item
 class Contract(TranslatableModel):
     translations = TranslatedFields(
         long_name=models.CharField(
-            _("Long name"), max_length=100,
-            default=EMPTY_STRING, blank=True,
-        ),
+            _("Long name"), max_length=100, default=EMPTY_STRING, blank=True
+        )
     )
     first_permanence_date = models.DateField(
-        verbose_name=_("Date of the first permanence"),
-        db_index=True
+        verbose_name=_("Date of the first permanence"), db_index=True
     )
     last_permanence_date = models.DateField(
-        verbose_name=_("Last permanence date"),
-        null=True, blank=True,
-        db_index=True
+        verbose_name=_("Last permanence date"), null=True, blank=True, db_index=True
     )
     recurrences = RecurrenceField()
     producers = models.ManyToManyField(
-        'Producer',
-        verbose_name=_("Producers"),
-        related_name='contracts',
-        blank=True
+        "Producer", verbose_name=_("Producers"), related_name="contracts", blank=True
     )
     customers = models.ManyToManyField(
-        'Customer',
-        verbose_name=_("Customers"),
-        blank=True
+        "Customer", verbose_name=_("Customers"), blank=True
     )
     picture2 = RepanierPictureField(
         verbose_name=_("Picture"),
-        null=True, blank=True,
-        upload_to="contract", size=SIZE_L)
+        null=True,
+        blank=True,
+        upload_to="contract",
+        size=SIZE_L,
+    )
     is_active = models.BooleanField(_("Active"), default=True)
-    permanences_dates = models.TextField(
-        null=True, blank=True, default=None)
+    permanences_dates = models.TextField(null=True, blank=True, default=None)
 
     @transaction.atomic()
     def get_or_create_offer_item(self, permanence, reset_add_2_stock=False):
@@ -74,6 +67,11 @@ class Contract(TranslatableModel):
                     )
                 )
             )
+            not_permanences_dates = (
+                contract_content.not_permanences_dates
+                if contract_content.not_permanences_dates is not None
+                else EMPTY_STRING
+            )
             if contract_content.flexible_dates:
                 # flexible_dates -> the customer is free to pick the date of his choice
                 # create one OfferItem per date for this product
@@ -86,11 +84,6 @@ class Contract(TranslatableModel):
                         permanences_dates=one_date_str,
                     )
                     if not offer_item_qs.exists():
-                        not_permanences_dates = (
-                            contract_content.not_permanences_dates
-                            if contract_content.not_permanences_dates is not None
-                            else EMPTY_STRING
-                        )
                         OfferItemWoReceiver.objects.create(
                             permanence_id=permanence.id,
                             product_id=contract_content.product_id,
@@ -110,9 +103,7 @@ class Contract(TranslatableModel):
                         offer_item = offer_item_qs.first()
                         offer_item.contract_id = self.id
                         offer_item.permanences_dates_order = permanences_dates_order
-                        offer_item.not_permanences_dates = (
-                            contract_content.not_permanences_dates
-                        )
+
                         if reset_add_2_stock:
                             offer_item.may_order = True
                         offer_item.save(
@@ -143,67 +134,89 @@ class Contract(TranslatableModel):
                         producer_id=contract_content.product.producer_id,
                         contract_id=self.id,
                         permanences_dates=contract_content.permanences_dates,
-                        not_permanences_dates=contract_content.not_permanences_dates,
-                        permanences_dates_counter=len(all_dates_str)
+                        not_permanences_dates=not_permanences_dates,
+                        permanences_dates_counter=len(all_dates_str),
                     )
-                    clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+                    clean_offer_item(
+                        permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock
+                    )
                 else:
                     offer_item = offer_item_qs.first()
                     offer_item.contract_id = self.id
                     offer_item.permanences_dates_order = 0
-                    offer_item.not_permanences_dates = (
-                        contract_content.not_permanences_dates
-                        if contract_content.not_permanences_dates is not None
-                        else EMPTY_STRING
-                    )
+                    offer_item.not_permanences_dates = not_permanences_dates
                     if reset_add_2_stock:
                         offer_item.may_order = True
-                    offer_item.save(update_fields=[
-                        "contract", "may_order", "permanences_dates_order", "not_permanences_dates"
-                    ])
-                    clean_offer_item(permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock)
+                    offer_item.save(
+                        update_fields=[
+                            "contract",
+                            "may_order",
+                            "permanences_dates_order",
+                            "not_permanences_dates",
+                        ]
+                    )
+                    clean_offer_item(
+                        permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock
+                    )
 
     @cached_property
     def get_producers(self):
         if len(self.producers.all()) > 0:
-            changelist_url = reverse(
-                'admin:repanier_product_changelist',
-            )
+            changelist_url = reverse("admin:repanier_product_changelist")
             link = []
             for p in self.producers.all():
                 link.append(
-                    "<a href=\"{}?producer={}&commitment={}\">&nbsp;{}&nbsp;{}</a>".format(
-                        changelist_url, p.id, self.id, LINK_UNICODE, p.short_profile_name.replace(" ", "&nbsp;")))
-            return mark_safe("<div class=\"wrap-text\">{}</div>".format(", ".join(link)))
+                    '<a href="{}?producer={}&commitment={}">&nbsp;{}&nbsp;{}</a>'.format(
+                        changelist_url,
+                        p.id,
+                        self.id,
+                        LINK_UNICODE,
+                        p.short_profile_name.replace(" ", "&nbsp;"),
+                    )
+                )
+            return mark_safe('<div class="wrap-text">{}</div>'.format(", ".join(link)))
         else:
-            return mark_safe("<div class=\"wrap-text\">{}</div>".format(_("No offer")))
+            return mark_safe('<div class="wrap-text">{}</div>'.format(_("No offer")))
 
-    get_producers.short_description = (_("Offers from"))
+    get_producers.short_description = _("Offers from")
 
     @cached_property
     def get_dates(self):
         if self.permanences_dates:
             all_dates_str = sorted(
-                list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+                list(
+                    filter(
+                        None,
+                        self.permanences_dates.split(
+                            settings.DJANGO_SETTINGS_DATES_SEPARATOR
+                        ),
+                    )
+                )
+            )
             all_dates = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
                 all_dates.append(one_date)
-            return '{} : {}'.format(
+            return "{} : {}".format(
                 len(all_dates),
-                ", ".join(date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH) for date in all_dates)
+                ", ".join(
+                    date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)
+                    for date in all_dates
+                ),
             )
         return EMPTY_STRING
 
-    get_dates.short_description = (_("Permanences"))
+    get_dates.short_description = _("Permanences")
 
     def get_contract_admin_display(self):
-        return "{} ({})".format(self.safe_translation_getter('long_name', any_language=True), self.get_dates)
+        return "{} ({})".format(
+            self.safe_translation_getter("long_name", any_language=True), self.get_dates
+        )
 
     get_contract_admin_display.short_description = _("Commitments")
 
     def __str__(self):
-        return "{}".format(self.safe_translation_getter('long_name', any_language=True))
+        return "{}".format(self.safe_translation_getter("long_name", any_language=True))
 
     class Meta:
         verbose_name = _("Commitment")
@@ -212,16 +225,25 @@ class Contract(TranslatableModel):
 
 class ContractContent(models.Model):
     contract = models.ForeignKey(
-        'Contract', verbose_name=_("Commitment"),
-        null=True, blank=True, db_index=True, on_delete=models.PROTECT)
+        "Contract",
+        verbose_name=_("Commitment"),
+        null=True,
+        blank=True,
+        db_index=True,
+        on_delete=models.PROTECT,
+    )
     product = models.ForeignKey(
-        'Product', verbose_name=_("Product"), related_name='contract_content',
-        null=True, blank=True, db_index=True, on_delete=models.PROTECT)
-    permanences_dates = models.TextField(
-        null=True, blank=True, default=None)
+        "Product",
+        verbose_name=_("Product"),
+        related_name="contract_content",
+        null=True,
+        blank=True,
+        db_index=True,
+        on_delete=models.PROTECT,
+    )
+    permanences_dates = models.TextField(null=True, blank=True, default=None)
     # Opposite of permaneces_date used to quickly know when this product is not into offer
-    not_permanences_dates = models.TextField(
-        null=True, blank=True, default=None)
+    not_permanences_dates = models.TextField(null=True, blank=True, default=None)
     # Flexible permanences dates
     flexible_dates = models.BooleanField(default=False)
 
@@ -229,11 +251,21 @@ class ContractContent(models.Model):
     def get_permanences_dates(self):
         if self.permanences_dates:
             all_dates_str = sorted(
-                list(filter(None, self.permanences_dates.split(settings.DJANGO_SETTINGS_DATES_SEPARATOR))))
+                list(
+                    filter(
+                        None,
+                        self.permanences_dates.split(
+                            settings.DJANGO_SETTINGS_DATES_SEPARATOR
+                        ),
+                    )
+                )
+            )
             all_days = []
             for one_date_str in all_dates_str:
                 one_date = parse_date(one_date_str)
-                all_days.append("{}".format(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)))
+                all_days.append(
+                    "{}".format(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH))
+                )
             return mark_safe(", ".join(all_days))
         return EMPTY_STRING
 
@@ -243,7 +275,5 @@ class ContractContent(models.Model):
     class Meta:
         verbose_name = _("Commitment content")
         verbose_name_plural = _("Commitments content")
-        unique_together = ("contract", "product",)
-        index_together = [
-            ["product", "contract"],
-        ]
+        unique_together = ("contract", "product")
+        index_together = [["product", "contract"]]

@@ -631,19 +631,19 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         )
                         user_message_level = messages.ERROR
                     else:
-                        # pre_open_order(permanence.id)
-                        t = threading.Thread(
-                            target=pre_open_order, args=(permanence.id,)
-                        )
-                        t.start()
+                        pre_open_order(permanence.id)
+                        # t = threading.Thread(
+                        #     target=pre_open_order, args=(permanence.id,)
+                        # )
+                        # t.start()
                         user_message = _("The offers are being generated.")
                         user_message_level = messages.INFO
                 else:
-                    # open_order(permanence.id, do_not_send_any_mail)
-                    t = threading.Thread(
-                        target=open_order, args=(permanence.id, do_not_send_any_mail)
-                    )
-                    t.start()
+                    open_order(permanence.id, do_not_send_any_mail)
+                    # t = threading.Thread(
+                    #     target=open_order, args=(permanence.id, do_not_send_any_mail)
+                    # )
+                    # t.start()
                     user_message = _("The offers are being generated.")
                     user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
