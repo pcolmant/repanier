@@ -8,6 +8,7 @@ Encore
     .enableSingleRuntimeChunk()
     .addStyleEntry('bootstrap/css/bootstrap', './repanier/static/repanier/alois/scss/custom-bootstrap.scss')
     .addStyleEntry('css/custom', './repanier/static/repanier/alois/scss/main.scss')
+    .addStyleEntry('css/custom_admin', './repanier/static/repanier/alois/scss/custom_admin.scss')
     .enableSassLoader()
 ;
 

@@ -15,6 +15,14 @@
       "css": [
         "/static/css/custom.css"
       ]
+    },
+    "css/custom_admin": {
+      "js": [
+        "/static/runtime.js"
+      ],
+      "css": [
+        "/static/css/custom_admin.css"
+      ]
     }
   }
 }

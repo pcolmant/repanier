@@ -1,5 +1,6 @@
 {
   "static/bootstrap/css/bootstrap.css": "/static/bootstrap/css/bootstrap.css",
-  "static/runtime.js": "/static/runtime.js",
-  "static/css/custom.css": "/static/css/custom.css"
+  "static/css/custom.css": "/static/css/custom.css",
+  "static/css/custom_admin.css": "/static/css/custom_admin.css",
+  "static/runtime.js": "/static/runtime.js"
 }
