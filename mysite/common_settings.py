@@ -92,7 +92,8 @@ DJANGO_SETTINGS_DATABASE_USER = config.get(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_DATABASE_USER"
 )
 DEBUG = config.getboolean("DJANGO_SETTINGS", "DJANGO_SETTINGS_DEBUG", fallback=False)
-DJANGO_SETTINGS_DEBUG_TOOLBAR = config.getboolean(
+# NO debug tool if not in debug mode
+DJANGO_SETTINGS_DEBUG_TOOLBAR = DEBUG and config.getboolean(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_DEBUG_TOOLBAR", fallback=False
 )
 EMAIL_HOST = config.get("DJANGO_SETTINGS", "DJANGO_SETTINGS_EMAIL_HOST")
@@ -113,7 +114,6 @@ DJANGO_SETTINGS_LANGUAGE = config.get(
 )
 DJANGO_SETTINGS_LOGGING = (
     config.getboolean("DJANGO_SETTINGS", "DJANGO_SETTINGS_LOGGING", fallback=False)
-    or DEBUG
 )
 DJANGO_SETTINGS_SESSION = config.get(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_SESSION", fallback="/var/tmp/django-session"
@@ -663,13 +663,13 @@ if DJANGO_SETTINGS_LOGGING:
         "formatters": {"console": {"format": "%(levelname)s %(name)s %(message)s"}},
         "handlers": {
             "console": {
-                "level": "DEBUG",
+                "level": "DEBUG", # DEBUG INFO WARNING ERROR CRITICAL
                 "class": "logging.StreamHandler",
                 "formatter": "console",
             }
         },
         "loggers": {
-            "django.db.backends": {"level": "INFO", "handlers": ["console"]},
+            "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
             "repanier": {"level": "DEBUG", "handlers": ["console"]},
         },
     }
