@@ -368,8 +368,8 @@ class Producer(models.Model):
             )
         )
 
-        if result_set["total_purchase_with_tax__sum"] is not None:
-            payment_needed += result_set["total_purchase_with_tax__sum"]
+        if result_set["total_purchase_price_with_tax"] is not None:
+            payment_needed += result_set["total_purchase_price_with_tax"]
 
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
         if self.manage_replenishment:
