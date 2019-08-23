@@ -186,10 +186,8 @@ class Producer(models.Model):
             return EMPTY_STRING
         return "{}{}".format(prefix, self.phone1)
 
-    def get_phone2(self, prefix=EMPTY_STRING):
-        if not self.phone2:
-            return EMPTY_STRING
-        return "{}{}".format(prefix, self.phone2)
+    def get_phone2(self):
+        return self.phone2 or EMPTY_STRING
 
     def get_negative_balance(self):
         return -self.balance
