@@ -1,6 +1,7 @@
 # -*- coding: utf-8
 
 from django.db import models
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
@@ -29,6 +30,20 @@ class PermanenceBoard(models.Model):
         on_delete=models.PROTECT,
     )
     is_registered_on = models.DateTimeField(_("Registered on"), null=True, blank=True)
+
+    @property
+    def get_html_board_member(self):
+        # Do not return phone2 nor email2
+        return format_html(
+            "<b>{}</b> : <b>{}</b>{}<br>{}",
+            self.permanence_role,
+            self.customer.long_basket_name,
+            self.customer.get_phone1(for_members=False, prefix=", ")
+            or self.customer.get_email1(for_members=False, prefix=", "),
+            self.permanence_role.safe_translation_getter(
+                "description", any_language=True, default=EMPTY_STRING
+            ),
+        )
 
     class Meta:
         verbose_name = _("Permanence board")
