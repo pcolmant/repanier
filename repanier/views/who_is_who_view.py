@@ -26,10 +26,6 @@ def who_is_who_view(request):
     staff_list = Staff.objects.filter(
         is_active=True, can_be_contacted=True
     )
-    try:
-        is_repanier_admin = request.user.is_repanier_admin
-    except AttributeError:
-        is_repanier_admin = False
     template_name = get_repanier_template_name("who_is_who.html")
     return render(
         request,
@@ -37,7 +33,6 @@ def who_is_who_view(request):
         {
             'staff_list': staff_list,
             'customer_list': customer_list,
-            'coordinator': is_repanier_admin,
             'q': q
         }
     )
