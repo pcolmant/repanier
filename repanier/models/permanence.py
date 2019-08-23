@@ -1860,10 +1860,23 @@ class Permanence(TranslatableModel):
             """.format(
                     href=reverse("order_view", args=(self.id,)),
                     title=self.get_html_permanence_display(),
-                    offer_description=offer_description.words(30, html=True)
+                    offer_description=offer_description.words(30, html=True),
                 )
             )
         return EMPTY_STRING
+
+    def get_html_board_composition(self):
+        from repanier.models.permanenceboard import PermanenceBoard
+
+        board_composition = []
+        for permanenceboard in PermanenceBoard.objects.filter(
+            permanence_id=self.id
+        ).order_by("permanence_role__tree_id", "permanence_role__lft"):
+            member = permanenceboard.get_html_board_member()
+            if member is not None:
+                board_composition.append(member)
+
+        return mark_safe("<br>".join(board_composition))
 
     def __str__(self):
         return self.get_permanence_display()

@@ -5,7 +5,6 @@ import threading
 from django import forms
 from django.contrib import admin
 from django.core.checks import messages
-from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
@@ -42,11 +41,7 @@ from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
 from repanier.task.task_order import pre_open_order, open_order, close_and_send_order
-from repanier.tools import (
-    get_board_composition,
-    get_recurrence_dates,
-    get_repanier_template_name,
-)
+from repanier.tools import get_recurrence_dates, get_repanier_template_name
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
 
@@ -691,8 +686,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 self.message_user(request, user_message, user_message_level)
                 return
             # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
-            t = threading.Thread(target=close_and_send_order,
-                                 args=(permanence.id, all_deliveries, deliveries_to_be_send))
+            t = threading.Thread(
+                target=close_and_send_order,
+                args=(permanence.id, all_deliveries, deliveries_to_be_send),
+            )
             t.start()
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
@@ -786,17 +783,13 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             template_order_producer_mail.append(language_code)
             template_order_producer_mail.append(template.render(context))
 
-            board_composition, board_composition_and_description = get_board_composition(
-                permanence.id
-            )
+            board_composition = permanence.get_html_board_composition()
             template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail)
             context = TemplateContext(
                 {
                     "permanence_link": format_html('<a href="#">{}</a>', permanence),
-                    "board_composition": mark_safe(board_composition),
-                    "board_composition_and_description": mark_safe(
-                        board_composition_and_description
-                    ),
+                    "board_composition": board_composition,
+                    "board_composition_and_description": board_composition,
                     "signature": staff.get_html_signature,
                 }
             )

@@ -55,14 +55,14 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 )
                 order_staff_mail_subject = "{} - {}".format(settings.REPANIER_SETTINGS_GROUP_NAME, permanence)
 
-                board_composition, board_composition_and_description = get_board_composition(permanence.id)
+                board_composition = permanence.get_html_board_composition()
 
                 template = Template(order_staff_mail)
                 context = TemplateContext({
                     'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                    'board_composition': mark_safe(board_composition),
-                    'board_composition_and_description': mark_safe(board_composition_and_description),
+                    'board_composition': board_composition,
+                    'board_composition_and_description': board_composition,
                     'signature': order_responsible.get_html_signature
                 })
                 html_body = template.render(context)
