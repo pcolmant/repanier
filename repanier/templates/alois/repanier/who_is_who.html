@@ -5,15 +5,7 @@
         <div class="row">
             <div class="col">
                 {% for staff in staff_list %}
-                    <b>{{ staff.long_name }}</b>{% if staff.customer_responsible %} :
-                    {% if staff.customer_responsible.long_basket_name %}
-                        {{ staff.customer_responsible.long_basket_name }}
-                    {% else %}
-                        {{ staff.customer_responsible.short_basket_name }}
-                    {% endif %}
-                    ({{ staff.customer_responsible.get_phone1 }})
-                {% endif %}
-                    <br>
+                    {{ staff.get_str_member }}<br>
                 {% endfor %}
                 <br>
                 <div class="row">
