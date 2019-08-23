@@ -45,17 +45,21 @@ def sint(str_val, default_val=0):
 
 
 if settings.DEBUG:
+
     def debug_parameters(func):
         @wraps(func)
         def func_wrapper(*args, **kwargs):
             logger.debug("__module__ %s", func_wrapper.__module__)
             logger.debug("__name__ %s", func_wrapper.__name__)
-            logger.debug('Must-have arguments are: %s', list(args))
-            logger.debug('Optional arguments are: %s', kwargs)
+            logger.debug("Must-have arguments are: %s", list(args))
+            logger.debug("Optional arguments are: %s", kwargs)
             return func(*args, **kwargs)
 
         return func_wrapper
+
+
 else:
+
     def debug_parameters(func):
         def func_wrapper(*args, **kwargs):
             return func(*args, **kwargs)
@@ -64,27 +68,15 @@ else:
 
 
 def get_admin_template_name(template_name):
-    return os.path.join(
-        settings.REPANIER_SETTINGS_TEMPLATE,
-        "admin",
-        template_name
-    )
+    return os.path.join(settings.REPANIER_SETTINGS_TEMPLATE, "admin", template_name)
 
 
 def get_repanier_template_name(template_name):
-    return os.path.join(
-        settings.REPANIER_SETTINGS_TEMPLATE,
-        "repanier",
-        template_name
-    )
+    return os.path.join(settings.REPANIER_SETTINGS_TEMPLATE, "repanier", template_name)
 
 
 def get_repanier_static_name(template_name):
-    return os.path.join(
-        "repanier",
-        settings.REPANIER_SETTINGS_TEMPLATE,
-        template_name
-    )
+    return os.path.join("repanier", settings.REPANIER_SETTINGS_TEMPLATE, template_name)
 
 
 def next_row(query_iterator):
@@ -100,47 +92,25 @@ def send_sms(sms_nr=None, sms_msg=None):
         if sms_nr is not None and sms_msg is not None:
             valid_nr = "0"
             i = 0
-            while i < len(sms_nr) and not sms_nr[i] == '4':
+            while i < len(sms_nr) and not sms_nr[i] == "4":
                 i += 1
             while i < len(sms_nr):
-                if '0' <= sms_nr[i] <= '9':
+                if "0" <= sms_nr[i] <= "9":
                     valid_nr += sms_nr[i]
                 i += 1
             if len(valid_nr) == 10:
                 if settings.REPANIER_SETTINGS_SMS_GATEWAY_MAIL:
                     from repanier.email.email import RepanierEmail
+
                     # Send SMS with free gateway : Sms Gateway - Android.
                     email = RepanierEmail(
                         valid_nr,
                         html_body=sms_msg,
-                        to=[settings.REPANIER_SETTINGS_SMS_GATEWAY_MAIL, ]
+                        to=[settings.REPANIER_SETTINGS_SMS_GATEWAY_MAIL],
                     )
                     email.send_email()
     except:
         pass
-
-
-def get_board_composition(permanence_id):
-    from repanier.models.permanenceboard import PermanenceBoard
-
-    board_composition = const.EMPTY_STRING
-    board_composition_and_description = const.EMPTY_STRING
-    for permanenceboard in PermanenceBoard.objects.filter(
-            permanence=permanence_id).order_by(
-        "permanence_role__tree_id",
-        "permanence_role__lft"
-    ):
-        r = permanenceboard.permanence_role
-        c = permanenceboard.customer
-        if c is not None:
-            # Do not show phone2 nor email2
-            member = "<b>{}</b> : <b>{}</b>{}{}<br>".format(
-                r.short_name, c.long_basket_name, c.get_phone1(prefix=", "), c.get_email1(prefix=", ")
-            )
-            board_composition += member
-            board_composition_and_description += "{}{}<br>".format(member, r.description)
-
-    return mark_safe(board_composition), mark_safe(board_composition_and_description)
 
 
 LENGTH_BY_PREFIX = [
@@ -160,7 +130,7 @@ def codepoint_length(first_byte):
             return length
         elif first_byte & 0xF8 == 0xF8:
             return length
-    assert False, 'Invalid byte %r' % first_byte
+    assert False, "Invalid byte %r" % first_byte
 
 
 def cap_to_bytes_length(unicode_text, byte_limit):
@@ -170,7 +140,7 @@ def cap_to_bytes_length(unicode_text, byte_limit):
         step = codepoint_length(ord(utf8_bytes[cut_index]))
         if cut_index + step > byte_limit:
             # can't go a whole codepoint further, time to cut
-            return utf8_bytes[:cut_index] + '...'
+            return utf8_bytes[:cut_index] + "..."
         else:
             cut_index += step
     return utf8_bytes
@@ -180,7 +150,7 @@ def cap(s, l):
     if s is not None:
         if not isinstance(s, string_types):
             s = str(s)
-        s = s if len(s) <= l else s[0:l - 4] + '...'
+        s = s if len(s) <= l else s[0 : l - 4] + "..."
         return s
     else:
         return
@@ -189,11 +159,19 @@ def cap(s, l):
 def permanence_ok_or_404(permanence):
     if permanence is None:
         raise Http404
-    if permanence.status not in [const.PERMANENCE_OPENED, const.PERMANENCE_CLOSED, const.PERMANENCE_SEND]:
+    if permanence.status not in [
+        const.PERMANENCE_OPENED,
+        const.PERMANENCE_CLOSED,
+        const.PERMANENCE_SEND,
+    ]:
         if permanence.status in [const.PERMANENCE_INVOICED, const.PERMANENCE_ARCHIVED]:
-            if permanence.permanence_date < (
-                    timezone.now() - datetime.timedelta(weeks=const.LIMIT_DISPLAYED_PERMANENCE)
-            ).date():
+            if (
+                permanence.permanence_date
+                < (
+                    timezone.now()
+                    - datetime.timedelta(weeks=const.LIMIT_DISPLAYED_PERMANENCE)
+                ).date()
+            ):
                 raise Http404
         else:
             raise Http404
@@ -228,45 +206,48 @@ def get_base_unit(order_unit, qty=0):
         if qty == const.DECIMAL_ZERO:
             base_unit = const.EMPTY_STRING
         else:
-            base_unit = _('kg')
+            base_unit = _("kg")
     elif order_unit == const.PRODUCT_ORDER_UNIT_LT:
         if qty == const.DECIMAL_ZERO:
             base_unit = const.EMPTY_STRING
         else:
-            base_unit = _('l')
+            base_unit = _("l")
     else:
         if qty == const.DECIMAL_ZERO:
             base_unit = const.EMPTY_STRING
         elif qty < 2:
-            base_unit = _('piece')
+            base_unit = _("piece")
         else:
-            base_unit = _('pieces')
+            base_unit = _("pieces")
     return base_unit
 
 
 def payment_message(customer, permanence):
     from repanier.models.invoice import CustomerInvoice
 
-    customer_invoice = CustomerInvoice.objects.filter(
-        customer_id=customer.id,
-        permanence_id=permanence.id
-    ).order_by('?').first()
+    customer_invoice = (
+        CustomerInvoice.objects.filter(
+            customer_id=customer.id, permanence_id=permanence.id
+        )
+        .order_by("?")
+        .first()
+    )
 
     total_price_with_tax = customer_invoice.get_total_price_with_tax()
-    customer_order_amount = \
-        _('The amount of your order is %(amount)s.') % {
-            'amount': total_price_with_tax
-        }
+    customer_order_amount = _("The amount of your order is %(amount)s.") % {
+        "amount": total_price_with_tax
+    }
     if customer.balance.amount != const.DECIMAL_ZERO:
         if customer.balance.amount < const.DECIMAL_ZERO:
-            balance = "<font color=\"#bd0926\">{}</font>".format(customer.balance)
+            balance = '<font color="#bd0926">{}</font>'.format(customer.balance)
         else:
             balance = "{}".format(customer.balance)
-        customer_last_balance = \
-            _('The balance of your account as of %(date)s is %(balance)s.') % {
-                'date': customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
-                'balance': balance
-            }
+        customer_last_balance = _(
+            "The balance of your account as of %(date)s is %(balance)s."
+        ) % {
+            "date": customer.date_balance.strftime(settings.DJANGO_SETTINGS_DATE),
+            "balance": balance,
+        }
     else:
         customer_last_balance = const.EMPTY_STRING
 
@@ -274,9 +255,9 @@ def payment_message(customer, permanence):
         customer_on_hold_movement = const.EMPTY_STRING
         customer_payment_needed = '<font color="#51a351">{}</font>'.format(
             _(
-                'Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments.') % {
-                'name': customer_invoice.customer_charged.long_basket_name
-            }
+                "Invoices for this delivery point are sent to %(name)s who is responsible for collecting the payments."
+            )
+            % {"name": customer_invoice.customer_charged.long_basket_name}
         )
     else:
         bank_not_invoiced = customer.get_bank_not_invoiced()
@@ -286,7 +267,9 @@ def payment_message(customer, permanence):
             bank_not_invoiced, order_not_invoiced, total_price_with_tax
         )
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            payment_needed = - (customer.balance - order_not_invoiced + bank_not_invoiced)
+            payment_needed = -(
+                customer.balance - order_not_invoiced + bank_not_invoiced
+            )
         else:
             payment_needed = total_price_with_tax
 
@@ -294,30 +277,40 @@ def payment_message(customer, permanence):
         if bank_account_number is not None:
             if payment_needed.amount > const.DECIMAL_ZERO:
                 if permanence.short_name:
-                    communication = "{} ({})".format(customer.short_basket_name, permanence.short_name)
+                    communication = "{} ({})".format(
+                        customer.short_basket_name, permanence.short_name
+                    )
                 else:
                     communication = customer.short_basket_name
                 group_name = settings.REPANIER_SETTINGS_GROUP_NAME
                 customer_payment_needed = '<br><font color="#bd0926">{}</font>'.format(
                     _(
-                        'Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s.') % {
-                        'payment': payment_needed,
-                        'name': group_name,
-                        'number': bank_account_number,
-                        'communication': communication
+                        "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+                    )
+                    % {
+                        "payment": payment_needed,
+                        "name": group_name,
+                        "number": bank_account_number,
+                        "communication": communication,
                     }
                 )
 
             else:
                 if customer.balance.amount != const.DECIMAL_ZERO:
                     customer_payment_needed = '<br><font color="#51a351">{}.</font>'.format(
-                        _('Your account balance is sufficient'))
+                        _("Your account balance is sufficient")
+                    )
                 else:
                     customer_payment_needed = const.EMPTY_STRING
         else:
             customer_payment_needed = const.EMPTY_STRING
 
-    return customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount
+    return (
+        customer_last_balance,
+        customer_on_hold_movement,
+        customer_payment_needed,
+        customer_order_amount,
+    )
 
 
 def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
@@ -340,17 +333,21 @@ def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
                         label = _("Sold out")
             else:
                 label = _("Closed")
-            html = "<option value=\"0\" selected>{}</option>".format(label)
+            html = '<option value="0" selected>{}</option>'.format(label)
 
         else:
-            unit_price_amount = offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
+            unit_price_amount = (
+                offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
+            )
             display = offer_item.get_display(
                 qty=quantity_ordered,
                 order_unit=offer_item.order_unit,
                 unit_price_amount=unit_price_amount,
-                for_order_select=True
+                for_order_select=True,
             )
-            html = "<option value=\"{}\" selected>{}</option>".format(quantity_ordered, display)
+            html = '<option value="{}" selected>{}</option>'.format(
+                quantity_ordered, display
+            )
     else:
         html = const.EMPTY_STRING
     return mark_safe(html)
@@ -363,29 +360,41 @@ def get_html_selected_box_value(offer_item, quantity_ordered):
             qty=quantity_ordered,
             order_unit=offer_item.order_unit,
             for_order_select=True,
-            without_price_display=True
+            without_price_display=True,
         )
     else:
         qty_display = "---"
-    return mark_safe("<option value=\"0\" selected>☑ {} {}</option>".format(
-        qty_display, const.BOX_UNICODE
-    ))
+    return mark_safe(
+        '<option value="0" selected>☑ {} {}</option>'.format(
+            qty_display, const.BOX_UNICODE
+        )
+    )
 
 
 def create_or_update_one_purchase(
-        customer_id, offer_item,
-        status, q_order=None,
-        batch_job=False, is_box_content=False, comment=None):
+    customer_id,
+    offer_item,
+    status,
+    q_order=None,
+    batch_job=False,
+    is_box_content=False,
+    comment=None,
+):
     from repanier.models.purchase import Purchase
     from repanier.models.invoice import CustomerInvoice
+
     # The batch_job flag is used because we need to forbid
     # customers to add purchases during the close_orders_async or other batch_job process
     # when the status is PERMANENCE_WAIT_FOR_SEND
-    purchase = Purchase.objects.filter(
-        customer_id=customer_id,
-        offer_item_id=offer_item.id,
-        is_box_content=is_box_content
-    ).order_by('?').first()
+    purchase = (
+        Purchase.objects.filter(
+            customer_id=customer_id,
+            offer_item_id=offer_item.id,
+            is_box_content=is_box_content,
+        )
+        .order_by("?")
+        .first()
+    )
     if batch_job:
         if purchase is None:
             purchase = Purchase.objects.create(
@@ -393,11 +402,15 @@ def create_or_update_one_purchase(
                 offer_item_id=offer_item.id,
                 producer_id=offer_item.producer_id,
                 customer_id=customer_id,
-                quantity_ordered=q_order if status < const.PERMANENCE_SEND else const.DECIMAL_ZERO,
-                quantity_invoiced=q_order if status >= const.PERMANENCE_SEND else const.DECIMAL_ZERO,
+                quantity_ordered=q_order
+                if status < const.PERMANENCE_SEND
+                else const.DECIMAL_ZERO,
+                quantity_invoiced=q_order
+                if status >= const.PERMANENCE_SEND
+                else const.DECIMAL_ZERO,
                 is_box_content=is_box_content,
                 status=status,
-                comment=comment
+                comment=comment,
             )
         else:
             purchase.set_comment(comment)
@@ -408,27 +421,39 @@ def create_or_update_one_purchase(
             purchase.save()
         return purchase, True
     else:
-        permanence_is_opened = CustomerInvoice.objects.filter(
-            permanence_id=offer_item.permanence_id,
-            customer_id=customer_id,
-            status=status
-        ).order_by('?').exists()
+        permanence_is_opened = (
+            CustomerInvoice.objects.filter(
+                permanence_id=offer_item.permanence_id,
+                customer_id=customer_id,
+                status=status,
+            )
+            .order_by("?")
+            .exists()
+        )
         if permanence_is_opened:
             if offer_item.limit_order_quantity_to_stock:
                 if purchase is not None:
                     q_previous_order = purchase.quantity_ordered
                 else:
                     q_previous_order = const.DECIMAL_ZERO
-                q_alert = offer_item.stock - offer_item.quantity_invoiced + q_previous_order
+                q_alert = (
+                    offer_item.stock - offer_item.quantity_invoiced + q_previous_order
+                )
                 if is_box_content and q_alert < q_order:
                     # Select one purchase
-                    non_box_purchase = Purchase.objects.filter(
-                        customer_id=customer_id,
-                        offer_item_id=offer_item.id,
-                        is_box_content=False
-                    ).order_by('?').first()
+                    non_box_purchase = (
+                        Purchase.objects.filter(
+                            customer_id=customer_id,
+                            offer_item_id=offer_item.id,
+                            is_box_content=False,
+                        )
+                        .order_by("?")
+                        .first()
+                    )
                     if non_box_purchase is not None:
-                        tbd_qty = min(q_order - q_alert, non_box_purchase.quantity_ordered)
+                        tbd_qty = min(
+                            q_order - q_alert, non_box_purchase.quantity_ordered
+                        )
                         tbk_qty = non_box_purchase.quantity_ordered - tbd_qty
                         non_box_purchase.quantity_ordered = tbk_qty
                         non_box_purchase.save()
@@ -441,7 +466,10 @@ def create_or_update_one_purchase(
             if purchase is not None:
                 purchase.set_comment(comment)
                 if q_order <= q_alert:
-                    if not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER or purchase.quantity_confirmed <= q_order:
+                    if (
+                        not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+                        or purchase.quantity_confirmed <= q_order
+                    ):
                         purchase.quantity_ordered = q_order
                         purchase.save()
                     else:
@@ -459,7 +487,7 @@ def create_or_update_one_purchase(
                     quantity_invoiced=const.DECIMAL_ZERO,
                     is_box_content=is_box_content,
                     status=status,
-                    comment=comment
+                    comment=comment,
                 )
             return purchase, True
         else:
@@ -467,15 +495,20 @@ def create_or_update_one_purchase(
 
 
 @transaction.atomic
-def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_id=None,
-                                   batch_job=False, comment=None):
+def create_or_update_one_cart_item(
+    customer, offer_item_id, q_order=None, value_id=None, batch_job=False, comment=None
+):
     from repanier.models.box import BoxContent
     from repanier.models.offeritem import OfferItem
     from repanier.models.purchase import Purchase
 
-    offer_item = OfferItem.objects.select_for_update(nowait=False) \
-        .filter(id=offer_item_id, is_active=True, may_order=True) \
-        .order_by('?').select_related("producer").first()
+    offer_item = (
+        OfferItem.objects.select_for_update(nowait=False)
+        .filter(id=offer_item_id, is_active=True, may_order=True)
+        .order_by("?")
+        .select_related("producer")
+        .first()
+    )
     if offer_item is not None:
         if q_order is None:
             # Transform value_id into a q_order.
@@ -503,11 +536,15 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
         is_box_updated = True
         if offer_item.is_box:
             # Select one purchase
-            purchase = Purchase.objects.filter(
-                customer_id=customer.id,
-                offer_item_id=offer_item.id,
-                is_box_content=False
-            ).order_by('?').first()
+            purchase = (
+                Purchase.objects.filter(
+                    customer_id=customer.id,
+                    offer_item_id=offer_item.id,
+                    is_box_content=False,
+                )
+                .order_by("?")
+                .first()
+            )
             if purchase is not None:
                 delta_q_order = q_order - purchase.quantity_ordered
             else:
@@ -515,24 +552,36 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
             with transaction.atomic():
                 sid = transaction.savepoint()
                 # This code executes inside a transaction.
-                for content in BoxContent.objects.filter(
-                        box=offer_item.product_id
-                ).only(
-                    "product_id", "content_quantity"
-                ).order_by('?'):
-                    box_offer_item = OfferItem.objects.filter(
-                        product_id=content.product_id,
-                        permanence_id=offer_item.permanence_id
-                    ).order_by('?').select_related("producer").first()
+                for content in (
+                    BoxContent.objects.filter(box=offer_item.product_id)
+                    .only("product_id", "content_quantity")
+                    .order_by("?")
+                ):
+                    box_offer_item = (
+                        OfferItem.objects.filter(
+                            product_id=content.product_id,
+                            permanence_id=offer_item.permanence_id,
+                        )
+                        .order_by("?")
+                        .select_related("producer")
+                        .first()
+                    )
                     if box_offer_item is not None:
                         # Select one purchase
-                        purchase = Purchase.objects.filter(
-                            customer_id=customer.id,
-                            offer_item_id=box_offer_item.id,
-                            is_box_content=True
-                        ).order_by('?').first()
+                        purchase = (
+                            Purchase.objects.filter(
+                                customer_id=customer.id,
+                                offer_item_id=box_offer_item.id,
+                                is_box_content=True,
+                            )
+                            .order_by("?")
+                            .first()
+                        )
                         if purchase is not None:
-                            quantity_ordered = purchase.quantity_ordered + delta_q_order * content.content_quantity
+                            quantity_ordered = (
+                                purchase.quantity_ordered
+                                + delta_q_order * content.content_quantity
+                            )
                         else:
                             quantity_ordered = delta_q_order * content.content_quantity
                         if quantity_ordered < const.DECIMAL_ZERO:
@@ -542,8 +591,9 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                             offer_item=box_offer_item,
                             status=const.PERMANENCE_OPENED,
                             q_order=quantity_ordered,
-                            batch_job=batch_job, is_box_content=True,
-                            comment=const.EMPTY_STRING
+                            batch_job=batch_job,
+                            is_box_content=True,
+                            comment=const.EMPTY_STRING,
                         )
                     else:
                         is_box_updated = False
@@ -558,36 +608,46 @@ def create_or_update_one_cart_item(customer, offer_item_id, q_order=None, value_
                 customer_id=customer.id,
                 offer_item=offer_item,
                 status=const.PERMANENCE_OPENED,
-                q_order=q_order, batch_job=batch_job,
-                is_box_content=False, comment=comment
+                q_order=q_order,
+                batch_job=batch_job,
+                is_box_content=False,
+                comment=comment,
             )
         elif not batch_job:
             # Select one purchase
-            purchase = Purchase.objects.filter(
-                customer_id=customer.id,
-                offer_item_id=offer_item.id,
-                is_box_content=False
-            ).order_by('?').first()
+            purchase = (
+                Purchase.objects.filter(
+                    customer_id=customer.id,
+                    offer_item_id=offer_item.id,
+                    is_box_content=False,
+                )
+                .order_by("?")
+                .first()
+            )
             return purchase, False
 
 
 def my_basket(is_order_confirm_send, order_amount):
     if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
-        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and not is_order_confirm_send:
+        if (
+            settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+            and not is_order_confirm_send
+        ):
             if order_amount.amount <= const.DECIMAL_ZERO:
                 msg_confirm = const.EMPTY_STRING
             else:
-                msg_confirm = "<span class=\"glyphicon glyphicon-exclamation-sign\"></span>&nbsp;<span class=\"glyphicon glyphicon-floppy-remove\"></span>"
+                msg_confirm = '<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;<span class="glyphicon glyphicon-floppy-remove"></span>'
             msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
-                order_amount=order_amount,
-                msg_confirm=msg_confirm
+                order_amount=order_amount, msg_confirm=msg_confirm
             )
         else:
             if order_amount.amount <= const.DECIMAL_ZERO:
                 msg_confirm = cart_content = const.EMPTY_STRING
             else:
                 msg_confirm = '<span class="glyphicon glyphicon-ok"></span>'
-                cart_content = '<div class="cart-line-3" style="background-color: #E5E9EA"></div>'
+                cart_content = (
+                    '<div class="cart-line-3" style="background-color: #E5E9EA"></div>'
+                )
             msg_html = """
             <div class="icon-cart" style="float: left">
                 <div class="cart-line-1" style="background-color: #fff"></div>
@@ -599,21 +659,22 @@ def my_basket(is_order_confirm_send, order_amount):
                 """.format(
                 cart_content=cart_content,
                 order_amount=order_amount,
-                msg_confirm=msg_confirm
+                msg_confirm=msg_confirm,
             )
         json_dict = {"#my_basket": msg_html}
         msg_html = "{order_amount}&nbsp;&nbsp;&nbsp;{msg_confirm}".format(
-            order_amount=order_amount,
-            msg_confirm=msg_confirm
+            order_amount=order_amount, msg_confirm=msg_confirm
         )
         json_dict["#prepared_amount_visible_xs"] = msg_html
     else:
-        if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER and not is_order_confirm_send:
+        if (
+            settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
+            and not is_order_confirm_send
+        ):
             msg_html = """
             {order_amount} <span class="badge">{to_confirm}</span>
             """.format(
-                order_amount=order_amount,
-                to_confirm=_("to confirm")
+                order_amount=order_amount, to_confirm=_("to confirm")
             )
         else:
             msg_html = """
@@ -629,7 +690,9 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
     if permanence.status > const.PERMANENCE_SEND:
         # The purchases are already invoiced.
         # The offer item may not be modified any more
-        raise ValueError("Not offer item may be created when permanece status > PERMANENCE_SEND")
+        raise ValueError(
+            "Not offer item may be created when permanece status > PERMANENCE_SEND"
+        )
     for offer_item in queryset.select_related("producer", "product"):
         product = offer_item.product
         producer = offer_item.producer
@@ -639,8 +702,16 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         offer_item.producer_pre_opening = producer.producer_pre_opening
         offer_item.manage_production = producer.represent_this_buyinggroup
         # Those offer_items not subjects to price modifications
-        offer_item.is_resale_price_fixed = producer.is_resale_price_fixed or product.is_box or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
-        offer_item.price_list_multiplier = const.DECIMAL_ONE if offer_item.is_resale_price_fixed else producer.price_list_multiplier
+        offer_item.is_resale_price_fixed = (
+            producer.is_resale_price_fixed
+            or product.is_box
+            or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
+        )
+        offer_item.price_list_multiplier = (
+            const.DECIMAL_ONE
+            if offer_item.is_resale_price_fixed
+            else producer.price_list_multiplier
+        )
 
         offer_item.may_order = False
         offer_item.manage_replenishment = False
@@ -672,14 +743,18 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
     template_cache_part_b = get_repanier_template_name("cache_part_b.html")
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         translation.activate(language["code"])
-        for offer_item in queryset.select_related("producer", "department_for_customer"):
+        for offer_item in queryset.select_related(
+            "producer", "department_for_customer"
+        ):
             offer_item.long_name = offer_item.product.long_name
             offer_item.cache_part_a = render_to_string(
                 template_cache_part_a,
-                {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
+                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+            )
             offer_item.cache_part_b = render_to_string(
                 template_cache_part_b,
-                {'offer': offer_item, 'MEDIA_URL': settings.MEDIA_URL})
+                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+            )
             offer_item.save_translations()
 
     translation.activate(cur_language)
@@ -689,42 +764,45 @@ def reorder_purchases(permanence_id):
     from repanier.models.purchase import Purchase
 
     # Order the purchases such that lower quantity are before larger quantity
-    Purchase.objects.filter(
-        permanence_id=permanence_id
-    ).update(
+    Purchase.objects.filter(permanence_id=permanence_id).update(
         quantity_for_preparation_sort_order=const.DECIMAL_ZERO
     )
     Purchase.objects.filter(
         permanence_id=permanence_id,
         offer_item__wrapped=False,
-        offer_item__order_unit__in=[const.PRODUCT_ORDER_UNIT_KG, const.PRODUCT_ORDER_UNIT_PC_KG]
-    ).update(
-        quantity_for_preparation_sort_order=F('quantity_invoiced')
-    )
+        offer_item__order_unit__in=[
+            const.PRODUCT_ORDER_UNIT_KG,
+            const.PRODUCT_ORDER_UNIT_PC_KG,
+        ],
+    ).update(quantity_for_preparation_sort_order=F("quantity_invoiced"))
 
 
 def reorder_offer_items(permanence_id):
     from repanier.models.offeritem import OfferItemWoReceiver
+
     # calculate the sort order of the order display screen
     cur_language = translation.get_language()
-    offer_item_qs = OfferItemWoReceiver.objects.filter(permanence_id=permanence_id).order_by('?')
+    offer_item_qs = OfferItemWoReceiver.objects.filter(
+        permanence_id=permanence_id
+    ).order_by("?")
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         language_code = language["code"]
         translation.activate(language_code)
 
         i = 0
         reorder_queryset = offer_item_qs.filter(
-            is_box=False,
-            translations__language_code=language_code
+            is_box=False, translations__language_code=language_code
         ).order_by(
             "department_for_customer",
             "translations__long_name",
             "order_average_weight",
             "producer__short_profile_name",
-            "permanences_dates_order"
+            "permanences_dates_order",
         )
         for offer_item in reorder_queryset:
-            offer_item.producer_sort_order = offer_item.order_sort_order = offer_item.preparation_sort_order = i
+            offer_item.producer_sort_order = (
+                offer_item.order_sort_order
+            ) = offer_item.preparation_sort_order = i
             offer_item.save_translations()
             if i < 9999:
                 i += 1
@@ -733,11 +811,8 @@ def reorder_offer_items(permanence_id):
         reorder_queryset = offer_item_qs.filter(
             is_box=False,
             producer__sort_products_by_reference=True,
-            translations__language_code=language_code
-        ).order_by(
-            "department_for_customer",
-            "reference"
-        )
+            translations__language_code=language_code,
+        ).order_by("department_for_customer", "reference")
         for offer_item in reorder_queryset:
             offer_item.producer_sort_order = i
             offer_item.save_translations()
@@ -746,18 +821,19 @@ def reorder_offer_items(permanence_id):
         # preparation lists sort order
         i = -9999
         reorder_queryset = offer_item_qs.filter(
-            is_box=True,
-            translations__language_code=language_code
+            is_box=True, translations__language_code=language_code
         ).order_by(
             "customer_unit_price",
             # "department_for_customer__lft",
             "unit_deposit",
-            "translations__long_name"
+            "translations__long_name",
         )
         # 'TranslatableQuerySet' object has no attribute 'desc'
         for offer_item in reorder_queryset:
             # display box on top
-            offer_item.producer_sort_order = offer_item.order_sort_order = offer_item.preparation_sort_order = i
+            offer_item.producer_sort_order = (
+                offer_item.order_sort_order
+            ) = offer_item.preparation_sort_order = i
             offer_item.save_translations()
             if i < -1:
                 i += 1
@@ -770,19 +846,21 @@ def update_offer_item(product_id=None, producer_id=None):
 
     # The user can modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
     for permanence in Permanence.objects.filter(
-            status__in=[const.PERMANENCE_PLANNED, const.PERMANENCE_PRE_OPEN, const.PERMANENCE_OPENED,
-                        const.PERMANENCE_CLOSED]
+        status__in=[
+            const.PERMANENCE_PLANNED,
+            const.PERMANENCE_PRE_OPEN,
+            const.PERMANENCE_OPENED,
+            const.PERMANENCE_CLOSED,
+        ]
     ):
         if producer_id is None:
             offer_item_qs = OfferItem.objects.filter(
-                permanence_id=permanence.id,
-                product_id=product_id,
-            ).order_by('?')
+                permanence_id=permanence.id, product_id=product_id
+            ).order_by("?")
         else:
             offer_item_qs = OfferItem.objects.filter(
-                permanence_id=permanence.id,
-                producer_id=producer_id,
-            ).order_by('?')
+                permanence_id=permanence.id, producer_id=producer_id
+            ).order_by("?")
         clean_offer_item(permanence, offer_item_qs)
         permanence.recalculate_order_amount(offer_item_qs=offer_item_qs)
     cache.clear()
@@ -793,10 +871,10 @@ def web_services_activated(reference_site=None):
     version = None
     if reference_site:
         try:
-            url = urljoin(reference_site, reverse('version_rest'))
+            url = urljoin(reference_site, reverse("version_rest"))
             web_services = urlopen(url, timeout=0.5)
             rest_as_json = json.load(reader(web_services))
-            if rest_as_json['version'] == '1':
+            if rest_as_json["version"] == "1":
                 activated = True
                 version = 1
         except:
@@ -808,41 +886,42 @@ def get_html_basket_message(customer, permanence, status):
     invoice_msg = const.EMPTY_STRING
     payment_msg = const.EMPTY_STRING
     customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
-        customer, permanence)
+        customer, permanence
+    )
     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING and customer_last_balance:
         invoice_msg = "<br>{} {}".format(
-            customer_last_balance,
-            customer_on_hold_movement
+            customer_last_balance, customer_on_hold_movement
         )
     if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None:
-        payment_msg = "<br>{}".format(
-            customer_payment_needed
-        )
+        payment_msg = "<br>{}".format(customer_payment_needed)
 
     if status == const.PERMANENCE_OPENED:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             if permanence.with_delivery_point:
                 you_can_change = _(
-                    "You can increase the order quantities as long as the orders are open for your delivery point.")
+                    "You can increase the order quantities as long as the orders are open for your delivery point."
+                )
             else:
-                you_can_change = _("You can increase the order quantities as long as the orders are open.")
+                you_can_change = _(
+                    "You can increase the order quantities as long as the orders are open."
+                )
         else:
             if permanence.with_delivery_point:
                 you_can_change = _(
-                    "You can change the order quantities as long as the orders are open for your delivery point.")
+                    "You can change the order quantities as long as the orders are open for your delivery point."
+                )
             else:
-                you_can_change = _("You can change the order quantities as long as the orders are open.")
+                you_can_change = _(
+                    "You can change the order quantities as long as the orders are open."
+                )
     else:
         if permanence.with_delivery_point:
-            you_can_change = _('The orders are closed for your delivery point.')
+            you_can_change = _("The orders are closed for your delivery point.")
         else:
-            you_can_change = _('The orders are closed.')
+            you_can_change = _("The orders are closed.")
 
     basket_message = "{}{}{}<br>{}".format(
-        customer_order_amount,
-        invoice_msg,
-        payment_msg,
-        you_can_change
+        customer_order_amount, invoice_msg, payment_msg, you_can_change
     )
     return mark_safe(basket_message)
 
@@ -852,52 +931,65 @@ def html_box_content(offer_item, user):
     from repanier.models.offeritem import OfferItemWoReceiver
 
     box_id = offer_item.product_id
-    box_products = list(BoxContent.objects.filter(
-        box_id=box_id
-    ).values_list(
-        'product_id', flat=True
-    ).order_by('?'))
+    box_products = list(
+        BoxContent.objects.filter(box_id=box_id)
+        .values_list("product_id", flat=True)
+        .order_by("?")
+    )
     if len(box_products) > 0:
-        box_offer_items_qs = OfferItemWoReceiver.objects.filter(
-            permanence_id=offer_item.permanence_id,
-            product_id__in=box_products,
-            translations__language_code=translation.get_language()
-        ).order_by(
-            "translations__order_sort_order"
-        ).select_related("producer")
+        box_offer_items_qs = (
+            OfferItemWoReceiver.objects.filter(
+                permanence_id=offer_item.permanence_id,
+                product_id__in=box_products,
+                translations__language_code=translation.get_language(),
+            )
+            .order_by("translations__order_sort_order")
+            .select_related("producer")
+        )
         box_products_description = []
         for box_offer_item in box_offer_items_qs:
             box_products_description.append(
                 format_html(
                     '<li>{} * {}, {} <span class="btn_like{}" style="cursor: pointer;">{}</span></li>',
-                    mark_safe(box_offer_item.get_display(
-                        qty=BoxContent.objects.filter(box_id=box_id, product_id=box_offer_item.product_id).only(
-                            "content_quantity").order_by('?').first().content_quantity,
-                        order_unit=box_offer_item.order_unit,
-                        without_price_display=True)),
+                    mark_safe(
+                        box_offer_item.get_display(
+                            qty=BoxContent.objects.filter(
+                                box_id=box_id, product_id=box_offer_item.product_id
+                            )
+                            .only("content_quantity")
+                            .order_by("?")
+                            .first()
+                            .content_quantity,
+                            order_unit=box_offer_item.order_unit,
+                            without_price_display=True,
+                        )
+                    ),
                     box_offer_item.long_name,
                     box_offer_item.producer.short_profile_name,
                     box_offer_item.id,
-                    mark_safe(box_offer_item.get_like(user))
+                    mark_safe(box_offer_item.get_like(user)),
                 )
             )
         return format_html(
-            '<ul>{}</ul>',
-            mark_safe(const.EMPTY_STRING.join(box_products_description))
+            "<ul>{}</ul>", mark_safe(const.EMPTY_STRING.join(box_products_description))
         )
     return const.EMPTY_STRING
 
 
-def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form_instance):
+def rule_of_3_reload_purchase(
+    customer, offer_item, purchase_form, purchase_form_instance
+):
     from repanier.models.purchase import Purchase
 
     purchase_form.repanier_is_valid = True
     # Reload purchase, because it has maybe be deleted
-    purchase = Purchase.objects.filter(
-        customer_id=customer.id,
-        offer_item_id=offer_item.id,
-        is_box_content=False
-    ).order_by('?').first()
+    purchase = (
+        Purchase.objects.filter(
+            customer_id=customer.id, offer_item_id=offer_item.id, is_box_content=False
+        )
+        .order_by("?")
+        .first()
+    )
     if purchase is None:
         # Doesn't exists ? Create one
         purchase = Purchase.objects.create(
@@ -909,7 +1001,7 @@ def rule_of_3_reload_purchase(customer, offer_item, purchase_form, purchase_form
             quantity_invoiced=const.DECIMAL_ZERO,
             comment=purchase_form_instance.comment,
             is_box_content=False,
-            status=const.PERMANENCE_SEND
+            status=const.PERMANENCE_SEND,
         )
     # And set the form's values
     purchase.quantity_invoiced = purchase_form_instance.quantity_invoiced
@@ -925,12 +1017,7 @@ def get_recurrence_dates(first_date, recurrences):
     d_start = first_date
     dt_start = new_datetime(d_start)
     dt_end = new_datetime(d_start + datetime.timedelta(days=const.ONE_YEAR))
-    occurrences = recurrences.between(
-        dt_start,
-        dt_end,
-        dtstart=dt_start,
-        inc=True
-    )
+    occurrences = recurrences.between(dt_start, dt_end, dtstart=dt_start, inc=True)
     for occurrence in occurrences:
         dates.append(occurrence.date())
     return dates
@@ -943,4 +1030,6 @@ def round_gov_be(number):
     If the total amount to be paid ends with 3, 4, 6 or 7 cents, it is rounded to 0.05 euro.
     If the total amount to be paid ends with 8 or 9 cents, it is rounded up to 0.10 euro.
     """
-    return (number / const.DECIMAL_0_05).quantize(const.DECIMAL_ONE, rounding=const.ROUND_HALF_UP) * const.DECIMAL_0_05
+    return (number / const.DECIMAL_0_05).quantize(
+        const.DECIMAL_ONE, rounding=const.ROUND_HALF_UP
+    ) * const.DECIMAL_0_05
