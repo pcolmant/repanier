@@ -210,15 +210,17 @@ class Staff(MPTTModel, TranslatableModel):
         return to_email
 
     @property
-    def get_title(self):
+    def get_str_member(self):
         if self.customer_responsible is not None:
-            return "{} : {} ({})".format(
+            return "{} : {}{}".format(
                 self,
-                self.customer_responsible.long_basket_name,
-                self.customer_responsible.get_phone1(for_members=False),
+                self.customer_responsible.long_basket_name or self.customer_responsible,
+                self.customer_responsible.get_phone1(
+                    for_members=False, prefix=" (", postfix=")"
+                ),
             )
         else:
-            return "{}".format(self)
+            return self
 
     objects = StaffManager()
 
