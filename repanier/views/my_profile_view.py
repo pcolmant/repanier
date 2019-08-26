@@ -27,10 +27,6 @@ class CustomerForm(forms.Form):
     email1 = fields.EmailField(label=_('My main email address, used to reset the password and connect to the site'))
     email2 = fields.EmailField(label=_('My secondary email address (does not allow to connect to the site)'),
                                required=False)
-    show_mails_to_members = fields.BooleanField(
-        label=EMPTY_STRING, required=False,
-        widget=RepanierCheckboxWidget(label=_("I agree to show my email addresses in the \"who's who\""))
-    )
     subscribe_to_email = fields.BooleanField(
         label=EMPTY_STRING, required=False,
         widget=RepanierCheckboxWidget(label=_('I agree to receive mails from this site'))
@@ -71,7 +67,6 @@ class CustomerForm(forms.Form):
         self.request = kwargs.pop('request', None)
         super(CustomerForm, self).__init__(*args, **kwargs)
         if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-            self.fields["show_mails_to_members"].widget = HiddenInput()
             self.fields["show_phones_to_members"].widget = HiddenInput()
 
 
@@ -101,7 +96,6 @@ def my_profile_view(request):
                 customer.phone2 = form.cleaned_data.get('phone2')
                 customer.email2 = form.cleaned_data.get('email2').lower()
                 customer.show_phones_to_members = form.cleaned_data.get('show_phones_to_members')
-                customer.show_mails_to_members = form.cleaned_data.get('show_mails_to_members')
                 customer.subscribe_to_email = form.cleaned_data.get('subscribe_to_email')
                 customer.city = form.cleaned_data.get('city')
                 customer.address = form.cleaned_data.get('address')
@@ -152,8 +146,6 @@ def my_profile_view(request):
         field.initial = customer.email2
         field = form.fields["show_phones_to_members"]
         field.initial = customer.show_phones_to_members
-        field = form.fields["show_mails_to_members"]
-        field.initial = customer.show_mails_to_members
         field = form.fields["subscribe_to_email"]
         field.initial = customer.subscribe_to_email
         field = form.fields["city"]

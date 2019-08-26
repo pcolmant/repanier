@@ -78,12 +78,12 @@ class Customer(models.Model):
     city = models.CharField(_("City"), max_length=50, blank=True, default=EMPTY_STRING)
     about_me = models.TextField(_("About me"), blank=True, default=EMPTY_STRING)
     memo = models.TextField(_("Memo"), blank=True, default=EMPTY_STRING)
-    show_mails_to_members = models.BooleanField(
-        _("Show my mail to other members"), default=False
-    )
-    show_phones_to_members = models.BooleanField(
-        _("Show my phone to other members"), default=False
-    )
+    # show_mails_to_members = models.BooleanField(
+    #     _("Show my mail to other members"), default=False
+    # )
+    # show_phones_to_members = models.BooleanField(
+    #     _("Show my phone to other members"), default=False
+    # )
     membership_fee_valid_until = models.DateField(
         _("Membership fee valid until"), default=datetime.date.today
     )
@@ -249,25 +249,19 @@ class Customer(models.Model):
             return EMPTY_STRING
         return self.phone2 or EMPTY_STRING
 
-    def get_phones(self, for_members=True, sep=", "):
-        if for_members and not self.show_mails_to_members:
-            return EMPTY_STRING
+    def get_phones(self, sep=", "):
         return (
             sep.join([self.phone1, self.phone2, EMPTY_STRING])
             if self.phone2
             else sep.join([self.phone1, EMPTY_STRING])
         )
 
-    def get_email1(self, for_members=True, prefix=EMPTY_STRING):
-        if for_members and not self.show_mails_to_members:
-            return EMPTY_STRING
+    def get_email1(self, prefix=EMPTY_STRING):
         if not self.user.email:
             return EMPTY_STRING
         return "{}{}".format(prefix, self.user.email)
 
-    def get_emails(self, for_members=True, sep="; "):
-        if for_members and not self.show_mails_to_members:
-            return EMPTY_STRING
+    def get_emails(self, sep="; "):
         return (
             sep.join([self.user.email, self.email2, EMPTY_STRING])
             if self.email2
@@ -594,7 +588,6 @@ class Customer(models.Model):
         self.is_anonymized = True
         self.valid_email = False
         self.subscribe_to_email = False
-        self.show_mails_to_members = False
         self.show_phones_to_members = False
         self.save()
 

@@ -62,9 +62,8 @@
                                 {% if customer.show_phones_to_members %}{% trans "Phone" %} :
                                     {{ customer.get_phones }}
                                     <br>{% endif %}
-                                {% if customer.show_mails_to_members %}{% trans "Email" %} :
+                                {% trans "Email" %} :
                                     {{ customer.get_emails }}
-                                    {% endif %}
                             </div>
                         </div>
                     </div>
