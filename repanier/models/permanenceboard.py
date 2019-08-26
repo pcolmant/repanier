@@ -39,7 +39,7 @@ class PermanenceBoard(models.Model):
             self.permanence_role,
             self.customer.long_basket_name,
             self.customer.get_phone1(for_members=False, prefix=", ")
-            or self.customer.get_email1(for_members=False, prefix=", "),
+            or self.customer.get_email1(prefix=", "),
             self.permanence_role.safe_translation_getter(
                 "description", any_language=True, default=EMPTY_STRING
             ),
