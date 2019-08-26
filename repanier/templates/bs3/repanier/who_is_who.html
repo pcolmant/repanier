@@ -59,9 +59,9 @@
                             <div class="col-xs-10">
                                 {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
                                     <br>{% endif %}
-                                {% if customer.show_phones_to_members %}{% trans "Phone" %} :
+                                {% trans "Phone" %} :
                                     {{ customer.get_phones }}
-                                    <br>{% endif %}
+                                    <br>
                                 {% trans "Email" %} :
                                     {{ customer.get_emails }}
                             </div>

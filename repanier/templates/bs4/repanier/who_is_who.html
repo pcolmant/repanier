@@ -55,9 +55,9 @@
                     {% if customer.about_me and customer.about_me.strip %}<i class="fas fa-info-circle"></i>
                         :
                         {{ customer.about_me | safe }}<br>{% endif %}
-                    {% if customer.show_phones_to_members %}<i class="fas fa-phone"></i> :
+                    <i class="fas fa-phone"></i> :
                         {{ customer.get_phones }}
-                        <br>{% endif %}
+                        <br>
                     <i class="far fa-envelope"></i> :
                         {{ customer.get_emails }}
                 </div>

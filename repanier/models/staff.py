@@ -186,7 +186,7 @@ class Staff(MPTTModel, TranslatableModel):
             customer = self.customer_responsible
             customer_name = customer.long_basket_name or customer.short_basket_name
             customer_contact_info = "{}{}".format(
-                customer_name, customer.get_phone1(for_members=False, prefix=" - ")
+                customer_name, customer.get_phone1(prefix=" - ")
             )
             html_signature = mark_safe(
                 "{}<br>{}<br>{}".format(
@@ -216,7 +216,7 @@ class Staff(MPTTModel, TranslatableModel):
                 self,
                 self.customer_responsible.long_basket_name or self.customer_responsible,
                 self.customer_responsible.get_phone1(
-                    for_members=False, prefix=" (", postfix=")"
+                    prefix=" (", postfix=")"
                 ),
             )
         else:

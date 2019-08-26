@@ -34,10 +34,6 @@ class CustomerForm(forms.Form):
 
     phone1 = fields.CharField(label=_('My main phone number'), max_length=25)
     phone2 = fields.CharField(label=_('My secondary phone number'), max_length=25, required=False)
-    show_phones_to_members = fields.BooleanField(
-        label=EMPTY_STRING, required=False,
-        widget=RepanierCheckboxWidget(label=_("I agree to show my phone numbers in the \"who's who\""))
-    )
     city = fields.CharField(label=_('My city'), max_length=50, required=False)
     address = fields.CharField(label=_('My address'), widget=widgets.Textarea(attrs={'cols': '40', 'rows': '3'}),
                                required=False)
@@ -66,8 +62,6 @@ class CustomerForm(forms.Form):
 
         self.request = kwargs.pop('request', None)
         super(CustomerForm, self).__init__(*args, **kwargs)
-        if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
-            self.fields["show_phones_to_members"].widget = HiddenInput()
 
 
 @login_required()
@@ -95,7 +89,6 @@ def my_profile_view(request):
                 customer.phone1 = form.cleaned_data.get('phone1')
                 customer.phone2 = form.cleaned_data.get('phone2')
                 customer.email2 = form.cleaned_data.get('email2').lower()
-                customer.show_phones_to_members = form.cleaned_data.get('show_phones_to_members')
                 customer.subscribe_to_email = form.cleaned_data.get('subscribe_to_email')
                 customer.city = form.cleaned_data.get('city')
                 customer.address = form.cleaned_data.get('address')
@@ -144,8 +137,6 @@ def my_profile_view(request):
         field.initial = request.user.email
         field = form.fields["email2"]
         field.initial = customer.email2
-        field = form.fields["show_phones_to_members"]
-        field.initial = customer.show_phones_to_members
         field = form.fields["subscribe_to_email"]
         field.initial = customer.subscribe_to_email
         field = form.fields["city"]

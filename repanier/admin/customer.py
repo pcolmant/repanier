@@ -448,7 +448,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         fields_basic = [
             ("short_basket_name", "long_basket_name", "language"),
             ("email", "email2"),
-            ("phone1", "phone2", "show_phones_to_members"),
+            ("phone1", "phone2"),
             "membership_fee_valid_until",
         ]
         if settings.REPANIER_SETTINGS_GROUP:

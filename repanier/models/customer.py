@@ -235,18 +235,14 @@ class Customer(models.Model):
 
     get_admin_balance.short_description = _("Balance")
 
-    def get_phone1(self, for_members=True, prefix=EMPTY_STRING, postfix=EMPTY_STRING):
+    def get_phone1(self, prefix=EMPTY_STRING, postfix=EMPTY_STRING):
         # return ", phone1" if prefix = ", "
         # return " (phone1)" if prefix = " (" and postfix = ")"
-        if for_members and not self.show_phones_to_members:
-            return EMPTY_STRING
         if not self.phone1:
             return EMPTY_STRING
         return "{}{}{}".format(prefix, self.phone1, postfix)
 
     def get_phone2(self):
-        if not self.show_phones_to_members:
-            return EMPTY_STRING
         return self.phone2 or EMPTY_STRING
 
     def get_phones(self, sep=", "):
@@ -588,7 +584,6 @@ class Customer(models.Model):
         self.is_anonymized = True
         self.valid_email = False
         self.subscribe_to_email = False
-        self.show_phones_to_members = False
         self.save()
 
     def __str__(self):

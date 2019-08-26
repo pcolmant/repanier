@@ -38,7 +38,7 @@ class PermanenceBoard(models.Model):
             "<b>{}</b> : <b>{}</b>{}<br>{}",
             self.permanence_role,
             self.customer.long_basket_name,
-            self.customer.get_phone1(for_members=False, prefix=", ")
+            self.customer.get_phone1(prefix=", ")
             or self.customer.get_email1(prefix=", "),
             self.permanence_role.safe_translation_getter(
                 "description", any_language=True, default=EMPTY_STRING
