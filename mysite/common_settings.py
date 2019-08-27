@@ -443,7 +443,7 @@ if DEBUG:
                     PROJECT_PATH, "repanier", "templates", REPANIER_SETTINGS_TEMPLATE
                 )
             ],
-            "APP_DIRS": True,
+            # "APP_DIRS": True,
             "OPTIONS": {"context_processors": CONTEXT_PROCESSORS},
         }
     ]

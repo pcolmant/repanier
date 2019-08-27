@@ -1,6 +1,5 @@
 # -*- coding: utf-8
 import logging
-import os
 
 from django import forms
 from django.conf import settings
@@ -20,7 +19,6 @@ from repanier.email.email import RepanierEmail
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_ProductionMode
-from repanier.models.staff import Staff
 from repanier.picture.const import SIZE_M
 from repanier.tools import get_repanier_template_name
 from repanier.widget.picture import RepanierPictureWidget
@@ -28,10 +26,6 @@ from repanier.widget.select_bootstrap import SelectBootstrapWidget
 from repanier.widget.select_producer_order_unit import SelectProducerOrderUnitWidget
 
 logger = logging.getLogger(__name__)
-
-template_password_reset_email = get_repanier_template_name(
-    os.path.join("registration", "password_reset_email.html")
-)
 
 
 class AuthRepanierPasswordResetForm(PasswordResetForm):
@@ -41,13 +35,15 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
         subject = loader.render_to_string(subject_template_name, context)
-        html_body = loader.render_to_string(template_password_reset_email, context)
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+        body = loader.render_to_string(html_email_template_name, context)
 
         if settings.REPANIER_SETTINGS_DEMO:
             to_email = settings.REPANIER_DEMO_EMAIL
         email = RepanierEmail(
             subject,
-            html_body=html_body,
+            html_body=body,
             to=[to_email],
             show_customer_may_unsubscribe=False,
             send_even_if_unsubscribed=True

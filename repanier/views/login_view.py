@@ -20,7 +20,7 @@ from repanier.tools import sint, get_repanier_template_name
 @sensitive_post_parameters()
 @csrf_protect
 @never_cache
-def login_view(request, template_name=EMPTY_STRING,
+def login_view(request,
                redirect_field_name=REDIRECT_FIELD_NAME,
                authentication_form=AuthenticationForm,
                extra_context=None):
