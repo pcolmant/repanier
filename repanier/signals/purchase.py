@@ -126,9 +126,11 @@ def purchase_pre_save(sender, **kwargs):
                 total_selling_with_tax=F("total_selling_with_tax")
                 + delta_selling_price,
             )
-            purchase.offer_item = OfferItemWoReceiver.objects.filter(
-                id=purchase.offer_item_id
-            ).first()
+            purchase.offer_item = (
+                OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id)
+                .order_by("?")
+                .first()
+            )
             CustomerInvoice.objects.filter(id=purchase.customer_invoice_id).update(
                 total_price_with_tax=F("total_price_with_tax") + delta_selling_price,
                 total_vat=F("total_vat") + delta_selling_vat,
