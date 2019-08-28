@@ -1872,7 +1872,7 @@ class Permanence(TranslatableModel):
         for permanenceboard in PermanenceBoard.objects.filter(
             permanence_id=self.id
         ).order_by("permanence_role__tree_id", "permanence_role__lft"):
-            member = permanenceboard.get_html_board_member()
+            member = permanenceboard.get_html_board_member
             if member is not None:
                 board_composition.append(member)
 
