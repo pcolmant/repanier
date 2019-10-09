@@ -125,13 +125,6 @@ class Configuration(TranslatableModel):
             default=EMPTY_STRING,
             blank=True,
         ),
-        offer_producer_mail=HTMLField(
-            _("Email content"),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
         order_customer_mail=HTMLField(
             _(
                 "Content of the order confirmation email sent to the consumers concerned"
@@ -196,12 +189,6 @@ class Configuration(TranslatableModel):
                 mark_safe("{} : {}".format(self.offer_customer_mail, error_str))
             )
         try:
-            template = Template(self.offer_producer_mail)
-        except Exception as error_str:
-            raise ValidationError(
-                mark_safe("{} : {}".format(self.offer_producer_mail, error_str))
-            )
-        try:
             template = Template(self.order_customer_mail)
         except Exception as error_str:
             raise ValidationError(
@@ -241,6 +228,8 @@ class Configuration(TranslatableModel):
         from repanier.models.staff import Staff
         from repanier.models.customer import Customer
         from repanier.models.lut import LUT_DepartmentForCustomer
+
+        logger.debug("######## start of init_repanier")
 
         # Create the configuration record managed via the admin UI
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
@@ -469,6 +458,8 @@ class Configuration(TranslatableModel):
                 short_name=_("Subscription")
             )
 
+        logger.debug("######## end of init_repanier")
+
         return config
 
     def init_email(self):
@@ -485,16 +476,6 @@ class Configuration(TranslatableModel):
                     Nouveauté(s) :<br />
                     {{ offer_recent_detail }}{% endif %}<br />
                     <br />
-                    {{ signature }}
-                    """
-                self.offer_producer_mail = """
-                    Cher/Chère {{ long_profile_name }},<br>
-                    <br>
-                    {% if offer_description != "" %}Voici l'annonce consommateur :<br>
-                    {{ offer_description }}<br>
-                    <br>
-                    {% endif %} Veuillez vérifier votre <strong>{{ offer_link }}</strong>.<br>
-                    <br>
                     {{ signature }}
                     """
                 self.order_customer_mail = """
@@ -561,7 +542,7 @@ class Configuration(TranslatableModel):
                 pass
 
     def upgrade_db(self):
-        logger.debug("######## upgrade_db")
+        logger.debug("######## start of upgrade_db")
 
         if self.db_version == 0:
             from repanier.models import (
@@ -643,6 +624,8 @@ class Configuration(TranslatableModel):
 
             Customer.objects.filter(city="NONE").order_by("?").update(city=EMPTY_STRING)
             self.db_version = 5
+
+        logger.debug("######## end of upgrade_db")
 
     def __str__(self):
         return self.group_name

@@ -96,7 +96,6 @@ class Producer(models.Model):
     )
     offer_filled = models.BooleanField(_("Offer filled"), default=False)
     invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
-    manage_replenishment = models.BooleanField(_("Manage replenishment"), default=False)
     producer_pre_opening = models.BooleanField(_("Pre-open the orders"), default=False)
     producer_price_are_wo_vat = models.BooleanField(
         _("Producer price are wo vat"), default=False
@@ -370,27 +369,6 @@ class Producer(models.Model):
             payment_needed += result_set["total_purchase_price_with_tax"]
 
         calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
-        if self.manage_replenishment:
-            for offer_item in OfferItemWoReceiver.objects.filter(
-                is_active=True,
-                permanence_id=permanence_id,
-                producer_id=self.id,
-                manage_replenishment=True,
-            ).order_by("?"):
-                invoiced_qty, taken_from_stock, customer_qty = (
-                    offer_item.get_producer_qty_stock_invoiced()
-                )
-                if (
-                    offer_item.price_list_multiplier < DECIMAL_ONE
-                ):  # or offer_item.is_resale_price_fixed:
-                    unit_price = offer_item.customer_unit_price.amount
-                else:
-                    unit_price = offer_item.producer_unit_price.amount
-                if taken_from_stock > DECIMAL_ZERO:
-                    delta_price_with_tax = (
-                        (unit_price + offer_item.unit_deposit.amount) * taken_from_stock
-                    ).quantize(TWO_DECIMALS)
-                    calculated_invoiced_balance -= delta_price_with_tax
         return calculated_invoiced_balance
 
     get_calculated_invoiced_balance.short_description = _("Balance")

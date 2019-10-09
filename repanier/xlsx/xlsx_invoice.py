@@ -412,7 +412,7 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                         long_name = long_name[:-len(qty_and_price_display)]
                     product.long_name = long_name[:100]
                     product.save()
-                    offer_item = product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
+                    offer_item = product.get_or_create_offer_item(permanence)
                     create_or_update_one_purchase(
                         customer_id=customer_id,
                         offer_item=offer_item,

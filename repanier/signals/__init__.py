@@ -2,7 +2,6 @@
 
 from .box import *
 from .configuration import *
-from .contract import *
 from .customer import *
 from .group import *
 from .lut import *

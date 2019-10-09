@@ -83,12 +83,6 @@ def purchase_pre_save(sender, **kwargs):
             (purchase.get_customer_unit_price() + unit_deposit) * quantity
         ).quantize(TWO_DECIMALS)
 
-        permanences_dates_counter = purchase.offer_item.permanences_dates_counter
-        if permanences_dates_counter > 1:
-            # Multiple delivery dates of a contract
-            purchase.purchase_price.amount *= permanences_dates_counter
-            purchase.selling_price.amount *= permanences_dates_counter
-
         delta_purchase_price = (
             purchase.purchase_price.amount - purchase.previous_purchase_price
         )

@@ -33,18 +33,6 @@ def order_filter_view(request, permanence_id):
     permanence_ok_or_404(permanence)
     is_basket = request.GET.get('is_basket', EMPTY_STRING)
     is_like = request.GET.get('is_like', EMPTY_STRING)
-    if permanence.contract is not None:
-        all_dates = permanence.contract.all_dates
-        len_all_dates = len(all_dates)
-        if len_all_dates < 2:
-            date_id = 'all'
-        else:
-            date_id = sint(request.GET.get('date'), -1)
-            if date_id < 0 or date_id >= len_all_dates:
-                date_id = 'all'
-    else:
-        all_dates = []
-        date_id = 'all'
     producer_id = request.GET.get('producer', 'all')
     department_id = request.GET.get('department', 'all')
     box_id = request.GET.get('box', 'all')
@@ -95,9 +83,6 @@ def order_filter_view(request, permanence_id):
             'is_basket': is_basket,
             'is_box': is_box,
             'q': q,
-            'all_dates': all_dates,
-
-            'date_id': date_id,
             'producer_id': producer_id,
             'department_id': department_id,
             'box_id': box_id,

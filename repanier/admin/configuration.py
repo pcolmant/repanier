@@ -92,16 +92,6 @@ class ConfigurationAdmin(TranslatableAdmin):
                 'fields': fields,
             }),
         ]
-        if settings.REPANIER_SETTINGS_PRE_OPENING:
-            fieldsets += [
-                (_('Pre-opening mails'), {
-                    'classes': ('collapse',),
-                    'fields':
-                        (
-                            'offer_producer_mail',
-                        ),
-                }),
-            ]
         fieldsets += [
             (_('Opening mails'), {
                 'classes': ('collapse',),

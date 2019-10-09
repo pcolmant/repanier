@@ -37,7 +37,6 @@ from repanier.tools import cap, create_or_update_one_purchase, debug_parameters
 logger = logging.getLogger(__name__)
 
 refresh_status = [
-    PERMANENCE_WAIT_FOR_PRE_OPEN,
     PERMANENCE_WAIT_FOR_OPEN,
     PERMANENCE_WAIT_FOR_CLOSED,
     PERMANENCE_CLOSED,
@@ -83,14 +82,6 @@ class Permanence(TranslatableModel):
         "Producer", verbose_name=_("Producers"), blank=True
     )
     boxes = models.ManyToManyField("Box", verbose_name=_("Boxes"), blank=True)
-    contract = models.ForeignKey(
-        "Contract",
-        verbose_name=_("Commitment"),
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        default=None,
-    )
 
     with_delivery_point = models.BooleanField(_("With delivery point"), default=False)
     automatically_closed = models.BooleanField(
@@ -129,19 +120,7 @@ class Permanence(TranslatableModel):
     def get_producers(self):
         if self.status == PERMANENCE_PLANNED:
             link = []
-            if self.contract and len(self.contract.producers.all()) > 0:
-                changelist_url = reverse("admin:repanier_product_changelist")
-                for p in self.contract.producers.all():
-                    link.append(
-                        '<a href="{}?producer={}&commitment={}">&nbsp;{}&nbsp;{}</a>'.format(
-                            changelist_url,
-                            p.id,
-                            self.contract.id,
-                            LINK_UNICODE,
-                            p.short_profile_name.replace(" ", "&nbsp;"),
-                        )
-                    )
-            elif len(self.producers.all()) > 0:
+            if len(self.producers.all()) > 0:
                 changelist_url = reverse("admin:repanier_product_changelist")
                 for p in self.producers.all():
                     link.append(
@@ -155,25 +134,12 @@ class Permanence(TranslatableModel):
                 msg_html = '<div class="wrap-text">{}</div>'.format(", ".join(link))
             else:
                 msg_html = '<div class="wrap-text">{}</div>'.format(_("No offer"))
-        elif self.status == PERMANENCE_PRE_OPEN:
-            link = []
-            for p in self.producers.all():
-                link.append(
-                    "{} ({})".format(p.short_profile_name, p.get_phone1()).replace(
-                        " ", "&nbsp;"
-                    )
-                )
-            msg_html = '<div class="wrap-text">{}</div>'.format(", ".join(link))
         elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
             close_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemclosed_changelist"
             )
 
             link = []
-            if self.contract and len(self.contract.producers.all()) > 0:
-                link_unicode = "{} ".format(LINK_UNICODE)
-            else:
-                link_unicode = EMPTY_STRING
             for p in self.producers.all().only("id"):
                 pi = (
                     ProducerInvoice.objects.filter(
@@ -185,8 +151,7 @@ class Permanence(TranslatableModel):
                 if pi is not None:
                     if pi.status == PERMANENCE_OPENED:
                         label = (
-                            "{}{} ({}) ".format(
-                                link_unicode,
+                            "{} ({}) ".format(
                                 p.short_profile_name,
                                 pi.get_total_price_with_tax(),
                             )
@@ -194,8 +159,7 @@ class Permanence(TranslatableModel):
                         offeritem_changelist_url = close_offeritem_changelist_url
                     else:
                         label = (
-                            "{}{} ({}) {}".format(
-                                link_unicode,
+                            "{} ({}) {}".format(
                                 p.short_profile_name,
                                 pi.get_total_price_with_tax(),
                                 settings.LOCK_UNICODE,
@@ -204,7 +168,7 @@ class Permanence(TranslatableModel):
                         offeritem_changelist_url = close_offeritem_changelist_url
                 else:
                     label = (
-                        "{}{} ".format(link_unicode, p.short_profile_name)
+                        "{} ".format(p.short_profile_name)
                     ).replace(" ", "&nbsp;")
                     offeritem_changelist_url = close_offeritem_changelist_url
                 link.append(
@@ -215,10 +179,6 @@ class Permanence(TranslatableModel):
             msg_html = '<div class="wrap-text">{}</div>'.format(", ".join(link))
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
-            if self.contract and len(self.contract.producers.all()) > 0:
-                link_unicode = "{} ".format(LINK_UNICODE)
-            else:
-                link_unicode = EMPTY_STRING
             send_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemsend_changelist"
             )
@@ -239,8 +199,7 @@ class Permanence(TranslatableModel):
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
-                    label = "{}{} ({})".format(
-                        link_unicode,
+                    label = "{} ({})".format(
                         pi.producer.short_profile_name,
                         pi.get_total_price_with_tax(),
                     )
@@ -258,15 +217,13 @@ class Permanence(TranslatableModel):
                             pi.to_be_invoiced_balance != DECIMAL_ZERO
                             or pi.total_price_with_tax != DECIMAL_ZERO
                         ):
-                            label = "{}{} ({} - {})".format(
-                                link_unicode,
+                            label = "{} ({} - {})".format(
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance,
                                 cap(pi.invoice_reference, 15),
                             )
                         else:
-                            label = "{}{} ({})".format(
-                                link_unicode,
+                            label = "{} ({})".format(
                                 pi.producer.short_profile_name,
                                 cap(pi.invoice_reference, 15),
                             )
@@ -275,8 +232,7 @@ class Permanence(TranslatableModel):
                             pi.to_be_invoiced_balance != DECIMAL_ZERO
                             or pi.total_price_with_tax != DECIMAL_ZERO
                         ):
-                            label = "{}{} ({})".format(
-                                link_unicode,
+                            label = "{} ({})".format(
                                 pi.producer.short_profile_name,
                                 pi.to_be_invoiced_balance,
                             )
@@ -725,17 +681,7 @@ class Permanence(TranslatableModel):
                 producer_order_by_quantity__gt=1,
                 quantity_invoiced__gt=0,
             ).order_by("?")
-            for offer_item in offer_item_qs:
-                # It's possible to round the ordered qty even If we do not manage stock
-                if offer_item.manage_replenishment:
-                    needed = offer_item.quantity_invoiced - offer_item.stock
-                else:
-                    needed = offer_item.quantity_invoiced
-                if needed > DECIMAL_ZERO:
-                    offer_item.add_2_stock = offer_item.producer_order_by_quantity - (
-                        needed % offer_item.producer_order_by_quantity
-                    )
-                    offer_item.save()
+
             # Add Transport
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_TRANSPORTATION
@@ -902,63 +848,6 @@ class Permanence(TranslatableModel):
                     date_balance=payment_date
                 )
             customer_invoice.save()
-
-        # Claculate new stock
-        for offer_item in OfferItem.objects.filter(
-            is_active=True, manage_replenishment=True, permanence_id=self.id
-        ).order_by("?"):
-            invoiced_qty, taken_from_stock, customer_qty = (
-                offer_item.get_producer_qty_stock_invoiced()
-            )
-            if taken_from_stock != DECIMAL_ZERO:
-                if (
-                    offer_item.price_list_multiplier < DECIMAL_ONE
-                ):  # or offer_item.is_resale_price_fixed:
-                    unit_price = offer_item.customer_unit_price.amount
-                    unit_vat = offer_item.customer_vat.amount
-                else:
-                    unit_price = offer_item.producer_unit_price.amount
-                    unit_vat = offer_item.producer_vat.amount
-                delta_price_with_tax = (
-                    (unit_price + offer_item.unit_deposit.amount) * taken_from_stock
-                ).quantize(TWO_DECIMALS)
-                delta_vat = unit_vat * taken_from_stock
-                delta_deposit = offer_item.unit_deposit.amount * taken_from_stock
-                producer_invoice = ProducerInvoice.objects.get(
-                    producer_id=offer_item.producer_id, permanence_id=self.id
-                )
-                producer_invoice.delta_stock_with_tax.amount -= delta_price_with_tax
-                producer_invoice.delta_stock_vat.amount -= delta_vat
-                producer_invoice.delta_stock_deposit.amount -= delta_deposit
-                producer_invoice.save(
-                    update_fields=[
-                        "delta_stock_with_tax",
-                        "delta_stock_vat",
-                        "delta_stock_deposit",
-                    ]
-                )
-
-            # Update new_stock even if no order
-            # // xslx_stock and task_invoice
-            offer_item.new_stock = (
-                offer_item.stock - taken_from_stock + offer_item.add_2_stock
-            )
-            if offer_item.new_stock < DECIMAL_ZERO:
-                offer_item.new_stock = DECIMAL_ZERO
-            offer_item.previous_add_2_stock = offer_item.add_2_stock
-            offer_item.previous_producer_unit_price = offer_item.producer_unit_price
-            offer_item.previous_unit_deposit = offer_item.unit_deposit
-            if self.highest_status <= PERMANENCE_SEND:
-                # Asked by Bees-Coop : Do not update stock when canceling
-                new_stock = (
-                    offer_item.stock
-                    if offer_item.stock > DECIMAL_ZERO
-                    else DECIMAL_ZERO
-                )
-                Product.objects.filter(
-                    id=offer_item.product_id, stock=new_stock
-                ).update(stock=offer_item.new_stock)
-            offer_item.save()
 
         for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
             producer_invoice.balance = (
@@ -1628,18 +1517,6 @@ class Permanence(TranslatableModel):
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
             )
-            for offer_item in (
-                OfferItem.objects.filter(
-                    permanence_id=self.id, is_active=True, manage_replenishment=True
-                )
-                .exclude(add_2_stock=DECIMAL_ZERO)
-                .order_by("?")
-            ):
-                # Recalculate the total_price_with_tax of ProducerInvoice and
-                # the total_purchase_with_tax of OfferItem
-                # taking into account "add_2_stock"
-                offer_item.previous_add_2_stock = DECIMAL_ZERO
-                offer_item.save()
 
         purchase_set = Purchase.objects.filter(permanence_id=self.id).order_by("?")
         if offer_item_qs is not None:

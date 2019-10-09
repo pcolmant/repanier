@@ -41,16 +41,9 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
             (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
         ]
         offer_items = OfferItemWoReceiver.objects.filter(
-            Q(
-                permanence_id=permanence.id,
-                manage_replenishment=True,
-                translations__language_code=translation.get_language()
-            ) |
-            Q(
-                permanence_id=permanence.id,
-                manage_production=True,
-                translations__language_code=translation.get_language()
-            )
+            permanence_id=permanence.id,
+            manage_production=True,
+            translations__language_code=translation.get_language()
         ).order_by(
             "producer",
             "translations__long_name",
@@ -111,9 +104,8 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
                             offer_item_reference = EMPTY_STRING
                         if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
 
-                            asked = offer_item.quantity_invoiced - offer_item.add_2_stock
+                            asked = offer_item.quantity_invoiced
                             stock = offer_item.stock
-                            add_2_stock = offer_item.add_2_stock
                             c = ws.cell(row=row_num, column=0)
                             c.value = offer_item.producer_id
                             c = ws.cell(row=row_num, column=1)
@@ -160,7 +152,7 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
                             c = ws.cell(row=row_num, column=7)
                             c.value = "=G{}-K{}+L{}".format(row_num + 1, row_num + 1, row_num + 1)
                             if not show_column_qty_ordered:
-                                show_column_qty_ordered = (asked - min(asked, stock) + add_2_stock) > 0
+                                show_column_qty_ordered = (asked - min(asked, stock)) > 0
                             c.style.number_format.format_code = '#,##0.???'
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=8)
@@ -181,18 +173,6 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
                             c.value = "=MIN(G{},I{})".format(row_num + 1, row_num + 1)
                             c.style.number_format.format_code = '#,##0.???'
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            c = ws.cell(row=row_num, column=11)
-                            c.value = add_2_stock
-                            c.style.number_format.format_code = '#,##0.???'
-                            c.style.borders.bottom.border_style = Border.BORDER_THIN
-                            c.style.font.color = Color(Color.BLUE)
-                            ws.conditional_formatting.addCellIs(
-                                get_column_letter(12) + str(row_num + 1), 'notEqual',
-                                [str(add_2_stock)], True, wb,
-                                None, None, yellowFill
-                            )
-                            if not show_column_add2stock:
-                                show_column_add2stock = add_2_stock > 0
                             c = ws.cell(row=row_num, column=12)
                             c.value = "=I{}-K{}+L{}".format(row_num + 1, row_num + 1, row_num + 1)
                             c.style.number_format.format_code = '#,##0.???'
@@ -275,7 +255,6 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
 #                 try:
 #                     # with transaction.atomic():
 #                     stock = None if row[_('Initial stock')] is None else Decimal(row[_('Initial stock')]).quantize(THREE_DECIMALS)
-#                     add_2_stock = None if row[_('Add 2 stock')] is None else Decimal(row[_('Add 2 stock')]).quantize(THREE_DECIMALS)
 #                     if stock is not None:
 #                         producer_id = None if row[_('Id')] is None else Decimal(row[_('Id')])
 #                         offer_item_id = None if row[_('OfferItem')] is None else Decimal(row[_('OfferItem')])
@@ -285,9 +264,8 @@ def export_permanence_stock(permanence, deliveries_id=(), customer_price=False, 
 #                             producer_id=producer_id
 #                         ).order_by('?').first()
 #                         if offer_item is not None \
-#                                 and (offer_item.stock != stock or offer_item.add_2_stock != add_2_stock):
+#                                 and (offer_item.stock != stock):
 #                             offer_item.stock = stock
-#                             offer_item.add_2_stock = add_2_stock
 #                             offer_item.save()
 #                             Product.objects.filter(
 #                                 id=offer_item.product_id,

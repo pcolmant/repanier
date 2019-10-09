@@ -2,7 +2,6 @@
 
 from django.db import models, transaction
 from django.urls import reverse
-from django.utils.dateparse import parse_date
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
@@ -10,7 +9,6 @@ from parler.fields import TranslatedField
 from parler.models import TranslatedFieldsModel
 
 from repanier.const import *
-from repanier.models.contract import ContractContent
 from repanier.models.item import Item
 from repanier.tools import clean_offer_item
 
@@ -22,9 +20,6 @@ class Product(Item):
         "LUT_ProductionMode", verbose_name=_("Production mode"), blank=True
     )
     permanences = models.ManyToManyField("Permanence", through="OfferItem", blank=True)
-    contracts = models.ManyToManyField(
-        "Contract", through="ContractContent", blank=True
-    )
     is_into_offer = models.BooleanField(_("In offer"), default=True)
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="likes")
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, blank=True)
@@ -38,218 +33,62 @@ class Product(Item):
         return self.likes.count()
 
     @transaction.atomic()
-    def get_or_create_offer_item(self, permanence, reset_add_2_stock=False):
+    def get_or_create_offer_item(self, permanence):
 
         from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
         from repanier.models.box import BoxContent
 
         offer_item_qs = OfferItem.objects.filter(
-            permanence_id=permanence.id,
-            product_id=self.id,
-            permanences_dates=EMPTY_STRING,
+            permanence_id=permanence.id, product_id=self.id
         ).order_by("?")
         if not offer_item_qs.exists():
             OfferItemWoReceiver.objects.create(
                 permanence_id=permanence.id,
                 product_id=self.id,
                 producer_id=self.producer_id,
-                permanences_dates=EMPTY_STRING,
             )
-            clean_offer_item(
-                permanence, offer_item_qs, reset_add_2_stock=reset_add_2_stock
-            )
+            clean_offer_item(permanence, offer_item_qs)
         else:
             offer_item = offer_item_qs.first()
-            offer_item.contract = None
-            offer_item.permanences_dates_order = 0
-            if reset_add_2_stock:
-                offer_item.may_order = True
-            offer_item.save(
-                update_fields=["contract", "may_order", "permanences_dates_order"]
-            )
+            offer_item.save(update_fields=["may_order"])
         if self.is_box:
             # Add box products
             for box_content in BoxContent.objects.filter(box=self.id).order_by("?"):
                 box_offer_item_qs = OfferItem.objects.filter(
-                    permanence_id=permanence.id,
-                    product_id=box_content.product_id,
-                    permanences_dates=EMPTY_STRING,
+                    permanence_id=permanence.id, product_id=box_content.product_id
                 ).order_by("?")
                 if not box_offer_item_qs.exists():
                     OfferItemWoReceiver.objects.create(
                         permanence_id=permanence.id,
                         product_id=box_content.product_id,
                         producer_id=box_content.product.producer_id,
-                        permanences_dates=EMPTY_STRING,
                         is_box_content=True,
                     )
-                    clean_offer_item(
-                        permanence,
-                        box_offer_item_qs,
-                        reset_add_2_stock=reset_add_2_stock,
-                    )
+                    clean_offer_item(permanence, box_offer_item_qs)
                 else:
                     box_offer_item = box_offer_item_qs.first()
                     box_offer_item.is_box_content = True
-                    box_offer_item.contract = None
-                    box_offer_item.permanences_dates_order = 0
-                    if reset_add_2_stock:
-                        box_offer_item.may_order = True
-                    box_offer_item.save(
-                        update_fields=[
-                            "is_box_content",
-                            "contract",
-                            "may_order",
-                            "permanences_dates_order",
-                        ]
-                    )
+                    box_offer_item.save(update_fields=["is_box_content", "may_order"])
 
         offer_item = offer_item_qs.first()
         return offer_item
 
-    def get_html_admin_is_into_offer(self, contract=None):
+    def get_html_admin_is_into_offer(self):
         return mark_safe(
             '<div id="is_into_offer_{}">{}</div>'.format(
-                self.id, self.get_html_is_into_offer(contract)
+                self.id, self.get_html_is_into_offer()
             )
         )
 
     get_html_admin_is_into_offer.short_description = _("In offer")
     get_html_admin_is_into_offer.admin_order_field = "is_into_offer"
 
-    def get_html_is_into_offer(self, contract=None, contract_content=None):
+    def get_html_is_into_offer(self):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
 
         css_class = ' class = "btn"'
-        if contract is not None or contract_content is not None:
-            css_class = EMPTY_STRING
-            if contract_content is None:
-                contract_content = (
-                    ContractContent.objects.filter(product=self, contract=contract)
-                    .order_by("?")
-                    .first()
-                )
-            if (
-                contract_content is not None
-                and contract_content.permanences_dates is not None
-            ):
-                all_dates_str = sorted(
-                    list(
-                        filter(
-                            None,
-                            contract_content.permanences_dates.split(
-                                settings.DJANGO_SETTINGS_DATES_SEPARATOR
-                            ),
-                        )
-                    )
-                )
-                is_into_offer = len(all_dates_str) > 0
-                flexible_dates = contract_content.flexible_dates
-            else:
-                all_dates_str = []
-                is_into_offer = False
-                flexible_dates = False
-            if contract.permanences_dates is not None:
-                contract_all_dates_str = sorted(
-                    list(
-                        filter(
-                            None,
-                            contract.permanences_dates.split(
-                                settings.DJANGO_SETTINGS_DATES_SEPARATOR
-                            ),
-                        )
-                    )
-                )
-            else:
-                contract_all_dates_str = []
-            contract_dates_array = []
-            month_save = None
-            selected_dates_counter = 0
-            for one_date_str in contract_all_dates_str:
-                one_date = parse_date(one_date_str)
-                if month_save != one_date.month:
-                    month_save = one_date.month
-                    new_line = "<br>"
-                else:
-                    new_line = EMPTY_STRING
-                # Important : linked to django.utils.dateparse.parse_date format
-                switch_is_into_offer = reverse(
-                    "is_into_offer_content", args=(self.id, contract.id, one_date_str)
-                )
-                javascript = """
-                    (function($) {{
-                        var lien = '{LINK}';
-                        $.ajax({{
-                                url: lien,
-                                cache: false,
-                                async: true,
-                                success: function (result) {{
-                                    $('#is_into_offer_{PRODUCT_ID}').html(result)
-                                }}
-                            }});
-                    }})(django.jQuery);
-                """.format(
-                    LINK=switch_is_into_offer, PRODUCT_ID=self.id
-                )
-                if one_date_str in all_dates_str:
-                    color = "green"
-                    icon = " {}".format(_boolean_icon(True))
-                    selected_dates_counter += 1
-                else:
-                    color = "red"
-                    icon = " {}".format(_boolean_icon(False))
-                link = """
-                        {}<a href="#" onclick="{};return false;" style="color:{} !important;">{}{}</a>
-                    """.format(
-                    new_line,
-                    javascript,
-                    color,
-                    icon,
-                    one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH),
-                )
-                contract_dates_array.append(link)
-            contract_dates = ",&nbsp;".join(contract_dates_array)
-            if selected_dates_counter > 1:
-                switch_flexible_dates = reverse(
-                    "flexible_dates", args=(self.id, contract.id)
-                )
-                javascript = """
-                                    (function($) {{
-                                        var lien = '{LINK}';
-                                        $.ajax({{
-                                                url: lien,
-                                                cache: false,
-                                                async: true,
-                                                success: function (result) {{
-                                                    $('#is_into_offer_{PRODUCT_ID}').html(result)
-                                                }}
-                                            }});
-                                    }})(django.jQuery);
-                                """.format(
-                    LINK=switch_flexible_dates, PRODUCT_ID=self.id
-                )
-                if flexible_dates:
-                    color = EMPTY_STRING
-                    flexible_dates_display = " {}".format(_("Flexible dates"))
-                else:
-                    color = EMPTY_STRING
-                    flexible_dates_display = " {} {}".format(
-                        selected_dates_counter, _("Fixed dates")
-                    )
-                flexible_dates_link = """
-                        <a href="#" onclick="{};return false;" style="color:{} !important;">{}</a>
-                    """.format(
-                    javascript, color, flexible_dates_display
-                )
-            else:
-                flexible_dates_link = EMPTY_STRING
-        else:
-            is_into_offer = self.is_into_offer
-            contract_dates = EMPTY_STRING
-            flexible_dates_link = EMPTY_STRING
-        switch_is_into_offer = reverse(
-            "is_into_offer", args=(self.id, contract.id if contract is not None else 0)
-        )
+        is_into_offer = self.is_into_offer
+        switch_is_into_offer = reverse("is_into_offer", args=(self.id,))
         javascript = """
                 (function($) {{
                     var lien = '{LINK}';
@@ -266,13 +105,8 @@ class Product(Item):
             LINK=switch_is_into_offer, PRODUCT_ID=self.id
         )
         # return false; http://stackoverflow.com/questions/1601933/how-do-i-stop-a-web-page-from-scrolling-to-the-top-when-a-link-is-clicked-that-t
-        link = '<div id="is_into_offer_{}"><a href="#" onclick="{};return false;"{}>{}</a>{}{}</div>'.format(
-            self.id,
-            javascript,
-            css_class,
-            _boolean_icon(is_into_offer),
-            flexible_dates_link,
-            contract_dates,
+        link = '<div id="is_into_offer_{}"><a href="#" onclick="{};return false;"{}>{}</a></div>'.format(
+            self.id, javascript, css_class, _boolean_icon(is_into_offer)
         )
         return mark_safe(link)
 

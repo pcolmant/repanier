@@ -34,13 +34,12 @@ from repanier.views.delivery_ajax import delivery_ajax
 from repanier.views.delivery_select_ajax import delivery_select_ajax
 from repanier.views.display_status_ajax import display_status
 from repanier.views.download_customer_invoice import download_customer_invoice
-from repanier.views.flexible_dates import flexible_dates
 from repanier.views.forms import (
     AuthRepanierSetPasswordForm,
     AuthRepanierPasswordResetForm,
 )
 from repanier.views.home_info_ajax import home_info_bs3_ajax
-from repanier.views.is_into_offer_ajax import is_into_offer, is_into_offer_content
+from repanier.views.is_into_offer_ajax import is_into_offer
 from repanier.views.like_ajax import like_ajax
 from repanier.views.login_view import login_view
 from repanier.views.logout_view import logout_view
@@ -53,9 +52,6 @@ from repanier.views.order_description_view import order_description_view
 from repanier.views.order_filter_view import order_filter_view
 from repanier.views.order_init_ajax import order_init_ajax
 from repanier.views.order_select_ajax import order_select_ajax
-from repanier.views.pre_order_class import PreOrderView
-from repanier.views.pre_order_create_product_ajax import pre_order_create_product_ajax
-from repanier.views.pre_order_update_product_ajax import pre_order_update_product_ajax
 from repanier.views.producer_invoice_class import ProducerInvoiceView
 
 # from repanier.views.send_mail_to_all_members_view import send_mail_to_all_members_view
@@ -178,21 +174,6 @@ if django.VERSION[0] < 2:
             name="customer_product_description_ajax",
         ),
         url(
-            r"^ajax/pre-order-create-product/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<permanence_id>\d+)/$",
-            pre_order_create_product_ajax,
-            name="pre_order_create_product_ajax",
-        ),
-        url(
-            r"^ajax/pre-order-update-product/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$",
-            pre_order_update_product_ajax,
-            name="pre_order_update_product_ajax",
-        ),
-        url(
-            r"^ajax/pre-order-update-product/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/(?P<offer_item_id>\d+)/$",
-            pre_order_update_product_ajax,
-            name="pre_order_update_product_ajax",
-        ),
-        url(
             r"^ajax/upload-picture/(?P<upload_to>.*)/(?P<size>[0-9]+)/$",
             ajax_picture,
             name="ajax_picture",
@@ -209,19 +190,9 @@ if django.VERSION[0] < 2:
         ),
         url(r"^ajax/like/$", like_ajax, name="like_ajax"),
         url(
-            r"^ajax/is-into-offer/(?P<product_id>\d+)/(?P<contract_id>\d+)/$",
+            r"^ajax/is-into-offer/(?P<product_id>\d+)/$",
             is_into_offer,
             name="is_into_offer",
-        ),
-        url(
-            r"^ajax/is-into-offer-content/(?P<product_id>\d+)/(?P<contract_id>\d+)/(?P<one_date_str>.*)/$",
-            is_into_offer_content,
-            name="is_into_offer_content",
-        ),
-        url(
-            r"^ajax/flexible_dates/(?P<product_id>\d+)/(?P<contract_id>\d+)/$",
-            flexible_dates,
-            name="flexible_dates",
         ),
         # url(r'^ajax/test-mail-config/(?P<id_email_host>.*)/(?P<id_email_port>.*)/(?P<id_email_use_tls>.*)/(?P<id_email_host_user>.*)/(?P<id_new_email_host_password>.*)/$', test_mail_config_ajax, name='test_mail_config_ajax'),
         url(
@@ -248,11 +219,6 @@ if django.VERSION[0] < 2:
             r"^producer-invoice/(?P<pk>[0-9]+)/$",
             login_required(ProducerInvoiceView.as_view()),
             name="producer_invoice_view",
-        ),
-        url(
-            r"^pre-order/(?P<offer_uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$",
-            never_cache(PreOrderView.as_view()),
-            name="pre_order_uuid_view",
         ),
         url(
             r"^inform/$",
@@ -422,21 +388,6 @@ else:
             name="customer_product_description_ajax",
         ),
         path(
-            "ajax/pre-order-create-product/<uuid:offer_uuid>/<int:permanence_id>/",
-            pre_order_create_product_ajax,
-            name="pre_order_create_product_ajax",
-        ),
-        path(
-            "ajax/pre-order-update-product/<uuid:offer_uuid>/",
-            pre_order_update_product_ajax,
-            name="pre_order_update_product_ajax",
-        ),
-        path(
-            "ajax/pre-order-update-product/<uuid:offer_uuid>/<int:offer_item_id>/",
-            pre_order_update_product_ajax,
-            name="pre_order_update_product_ajax",
-        ),
-        path(
             "ajax/upload-picture/<path:upload_to>/<int:size>/",
             ajax_picture,
             name="ajax_picture",
@@ -453,19 +404,9 @@ else:
         ),
         path("ajax/like/", like_ajax, name="like_ajax"),
         path(
-            "ajax/is-into-offer/<int:product_id>/<int:contract_id>/",
+            "ajax/is-into-offer/<int:product_id>/",
             is_into_offer,
             name="is_into_offer",
-        ),
-        path(
-            "ajax/is-into-offer-content/<int:product_id>/<int:contract_id>/<str:one_date_str>/",
-            is_into_offer_content,
-            name="is_into_offer_content",
-        ),
-        path(
-            "ajax/flexible_dates/<int:product_id>/<int:contract_id>/",
-            flexible_dates,
-            name="flexible_dates",
         ),
         # url(r'^ajax/test-mail-config/(?P<id_email_host>.*)/(?P<id_email_port>.*)/(?P<id_email_use_tls>.*)/(?P<id_email_host_user>.*)/(?P<id_new_email_host_password>.*)/$', test_mail_config_ajax, name='test_mail_config_ajax'),
         path(
@@ -490,11 +431,6 @@ else:
             "producer-invoice/<int:pk>/",
             login_required(ProducerInvoiceView.as_view()),
             name="producer_invoice_view",
-        ),
-        path(
-            "pre-order/<uuid:offer_uuid>/",
-            never_cache(PreOrderView.as_view()),
-            name="pre_order_uuid_view",
         ),
         path(
             "coordinators/",

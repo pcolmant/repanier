@@ -22,11 +22,7 @@ def producer_pre_save(sender, **kwargs):
         producer.email3 = producer.email3.lower()
     if producer.producer_pre_opening:
         # Used to make difference between the stock of the group and the stock of the producer
-        producer.manage_replenishment = False
         producer.is_resale_price_fixed = False
-    elif producer.manage_replenishment:
-        # Needed to compute ProducerInvoice.total_price_with_tax
-        producer.invoice_by_basket = False
     if producer.price_list_multiplier <= DECIMAL_ZERO:
         producer.price_list_multiplier = DECIMAL_ONE
     if not producer.uuid:

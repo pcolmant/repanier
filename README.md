@@ -24,14 +24,6 @@ Active producer :
 
 Licence : GPL v3
 
-# Howto contribute to `Repanier`?
-
-
-  * [Contact the `repanier` community](https://forum.repanier.be/)
-  * [Send a mail to support@repanier.be](mailt:support@repanier.be)
-  * [Propose a pull request](https://github.com/pcolmant/repanier/pulls)
-  * [Interface Web pour gérer les instances Repanier](https://gitlab.domainepublic.net/quenenni/repanier_gui/)
-
 # How to setup `Repanier` on Debian 9
 
 This procedure shows you step by step how to install `Repanier` on a server.
@@ -302,7 +294,6 @@ Always on windows, remember to open a shell as an Administrator to edit C:\WINDO
 Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here above `_0_prd_example.ini` 
 - REPANIER_SETTINGS_BOOTSTRAP_CSS  (*bootstrap.css*, bootstrap_my_own.css, bootstrap_another.css) : Allows you to change the look of the site.
 - REPANIER_SETTINGS_BOX (True, *False*) : Allows you to sell multiple products together.
-- REPANIER_SETTINGS_CONTRACT (True, *False*) : Allows you to operate in * GASAP * mode, with contracts.
 - REPANIER_SETTINGS_COUNTRY  (be, fr, ch, es) : Allows you to change the applicable VAT. The currency (EUR, CHF, ...) is configured directly in the management interface of `Repanier`.
 - REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : If present, email address to put in bcc of all the mails
 - REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by `Repanier`.
@@ -311,7 +302,6 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_GROUP (True, *False*) : Others groups may be members of the `Repanier` site. Orders from a group member are billed to the group and not to the member.
 - REPANIER_SETTINGS_IS_MINIMALIST (*True*, False) : Remove the rare option from the Repanier administration screens, for e.g. configure the currency need that this option is set to `False`.
 - REPANIER_SETTINGS_MANAGE_ACCOUNTING (*True*, False) : If True, Repanier is used to manage the accounts (customers, proucers, bank).
-- REPANIER_SETTINGS_PRE_OPENING (True, *False*) : Lets the producer modify their offer during an order pre-opening phase.
 - REPANIER_SETTINGS_PRODUCT_LABEL (True, *False*) : If True, Repanier lets you define labels (for e.g. bio, local, ...) at product level.
 - REPANIER_SETTINGS_PRODUCT_REFERENCE (True, *False*) : If True, Repanier lets you define reference at product level and use them to communicate with the producer.
 - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5).

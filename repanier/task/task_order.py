@@ -24,96 +24,18 @@ from repanier.tools import reorder_purchases
 
 
 @transaction.atomic
-def automatically_pre_open():
-    translation.activate(settings.LANGUAGE_CODE)
-    something_to_pre_open = False
-    max_3_days_in_the_future = (timezone.now() + datetime.timedelta(days=3)).date()
-    for permanence in Permanence.objects.filter(
-        status=PERMANENCE_PLANNED,
-        permanence_date__lte=max_3_days_in_the_future,
-        automatically_closed=True,
-    ):
-        producers = list(
-            Producer.objects.filter(is_active=True, producer_pre_opening=True)
-            .values_list("id", flat=True)
-            .order_by("?")
-        )
-        permanence.producers.add(*producers)
-        permanence.set_status(
-            old_status=(PERMANENCE_PLANNED,), new_status=PERMANENCE_WAIT_FOR_PRE_OPEN
-        )
-        pre_open_order(permanence.id)
-        something_to_pre_open = True
-    return something_to_pre_open
-
-
-@transaction.atomic
 def automatically_open():
     translation.activate(settings.LANGUAGE_CODE)
     something_to_open = False
     for permanence in Permanence.objects.filter(
-        status=PERMANENCE_PRE_OPEN, automatically_closed=True
+        status=PERMANENCE_PLANNED, automatically_closed=True
     ):
         permanence.set_status(
-            old_status=(PERMANENCE_PRE_OPEN,), new_status=PERMANENCE_WAIT_FOR_OPEN
+            old_status=(PERMANENCE_PLANNED,), new_status=PERMANENCE_WAIT_FOR_OPEN
         )
         open_order(permanence.id)
         something_to_open = True
     return something_to_open
-
-
-def common_to_pre_open_and_open(permanence):
-    if permanence.contract is not None:
-        permanence.contract.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-    else:
-        # Create offer items which can be purchased depending on selection in the admin
-        producers_in_this_permanence = (
-            Producer.objects.filter(permanence=permanence, is_active=True)
-            .order_by("?")
-            .only("id")
-        )
-        product_queryset = Product.objects.filter(
-            producer__in=producers_in_this_permanence, is_box=False, is_into_offer=True
-        ).order_by("?")
-        for product in product_queryset:
-            product.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-        boxes_in_this_permanence = (
-            Box.objects.filter(permanence=permanence, is_active=True)
-            .order_by("?")
-            .only("id")
-        )
-        for box in boxes_in_this_permanence:
-            box.get_or_create_offer_item(permanence, reset_add_2_stock=True)
-    # Calculate the sort order of the order display screen
-    reorder_offer_items(permanence.id)
-    # Calculate the Purchase 'sum' for each customer
-    permanence.recalculate_order_amount()
-
-
-# @transaction.atomic
-# Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_html_status_display()**
-# won't works on the admin screen. The clock is based on the permanence.status state.
-def pre_open_order(permanence_id):
-    permanence = Permanence.objects.filter(id=permanence_id).order_by("?").first()
-    permanence.set_status(
-        old_status=(PERMANENCE_PLANNED,), new_status=PERMANENCE_WAIT_FOR_PRE_OPEN
-    )
-
-    common_to_pre_open_and_open(permanence)
-
-    # 1 - Allow access to the producer to his/her products into "pre order" status using random uuid4
-    for producer in (
-        Producer.objects.filter(permanence=permanence_id, producer_pre_opening=True)
-        .only("offer_uuid")
-        .order_by("?")
-    ):
-        producer.offer_uuid = uuid.uuid1()
-        producer.offer_filled = False
-        producer.save(update_fields=["offer_uuid", "offer_filled"])
-    email_offer.send_pre_open_order(permanence_id)
-    permanence.set_status(
-        old_status=(PERMANENCE_WAIT_FOR_PRE_OPEN,), new_status=PERMANENCE_PRE_OPEN
-    )
 
 
 # @transaction.atomic
@@ -124,11 +46,32 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     # for the "thread" processing
     permanence = Permanence.objects.filter(id=permanence_id).order_by("?").first()
     permanence.set_status(
-        old_status=(PERMANENCE_PLANNED, PERMANENCE_PRE_OPEN),
+        old_status=(PERMANENCE_PLANNED,),
         new_status=PERMANENCE_WAIT_FOR_OPEN,
     )
 
-    common_to_pre_open_and_open(permanence)
+    # Create offer items which can be purchased depending on selection in the admin
+    producers_in_this_permanence = (
+        Producer.objects.filter(permanence=permanence, is_active=True)
+        .order_by("?")
+        .only("id")
+    )
+    product_queryset = Product.objects.filter(
+        producer__in=producers_in_this_permanence, is_box=False, is_into_offer=True
+    ).order_by("?")
+    for product in product_queryset:
+        product.get_or_create_offer_item(permanence)
+    boxes_in_this_permanence = (
+        Box.objects.filter(permanence=permanence, is_active=True)
+        .order_by("?")
+        .only("id")
+    )
+    for box in boxes_in_this_permanence:
+        box.get_or_create_offer_item(permanence)
+    # Calculate the sort order of the order display screen
+    reorder_offer_items(permanence.id)
+    # Calculate the Purchase 'sum' for each customer
+    permanence.recalculate_order_amount()
 
     # 1 - Disallow access to the producer to his/her products no more into "pre order" status
     for producer in (

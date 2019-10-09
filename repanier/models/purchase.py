@@ -66,9 +66,6 @@ class Purchase(models.Model):
     quantity_ordered = models.DecimalField(
         _("Quantity ordered"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
-    quantity_contracted = models.DecimalField(
-        _("Quantity contracted"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
-    )
     quantity_confirmed = models.DecimalField(
         _("Quantity confirmed"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )

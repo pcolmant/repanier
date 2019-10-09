@@ -88,11 +88,6 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 email.send_email()
 
         # Orders send to our producers
-        # producer_set = Producer.objects.filter(
-        #     permanence=permanence,
-        #     language=language_code,
-        # ).order_by('?')
-        # all_producers = permanence.contract.producers.all() if permanence.contract else permanence.producers.all()
         producer_set = Producer.objects.filter(
             permanence=permanence,
             language=language_code,
@@ -111,7 +106,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 'name': long_profile_name,
                 'long_profile_name': long_profile_name,
                 'order_empty': wb is None,
-                'duplicate': not (wb is None or producer.manage_replenishment),
+                'duplicate': wb is not None,
                 'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                 'signature': order_responsible.get_html_signature

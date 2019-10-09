@@ -64,10 +64,6 @@ class RepanierToolbar(CMSToolbar):
                 position += 1
                 url = "{}?is_into_offer__exact=1&is_active__exact=1".format(reverse('admin:repanier_box_changelist'))
                 admin_menu.add_sideframe_item(_('Boxes'), url=url, position=position)
-            if settings.REPANIER_SETTINGS_CONTRACT:
-                position += 1
-                url = "{}?is_active__exact=1".format(reverse('admin:repanier_contract_changelist'))
-                admin_menu.add_sideframe_item(_('Commitments'), url=url, position=position)
             if user.is_order_manager:
                 position += 1
                 url = reverse('admin:repanier_permanenceinpreparation_changelist')

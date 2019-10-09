@@ -40,9 +40,7 @@ class OfferItemSerializer(serializers.Serializer):
             'reference',
             'get_long_name',
             'quantity_invoiced',
-            'manage_replenishment',
             'stock',
-            'add_2_stock'
         )
 
 

@@ -49,14 +49,3 @@ class Command(BaseCommand):
                 cursor.execute("UPDATE repanier_producer SET city = \'\' WHERE city IS NULL")
         except:
             pass
-
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    "UPDATE repanier_offeritem SET not_permanences_dates = \'\' WHERE not_permanences_dates IS NULL")
-                cursor.execute(
-                    "UPDATE repanier_offeritem SET permanences_dates = \'\' WHERE permanences_dates IS NULL")
-                cursor.execute(
-                    "UPDATE repanier_offeritem SET permanences_dates_counter = 1 WHERE permanences_dates_counter IS NULL")
-        except:
-            pass

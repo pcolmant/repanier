@@ -43,18 +43,6 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
                         values.add(value)
                     qty_invoiced += form.cleaned_data.get('quantity_invoiced', DECIMAL_ZERO).quantize(THREE_DECIMALS)
 
-        if self.instance.manage_replenishment:
-            stock = Decimal(self.data.get("stock", DECIMAL_ZERO)).quantize(THREE_DECIMALS)
-            qty_delivered = Decimal(self.data.get("qty_delivered", DECIMAL_ZERO)).quantize(THREE_DECIMALS)
-
-            if qty_invoiced > stock + qty_delivered:
-                raise ValidationError(
-                    _(
-                        'Total quantity invoiced %(qty_invoiced)s is greather than the sum of the stock and the quantity delivered.') % {
-                        'qty_invoiced': number_format(qty_invoiced, 3)
-                    }
-                )
-
 
 class OfferItemPurchaseSendInlineForm(forms.ModelForm):
     previous_purchase_price = FormMoneyField(
@@ -133,22 +121,9 @@ class OfferItemSendDataForm(forms.ModelForm):
         self.fields["previous_producer_unit_price"].initial = offer_item.producer_unit_price
         self.fields["previous_customer_unit_price"].initial = offer_item.customer_unit_price
         self.fields["previous_unit_deposit"].initial = offer_item.unit_deposit
-        if offer_item.manage_replenishment:
-            invoiced_qty, taken_from_stock, customer_qty = offer_item.get_producer_qty_stock_invoiced()
-            self.fields["offer_purchase_price"].initial = RepanierMoney(
-                offer_item.total_purchase_with_tax.amount - (
-                        (offer_item.producer_unit_price.amount +
-                         offer_item.unit_deposit.amount) * taken_from_stock
-                ).quantize(TWO_DECIMALS), 2)
-            self.fields["qty_delivered"].initial = invoiced_qty.quantize(FOUR_DECIMALS)
-            self.fields["qty_prepared"].initial = customer_qty.quantize(
-                FOUR_DECIMALS)
-            self.fields["qty_prepared"].widget.attrs['readonly'] = True
-            self.fields["qty_prepared"].disabled = True
-        else:
-            self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
+        self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
         if offer_item.wrapped or offer_item.order_unit not in [PRODUCT_ORDER_UNIT_KG,
-                                                               PRODUCT_ORDER_UNIT_PC_KG] or offer_item.manage_replenishment:
+                                                               PRODUCT_ORDER_UNIT_PC_KG]:
             self.fields["offer_purchase_price"].widget.attrs['readonly'] = True
             self.fields["offer_purchase_price"].disabled = True
         if offer_item.producer_price_are_wo_vat:
@@ -156,15 +131,9 @@ class OfferItemSendDataForm(forms.ModelForm):
 
     def get_readonly_fields(self, request, obj=None):
         if obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
-            if obj.manage_replenishment:
-                return ['product', 'qty_prepared']
-            else:
-                return ['product']
+            return ['product']
         else:
-            if obj.manage_replenishment:
-                return ['offer_purchase_price', 'product', 'qty_prepared']
-            else:
-                return ['offer_purchase_price', 'product']
+            return ['offer_purchase_price', 'product']
 
     def save(self, *args, **kwargs):
         offer_item = super(OfferItemSendDataForm, self).save(*args, **kwargs)
@@ -176,8 +145,7 @@ class OfferItemSendDataForm(forms.ModelForm):
             customer_unit_price = self.cleaned_data.get("customer_unit_price", offer_item.customer_unit_price)
             unit_deposit = self.cleaned_data["unit_deposit"]
 
-            if offer_item.manage_replenishment \
-                    or previous_producer_unit_price != producer_unit_price \
+            if previous_producer_unit_price != producer_unit_price \
                     or previous_customer_unit_price != customer_unit_price \
                     or previous_unit_deposit != unit_deposit:
                 offer_item.producer_unit_price = producer_unit_price
@@ -224,25 +192,18 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         else:
             prices = ('producer_unit_price', 'unit_deposit')
 
-        if obj.manage_replenishment:
+        if not obj.wrapped and obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
             self.fields = (
                 ('permanence', 'department_for_customer', 'product', 'get_vat_level',),
                 prices,
-                ('stock', 'qty_delivered', 'qty_prepared', 'offer_purchase_price')
+                ('offer_purchase_price', 'rule_of_3',)
             )
         else:
-            if not obj.wrapped and obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
-                self.fields = (
-                    ('permanence', 'department_for_customer', 'product', 'get_vat_level',),
-                    prices,
-                    ('offer_purchase_price', 'rule_of_3',)
-                )
-            else:
-                self.fields = (
-                    ('permanence', 'department_for_customer', 'product', 'get_vat_level',),
-                    prices,
-                    ('offer_purchase_price',)
-                )
+            self.fields = (
+                ('permanence', 'department_for_customer', 'product', 'get_vat_level',),
+                prices,
+                ('offer_purchase_price',)
+            )
 
         form = super(OfferItemSendAdmin, self).get_form(request, obj, **kwargs)
         permanence_field = form.base_fields["permanence"]
@@ -402,26 +363,3 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         offer_item.permanence.recalculate_order_amount(
             offer_item_qs=OfferItem.objects.filter(id=offer_item.id).order_by('?')
         )
-
-        if offer_item.manage_replenishment:
-            # qty_delivered and stock are displayed in the form
-            offer_item = OfferItem.objects.filter(id=offer_item.id).order_by('?').first()
-            qty_delivered = form.cleaned_data.get('qty_delivered', DECIMAL_ZERO).quantize(THREE_DECIMALS)
-            result_set = Purchase.objects.filter(
-                offer_item_id=offer_item.id,
-                is_box_content=False
-            ).order_by('?').aggregate(
-                qty_invoiced=Sum(
-                    'quantity_invoiced',
-                    output_field=DecimalField(max_digits=9, decimal_places=4, default=DECIMAL_ZERO)
-                )
-            )
-            qty_invoiced = result_set["qty_invoiced"] \
-                if result_set["qty_invoiced"] is not None else DECIMAL_ZERO
-            taken_from_stock = qty_invoiced if qty_invoiced < offer_item.stock else offer_item.stock
-            new_add_2_stock = taken_from_stock + qty_delivered - qty_invoiced
-            if new_add_2_stock < DECIMAL_ZERO:
-                new_add_2_stock = DECIMAL_ZERO
-            # Important : go through offer_item_post_init and offer_item_pre_save
-            offer_item.add_2_stock = new_add_2_stock
-            offer_item.save()

@@ -16,8 +16,6 @@ from .staff import Staff
 # after Producer and Product
 from .box import Box
 from .box import BoxContent
-from .contract import Contract
-from .contract import ContractContent
 # proxies
 from .invoice import CustomerSend
 from .offeritem import OfferItemSend, OfferItemClosed, OfferItemWoReceiver

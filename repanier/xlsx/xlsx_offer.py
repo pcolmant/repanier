@@ -4,7 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 
 import repanier.apps
 from repanier.const import PERMANENCE_PLANNED, PERMANENCE_OPENED, LIMIT_ORDER_QTY_ITEM
-from repanier.models import ContractContent
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -17,41 +16,28 @@ def export_offer(permanence, wb=None):
     row_num = 0
 
     if permanence.status == PERMANENCE_PLANNED:
-        if permanence.contract is None:
-            producers_in_this_permanence = Producer.objects.filter(
-                permanence=permanence, is_active=True)
+        producers_in_this_permanence = Producer.objects.filter(
+            permanence=permanence, is_active=True)
 
-            for product in Product.objects.prefetch_related(
-                    "producer", "department_for_customer").filter(
-                producer__in=producers_in_this_permanence, is_into_offer=True,
-                is_box=False,
-                translations__language_code=translation.get_language()).order_by(
-                "producer__short_profile_name",
-                "department_for_customer",
-                "translations__long_name",
-                "order_average_weight"):
-                row_num = export_offer_row(product, row_num, ws)
-            for product in Product.objects.prefetch_related(
-                    "producer", "department_for_customer").filter(
-                is_into_offer=True,
-                is_box=True,
-                translations__language_code=translation.get_language()).order_by(
-                "customer_unit_price",
-                "unit_deposit",
-                "translations__long_name"):
-                row_num = export_offer_row(product, row_num, ws)
-        else:
-            for contract_content in ContractContent.objects.prefetch_related(
-                    "product", "product__producer", "product__department_for_customer").filter(
-                contract=permanence.contract,
-                permanences_dates__isnull=False
-            ):
-                product = contract_content.product
-                row_num = export_offer_row(
-                    product, row_num, ws,
-                    permanences_dates=contract_content.get_permanences_dates,
-                    flexible_dates=contract_content.flexible_dates
-                )
+        for product in Product.objects.prefetch_related(
+                "producer", "department_for_customer").filter(
+            producer__in=producers_in_this_permanence, is_into_offer=True,
+            is_box=False,
+            translations__language_code=translation.get_language()).order_by(
+            "producer__short_profile_name",
+            "department_for_customer",
+            "translations__long_name",
+            "order_average_weight"):
+            row_num = export_offer_row(product, row_num, ws)
+        for product in Product.objects.prefetch_related(
+                "producer", "department_for_customer").filter(
+            is_into_offer=True,
+            is_box=True,
+            translations__language_code=translation.get_language()).order_by(
+            "customer_unit_price",
+            "unit_deposit",
+            "translations__long_name"):
+            row_num = export_offer_row(product, row_num, ws)
 
     elif permanence.status == PERMANENCE_OPENED:
         for offer_item in OfferItem.objects.prefetch_related(
@@ -63,14 +49,13 @@ def export_offer(permanence, wb=None):
             'translations__order_sort_order',
         ):
             row_num = export_offer_row(
-                offer_item, row_num, ws,
-                permanences_dates=offer_item.get_permanences_dates
+                offer_item, row_num, ws
             )
 
     return wb
 
 
-def export_offer_row(product, row_num, ws, permanences_dates=EMPTY_STRING, flexible_dates=False):
+def export_offer_row(product, row_num, ws):
     row = [
         (_("Producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
         (_("Department"), 15,
@@ -86,12 +71,6 @@ def export_offer_row(product, row_num, ws, permanences_dates=EMPTY_STRING, flexi
         (_("Deposit"), 10, product.unit_deposit,
          repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
     ]
-    if permanences_dates:
-        row += [
-            (_("Permanences dates"), 60, permanences_dates, NumberFormat.FORMAT_TEXT, False),
-            (_("Flexible dates of permanence"), 5, _("Yes") if flexible_dates else _("No"), NumberFormat.FORMAT_TEXT,
-             False),
-        ]
     if row_num == 0:
         worksheet_set_header(ws, row)
         row_num += 1

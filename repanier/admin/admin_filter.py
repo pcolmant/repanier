@@ -5,7 +5,6 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
-from repanier.models.contract import Contract
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
@@ -46,41 +45,6 @@ class ProductFilterByProducer(SimpleListFilter):
             return queryset.filter(producer_id=self.value())
         else:
             return queryset
-
-
-class ContractFilterByProducer(SimpleListFilter):
-    title = _("Producers")
-    parameter_name = 'producer'
-    template = get_admin_template_name('producer_filter.html')
-
-    def lookups(self, request, model_admin):
-        return [(c.id, c.short_profile_name) for c in
-                Producer.objects.filter(is_active=True)
-                ]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(producers=self.value())
-        else:
-            return queryset
-
-
-class ProductFilterByContract(SimpleListFilter):
-    title = _("Commitments")
-    parameter_name = 'commitment'
-    template = get_admin_template_name('contract_filter.html')
-
-    def lookups(self, request, model_admin):
-        return [(c.id, c.long_name) for c in
-                Contract.objects.filter(is_active=True)
-                ]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(producer__contracts__id=self.value())
-        else:
-            return queryset
-
 
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
     title = _("Departments")

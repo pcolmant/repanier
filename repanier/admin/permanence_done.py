@@ -724,12 +724,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             return qs.filter(
                 status__gte=PERMANENCE_SEND
-                # master_contract__isnull=True
             )
         else:
             return qs.filter(
                 status__gte=PERMANENCE_CLOSED
-                # master_contract__isnull=True
             )
 
     def save_model(self, request, permanence, form, change):

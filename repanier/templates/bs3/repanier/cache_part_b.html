@@ -6,7 +6,7 @@
 {% if offer.unit_deposit != 0 %}
     <br>♻ {{ offer.unit_deposit }}
 {% endif %}
-{% if offer.picture2 and not offer.permanences_dates %}
+{% if offer.picture2 %}
     {% with order_nam=offer.get_order_name %}
         <br>
         <span data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}">

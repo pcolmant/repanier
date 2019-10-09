@@ -61,12 +61,6 @@ class ProducerResource(resources.ModelResource):
         widget=DecimalBooleanWidget(),
         readonly=False,
     )
-    manage_replenishment = fields.Field(
-        attribute="manage_replenishment",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=False,
-    )
     sort_products_by_reference = fields.Field(
         attribute="sort_products_by_reference",
         default=False,
@@ -94,13 +88,6 @@ class ProducerResource(resources.ModelResource):
         """
         Override to add additional logic.
         """
-        if not settings.REPANIER_SETTINGS_STOCK:
-            if instance.manage_replenishment:
-                raise ValueError(
-                    _(
-                        "Manage replenishment must be set to False because this option is not activated."
-                    )
-                )
         producer_qs = Producer.objects.filter(
             short_profile_name=instance.short_profile_name
         ).order_by("?")
@@ -128,7 +115,6 @@ class ProducerResource(resources.ModelResource):
             "fax",
             "address",
             "invoice_by_basket",
-            "manage_replenishment",
             "sort_products_by_reference",
             "producer_pre_opening",
             "producer_price_are_wo_vat",
@@ -229,36 +215,7 @@ class ProducerDataForm(forms.ModelForm):
         )
 
         producer_pre_opening = self.cleaned_data.get("producer_pre_opening", False)
-        manage_replenishment = self.cleaned_data.get("manage_replenishment", False)
         is_resale_price_fixed = self.cleaned_data.get("is_resale_price_fixed", False)
-        if manage_replenishment and producer_pre_opening:
-            # The producer set his offer -> no possibility to manage stock
-            self.add_error(
-                "producer_pre_opening",
-                _(
-                    "The pre-opening of the orders is incompatible with the management of the reassortment."
-                ),
-            )
-            self.add_error(
-                "manage_replenishment",
-                _(
-                    "The pre-opening of the orders is incompatible with the management of the reassortment."
-                ),
-            )
-        if manage_replenishment and invoice_by_basket:
-            # The group manage the replenishment -> no possibility for the producer to prepare basket
-            self.add_error(
-                "invoice_by_basket",
-                _(
-                    "Billing by basket is incompatible with the management of the reassortment."
-                ),
-            )
-            self.add_error(
-                "manage_replenishment",
-                _(
-                    "Billing by basket is incompatible with the management of the reassortment."
-                ),
-            )
         if is_resale_price_fixed and producer_pre_opening:
             # The producer set his price -> no possibility to fix the resale price
             self.add_error(
@@ -396,7 +353,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         # return xlsx_stock.admin_export(self, Producer.objects.all())
         wb = export_producer_stock(
             producers=Producer.objects.filter(
-                Q(manage_replenishment=True) | Q(represent_this_buyinggroup=True)
+                represent_this_buyinggroup=True
             ).order_by("short_profile_name"),
             wb=None,
         )
@@ -475,8 +432,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_advanced = []
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             fields_advanced += ["bank_account", "vat_id"]
-        if settings.REPANIER_SETTINGS_STOCK:
-            fields_advanced += ["manage_replenishment"]
         if settings.REPANIER_SETTINGS_PRODUCT_REFERENCE:
             fields_advanced += ["sort_products_by_reference"]
         fields_advanced += [

@@ -26,7 +26,6 @@ from repanier.admin.admin_filter import (
     ProductFilterByProductioMode,
     ProductFilterByPlacement,
     ProductFilterByVatLevel,
-    ProductFilterByContract,
 )
 from repanier.const import (
     LUT_PRODUCT_ORDER_UNIT,
@@ -49,7 +48,6 @@ from repanier.const import (
     LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
 )
-from repanier.models import Contract
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -482,7 +480,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     ordering = ("producer", "translations__long_name")
     search_fields = ("translations__long_name",)
     actions = ["deselect_is_into_offer", "duplicate_product"]
-    _contract = None
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -497,7 +494,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return self.has_delete_permission(request)
 
     def deselect_is_into_offer(self, request, queryset):
-        task_product.deselect_is_into_offer(queryset, self._contract)
+        task_product.deselect_is_into_offer(queryset)
 
     deselect_is_into_offer.short_description = _(
         "Remove selected products from the offer"
@@ -560,11 +557,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return list_display
 
     def get_list_filter(self, request):
-        if settings.REPANIER_SETTINGS_CONTRACT:
-            list_filter = [ProductFilterByContract]
-        else:
-            list_filter = []
-        list_filter += [
+        list_filter = [
             ProductFilterByProducer,
             ProductFilterByDepartmentForThisProducer,
             "is_into_offer",
@@ -760,27 +753,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ).order_by("translations__short_name")
         return form
 
-    def changelist_view(self, request, extra_context=None):
-        # Important : Needed to pass contract to product.get_html_is_into_offer()
-        # in the list_display of 'get_html_is_into_offer'
-        # and in 'deselect_is_into_offer'
-        if settings.REPANIER_SETTINGS_CONTRACT:
-            contract_id = sint(request.GET.get("commitment", 0))
-            if contract_id:
-                contract = Contract.objects.get(pk=contract_id)
-            elif Contract.objects.all().count() == 1:
-                contract = Contract.objects.all().first()
-            else:
-                contract = None
-        else:
-            contract = None
-        self._contract = contract
-        return super(ProductAdmin, self).changelist_view(
-            request, extra_context=extra_context
-        )
-
     def get_html_admin_is_into_offer(self, product):
-        return product.get_html_admin_is_into_offer(self._contract)
+        return product.get_html_admin_is_into_offer()
 
     get_html_admin_is_into_offer.short_description = _("In offer")
     get_html_admin_is_into_offer.admin_order_field = "is_into_offer"

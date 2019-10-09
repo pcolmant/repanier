@@ -686,7 +686,7 @@ def my_basket(is_order_confirm_send, order_amount):
     return json_dict
 
 
-def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
+def clean_offer_item(permanence, queryset):
     if permanence.status > const.PERMANENCE_SEND:
         # The purchases are already invoiced.
         # The offer item may not be modified any more
@@ -714,26 +714,14 @@ def clean_offer_item(permanence, queryset, reset_add_2_stock=False):
         )
 
         offer_item.may_order = False
-        offer_item.manage_replenishment = False
-        if offer_item.contract is not None:
-            offer_item.may_order = len(offer_item.permanences_dates) > 0
-            # No stock limit if this is a contract (ie a pre-order)
-            offer_item.limit_order_quantity_to_stock = False
-            offer_item.manage_production = False
-            offer_item.producer_pre_opening = False
-        else:
-            if offer_item.order_unit < const.PRODUCT_ORDER_UNIT_DEPOSIT:
-                offer_item.may_order = product.is_into_offer
-                offer_item.manage_replenishment = producer.manage_replenishment
+        if offer_item.order_unit < const.PRODUCT_ORDER_UNIT_DEPOSIT:
+            offer_item.may_order = product.is_into_offer
 
         # The group must pay the VAT, so it's easier to allways have
         # offer_item with VAT included
         if producer.producer_price_are_wo_vat:
             offer_item.producer_unit_price += offer_item.producer_vat
         offer_item.producer_price_are_wo_vat = False
-
-        if reset_add_2_stock:
-            offer_item.add_2_stock = const.DECIMAL_ZERO
 
         offer_item.save()
 
@@ -797,7 +785,6 @@ def reorder_offer_items(permanence_id):
             "translations__long_name",
             "order_average_weight",
             "producer__short_profile_name",
-            "permanences_dates_order",
         )
         for offer_item in reorder_queryset:
             offer_item.producer_sort_order = (
@@ -848,7 +835,6 @@ def update_offer_item(product_id=None, producer_id=None):
     for permanence in Permanence.objects.filter(
         status__in=[
             const.PERMANENCE_PLANNED,
-            const.PERMANENCE_PRE_OPEN,
             const.PERMANENCE_OPENED,
             const.PERMANENCE_CLOSED,
         ]

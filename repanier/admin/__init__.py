@@ -74,10 +74,6 @@ from repanier.models.box import Box
 from repanier.admin.box import BoxAdmin
 
 admin.site.register(Box, BoxAdmin)
-from repanier.models.contract import Contract
-from repanier.admin.contract import ContractAdmin
-
-admin.site.register(Contract, ContractAdmin)
 from repanier.models.staff import Staff
 from repanier.admin.staff import StaffWithUserDataAdmin
 

@@ -48,7 +48,7 @@ class OfferItem(Item):
     product = models.ForeignKey(
         "Product", verbose_name=_("Product"), on_delete=models.PROTECT
     )
-    # is a box or a contract content
+    # is a box content
     is_box_content = models.BooleanField(default=False)
 
     producer_price_are_wo_vat = models.BooleanField(
@@ -95,37 +95,8 @@ class OfferItem(Item):
     use_order_unit_converted = models.BooleanField(default=False)
 
     may_order = models.BooleanField(_("May order"), default=True)
-    manage_replenishment = models.BooleanField(_("Manage replenishment"), default=False)
     manage_production = models.BooleanField(default=False)
     producer_pre_opening = models.BooleanField(_("Pre-open the orders"), default=False)
-
-    add_2_stock = models.DecimalField(
-        _("Additional"), default=DECIMAL_ZERO, max_digits=9, decimal_places=4
-    )
-    new_stock = models.DecimalField(
-        _("Remaining stock"), default=None, max_digits=9, decimal_places=3, null=True
-    )
-    contract = models.ForeignKey(
-        "Contract",
-        verbose_name=_("Commitment"),
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        default=None,
-    )
-    permanences_dates = models.TextField(blank=True, default=EMPTY_STRING)
-    # Opposite of permaneces_date used to know when the related product is not into offer
-    not_permanences_dates = models.TextField(blank=True, default=EMPTY_STRING)
-    # Number of permanences where this product is placed.
-    # Used to compute the price during order phase
-    permanences_dates_counter = models.IntegerField(blank=False, default=1)
-    # Important : permanences_dates_order is used to
-    # group together offer item's of the same product of a contract
-    # with different purchases dates on the order form
-    # 0   : No group needed
-    # 1   : Master of a group
-    # > 1 : Displayed with the master of the group
-    permanences_dates_order = models.IntegerField(default=0)
 
     def get_vat_level(self):
         return self.get_vat_level_display()
@@ -136,29 +107,7 @@ class OfferItem(Item):
     def get_producer_qty_stock_invoiced(self):
         # Return quantity to buy to the producer and stock used to deliver the invoiced quantity
         if self.quantity_invoiced > DECIMAL_ZERO:
-            if self.manage_replenishment:
-                # if RepanierSettings.producer_pre_opening then the stock is the max available qty by the producer,
-                # not into our stock
-                quantity_for_customer = self.quantity_invoiced - self.add_2_stock
-                if self.stock == DECIMAL_ZERO:
-                    return self.quantity_invoiced, DECIMAL_ZERO, quantity_for_customer
-                else:
-                    delta = (quantity_for_customer - self.stock).quantize(FOUR_DECIMALS)
-                    if delta <= DECIMAL_ZERO:
-                        # i.e. quantity_for_customer <= self.stock
-                        return (
-                            self.add_2_stock,
-                            quantity_for_customer,
-                            quantity_for_customer,
-                        )
-                    else:
-                        return (
-                            delta + self.add_2_stock,
-                            self.stock,
-                            quantity_for_customer,
-                        )
-            else:
-                return self.quantity_invoiced, DECIMAL_ZERO, self.quantity_invoiced
+            return self.quantity_invoiced, DECIMAL_ZERO, self.quantity_invoiced
         return DECIMAL_ZERO, DECIMAL_ZERO, DECIMAL_ZERO
 
     def get_html_producer_qty_stock_invoiced(self):
@@ -204,38 +153,13 @@ class OfferItem(Item):
             return self.producer_unit_price
 
     def get_producer_row_price_invoiced(self):
-        if self.manage_replenishment:
-            if self.producer_unit_price.amount > self.customer_unit_price.amount:
-                return RepanierMoney(
-                    (self.customer_unit_price.amount + self.unit_deposit.amount)
-                    * self.get_producer_qty_invoiced(),
-                    2,
-                )
-            else:
-                return RepanierMoney(
-                    (self.producer_unit_price.amount + self.unit_deposit.amount)
-                    * self.get_producer_qty_invoiced(),
-                    2,
-                )
+        if self.producer_unit_price.amount > self.customer_unit_price.amount:
+            return self.total_selling_with_tax
         else:
-            if self.producer_unit_price.amount > self.customer_unit_price.amount:
-                return self.total_selling_with_tax
-            else:
-                return self.total_purchase_with_tax
+            return self.total_purchase_with_tax
 
     def get_html_producer_price_purchased(self):
-        if self.manage_replenishment:
-            invoiced_qty, taken_from_stock, customer_qty = (
-                self.get_producer_qty_stock_invoiced()
-            )
-            price = RepanierMoney(
-                (
-                    (self.producer_unit_price.amount + self.unit_deposit.amount)
-                    * invoiced_qty
-                ).quantize(TWO_DECIMALS)
-            )
-        else:
-            price = self.total_purchase_with_tax
+        price = self.total_purchase_with_tax
         if price != DECIMAL_ZERO:
             return mark_safe(_("<b>%(price)s</b>") % {"price": price})
         return EMPTY_STRING
@@ -262,83 +186,6 @@ class OfferItem(Item):
                     self.id,
                 )
             )
-
-    @cached_property
-    def get_not_permanences_dates(self):
-        if self.not_permanences_dates:
-            all_dates_str = sorted(
-                list(
-                    filter(
-                        None,
-                        self.not_permanences_dates.split(
-                            settings.DJANGO_SETTINGS_DATES_SEPARATOR
-                        ),
-                    )
-                )
-            )
-            all_days = []
-            for one_date_str in all_dates_str:
-                one_date = parse_date(one_date_str)
-                all_days.append(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH))
-            return ", ".join(all_days)
-        return EMPTY_STRING
-
-    @cached_property
-    def get_html_permanences_dates(self):
-        if self.permanences_dates:
-            all_dates_str = sorted(
-                list(
-                    filter(
-                        None,
-                        self.permanences_dates.split(
-                            settings.DJANGO_SETTINGS_DATES_SEPARATOR
-                        ),
-                    )
-                )
-            )
-            all_days = []
-            month_save = None
-            for one_date_str in all_dates_str:
-                one_date = parse_date(one_date_str)
-                if month_save != one_date.month:
-                    if month_save is not None:
-                        new_line = "<br>"
-                    else:
-                        new_line = EMPTY_STRING
-                    month_save = one_date.month
-                else:
-                    new_line = EMPTY_STRING
-                all_days.append(
-                    "{}{}".format(
-                        new_line, one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH)
-                    )
-                )
-            return mark_safe(", ".join(all_days))
-        return EMPTY_STRING
-
-    @cached_property
-    def get_permanences_dates(self):
-        if self.permanences_dates:
-            all_dates_str = sorted(
-                list(
-                    filter(
-                        None,
-                        self.permanences_dates.split(
-                            settings.DJANGO_SETTINGS_DATES_SEPARATOR
-                        ),
-                    )
-                )
-            )
-            all_days = []
-            # https://stackoverflow.com/questions/3845423/remove-empty-strings-from-a-list-of-strings
-            # -> list(filter(None, all_dates_str))
-            for one_date_str in all_dates_str:
-                one_date = parse_date(one_date_str)
-                all_days.append(
-                    "{}".format(one_date.strftime(settings.DJANGO_SETTINGS_DAY_MONTH))
-                )
-            return ", ".join(all_days)
-        return EMPTY_STRING
 
     def get_order_name(self):
         qty_display = self.get_qty_display()
@@ -373,27 +220,13 @@ class OfferItem(Item):
         return qty_display
 
     def get_long_name(self, customer_price=True, is_html=False):
-        if self.permanences_dates:
-            new_line = "<br>" if is_html else "\n"
-            return "{}{}{}".format(
-                super(OfferItem, self).get_long_name(customer_price=customer_price),
-                new_line,
-                self.get_permanences_dates,
-            )
-        else:
-            return super(OfferItem, self).get_long_name(customer_price=customer_price)
+        return super(OfferItem, self).get_long_name(customer_price=customer_price)
 
     def get_html_long_name(self):
         return mark_safe(self.get_long_name(is_html=True))
 
     def get_long_name_with_producer(self, is_html=False):
-        if self.permanences_dates:
-            return "{}, {}".format(
-                self.producer.short_profile_name,
-                self.get_long_name(customer_price=True, is_html=is_html),
-            )
-        else:
-            return super(OfferItem, self).get_long_name_with_producer()
+        return super(OfferItem, self).get_long_name_with_producer()
 
     def get_html_long_name_with_producer(self):
         return mark_safe(self.get_long_name_with_producer(is_html=True))
@@ -407,7 +240,7 @@ class OfferItem(Item):
     class Meta:
         verbose_name = _("Offer item")
         verbose_name_plural = _("Offer items")
-        unique_together = ("permanence", "product", "permanences_dates")
+        unique_together = ("permanence", "product")
         # index_together = [
         #     ["id", "order_unit"]
         # ]

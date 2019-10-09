@@ -29,7 +29,6 @@ from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheM
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
-from repanier.models import Contract
 from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -40,7 +39,7 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
-from repanier.task.task_order import pre_open_order, open_order, close_and_send_order
+from repanier.task.task_order import open_order, close_and_send_order
 from repanier.tools import get_recurrence_dates, get_repanier_template_name
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
@@ -172,43 +171,6 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         required=False,
     )
 
-    def __init__(self, *args, **kwargs):
-        super(PermanenceInPreparationForm, self).__init__(*args, **kwargs)
-        if settings.REPANIER_SETTINGS_CONTRACT and "contract" in self.fields:
-            contract_field = self.fields["contract"]
-            contract_field.widget.can_add_related = False
-            contract_field.widget.can_change_related = False
-            contract_field.widget.can_delete_related = False
-            contract = Contract.objects.all().first()
-            contract_field.initial = contract.pk if contract else None
-            permanence_date_field = self.fields["permanence_date"]
-            permanence_date_field.widget = forms.HiddenInput()
-            permanence_date_field.initial = timezone.now().date()
-
-    def clean(self):
-        if any(self.errors):
-            # Don't bother validating the formset unless each form is valid on its own
-            return
-        if settings.REPANIER_SETTINGS_CONTRACT:
-            contract = self.cleaned_data.get("contract", None)
-            if contract is not None:
-                producers = self.cleaned_data.get("producers", None)
-                if producers:
-                    self.add_error(
-                        "producers",
-                        _(
-                            "No producer may be selected if a contract is also selected."
-                        ),
-                    )
-                if settings.REPANIER_SETTINGS_BOX:
-                    boxes = self.cleaned_data.get("boxes", None)
-                    if boxes:
-                        self.add_error(
-                            "boxes",
-                            _("No box may be selected if a contract is also selected."),
-                        )
-        return
-
     class Meta:
         model = PermanenceInPreparation
         fields = "__all__"
@@ -253,12 +215,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         list_display = ["get_permanence_admin_display"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
-        list_display += ["get_producers"]
-        if settings.REPANIER_SETTINGS_CONTRACT:
-            list_display += ["contract"]
-        else:
-            list_display += ["get_customers"]
-        list_display += ["get_board", "get_html_status_display"]
+        list_display += ["get_producers", "get_customers", "get_board", "get_html_status_display"]
         return list_display
 
     def get_fields(self, request, permanence=None):
@@ -267,11 +224,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             "automatically_closed",
             "short_name",
             "offer_description",
+            "producers"
         ]
-        if settings.REPANIER_SETTINGS_CONTRACT:
-            fields = ["contract"] + fields
-        else:
-            fields += ["producers"]
 
         if settings.REPANIER_SETTINGS_BOX:
             fields.append("boxes")
@@ -280,8 +234,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     def get_readonly_fields(self, request, permanence=None):
         if permanence is not None and permanence.status > PERMANENCE_PLANNED:
             readonly_fields = ["status", "producers"]
-            if settings.REPANIER_SETTINGS_CONTRACT:
-                readonly_fields += ["contract"]
             if settings.REPANIER_SETTINGS_BOX:
                 readonly_fields += ["boxes"]
             return readonly_fields
@@ -454,169 +406,93 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             self.message_user(request, user_message, user_message_level)
             return
         permanence = queryset.first()
-        if permanence.status not in [PERMANENCE_PLANNED, PERMANENCE_PRE_OPEN]:
+        if permanence.status != PERMANENCE_PLANNED:
             user_message = _(
                 "The status of %(permanence)s prohibit you to perform this action."
             ) % {"permanence": permanence}
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
-        pre_open = (
-            (permanence.status == PERMANENCE_PLANNED)
-            and Producer.objects.filter(
-                permanence__id=permanence.id, is_active=True, producer_pre_opening=True
+        template_offer_mail = []
+        template_cancel_order_mail = []
+        cur_language = translation.get_language()
+        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+            language_code = language["code"]
+            translation.activate(language_code)
+
+            with switch_language(
+                repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+            ):
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
+                )
+
+            staff = Staff.get_or_create_order_responsible()
+
+            with switch_language(permanence, language_code):
+                offer_description = permanence.safe_translation_getter(
+                    "offer_description", any_language=True, default=EMPTY_STRING
+                )
+            offer_producer = ", ".join(
+                [p.short_profile_name for p in permanence.producers.all()]
             )
-            .order_by("?")
-            .exists()
-        )
-        if pre_open:
-            template_offer_mail = []
-            template_cancel_order_mail = []
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-
-                with switch_language(
-                    repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-                ):
-                    template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.offer_producer_mail
+            qs = Product.objects.filter(
+                producer=permanence.producers.first(),
+                is_into_offer=True,
+                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+            ).order_by("translations__long_name")[:5]
+            offer_detail = "<ul>{}</ul>".format(
+                "".join(
+                    "<li>{}, {}</li>".format(
+                        p.get_long_name(), p.producer.short_profile_name
                     )
-
-                staff = Staff.get_or_create_order_responsible()
-
-                with switch_language(permanence, language_code):
-                    offer_description = permanence.safe_translation_getter(
-                        "offer_description", any_language=True, default=EMPTY_STRING
-                    )
+                    for p in qs
+                )
+            )
+            context = TemplateContext(
+                {
+                    "offer_description": mark_safe(offer_description),
+                    "offer_detail": offer_detail,
+                    "offer_recent_detail": offer_detail,
+                    "offer_producer": offer_producer,
+                    "permanence_link": mark_safe(
+                        '<a href="#">{}</a>'.format(permanence)
+                    ),
+                    "signature": staff.get_html_signature,
+                }
+            )
+            template_offer_mail.append(language_code)
+            template_offer_mail.append(template.render(context))
+            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                 context = TemplateContext(
                     {
                         "name": _("Long name"),
-                        "long_profile_name": _("Long name"),
-                        "permanence_link": mark_safe(
-                            '<a href="#">{}</a>'.format(_("Offers"))
-                        ),
-                        "offer_description": mark_safe(offer_description),
-                        "offer_link": mark_safe(
-                            '<a href="#">{}</a>'.format(_("Offers"))
-                        ),
-                        "signature": staff.get_html_signature,
-                    }
-                )
-                template_offer_mail.append(language_code)
-                template_offer_mail.append(template.render(context))
-            translation.activate(cur_language)
-            email_will_be_sent, email_will_be_sent_to = (
-                RepanierEmail.send_email_to_who()
-            )
-        else:
-            template_offer_mail = []
-            template_cancel_order_mail = []
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-
-                with switch_language(
-                    repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-                ):
-                    template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
-                    )
-
-                staff = Staff.get_or_create_order_responsible()
-
-                with switch_language(permanence, language_code):
-                    offer_description = permanence.safe_translation_getter(
-                        "offer_description", any_language=True, default=EMPTY_STRING
-                    )
-                offer_producer = ", ".join(
-                    [p.short_profile_name for p in permanence.producers.all()]
-                )
-                qs = Product.objects.filter(
-                    producer=permanence.producers.first(),
-                    is_into_offer=True,
-                    order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
-                ).order_by("translations__long_name")[:5]
-                offer_detail = "<ul>{}</ul>".format(
-                    "".join(
-                        "<li>{}, {}</li>".format(
-                            p.get_long_name(), p.producer.short_profile_name
-                        )
-                        for p in qs
-                    )
-                )
-                context = TemplateContext(
-                    {
-                        "offer_description": mark_safe(offer_description),
-                        "offer_detail": offer_detail,
-                        "offer_recent_detail": offer_detail,
-                        "offer_producer": offer_producer,
+                        "long_basket_name": _("Long name"),
+                        "basket_name": _("Short name"),
+                        "short_basket_name": _("Short name"),
                         "permanence_link": mark_safe(
                             '<a href="#">{}</a>'.format(permanence)
                         ),
                         "signature": staff.get_html_signature,
                     }
                 )
-                template_offer_mail.append(language_code)
-                template_offer_mail.append(template.render(context))
-                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                    context = TemplateContext(
-                        {
-                            "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
-                            "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
-                            "permanence_link": mark_safe(
-                                '<a href="#">{}</a>'.format(permanence)
-                            ),
-                            "signature": staff.get_html_signature,
-                        }
-                    )
-                    template_cancel_order_mail.append(language_code)
-                    template_cancel_order_mail.append(template.render(context))
-            translation.activate(cur_language)
-            email_will_be_sent, email_will_be_sent_to = (
-                RepanierEmail.send_email_to_who()
-            )
+                template_cancel_order_mail.append(language_code)
+                template_cancel_order_mail.append(template.render(context))
+        translation.activate(cur_language)
+        email_will_be_sent, email_will_be_sent_to = (
+            RepanierEmail.send_email_to_who()
+        )
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             form = OpenAndSendOfferForm(request.POST)
             if form.is_valid():
                 do_not_send_any_mail = "apply-wo-mail" in request.POST
-                if pre_open:
-                    permanence_already_pre_opened = (
-                        Permanence.objects.filter(
-                            status__in=[
-                                PERMANENCE_WAIT_FOR_PRE_OPEN,
-                                PERMANENCE_PRE_OPEN,
-                            ]
-                        )
-                        .order_by("-is_updated_on")
-                        .only("id")
-                        .first()
-                    )
-                    if permanence_already_pre_opened is not None:
-                        user_message = _(
-                            "A maximum of one permanence may be pre opened."
-                        )
-                        user_message_level = messages.ERROR
-                    else:
-                        # pre_open_order(permanence.id)
-                        t = threading.Thread(
-                            target=pre_open_order, args=(permanence.id,)
-                        )
-                        t.start()
-                        user_message = _("The offers are being generated.")
-                        user_message_level = messages.INFO
-                else:
-                    # open_order(permanence.id, do_not_send_any_mail)
-                    t = threading.Thread(
-                        target=open_order, args=(permanence.id, do_not_send_any_mail)
-                    )
-                    t.start()
-                    user_message = _("The offers are being generated.")
-                    user_message_level = messages.INFO
+                # open_order(permanence.id, do_not_send_any_mail)
+                t = threading.Thread(
+                    target=open_order, args=(permanence.id, do_not_send_any_mail)
+                )
+                t.start()
+                user_message = _("The offers are being generated.")
+                user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
             return HttpResponseRedirect(request.get_full_path())
         else:
@@ -896,7 +772,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         permanence = queryset.first()
         if permanence.status not in [
             PERMANENCE_PLANNED,
-            PERMANENCE_PRE_OPEN,
             PERMANENCE_OPENED,
             PERMANENCE_CLOSED,
             PERMANENCE_SEND,
@@ -942,13 +817,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         )
 
     generate_permanence.short_description = _("Duplicate")
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "contract":
-            kwargs["queryset"] = Contract.objects.filter(is_active=True)
-        return super(PermanenceInPreparationAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":

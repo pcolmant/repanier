@@ -71,8 +71,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
                 self.list_editable = ('stock',)
                 return ('department_for_customer', 'get_html_long_name_with_producer',
                         'stock', 'limit_order_quantity_to_stock',
-                        'get_html_producer_qty_stock_invoiced',
-                        'add_2_stock')
+                        'get_html_producer_qty_stock_invoiced')
             else:
                 return ('department_for_customer', 'get_html_long_name_with_producer',
                         'get_html_producer_qty_stock_invoiced')
@@ -81,22 +80,10 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
                     'get_html_producer_qty_stock_invoiced')
 
     def get_form(self, request, offer_item=None, **kwargs):
-        if offer_item.manage_replenishment:
-            if offer_item.permanence.status == PERMANENCE_CLOSED:
-                fields_basic = [
-                    ('permanence', 'department_for_customer', 'product'),
-                    ('stock', 'producer_qty_stock_invoiced', 'add_2_stock',)
-                ]
-            else:
-                fields_basic = [
-                    ('permanence', 'department_for_customer', 'product'),
-                    ('stock', 'producer_qty_stock_invoiced',)
-                ]
-        else:
-            fields_basic = [
-                ('permanence', 'department_for_customer', 'product'),
-                ('producer_qty_stock_invoiced',)
-            ]
+        fields_basic = [
+            ('permanence', 'department_for_customer', 'product'),
+            ('producer_qty_stock_invoiced',)
+        ]
         self.fieldsets = (
             (None, {'fields': fields_basic}),
         )

@@ -1497,7 +1497,7 @@ def generate_producer_xlsx(permanence, producer=None, wb=None):
     wb = export_producer_by_product(
         permanence=permanence, producer=producer, wb=wb
     )
-    if not (wb is None or producer.manage_replenishment):
+    if wb is not None:
         # At least one order and we don't manage replenishment for this producer
         wb = export_producer_by_customer(
             permanence=permanence, producer=producer, wb=wb

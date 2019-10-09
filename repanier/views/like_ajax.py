@@ -28,11 +28,6 @@ def like_ajax(request):
                     # add a new like for a company
                     product.likes.add(user)
                 like_html = offer_item.get_html_like(user)
-                if settings.REPANIER_SETTINGS_CONTRACT:
-                    for offer_item in OfferItemWoReceiver.objects.filter(product_id=product.id).only("id").order_by(
-                            '?'):
-                        json_dict[".btn_like{}".format(offer_item.id)] = like_html
-                else:
-                    json_dict[".btn_like{}".format(offer_item.id)] = like_html
+                json_dict[".btn_like{}".format(offer_item.id)] = like_html
                 return JsonResponse(json_dict)
     raise Http404

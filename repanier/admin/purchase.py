@@ -127,12 +127,6 @@ class PurchaseForm(forms.ModelForm):
     product = forms.ChoiceField(
         label=_("Product"), widget=Select2(select2attrs={"width": "450px"})
     )
-    if settings.REPANIER_SETTINGS_CONTRACT:
-        # TODO : Lets the user select a date instead of "add_for_contract"
-        add_for_contract = forms.BooleanField(
-            label=_("Create purchases for all contract openings"), initial=True
-        )
-
     delivery = forms.ChoiceField(
         label=_("Delivery point"), widget=SelectAdminDeliveryWidget()
     )
@@ -397,7 +391,6 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             permanence_id = purchase.permanence_id
 
         if permanence_id is not None:
-            # CONTRACT may not be used with delivery_point nor box, see common_settings
             if (
                 Permanence.objects.filter(id=permanence_id, with_delivery_point=True)
                 .order_by("?")
@@ -406,21 +399,6 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 fields_basic = [
                     "permanence",
                     "delivery",
-                    "customer",
-                    "product",
-                    "quantity",
-                    "comment",
-                    "is_updated_on",
-                ]
-            elif (
-                Permanence.objects.filter(id=permanence_id, contract_id__isnull=False)
-                .order_by("?")
-                .exists()
-            ):
-                # TODO : Lets the user select a date instead of "add_for_contract"
-                fields_basic = [
-                    "permanence",
-                    "add_for_contract",
                     "customer",
                     "product",
                     "quantity",
@@ -625,26 +603,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 .order_by("?")
                 .first()
             )
-            if settings.REPANIER_SETTINGS_CONTRACT:
-                # TODO : Get or create on offer item for the selected date of the contract linked to the permanence
-                # if form.cleaned_data.get("add_for_contract"):
-                #     offer_items_for_contract = product.offeritem_set.filter(
-                #         permanence=purchase.permanence, may_order=True
-                #     )
-                #     if offer_items_for_contract is not None:
-                #         for offer_item in offer_items_for_contract:
-                #             import copy
-                #
-                #             copied_purchase = copy.deepcopy(purchase)
-                #             copied_purchase.offer_item = offer_item
-                #             copied_purchase.status = status
-                #             copied_purchase.producer = offer_item.producer
-                #             copied_purchase.permanence.producers.add(offer_item.producer)
-                #             copied_purchase.save()
-                #             copied_purchase.save_box()
-                offer_item = None
-            else:
-                offer_item = product.get_or_create_offer_item(purchase.permanence)
+            offer_item = product.get_or_create_offer_item(purchase.permanence)
 
         if offer_item is not None:
 
@@ -653,22 +612,6 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 purchase.quantity_ordered = form.cleaned_data.get("quantity", DECIMAL_ZERO)
             else:
                 purchase.quantity_invoiced = form.cleaned_data.get("quantity", DECIMAL_ZERO)
-            # if purchase.id is None:
-            #     # Select one purchase
-            #     previous_purchase = Purchase.objects.filter(
-            #         customer=purchase.customer,
-            #         offer_item=offer_item,
-            #         is_box_content=False
-            #     ).order_by('?')
-            #     if previous_purchase.exists():
-            #         # add to it
-            #         previous_purchase = previous_purchase.first()
-            #         purchase.id = previous_purchase.id
-            #         if status < PERMANENCE_SEND:
-            #             purchase.quantity_ordered += previous_purchase.quantity_ordered
-            #         else:
-            #             purchase.quantity_invoiced += previous_purchase.quantity_invoiced
-
 
             purchase.status = status
             purchase.producer = offer_item.producer
