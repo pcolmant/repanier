@@ -1,0 +1,30 @@
+{% load i18n l10n %}
+<div class="row">
+      <div class="panel panel-default">
+            <div class="panel-heading">
+                  {{ msg_delivery }}
+                  {{ msg_confirmation1 }}
+
+                  {% if is_order_confirm_send %}
+                        <p>{{ basket_message }}</p>
+                        <p><font color="#51a351">{{ msg_confirmation2 }}</font><p/>
+                  {% elif should_confirm and is_basket %}
+                        <p>{{ basket_message }}</p>
+                        <span style="color: red; ">{% trans "⚠ Unconfirmed orders will be canceled." %}</span><br>
+                        <button id="btn_confirm_order" class="btn btn-info" {} onclick="btn_receive_order_email();"  {{ confirm_btn_disabled }}>
+                              <span class="glyphicon glyphicon-floppy-disk">&nbsp;&nbsp;{% trans "Confirm this order and receive an email containing its summary." %}</span>
+                        </button>
+                        <p>
+                              <a href="{% url 'order_view' permanence.pk %}">{% trans "➜ Go back to order page." %}</a>
+                        </p>
+                  {% elif should_confirm %}
+                        <span style="color: red; ">{% trans "⚠ Unconfirmed orders will be canceled." %}</span><br>
+                        <a href="{% url 'order_view' permanence.pk %}?is_basket=yes" class="btn btn-info" {{ confirm_btn_disabled }}>{% trans "➜ Go to the confirmation step of my order." %}</a>
+                  {% elif is_basket %}
+                        <p>{{ basket_message }}</p>
+                        <button id="btn_confirm_order" class="btn btn-info" onclick="btn_receive_order_email();">{% trans "Receive an email containing this order summary." %}</button>
+                        <div class="clearfix"></div>
+                  {% endif %}
+            </div>
+      </div>
+</div>

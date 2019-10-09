@@ -2396,6 +2396,10 @@ msgstr " ➜ Confirmer ma commande et recevoir un ✉ récapitulatif."
 msgid "➜ Go to the confirmation step of my order."
 msgstr "➜ Aller à l'étape de confirmation de ma commande."
 
+#: models/invoice.py:390
+msgid "➜ Go back to order page."
+msgstr "➜ Retourner à l'écran de commande."
+
 #: models/invoice.py:404
 msgid "Receive an email containing this order summary."
 msgstr "Recevoir un ✉ récapitulatif de ma commande."
