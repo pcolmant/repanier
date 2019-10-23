@@ -20,7 +20,7 @@ class ConfigurationDataForm(TranslatableModelForm):
         max_length=50,
         initial=settings.REPANIER_SETTINGS_GROUP_NAME
     )
-    email = forms.EmailField(
+    email = forms.CharField(
         label=_('Email'),
         required=True,
         initial=settings.DEFAULT_FROM_EMAIL
