@@ -125,9 +125,6 @@ REPANIER_SETTINGS_BOOTSTRAP_CSS = config.get(
 REPANIER_SETTINGS_BOX = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_BOX", fallback=False
 )
-REPANIER_SETTINGS_CONTRACT = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_CONTRACT", fallback=False
-)
 REPANIER_SETTINGS_COORDINATOR_EMAIL = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_COORDINATOR_EMAIL", fallback=ADMIN_EMAIL
 )
@@ -166,9 +163,6 @@ REPANIER_SETTINGS_IS_MINIMALIST = config.getboolean(
 REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_MANAGE_ACCOUNTING", fallback=True
 )
-REPANIER_SETTINGS_PRE_OPENING = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_PRE_OPENING", fallback=False
-)
 REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_PRODUCT_LABEL", fallback=False
 )
@@ -197,11 +191,6 @@ REPANIER_SETTINGS_STOCK = config.getboolean(
 REPANIER_SETTINGS_TEMPLATE = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_TEMPLATE", fallback="bs3"
 )
-# IMPORTANT :
-# CONTRACT may not be used with delivery nor box
-if REPANIER_SETTINGS_CONTRACT:
-    REPANIER_SETTINGS_BOX = False
-    REPANIER_SETTINGS_DELIVERY_POINT = False
 
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
@@ -444,7 +433,14 @@ if DEBUG:
                 )
             ],
             # "APP_DIRS": True,
-            "OPTIONS": {"context_processors": CONTEXT_PROCESSORS},
+            "OPTIONS": {
+                "context_processors": CONTEXT_PROCESSORS,
+                "loaders": [
+                        "django.template.loaders.filesystem.Loader",
+                        "django.template.loaders.app_directories.Loader",
+                ],
+                "debug": True,
+            },
         }
     ]
 else:
@@ -468,7 +464,7 @@ else:
                         ],
                     )
                 ],
-                "debug": DEBUG,
+                "debug": False,
             },
         }
     ]
