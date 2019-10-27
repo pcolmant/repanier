@@ -699,7 +699,6 @@ def clean_offer_item(permanence, queryset):
 
         offer_item.set_from(product)
 
-        offer_item.producer_pre_opening = producer.producer_pre_opening
         offer_item.manage_production = producer.represent_this_buyinggroup
         # Those offer_items not subjects to price modifications
         offer_item.is_resale_price_fixed = (

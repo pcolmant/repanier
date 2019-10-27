@@ -3,7 +3,7 @@
 {% block content %}
     <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
     <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
-    <h4>{% if pre_open %}{% trans "Pre-opening of orders" %}{% else %}{% trans "Opening of orders" %}{% endif %} : {{ permanence }}</h4>
+    <h4>{% trans "Opening of orders" %} : {{ permanence }}</h4>
     <p></p>
     <form action="" method="post">{% csrf_token %}
         <h6>{{ sub_title }}</h6>

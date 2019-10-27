@@ -116,7 +116,6 @@ class ProducerResource(resources.ModelResource):
             "address",
             "invoice_by_basket",
             "sort_products_by_reference",
-            "producer_pre_opening",
             "producer_price_are_wo_vat",
             "price_list_multiplier",
             "is_resale_price_fixed",
@@ -214,22 +213,7 @@ class ProducerDataForm(forms.ModelForm):
             "price_list_multiplier", DECIMAL_ONE
         )
 
-        producer_pre_opening = self.cleaned_data.get("producer_pre_opening", False)
         is_resale_price_fixed = self.cleaned_data.get("is_resale_price_fixed", False)
-        if is_resale_price_fixed and producer_pre_opening:
-            # The producer set his price -> no possibility to fix the resale price
-            self.add_error(
-                "producer_pre_opening",
-                _(
-                    "The pre-opening of orders is incompatible with the imposition of customer selling prices."
-                ),
-            )
-            self.add_error(
-                "is_resale_price_fixed",
-                _(
-                    "The pre-opening of orders is incompatible with the imposition of customer selling prices."
-                ),
-            )
         if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
             # Important : For invoicing correctly
             self.add_error(
@@ -439,7 +423,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             "minimum_order_value",
             "price_list_multiplier",
             "is_resale_price_fixed",
-            "producer_pre_opening",
             "reference_site",
             "web_services_activated",
         ]

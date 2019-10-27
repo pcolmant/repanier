@@ -96,7 +96,6 @@ class OfferItem(Item):
 
     may_order = models.BooleanField(_("May order"), default=True)
     manage_production = models.BooleanField(default=False)
-    producer_pre_opening = models.BooleanField(_("Pre-open the orders"), default=False)
 
     def get_vat_level(self):
         return self.get_vat_level_display()

@@ -337,13 +337,6 @@ class ProductDataForm(TranslatableModelForm):
                                 "You must limit the order quantity to the stock because the producer represent this buyinggroup."
                             ),
                         )
-                    if producer.producer_pre_opening:
-                        self.add_error(
-                            "limit_order_quantity_to_stock",
-                            _(
-                                "You must limit the order quantity to the stock because you pre open the orders for this producer."
-                            ),
-                        )
 
             if order_unit in [
                 PRODUCT_ORDER_UNIT_PC,

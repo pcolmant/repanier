@@ -73,21 +73,6 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     # Calculate the Purchase 'sum' for each customer
     permanence.recalculate_order_amount()
 
-    # 1 - Disallow access to the producer to his/her products no more into "pre order" status
-    for producer in (
-        Producer.objects.filter(
-            permanence=permanence_id, producer_pre_opening=True, is_active=True
-        )
-        .only("offer_uuid", "offer_filled")
-        .order_by("?")
-    ):
-        producer.offer_uuid = uuid.uuid1()
-        producer.save(update_fields=["offer_uuid"])
-        if not producer.offer_filled:
-            # Deactivate offer item if the producer as not reacted to the pre opening
-            OfferItemWoReceiver.objects.filter(
-                permanence_id=permanence_id, may_order=True, producer_id=producer.id
-            ).update(may_order=False)
     # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
     for offer_item in (
