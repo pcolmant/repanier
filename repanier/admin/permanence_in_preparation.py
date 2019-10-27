@@ -517,7 +517,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "open_and_send_offer",
                 "permanence": permanence,
-                "pre_open": pre_open,
                 "form": form,
                 "email_will_be_sent": email_will_be_sent,
                 "email_will_be_sent_to": email_will_be_sent_to,
