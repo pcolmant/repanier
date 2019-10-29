@@ -47,10 +47,7 @@ class Product(Item):
                 product_id=self.id,
                 producer_id=self.producer_id,
             )
-            clean_offer_item(permanence, offer_item_qs)
-        else:
-            offer_item = offer_item_qs.first()
-            offer_item.save(update_fields=["may_order"])
+        clean_offer_item(permanence, offer_item_qs)
         if self.is_box:
             # Add box products
             for box_content in BoxContent.objects.filter(box=self.id).order_by("?"):
@@ -64,11 +61,11 @@ class Product(Item):
                         producer_id=box_content.product.producer_id,
                         is_box_content=True,
                     )
-                    clean_offer_item(permanence, box_offer_item_qs)
                 else:
                     box_offer_item = box_offer_item_qs.first()
                     box_offer_item.is_box_content = True
-                    box_offer_item.save(update_fields=["is_box_content", "may_order"])
+                    box_offer_item.save(update_fields=["is_box_content"])
+                clean_offer_item(permanence, box_offer_item_qs)
 
         offer_item = offer_item_qs.first()
         return offer_item
