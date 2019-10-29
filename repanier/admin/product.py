@@ -3,6 +3,7 @@ from os import sep as os_sep
 from urllib.parse import parse_qsl
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.core.checks import messages
 from django.db.models import F
@@ -10,8 +11,6 @@ from django.shortcuts import render
 from django.utils import translation
 from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _, get_language_info
-
-from django.conf import settings
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
@@ -28,7 +27,6 @@ from repanier.admin.admin_filter import (
     ProductFilterByVatLevel,
 )
 from repanier.const import (
-    LUT_PRODUCT_ORDER_UNIT,
     LUT_PRODUCT_ORDER_UNIT_REVERSE,
     LUT_ALL_VAT,
     LUT_ALL_VAT_REVERSE,
@@ -44,8 +42,8 @@ from repanier.const import (
     LIMIT_ORDER_QTY_ITEM,
     PRODUCT_ORDER_UNIT_PC_PRICE_LT,
     LUT_VAT,
-    LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION,
-    LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION,
+    LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
+    LUT_PRODUCT_ORDER_UNIT,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
 )
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
@@ -53,7 +51,6 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.task import task_product
 from repanier.tools import (
-    sint,
     update_offer_item,
     get_repanier_template_name,
     get_repanier_static_name,
@@ -677,7 +674,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         else:
             production_mode_field = None
 
-        order_unit_choices = LUT_PRODUCT_ORDER_UNIT_WO_SUBSCRIPTION
+        order_unit_choices = LUT_PRODUCT_ORDER_UNIT
         if producer is not None:
             # One folder by producer for clarity
             if hasattr(picture_field.widget, "upload_to"):
@@ -685,7 +682,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     "product", os_sep, producer.id
                 )
             if producer.represent_this_buyinggroup:
-                order_unit_choices = LUT_PRODUCT_ORDER_UNIT_W_SUBSCRIPTION
+                order_unit_choices = LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST
         order_unit_field.choices = order_unit_choices
 
         if product is not None:

@@ -152,8 +152,7 @@ class Permanence(TranslatableModel):
                     if pi.status == PERMANENCE_OPENED:
                         label = (
                             "{} ({}) ".format(
-                                p.short_profile_name,
-                                pi.get_total_price_with_tax(),
+                                p.short_profile_name, pi.get_total_price_with_tax()
                             )
                         ).replace(" ", "&nbsp;")
                         offeritem_changelist_url = close_offeritem_changelist_url
@@ -167,9 +166,7 @@ class Permanence(TranslatableModel):
                         ).replace(" ", "&nbsp;")
                         offeritem_changelist_url = close_offeritem_changelist_url
                 else:
-                    label = (
-                        "{} ".format(p.short_profile_name)
-                    ).replace(" ", "&nbsp;")
+                    label = ("{} ".format(p.short_profile_name)).replace(" ", "&nbsp;")
                     offeritem_changelist_url = close_offeritem_changelist_url
                 link.append(
                     '<a href="{}?permanence={}&producer={}">{}</a>'.format(
@@ -200,8 +197,7 @@ class Permanence(TranslatableModel):
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
                     label = "{} ({})".format(
-                        pi.producer.short_profile_name,
-                        pi.get_total_price_with_tax(),
+                        pi.producer.short_profile_name, pi.get_total_price_with_tax()
                     )
                     link.append(
                         '<a href="{}?permanence={}&producer={}">&nbsp;{}</a>'.format(
@@ -542,7 +538,7 @@ class Permanence(TranslatableModel):
         self.producers.clear()
         for offer_item in (
             OfferItemWoReceiver.objects.filter(permanence_id=self.id, may_order=True)
-            .order_by()
+            .order_by("producer_id")
             .distinct("producer_id")
         ):
             self.producers.add(offer_item.producer_id)

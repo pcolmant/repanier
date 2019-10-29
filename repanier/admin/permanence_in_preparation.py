@@ -33,7 +33,7 @@ from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
-from repanier.models.permanence import PermanenceInPreparation, Permanence
+from repanier.models.permanence import PermanenceInPreparation
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -215,7 +215,12 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         list_display = ["get_permanence_admin_display"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
-        list_display += ["get_producers", "get_customers", "get_board", "get_html_status_display"]
+        list_display += [
+            "get_producers",
+            "get_customers",
+            "get_board",
+            "get_html_status_display",
+        ]
         return list_display
 
     def get_fields(self, request, permanence=None):
@@ -224,7 +229,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             "automatically_closed",
             "short_name",
             "offer_description",
-            "producers"
+            "producers",
         ]
 
         if settings.REPANIER_SETTINGS_BOX:
@@ -420,9 +425,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             language_code = language["code"]
             translation.activate(language_code)
 
-            with switch_language(
-                repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-            ):
+            with switch_language(repanier.apps.REPANIER_SETTINGS_CONFIG, language_code):
                 template = Template(
                     repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
                 )
@@ -479,9 +482,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 template_cancel_order_mail.append(language_code)
                 template_cancel_order_mail.append(template.render(context))
         translation.activate(cur_language)
-        email_will_be_sent, email_will_be_sent_to = (
-            RepanierEmail.send_email_to_who()
-        )
+        email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             form = OpenAndSendOfferForm(request.POST)
             if form.is_valid():
