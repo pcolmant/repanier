@@ -1340,47 +1340,15 @@ class Permanence(TranslatableModel):
         ).select_related("producer"):
             # We have to pay something
             producer = producer_invoice.producer
-            result_set = (
-                BankAccount.objects.filter(
-                    producer_id=producer.id, producer_invoice__isnull=True
-                )
-                .order_by("?")
-                .aggregate(
-                    bank_amount_in=Sum(
-                        "bank_amount_in",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
-                    ),
-                    bank_amount_out=Sum(
-                        "bank_amount_out",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
-                    ),
-                )
-            )
-
-            total_bank_amount_in = (
-                result_set["bank_amount_in"]
-                if result_set["bank_amount_in"] is not None
-                else DECIMAL_ZERO
-            )
-            total_bank_amount_out = (
-                result_set["bank_amount_out"]
-                if result_set["bank_amount_out"] is not None
-                else DECIMAL_ZERO
-            )
-            bank_not_invoiced = total_bank_amount_out - total_bank_amount_in
-
+            bank_not_invoiced = producer.get_bank_not_invoiced()
             if (
                 producer.balance.amount != DECIMAL_ZERO
                 or producer_invoice.to_be_invoiced_balance.amount != DECIMAL_ZERO
-                or bank_not_invoiced != DECIMAL_ZERO
+                or bank_not_invoiced.amount != DECIMAL_ZERO
             ):
 
                 delta = (
-                    producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced
+                    producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced.amount
                 ).quantize(TWO_DECIMALS)
 
                 if delta > DECIMAL_ZERO:
