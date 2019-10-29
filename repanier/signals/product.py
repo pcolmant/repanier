@@ -14,7 +14,6 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_PC_KG,
     PRODUCT_ORDER_UNIT_DEPOSIT,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-    PRODUCT_ORDER_UNIT_SUBSCRIPTION,
     VAT_100,
     PRODUCT_ORDER_UNIT_KG,
     PRODUCT_ORDER_UNIT_LT,
@@ -49,7 +48,6 @@ def product_pre_save(sender, **kwargs):
     if product.order_unit in [
         PRODUCT_ORDER_UNIT_DEPOSIT,
         PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-        PRODUCT_ORDER_UNIT_SUBSCRIPTION,
     ]:
         # No VAT on those products
         product.vat_level = VAT_100
