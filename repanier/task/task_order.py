@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-import datetime
 import logging
-import uuid
 
 from django.db import transaction
-from django.utils import timezone
 from django.utils import translation
 
 logger = logging.getLogger(__name__)
@@ -46,8 +43,7 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     # for the "thread" processing
     permanence = Permanence.objects.filter(id=permanence_id).order_by("?").first()
     permanence.set_status(
-        old_status=(PERMANENCE_PLANNED,),
-        new_status=PERMANENCE_WAIT_FOR_OPEN,
+        old_status=(PERMANENCE_PLANNED,), new_status=PERMANENCE_WAIT_FOR_OPEN
     )
 
     # Create offer items which can be purchased depending on selection in the admin
@@ -76,12 +72,8 @@ def open_order(permanence_id, do_not_send_any_mail=False):
     # 3 - Keep only producer with offer items which can be ordered
     permanence.producers.clear()
     for offer_item in (
-        OfferItemWoReceiver.objects.filter(
-            permanence_id=permanence.id,
-            # order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
-            may_order=True,
-        )
-        .order_by()
+        OfferItemWoReceiver.objects.filter(permanence_id=permanence.id, may_order=True)
+        .order_by("producer_id")
         .distinct("producer_id")
     ):
         permanence.producers.add(offer_item.producer_id)
@@ -105,8 +97,6 @@ def open_order(permanence_id, do_not_send_any_mail=False):
 
 
 def back_to_scheduled(permanence):
-    # Be careful : use permanece_id and not objects
-    # for the "thread" processing
     permanence.back_to_scheduled()
     permanence.set_status(
         old_status=(PERMANENCE_OPENED,), new_status=PERMANENCE_PLANNED
@@ -124,7 +114,9 @@ def automatically_closed():
             deliveries_id = list(
                 DeliveryBoard.objects.filter(
                     permanence_id=permanence.id, status=PERMANENCE_OPENED
-                ).values_list("id", flat=True)
+                )
+                .values_list("id", flat=True)
+                .order_by("?")
             )
         else:
             deliveries_id = ()
