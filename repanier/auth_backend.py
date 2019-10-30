@@ -215,24 +215,7 @@ class RepanierAuthBackend(ModelBackend):
                             customer=customer
                         )
                 else:
-                    staff = Staff.objects.filter(user_id=user_or_none.id).only(
-                        "id", "customer_responsible_id",
-                        "is_active", "is_order_manager", "is_invoice_manager",
-                        "is_repanier_admin",
-                        "is_webmaster"
-                    ).order_by('?').first()
-                    if staff is not None:
-                        if not staff.is_active:
-                            user_or_none = None
-                        else:
-                            RepanierAuthBackend.set_user_right(
-                                user=user_or_none,
-                                is_superuser=False,
-                                staff=staff,
-                                customer=None
-                            )
-                    else:
-                        user_or_none = None
+                    user_or_none = None
             else:
                 RepanierAuthBackend.set_user_right(
                     user=user_or_none,
