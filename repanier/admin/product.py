@@ -636,10 +636,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             fields_advanced_descriptions += ["production_mode"]
         if settings.REPANIER_SETTINGS_STOCK:
             fields_advanced_options += ["producer_order_by_quantity"]
-        if settings.REPANIER_SETTINGS_PRODUCT_REFERENCE:
-            fields_advanced_options += ["reference"]
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            fields_advanced_options += ["vat_level"]
+        fields_advanced_options += ["reference"]
+        fields_advanced_options += ["vat_level"]
         fields_advanced_options += [("is_into_offer", "is_active")]
 
         self.fieldsets = (
@@ -662,17 +660,15 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
         vat_level_field = form.base_fields["vat_level"]
+        # TODO : Make it dependent of the producer country
+        vat_level_field.widget.choices = LUT_VAT
         producer_field.widget.can_add_related = False
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs["readonly"] = True
         department_for_customer_field.widget.can_delete_related = False
-        # TODO : Make it dependent of the producer country
-        vat_level_field.widget.choices = LUT_VAT
 
-        if "production_mode" in form.base_fields:
-            production_mode_field = form.base_fields["production_mode"]
-        else:
-            production_mode_field = None
+
+        production_mode_field = form.base_fields.get("production_mode")
 
         order_unit_choices = LUT_PRODUCT_ORDER_UNIT
         if producer is not None:

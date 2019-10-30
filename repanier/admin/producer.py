@@ -416,9 +416,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             fields_advanced = []
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             fields_advanced += ["bank_account", "vat_id"]
-        if settings.REPANIER_SETTINGS_PRODUCT_REFERENCE:
-            fields_advanced += ["sort_products_by_reference"]
         fields_advanced += [
+            "sort_products_by_reference",
             "invoice_by_basket",
             "minimum_order_value",
             "price_list_multiplier",
