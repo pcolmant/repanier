@@ -4,8 +4,17 @@ import datetime
 import logging
 import time
 from random import random
-from smtplib import SMTPAuthenticationError, SMTPRecipientsRefused, SMTPNotSupportedError, SMTPServerDisconnected, \
-    SMTPResponseException, SMTPSenderRefused, SMTPDataError, SMTPConnectError, SMTPHeloError
+from smtplib import (
+    SMTPAuthenticationError,
+    SMTPRecipientsRefused,
+    SMTPNotSupportedError,
+    SMTPServerDisconnected,
+    SMTPResponseException,
+    SMTPSenderRefused,
+    SMTPDataError,
+    SMTPConnectError,
+    SMTPHeloError,
+)
 
 from django.conf import settings
 from django.core import mail
@@ -22,9 +31,11 @@ logger = logging.getLogger(__name__)
 
 class RepanierEmail(EmailMultiAlternatives):
     def __init__(self, *args, **kwargs):
-        self.html_body = kwargs.pop('html_body', None)
-        self.show_customer_may_unsubscribe = kwargs.pop('show_customer_may_unsubscribe', True)
-        self.send_even_if_unsubscribed = kwargs.pop('send_even_if_unsubscribed', False)
+        self.html_body = kwargs.pop("html_body", None)
+        self.show_customer_may_unsubscribe = kwargs.pop(
+            "show_customer_may_unsubscribe", True
+        )
+        self.send_even_if_unsubscribed = kwargs.pop("send_even_if_unsubscribed", False)
         super(RepanierEmail, self).__init__(*args, **kwargs)
 
     def send_email(self):
@@ -55,7 +66,9 @@ class RepanierEmail(EmailMultiAlternatives):
                 if not customer.subscribe_to_email:
                     return False
                 elif customer.user.last_login is not None:
-                    max_2_years_in_the_past = timezone.now() - datetime.timedelta(days=426)
+                    max_2_years_in_the_past = timezone.now() - datetime.timedelta(
+                        days=426
+                    )
                     if customer.user.last_login < max_2_years_in_the_past:
                         # Do not spam someone who has never logged in since more than 1 year and 2 months
                         return False
@@ -63,18 +76,19 @@ class RepanierEmail(EmailMultiAlternatives):
         self.alternatives = []
         if customer is not None and self.show_customer_may_unsubscribe:
             self.attach_alternative(
-                "{}{}".format(self.html_body, customer.get_html_unsubscribe_mail_footer()),
-                "text/html"
+                "{}{}".format(
+                    self.html_body, customer.get_html_unsubscribe_mail_footer()
+                ),
+                "text/html",
             )
-            self.extra_headers['List-Unsubscribe'] = customer.get_html_list_unsubscribe()
+            self.extra_headers[
+                "List-Unsubscribe"
+            ] = customer.get_html_list_unsubscribe()
         else:
-            self.attach_alternative(
-                self.html_body,
-                "text/html"
-            )
+            self.attach_alternative(self.html_body, "text/html")
         email_send = False
         # Email subject *must not* contain newlines
-        self.subject = ''.join(self.subject.splitlines())
+        self.subject = "".join(self.subject.splitlines())
 
         logger.debug("################################## send_email")
         attempt_counter = 1
@@ -93,17 +107,27 @@ class RepanierEmail(EmailMultiAlternatives):
                     self.send()
                 email_send = True
             except SMTPRecipientsRefused as error_str:
-                logger.error("################################## send_email SMTPRecipientsRefused")
+                logger.error(
+                    "################################## send_email SMTPRecipientsRefused"
+                )
                 logger.error(error_str)
+                # reset connection : EmailMessage.get_connection() will get/open a new connection
+                # before next self.send()
+                self.connection = None
             except Exception as error_str:
                 logger.error("################################## send_email error")
                 logger.error(error_str)
                 self._send_error("send_email error", error_str)
+                # reset connection : EmailMessage.get_connection() will get/open a new connection
+                # before next self.send()
+                self.connection = None
             if customer is not None:
                 # customer.valid_email = valid_email
                 # customer.save(update_fields=['valid_email'])
                 # use vvvv because ^^^^^ will call "pre_save" function which reset valid_email to None
-                Customer.objects.filter(id=customer.id).order_by('?').update(valid_email=email_send)
+                Customer.objects.filter(id=customer.id).order_by("?").update(
+                    valid_email=email_send
+                )
             time.sleep(min(1, 1 + random()))
 
         return email_send
@@ -112,10 +136,13 @@ class RepanierEmail(EmailMultiAlternatives):
     def send_test_email(cls, to_email, subject=EMPTY_STRING, body=EMPTY_STRING):
         try:
             # Avoid : string payload expected: <class 'django.utils.functional.__proxy__'>
-            subject = subject or "{}".format(_("Test mail server configuration from Repanier"))
+            subject = subject or "{}".format(
+                _("Test mail server configuration from Repanier")
+            )
             body = body or "{}".format(
-                _("The mail server configuration is working on your website {}.").format(
-                    settings.REPANIER_SETTINGS_GROUP_NAME)
+                _(
+                    "The mail server configuration is working on your website {}."
+                ).format(settings.REPANIER_SETTINGS_GROUP_NAME)
             )
             # to_email = list({to_email, host_user})
             email = EmailMultiAlternatives(
@@ -123,24 +150,30 @@ class RepanierEmail(EmailMultiAlternatives):
                 body=body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[to_email, settings.ADMIN_EMAIL],
-                reply_to=[settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO]
+                reply_to=[settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO],
             )
             email.send()
-            return _("An email has been from {} to {}.".format(settings.DEFAULT_FROM_EMAIL, to_email))
+            return _(
+                "An email has been from {} to {}.".format(
+                    settings.DEFAULT_FROM_EMAIL, to_email
+                )
+            )
         except SMTPNotSupportedError:
             return "SMTPNotSupportedError"
         except SMTPServerDisconnected:
             return "SMTPServerDisconnected"
         except SMTPAuthenticationError:
-            return "SMTPAuthenticationError : usser {}, password {}".format(settings.EMAIL_HOST_USER,
-                                                                            settings.EMAIL_HOST_PASSWORD)
+            return "SMTPAuthenticationError : usser {}, password {}".format(
+                settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD
+            )
         except SMTPSenderRefused:
             return "SMTPSenderRefused : sender {}".format(settings.DEFAULT_FROM_EMAIL)
         except SMTPRecipientsRefused:
             return "SMTPRecipientsRefused : recipient {}".format(to_email)
         except SMTPConnectError:
-            return "SMTPConnectError : host {}, port {}".format(settings.EMAIL_HOST,
-                                                                settings.EMAIL_HOST_PORT)
+            return "SMTPConnectError : host {}, port {}".format(
+                settings.EMAIL_HOST, settings.EMAIL_HOST_PORT
+            )
         except SMTPHeloError:
             return "SMTPHeloError"
         except SMTPDataError:
@@ -153,9 +186,7 @@ class RepanierEmail(EmailMultiAlternatives):
     @classmethod
     def send_startup_email(cls, argv_0):
         if argv_0 == "uwsgi":  # Maybe better != manage.py',
-            subject = "Start of instance {}".format(
-                settings.ALLOWED_HOSTS[0]
-            )
+            subject = "Start of instance {}".format(settings.ALLOWED_HOSTS[0])
             body = """
                         [{REPANIER_SETTINGS_GROUP_NAME} : {ALLOWED_HOSTS}]
                         DJANGO_SETTINGS_LANGUAGE : {DJANGO_SETTINGS_LANGUAGE}
@@ -178,7 +209,7 @@ class RepanierEmail(EmailMultiAlternatives):
                         REPANIER_SETTINGS_SMS_GATEWAY_MAIL : {REPANIER_SETTINGS_SMS_GATEWAY_MAIL}
                         REPANIER_SETTINGS_STOCK : {REPANIER_SETTINGS_STOCK}
                         REPANIER_SETTINGS_TEMPLATE : {REPANIER_SETTINGS_TEMPLATE}
-                        """"".format(
+                        """ "".format(
                 REPANIER_SETTINGS_GROUP_NAME=settings.REPANIER_SETTINGS_GROUP_NAME,
                 ALLOWED_HOSTS=settings.ALLOWED_HOSTS[0],
                 DJANGO_SETTINGS_LANGUAGE=settings.DJANGO_SETTINGS_LANGUAGE,
@@ -200,32 +231,53 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM=settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM,
                 REPANIER_SETTINGS_SMS_GATEWAY_MAIL=settings.REPANIER_SETTINGS_SMS_GATEWAY_MAIL,
                 REPANIER_SETTINGS_STOCK=settings.REPANIER_SETTINGS_STOCK,
-                REPANIER_SETTINGS_TEMPLATE=settings.REPANIER_SETTINGS_TEMPLATE
+                REPANIER_SETTINGS_TEMPLATE=settings.REPANIER_SETTINGS_TEMPLATE,
             )
             RepanierEmail.send_test_email(
-                settings.ADMIN_EMAIL,
-                subject=subject,
-                body=body
+                settings.ADMIN_EMAIL, subject=subject, body=body
             )
 
     @classmethod
     def send_email_to_who(cls, is_email_send=True, board=False):
         if is_email_send or board:
             if settings.REPANIER_SETTINGS_DEMO:
-                return True, _("This email will be send to : {}").format(settings.REPANIER_DEMO_EMAIL)
+                return (
+                    True,
+                    _("This email will be send to : {}").format(
+                        settings.REPANIER_DEMO_EMAIL
+                    ),
+                )
             if settings.DEBUG:
                 if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
-                    return True, _(
-                        "Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be send to : {}").format(
-                        settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO)
+                    return (
+                        True,
+                        _(
+                            "Debug mode with REPANIER_SETTINGS_BCC_ALL_EMAIL_TO. This email will be send to : {}"
+                        ).format(settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO),
+                    )
                 else:
-                    return False, _("Debug mode without REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : No email will be sent.")
+                    return (
+                        False,
+                        _(
+                            "Debug mode without REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : No email will be sent."
+                        ),
+                    )
             else:
                 if is_email_send:
                     if board:
-                        return True, _("This email will be sent to the preparation team and the staff.")
+                        return (
+                            True,
+                            _(
+                                "This email will be sent to the preparation team and the staff."
+                            ),
+                        )
                     else:
-                        return True, _("This email will be sent to customers or producers depending of the case.")
+                        return (
+                            True,
+                            _(
+                                "This email will be sent to customers or producers depending of the case."
+                            ),
+                        )
                 else:
                     if board:
                         return True, _("This email will be sent to the staff.")
@@ -239,13 +291,16 @@ class RepanierEmail(EmailMultiAlternatives):
         cc_email = "cc : {}".format(self.cc)
         bcc_email = "bcc : {}".format(self.bcc)
         subject_email = "subject : {}".format(self.subject)
-        message = "{}\n{}\n{}\n{}\n{}\n{}".format(from_email, reply_to, to_email, cc_email, bcc_email,
-                                                  subject_email)
+        message = "{}\n{}\n{}\n{}\n{}\n{}".format(
+            from_email, reply_to, to_email, cc_email, bcc_email, subject_email
+        )
         time.sleep(5)
         try:
             connection = mail.get_connection()
             connection.open()
-            mail_admins(subject, "{}\n{}".format(message, error_str), connection=connection)
+            mail_admins(
+                subject, "{}\n{}".format(message, error_str), connection=connection
+            )
             connection.close()
         except:
             pass
