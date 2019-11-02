@@ -127,5 +127,5 @@ class BoxContent(models.Model):
     class Meta:
         verbose_name = _("Box content")
         verbose_name_plural = _("Boxes content")
-        unique_together = ("box", "product")
+        unique_together = (("box", "product"),)
         index_together = [["product", "box"]]

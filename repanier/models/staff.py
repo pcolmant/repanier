@@ -34,8 +34,6 @@ class Staff(MPTTModel, TranslatableModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
     )
-    # user = models.OneToOneField(
-    #     settings.AUTH_USER_MODEL, verbose_name=_("Login"))
     customer_responsible = models.ForeignKey(
         "Customer",
         verbose_name=_("Customer responsible"),
@@ -215,9 +213,7 @@ class Staff(MPTTModel, TranslatableModel):
             return "{} : {}{}".format(
                 self,
                 self.customer_responsible.long_basket_name or self.customer_responsible,
-                self.customer_responsible.get_phone1(
-                    prefix=" (", postfix=")"
-                ),
+                self.customer_responsible.get_phone1(prefix=" (", postfix=")"),
             )
         else:
             return self

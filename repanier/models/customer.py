@@ -78,12 +78,6 @@ class Customer(models.Model):
     city = models.CharField(_("City"), max_length=50, blank=True, default=EMPTY_STRING)
     about_me = models.TextField(_("About me"), blank=True, default=EMPTY_STRING)
     memo = models.TextField(_("Memo"), blank=True, default=EMPTY_STRING)
-    # show_mails_to_members = models.BooleanField(
-    #     _("Show my mail to other members"), default=False
-    # )
-    # show_phones_to_members = models.BooleanField(
-    #     _("Show my phone to other members"), default=False
-    # )
     membership_fee_valid_until = models.DateField(
         _("Membership fee valid until"), default=datetime.date.today
     )

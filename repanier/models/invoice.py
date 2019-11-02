@@ -817,7 +817,7 @@ class CustomerInvoice(Invoice):
     class Meta:
         verbose_name = _("Customer invoice")
         verbose_name_plural = _("Customers invoices")
-        unique_together = ("permanence", "customer")
+        unique_together = (("permanence", "customer"),)
 
 
 class ProducerInvoice(Invoice):
@@ -920,7 +920,7 @@ class ProducerInvoice(Invoice):
     class Meta:
         verbose_name = _("Producer invoice")
         verbose_name_plural = _("Producers invoices")
-        unique_together = ("permanence", "producer")
+        unique_together = (("permanence", "producer"),)
 
 
 class CustomerProducerInvoice(models.Model):
@@ -962,7 +962,7 @@ class CustomerProducerInvoice(models.Model):
         return "{}, {}".format(self.producer, self.customer)
 
     class Meta:
-        unique_together = ("permanence", "customer", "producer")
+        unique_together = (("permanence", "customer", "producer"),)
 
 
 class CustomerSend(CustomerProducerInvoice):

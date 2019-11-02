@@ -126,7 +126,7 @@ class Product(Item):
     class Meta:
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
-        unique_together = ("producer", "reference")
+        unique_together = (("producer", "reference"),)
 
 
 class Product_Translation(TranslatedFieldsModel):

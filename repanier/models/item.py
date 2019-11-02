@@ -150,8 +150,6 @@ class Item(TranslatableModel):
     )
 
     is_box = models.BooleanField(default=False)
-    # is_membership_fee = models.BooleanField(_("is_membership_fee"), default=False)
-    # may_order = models.BooleanField(_("may_order"), default=True)
     is_active = models.BooleanField(_("Active"), default=True)
 
     @property

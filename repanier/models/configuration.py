@@ -37,9 +37,6 @@ class Configuration(TranslatableModel):
         default=PERMANENCE_NAME_PERMANENCE,
         verbose_name=_("Offers name"),
     )
-    # email = models.EmailField(
-    #     _("Email"), blank=False, default=settings.DJANGO_SETTINGS_EMAIL_HOST_USER)
-
     currency = models.CharField(
         max_length=3,
         choices=LUT_CURRENCY,
@@ -633,4 +630,3 @@ class Configuration(TranslatableModel):
     class Meta:
         verbose_name = _("Configuration")
         verbose_name_plural = _("Configurations")
-
