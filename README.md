@@ -16,6 +16,7 @@ Active customers groups :
 - https://peupliedotrange.repanier.be/
 - https://pigal.repanier.be/
 - https://ptidej.repanier.be/fr/
+- https://silly-bag.be/fr/
 
 Active producer :
 
