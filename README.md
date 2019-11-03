@@ -11,10 +11,9 @@ Active customers groups :
 
 - https://apero.repanier.be/fr/
 - https://commande.coopeco-supermarche.be/fr/
-- https://commandes.gac-hamois.be/fr/
 - https://exceptionnel.repanier.be/fr/
 - https://lepanierlensois.repanier.be/fr/
-- https://niveze.repanier.be/fr/
+- https://peupliedotrange.repanier.be/
 - https://pigal.repanier.be/
 - https://ptidej.repanier.be/fr/
 
