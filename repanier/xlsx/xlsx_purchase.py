@@ -593,7 +593,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                             error = True
                             error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
                             break
-                    comment = cap(row[_('Comment')], 100)
+                    comment = cap(row[_('Comment')] or EMPTY_STRING, 100)
 
                     quantity_has_been_modified = False
 
