@@ -24,3 +24,4 @@ class SelectBootstrapWidget(forms.Select):
         context['repanier_selected_label'] = selected_label
         context['repanier_selected_value'] = value
         return context
+

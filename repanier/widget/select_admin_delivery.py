@@ -28,3 +28,6 @@ class SelectAdminDeliveryWidget(forms.Select):
         context["case_show_hide"] = mark_safe(case_show_hide)
         context["case_hide_show"] = mark_safe(case_hide_show)
         return context
+
+    class Media:
+        js = ("admin/js/jquery.init.js",)

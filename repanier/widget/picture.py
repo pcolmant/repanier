@@ -36,3 +36,6 @@ class RepanierPictureWidget(widgets.TextInput):
         context['repanier_height'] = context['repanier_width'] = self.size
         context['bootstrap'] = self.bootstrap
         return context
+
+    class Media:
+        js = ("admin/js/jquery.init.js",)

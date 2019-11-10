@@ -16,13 +16,13 @@
     </div>
         <fieldset class="module aligned ">
         <div class="submit-row">
-            <div class="field-box">
+            <div class="fieldBox">
             <h6>{{ email_will_be_sent_to }}</h6>
             </div>
         </div>
         <div class="form-row">
         {% if email_will_be_sent %}
-            <div class="field-box">
+            <div class="fieldBox">
                 {% with id_for_label=form.template_offer_customer_mail.id_for_label %}
                     <div id="div_{{ id_for_label }}">
                         <div class="controls col-xs-12">
@@ -50,7 +50,7 @@
             </div>
         {% endif %}
         {% if template_cancel_order_mail %}
-            <div class="field-box">
+            <div class="fieldBox">
                 {% with id_for_label=form.template_cancel_order_customer_mail.id_for_label %}
                     <div id="div_{{ id_for_label }}">
                         <div class="controls col-xs-12">

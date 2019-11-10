@@ -14,6 +14,9 @@ class ButtonTestMailConfigWidget(Widget):
         context = super(ButtonTestMailConfigWidget, self).get_context(name, value, attrs)
         return context
 
+    class Media:
+        js = ("admin/js/jquery.init.js",)
+
     # class Media:
     #     js = (
     #         'js/button_test_mail_config_script.js',

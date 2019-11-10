@@ -13,14 +13,14 @@
         </div>
         <fieldset class="module aligned ">
         <div class="submit-row">
-            <div class="field-box">
+            <div class="fieldBox">
                 <h6>{% trans "mail invoices to customers" %} :</h6>
             </div>
-            <div class="field-box">
+            <div class="fieldBox">
                 <h6>{{ invoice_customer_email_will_be_sent_to }}</h6>
             </div>
         {% if invoice_customer_email_will_be_sent %}
-            <div class="field-box">
+            <div class="fieldBox">
                 {% with id_for_label=form.template_invoice_customer_mail.id_for_label %}
                     <div id="div_{{ id_for_label }}">
                         <div class="controls col-xs-12">
@@ -51,14 +51,14 @@
         </fieldset>
         <fieldset class="module aligned ">
         <div class="submit-row">
-            <div class="field-box">
+            <div class="fieldBox">
                 <h6>{% trans "mail invoices to producers" %} :</h6>
             </div>
-            <div class="field-box">
+            <div class="fieldBox">
                 <h6>{{ invoice_producer_email_will_be_sent_to }}</h6>
             </div>
         {% if invoice_producer_email_will_be_sent %}
-            <div class="field-box">
+            <div class="fieldBox">
                 {% with id_for_label=form.template_invoice_producer_mail.id_for_label %}
                     <div id="div_{{ id_for_label }}">
                         <div class="controls col-xs-12">
