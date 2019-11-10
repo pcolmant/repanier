@@ -772,4 +772,4 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return [f for f in (CSV, XLSX) if f().can_export()]
 
     class Media:
-        js = (get_repanier_static_name("js/confirm_exit.js"),)
+        js = ('admin/js/jquery.init.js', get_repanier_static_name("js/confirm_exit.js"),)

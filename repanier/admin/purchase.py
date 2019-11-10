@@ -659,4 +659,4 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     get_repanier_static_name("js/is_order_confirm_send.js")
                 )
             )
-            js = (get_repanier_static_name("js/is_order_confirm_send.js"),)
+            js = ('admin/js/jquery.init.js', get_repanier_static_name("js/is_order_confirm_send.js"),)

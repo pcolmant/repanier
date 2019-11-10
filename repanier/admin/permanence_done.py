@@ -738,4 +738,4 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             request, permanence, form, change)
 
     class Media:
-        js = (get_repanier_static_name("js/import_invoice.js"),)
+        js = ('admin/js/jquery.init.js', get_repanier_static_name("js/import_invoice.js"),)

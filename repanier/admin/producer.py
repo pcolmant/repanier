@@ -472,4 +472,4 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     class Media:
         if settings.REPANIER_SETTINGS_STOCK:
-            js = (get_repanier_static_name("js/export_import_stock.js"),)
+            js = ('admin/js/jquery.init.js', get_repanier_static_name("js/export_import_stock.js"),)
