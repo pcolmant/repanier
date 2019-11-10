@@ -1,7 +1,7 @@
 Repanier
 ========
 
-`Repanier` is a web tool for short circuit food supply using Django CMS 3.5 / Bootstrap 3 / Python 3.5.
+`Repanier` is a web tool for short circuit food supply using Django CMS 3.7 / Bootstrap 3 / Python 3.5.
 
 - https://repanier.be/fr/documentation/survol/
 - https://repanier.be/fr/
