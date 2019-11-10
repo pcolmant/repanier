@@ -772,6 +772,35 @@ elif DJANGO_SETTINGS_LANGUAGE == "fr-en":
         SITE_ID: ({"code": "fr"}, {"code": "en"}),
         "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
     }
+elif DJANGO_SETTINGS_LANGUAGE == "fr-nl":
+
+    LANGUAGE_CODE = "fr"
+    LANGUAGES = [
+        ("fr", get_language_info("fr")["name_local"]),
+        ("nl", get_language_info("nl")["name_local"]),
+    ]
+    CMS_LANGUAGES = {
+        SITE_ID: [
+            {
+                "code": "fr",
+                "name": get_language_info("fr")["name"],
+                "public": True,
+                "redirect_on_fallback": False,
+                "hide_untranslated": False,
+            },
+            {
+                "code": "nl",
+                "name": get_language_info("nl")["name"],
+                "fallbacks": [LANGUAGE_CODE],
+                "public": True,
+            },
+        ]
+    }
+    PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
+    PARLER_LANGUAGES = {
+        SITE_ID: ({"code": "fr"}, {"code": "nl"}),
+        "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
+    }
 
 DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 
