@@ -65,12 +65,6 @@ ADMIN_NAME = config.get("DJANGO_SETTINGS", "DJANGO_SETTINGS_ADMIN_NAME")
 DJANGO_SETTINGS_CACHE = config.get(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_CACHE", fallback="/var/tmp/django-cache"
 )
-DJANGO_SETTINGS_CMS_FILER = config.getboolean(
-    "DJANGO_SETTINGS", "DJANGO_SETTINGS_CMS_FILER", fallback=False
-)
-DJANGO_SETTINGS_CMS_CASCADE = config.getboolean(
-    "DJANGO_SETTINGS", "DJANGO_SETTINGS_CMS_CASCADE", fallback=False
-)
 DJANGO_SETTINGS_DATABASE_ENGINE = config.get(
     "DJANGO_SETTINGS",
     "DJANGO_SETTINGS_DATABASE_ENGINE",
@@ -346,40 +340,6 @@ text_only_plugins = [
     "FolderPlugin",  # filer
     "VideoPlayerPlugin",  # djangocms_video
 ]
-
-if DJANGO_SETTINGS_CMS_FILER:
-    try:
-        import cmsplugin_filer_utils
-
-        # TODO : remove cmsplugin which is replaced by djangocms_file / link / picture / video
-        INSTALLED_APPS += (
-            "cmsplugin_filer_file",
-            "cmsplugin_filer_folder",
-            "cmsplugin_filer_link",
-            "cmsplugin_filer_image",
-            "cmsplugin_filer_video",
-        )
-    except ImportError:
-        pass  # module doesn't exist
-
-cascade_is_installed = False
-if DJANGO_SETTINGS_CMS_CASCADE:
-    try:
-        # TODO : remove cmsplugin cascade
-        import cmsplugin_cascade
-
-        INSTALLED_APPS += (
-            "cmsplugin_cascade",
-            "cmsplugin_cascade.clipboard",
-            "cmsplugin_cascade.extra_fields",
-            "cmsplugin_cascade.icon",
-            "cmsplugin_cascade.sharable",
-            "cmsplugin_cascade.segmentation",
-        )
-
-        cascade_is_installed = True
-    except ImportError:
-        pass  # module doesn't exist
 
 # http://docs.django-cms.org/en/develop/how_to/caching.html
 
