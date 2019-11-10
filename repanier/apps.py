@@ -117,9 +117,10 @@ class RepanierConfig(AppConfig):
             )
             webmaster_group.permissions.set(permissions)
 
-            from repanier.email.email import RepanierEmail
+            if not settings.DEBUG:
+                from repanier.email.email import RepanierEmail
 
-            RepanierEmail.send_startup_email(sys.argv[0])
+                RepanierEmail.send_startup_email(sys.argv[0])
 
         except Exception as error_str:
             logger.error("##################################")
