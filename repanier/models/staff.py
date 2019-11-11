@@ -60,39 +60,6 @@ class Staff(MPTTModel, TranslatableModel):
             default=EMPTY_STRING,
         ),
     )
-    # TBD: replaced by is_order_manager
-    is_reply_to_order_email = models.BooleanField(
-        _("Responsible for orders; this contact is used to transmit offers and orders"),
-        default=False,
-    )
-    # TBD: replaced by is_invoice_manager
-    is_reply_to_invoice_email = models.BooleanField(
-        _("Responsible for invoices; this contact is used to transmit invoices"),
-        default=False,
-    )
-    # TBD: replaced by is_order_referent
-    is_contributor = models.BooleanField(_("Producer referent"), default=False)
-
-    # TBD: Not replaced
-    is_order_referent = models.BooleanField(
-        _("Offers in preparation referent"), default=False
-    )
-    # TBD: Not replaced
-    is_order_copy = models.BooleanField(
-        _("In copy of the offers in preparation"), default=False
-    )
-    # TBD: Not replaced
-    is_invoice_referent = models.BooleanField(
-        _("Billing offers referent"), default=False
-    )
-    # TBD: Not replaced
-    is_invoice_copy = models.BooleanField(
-        _("In copy of the billing offers"), default=False
-    )
-    # TBD: replaced by is_repanier_admin
-    is_coordinator = models.BooleanField(_("Coordonnateur"), default=False)
-    # TBD: Not replaced
-    is_tester = models.BooleanField(_("Tester"), default=False)
 
     is_repanier_admin = models.BooleanField(_("Repanier administrator"), default=False)
     is_order_manager = models.BooleanField(
@@ -127,13 +94,7 @@ class Staff(MPTTModel, TranslatableModel):
             from repanier.models.customer import Customer
 
             very_first_customer = Customer.get_or_create_the_very_first_customer()
-            # user_model = get_user_model()
-            # user = user_model.objects.create_user(
-            #     username="{}{}".format(uuid.uuid1(), settings.REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION), ???
-            #     email=EMPTY_STRING, password=None,
-            #     first_name=EMPTY_STRING, last_name=EMPTY_STRING)
             coordinator = Staff.objects.create(
-                # user=user,
                 is_active=True,
                 is_repanier_admin=True,
                 is_webmaster=True,
@@ -219,14 +180,6 @@ class Staff(MPTTModel, TranslatableModel):
             return self
 
     objects = StaffManager()
-
-    def anonymize(self):
-        pass
-        # self.user.username = self.user.email = "{}-{}@repanier.be".format(_("STAFF"), self.id).lower()
-        # self.user.first_name = EMPTY_STRING
-        # self.user.last_name = "{}".format(self)
-        # self.user.set_password(None)
-        # self.user.save()
 
     def __str__(self):
         return self.safe_translation_getter(
