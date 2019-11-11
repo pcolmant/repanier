@@ -567,16 +567,16 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 return
             do_not_send_any_mail = "apply-wo-mail" in request.POST
             # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
-            # t = threading.Thread(
-            #     target=close_and_send_order,
-            #     args=(
-            #         permanence.id,
-            #         all_deliveries,
-            #         deliveries_to_be_send,
-            #         do_not_send_any_mail,
-            #     ),
-            # )
-            # t.start()
+            t = threading.Thread(
+                target=close_and_send_order,
+                args=(
+                    permanence.id,
+                    all_deliveries,
+                    deliveries_to_be_send,
+                    do_not_send_any_mail,
+                ),
+            )
+            t.start()
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
