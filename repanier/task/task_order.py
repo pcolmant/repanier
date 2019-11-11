@@ -130,7 +130,9 @@ def automatically_closed():
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_html_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
 @debug_parameters
-def close_and_send_order(permanence_id, everything=True, deliveries_id=()):
+def close_and_send_order(
+    permanence_id, everything=True, deliveries_id=(), do_not_send_any_mail=False
+):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
 
@@ -166,9 +168,10 @@ def close_and_send_order(permanence_id, everything=True, deliveries_id=()):
     )
     permanence.recalculate_order_amount(send_to_producer=True)
     reorder_purchases(permanence.id)
-    email_order.email_order(
-        permanence.id, everything=everything, deliveries_id=deliveries_id
-    )
+    if not do_not_send_any_mail:
+        email_order.email_order(
+            permanence.id, everything=everything, deliveries_id=deliveries_id
+        )
     permanence.set_status(
         old_status=(PERMANENCE_WAIT_FOR_SEND,),
         new_status=PERMANENCE_SEND,

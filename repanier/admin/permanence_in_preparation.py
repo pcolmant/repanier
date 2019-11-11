@@ -540,7 +540,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
             return
-        if "apply" in request.POST:
+        # cur_language = translation.get_language()
+        # translation.activate(cur_language)
+        email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
+        if "apply" in request.POST or "apply-wo-mail" in request.POST:
             all_deliveries = True if request.POST.get("all-deliveries", True) else False
             deliveries_to_be_send = request.POST.getlist("deliveries", [])
             logger.debug(
@@ -561,10 +564,16 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 user_message_level = messages.WARNING
                 self.message_user(request, user_message, user_message_level)
                 return
+            do_not_send_any_mail = "apply-wo-mail" in request.POST
             # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
             t = threading.Thread(
                 target=close_and_send_order,
-                args=(permanence.id, all_deliveries, deliveries_to_be_send),
+                args=(
+                    permanence.id,
+                    all_deliveries,
+                    deliveries_to_be_send,
+                    do_not_send_any_mail,
+                ),
             )
             t.start()
             user_message = _("The orders are being send.")
@@ -718,6 +727,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 "with_delivery_point": permanence.with_delivery_point,
                 "deliveries": deliveries,
                 "form": form,
+                "email_will_be_sent": email_will_be_sent,
+                "email_will_be_sent_to": email_will_be_sent_to,
                 "order_customer_email_will_be_sent": order_customer_email_will_be_sent,
                 "order_customer_email_will_be_sent_to": order_customer_email_will_be_sent_to,
                 "order_producer_email_will_be_sent": order_producer_email_will_be_sent,
