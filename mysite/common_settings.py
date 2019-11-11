@@ -499,11 +499,6 @@ CKEDITOR_SETTINGS = {
     # 'stylesSet': format_lazy('default:{}', reverse_lazy('admin:cascade_texticon_wysiwig_config')),
 }
 
-if cascade_is_installed:
-    CKEDITOR_SETTINGS["stylesSet"] = format_lazy(
-        "default:{}", reverse_lazy("admin:cascade_texticon_wysiwig_config")
-    )
-
 CKEDITOR_SETTINGS_MODEL2 = {
     "language": "{{ language }}",
     "toolbar_HTMLField": [
