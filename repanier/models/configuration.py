@@ -1,12 +1,10 @@
 # -*- coding: utf-8
 import logging
 
-from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import F
 from django.template import Template
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -98,7 +96,6 @@ class Configuration(TranslatableModel):
     permanence_of_last_cancelled_invoice = models.ForeignKey(
         "Permanence", on_delete=models.PROTECT, blank=True, null=True
     )
-    db_version = models.PositiveSmallIntegerField(default=0)
     translations = TranslatedFields(
         group_label=models.CharField(
             _("Label to mention on the invoices of the group"),
@@ -537,92 +534,6 @@ class Configuration(TranslatableModel):
                 self.save_translations()
             except TranslationDoesNotExist:
                 pass
-
-    def upgrade_db(self):
-        logger.debug("######## start of upgrade_db")
-
-        if self.db_version == 0:
-            from repanier.models import (
-                Product,
-                OfferItemWoReceiver,
-                BankAccount,
-                Permanence,
-                Staff,
-            )
-
-            # Staff.objects.rebuild()
-            Product.objects.filter(is_box=True).order_by("?").update(
-                limit_order_quantity_to_stock=True
-            )
-            OfferItemWoReceiver.objects.filter(
-                permanence__status__gte=PERMANENCE_SEND,
-                order_unit=PRODUCT_ORDER_UNIT_PC_KG,
-            ).order_by("?").update(use_order_unit_converted=True)
-            for bank_account in (
-                BankAccount.objects.filter(
-                    permanence__isnull=False,
-                    producer__isnull=True,
-                    customer__isnull=True,
-                )
-                .order_by("?")
-                .only("id", "permanence_id")
-            ):
-                Permanence.objects.filter(
-                    id=bank_account.permanence_id, invoice_sort_order__isnull=True
-                ).order_by("?").update(invoice_sort_order=bank_account.id)
-            for permanence in Permanence.objects.filter(
-                status__in=[PERMANENCE_CANCELLED, PERMANENCE_ARCHIVED],
-                invoice_sort_order__isnull=True,
-            ).order_by("?"):
-                bank_account = BankAccount.get_closest_to(permanence.permanence_date)
-                if bank_account is not None:
-                    permanence.invoice_sort_order = bank_account.id
-                    permanence.save(update_fields=["invoice_sort_order"])
-            Staff.objects.order_by("?").update(
-                is_order_manager=F("is_reply_to_order_email"),
-                is_invoice_manager=F("is_reply_to_invoice_email"),
-                is_order_referent=F("is_contributor"),
-            )
-            self.db_version = 1
-        if self.db_version == 1:
-            for user in User.objects.filter(is_staff=False).order_by("?"):
-                user.first_name = EMPTY_STRING
-                user.last_name = user.username[:30]
-                user.save()
-            for user in User.objects.filter(is_staff=True, is_superuser=False).order_by(
-                "?"
-            ):
-                user.first_name = EMPTY_STRING
-                user.last_name = user.email[:30]
-                user.save()
-            self.db_version = 2
-        if self.db_version == 2:
-            from repanier.models import Staff
-
-            Staff.objects.order_by("?").update(is_repanier_admin=F("is_coordinator"))
-            Staff.objects.filter(is_repanier_admin=True).order_by("?").update(
-                can_be_contacted=True
-            )
-            Staff.objects.filter(is_order_manager=True).order_by("?").update(
-                can_be_contacted=True
-            )
-            Staff.objects.filter(is_invoice_manager=True).order_by("?").update(
-                can_be_contacted=True
-            )
-            Staff.objects.filter(is_invoice_referent=True).order_by("?").update(
-                is_invoice_manager=True
-            )
-            Staff.objects.filter(is_order_referent=True).order_by("?").update(
-                is_order_manager=True
-            )
-            self.db_version = 4
-        if self.db_version == 4:
-            from repanier.models import Customer
-
-            Customer.objects.filter(city="NONE").order_by("?").update(city=EMPTY_STRING)
-            self.db_version = 5
-
-        logger.debug("######## end of upgrade_db")
 
     def __str__(self):
         return self.group_name

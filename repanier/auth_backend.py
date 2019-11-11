@@ -174,10 +174,9 @@ class RepanierAuthBackend(ModelBackend):
                     user.customer_id = staff.customer_responsible_id
                 else:
                     user.customer_id = customer.id
-        user.is_db_version_3 = True
 
     def get_user(self, user_id):
-        if self.user is not None and self.user.id == user_id and hasattr(self.user, 'is_db_version_3'):
+        if self.user is not None and self.user.id == user_id:
             # Test "hasattr(self.user, 'is_order_manager')" to detect user without new attributes
             return self.user
         user_or_none = UserModel.objects.filter(pk=user_id).only("id", "password", "is_staff", "is_superuser").order_by(

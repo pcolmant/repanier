@@ -73,11 +73,8 @@ class RepanierConfig(AppConfig):
             # Create if needed and load RepanierSettings var when performing config.save()
             translation.activate(settings.LANGUAGE_CODE)
 
-            config = Configuration.objects.filter(id=DECIMAL_ONE).first()
-            if config is None:
-                config = Configuration.init_repanier()
-            config.upgrade_db()
-            config.save()
+            if Configuration.objects.filter(id=DECIMAL_ONE).first() is None:
+                Configuration.init_repanier()
 
             notification = Notification.objects.filter(id=DECIMAL_ONE).first()
             if notification is None:
