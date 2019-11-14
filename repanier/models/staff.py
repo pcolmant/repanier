@@ -177,7 +177,7 @@ class Staff(MPTTModel, TranslatableModel):
                 self.customer_responsible.get_phone1(prefix=" (", postfix=")"),
             )
         else:
-            return self
+            return "{}".format(self)
 
     objects = StaffManager()
 
