@@ -491,7 +491,7 @@ class Producer(models.Model):
 
     def __str__(self):
         if self.producer_price_are_wo_vat:
-            return "{} {}".format(self.short_profile_name, _("wo tax"))
+            return "{} {}".format(self.short_profile_name, _("wo VAT"))
         return self.short_profile_name
 
     class Meta:

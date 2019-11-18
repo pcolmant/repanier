@@ -42,10 +42,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
         (_("Producer unit price"), 10),
         (_("Deposit"), 10),
         (_("Purchase price"), 10),
-        (_("Tax"), 10),
+        (_("VAT"), 10),
         (_("Rule of 3"), 10),
         (_("Comment"), 30),
-        (_("VAT level"), 10),
+        (_("VAT rate"), 10),
         (_("CustId_01"), 10),
     ]
 
@@ -194,8 +194,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=7)
                                 c.value = purchase.get_producer_unit_price()
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
-                                # if year is None:
-                                #     c.style.font.color = Color(Color.BLUE)
                                 c = ws.cell(row=row_num, column=8)
                                 c.value = purchase.offer_item.unit_deposit.amount
                                 c.style.number_format.format_code = REPANIER_SETTINGS_CURRENCY_XLSX
@@ -206,11 +204,6 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                                       (purchase.get_producer_unit_price() +
                                                        purchase.get_unit_deposit())).quantize(TWO_DECIMALS)
                                     purchases_price += purchase_price
-                                    # Asked by GAC HAMOIS : sell broken products...
-                                    # if offer_item_save.order_unit in [
-                                    #     PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG,
-                                    #     PRODUCT_ORDER_UNIT_LT
-                                    # ]:
                                     c.style.font.color = Color(Color.BLUE)
                                     ws.conditional_formatting.addCellIs(
                                         get_column_letter(10) + str(row_num + 1), 'notEqual',
@@ -591,7 +584,7 @@ def import_purchase_sheet(worksheet, permanence=None,
                         customer_id = customer_2_id_dict[customer_name]
                         if customer_id != purchase.customer_id:
                             error = True
-                            error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
+                            error_msg = _("Row %(row_num)d : No valid customer.") % {'row_num': row_num + 1}
                             break
                     comment = cap(row[_('Comment')] or EMPTY_STRING, 100)
 

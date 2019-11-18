@@ -127,7 +127,7 @@ class OfferItemSendDataForm(forms.ModelForm):
             self.fields["offer_purchase_price"].widget.attrs['readonly'] = True
             self.fields["offer_purchase_price"].disabled = True
         if offer_item.producer_price_are_wo_vat:
-            self.fields["offer_purchase_price"].label = _("Producer amount invoiced wo tax")
+            self.fields["offer_purchase_price"].label = _("Producer amount invoiced wo VAT")
 
     def get_readonly_fields(self, request, obj=None):
         if obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:

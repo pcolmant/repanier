@@ -52,7 +52,7 @@ class Permanence(TranslatableModel):
             _("Offer description"),
             configuration="CKEDITOR_SETTINGS_MODEL2",
             help_text=_(
-                "This message is send by mail to all customers when opening the order or on top "
+                "This message is send by mail to all customers when opening the order or on top."
             ),
             blank=True,
             default=EMPTY_STRING,
@@ -953,9 +953,9 @@ class Permanence(TranslatableModel):
                 customer_id=customer_buyinggroup.id,
                 operation_date=payment_date,
                 operation_status=BANK_TAX,
-                operation_comment=_("VAT to pay to the tax authorities")
+                operation_comment=_("VAT to be paid to the administration")
                 if purchases_delta_vat >= DECIMAL_ZERO
-                else _("VAT to receive from the tax authorities"),
+                else _("VAT receivable from the administration"),
                 bank_amount_out=-purchases_delta_vat
                 if purchases_delta_vat < DECIMAL_ZERO
                 else DECIMAL_ZERO,

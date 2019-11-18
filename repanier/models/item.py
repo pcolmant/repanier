@@ -97,7 +97,7 @@ class Item(TranslatableModel):
         max_length=3,
         choices=LUT_ALL_VAT,
         default=DICT_VAT_DEFAULT,
-        verbose_name=_("Tax level"),
+        verbose_name=_("VAT rate"),
     )
 
     wrapped = models.BooleanField(

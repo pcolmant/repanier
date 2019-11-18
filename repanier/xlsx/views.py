@@ -20,7 +20,7 @@ def import_xslx_view(admin_ui, admin, request, queryset, sub_title, handle_uploa
                 if error:
                     if error_msg is None:
                         admin_ui.message_user(request,
-                                              _("Error when importing {} : Content not valid").format(
+                                              _("Error when importing {} : Content not valid.").format(
                                                   file_to_import.name),
                                               level=messages.WARNING
                                               )

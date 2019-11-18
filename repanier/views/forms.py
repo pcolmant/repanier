@@ -165,7 +165,7 @@ class ProducerProductForm(forms.Form):
         label=_("Stock"),
         max_digits=7, decimal_places=1)
     vat_level = forms.ChoiceField(
-        label=_("Tax"),
+        label=_("VAT rate"),
         choices=LUT_VAT,
         widget=SelectBootstrapWidget,
         required=True

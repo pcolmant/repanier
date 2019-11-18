@@ -79,7 +79,7 @@ class OfferItem(Item):
     )
     # Calculated with Purchase : Total customer selling price vat included
     total_selling_with_tax = ModelMoneyField(
-        _("Invoiced to the consumer including tax"),
+        _("Invoiced to the consumer w TVA"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -100,7 +100,7 @@ class OfferItem(Item):
     def get_vat_level(self):
         return self.get_vat_level_display()
 
-    get_vat_level.short_description = _("VAT level")
+    get_vat_level.short_description = _("VAT rate")
     get_vat_level.admin_order_field = "vat_level"
 
     def get_producer_qty_stock_invoiced(self):
@@ -118,7 +118,7 @@ class OfferItem(Item):
                 return EMPTY_STRING
             else:
                 return mark_safe(
-                    _("Stock %(stock)s") % {"stock": number_format(taken_from_stock, 4)}
+                    _("stock %(stock)s") % {"stock": number_format(taken_from_stock, 4)}
                 )
         else:
             if taken_from_stock == DECIMAL_ZERO:

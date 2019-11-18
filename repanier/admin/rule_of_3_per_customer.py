@@ -114,7 +114,7 @@ class CustomerSendForm(forms.ModelForm):
         label=_("Producer amount invoiced"), max_digits=8, decimal_places=2, required=False,
         initial=REPANIER_MONEY_ZERO)
     offer_selling_price = FormMoneyField(
-        label=_("Invoiced to the consumer including tax"), max_digits=8, decimal_places=2, required=False,
+        label=_("Invoiced to the consumer including VAT"), max_digits=8, decimal_places=2, required=False,
         initial=REPANIER_MONEY_ZERO)
     rule_of_3 = forms.BooleanField(
         label=_("Apply the rule of 3"), required=False, initial=False)

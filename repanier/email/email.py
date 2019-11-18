@@ -154,7 +154,7 @@ class RepanierEmail(EmailMultiAlternatives):
             )
             email.send()
             return _(
-                "An email has been from {} to {}.".format(
+                "An email has been send from {} to {}.".format(
                     settings.DEFAULT_FROM_EMAIL, to_email
                 )
             )

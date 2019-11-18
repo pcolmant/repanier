@@ -52,7 +52,7 @@ class UserDataForm(forms.ModelForm):
         username_field_name = "short_basket_name"
         username = self.cleaned_data.get(username_field_name)
         user_error1 = _("The given short_basket_name must be set")
-        user_error2 = _("The given short_basket_name is used by another user")
+        user_error2 = _("The given short_basket_name is used by another user.")
         if not username:
             self.add_error(username_field_name, user_error1)
         # Check that the email is set
@@ -81,7 +81,7 @@ class UserDataForm(forms.ModelForm):
                     self.add_error(
                         "price_list_multiplier",
                         _(
-                            "If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE"
+                            "If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE."
                         ),
                     )
             is_active = self.cleaned_data.get("is_active")

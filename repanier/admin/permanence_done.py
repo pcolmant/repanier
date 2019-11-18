@@ -161,7 +161,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             return
         template_name = get_repanier_template_name("confirm_admin_action.html")
         return render(request, template_name, {
-            'sub_title': _("Please, confirm the action : cancel delivery"),
+            'sub_title': _("Please, confirm the action : cancel delivery."),
             'action': 'cancel_delivery',
             'permanence': permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
@@ -356,7 +356,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             template_name,
                             {
                                 "sub_title": _(
-                                    "Please make the following payments, whose bank movements have been generated"
+                                    "Please make the following payments, whose bank movements have been generated."
                                 ),
                                 "action": "generate_invoices",
                                 "permanence": permanence,
@@ -412,7 +412,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
         template_name = get_repanier_template_name("confirm_admin_invoice.html")
         return render(request, template_name, {
-            'sub_title': _("Please, confirm the action : generate the invoices"),
+            'sub_title': _("Please, confirm the action : generate the invoices."),
             'action': 'generate_invoices',
             'permanence': permanence,
             'permanence_form': permanence_form,
@@ -448,7 +448,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             return
         template_name = get_repanier_template_name("confirm_admin_action.html")
         return render(request, template_name, {
-            'sub_title': _("Please, confirm the action : generate archive"),
+            'sub_title': _("Please, confirm the action : generate archive."),
             'action': 'generate_archive',
             'permanence': permanence,
             'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
@@ -525,11 +525,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             request,
             template_name,
             {
-                "sub_title": _("Please, confirm the action : cancel the invoices")
+                "sub_title": _("Please, confirm the action : cancel the invoices.")
                 if permanence.status == PERMANENCE_INVOICED
-                else _("Please, confirm the action : cancel the archiving")
+                else _("Please, confirm the action : cancel the archiving.")
                 if permanence.status == PERMANENCE_ARCHIVED
-                else _("Please, confirm the action : restore the delivery"),
+                else _("Please, confirm the action : restore the delivery."),
                 "action": action,
                 "permanence": permanence,
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
@@ -673,7 +673,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             request,
             template_name,
             {
-                "sub_title": _("Please, confirm the action : send invoices"),
+                "sub_title": _("Please, confirm the action : send invoices."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "send_invoices",
                 "permanence": permanence,

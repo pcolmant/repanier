@@ -246,7 +246,7 @@ class BoxAdmin(TranslatableAdmin):
         return render(
             request,
             template_name, {
-                'sub_title': _("Please, confirm the action : duplicate box"),
+                'sub_title': _("Please, confirm the action : duplicate box."),
                 'action_checkbox_name': admin.ACTION_CHECKBOX_NAME,
                 'action': 'duplicate_box',
                 'product': box,

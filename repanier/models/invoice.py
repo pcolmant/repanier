@@ -40,7 +40,7 @@ class Invoice(models.Model):
     )
     delta_price_with_tax = ModelMoneyField(
         _("Total amount"),
-        help_text=_("Purchase to add amount vat included"),
+        help_text=_("Purchase to add amount w VAT"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -427,7 +427,7 @@ class CustomerInvoice(Invoice):
                             )
                             msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;{}'.format(
                                 _(
-                                    "Confirm this order and receive an email containing its summary."
+                                    " ➜ Confirm this order and receive an email containing its summary."
                                 )
                             )
                     else:
@@ -943,7 +943,7 @@ class CustomerProducerInvoice(models.Model):
     )
     # Calculated with Purchase
     total_selling_with_tax = ModelMoneyField(
-        _("Invoiced to the consumer including tax"),
+        _("Invoiced to the consumer w TVA"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,
         max_digits=8,

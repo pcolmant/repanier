@@ -27,7 +27,7 @@
                                 {% endfor %}
                             </ul>
                         {% endif %}
-                        <label for="id_payment_date">{% trans "payment date" %}&nbsp;:</label>
+                        <label for="id_payment_date">{% trans "Payment date" %}&nbsp;:</label>
                         {{ permanence_form.payment_date }}
                     </div>
                 </div>
@@ -69,8 +69,8 @@
                     {{ f_form.calculated_invoiced_balance.value }}
                     {% trans ", invoiced : " %}
                     {{ f_form.to_be_invoiced_balance }}
-                    {% if f_form.producer_price_are_wo_vat %}{% trans "wo tax" %}{% else %}
-                        {% trans "w tax" %}{% endif %}
+                    {% if f_form.producer_price_are_wo_vat %}{% trans "wo VAT" %}{% else %}
+                        {% trans "w VAT" %}{% endif %}
                     {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
                     <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name"
                            name="form-{{ forloop.counter0 }}-short_profile_name"

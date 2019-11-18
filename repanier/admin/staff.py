@@ -63,7 +63,7 @@ class UserDataForm(TranslatableModelForm):
                 self.add_error(
                     "is_repanier_admin",
                     _(
-                        "At least one Repanier administrator must be set within the management team"
+                        "At least one Repanier administrator must be set within the management team."
                     ),
                 )
 

@@ -264,7 +264,7 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                 ]
             else:
                 row += [
-                    (_("VAT level"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+                    (_("VAT rate"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
                 ]
             row += [
                 (_("Comment"), 30, purchase.comment,
@@ -384,12 +384,12 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                         customer_id = customer_2_id_dict[customer_name]
                     else:
                         error = True
-                        error_msg = _("Row %(row_num)d : No valid customer") % {'row_num': row_num + 1}
+                        error_msg = _("Row %(row_num)d : No valid customer.") % {'row_num': row_num + 1}
                         break
                     product_reference = row[_("Reference")] or EMPTY_STRING
                     unit = row[_("Unit")]
                     order_unit = get_reverse_invoice_unit(unit)
-                    vat = row[_("VAT level")]
+                    vat = row[_("VAT rate")]
                     vat_level = lut_reverse_vat[vat]
                     product = Product.objects.filter(producer_id=producer.id, reference=product_reference).order_by(
                         '?').first()

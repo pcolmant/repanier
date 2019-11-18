@@ -211,47 +211,47 @@ DICT_VAT_RATE = 1
 
 DICT_VAT = {
     VAT_100: (_("---------"), DECIMAL_ZERO),
-    VAT_315: (_("VAT 2.1%"), DECIMAL_0_021),
-    VAT_325: (_("VAT 2.5%"), DECIMAL_0_025),
-    VAT_350: (_("VAT 3.8%"), DECIMAL_0_038),
-    VAT_360: (_("VAT 4%"), DECIMAL_0_04),
-    VAT_375: (_("VAT 5.5%"), DECIMAL_0_055),
-    VAT_400: (_("VAT 6%"), DECIMAL_0_06),
-    VAT_430: (_("VAT 8%"), DECIMAL_0_08),
-    VAT_460: (_("VAT 10%"), DECIMAL_0_10),
-    VAT_500: (_("VAT 12%"), DECIMAL_0_12),
-    VAT_590: (_("VAT 20%"), DECIMAL_0_20),
-    VAT_600: (_("VAT 21%"), DECIMAL_0_21),
+    VAT_315: (_("2.1%"), DECIMAL_0_021),
+    VAT_325: (_("2.5%"), DECIMAL_0_025),
+    VAT_350: (_("3.8%"), DECIMAL_0_038),
+    VAT_360: (_("4%"), DECIMAL_0_04),
+    VAT_375: (_("5.5%"), DECIMAL_0_055),
+    VAT_400: (_("6%"), DECIMAL_0_06),
+    VAT_430: (_("8%"), DECIMAL_0_08),
+    VAT_460: (_("10%"), DECIMAL_0_10),
+    VAT_500: (_("12%"), DECIMAL_0_12),
+    VAT_590: (_("20%"), DECIMAL_0_20),
+    VAT_600: (_("21%"), DECIMAL_0_21),
 }
 
 LUT_ALL_VAT = (
     (VAT_100, _("---------")),
-    (VAT_315, _("VAT 2.1%")),
-    (VAT_325, _("VAT 2.5%")),
-    (VAT_350, _("VAT 3.8%")),
-    (VAT_360, _("VAT 4%")),
-    (VAT_375, _("VAT 5.5%")),
-    (VAT_400, _("VAT 6%")),
-    (VAT_430, _("VAT 8%")),
-    (VAT_460, _("VAT 10%")),
-    (VAT_500, _("VAT 12%")),
-    (VAT_590, _("VAT 20%")),
-    (VAT_600, _("VAT 21%")),
+    (VAT_315, _("2.1%")),
+    (VAT_325, _("2.5%")),
+    (VAT_350, _("3.8%")),
+    (VAT_360, _("4%")),
+    (VAT_375, _("5.5%")),
+    (VAT_400, _("6%")),
+    (VAT_430, _("8%")),
+    (VAT_460, _("10%")),
+    (VAT_500, _("12%")),
+    (VAT_590, _("20%")),
+    (VAT_600, _("21%")),
 )
 
 LUT_ALL_VAT_REVERSE = (
     (_("---------"), VAT_100),
-    (_("VAT 2.1%"), VAT_315),
-    (_("VAT 2.5%"), VAT_325),
-    (_("VAT 3.8%"), VAT_350),
-    (_("VAT 4%"), VAT_360),
-    (_("VAT 5.5%"), VAT_375),
-    (_("VAT 6%"), VAT_400),
-    (_("VAT 8%"), VAT_430),
-    (_("VAT 10%"), VAT_460),
-    (_("VAT 12%"), VAT_500),
-    (_("VAT 20%"), VAT_590),
-    (_("VAT 21%"), VAT_600),
+    (_("2.1%"), VAT_315),
+    (_("2.5%"), VAT_325),
+    (_("3.8%"), VAT_350),
+    (_("4%"), VAT_360),
+    (_("5.5%"), VAT_375),
+    (_("6%"), VAT_400),
+    (_("8%"), VAT_430),
+    (_("10%"), VAT_460),
+    (_("12%"), VAT_500),
+    (_("20%"), VAT_590),
+    (_("21%"), VAT_600),
 )
 
 ##################### REPANIER VAT/RATE
@@ -261,66 +261,66 @@ if settings.REPANIER_SETTINGS_COUNTRY == "ch":
     DICT_VAT_DEFAULT = VAT_325
     LUT_VAT = (
         (VAT_100, _("---------")),
-        (VAT_325, _("VAT 2.5%")),
-        (VAT_350, _("VAT 3.8%")),
-        (VAT_430, _("VAT 8%")),
+        (VAT_325, _("2.5%")),
+        (VAT_350, _("3.8%")),
+        (VAT_430, _("8%")),
     )
 
     LUT_VAT_REVERSE = (
         (_("---------"), VAT_100),
-        (_("VAT 2.5%"), VAT_325),
-        (_("VAT 3.8%"), VAT_350),
-        (_("VAT 8%"), VAT_430),
+        (_("2.5%"), VAT_325),
+        (_("3.8%"), VAT_350),
+        (_("8%"), VAT_430),
     )
 elif settings.REPANIER_SETTINGS_COUNTRY == "fr":
     # France
     DICT_VAT_DEFAULT = VAT_375
     LUT_VAT = (
         (VAT_100, _("---------")),
-        (VAT_315, _("VAT 2.1%")),
-        (VAT_375, _("VAT 5.5%")),
-        (VAT_460, _("VAT 10%")),
-        (VAT_590, _("VAT 20%")),
+        (VAT_315, _("2.1%")),
+        (VAT_375, _("5.5%")),
+        (VAT_460, _("10%")),
+        (VAT_590, _("20%")),
     )
 
     LUT_VAT_REVERSE = (
         (_("---------"), VAT_100),
-        (_("VAT 2.1%"), VAT_315),
-        (_("VAT 5.5%"), VAT_375),
-        (_("VAT 10%"), VAT_460),
-        (_("VAT 20%"), VAT_590),
+        (_("2.1%"), VAT_315),
+        (_("5.5%"), VAT_375),
+        (_("10%"), VAT_460),
+        (_("20%"), VAT_590),
     )
 elif settings.REPANIER_SETTINGS_COUNTRY == "es":
     # Espagne
     DICT_VAT_DEFAULT = VAT_460
     LUT_VAT = (
         (VAT_100, _("---------")),
-        (VAT_360, _("VAT 4%")),
-        (VAT_460, _("VAT 10%")),
-        (VAT_600, _("VAT 21%")),
+        (VAT_360, _("4%")),
+        (VAT_460, _("10%")),
+        (VAT_600, _("21%")),
     )
 
     LUT_VAT_REVERSE = (
         (_("---------"), VAT_100),
-        (_("VAT 4%"), VAT_360),
-        (_("VAT 10%"), VAT_460),
-        (_("VAT 21%"), VAT_600),
+        (_("4%"), VAT_360),
+        (_("10%"), VAT_460),
+        (_("21%"), VAT_600),
     )
 else:
     # Belgium
     DICT_VAT_DEFAULT = VAT_400
     LUT_VAT = (
         (VAT_100, _("---------")),
-        (VAT_400, _("VAT 6%")),
-        (VAT_500, _("VAT 12%")),
-        (VAT_600, _("VAT 21%")),
+        (VAT_400, _("6%")),
+        (VAT_500, _("12%")),
+        (VAT_600, _("21%")),
     )
 
     LUT_VAT_REVERSE = (
         (_("---------"), VAT_100),
-        (_("VAT 6%"), VAT_400),
-        (_("VAT 12%"), VAT_500),
-        (_("VAT 21%"), VAT_600),
+        (_("6%"), VAT_400),
+        (_("12%"), VAT_500),
+        (_("21%"), VAT_600),
     )
 
 BANK_NOT_LATEST_TOTAL = "100"
@@ -340,8 +340,8 @@ LUT_BANK_TOTAL = (
     (BANK_PROFIT, BANK_PROFIT),
     (BANK_TAX, BANK_TAX),
     (BANK_CALCULATED_INVOICE, BANK_CALCULATED_INVOICE),
-    (BANK_NEXT_LATEST_TOTAL, _("This is the next latest bank total")),
-    (BANK_LATEST_TOTAL, _("This is the latest bank total")),
+    (BANK_NEXT_LATEST_TOTAL, _("This is the next latest bank total.")),
+    (BANK_LATEST_TOTAL, _("This is the latest bank total.")),
 )
 
 PERMANENCE_NAME_PERMANENCE = "100"
@@ -382,6 +382,6 @@ CURRENCY_LOC = "300"
 
 LUT_CURRENCY = (
     (CURRENCY_EUR, _("Euro")),
-    (CURRENCY_CHF, _("Franc")),
+    (CURRENCY_CHF, _("Fr.")),
     (CURRENCY_LOC, _("Local")),
 )

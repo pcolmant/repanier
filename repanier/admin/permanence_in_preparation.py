@@ -514,7 +514,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             request,
             template_name,
             {
-                "sub_title": _("Please, confirm the action : open and send offers"),
+                "sub_title": _("Please, confirm the action : open and send offers."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "open_and_send_offer",
                 "permanence": permanence,
@@ -721,7 +721,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             request,
             template_name,
             {
-                "sub_title": _("Please, confirm the action : send orders"),
+                "sub_title": _("Please, confirm the action : send orders."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "close_and_send_order",
                 "permanence": permanence,
@@ -757,7 +757,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             return
         if "apply" in request.POST:
             task_order.back_to_scheduled(permanence)
-            user_message = _("The permanence is back to scheduled.")
+            user_message = _('The permanence is back to "Scheduled".')
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
             return

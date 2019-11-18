@@ -15,7 +15,7 @@
             {% if offer.product.offer_description %}
                 {{ offer.product.offer_description | safe }}
             {% else %}
-                {% trans "There is no more product's information" %}
+                {% trans "There is no more product's information." %}
             {% endif %}
             <br>
             {% for production_mode in offer.product.production_mode.all %}

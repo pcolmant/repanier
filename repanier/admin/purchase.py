@@ -155,14 +155,14 @@ class PurchaseForm(forms.ModelForm):
                 self.add_error(
                     "product",
                     _(
-                        "Please select first a producer in the filter of previous screen"
+                        "Please select first a producer in the filter of previous screen..."
                     ),
                 )
             else:
                 self.add_error(
                     "product",
                     _(
-                        "No more product to add. Please update a product of previous screen"
+                        "No more product to add. Please update a product of previous screen."
                     ),
                 )
         return product_id
@@ -328,7 +328,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     customer_invoice.save()
                 else:
                     user_message_level = messages.INFO
-                    user_message = _("Nothing to confirm")
+                    user_message = _("Nothing to confirm.")
 
             redirect_to = "{}?permanence={}&customer={}".format(
                 reverse("admin:repanier_purchase_changelist"),
@@ -493,7 +493,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     (
                         "-1",
                         _(
-                            "Please select first a permanence in the filter of previous screen"
+                            "Please select first a permanence in the filter of previous screen..."
                         ),
                     )
                 ]
@@ -543,7 +543,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                                 (
                                     "-2",
                                     _(
-                                        "No more product to add. Please update a product of previous screen"
+                                        "No more product to add. Please update a product of previous screen."
                                     ),
                                 )
                             ]
@@ -553,7 +553,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                             (
                                 "-1",
                                 _(
-                                    "Please select first a customer in the filter of previous screen"
+                                    "Please select first a customer in the filter of previous screen..."
                                 ),
                             )
                         ]

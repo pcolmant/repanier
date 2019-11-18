@@ -270,7 +270,7 @@ class ProductDataForm(TranslatableModelForm):
         if producer is None:
             self.add_error(
                 "producer",
-                _("Please select first a producer in the filter of previous screen"),
+                _("Please select first a producer in the filter of previous screen..."),
             )
         else:
             reference = self.cleaned_data.get("reference", EMPTY_STRING)
@@ -521,7 +521,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             request,
             template_name,
             {
-                "sub_title": _("Please, confirm the action : duplicate product"),
+                "sub_title": _("Please, confirm the action : duplicate product."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "duplicate_product",
                 "product": product,
@@ -702,7 +702,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     (
                         "-1",
                         _(
-                            "Please select first a producer in the filter of previous screen"
+                            "Please select first a producer in the filter of previous screen..."
                         ),
                     )
                 ]

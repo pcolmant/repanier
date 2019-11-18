@@ -926,11 +926,11 @@ def export_producer_by_product(permanence, producer, wb=None):
                 if col_num == 4:
                     if producer.producer_price_are_wo_vat:
                         c.value = "{} {} {}".format(
-                            _("Total Price"), _("wo tax"), department_for_customer_save.short_name \
+                            _("Total Price"), _("wo VAT"), department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else "---")
                     else:
                         c.value = "{} {} {}".format(
-                            _("Total Price"), _("w tax"), department_for_customer_save.short_name \
+                            _("Total Price"), _("w TVA"), department_for_customer_save.short_name \
                                 if department_for_customer_save is not None else "---")
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 if col_num == 7:
@@ -951,10 +951,10 @@ def export_producer_by_product(permanence, producer, wb=None):
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 1:
                 if producer.producer_price_are_wo_vat:
-                    c.value = "{} {} {}".format(_("Total Price"), _("wo tax"),
+                    c.value = "{} {} {}".format(_("Total Price"), _("wo VAT"),
                                                 settings.REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    c.value = "{} {} {}".format(_("Total Price"), _("w tax"),
+                    c.value = "{} {} {}".format(_("Total Price"), _("w TVA"),
                                                 settings.REPANIER_SETTINGS_GROUP_NAME)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 7:
@@ -1095,10 +1095,10 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 if col_num == 3:
                     if producer.producer_price_are_wo_vat:
                         c.value = "{} {} {}".format(
-                            _("Total Price"), _("wo tax"), customer_save.short_basket_name)
+                            _("Total Price"), _("wo VAT"), customer_save.short_basket_name)
                     else:
                         c.value = "{} {} {}".format(
-                            _("Total Price"), _("w tax"), customer_save.short_basket_name)
+                            _("Total Price"), _("w VAT"), customer_save.short_basket_name)
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 if col_num == 6:
                     formula = "SUM(G{}:G{})".format(row_start_customer, row_num)
@@ -1112,10 +1112,10 @@ def export_producer_by_customer(permanence, producer, wb=None):
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 0:
                 if producer.producer_price_are_wo_vat:
-                    c.value = "{} {} {}".format(_("Total Price"), _("wo tax"),
+                    c.value = "{} {} {}".format(_("Total Price"), _("wo VAT"),
                                                 settings.REPANIER_SETTINGS_GROUP_NAME)
                 else:
-                    c.value = "{} {} {}".format(_("Total Price"), _("w tax"),
+                    c.value = "{} {} {}".format(_("Total Price"), _("w VAT"),
                                                 settings.REPANIER_SETTINGS_GROUP_NAME)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             if col_num == 6:
