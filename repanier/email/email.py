@@ -49,7 +49,7 @@ class RepanierEmail(EmailMultiAlternatives):
             # Remove duplicates
             send_email_to = list(set(self.to + self.cc + self.bcc))
             for email_to in send_email_to:
-                self._send_email_with_unsubscribe(email_to=email_to)
+                self._send_email_with_unsubscribe(email_to=email_to.strip())
 
     @debug_parameters
     def _send_email_with_unsubscribe(self, email_to=None):
