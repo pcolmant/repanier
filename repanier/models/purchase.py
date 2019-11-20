@@ -22,6 +22,26 @@ from repanier.tools import cap
 logger = logging.getLogger(__name__)
 
 
+class PurchaseManager(models.Manager):
+    def get_invoices(self, permanence=None, year=None, customer=None, producer=None):
+        purchase_set = (
+            super()
+            .get_queryset()
+            .order_by("permanence", "customer", "offer_item", "is_box_content")
+        )
+        if permanence is not None:
+            purchase_set = purchase_set.filter(permanence_id=permanence.id)
+        if year is not None:
+            purchase_set = purchase_set.filter(permanence__permanence_date__year=year)
+        if customer is not None:
+            purchase_set = purchase_set.filter(
+                customer_invoice__customer_charged_id=customer.id
+            )
+        if producer is not None:
+            purchase_set = purchase_set.filter(producer_id=producer.id)
+        return purchase_set
+
+
 class Purchase(models.Model):
     permanence = models.ForeignKey(
         "Permanence",
@@ -347,6 +367,8 @@ class Purchase(models.Model):
     def __str__(self):
         # Use to not display label (inline_admin_form.original) into the inline form (tabular.html)
         return EMPTY_STRING
+
+    objects = PurchaseManager()
 
     class Meta:
         verbose_name = _("Purchase")
