@@ -16,42 +16,49 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.purchase import Purchase
 from repanier.packages.openpyxl import load_workbook
-from repanier.tools import get_invoice_unit, get_reverse_invoice_unit, \
-    create_or_update_one_purchase, reorder_offer_items, reorder_purchases
+from repanier.tools import (
+    get_invoice_unit,
+    get_reverse_invoice_unit,
+    create_or_update_one_purchase,
+    reorder_offer_items,
+    reorder_purchases,
+)
 from repanier.xlsx.export_tools import *
-from repanier.xlsx.import_tools import get_customer_email_2_id_dict, \
-    get_header, get_row
+from repanier.xlsx.import_tools import get_customer_email_2_id_dict, get_header, get_row
 
 
 def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     # Detail of bank movements for a permanence
-    wb, ws = new_landscape_a4_sheet(wb, "{} {}".format(_('Dashboard'), sheet_name),
-                                    permanence)
+    wb, ws = new_landscape_a4_sheet(
+        wb, "{} {}".format(_("Dashboard"), sheet_name), permanence
+    )
 
     row_num = 0
 
-    bank_account = BankAccount.objects.filter(
-        permanence_id=permanence.id,
-        customer__isnull=True,
-        producer__isnull=True
-    ).order_by('?').first()
+    bank_account = (
+        BankAccount.objects.filter(
+            permanence_id=permanence.id, customer__isnull=True, producer__isnull=True
+        )
+        .order_by("?")
+        .first()
+    )
     if bank_account is None:
         # Permanence not invoiced yet : Nothing to do
         return wb
     customer_set = Customer.objects.filter(
-        Q(
-            customerinvoice__isnull=False, is_anonymized=False
-        ) | Q(
-            customerinvoice__permanence_id=permanence.id
-        )
+        Q(customerinvoice__isnull=False, is_anonymized=False)
+        | Q(customerinvoice__permanence_id=permanence.id)
     ).distinct()
     for customer in customer_set:
         bank_amount_in = bank_amount_out = DECIMAL_ZERO
         prepared = DECIMAL_ZERO
-        customer_invoice = CustomerInvoice.objects.filter(
-            customer_id=customer.id,
-            permanence_id=permanence.id
-        ).order_by('?').first()
+        customer_invoice = (
+            CustomerInvoice.objects.filter(
+                customer_id=customer.id, permanence_id=permanence.id
+            )
+            .order_by("?")
+            .first()
+        )
         if customer_invoice is not None:
             balance_before = customer_invoice.previous_balance.amount
             bank_amount_in = customer_invoice.bank_amount_in.amount
@@ -60,10 +67,13 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 prepared = customer_invoice.get_total_price_with_tax().amount
             balance_after = customer_invoice.balance.amount
         else:
-            last_customer_invoice = CustomerInvoice.objects.filter(
-                customer_id=customer.id,
-                invoice_sort_order__lte=bank_account.id
-            ).order_by('-invoice_sort_order').first()
+            last_customer_invoice = (
+                CustomerInvoice.objects.filter(
+                    customer_id=customer.id, invoice_sort_order__lte=bank_account.id
+                )
+                .order_by("-invoice_sort_order")
+                .first()
+            )
             if last_customer_invoice is not None:
                 balance_before = last_customer_invoice.balance.amount
                 balance_after = last_customer_invoice.balance.amount
@@ -73,13 +83,38 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after = customer.initial_balance.amount
 
         row = [
-            (_('Name'), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
-            (_('Previous balance'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Cash in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Cash out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Final balance'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Name'), 20, customer.short_basket_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
+            (
+                _("Previous balance"),
+                15,
+                balance_before,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Cash in"),
+                10,
+                bank_amount_in,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Cash out"),
+                10,
+                bank_amount_out,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Prepared"),
+                10,
+                prepared,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Final balance"),
+                15,
+                balance_after,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (_("Name"), 20, customer.short_basket_name, NumberFormat.FORMAT_TEXT),
         ]
 
         if row_num == 0:
@@ -100,10 +135,13 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     for producer in producer_set:
         bank_amount_in = bank_amount_out = DECIMAL_ZERO
         prepared = DECIMAL_ZERO
-        producer_invoice = ProducerInvoice.objects.filter(
-            producer_id=producer.id,
-            permanence_id=permanence.id,
-        ).order_by('?').first()
+        producer_invoice = (
+            ProducerInvoice.objects.filter(
+                producer_id=producer.id, permanence_id=permanence.id
+            )
+            .order_by("?")
+            .first()
+        )
         if producer_invoice is not None:
             balance_before = -producer_invoice.previous_balance.amount
             bank_amount_in = producer_invoice.bank_amount_in.amount
@@ -111,10 +149,13 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
             prepared = producer_invoice.get_total_price_with_tax().amount
             balance_after = -producer_invoice.balance.amount
         else:
-            last_producer_invoice = ProducerInvoice.objects.filter(
-                producer_id=producer.id,
-                invoice_sort_order__lte=bank_account.id
-            ).order_by('-invoice_sort_order').first()
+            last_producer_invoice = (
+                ProducerInvoice.objects.filter(
+                    producer_id=producer.id, invoice_sort_order__lte=bank_account.id
+                )
+                .order_by("-invoice_sort_order")
+                .first()
+            )
             if last_producer_invoice is not None:
                 balance_before = -last_producer_invoice.balance.amount
                 balance_after = -last_producer_invoice.balance.amount
@@ -124,13 +165,38 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after = -producer.initial_balance.amount
 
         row = [
-            (_('Name'), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
-            (_('Previous balance'), 15, balance_before, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Cash in'), 10, bank_amount_in, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Cash out'), 10, bank_amount_out, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Prepared'), 10, prepared, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Final balance'), 15, balance_after, repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX),
-            (_('Name'), 20, producer.short_profile_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
+            (
+                _("Previous balance"),
+                15,
+                balance_before,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Cash in"),
+                10,
+                bank_amount_in,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Cash out"),
+                10,
+                bank_amount_out,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Prepared"),
+                10,
+                prepared,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (
+                _("Final balance"),
+                15,
+                balance_after,
+                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+            ),
+            (_("Name"), 20, producer.short_profile_name, NumberFormat.FORMAT_TEXT),
         ]
 
         if row_num == 0:
@@ -144,14 +210,20 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
 
         row_num += 1
 
-    final_bank_amount = bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
-    bank_account = BankAccount.objects.filter(
-        id__lt=bank_account.id,
-        customer__isnull=True,
-        producer__isnull=True
-    ).order_by("-id").first()
+    final_bank_amount = (
+        bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+    )
+    bank_account = (
+        BankAccount.objects.filter(
+            id__lt=bank_account.id, customer__isnull=True, producer__isnull=True
+        )
+        .order_by("-id")
+        .first()
+    )
     if bank_account is not None:
-        initial_bank_amount = bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+        initial_bank_amount = (
+            bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
+        )
     else:
         # This shouldn't occur because an initial balance is automatically generated
         # if not present
@@ -162,14 +234,18 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     c.value = initial_bank_amount
     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
     c = ws.cell(row=row_num, column=4)
-    formula = "B{}+SUM(C{}:C{})-SUM(D{}:D{})".format(row_num + 1, 2, row_num - 1, 2, row_num - 1)
-    c.value = '=' + formula
+    formula = "B{}+SUM(C{}:C{})-SUM(D{}:D{})".format(
+        row_num + 1, 2, row_num - 1, 2, row_num - 1
+    )
+    c.value = "=" + formula
     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
     c = ws.cell(row=row_num, column=4)
-    formula = "SUM(F{}:F{})-SUM(F{}:F{})".format(2, row_break, row_break + 2, row_num - 2)
-    c.value = '=' + formula
+    formula = "SUM(F{}:F{})-SUM(F{}:F{})".format(
+        2, row_break, row_break + 2, row_num - 2
+    )
+    c.value = "=" + formula
     c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
@@ -180,23 +256,22 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     return wb
 
 
-def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=None, sheet_name=EMPTY_STRING):
+def export_invoice(
+    permanence=None,
+    year=None,
+    customer=None,
+    producer=None,
+    wb=None,
+    sheet_name=EMPTY_STRING,
+):
     # Detail of what has been prepared
     from repanier.apps import REPANIER_SETTINGS_CONFIG
 
-    hide_producer_prices = False
-    hide_customer_prices = False
-    purchase_set = Purchase.objects.all()
-    if producer is not None:
-        purchase_set = purchase_set.filter(producer_id=producer.id)
-        hide_customer_prices = True
-    if permanence is not None:
-        purchase_set = purchase_set.filter(permanence_id=permanence.id)
-    if year is not None:
-        purchase_set = purchase_set.filter(permanence__permanence_date__year=year)
-    if customer is not None:
-        purchase_set = purchase_set.filter(customer_invoice__customer_charged_id=customer.id)
-        hide_producer_prices = True
+    hide_producer_prices = producer is None
+    hide_customer_prices = customer is None
+    purchase_set = Purchase.objects.get_invoices(
+        permanence=permanence, year=year, customer=customer, producer=producer
+    )
     if purchase_set.exists():
 
         wb, ws = new_landscape_a4_sheet(wb, sheet_name, permanence)
@@ -213,67 +288,164 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
 
             unit = get_invoice_unit(order_unit=purchase.offer_item.order_unit, qty=qty)
             row = [
-                (_("Permanence"), 20, purchase.permanence, NumberFormat.FORMAT_TEXT, False),
-                (_("Producer"), 15, purchase.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
-                (_("Basket"), 20, purchase.customer.short_basket_name, NumberFormat.FORMAT_TEXT, False),
-                (_("Department"), 15,
-                 purchase.offer_item.department_for_customer.short_name if purchase.offer_item.department_for_customer is not None else EMPTY_STRING,
-                 NumberFormat.FORMAT_TEXT, False),
-                (_("Product"), 60, purchase.get_long_name(), NumberFormat.FORMAT_TEXT, False),
-                (_("Quantity"), 10, qty, '#,##0.????',
-                 True if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG else False),
+                (
+                    _("Permanence"),
+                    20,
+                    purchase.permanence,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Producer"),
+                    15,
+                    purchase.producer.short_profile_name,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Basket"),
+                    20,
+                    purchase.customer.short_basket_name,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Department"),
+                    15,
+                    purchase.offer_item.department_for_customer.short_name
+                    if purchase.offer_item.department_for_customer is not None
+                    else EMPTY_STRING,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Product"),
+                    60,
+                    purchase.get_long_name(),
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Quantity"),
+                    10,
+                    qty,
+                    "#,##0.????",
+                    True
+                    if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG
+                    else False,
+                ),
                 (_("Unit"), 10, unit, NumberFormat.FORMAT_TEXT, False),
-                (_("Deposit"), 10, purchase.offer_item.unit_deposit.amount,
-                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
-                 False)]
+                (
+                    _("Deposit"),
+                    10,
+                    purchase.offer_item.unit_deposit.amount,
+                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                    False,
+                ),
+            ]
             if hide_producer_prices:
                 row += [
                     (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
                     (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
                 ]
             else:
                 row += [
-                    (_("Producer unit price"), 10, purchase.get_producer_unit_price(),
-                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("Purchase price"), 10, purchase.purchase_price.amount,
-                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
-                     False),
-                    (_("VAT"), 10, purchase.producer_vat.amount,
-                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False)
+                    (
+                        _("Producer unit price"),
+                        10,
+                        purchase.get_producer_unit_price(),
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        False,
+                    ),
+                    (
+                        _("Purchase price"),
+                        10,
+                        purchase.purchase_price.amount,
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        False,
+                    ),
+                    (
+                        _("VAT"),
+                        10,
+                        purchase.producer_vat.amount,
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        False,
+                    ),
                 ]
 
             if hide_customer_prices:
                 row += [
                     (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
                     (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
+                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False),
                 ]
             else:
                 row += [
-                    (_("Customer unit price"), 10, purchase.get_customer_unit_price(),
-                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("Selling price"), 10, purchase.selling_price.amount,
-                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
-                    (_("VAT"), 10, purchase.customer_vat.amount,
-                     repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX, False),
+                    (
+                        _("Customer unit price"),
+                        10,
+                        purchase.get_customer_unit_price(),
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        False,
+                    ),
+                    (
+                        _("Selling price"),
+                        10,
+                        purchase.selling_price.amount,
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        False,
+                    ),
+                    (
+                        _("VAT"),
+                        10,
+                        purchase.customer_vat.amount,
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        False,
+                    ),
                 ]
             if hide_producer_prices and hide_customer_prices:
-                row += [
-                    (_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)
-                ]
+                row += [(_("Empty"), 10, EMPTY_STRING, NumberFormat.FORMAT_TEXT, False)]
             else:
                 row += [
-                    (_("VAT rate"), 10, purchase.offer_item.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False)
+                    (
+                        _("VAT rate"),
+                        10,
+                        purchase.offer_item.get_vat_level_display(),
+                        NumberFormat.FORMAT_TEXT,
+                        False,
+                    )
                 ]
             row += [
-                (_("Comment"), 30, purchase.comment,
-                 NumberFormat.FORMAT_TEXT,
-                 False),
-                (_("Invoice status"), 10, purchase.get_status_display(), NumberFormat.FORMAT_TEXT, False),
-                (_("Customer"), 10, purchase.customer.user.email, NumberFormat.FORMAT_TEXT, False),
-                (_("Reference"), 10, purchase.offer_item.reference, NumberFormat.FORMAT_TEXT, False),
-                (_("Wrapped"), 10, purchase.offer_item.wrapped, NumberFormat.FORMAT_TEXT, False),
+                (_("Comment"), 30, purchase.comment, NumberFormat.FORMAT_TEXT, False),
+                (
+                    _("Invoice status"),
+                    10,
+                    purchase.get_status_display(),
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Customer"),
+                    10,
+                    purchase.customer.user.email,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Reference"),
+                    10,
+                    purchase.offer_item.reference,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
+                (
+                    _("Wrapped"),
+                    10,
+                    purchase.offer_item.wrapped,
+                    NumberFormat.FORMAT_TEXT,
+                    False,
+                ),
             ]
 
             if row_num == 0:
@@ -321,23 +493,31 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
                     c.style.font.bold = True
                 if col_num == 9:
                     formula = "SUM(J{}:J{})".format(2, row_num)
-                    c.value = '=' + formula
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    c.value = "=" + formula
+                    c.style.number_format.format_code = (
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    )
                     c.style.font.bold = True
                 if col_num == 10:
                     formula = "SUM(K{}:K{})".format(2, row_num)
-                    c.value = '=' + formula
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    c.value = "=" + formula
+                    c.style.number_format.format_code = (
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    )
                     c.style.font.bold = True
                 if col_num == 12:
                     formula = "SUM(M{}:M{})".format(2, row_num)
-                    c.value = '=' + formula
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    c.value = "=" + formula
+                    c.style.number_format.format_code = (
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    )
                     c.style.font.bold = True
                 if col_num == 13:
                     formula = "SUM(N{}:N{})".format(2, row_num)
-                    c.value = '=' + formula
-                    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    c.value = "=" + formula
+                    c.style.number_format.format_code = (
+                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    )
                     c.style.font.bold = True
             if customer is not None:
                 config = REPANIER_SETTINGS_CONFIG
@@ -354,10 +534,9 @@ def export_invoice(permanence=None, year=None, customer=None, producer=None, wb=
     return wb
 
 
-def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
-                         customer_2_id_dict=None,
-                         producer=None
-                         ):
+def import_invoice_sheet(
+    worksheet, invoice_reference=EMPTY_STRING, customer_2_id_dict=None, producer=None
+):
     error = False
     error_msg = None
     header = get_header(worksheet)
@@ -373,7 +552,7 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                 permanence_date=now,
                 short_name=invoice_reference,
                 status=PERMANENCE_SEND,
-                highest_status=PERMANENCE_SEND
+                highest_status=PERMANENCE_SEND,
             )
             permanence.producers.add(producer)
             row = get_row(worksheet, header, row_num)
@@ -384,19 +563,25 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                         customer_id = customer_2_id_dict[customer_name]
                     else:
                         error = True
-                        error_msg = _("Row %(row_num)d : No valid customer.") % {'row_num': row_num + 1}
+                        error_msg = _("Row %(row_num)d : No valid customer.") % {
+                            "row_num": row_num + 1
+                        }
                         break
                     product_reference = row[_("Reference")] or EMPTY_STRING
                     unit = row[_("Unit")]
                     order_unit = get_reverse_invoice_unit(unit)
                     vat = row[_("VAT rate")]
                     vat_level = lut_reverse_vat[vat]
-                    product = Product.objects.filter(producer_id=producer.id, reference=product_reference).order_by(
-                        '?').first()
+                    product = (
+                        Product.objects.filter(
+                            producer_id=producer.id, reference=product_reference
+                        )
+                        .order_by("?")
+                        .first()
+                    )
                     if product is None:
                         product = Product.objects.create(
-                            producer=producer,
-                            reference=product_reference,
+                            producer=producer, reference=product_reference
                         )
                     long_name = row[_("Product")]
                     # The producer unit price is the imported customer unit price
@@ -407,9 +592,11 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                     product.order_unit = order_unit
                     product.vat_level = vat_level
                     product.wrapped = row[_("Wrapped")]
-                    qty_and_price_display = product.get_qty_and_price_display(customer_price=False)
+                    qty_and_price_display = product.get_qty_and_price_display(
+                        customer_price=False
+                    )
                     if long_name.endswith(qty_and_price_display):
-                        long_name = long_name[:-len(qty_and_price_display)]
+                        long_name = long_name[: -len(qty_and_price_display)]
                     product.long_name = long_name[:100]
                     product.save()
                     offer_item = product.get_or_create_offer_item(permanence)
@@ -418,8 +605,9 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
                         offer_item=offer_item,
                         status=PERMANENCE_SEND,
                         q_order=Decimal(row[_("Quantity")]),
-                        batch_job=True, is_box_content=False,
-                        comment=row[_("Comment")] or EMPTY_STRING
+                        batch_job=True,
+                        is_box_content=False,
+                        comment=row[_("Comment")] or EMPTY_STRING,
                     )
                     import_counter += 1
 
@@ -431,11 +619,15 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
         except KeyError as e:
             # Missing field
             error = True
-            error_msg = _("Row %(row_num)d : A required column is missing %(error_msg)s.") % {
-                'row_num': row_num + 1, 'error_msg': str(e)}
+            error_msg = _(
+                "Row %(row_num)d : A required column is missing %(error_msg)s."
+            ) % {"row_num": row_num + 1, "error_msg": str(e)}
         except Exception as e:
             error = True
-            error_msg = _("Row %(row_num)d : %(error_msg)s.") % {'row_num': row_num + 1, 'error_msg': str(e)}
+            error_msg = _("Row %(row_num)d : %(error_msg)s.") % {
+                "row_num": row_num + 1,
+                "error_msg": str(e),
+            }
         if not error and import_counter == 0:
             error = True
             error_msg = "{}".format(_("Nothing to import."))
@@ -446,7 +638,9 @@ def import_invoice_sheet(worksheet, invoice_reference=EMPTY_STRING,
     return error, error_msg
 
 
-def handle_uploaded_invoice(request, permanences, file_to_import, producer, invoice_reference):
+def handle_uploaded_invoice(
+    request, permanences, file_to_import, producer, invoice_reference
+):
     if producer is None:
         error = True
         error_msg = _("A producer must be given.")
@@ -456,8 +650,9 @@ def handle_uploaded_invoice(request, permanences, file_to_import, producer, invo
         customer_2_id_dict = get_customer_email_2_id_dict()
         ws = wb.worksheets[0]
         error, error_msg = import_invoice_sheet(
-            ws, invoice_reference=invoice_reference,
+            ws,
+            invoice_reference=invoice_reference,
             customer_2_id_dict=customer_2_id_dict,
-            producer=producer
+            producer=producer,
         )
     return error, error_msg
