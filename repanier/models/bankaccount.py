@@ -132,6 +132,14 @@ class BankAccount(models.Model):
             else:
                 return closest_greater
 
+    @classmethod
+    def get_latest_total(cls):
+        return (
+            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
+            .order_by("?")
+            .first()
+        )
+
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
             return format_html(
