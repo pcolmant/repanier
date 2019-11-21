@@ -467,7 +467,7 @@ class Permanence(TranslatableModel):
     @debug_parameters
     def set_status(
         self,
-        old_status=(),
+        old_status=None,
         new_status=None,
         everything=True,
         deliveries_id=(),
@@ -477,7 +477,7 @@ class Permanence(TranslatableModel):
         if everything:
             permanence = (
                 Permanence.objects.select_for_update()
-                .filter(id=self.id, status__in=old_status)
+                .filter(id=self.id, status=old_status)
                 .exclude(status=new_status)
                 .first()
             )
@@ -695,21 +695,18 @@ class Permanence(TranslatableModel):
                 )
 
     @transaction.atomic
+    @debug_parameters
     def invoice(self, payment_date):
         from repanier.models.purchase import PurchaseWoReceiver
 
         self.set_status(
-            old_status=(PERMANENCE_SEND,), new_status=PERMANENCE_WAIT_FOR_INVOICED
+            old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
         )
-        bank_account = (
-            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
-            .order_by("?")
-            .first()
-        )
+        bank_account_latest_total = BankAccount.get_latest_total()
         producer_buyinggroup = Producer.get_or_create_group()
         customer_buyinggroup = Customer.get_or_create_group()
         if (
-            bank_account is None
+            bank_account_latest_total is None
             or producer_buyinggroup is None
             or customer_buyinggroup is None
         ):
@@ -734,9 +731,6 @@ class Permanence(TranslatableModel):
                 min_transport=DECIMAL_ZERO,
                 price_list_multiplier=DECIMAL_ONE,
             )
-        old_bank_latest_total = (
-            bank_account.bank_amount_in.amount - bank_account.bank_amount_out.amount
-        )
         permanence_partially_invoiced = (
             ProducerInvoice.objects.filter(
                 permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=False
@@ -992,7 +986,10 @@ class Permanence(TranslatableModel):
         # generate bank account movements
         self.generate_bank_account_movement(payment_date=payment_date)
 
-        new_bank_latest_total = old_bank_latest_total
+        new_bank_latest_total = (
+            bank_account_latest_total.bank_amount_in.amount
+            - bank_account_latest_total.bank_amount_out.amount
+        )
 
         # Calculate new current balance : Bank
         for bank_account in (
@@ -1152,7 +1149,7 @@ class Permanence(TranslatableModel):
             else PERMANENCE_ARCHIVED
         )
         self.set_status(
-            old_status=(PERMANENCE_WAIT_FOR_INVOICED,),
+            old_status=PERMANENCE_WAIT_FOR_INVOICED,
             new_status=new_status,
             update_payment_date=True,
             payment_date=payment_date,
@@ -1161,7 +1158,7 @@ class Permanence(TranslatableModel):
     @transaction.atomic
     def cancel_invoice(self, last_bank_account_total):
         self.set_status(
-            old_status=(PERMANENCE_INVOICED,),
+            old_status=PERMANENCE_INVOICED,
             new_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE,
         )
         CustomerInvoice.objects.filter(permanence_id=self.id).update(
@@ -1254,12 +1251,12 @@ class Permanence(TranslatableModel):
         ).order_by("?").delete()
         Permanence.objects.filter(id=self.id).update(invoice_sort_order=None)
         self.set_status(
-            old_status=(PERMANENCE_WAIT_FOR_CANCEL_INVOICE,), new_status=PERMANENCE_SEND
+            old_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE, new_status=PERMANENCE_SEND
         )
 
     @transaction.atomic
     def cancel_delivery(self):
-        self.set_status(old_status=(PERMANENCE_SEND,), new_status=PERMANENCE_CANCELLED)
+        self.set_status(old_status=PERMANENCE_SEND, new_status=PERMANENCE_CANCELLED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
@@ -1267,7 +1264,7 @@ class Permanence(TranslatableModel):
 
     @transaction.atomic
     def archive(self):
-        self.set_status(old_status=(PERMANENCE_SEND,), new_status=PERMANENCE_ARCHIVED)
+        self.set_status(old_status=PERMANENCE_SEND, new_status=PERMANENCE_ARCHIVED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
@@ -1348,7 +1345,8 @@ class Permanence(TranslatableModel):
             ):
 
                 delta = (
-                    producer_invoice.to_be_invoiced_balance.amount - bank_not_invoiced.amount
+                    producer_invoice.to_be_invoiced_balance.amount
+                    - bank_not_invoiced.amount
                 ).quantize(TWO_DECIMALS)
 
                 if delta > DECIMAL_ZERO:

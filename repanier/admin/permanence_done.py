@@ -509,13 +509,19 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
                     permanence.set_status(
-                        old_status=(PERMANENCE_INVOICED,), new_status=PERMANENCE_SEND
+                        old_status=PERMANENCE_INVOICED, new_status=PERMANENCE_SEND
                     )
             else:
-                permanence.set_status(
-                    old_status=(PERMANENCE_ARCHIVED, PERMANENCE_CANCELLED),
-                    new_status=PERMANENCE_SEND,
-                )
+                if permanence.status = PERMANENCE_ARCHIVED:
+                    permanence.set_status(
+                        old_status=PERMANENCE_ARCHIVED,
+                        new_status=PERMANENCE_SEND,
+                    )
+                if permanence.status = PERMANENCE_CANCELLED:
+                    permanence.set_status(
+                        old_status=PERMANENCE_CANCELLED,
+                        new_status=PERMANENCE_SEND,
+                    )
                 user_message = _("The selected invoice has been restored.")
                 user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
