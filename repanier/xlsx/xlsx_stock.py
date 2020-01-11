@@ -400,7 +400,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
 
 
 @transaction.atomic
-def import_producer_stock(worksheet, producers=None):
+def import_producer_stock(worksheet):
     error = False
     error_msg = None
     header = get_header(worksheet)
@@ -417,7 +417,7 @@ def import_producer_stock(worksheet, producers=None):
                         THREE_DECIMALS)
                     stock = stock if stock >= DECIMAL_ZERO else DECIMAL_ZERO
                     Product.objects.filter(
-                        id=product_id, producer__in=producers
+                        id=product_id
                     ).update(stock=stock)
                 update_offer_item(product_id=product_id)
                 row_num += 1

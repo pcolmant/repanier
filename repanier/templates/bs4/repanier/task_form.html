@@ -133,28 +133,3 @@
     </div>
 
 {% endblock %}
-{#{% block footer %}{% spaceless %}#}
-{#    {% if is_paginated %}#}
-{#        <div class="btn-group">#}
-{#            <div class="btn-group">#}
-{#                {% if page_obj.has_previous %}#}
-{#                    <a href="?page={{ page_obj.previous_page_number }}"#}
-{#                       class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span#}
-{#                            class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>#}
-{#                {% else %}#}
-{#                    <a href="#" class="btn btn-disabled"></a>#}
-{#                {% endif %}#}
-{#                {% if page_obj.has_previous or page_obj.has_next %}#}
-{#                    <a href="#"#}
-{#                       class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>#}
-{#                {% endif %}#}
-{#                {% if page_obj.has_next %}#}
-{#                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span#}
-{#                            class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>#}
-{#                {% else %}#}
-{#                    <a href="#" class="btn btn-disabled"></a>#}
-{#                {% endif %}#}
-{#            </div>#}
-{#        </div>#}
-{#    {% endif %}#}
-{#{% endspaceless %}{% endblock %}#}

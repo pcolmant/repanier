@@ -1,16 +1,25 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags i18n l10n static %}
-{% block content %}
-    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
-    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
-    <h4>{{ sub_title }}</h4>
-    <p></p>
-    <form action="" method="post">{% csrf_token %}
 
-        <h6>{{ permanence }}</h6>
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% trans 'Manage' %}
+        &rsaquo;
+        <script>
+            document.write('<a href="' + document.referrer + '">{{ model_verbose_name_plural }}</a>');
+        </script>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
         <div class="submit-row">
+            <h4>{{ sub_title }}</h4>
+            <p>&nbsp;</p>
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
+            </button>
         </div>
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>

@@ -3,6 +3,7 @@ import logging
 import threading
 
 from django import forms
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
 from django.db import transaction
@@ -10,6 +11,7 @@ from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
+from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.utils import translation
 from django.utils.html import format_html
@@ -26,6 +28,7 @@ from repanier.admin.forms import (
     GeneratePermanenceForm,
 )
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
+from repanier.admin.tools import check_cancel_in_post, check_permanence
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
@@ -33,13 +36,13 @@ from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
-from repanier.models.permanence import PermanenceInPreparation
+from repanier.models.permanence import PermanenceInPreparation, Permanence
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.models.staff import Staff
 from repanier.task import task_order
-from repanier.task.task_order import open_order, close_and_send_order
+from repanier.task.task_order import open_order, close_order
 from repanier.tools import get_recurrence_dates, get_repanier_template_name
 from repanier.xlsx.xlsx_offer import export_offer
 from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_xlsx
@@ -76,7 +79,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
                 self._has_add_or_delete_permission = True
         return self._has_add_or_delete_permission
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, **kwargs):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
@@ -137,7 +140,7 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
                 self._has_add_or_delete_permission = True
         return self._has_add_or_delete_permission
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, **kwargs):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
@@ -178,26 +181,16 @@ class PermanenceInPreparationForm(TranslatableModelForm):
 
 class PermanenceInPreparationAdmin(TranslatableAdmin):
     form = PermanenceInPreparationForm
+    change_list_url = reverse_lazy("admin:repanier_permanenceinpreparation_changelist")
+
     list_per_page = 10
     list_max_show_all = 10
     filter_horizontal = ("producers", "boxes")
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = "permanence_date"
     list_display = ("get_permanence_admin_display",)
+    list_display_links = ("get_permanence_admin_display",)
     ordering = ("-status", "permanence_date", "id")
-    # action_form = RepanierActionForm
-    actions = [
-        "export_xlsx_offer",
-        "open_and_send_offer",
-        "back_to_scheduled",
-        "export_xlsx_customer_order",
-        "export_xlsx_producer_order",
-        "close_and_send_order",
-        "generate_permanence",
-    ]
-
-    # def get_changelist(self, request, **kwargs):
-    #     return PermanenceInPreparationChangeList
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -209,15 +202,15 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        return self.has_delete_permission(request, obj)
+        return self.has_delete_permission(request)
 
     def get_list_display(self, request):
-        list_display = ["get_permanence_admin_display"]
+        list_display = ["get_permanence_admin_display", "get_row_actions"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
         list_display += [
-            "get_producers",
-            "get_customers",
+            "get_producers_with_download",
+            "get_customers_with_download",
             "get_board",
             "get_html_status_display",
         ]
@@ -260,15 +253,59 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 continue
             yield inline.get_formset(request, obj), inline
 
-    def export_xlsx_offer(self, request, queryset):
-        permanence = queryset.first()
-        if permanence.status not in [PERMANENCE_PLANNED, PERMANENCE_OPENED]:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
+    def get_urls(self):
+        urls = super(PermanenceInPreparationAdmin, self).get_urls()
+        custom_urls = [
+            url(
+                r"^(?P<permanence_id>.+)/export-offer/$",
+                self.admin_site.admin_view(self.export_offer),
+                name="permanence-export-offer",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/export-customer-opened-order/$",
+                self.admin_site.admin_view(self.export_customer_opened_order),
+                name="permanence-export-customer-opened-order",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/export-customer-closed-order/$",
+                self.admin_site.admin_view(self.export_customer_closed_order),
+                name="permanence-export-customer-closed-order",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/export-producer-opened-order/$",
+                self.admin_site.admin_view(self.export_producer_opened_order),
+                name="permanence-export-producer-opened-order",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/export-producer-closed-order/$",
+                self.admin_site.admin_view(self.export_producer_closed_order),
+                name="permanence-export-producer-closed-order",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/open-order/$",
+                self.admin_site.admin_view(self.open_order),
+                name="permanence-open-order",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/close-order/$",
+                self.admin_site.admin_view(self.close_order),
+                name="permanence-close-order",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/back-to-scheduled/$",
+                self.admin_site.admin_view(self.back_to_scheduled),
+                name="permanence-back-to-scheduled",
+            ),
+            url(
+                r"^(?P<permanence_id>.+)/generate-permanence/$",
+                self.admin_site.admin_view(self.generate_permanence),
+                name="generate-permanence",
+            ),
+        ]
+        return custom_urls + urls
+
+    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    def export_offer(self, request, permanence_id, permanence=None):
         wb = export_offer(permanence=permanence, wb=None)
         if wb is not None:
             response = HttpResponse(
@@ -282,28 +319,21 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             wb.save(response)
             return response
         else:
-            return
+            return HttpResponseRedirect(self.change_list_url)
 
-    export_xlsx_offer.short_description = _("1 --- Check the offer")
+    export_offer.short_description = _("1 --- Check the offer")
 
-    def export_xlsx_customer_order(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence.status not in [
-            PERMANENCE_OPENED,
-            PERMANENCE_CLOSED,
-            PERMANENCE_SEND,
-        ]:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
+    @check_cancel_in_post
+    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    def export_customer_opened_order(self, request, permanence_id, permanence=None):
+        return self.export_customer_order(request, permanence, action="export_customer_opened_order")
+
+    @check_cancel_in_post
+    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    def export_customer_closed_order(self, request, permanence_id, permanence=None):
+        return self.export_customer_order(request, permanence, action="export_customer_closed_order")
+
+    def export_customer_order(self, request, permanence, action):
         if not permanence.with_delivery_point:
             # Perform the action directly. Do not ask to select any delivery point.
             response = None
@@ -326,24 +356,21 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message = _("You must select at least one delivery point.")
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
-                    return
+                    return HttpResponseRedirect(self.change_list_url)
                     # Also display order without delivery point -> The customer has not selected it yet
                     # deliveries_to_be_exported.append(None)
             else:
                 deliveries_to_be_exported = ()
-            response = None
+            response = HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            response[
+                "Content-Disposition"
+            ] = "attachment; filename={0}-{1}.xlsx".format(_("Customers"), permanence)
             wb = generate_customer_xlsx(
                 permanence=permanence, deliveries_id=deliveries_to_be_exported
             )[0]
             if wb is not None:
-                response = HttpResponse(
-                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                response[
-                    "Content-Disposition"
-                ] = "attachment; filename={0}-{1}.xlsx".format(
-                    _("Customers"), permanence
-                )
                 wb.save(response)
             return response
         template_name = get_repanier_template_name(
@@ -353,37 +380,33 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             request,
             template_name,
             {
+                **self.admin_site.each_context(request),
                 "sub_title": _("Please, confirm the action : Export customer orders"),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
-                "action": "export_xlsx_customer_order",
+                "action": "export_customer_order",
                 "permanence": permanence,
                 "deliveries": DeliveryBoard.objects.filter(permanence_id=permanence.id),
             },
         )
 
-    export_xlsx_customer_order.short_description = _("Export customer orders")
+    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    def export_producer_opened_order(self, request, permanence_id, permanence=None):
+        return self.export_producer_order(request, permanence)
 
-    def export_xlsx_producer_order(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence.status not in [
-            PERMANENCE_OPENED,
-            PERMANENCE_CLOSED,
-            PERMANENCE_SEND,
-        ]:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
+    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    def export_producer_closed_order(self, request, permanence_id, permanence=None):
+        return self.export_producer_order(request, permanence)
+
+    def export_producer_order(self, request, permanence):
         # The export producer order use the offer item qty ordered
         # So that, this export is for all deliveries points
         # Perform the action directly. Do not ask to select any delivery point.
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = "attachment; filename={0}-{1}.xlsx".format(
+            _("Producers"), permanence
+        )
         wb = None
         producer_set = Producer.objects.filter(permanence=permanence).order_by(
             "short_profile_name"
@@ -391,132 +414,117 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         for producer in producer_set:
             wb = generate_producer_xlsx(permanence, producer=producer, wb=wb)
         if wb is not None:
-            response = HttpResponse(
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-            response[
-                "Content-Disposition"
-            ] = "attachment; filename={0}-{1}.xlsx".format(_("Producers"), permanence)
             wb.save(response)
-            return response
-        else:
-            return
+        return response
 
-    export_xlsx_producer_order.short_description = _("Export producer orders")
-
-    def open_and_send_offer(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
+    @check_cancel_in_post
+    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    def open_order(self, request, permanence_id, permanence=None):
+        if "apply" in request.POST or "apply-wo-mail" in request.POST:
+            send_mail = not ("apply-wo-mail" in request.POST)
+            # open_order(permanence.id, send_mail)
+            t = threading.Thread(target=open_order, args=(permanence.id, send_mail))
+            t.start()
+            user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence.status != PERMANENCE_PLANNED:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
+            return HttpResponseRedirect(self.change_list_url)
+
         template_offer_mail = []
         template_cancel_order_mail = []
-        cur_language = translation.get_language()
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            translation.activate(language_code)
+        email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
 
-            with switch_language(repanier.apps.REPANIER_SETTINGS_CONFIG, language_code):
-                template = Template(
-                    repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
-                )
+        if email_will_be_sent:
+            cur_language = translation.get_language()
+            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                language_code = language["code"]
+                translation.activate(language_code)
+                order_responsible = Staff.get_or_create_order_responsible()
 
-            staff = Staff.get_or_create_order_responsible()
-
-            with switch_language(permanence, language_code):
-                offer_description = permanence.safe_translation_getter(
-                    "offer_description", any_language=True, default=EMPTY_STRING
-                )
-            offer_producer = ", ".join(
-                [p.short_profile_name for p in permanence.producers.all()]
-            )
-            qs = Product.objects.filter(
-                producer=permanence.producers.first(),
-                is_into_offer=True,
-                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
-            ).order_by("translations__long_name")[:5]
-            offer_detail = "<ul>{}</ul>".format(
-                "".join(
-                    "<li>{}, {}</li>".format(
-                        p.get_long_name(), p.producer.short_profile_name
+                with switch_language(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+                ):
+                    template = Template(
+                        repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
                     )
-                    for p in qs
+                with switch_language(permanence, language_code):
+                    offer_description = permanence.safe_translation_getter(
+                        "offer_description", any_language=True, default=EMPTY_STRING
+                    )
+                offer_producer = ", ".join(
+                    [p.short_profile_name for p in permanence.producers.all()]
                 )
-            )
-            context = TemplateContext(
-                {
-                    "offer_description": mark_safe(offer_description),
-                    "offer_detail": offer_detail,
-                    "offer_recent_detail": offer_detail,
-                    "offer_producer": offer_producer,
-                    "permanence_link": mark_safe(
-                        '<a href="#">{}</a>'.format(permanence)
-                    ),
-                    "signature": staff.get_html_signature,
-                }
-            )
-            template_offer_mail.append(language_code)
-            template_offer_mail.append(template.render(context))
-            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                qs = Product.objects.filter(
+                    producer=permanence.producers.first(),
+                    is_into_offer=True,
+                    order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+                ).order_by("translations__long_name")[:5]
+                offer_detail = "<ul>{}</ul>".format(
+                    "".join(
+                        "<li>{}, {}</li>".format(
+                            p.get_long_name(), p.producer.short_profile_name
+                        )
+                        for p in qs
+                    )
+                )
                 context = TemplateContext(
                     {
-                        "name": _("Long name"),
-                        "long_basket_name": _("Long name"),
-                        "basket_name": _("Short name"),
-                        "short_basket_name": _("Short name"),
+                        "offer_description": mark_safe(offer_description),
+                        "offer_detail": offer_detail,
+                        "offer_recent_detail": offer_detail,
+                        "offer_producer": offer_producer,
                         "permanence_link": mark_safe(
                             '<a href="#">{}</a>'.format(permanence)
                         ),
-                        "signature": staff.get_html_signature,
+                        "signature": order_responsible["html_signature"],
                     }
                 )
-                template_cancel_order_mail.append(language_code)
-                template_cancel_order_mail.append(template.render(context))
-        translation.activate(cur_language)
-        email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
-        if "apply" in request.POST or "apply-wo-mail" in request.POST:
-            form = OpenAndSendOfferForm(request.POST)
-            if form.is_valid():
-                do_not_send_any_mail = "apply-wo-mail" in request.POST
-                # open_order(permanence.id, do_not_send_any_mail)
-                t = threading.Thread(
-                    target=open_order, args=(permanence.id, do_not_send_any_mail)
-                )
-                t.start()
-                user_message = _("The offers are being generated.")
-                user_message_level = messages.INFO
-                self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(request.get_full_path())
-        else:
-            form = OpenAndSendOfferForm(
-                initial={
-                    "template_offer_customer_mail": mark_safe(
-                        "<br>==============<br>".join(template_offer_mail)
-                    ),
-                    "template_cancel_order_customer_mail": mark_safe(
-                        "<br>==============<br>".join(template_cancel_order_mail)
-                    ),
-                }
-            )
-        template_name = get_repanier_template_name(
-            "confirm_admin_open_and_send_offer.html"
+                template_offer_mail.append(language_code)
+                template_offer_mail.append(template.render(context))
+
+                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                    with switch_language(
+                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+                    ):
+                        template = Template(
+                            repanier.apps.REPANIER_SETTINGS_CONFIG.cancel_order_customer_mail
+                        )
+
+                    context = TemplateContext(
+                        {
+                            "name": _("Long name"),
+                            "long_basket_name": _("Long name"),
+                            "basket_name": _("Short name"),
+                            "short_basket_name": _("Short name"),
+                            "permanence_link": mark_safe(
+                                '<a href="#">{}</a>'.format(permanence)
+                            ),
+                            "signature": order_responsible["html_signature"],
+                        }
+                    )
+                    template_cancel_order_mail.append(language_code)
+                    template_cancel_order_mail.append(template.render(context))
+            translation.activate(cur_language)
+
+        form = OpenAndSendOfferForm(
+            initial={
+                "template_offer_customer_mail": mark_safe(
+                    "<br>==============<br>".join(template_offer_mail)
+                ),
+                "template_cancel_order_customer_mail": mark_safe(
+                    "<br>==============<br>".join(template_cancel_order_mail)
+                ),
+            }
         )
+        template_name = get_repanier_template_name("confirm_admin_open_order.html")
         return render(
             request,
             template_name,
             {
+                **self.admin_site.each_context(request),
                 "sub_title": _("Please, confirm the action : open and send offers."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
-                "action": "open_and_send_offer",
+                "action": "open_order",
                 "permanence": permanence,
                 "form": form,
                 "email_will_be_sent": email_will_be_sent,
@@ -524,167 +532,46 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             },
         )
 
-    open_and_send_offer.short_description = _("2 --- Open orders")
+    @check_cancel_in_post
+    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    def close_order(self, request, permanence_id, permanence=None):
 
-    def close_and_send_order(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence.status not in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
-        # cur_language = translation.get_language()
-        # translation.activate(cur_language)
-        email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             # request.POST.get("all-deliveries") return None if not set and "on" if set
-            all_deliveries = True if request.POST.get("all-deliveries") else False
+            everything = not permanence.with_delivery_point or (
+                True if request.POST.get("all-deliveries") else False
+            )
             deliveries_to_be_send = request.POST.getlist("deliveries", [])
-            logger.debug(
-                "all_deliveries : {}".format(request.POST.get("all-deliveries"))
-            )
-            logger.debug("all_deliveries : {}".format(all_deliveries))
-            logger.debug(
-                "deliveries_to_be_send : {}".format(
-                    request.POST.getlist("deliveries", [])
-                )
-            )
+            # logger.debug(
+            #     "all_deliveries : {}".format(request.POST.get("all-deliveries"))
+            # )
+            # logger.debug("everything : {}".format(everything))
+            # logger.debug("deliveries_to_be_send : {}".format(deliveries_to_be_send))
             if (
                 permanence.with_delivery_point
-                and not all_deliveries
+                and not everything
                 and len(deliveries_to_be_send) == 0
             ):
                 user_message = _("You must select at least one delivery point.")
                 user_message_level = messages.WARNING
                 self.message_user(request, user_message, user_message_level)
-                return
-            do_not_send_any_mail = "apply-wo-mail" in request.POST
-            # close_and_send_order(permanence.id, all_deliveries, deliveries_to_be_send)
+                return HttpResponseRedirect(self.change_list_url)
+            send_mail = not ("apply-wo-mail" in request.POST)
+            # close_order(permanence.id, everything, deliveries_to_be_send, send_mail)
             t = threading.Thread(
-                target=close_and_send_order,
-                args=(
-                    permanence.id,
-                    all_deliveries,
-                    deliveries_to_be_send,
-                    do_not_send_any_mail,
-                ),
+                target=close_order,
+                args=(permanence.id, everything, deliveries_to_be_send, send_mail),
             )
             t.start()
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return
+            return HttpResponseRedirect(self.change_list_url)
 
         template_order_customer_mail = []
         template_order_producer_mail = []
         template_order_staff_mail = []
-        cur_language = translation.get_language()
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            translation.activate(language_code)
-
-            template = Template(
-                repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail
-            )
-
-            staff = Staff.get_or_create_order_responsible()
-
-            customer_last_balance = _(
-                "The balance of your account as of %(date)s is %(balance)s."
-            ) % {
-                "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
-                "balance": RepanierMoney(123.45),
-            }
-            customer_on_hold_movement = _(
-                "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
-            ) % {"bank": RepanierMoney(123.45), "other_order": RepanierMoney(123.45)}
-
-            bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
-            if bank_account_number is not None:
-                group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-
-                if permanence.short_name:
-                    communication = "{} ({})".format(
-                        _("Short name"), permanence.short_name
-                    )
-                else:
-                    communication = _("Short name")
-                customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
-                    _(
-                        "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
-                    )
-                    % {
-                        "payment": RepanierMoney(123.45),
-                        "name": group_name,
-                        "number": bank_account_number,
-                        "communication": communication,
-                    }
-                )
-            else:
-                customer_payment_needed = EMPTY_STRING
-            context = TemplateContext(
-                {
-                    "name": _("Long name"),
-                    "long_basket_name": _("Long name"),
-                    "basket_name": _("Short name"),
-                    "short_basket_name": _("Short name"),
-                    "permanence_link": mark_safe(
-                        '<a href="#">{}</a>'.format(permanence)
-                    ),
-                    "last_balance": mark_safe(
-                        '<a href="#">{}</a>'.format(customer_last_balance)
-                    ),
-                    "order_amount": RepanierMoney(123.45),
-                    "on_hold_movement": mark_safe(customer_on_hold_movement),
-                    "payment_needed": mark_safe(customer_payment_needed),
-                    "delivery_point": _("Delivery point").upper(),
-                    "signature": staff.get_html_signature,
-                }
-            )
-
-            template_order_customer_mail.append(language_code)
-            template_order_customer_mail.append(template.render(context))
-
-            template = Template(
-                repanier.apps.REPANIER_SETTINGS_CONFIG.order_producer_mail
-            )
-            context = TemplateContext(
-                {
-                    "name": _("Long name"),
-                    "long_profile_name": _("Long name"),
-                    "order_empty": False,
-                    "duplicate": True,
-                    "permanence_link": format_html('<a href="#">{}</a>', permanence),
-                    "signature": staff.get_html_signature,
-                }
-            )
-
-            template_order_producer_mail.append(language_code)
-            template_order_producer_mail.append(template.render(context))
-
-            board_composition = permanence.get_html_board_composition()
-            template = Template(repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail)
-            context = TemplateContext(
-                {
-                    "permanence_link": format_html('<a href="#">{}</a>', permanence),
-                    "board_composition": board_composition,
-                    "board_composition_and_description": board_composition,
-                    "signature": staff.get_html_signature,
-                }
-            )
-
-            template_order_staff_mail.append(language_code)
-            template_order_staff_mail.append(template.render(context))
-
-        translation.activate(cur_language)
-
+        email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
         order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
             is_email_send=True
         )
@@ -695,6 +582,120 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
             board=True,
         )
+
+        if email_will_be_sent:
+
+            cur_language = translation.get_language()
+            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                language_code = language["code"]
+                translation.activate(language_code)
+
+                order_responsible = Staff.get_or_create_order_responsible()
+
+                if order_customer_email_will_be_sent:
+                    template = Template(
+                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail
+                    )
+
+                    customer_last_balance = _(
+                        "The balance of your account as of %(date)s is %(balance)s."
+                    ) % {
+                        "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
+                        "balance": RepanierMoney(123.45),
+                    }
+                    customer_on_hold_movement = _(
+                        "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                    ) % {
+                        "bank": RepanierMoney(123.45),
+                        "other_order": RepanierMoney(123.45),
+                    }
+
+                    bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
+                    if bank_account_number is not None:
+                        group_name = settings.REPANIER_SETTINGS_GROUP_NAME
+
+                        if permanence.short_name:
+                            communication = "{} ({})".format(
+                                _("Short name"), permanence.short_name
+                            )
+                        else:
+                            communication = _("Short name")
+                        customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
+                            _(
+                                "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+                            )
+                            % {
+                                "payment": RepanierMoney(123.45),
+                                "name": group_name,
+                                "number": bank_account_number,
+                                "communication": communication,
+                            }
+                        )
+                    else:
+                        customer_payment_needed = EMPTY_STRING
+                    context = TemplateContext(
+                        {
+                            "name": _("Long name"),
+                            "long_basket_name": _("Long name"),
+                            "basket_name": _("Short name"),
+                            "short_basket_name": _("Short name"),
+                            "permanence_link": mark_safe(
+                                '<a href="#">{}</a>'.format(permanence)
+                            ),
+                            "last_balance": mark_safe(
+                                '<a href="#">{}</a>'.format(customer_last_balance)
+                            ),
+                            "order_amount": RepanierMoney(123.45),
+                            "on_hold_movement": mark_safe(customer_on_hold_movement),
+                            "payment_needed": mark_safe(customer_payment_needed),
+                            "delivery_point": _("Delivery point").upper(),
+                            "signature": order_responsible["html_signature"],
+                        }
+                    )
+
+                    template_order_customer_mail.append(language_code)
+                    template_order_customer_mail.append(template.render(context))
+
+                if order_producer_email_will_be_sent:
+                    template = Template(
+                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_producer_mail
+                    )
+                    context = TemplateContext(
+                        {
+                            "name": _("Long name"),
+                            "long_profile_name": _("Long name"),
+                            "order_empty": False,
+                            "duplicate": True,
+                            "permanence_link": format_html(
+                                '<a href="#">{}</a>', permanence
+                            ),
+                            "signature": order_responsible["html_signature"],
+                        }
+                    )
+
+                    template_order_producer_mail.append(language_code)
+                    template_order_producer_mail.append(template.render(context))
+
+                if order_board_email_will_be_sent:
+                    board_composition = permanence.get_html_board_composition()
+                    template = Template(
+                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail
+                    )
+                    context = TemplateContext(
+                        {
+                            "permanence_link": format_html(
+                                '<a href="#">{}</a>', permanence
+                            ),
+                            "board_composition": board_composition,
+                            "board_composition_and_description": board_composition,
+                            "signature": order_responsible["html_signature"],
+                        }
+                    )
+
+                    template_order_staff_mail.append(language_code)
+                    template_order_staff_mail.append(template.render(context))
+
+            translation.activate(cur_language)
 
         form = CloseAndSendOrderForm(
             initial={
@@ -716,56 +717,41 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             )
         else:
             deliveries = DeliveryBoard.objects.none()
-        template_name = get_repanier_template_name("confirm_admin_send_order.html")
+        template_name = get_repanier_template_name("confirm_admin_close_order.html")
         return render(
             request,
             template_name,
             {
+                **self.admin_site.each_context(request),
                 "sub_title": _("Please, confirm the action : send orders."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
-                "action": "close_and_send_order",
+                "action": "close_order",
                 "permanence": permanence,
-                "with_delivery_point": permanence.with_delivery_point,
                 "deliveries": deliveries,
                 "form": form,
                 "email_will_be_sent": email_will_be_sent,
-                "email_will_be_sent_to": email_will_be_sent_to,
-                "order_customer_email_will_be_sent": order_customer_email_will_be_sent,
                 "order_customer_email_will_be_sent_to": order_customer_email_will_be_sent_to,
-                "order_producer_email_will_be_sent": order_producer_email_will_be_sent,
                 "order_producer_email_will_be_sent_to": order_producer_email_will_be_sent_to,
-                "order_board_email_will_be_sent": order_board_email_will_be_sent,
                 "order_board_email_will_be_sent_to": order_board_email_will_be_sent_to,
             },
         )
 
-    close_and_send_order.short_description = _("3 --- Close and transmit orders")
-
-    def back_to_scheduled(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence.status != PERMANENCE_OPENED:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
+    @check_cancel_in_post
+    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    def back_to_scheduled(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             task_order.back_to_scheduled(permanence)
             user_message = _('The permanence is back to "Scheduled".')
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return
+            return HttpResponseRedirect(self.change_list_url)
         template_name = get_repanier_template_name("confirm_admin_action.html")
         return render(
             request,
             template_name,
             {
+                **self.admin_site.each_context(request),
+                "model_verbose_name_plural": _("Offers in preparation"),
                 "sub_title": _("Please, confirm the action : back to scheduled"),
                 "action": "back_to_scheduled",
                 "permanence": permanence,
@@ -773,27 +759,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             },
         )
 
-    back_to_scheduled.short_description = _("Return to scheduled status to change bid")
-
-    def generate_permanence(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        permanence = queryset.first()
-        if permanence.status not in [
-            PERMANENCE_PLANNED,
-            PERMANENCE_OPENED,
-            PERMANENCE_CLOSED,
-            PERMANENCE_SEND,
-        ]:
-            user_message = _(
-                "The status of %(permanence)s prohibit you to perform this action."
-            ) % {"permanence": permanence}
-            user_message_level = messages.ERROR
-            self.message_user(request, user_message, user_message_level)
-            return
+    @check_cancel_in_post
+    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    def generate_permanence(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             form = GeneratePermanenceForm(request.POST)
             if form.is_valid():
@@ -808,7 +776,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message = _("{} duplicates created.").format(creation_counter)
                 user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(request.get_full_path())
+            return HttpResponseRedirect(self.change_list_url)
         else:
             form = GeneratePermanenceForm()
         template_name = get_repanier_template_name(
@@ -818,6 +786,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             request,
             template_name,
             {
+                **self.admin_site.each_context(request),
                 "sub_title": _(
                     "How many weekly permanence(s) do you want to generate from this ?"
                 ),
@@ -828,7 +797,34 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             },
         )
 
-    generate_permanence.short_description = _("Duplicate")
+    def get_row_actions(self, obj):
+        permanence = (
+            Permanence.objects.filter(id=obj.pk).only("status").order_by("?").first()
+        )
+        if permanence is None:
+            return EMPTY_STRING
+
+        if permanence.status == PERMANENCE_PLANNED:
+            return format_html(
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span> '
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a></span>',
+                reverse("admin:generate-permanence", args=[obj.pk]),
+                _("Duplicate"),
+                reverse("admin:permanence-open-order", args=[obj.pk]),
+                _("Open orders"),
+            )
+        elif permanence.status == PERMANENCE_OPENED:
+            return format_html(
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a></span> '
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a></span>',
+                reverse("admin:permanence-back-to-scheduled", args=[obj.pk]),
+                _("Modify the offer"),
+                reverse("admin:permanence-close-order", args=[obj.pk]),
+                _("Close orders"),
+            )
+        return EMPTY_STRING
+
+    get_row_actions.short_description = EMPTY_STRING
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "producers":

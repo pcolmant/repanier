@@ -219,6 +219,9 @@ class BankAccount(models.Model):
     get_customer.short_description = _("Customer")
     get_customer.admin_order_field = "customer"
 
+    def __str__(self):
+        return format_html("{} ({})", _("Banking transaction number"), self.id)
+
     class Meta:
         verbose_name = _("Bank account transaction")
         verbose_name_plural = _("Bank account transactions")

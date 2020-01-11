@@ -31,59 +31,66 @@
                 {% endif %}
             {% endspaceless %}{% endblock login %}
             {% block permanenceboard %}{% spaceless %}
-                {% addtoblock "jshead" %}<script src="{{ STATIC_URL}}repanier/bs3/waypoints/jquery.waypoints.min.js"></script>{% endaddtoblock %}
-                {% addtoblock "jshead" %}<script src="{{ STATIC_URL}}repanier/bs3/waypoints/shortcuts/infinite.min.js"></script>{% endaddtoblock %}
+                {% addtoblock "jshead" %}
+                    <script src="{{ STATIC_URL }}repanier/bs3/waypoints/jquery.waypoints.min.js"></script>
+                {% endaddtoblock %}
+                {% addtoblock "jshead" %}
+                    <script src="{{ STATIC_URL }}repanier/bs3/waypoints/shortcuts/infinite.min.js"></script>
+                {% endaddtoblock %}
                 {% if permanenceboard_list %}
                     <div class="infinite-container">
-                    {% for permanenceboard in permanenceboard_list %}
-                        <div class="infinite-item">
-                        <form>
-                            {% ifchanged permanenceboard.permanence %}
-                                {% if not forloop.first %}
+                        {% for permanenceboard in permanenceboard_list %}
+                            <div class="infinite-item">
+                                <form>
+                                    {% ifchanged permanenceboard.permanence %}
+                                        {% if not forloop.first %}
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <hr/>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <div class="row">
+                                            <b>{{ permanenceboard.permanence }}</b>
+                                            {% if DISPLAY_PRODUCER %}&nbsp;:&nbsp;
+                                                {% for producer in permanenceboard.permanence.producers.all %}
+                                                    {{ producer }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            {% endif %}<br><br>
+                                        </div>
+                                    {% endifchanged %}
                                     <div class="row">
-                                        <div class="col-md-12">
-                                            <hr/>
+                                        <div class="col-md-2">
+                                        </div>
+                                        <div class="col-md-5">
+                                            {% repanier_display_task task_id=permanenceboard.id %}
+                                        </div>
+                                        <div class="col-md-5">
+                                            {% if user.is_authenticated %}
+                                                {% repanier_select_task task_id=permanenceboard.id %}{% endif %}
+                                            <br>
                                         </div>
                                     </div>
-                                {% endif %}
-                                <div class="row">
-                                    <b>{{ permanenceboard.permanence }}</b>
-                                    {% if DISPLAY_PRODUCER %}&nbsp;:&nbsp;
-                                        {% for producer in permanenceboard.permanence.producers.all %}
-                                            {{ producer }}{% if not forloop.last %}, {% endif %}
-                                        {% endfor %}
-                                    {% endif %}<br><br>
-                                </div>
-                            {% endifchanged %}
-                            <div class="row">
-                                <div class="col-md-2">
-                                </div>
-                                <div class="col-md-5">
-                                    {% repanier_display_task task_id=permanenceboard.id %}
-                                </div>
-                                <div class="col-md-5">
-                                    {% if user.is_authenticated %}
-                                        {% repanier_select_task task_id=permanenceboard.id %}{% endif %}
-                                    <br>
-                                </div>
+                                </form>
                             </div>
-                        </form>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                     {% if page_obj.has_next %}
                         <div class="loading" style="display: none;">
                             <a href="?page={{ page_obj.next_page_number }}"
-                           class="infinite-more-link btn btn-info not-active"><span class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% trans "Loading..." %}</a>
+                               class="infinite-more-link btn btn-info not-active"><span
+                                    class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% trans "Loading..." %}
+                            </a>
                         </div>
                     {% endif %}
-{#                    <div class="loaded" style="display: none;">#}
-{#                        <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>#}
-{#                    </div>#}
-                    <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>
+                    <a class="btn btn-info back-to-top-sticky-button" id="backToTop" href="#top"><span
+                            class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>
                     <script>
-        {#                https://www.w3schools.com/howto/howto_js_scroll_to_top.asp#}
-                        window.onscroll = function() {scrollFunction()};
+                        {#                https://www.w3schools.com/howto/howto_js_scroll_to_top.asp#}
+                        window.onscroll = function () {
+                            scrollFunction()
+                        };
+
                         function scrollFunction() {
                             if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
                                 document.getElementById("backToTop").style.display = "block";
@@ -91,21 +98,22 @@
                                 document.getElementById("backToTop").style.display = "none";
                             }
                         }
+
                         var infinite = new Waypoint.Infinite({
-                          element: $('.infinite-container')[0],
-                          offset: '75%',
-                          onBeforePageLoad: function () {
-                            $('.loading').show();
-                          },
-                          onAfterPageLoad: function ($items) {
-                            $('.loading').hide();
-                            {#$('.loaded').show();#}
-                          }
+                            element: $('.infinite-container')[0],
+                            offset: '75%',
+                            onBeforePageLoad: function () {
+                                $('.loading').show();
+                            },
+                            onAfterPageLoad: function ($items) {
+                                $('.loading').hide();
+                                {#$('.loaded').show();#}
+                            }
                         });
                     </script>
-            {% else %}
-                <h3>{% trans "No permanence found" %}</h3>
-            {% endif %}
+                {% else %}
+                    <h3>{% trans "No permanence found" %}</h3>
+                {% endif %}
             {% endspaceless %}{% endblock permanenceboard %}
             {% addtoblock "lastjs" %}{% spaceless %}
                 <script type="text/javascript">
@@ -136,28 +144,3 @@
     </div>
 
 {% endblock %}
-{#{% block footer %}{% spaceless %}#}
-{#    {% if is_paginated %}#}
-{#        <div class="btn-group">#}
-{#            <div class="btn-group">#}
-{#                {% if page_obj.has_previous %}#}
-{#                    <a href="?page={{ page_obj.previous_page_number }}"#}
-{#                       class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span#}
-{#                            class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>#}
-{#                {% else %}#}
-{#                    <a href="#" class="btn btn-disabled"></a>#}
-{#                {% endif %}#}
-{#                {% if page_obj.has_previous or page_obj.has_next %}#}
-{#                    <a href="#"#}
-{#                       class="btn btn-disabled">{% trans "Page " %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</a>#}
-{#                {% endif %}#}
-{#                {% if page_obj.has_next %}#}
-{#                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span#}
-{#                            class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>#}
-{#                {% else %}#}
-{#                    <a href="#" class="btn btn-disabled"></a>#}
-{#                {% endif %}#}
-{#            </div>#}
-{#        </div>#}
-{#    {% endif %}#}
-{#{% endspaceless %}{% endblock %}#}

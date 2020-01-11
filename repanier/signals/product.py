@@ -59,7 +59,6 @@ def product_pre_save(sender, **kwargs):
         product.wrapped = False
     product.recalculate_prices(
         producer.producer_price_are_wo_vat,
-        producer.is_resale_price_fixed,
         producer.price_list_multiplier,
     )
 

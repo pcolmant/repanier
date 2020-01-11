@@ -14,8 +14,14 @@ class MoneyWidget(NumberInput):
 
     def get_context(self, name, value, attrs):
         context = super(MoneyWidget, self).get_context(name, value, attrs)
-        context['repanier_currency_after'] = repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT
-        context['repanier_currency_str'] = repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+        context[
+            "repanier_currency_after"
+        ] = repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT
+        context["repanier_currency_str"] = (
+            '<i class="fas fa-euro-sign"></i>'
+            if repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY == "€"
+            else repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+        )
         return context
 
     # class Media:

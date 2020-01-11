@@ -92,7 +92,7 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
     def get_queryset(self, request):
         qs = super(LUTAdmin, self).get_queryset(request)
         qs = qs.filter(
-            # Important to also display untranslated produts : translations__language_code=settings.LANGUAGE_CODE
+            # Important to also display untranslated items : translations__language_code=settings.LANGUAGE_CODE
             translations__language_code=settings.LANGUAGE_CODE
         )
         return qs

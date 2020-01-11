@@ -47,13 +47,12 @@ def delivery_ajax(request):
     if customer_invoice.status == PERMANENCE_OPENED:
         delivery_id = sint(request.GET.get('delivery', 0))
         if customer.delivery_point is not None:
+            # The customer is member of a group
             qs = DeliveryBoard.objects.filter(
                 Q(
                     id=delivery_id,
                     permanence_id=permanence_id,
                     delivery_point_id=customer.delivery_point_id,
-                    # delivery_point__closed_group=True, -> This is always the case
-                    # when delivery_point_id == customer.delivery_point_id
                     status=PERMANENCE_OPENED
                 ) | Q(
                     id=delivery_id,

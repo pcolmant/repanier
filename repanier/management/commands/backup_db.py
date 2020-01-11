@@ -50,6 +50,6 @@ class Command(BaseCommand):
                         is_group=False,
                         is_anonymized=False,
                 ).order_by('?'):
-                    if customer.get_purchase() <= 0 and customer.get_participation() <= 0 and customer.get_admin_balance().amount == DECIMAL_ZERO:
+                    if customer.get_purchase_counter() <= 0 and customer.get_participation_counter() <= 0 and customer.get_admin_balance().amount == DECIMAL_ZERO:
                         customer.is_active = False
                         customer.anonymize()

@@ -1,4 +1,4 @@
-{% load staticfiles i18n %}
+{% load static i18n %}
 <link href="{% static "easy_select2/vendor/select2/css/select2.min.css" %}" type="text/css" media="screen" rel="stylesheet" />
 <link href="{% static "easy_select2/css/easy_select2.css" %}" type="text/css" media="screen" rel="stylesheet" />
 <script type="text/javascript">var go_from_select = function(opt) { window.location = window.location.pathname + opt };</script>
@@ -10,7 +10,7 @@
 <ul class="admin-filter-{{ title|cut:' ' }}">
 {% if choices|slice:"1:" %}
     <li>
-    <select style="width: 95%;" id="id_filter_customer"
+    <select style="width: 95%;" id="id_filter_placement"
         onchange="go_from_select(this.options[this.selectedIndex].value)">
     {% for choice in choices %}
         <option{% if choice.selected %} selected="selected"{% endif %}
@@ -19,7 +19,7 @@
     </select>
     <div class="field-easy-select2"
                    style="display:none"
-                   id="id_filter_customer"
+                   id="id_filter_placement"
                    ></div>
     </li>
 {% else %}

@@ -68,7 +68,7 @@ else:
 
 
 def get_admin_template_name(template_name):
-    return os.path.join(settings.REPANIER_SETTINGS_TEMPLATE, "admin", template_name)
+    return os.path.join(settings.REPANIER_SETTINGS_TEMPLATE, "admin", "repanier", template_name)
 
 
 def get_repanier_template_name(template_name):
@@ -702,8 +702,7 @@ def clean_offer_item(permanence, queryset):
         offer_item.manage_production = producer.represent_this_buyinggroup
         # Those offer_items not subjects to price modifications
         offer_item.is_resale_price_fixed = (
-            producer.is_resale_price_fixed
-            or product.is_box
+            product.is_box
             or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
         )
         offer_item.price_list_multiplier = (

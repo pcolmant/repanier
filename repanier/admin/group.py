@@ -165,7 +165,7 @@ class GroupWithUserDataForm(UserDataForm):
         required=False,
     )
     min_transport = FormMoneyField(
-        label=_("Minium order amount for free shipping cost"),
+        label=_("Minimum order amount for free shipping cost"),
         # help_text=_("This is the minimum order amount to avoid shipping cost."),
         max_digits=5,
         decimal_places=2,
@@ -297,8 +297,8 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             "is_active",
         ]
         if customer is not None:
-            fields_basic += [("get_admin_balance", "get_admin_date_balance")]
-            fields_advanced = ["bank_account1", "bank_account2", "get_purchase"]
+            fields_basic += ["get_admin_balance", "get_admin_date_balance"]
+            fields_advanced = ["bank_account1", "bank_account2", "get_purchase_counter"]
         else:
             fields_advanced = ["bank_account1", "bank_account2"]
         fieldsets = (
@@ -315,7 +315,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             readonly_fields = [
                 "get_admin_date_balance",
                 "get_admin_balance",
-                "get_purchase",
+                "get_purchase_counter",
             ]
             return readonly_fields
         return []

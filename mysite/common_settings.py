@@ -13,6 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from .settings import *
 
 EMPTY_STRING = ""
+
+
 # gettext = lambda s: s
 
 
@@ -106,8 +108,8 @@ EMAIL_USE_TLS = config.getboolean(
 DJANGO_SETTINGS_LANGUAGE = config.get(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_LANGUAGE", fallback="fr"
 )
-DJANGO_SETTINGS_LOGGING = (
-    config.getboolean("DJANGO_SETTINGS", "DJANGO_SETTINGS_LOGGING", fallback=False)
+DJANGO_SETTINGS_LOGGING = config.getboolean(
+    "DJANGO_SETTINGS", "DJANGO_SETTINGS_LOGGING", fallback=False
 )
 DJANGO_SETTINGS_SESSION = config.get(
     "DJANGO_SETTINGS", "DJANGO_SETTINGS_SESSION", fallback="/var/tmp/django-session"
@@ -393,8 +395,8 @@ if DEBUG:
             "OPTIONS": {
                 "context_processors": CONTEXT_PROCESSORS,
                 "loaders": [
-                        "django.template.loaders.filesystem.Loader",
-                        "django.template.loaders.app_directories.Loader",
+                    "django.template.loaders.filesystem.Loader",
+                    "django.template.loaders.app_directories.Loader",
                 ],
                 "debug": True,
             },
@@ -611,14 +613,15 @@ if DJANGO_SETTINGS_LOGGING:
         "formatters": {"console": {"format": "%(levelname)s %(name)s %(message)s"}},
         "handlers": {
             "console": {
-                "level": "DEBUG", # DEBUG INFO WARNING ERROR CRITICAL
+                "level": "DEBUG",  # DEBUG INFO WARNING ERROR CRITICAL
                 "class": "logging.StreamHandler",
                 "formatter": "console",
             }
         },
         "loggers": {
-            "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
+            "django.db.backends": {"level": "WARNING", "handlers": ["console"]},
             "repanier": {"level": "DEBUG", "handlers": ["console"]},
+            "django.template": {"level": "DEBUG", "handlers": ["console"]},
         },
     }
 
@@ -761,25 +764,45 @@ DJANGO_SETTINGS_MULTIPLE_LANGUAGE = len(LANGUAGES) > 1
 
 ###################### Django : Cache setup (https://docs.djangoproject.com/en/dev/topics/cache/)
 
-CACHE_MIDDLEWARE_ALIAS = "default"
-CACHE_MIDDLEWARE_SECONDS = 3600
+if DEBUG:
+    CACHE_MIDDLEWARE_ALIAS = "default"
+    CACHE_MIDDLEWARE_SECONDS = 1
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
-        "TIMEOUT": 3000,
-        "OPTIONS": {"MAX_ENTRIES": 10000, "CULL_FREQUENCY": 3},
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+            "LOCATION": os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
+            "TIMEOUT": 1,
+            "OPTIONS": {"MAX_ENTRIES": 10000, "CULL_FREQUENCY": 3},
+        }
     }
-}
+else:
+    CACHE_MIDDLEWARE_ALIAS = "default"
+    CACHE_MIDDLEWARE_SECONDS = 3600
+
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+            "LOCATION": os.path.join(DJANGO_SETTINGS_CACHE, ALLOWED_HOSTS[0]),
+            "TIMEOUT": 3000,
+            "OPTIONS": {"MAX_ENTRIES": 10000, "CULL_FREQUENCY": 3},
+        }
+    }
 
 ######################## CMS
 
-CMS_CACHE_DURATIONS = {
-    "content": 60,  # default 60
-    "menus": 60,  # default 3600
-    "permissions": 3600,  # default: 3600
-}
+if DEBUG:
+    CMS_CACHE_DURATIONS = {
+        "content": 1,  # default 60
+        "menus": 1,  # default 3600
+        "permissions": 1,  # default: 3600
+    }
+else:
+    CMS_CACHE_DURATIONS = {
+        "content": 60,  # default 60
+        "menus": 60,  # default 3600
+        "permissions": 3600,  # default: 3600
+    }
 
 CMS_TEMPLATE_HOME = "cms_home.html"
 CMS_TEMPLATE_PAGE = "cms_page.html"
@@ -857,53 +880,29 @@ CMS_PLACEHOLDER_CONF = {
             {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_HERO}}
         ],
     },
-    'home-col-1': {
-        'name': gettext('Column 1'),
-        'plugins': [
-            'TextPlugin',
+    "home-col-1": {
+        "name": gettext("Column 1"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_COL_1}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_1
-                },
-            },
-        ]
     },
-    'home-col-2': {
-        'name': gettext('Column 2'),
-        'plugins': [
-            'TextPlugin',
+    "home-col-2": {
+        "name": gettext("Column 2"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_COL_2}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_2
-                },
-            },
-        ]
     },
-    'home-col-3': {
-        'name': gettext('Column 3'),
-        'plugins': [
-            'TextPlugin',
+    "home-col-3": {
+        "name": gettext("Column 3"),
+        "plugins": ["TextPlugin"],
+        "text_only_plugins": text_only_plugins,
+        "default_plugins": [
+            {"plugin_type": "TextPlugin", "values": {"body": CMS_TEMPLATE_HOME_COL_3}}
         ],
-        'text_only_plugins': text_only_plugins,
-        'default_plugins': [
-            {
-                'plugin_type': 'TextPlugin',
-                'values': {
-                    'body':
-                        CMS_TEMPLATE_HOME_COL_3
-                },
-            },
-        ]
     },
     "subpage_content": {
         "name": gettext("Content"),

@@ -8,12 +8,10 @@
     <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
         <fieldset class="module aligned ">
         <div class="form-group">
-            <b>{% trans "The importation concern :" %}</b> {% for object in queryset.all  %}{{ object }}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>{% if not forloop.last %}, {% endif %}{% endfor %}
-            <br>
             <label for="id_file_to_import"><b>{% trans "File to import :"%}</b></label><input id="id_file_to_import" name="file_to_import" type="file" />
         </div>
         </fieldset>
-        <div class="submit-row">
+        <div class="submit-row repanier-submit-row">
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
             <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Perform the import" %}</h6></button>
         </div>

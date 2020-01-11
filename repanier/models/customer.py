@@ -127,9 +127,15 @@ class Customer(models.Model):
     as_staff = models.ForeignKey(
         "Staff", blank=True, null=True, default=None, on_delete=models.CASCADE
     )
-    # This indicate that the user record data have been replaced with anonymous data in application of GDPR
+    # This indicate that the user record data have been replaced
+    # with anonymous data in application of GDPR
     is_anonymized = models.BooleanField(default=False)
+    # A group is a customer that groups several other customers.
+    # The value of this field is set in "group_pre_save" signal
     is_group = models.BooleanField(_("Group"), default=False)
+    # A group may not place an order.
+    # The value of this field is set in "group_pre_save" signal
+    # or in the admin at customer level.
     may_order = models.BooleanField(_("May order"), default=True)
     zero_waste = models.BooleanField(_("Zero waste"), default=False)
     valid_email = models.NullBooleanField(_("Valid email"), default=None)
@@ -209,7 +215,7 @@ class Customer(models.Model):
         return customer
 
     def get_admin_date_balance(self):
-        return timezone.now().date().strftime(settings.DJANGO_SETTINGS_DATE)
+        return timezone.now().strftime(settings.DJANGO_SETTINGS_DATETIME)
 
     get_admin_date_balance.short_description = _("Date balance")
 
@@ -356,21 +362,21 @@ class Customer(models.Model):
         if last_customer_invoice.exists():
             if balance.amount >= 30:
                 return format_html(
-                    '<a href="{}?customer={}" class="btn" target="_blank" ><span style="color:#32CD32">{}</span></a>',
+                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
                     reverse("customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
             elif balance.amount >= -10:
                 return format_html(
-                    '<a href="{}?customer={}" class="btn" target="_blank" ><span style="color:#696969">{}</span></a>',
+                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
                     reverse("customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
             else:
                 return format_html(
-                    '<a href="{}?customer={}" class="btn" target="_blank" ><span style="color:red">{}</span></a>',
+                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
                     reverse("customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
@@ -472,7 +478,7 @@ class Customer(models.Model):
 
     get_last_membership_fee_date.short_description = _("Last membership fee date")
 
-    def get_participation(self):
+    def get_participation_counter(self):
         now = timezone.now()
         return (
             PermanenceBoard.objects.filter(
@@ -485,18 +491,20 @@ class Customer(models.Model):
             .count()
         )
 
-    get_participation.short_description = _("Participation")
+    get_participation_counter.short_description = _("Participation")
 
-    def get_purchase(self):
+    def get_purchase_counter(self):
         now = timezone.now()
         # Do not count invoice having only products free of charge
+        # or slitted permanences (master_permanence is not NULL)
         return CustomerInvoice.objects.filter(
             customer_id=self.id,
             total_price_with_tax__gt=DECIMAL_ZERO,
             date_balance__gte=now - datetime.timedelta(ONE_YEAR),
+            permanence__master_permanence__isnull=True,
         ).count()
 
-    get_purchase.short_description = _("Purchase")
+    get_purchase_counter.short_description = _("Purchase")
 
     def my_order_confirmation_email_send_to(self):
         if self.email2:
@@ -550,14 +558,11 @@ class Customer(models.Model):
         return True
 
     def anonymize(self, also_group=False):
-        if self.represent_this_buyinggroup:
-            if not also_group:
-                return
-            self.short_basket_name = "{}-{}".format(_("GROUP"), self.id).lower()
-            self.long_basket_name = "{} {}".format(_("Group"), self.id)
-        else:
-            self.short_basket_name = "{}-{}".format(_("BASKET"), self.id).lower()
-            self.long_basket_name = "{} {}".format(_("Family"), self.id)
+        if self.represent_this_buyinggroup or self.is_group:
+            # Do not anonymize groups
+            return
+        self.short_basket_name = "{}-{}".format(_("BASKET"), self.id).lower()
+        self.long_basket_name = "{} {}".format(_("Family"), self.id)
         self.email2 = EMPTY_STRING
         self.picture = EMPTY_STRING
         self.phone1 = EMPTY_STRING

@@ -19,7 +19,7 @@ from repanier.xlsx.xlsx_order import generate_customer_xlsx, generate_producer_x
 logger = logging.getLogger(__name__)
 
 
-@debug_parameters
+# @debug_parameters
 def email_order(permanence_id, everything=True, deliveries_id=()):
     from repanier.apps import REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD, REPANIER_SETTINGS_CONFIG
     cur_language = translation.get_language()
@@ -63,7 +63,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                         settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
                     'board_composition': board_composition,
                     'board_composition_and_description': board_composition,
-                    'signature': order_responsible.get_html_signature
+                    'signature': order_responsible["html_signature"]
                 })
                 html_body = template.render(context)
 
@@ -73,9 +73,9 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                             permanence_id=permanence.id).order_by('?'):
                         if permanence_board.customer:
                             to_email.append(permanence_board.customer.user.email)
-                    to_email = list(set(to_email + order_responsible.get_to_email))
+                    to_email = list(set(to_email + order_responsible["to_email"]))
                 else:
-                    to_email = list(set(order_responsible.get_to_email))
+                    to_email = list(set(order_responsible["to_email"]))
 
                 email = RepanierEmail(
                     subject=order_staff_mail_subject,
@@ -109,7 +109,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 'duplicate': wb is not None,
                 'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
                     settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
-                'signature': order_responsible.get_html_signature
+                'signature': order_responsible["html_signature"]
             })
             html_body = template.render(context)
 
@@ -133,7 +133,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                     to_email.append(producer.email2)
                 if producer.email3:
                     to_email.append(producer.email3)
-            to_email = list(set(to_email + order_responsible.get_to_email))
+            to_email = list(set(to_email + order_responsible["to_email"]))
             email = RepanierEmail(
                 subject=order_producer_mail_subject,
                 html_body=html_body,
@@ -215,14 +215,14 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, order_resp
             'on_hold_movement': EMPTY_STRING,
             'payment_needed': EMPTY_STRING,
             'delivery_point': delivery_point,
-            'signature': order_responsible.get_html_signature
+            'signature': order_responsible["html_signature"]
         })
         html_body = template.render(context)
 
         to_email = [customer_responsible.user.email]
         if customer_responsible.email2:
             to_email.append(customer_responsible.email2)
-        to_email = list(set(to_email + order_responsible.get_to_email))
+        to_email = list(set(to_email + order_responsible["to_email"]))
 
         email = RepanierEmail(
             subject=order_customer_mail_subject,
@@ -295,7 +295,7 @@ def export_order_2_1_customer(customer, filename, permanence, order_responsible=
                 'on_hold_movement': customer_on_hold_movement,
                 'payment_needed': mark_safe(customer_payment_needed),
                 'delivery_point': delivery_point,
-                'signature': order_responsible.get_html_signature
+                'signature': order_responsible["html_signature"]
             })
             html_body = template.render(context)
 

@@ -25,7 +25,6 @@ def offer_item_pre_save(sender, **kwargs):
     # ipdb.set_trace()
     offer_item.recalculate_prices(
         offer_item.producer_price_are_wo_vat,
-        offer_item.is_resale_price_fixed,
         offer_item.price_list_multiplier,
     )
 

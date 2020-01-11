@@ -12,7 +12,7 @@ def import_xslx_view(
     admin_ui,
     admin,
     request,
-    queryset,
+    obj,
     sub_title,
     handle_uploaded_file,
     action,
@@ -28,7 +28,7 @@ def import_xslx_view(
                     "invoice_reference", EMPTY_STRING
                 )
                 error, error_msg = handle_uploaded_file(
-                    request, queryset, file_to_import, producer, invoice_reference
+                    request, obj, file_to_import, producer, invoice_reference
                 )
                 if error:
                     if error_msg is None:
@@ -54,9 +54,11 @@ def import_xslx_view(
                         request,
                         _("Successfully imported {}.").format(file_to_import.name),
                     )
-                    split_path = request.get_full_path().split("/")
-                    if len(split_path) == 7:
-                        return HttpResponseRedirect("/".join(split_path[:-2]))
+                    full_path = request.get_full_path()
+                    split_path = full_path.split("/")
+                    if len(split_path) > 5:
+                        return HttpResponseRedirect("/".join(split_path[:5]))
+                    return HttpResponseRedirect(full_path)
             else:
                 admin_ui.message_user(
                     request,
@@ -70,14 +72,6 @@ def import_xslx_view(
                 request, _("No file to import."), level=messages.WARNING
             )
         return HttpResponseRedirect(request.get_full_path())
-    elif "cancel" in request.POST:
-        admin_ui.message_user(
-            request, _("Action canceled by the user."), level=messages.INFO
-        )
-        split_path = request.get_full_path().split("/")
-        if len(split_path) == 7:
-            return HttpResponseRedirect("/".join(split_path[:-2]))
-        return HttpResponseRedirect(request.get_full_path())
     form = form_klass(
         initial={"_selected_action": request.POST.getlist(admin.ACTION_CHECKBOX_NAME)}
     )
@@ -86,7 +80,7 @@ def import_xslx_view(
         form.template,
         {
             "sub_title": sub_title,
-            "queryset": queryset,
+            "object": obj,
             "form": form,
             "action": action,
             "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,

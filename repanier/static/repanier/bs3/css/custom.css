@@ -1,25 +1,28 @@
 /* Sticky footer styles */
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
+
 body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
 }
-@media screen and (min-width:768px) and (max-width: 979px) {
-  body {
-    padding-top: 60px;
-  }
+
+@media screen and (min-width: 768px) and (max-width: 979px) {
+    body {
+        padding-top: 60px;
+    }
 }
+
 .footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  /* Set the fixed height of the footer here */
-  height: 60px;
-  /* background-color: #f5f5f5; */
-  text-align: center;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Set the fixed height of the footer here */
+    height: 60px;
+    /* background-color: #f5f5f5; */
+    text-align: center;
 }
 
 /* sidebar */
@@ -28,6 +31,7 @@ body {
     margin-top: 1px;
     margin-bottom: 1px;
 }
+
 /* all links */
 .bs-docs-sidebar .nav > li > a {
     color: #3c3c3c;
@@ -35,12 +39,14 @@ body {
     font-weight: bold;
     border-left: 2px solid transparent;
 }
+
 /* nested links */
 .bs-docs-sidebar .nav .nav > li > a {
     padding-left: 30px;
     /*font-size: 16px;*/
     font-weight: normal;
 }
+
 /* active & hover links */
 .bs-docs-sidebar .nav > .active > a,
 .bs-docs-sidebar .nav > li > a:hover,
@@ -49,6 +55,7 @@ body {
     text-decoration: none;
     background-color: transparent;
 }
+
 /* selected links */
 .bs-docs-sidebar .nav > li > a.bs-docs-sidebar-active {
     color: #51a351;
@@ -56,14 +63,16 @@ body {
     background-color: transparent;
     border-left: 2px solid #51a351;
 }
+
 .display_none {
-    display:none;
+    display: none;
 }
+
 .panel-heading.accordion-toggle:after {
     /* symbol for "opening" panels */
-    font-family:'Glyphicons Halflings';
+    font-family: 'Glyphicons Halflings';
     /* essential for enabling glyphicon */
-    content:"\e114";
+    content: "\e114";
     /* adjust as needed, taken from bootstrap.css */
     float: right;
     position: relative;
@@ -71,9 +80,10 @@ body {
     font-size: 15pt;
     color: grey;
 }
+
 .panel-heading.accordion-toggle.collapsed:after {
     /* symbol for "collapsed" panels */
-    content:"\e080";
+    content: "\e080";
 }
 
 .panel-heading:hover {
@@ -85,36 +95,39 @@ body {
 }
 
 .offer-description {
-  position: relative;
-  height: 200px;
-  margin-top: 20px;
-  overflow: auto;
+    position: relative;
+    height: 200px;
+    margin-top: 20px;
+    overflow: auto;
 }
 
 body > .container {
-  padding: 0 15px 0;
+    padding: 0 15px 0;
 }
+
 .container .text-muted {
-  margin: 20px 0;
+    margin: 20px 0;
 }
 
 .footer > .container {
-  padding-right: 15px;
-  padding-left: 15px;
+    padding-right: 15px;
+    padding-left: 15px;
 }
 
 code {
-  font-size: 80%;
+    font-size: 80%;
 }
-@media only screen and (min-width:768px) {
+
+@media only screen and (min-width: 768px) {
     /* automatically display menu on mouse over if not xs */
     ul.nav li.dropdown:hover > ul.dropdown-menu {
         display: block;
     }
 }
-@media only screen and (max-width:767px) {
+
+@media only screen and (max-width: 767px) {
     .sidenav {
-        display:none;
+        display: none;
         height: 100%;
         max-height: 100% !important;
         width: 90%;
@@ -138,7 +151,7 @@ code {
         font-size: 18px;
     }
 
-    .sidenav a:hover, .offcanvas a:focus{
+    .sidenav a:hover, .offcanvas a:focus {
         color: #f1f1f1;
     }
 
@@ -151,276 +164,297 @@ code {
     }
 
     /*@media screen and (max-height: 450px) {*/
-      /*.sidenav {padding-top: 15px;}*/
-      /*.sidenav a {font-size: 18px;}*/
+    /*.sidenav {padding-top: 15px;}*/
+    /*.sidenav a {font-size: 18px;}*/
     /*}*/
 }
 
-a.skip_link{
-   position:absolute;
-   left:-1000px;
-   top:-1000px;
+a.skip_link {
+    position: absolute;
+    left: -1000px;
+    top: -1000px;
 }
+
 .white, .white a {
     color: #fff;
 }
-@media only screen and (min-width:768px) {
+
+@media only screen and (min-width: 768px) {
     .container-bootstrap {
         margin-top: 65px;
     }
+
     .container-repanier {
         margin: 75px 0 0;
     }
+
     .container-info {
         margin: 75px 0 -75px 0;
     }
+
     .container-menu {
         padding: 0 15px 0;
     }
 }
 
-@media only screen and (max-width:767px) {
+@media only screen and (max-width: 767px) {
     .container-bootstrap {
         margin-top: 36px;
     }
+
     .container-repanier {
         margin: 46px 0 0;
     }
+
     .container-info {
         margin: 46px 0 -46px 0;
     }
+
     .container-menu {
     }
 }
+
 /* django-angular : style.css */
-[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
-	display: none !important;
-}
+/*[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {*/
+/*	display: none !important;*/
+/*}*/
 
-form.ng-submitted .ng-invalid,
-form .ng-invalid-bound.ng-pristine,
-form .ng-invalid.ng-dirty {
-	border-color: #e9322d;
-}
+/*form.ng-submitted .ng-invalid,*/
+/*form .ng-invalid-bound.ng-pristine,*/
+/*form .ng-invalid.ng-dirty {*/
+/*	border-color: #e9322d;*/
+/*}*/
 
-form.ng-submitted .ng-invalid:focus,
-form .ng-invalid-bound.ng-pristine:focus,
-form .ng-invalid.ng-dirty:focus {
-	box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #ce8483;
-}
-label.djng-field-required::after {
-	content: "\00a0*";
-}
-ul.djng-form-errors, ul.djng-field-errors {
-	display: inline-block;
-	list-style-type: none;
-	margin: 5px 0 0 0;
-	padding: 0;
-}
-ul.djng-form-errors li, ul.djng-field-errors li {
-	color: #e9322d;
-}
-ul.djng-field-errors li.invalid::before {
-	content: "\2716";
-	margin-right: 10px;
-}
-ul.djng-field-errors li.valid::before {
-	color: #00c900;
-	content: "\2714";
-}
-/* django-angular : bootstrap3.css */
-.djng-form-control-feedback {
-	position: absolute;
-	text-align: right;
-	/*top: -5px;*/
-    top: 36px;
-	right: 10px;
-}
-.djng-line-spreader {
-	height: 20px;
-	margin-bottom: 10px;
-}
-.checkbox + ul.djng-field-errors,
-.checkbox + ul.djng-field-errors + ul.djng-field-errors {
-    display: none;
-}
+/*form.ng-submitted .ng-invalid:focus,*/
+/*form .ng-invalid-bound.ng-pristine:focus,*/
+/*form .ng-invalid.ng-dirty:focus {*/
+/*	box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #ce8483;*/
+/*}*/
+/*label.djng-field-required::after {*/
+/*	content: "\00a0*";*/
+/*}*/
+/*ul.djng-form-errors, ul.djng-field-errors {*/
+/*	display: inline-block;*/
+/*	list-style-type: none;*/
+/*	margin: 5px 0 0 0;*/
+/*	padding: 0;*/
+/*}*/
+/*ul.djng-form-errors li, ul.djng-field-errors li {*/
+/*	color: #e9322d;*/
+/*}*/
+/*ul.djng-field-errors li.invalid::before {*/
+/*	content: "\2716";*/
+/*	margin-right: 10px;*/
+/*}*/
+/*ul.djng-field-errors li.valid::before {*/
+/*	color: #00c900;*/
+/*	content: "\2714";*/
+/*}*/
+/*!* django-angular : bootstrap3.css *!*/
+/*.djng-form-control-feedback {*/
+/*	position: absolute;*/
+/*	text-align: right;*/
+/*	!*top: -5px;*!*/
+/*    top: 36px;*/
+/*	right: 10px;*/
+/*}*/
+/*.djng-line-spreader {*/
+/*	height: 20px;*/
+/*	margin-bottom: 10px;*/
+/*}*/
+/*.checkbox + ul.djng-field-errors,*/
+/*.checkbox + ul.djng-field-errors + ul.djng-field-errors {*/
+/*    display: none;*/
+/*}*/
 /* https://codepen.io/msaetre/pen/Ekyaz */
 .icon-cart {
-  width: 48px;
-  height: 48px;
-  position: relative;
-  overflow: hidden;
-  /*margin-left: 25px;*/
-  /*margin-bottom: 25px;*/
-  margin-top: -10px;
+    width: 48px;
+    height: 48px;
+    position: relative;
+    overflow: hidden;
+    /*margin-left: 25px;*/
+    /*margin-bottom: 25px;*/
+    margin-top: -10px;
 }
 
 .icon-cart .cart-line-1 {
-  width: 15%;
-  height: 7%;
-  position: absolute;
-  left: 8%;
-  top: 25%;
-  -webkit-transform: rotate(5deg);
-  -moz-transform: rotate(5deg);
-  -ms-transform: rotate(5deg);
-  transform: rotate(5deg);
-  border-bottom-left-radius: 35%;
+    width: 15%;
+    height: 7%;
+    position: absolute;
+    left: 8%;
+    top: 25%;
+    -webkit-transform: rotate(5deg);
+    -moz-transform: rotate(5deg);
+    -ms-transform: rotate(5deg);
+    transform: rotate(5deg);
+    border-bottom-left-radius: 35%;
 }
 
 .icon-cart .cart-line-2 {
-  width: 35%;
-  height: 7%;
-  position: absolute;
-  left: 6%;
-  top: 40%;
-  -webkit-transform: rotate(80deg);
-  -moz-transform: rotate(80deg);
-  -ms-transform: rotate(80deg);
-  transform: rotate(80deg);
+    width: 35%;
+    height: 7%;
+    position: absolute;
+    left: 6%;
+    top: 40%;
+    -webkit-transform: rotate(80deg);
+    -moz-transform: rotate(80deg);
+    -ms-transform: rotate(80deg);
+    transform: rotate(80deg);
 }
 
 .icon-cart .cart-line-2:before {
-  content: "";
-  width: 120%;
-  height: 100%;
-  position: absolute;
-  left: 45%;
-  top: -280%;
-  -webkit-transform: rotate(-80deg);
-  -moz-transform: rotate(-80deg);
-  -ms-transform: rotate(-80deg);
-  transform: rotate(-80deg);
-  background-color: inherit;
+    content: "";
+    width: 120%;
+    height: 100%;
+    position: absolute;
+    left: 45%;
+    top: -280%;
+    -webkit-transform: rotate(-80deg);
+    -moz-transform: rotate(-80deg);
+    -ms-transform: rotate(-80deg);
+    transform: rotate(-80deg);
+    background-color: inherit;
 }
 
 .icon-cart .cart-line-2:after {
-  content: "";
-  width: 70%;
-  height: 100%;
-  position: absolute;
-  left: 59%;
-  top: -670%;
-  background-color: inherit;
-  -webkit-transform: rotate(40deg);
-  -moz-transform: rotate(40deg);
-  -ms-transform: rotate(40deg);
-  transform: rotate(40deg);
-  border-top-left-radius: 50%;
-  border-bottom-left-radius: 25%;
+    content: "";
+    width: 70%;
+    height: 100%;
+    position: absolute;
+    left: 59%;
+    top: -670%;
+    background-color: inherit;
+    -webkit-transform: rotate(40deg);
+    -moz-transform: rotate(40deg);
+    -ms-transform: rotate(40deg);
+    transform: rotate(40deg);
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 25%;
 }
 
 .icon-cart .cart-line-3 {
-  width: 30%;
-  height: 7%;
-  position: absolute;
-  left: 33%;
-  top: 45%;
+    width: 30%;
+    height: 7%;
+    position: absolute;
+    left: 33%;
+    top: 45%;
 }
 
 .icon-cart .cart-line-3:after {
-  content: "";
-  width: 124%;
-  height: 100%;
-  position: absolute;
-  top: -150%;
-  left: -5%;
-  background-color: inherit;
+    content: "";
+    width: 124%;
+    height: 100%;
+    position: absolute;
+    top: -150%;
+    left: -5%;
+    background-color: inherit;
 }
 
 .icon-cart .cart-wheel {
-  width: 12%;
-  height: 12%;
-  border-radius: 100%;
-  position: absolute;
-  left: 28%;
-  bottom: 20%;
+    width: 12%;
+    height: 12%;
+    border-radius: 100%;
+    position: absolute;
+    left: 28%;
+    bottom: 20%;
 }
 
 .icon-cart .cart-wheel:after {
-  content: "";
-  width: 100%;
-  height: 100%;
-  background-color: inherit;
-  border-radius: 100%;
-  position: absolute;
-  left: 200%;
-  bottom: 0;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+    border-radius: 100%;
+    position: absolute;
+    left: 200%;
+    bottom: 0;
 }
+
 /* Bootstrap : Let's align right the cart button on small devices */
-.navbar-header{
-  width:100%;
+.navbar-header {
+    width: 100%;
 }
+
 .navbar-group-name {
     margin-left: 10px;
     color: #fff;
 }
+
 /* Bootstrap : Wordwrap button */
-.btn{
-    white-space:normal !important;
+.btn {
+    white-space: normal !important;
     word-wrap: break-word;
     word-break: normal;
     overflow-wrap: break-word;
 }
+
 /* Disable link using css */
 .not-active {
-   pointer-events: none;
-   cursor: default;
+    pointer-events: none;
+    cursor: default;
 }
+
 /* sticky "Update" button */
-.form-sticky-update-button{
-    position:sticky;
-    bottom:65px;
+.form-sticky-update-button {
+    position: sticky;
+    bottom: 65px;
 }
+
 /* https://www.w3schools.com/howto/howto_js_scroll_to_top.asp */
-.back-to-top-sticky-button{
-    display:none;
-    position:fixed;
-    bottom:20px;
-    right:30px;
-    z-index:2000;
+.back-to-top-sticky-button {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    z-index: 2000;
 }
+
 /* Bootstrap refresh animated */
 .gly-spin {
-  -webkit-animation: spin 2s infinite linear;
-  -moz-animation: spin 2s infinite linear;
-  -o-animation: spin 2s infinite linear;
-  animation: spin 2s infinite linear;
+    -webkit-animation: spin 2s infinite linear;
+    -moz-animation: spin 2s infinite linear;
+    -o-animation: spin 2s infinite linear;
+    animation: spin 2s infinite linear;
 }
+
 @-moz-keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-  }
-  100% {
-    -moz-transform: rotate(359deg);
-  }
+    0% {
+        -moz-transform: rotate(0deg);
+    }
+    100% {
+        -moz-transform: rotate(359deg);
+    }
 }
+
 @-webkit-keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(359deg);
-  }
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+    }
 }
+
 @-o-keyframes spin {
-  0% {
-    -o-transform: rotate(0deg);
-  }
-  100% {
-    -o-transform: rotate(359deg);
-  }
+    0% {
+        -o-transform: rotate(0deg);
+    }
+    100% {
+        -o-transform: rotate(359deg);
+    }
 }
+
 @keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
 }
+
 .form-group input[type="checkbox"] {
     display: none;
 }

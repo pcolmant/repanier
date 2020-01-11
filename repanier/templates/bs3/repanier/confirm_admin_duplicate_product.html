@@ -7,12 +7,12 @@
     <p></p>
     <form action="" method="post">{% csrf_token %}
         <h6>{{ product }}</h6>
-        <div class="submit-row">
+        <div class="submit-row repanier-submit-row">
             <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
             <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6></button>
         </div>
         <fieldset class="module aligned ">
-        <div class="submit-row">
+        <div class="submit-row repanier-submit-row">
             {% for producer in producers %}
                 <h6><input type="radio" name="producers" value="{{ producer.id|unlocalize }}"{% if producer.id == product.producer_id|add:0 %} checked{% endif %}/>&nbsp;&nbsp;{{ producer }}</h6>
             {% endfor %}

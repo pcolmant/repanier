@@ -78,17 +78,21 @@ class Staff(MPTTModel, TranslatableModel):
     @classmethod
     def get_or_create_any_coordinator(cls):
         coordinator = (
-            cls.objects.filter(is_active=True, is_repanier_admin=True)
-            .order_by("id")
-            .first()
+            (
+                cls.objects.filter(
+                    is_active=True, is_repanier_admin=True, can_be_contacted=True
+                )
+                .order_by("id")
+                .first()
+            )
+            or (
+                cls.objects.filter(is_active=True, is_repanier_admin=True)
+                .order_by("id")
+                .first()
+            )
+            or (cls.objects.filter(is_active=True).order_by("id").first())
+            or (cls.objects.order_by("id").first())
         )
-        if coordinator is None:
-            # Set the first staff member as coordinator if possible
-            coordinator = cls.objects.all().order_by("id").first()
-            if coordinator is not None:
-                coordinator.is_active = True
-                coordinator.is_repanier_admin = True
-                coordinator.save(update_fields=["is_active", "is_repanier_admin"])
         if coordinator is None:
             # Create the very first staff member
             from repanier.models.customer import Customer
@@ -99,6 +103,7 @@ class Staff(MPTTModel, TranslatableModel):
                 is_repanier_admin=True,
                 is_webmaster=True,
                 customer_responsible=very_first_customer,
+                can_be_contacted=True,
             )
             cur_language = translation.get_language()
             for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
@@ -112,29 +117,59 @@ class Staff(MPTTModel, TranslatableModel):
 
     @classmethod
     def get_or_create_order_responsible(cls):
-        order_responsible = (
-            cls.objects.filter(is_active=True, is_order_manager=True)
-            .order_by("?")
-            .first()
-        )
-        if order_responsible is None:
+        signature = []
+        html_signature = []
+        to_email = []
+        order_responsible_qs = cls.objects.filter(
+            is_active=True, is_order_manager=True
+        ).order_by("?")
+        if not order_responsible_qs.exists():
             order_responsible = Staff.get_or_create_any_coordinator()
+            order_responsible.is_active = True
             order_responsible.is_order_manager = True
-            order_responsible.save(update_fields=["is_order_manager"])
-        return order_responsible
+            order_responsible.save(update_fields=["is_active", "is_order_manager"])
+        for order_responsible in order_responsible_qs:
+            customer_responsible = order_responsible.customer_responsible
+            can_be_contacted = order_responsible.can_be_contacted
+            if customer_responsible is not None:
+                if can_be_contacted:
+                    signature.append(order_responsible.get_str_member)
+                    html_signature.append(order_responsible.get_html_signature)
+                to_email.extend(order_responsible.get_to_email)
+        separator = chr(10) + " "
+        return {
+            "signature": separator.join(signature),
+            "html_signature": mark_safe("<br>".join(html_signature)),
+            "to_email": to_email,
+        }
 
     @classmethod
     def get_or_create_invoice_responsible(cls):
-        invoice_responsible = (
-            cls.objects.filter(is_active=True, is_invoice_manager=True)
-            .order_by("?")
-            .first()
-        )
-        if invoice_responsible is None:
+        signature = []
+        html_signature = []
+        to_email = []
+        invoice_responsible_qs = cls.objects.filter(
+            is_active=True, is_invoice_manager=True
+        ).order_by("?")
+        if not invoice_responsible_qs.exists():
             invoice_responsible = Staff.get_or_create_any_coordinator()
-            invoice_responsible.is_invoice_manager = True
-            invoice_responsible.save(update_fields=["is_invoice_manager"])
-        return invoice_responsible
+            invoice_responsible.is_active = True
+            invoice_responsible.is_order_manager = True
+            invoice_responsible.save(update_fields=["is_active", "is_order_manager"])
+        for invoice_responsible in invoice_responsible_qs:
+            customer_responsible = invoice_responsible.customer_responsible
+            can_be_contacted = invoice_responsible.can_be_contacted
+            if customer_responsible is not None:
+                if can_be_contacted:
+                    signature.append(invoice_responsible.get_str_member)
+                    html_signature.append(invoice_responsible.get_html_signature)
+                to_email.extend(invoice_responsible.get_to_email)
+        separator = chr(10) + " "
+        return {
+            "signature": separator.join(signature),
+            "html_signature": mark_safe("<br>".join(html_signature)),
+            "to_email": to_email,
+        }
 
     @cached_property
     def get_html_signature(self):
@@ -168,7 +203,7 @@ class Staff(MPTTModel, TranslatableModel):
             to_email = [settings.DEFAULT_FROM_EMAIL]
         return to_email
 
-    @property
+    @cached_property
     def get_str_member(self):
         if self.customer_responsible is not None:
             return "{} : {}{}".format(

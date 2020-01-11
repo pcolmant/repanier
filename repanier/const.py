@@ -61,18 +61,32 @@ PERMANENCE_INVOICED = "800"
 PERMANENCE_ARCHIVED = "900"
 PERMANENCE_CANCELLED = "950"
 
+PERMANENCE_PLANNED_STR = _("Scheduled")
+PERMANENCE_WAIT_FOR_OPEN_STR = _("Being opened")
+PERMANENCE_OPENED_STR = _("Orders opened")
+PERMANENCE_WAIT_FOR_CLOSED_STR = _("Being closed (step1)")
+PERMANENCE_CLOSED_STR = _("Being closed (step 2)")
+PERMANENCE_WAIT_FOR_SEND_STR = _("Being closed (step 3)")
+PERMANENCE_SEND_STR = _("Orders closed")
+PERMANENCE_WAIT_FOR_INVOICED_STR = _("Being invoiced")
+PERMANENCE_WAIT_FOR_CANCEL_INVOICE_STR = _("Being cancelled")
+PERMANENCE_INVOICED_STR = _("Invoiced")
+PERMANENCE_ARCHIVED_STR = _("Archived")
+PERMANENCE_CANCELLED_STR = _("Cancelled")
+
 LUT_PERMANENCE_STATUS = (
-    (PERMANENCE_PLANNED, _("Scheduled")),
-    (PERMANENCE_WAIT_FOR_OPEN, _("Wait for open")),
-    (PERMANENCE_OPENED, _("Orders opened")),
-    (PERMANENCE_WAIT_FOR_CLOSED, _("Wait for close")),
-    (PERMANENCE_CLOSED, _("Orders closed")),
-    (PERMANENCE_WAIT_FOR_SEND, _("Wait for send")),
-    (PERMANENCE_SEND, _("Orders send")),
-    (PERMANENCE_WAIT_FOR_INVOICED, _("Wait for done")),
-    (PERMANENCE_INVOICED, _("Invoiced")),
-    (PERMANENCE_ARCHIVED, _("Archived")),
-    (PERMANENCE_CANCELLED, _("Cancelled")),
+    (PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR),
+    (PERMANENCE_WAIT_FOR_OPEN, PERMANENCE_WAIT_FOR_OPEN_STR),
+    (PERMANENCE_OPENED, PERMANENCE_OPENED_STR),
+    (PERMANENCE_WAIT_FOR_CLOSED, PERMANENCE_WAIT_FOR_CLOSED_STR),
+    (PERMANENCE_CLOSED, PERMANENCE_CLOSED_STR),
+    (PERMANENCE_WAIT_FOR_SEND, PERMANENCE_WAIT_FOR_SEND_STR),
+    (PERMANENCE_SEND, PERMANENCE_SEND_STR),
+    (PERMANENCE_WAIT_FOR_INVOICED, PERMANENCE_WAIT_FOR_INVOICED_STR),
+    (PERMANENCE_WAIT_FOR_CANCEL_INVOICE, PERMANENCE_WAIT_FOR_CANCEL_INVOICE_STR),
+    (PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR),
+    (PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR),
+    (PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR),
 )
 
 PRODUCT_PLACEMENT_FREEZER = "100"
@@ -80,18 +94,23 @@ PRODUCT_PLACEMENT_FRIDGE = "200"
 PRODUCT_PLACEMENT_OUT_OF_BASKET = "300"
 PRODUCT_PLACEMENT_BASKET = "400"
 
+PRODUCT_PLACEMENT_FREEZER_STR = _("Freezer")
+PRODUCT_PLACEMENT_FRIDGE_STR = _("Fridge")
+PRODUCT_PLACEMENT_OUT_OF_BASKET_STR = _("Loose, out of the basket")
+PRODUCT_PLACEMENT_BASKET_STR = _("Into the basket")
+
 LUT_PRODUCT_PLACEMENT = (
-    (PRODUCT_PLACEMENT_FREEZER, _("Freezer")),
-    (PRODUCT_PLACEMENT_FRIDGE, _("Fridge")),
-    (PRODUCT_PLACEMENT_OUT_OF_BASKET, _("Loose, out of the basket")),
-    (PRODUCT_PLACEMENT_BASKET, _("Into the basket")),
+    (PRODUCT_PLACEMENT_FREEZER, PRODUCT_PLACEMENT_FREEZER_STR),
+    (PRODUCT_PLACEMENT_FRIDGE, PRODUCT_PLACEMENT_FRIDGE_STR),
+    (PRODUCT_PLACEMENT_OUT_OF_BASKET, PRODUCT_PLACEMENT_OUT_OF_BASKET_STR),
+    (PRODUCT_PLACEMENT_BASKET, PRODUCT_PLACEMENT_BASKET_STR),
 )
 
 LUT_PRODUCT_PLACEMENT_REVERSE = (
-    (_("Freezer"), PRODUCT_PLACEMENT_FREEZER),
-    (_("Fridge"), PRODUCT_PLACEMENT_FRIDGE),
-    (_("Loose, out of the basket"), PRODUCT_PLACEMENT_OUT_OF_BASKET),
-    (_("Into the basket"), PRODUCT_PLACEMENT_BASKET),
+    (PRODUCT_PLACEMENT_FREEZER_STR, PRODUCT_PLACEMENT_FREEZER),
+    (PRODUCT_PLACEMENT_FRIDGE_STR, PRODUCT_PLACEMENT_FRIDGE),
+    (PRODUCT_PLACEMENT_OUT_OF_BASKET_STR, PRODUCT_PLACEMENT_OUT_OF_BASKET),
+    (PRODUCT_PLACEMENT_BASKET_STR, PRODUCT_PLACEMENT_BASKET),
 )
 
 PRODUCT_ORDER_UNIT_PC = "100"
@@ -105,90 +124,65 @@ PRODUCT_ORDER_UNIT_DEPOSIT = "300"
 PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE = "400"
 PRODUCT_ORDER_UNIT_TRANSPORTATION = "500"
 
+PRODUCT_ORDER_UNIT_PC_STR = _(
+    "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."
+)
+PRODUCT_ORDER_UNIT_PC_PRICE_KG_STR = _(
+    "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."
+)
+PRODUCT_ORDER_UNIT_PC_PRICE_KG_SHORT_STR = _("Sold by weight")
+PRODUCT_ORDER_UNIT_PC_PRICE_LT_STR = _(
+    "Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."
+)
+PRODUCT_ORDER_UNIT_PC_PRICE_LT_SHORT_STR = _("Sold by l")
+PRODUCT_ORDER_UNIT_PC_PRICE_PC_STR = _(
+    "Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."
+)
+PRODUCT_ORDER_UNIT_PC_PRICE_PC_SHORT_STR = _("Sold by piece")
+PRODUCT_ORDER_UNIT_KG_STR = _(
+    "Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ..."
+)
+PRODUCT_ORDER_UNIT_PC_KG_STR = _(
+    "Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."
+)
+PRODUCT_ORDER_UNIT_PC_KG_SHORT_STR = _("Sold by piece, invoiced following the weight")
+PRODUCT_ORDER_UNIT_LT_STR = _("Sold in volume (in ℓ): non-conditioned liquids")
+PRODUCT_ORDER_UNIT_DEPOSIT_STR = _("Deposit taken back at the permanence.")
+PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE_STR = _("Membership fee.")
+PRODUCT_ORDER_UNIT_TRANSPORTATION_STR = _("Shipping cost.")
+
 LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST = (
-    (
-        PRODUCT_ORDER_UNIT_PC,
-        _(
-            "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."
-        ),
-    ),
-    (
-        PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-        _(
-            "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."
-        ),
-    ),
-    (
-        PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-        _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."),
-    ),
-    (
-        PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-        _(
-            "Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."
-        ),
-    ),
-    (
-        PRODUCT_ORDER_UNIT_KG,
-        _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ..."),
-    ),
-    (
-        PRODUCT_ORDER_UNIT_PC_KG,
-        _(
-            "Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."
-        ),
-    ),
-    (PRODUCT_ORDER_UNIT_LT, _("Sold in volume (in ℓ): non-conditioned liquids")),
-    (PRODUCT_ORDER_UNIT_DEPOSIT, _("Deposit taken back at the permanence.")),
+    (PRODUCT_ORDER_UNIT_PC, PRODUCT_ORDER_UNIT_PC_STR),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG_STR),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_LT_STR),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, PRODUCT_ORDER_UNIT_PC_PRICE_PC_STR),
+    (PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_KG_STR),
+    (PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_KG_STR),
+    (PRODUCT_ORDER_UNIT_LT, PRODUCT_ORDER_UNIT_LT_STR),
+    (PRODUCT_ORDER_UNIT_DEPOSIT, PRODUCT_ORDER_UNIT_DEPOSIT_STR),
 )
 
 LUT_PRODUCT_ORDER_UNIT = LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST + (
-    (PRODUCT_ORDER_UNIT_TRANSPORTATION, _("Shipping cost.")),
+    (PRODUCT_ORDER_UNIT_TRANSPORTATION, PRODUCT_ORDER_UNIT_TRANSPORTATION_STR),
 )
 
 LUT_PRODUCT_ORDER_UNIT_REVERSE = (
-    (
-        _(
-            "Sold by the piece without further details (not recommended if the weight or the litter is available): bouquet of thyme, ..."
-        ),
-        PRODUCT_ORDER_UNIT_PC,
-    ),
-    (
-        _(
-            "Sold packaged in pack / bag / ravier / ...: 250 gr. of butter, bag of 5 kg of potatoes, lasagne of 200 gr., ..."
-        ),
-        PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-    ),
-    (
-        _("Sold packaged in cubi of 3 ℓ, bottle of 75 cℓ, ..."),
-        PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-    ),
-    (
-        _(
-            "Sold packaged in packs without weight or volume: 6 eggs, 12 coffee pads, 6 praline ballotin, ..."
-        ),
-        PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-    ),
-    (
-        _("Sold by weight (in kg): bulk vegetables, cheeses / meat cut, ..."),
-        PRODUCT_ORDER_UNIT_KG,
-    ),
-    (
-        _(
-            "Sold by the piece, charged according to the actual weight: hamburgers, pumpkins, ..."
-        ),
-        PRODUCT_ORDER_UNIT_PC_KG,
-    ),
-    (_("Sold in volume (in ℓ): non-conditioned liquids"), PRODUCT_ORDER_UNIT_LT),
-    (_("Deposit taken back at the permanence."), PRODUCT_ORDER_UNIT_DEPOSIT),
-    (_("Shipping cost."), PRODUCT_ORDER_UNIT_TRANSPORTATION),
+    (PRODUCT_ORDER_UNIT_PC_STR, PRODUCT_ORDER_UNIT_PC),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG_STR, PRODUCT_ORDER_UNIT_PC_PRICE_KG),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT_STR, PRODUCT_ORDER_UNIT_PC_PRICE_LT),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC_STR, PRODUCT_ORDER_UNIT_PC_PRICE_PC),
+    (PRODUCT_ORDER_UNIT_KG_STR, PRODUCT_ORDER_UNIT_KG),
+    (PRODUCT_ORDER_UNIT_PC_KG_STR, PRODUCT_ORDER_UNIT_PC_KG),
+    (PRODUCT_ORDER_UNIT_LT_STR, PRODUCT_ORDER_UNIT_LT),
+    (PRODUCT_ORDER_UNIT_DEPOSIT_STR, PRODUCT_ORDER_UNIT_DEPOSIT),
+    (PRODUCT_ORDER_UNIT_TRANSPORTATION_STR, PRODUCT_ORDER_UNIT_TRANSPORTATION),
 )
 
 LUT_PRODUCER_PRODUCT_ORDER_UNIT = (
-    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, _("Sold by piece")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, _("Sold by weight")),
-    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, _("Sold by l")),
-    (PRODUCT_ORDER_UNIT_PC_KG, _("Sold by piece, invoiced following the weight")),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_PC, PRODUCT_ORDER_UNIT_PC_PRICE_PC_SHORT_STR),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_KG, PRODUCT_ORDER_UNIT_PC_PRICE_KG_SHORT_STR),
+    (PRODUCT_ORDER_UNIT_PC_PRICE_LT, PRODUCT_ORDER_UNIT_PC_PRICE_LT_SHORT_STR),
+    (PRODUCT_ORDER_UNIT_PC_KG, PRODUCT_ORDER_UNIT_PC_KG_SHORT_STR),
 )
 
 VAT_100 = "100"

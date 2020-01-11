@@ -116,9 +116,6 @@ class Producer(models.Model):
         blank=True,
         validators=[MinValueValidator(0)],
     )
-    is_resale_price_fixed = models.BooleanField(
-        _("The resale price is set by the producer"), default=False
-    )
     minimum_order_value = ModelMoneyField(
         _("Minimum order value"),
         help_text=_("0 mean : no minimum order value."),
@@ -195,7 +192,7 @@ class Producer(models.Model):
         if self.is_active:
 
             changeproductslist_url = reverse("admin:repanier_product_changelist")
-            link = '<a href="{}?is_active__exact=1&producer={}" class="btn">&nbsp;{}</a>'.format(
+            link = '<a href="{}?is_active__exact=1&producer={}" class="repanier-a-info">&nbsp;{}</a>'.format(
                 changeproductslist_url, str(self.id), _("Products")
             )
             return format_html(link)
@@ -205,32 +202,14 @@ class Producer(models.Model):
     get_products.short_description = EMPTY_STRING
 
     def get_admin_date_balance(self):
-        if self.id is not None:
-            bank_account = (
-                BankAccount.objects.filter(
-                    producer_id=self.id, producer_invoice__isnull=True
-                )
-                .order_by("-operation_date")
-                .only("operation_date")
-                .first()
-            )
-            if bank_account is not None:
-                return bank_account.operation_date
-            return self.date_balance
-        else:
-            return timezone.now().date()
+        return timezone.now().strftime(settings.DJANGO_SETTINGS_DATETIME)
 
-    get_admin_date_balance.short_description = _("Date_balance")
+    get_admin_date_balance.short_description = _("Date balance")
 
     def get_admin_balance(self):
-        if self.id is not None:
-            return (
-                self.balance
-                - self.get_bank_not_invoiced()
-                + self.get_order_not_invoiced()
-            )
-        else:
-            return REPANIER_MONEY_ZERO
+        return (
+            self.balance - self.get_bank_not_invoiced() + self.get_order_not_invoiced()
+        )
 
     get_admin_balance.short_description = _("Balance")
 
@@ -319,7 +298,6 @@ class Producer(models.Model):
 
     def get_calculated_invoiced_balance(self, permanence_id):
         bank_not_invoiced = self.get_bank_not_invoiced()
-        # IMPORTANT : when is_resale_price_fixed=True then price_list_multiplier == 1
         # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
 
         result_set = (
@@ -390,7 +368,7 @@ class Producer(models.Model):
 
         if last_producer_invoice_set.exists():
             return format_html(
-                '<a href="{}?producer={}" class="btn" target="_blank"><span style="color:{}">{}</span></a>',
+                '<a href="{}?producer={}" class="repanier-a-info" target="_blank"><span style="color:{}">{}</span></a>',
                 reverse("producer_invoice_view", args=(0,)),
                 str(self.id),
                 color,

@@ -451,13 +451,14 @@ class ProductDataForm(TranslatableModelForm):
         widgets = {
             "long_name": forms.TextInput(attrs={"style": "width:450px !important"}),
             "order_unit": SelectAdminOrderUnitWidget(
-                attrs={"style": "width:700px !important"}
+                attrs={"style": "width:100% !important"}
             ),
             "department_for_customer": apply_select2(forms.Select),
         }
 
 
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
+    change_list_template = None # get default admin selection to use customized product change_list template
     form = ProductDataForm
     resource_class = ProductResource
     list_display = ("get_long_name_with_producer",)
@@ -588,19 +589,12 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 if "is_into_offer__exact" in param:
                     is_into_offer_value = param["is_into_offer__exact"]
         producer = producer_queryset.first()
-        producer_resale_price_fixed = (
-            producer is not None and producer.is_resale_price_fixed
-        )
-        fields_basic = [("producer", "long_name", "picture2"), "order_unit", "wrapped"]
-        if producer_resale_price_fixed:
-            fields_basic += [
-                ("producer_unit_price", "customer_unit_price"),
-                ("unit_deposit", "order_average_weight"),
-            ]
-        else:
-            fields_basic += [
-                ("producer_unit_price", "unit_deposit", "order_average_weight")
-            ]
+        fields_basic = [
+            ("producer", "long_name", "picture2"),
+            "order_unit",
+            "wrapped",
+            ("producer_unit_price", "unit_deposit", "order_average_weight"),
+        ]
         if settings.REPANIER_SETTINGS_STOCK:
             fields_basic += [
                 (
@@ -666,7 +660,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs["readonly"] = True
         department_for_customer_field.widget.can_delete_related = False
-
 
         production_mode_field = form.base_fields.get("production_mode")
 
@@ -772,4 +765,4 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return [f for f in (CSV, XLSX) if f().can_export()]
 
     class Media:
-        js = ('admin/js/jquery.init.js', get_repanier_static_name("js/confirm_exit.js"),)
+        js = ("admin/js/jquery.init.js", get_repanier_static_name("js/confirm_exit.js"))

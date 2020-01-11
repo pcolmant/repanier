@@ -98,6 +98,9 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         ),
     )
     is_active = models.BooleanField(_("Active"), default=True)
+    # A delivery point may have a customer who is responsible to pay
+    # for all the customers who have selected this delivery point
+    # Such delivery point represent a closed group of customers.
     customer_responsible = models.ForeignKey(
         "Customer",
         verbose_name=_("Customer responsible"),
@@ -109,12 +112,13 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         default=None,
         on_delete=models.CASCADE,
     )
+    # Does the customer responsible of this delivery point be informed of
+    # each individual order for this delivery point ?
     inform_customer_responsible = models.BooleanField(
         _("Inform the group of orders placed by its members"), default=False
     )
     transport = ModelMoneyField(
         _("Delivery point shipping cost"),
-        # help_text=_("This amount is added once for groups with entitled customer or at each customer for open groups."),
         default=DECIMAL_ZERO,
         blank=True,
         max_digits=5,
@@ -122,7 +126,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         validators=[MinValueValidator(0)],
     )
     min_transport = ModelMoneyField(
-        _("Minium order amount for free shipping cost"),
+        _("Minimum order amount for free shipping cost"),
         # help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO,
         blank=True,

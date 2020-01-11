@@ -205,10 +205,12 @@ class CustomerResource(resources.ModelResource):
         attribute="last_membership_fee_date", widget=DateWidgetExcel(), readonly=True
     )
     purchase = fields.Field(
-        attribute="get_purchase", widget=ZeroDecimalsWidget(), readonly=True
+        attribute="get_purchase_counter", widget=ZeroDecimalsWidget(), readonly=True
     )
     participation = fields.Field(
-        attribute="get_participation", widget=ZeroDecimalsWidget(), readonly=True
+        attribute="get_participation_counter",
+        widget=ZeroDecimalsWidget(),
+        readonly=True,
     )
     delivery_point = fields.Field(
         attribute="delivery_point",
@@ -451,41 +453,43 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             ("phone1", "phone2"),
             "membership_fee_valid_until",
         ]
-        if settings.REPANIER_SETTINGS_GROUP:
-            fields_basic += ["delivery_point"]
-        if customer is not None:
-            fields_basic += [("address", "city", "picture"), "memo"]
-        else:
-            # Do not accept the picture because there is no customer.id for the "upload_to"
-            fields_basic += [("address", "city"), "memo"]
-        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-            fields_basic += ["price_list_multiplier"]
         if customer is not None:
             if customer.represent_this_buyinggroup:
                 fields_basic += [
-                    ("get_admin_balance", "get_admin_date_balance"),
+                    "get_admin_balance",
+                    "get_admin_date_balance",
                     ("may_order", "represent_this_buyinggroup"),
                 ]
             else:
+                fields_basic += ["subscribe_to_email"]
+                if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
+                    fields_basic += ["price_list_multiplier"]
+                if settings.REPANIER_SETTINGS_GROUP:
+                    fields_basic += ["delivery_point"]
                 fields_basic += [
-                    "subscribe_to_email",
-                    ("get_admin_balance", "get_admin_date_balance"),
-                    ("may_order", "is_active"),
+                    "get_admin_balance",
+                    "get_admin_date_balance",
+                    ("may_order", "is_active", "zero_waste"),
                 ]
+            fields_basic += [("address", "city", "picture"), "memo"]
             fields_advanced = [
                 "bank_account1",
                 "bank_account2",
-                "zero_waste",
                 "get_last_login",
                 "get_admin_date_joined",
                 "get_last_membership_fee",
                 "get_last_membership_fee_date",
-                "get_participation",
-                "get_purchase",
+                "get_participation_counter",
+                "get_purchase_counter",
             ]
         else:
             fields_basic += [("may_order", "is_active")]
+            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
+                fields_basic += ["price_list_multiplier"]
+            # Do not accept the picture because there is no customer.id for the "upload_to"
+            fields_basic += [("address", "city"), "memo"]
             fields_advanced = ["bank_account1", "bank_account2", "zero_waste"]
+
         fieldsets = (
             (None, {"fields": fields_basic}),
             (
@@ -502,8 +506,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "get_admin_balance",
                 "get_last_login",
                 "get_admin_date_joined",
-                "get_participation",
-                "get_purchase",
+                "get_purchase_counter",
+                "get_participation_counter",
                 "get_last_membership_fee",
                 "get_last_membership_fee_date",
             ]

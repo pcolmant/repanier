@@ -83,7 +83,7 @@ class Product(Item):
     def get_html_is_into_offer(self):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
 
-        css_class = ' class = "btn"'
+        css_class = ' class = "repanier-a-info"'
         is_into_offer = self.is_into_offer
         switch_is_into_offer = reverse("is_into_offer", args=(self.id,))
         javascript = """

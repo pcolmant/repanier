@@ -3,22 +3,23 @@
 from collections import OrderedDict
 
 from django import forms
+from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.db.models import Q
 from django.forms import Textarea
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX
 from import_export.widgets import CharWidget
 
 import repanier.apps
-from repanier.admin.forms import ImportXlsxForm
+from repanier.admin.forms import ImportStockForm
+from repanier.admin.tools import check_cancel_in_post
 from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
@@ -63,12 +64,6 @@ class ProducerResource(resources.ModelResource):
     )
     sort_products_by_reference = fields.Field(
         attribute="sort_products_by_reference",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=False,
-    )
-    is_resale_price_fixed = fields.Field(
-        attribute="is_resale_price_fixed",
         default=False,
         widget=DecimalBooleanWidget(),
         readonly=False,
@@ -118,7 +113,6 @@ class ProducerResource(resources.ModelResource):
             "sort_products_by_reference",
             "producer_price_are_wo_vat",
             "price_list_multiplier",
-            "is_resale_price_fixed",
             "reference_site",
             "bank_account",
             "date_balance",
@@ -186,7 +180,6 @@ class ProducerDataForm(forms.ModelForm):
             self.fields["permanences"].initial = self.instance.permanence_set.all()
 
     def clean_price_list_multiplier(self):
-        # Let the user delete the price list multiplier if he/she select is_resale_price_fixed
         price_list_multiplier = self.cleaned_data["price_list_multiplier"]
         if price_list_multiplier is None:
             price_list_multiplier = DECIMAL_ONE
@@ -212,22 +205,6 @@ class ProducerDataForm(forms.ModelForm):
         price_list_multiplier = self.cleaned_data.get(
             "price_list_multiplier", DECIMAL_ONE
         )
-
-        is_resale_price_fixed = self.cleaned_data.get("is_resale_price_fixed", False)
-        if is_resale_price_fixed and price_list_multiplier != DECIMAL_ONE:
-            # Important : For invoicing correctly
-            self.add_error(
-                "price_list_multiplier",
-                _(
-                    "The 'price list multiplier' must be set to 1 when 'fixed reseale price'."
-                ),
-            )
-            self.add_error(
-                "is_resale_price_fixed",
-                _(
-                    "The 'price list multiplier' must be set to 1 when 'fixed reseale price'."
-                ),
-            )
 
         if invoice_by_basket and self.instance.id is not None:
             if BoxContent.objects.filter(
@@ -287,11 +264,13 @@ class ProducerDataForm(forms.ModelForm):
 class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     form = ProducerDataForm
     resource_class = ProducerResource
+    change_list_url = reverse_lazy("admin:repanier_producer_changelist")
+
     search_fields = ("short_profile_name", "email")
     list_per_page = 16
     list_max_show_all = 16
     list_filter = ("is_active", "invoice_by_basket")
-    actions = ["export_xlsx_customer_prices"]
+    actions = ["export_customer_prices"]
 
     # change_list_template = 'admin/producer_change_list.html'
 
@@ -309,13 +288,21 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_urls(self):
         urls = super(ProducerAdmin, self).get_urls()
-        my_urls = [
-            url(r"^export_stock/$", self.admin_site.admin_view(self.export_xlsx_stock)),
-            url(r"^import_stock/$", self.admin_site.admin_view(self.import_xlsx_stock)),
+        custom_urls = [
+            url(
+                r"^export-stock/$",
+                self.admin_site.admin_view(self.export_stock),
+                name="producer-export-stock",
+            ),
+            url(
+                r"^import-stock/$",
+                self.admin_site.admin_view(self.import_stock),
+                name="producer-import-stock",
+            ),
         ]
-        return my_urls + urls
+        return custom_urls + urls
 
-    def export_xlsx_customer_prices(self, request, producer_qs):
+    def export_customer_prices(self, request, producer_qs):
         wb = export_customer_prices(
             producer_qs=producer_qs, wb=None, producer_prices=False
         )
@@ -324,21 +311,20 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
             response["Content-Disposition"] = "attachment; filename={0}.xlsx".format(
-                _("Products")
+                _("Customer rate")
             )
             wb.save(response)
             return response
         else:
-            return
+            return HttpResponseRedirect(self.change_list_url)
 
-    export_xlsx_customer_prices.short_description = _("Export the customer tariff")
+    export_customer_prices.short_description = _("Export the customer tariff")
 
-    def export_xlsx_stock(self, request):
-        # return xlsx_stock.admin_export(self, Producer.objects.all())
+    def export_stock(self, request):
         wb = export_producer_stock(
-            producers=Producer.objects.filter(
-                represent_this_buyinggroup=True
-            ).order_by("short_profile_name"),
+            producers=Producer.objects.all().order_by(
+                "short_profile_name"
+            ),
             wb=None,
         )
         if wb is not None:
@@ -351,23 +337,20 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             wb.save(response)
             return response
         else:
-            return
+            return HttpResponseRedirect(self.change_list_url)
 
-    export_xlsx_stock.short_description = _("Export the stock")
-
-    def import_xlsx_stock(self, request):
+    @check_cancel_in_post
+    def import_stock(self, request):
         return import_xslx_view(
             self,
             admin,
             request,
-            Producer.objects.all(),
+            None,
             _("Import the stock"),
             handle_uploaded_stock,
-            action="import_xlsx_stock",
-            form_klass=ImportXlsxForm,
+            action="import_stock",
+            form_klass=ImportStockForm,
         )
-
-    import_xlsx_stock.short_description = _("Import the stock")
 
     def get_actions(self, request):
         actions = super(ProducerAdmin, self).get_actions(request)
@@ -400,7 +383,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 "is_active",
                 "producer_price_are_wo_vat",
                 "permanences",
-                ("get_admin_balance", "get_admin_date_balance"),
+                "get_admin_balance",
+                "get_admin_date_balance",
             ]
         else:
             # Do not accept the picture because there is no producer.id for the "upload_to"
@@ -421,7 +405,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             "invoice_by_basket",
             "minimum_order_value",
             "price_list_multiplier",
-            "is_resale_price_fixed",
             "reference_site",
             "web_services_activated",
         ]
@@ -470,6 +453,9 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         return [f for f in (CSV, XLSX) if f().can_export()]
 
-    class Media:
-        if settings.REPANIER_SETTINGS_STOCK:
-            js = ('admin/js/jquery.init.js', get_repanier_static_name("js/export_import_stock.js"),)
+    # class Media:
+    #     if settings.REPANIER_SETTINGS_STOCK:
+    #         js = (
+    #             "admin/js/jquery.init.js",
+    #             get_repanier_static_name("js/export_import_stock.js"),
+    #         )

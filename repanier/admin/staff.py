@@ -80,8 +80,9 @@ class StaffWithUserDataAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
     item_label_field_name = "get_str_member"
     form = StaffWithUserDataForm
-    list_display = ("long_name",)
-    list_display_links = ("long_name",)
+
+    list_display = ("get_str_member",)
+    list_display_links = ("get_str_member",)
     list_select_related = ("customer_responsible",)
     list_per_page = 16
     list_max_show_all = 16

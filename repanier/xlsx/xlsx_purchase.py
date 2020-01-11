@@ -691,7 +691,7 @@ def import_purchase_sheet(worksheet, permanence=None,
     return error, error_msg
 
 
-def handle_uploaded_purchase(request, permanences, file_to_import, *args):
+def handle_uploaded_purchase(request, permanence, file_to_import, *args):
     error = False
     error_msg = None
     wb = load_workbook(file_to_import)
@@ -707,7 +707,6 @@ def handle_uploaded_purchase(request, permanences, file_to_import, *args):
             error_msg = _("At least one producer must represent the buying group.")
 
     if not error:
-        permanence = permanences.first()
         if permanence is not None:
             if permanence.status == PERMANENCE_SEND:
                 ws = wb.get_sheet_by_name(format_worksheet_title(permanence))

@@ -187,10 +187,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         ).distinct()
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj.is_resale_price_fixed:
-            prices = ('producer_unit_price', 'customer_unit_price', 'unit_deposit')
-        else:
-            prices = ('producer_unit_price', 'unit_deposit')
+        prices = ('producer_unit_price', 'unit_deposit')
 
         if not obj.wrapped and obj.order_unit in [PRODUCT_ORDER_UNIT_KG, PRODUCT_ORDER_UNIT_PC_KG]:
             self.fields = (

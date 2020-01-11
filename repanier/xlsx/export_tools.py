@@ -26,26 +26,18 @@ def worksheet_setup_a4(worksheet, title1, title2, add_print_title=True):
     worksheet.page_setup.fitToWidth = 1
     worksheet.print_gridlines = True
     if add_print_title:
-        worksheet.add_print_title(1, rows_or_cols='rows')
-        worksheet.freeze_panes = 'A2'
+        worksheet.add_print_title(1, rows_or_cols="rows")
+        worksheet.freeze_panes = "A2"
     worksheet.header_footer.left_header.text = Site.objects.get_current().name
     worksheet.header_footer.left_footer.text = "{}".format(title2)
     worksheet.header_footer.center_footer.text = "{}".format(title1)
-    worksheet.header_footer.right_footer.text = 'Page &[Page]/&[Pages]'
-    orders_responsible = Staff.get_or_create_order_responsible()
-    invoices_responsible = Staff.get_or_create_invoice_responsible()
-    s1 = EMPTY_STRING
-    if orders_responsible:
-        c = orders_responsible.customer_responsible
-        if c is not None:
-            s1 = "{}: {}{}".format(_("Orders"), c.long_basket_name, c.get_phone1(prefix=", "))
-    s2 = EMPTY_STRING
-    if invoices_responsible:
-        c = invoices_responsible.customer_responsible
-        if c is not None:
-            s2 = "{}: {}{}".format(_("Invoices"), c.long_basket_name, c.get_phone1(prefix=", "))
+    worksheet.header_footer.right_footer.text = "Page &[Page]/&[Pages]"
+    order_responsible = Staff.get_or_create_order_responsible()
+    invoice_responsible = Staff.get_or_create_invoice_responsible()
     separator = chr(10) + " "
-    worksheet.header_footer.right_header.text = separator.join((s1, s2))
+    worksheet.header_footer.right_header.text = separator.join(
+        (order_responsible["signature"], invoice_responsible["signature"])
+    )
     return worksheet
 
 
@@ -61,7 +53,9 @@ def new_portrait_a4_sheet(workbook, title1, title2, header=None, add_print_title
         worksheet = workbook.get_active_sheet()
     else:
         worksheet = workbook.create_sheet()
-    worksheet = worksheet_setup_portrait_a4(worksheet, title1, title2, add_print_title=add_print_title)
+    worksheet = worksheet_setup_portrait_a4(
+        worksheet, title1, title2, add_print_title=add_print_title
+    )
     if header is not None:
         worksheet_set_header(worksheet, header)
     return workbook, worksheet
@@ -69,9 +63,13 @@ def new_portrait_a4_sheet(workbook, title1, title2, header=None, add_print_title
 
 def worksheet_setup_landscape_a4(worksheet, title1, title2, add_print_title=True):
     from repanier.apps import REPANIER_SETTINGS_XLSX_PORTRAIT
+
     worksheet = worksheet_setup_a4(worksheet, title1, title2, add_print_title)
-    worksheet.page_setup.orientation = worksheet.ORIENTATION_PORTRAIT \
-        if REPANIER_SETTINGS_XLSX_PORTRAIT else worksheet.ORIENTATION_LANDSCAPE
+    worksheet.page_setup.orientation = (
+        worksheet.ORIENTATION_PORTRAIT
+        if REPANIER_SETTINGS_XLSX_PORTRAIT
+        else worksheet.ORIENTATION_LANDSCAPE
+    )
     return worksheet
 
 
@@ -81,7 +79,9 @@ def new_landscape_a4_sheet(workbook, title1, title2, header=None, add_print_titl
         worksheet = workbook.get_active_sheet()
     else:
         worksheet = workbook.create_sheet()
-    worksheet = worksheet_setup_landscape_a4(worksheet, title1, title2, add_print_title=add_print_title)
+    worksheet = worksheet_setup_landscape_a4(
+        worksheet, title1, title2, add_print_title=add_print_title
+    )
     if header is not None:
         worksheet_set_header(worksheet, header)
     return workbook, worksheet
@@ -94,7 +94,9 @@ def worksheet_set_header(worksheet, header):
         c.style.font.bold = True
         c.style.alignment.wrap_text = False
         c.style.borders.bottom.border_style = Border.BORDER_THIN
-        worksheet.column_dimensions[get_column_letter(col_num + 1)].width = header[col_num][ROW_WIDTH]
+        worksheet.column_dimensions[get_column_letter(col_num + 1)].width = header[
+            col_num
+        ][ROW_WIDTH]
         if header[col_num][ROW_TITLE] == _("Id"):
             worksheet.column_dimensions[get_column_letter(col_num + 1)].visible = False
 
@@ -120,6 +122,8 @@ def get_validation_formula(wb=None, valid_values=None):
             c.value = "{}".format(v)
             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
             row_num += 1
-        return "'{}'!${}$1:${}${}".format(ws_dv_name, col_letter_dv, col_letter_dv, row_num + 1)
+        return "'{}'!${}$1:${}${}".format(
+            ws_dv_name, col_letter_dv, col_letter_dv, row_num + 1
+        )
     else:
         return EMPTY_STRING

@@ -83,10 +83,12 @@ def send_open_order(permanence_id):
             'offer_detail': mark_safe(offer_detail),
             'offer_recent_detail': mark_safe(permanence.get_new_products),
             'offer_producer': offer_producer,
-            'signature': order_responsible.get_html_signature
+            'signature': order_responsible["html_signature"]
         })
+        logger.debug("send_open_order before html_body = template.render(context)")
         html_body = template.render(context)
-        to_email = list(set(to_email + order_responsible.get_to_email))
+        logger.debug("send_open_order after html_body = template.render(context)")
+        to_email = list(set(to_email + order_responsible["to_email"]))
         email = RepanierEmail(
             subject=offer_customer_mail_subject,
             html_body=html_body,

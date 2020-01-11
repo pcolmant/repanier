@@ -1,14 +1,31 @@
-{% load admin_list %}
+{% load admin_list repanier_admin_tags %}
 {% load i18n %}
-<div {% if not is_popup %}style="position:sticky;bottom:0;"{% endif %}>
-<p class="paginator">
-{% if pagination_required %}
-{% for i in page_range %}
-    {% paginator_number cl i %}
-{% endfor %}
-{% endif %}
-{{ cl.result_count }} {% if cl.result_count == 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endif %}
-{% if show_all_url %}&nbsp;&nbsp;<a href="{{ show_all_url }}" class="showall">{% trans 'Show all' %}</a>{% endif %}
-{% if cl.formset and cl.result_count %}<input type="submit" name="_save" class="default" value="{% trans 'Save' %}"/>{% endif %}
-</p>
+{# PCO replace class paginator by class submit-row #}
+{#<p class="paginator">#}
+<div class="repanier-submit-row">
+    <div class="repanier-submit-row-left">
+        {% if pagination_required %}
+            {% for i in page_range %}
+                {# PCO replace paginator_number by repanier_admin_paginator_number #}
+                {% repanier_admin_paginator_number cl i %}
+            {% endfor %}
+        {% endif %}
+        {#{{ cl.result_count }}#}
+        {#{% if cl.result_count == 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endif %}#}
+        {% if show_all_url %}&nbsp;&nbsp;
+            <a href="{{ show_all_url }}" class="showall">{% trans 'Show all' %}</a>{% endif %}
+    </div>
+    <div class="repanier-submit-row-right">
+        {% if cl.formset and cl.result_count %}
+            {#            {% autoescape off %}#}
+{#                            <input type="submit" name="_save" class="repanier-submit-info"#}
+{#                                   value="{% trans 'Save' %}">#}
+            {#            {% endautoescape %}#}
+            <span class="repanier-a-container">
+            <button type="submit" name="_save" class="repanier-submit-info">
+                <i class="fas fa-file-import"></i> {% trans 'Save' %}
+            </button>
+            </span>
+        {% endif %}
+    </div>
 </div>

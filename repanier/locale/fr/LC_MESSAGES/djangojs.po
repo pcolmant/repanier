@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-19 10:12+0100\n"
-"PO-Revision-Date: 2018-04-05 10:43+0200\n"
+"POT-Creation-Date: 2019-12-11 12:11+0100\n"
+"PO-Revision-Date: 2019-12-11 13:48+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language: fr\n"
@@ -16,32 +16,37 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 2.0.5\n"
+"X-Generator: Poedit 2.2.4\n"
 
-#: static/js/confirm_exit.js:12
+#: static/repanier/bs3/js/confirm_exit.js:12
+#: static/repanier/bs4/js/confirm_exit.js:12
 msgid "New information not saved. Do you wish to leave the page?"
-msgstr ""
+msgstr "Les modifications ne sont pas sauvegardées. Voulez-vous quitter la page ?"
 
-#: static/js/expenses_to_be_apportioned.js:4
+#: static/repanier/bs3/js/expenses_to_be_apportioned.js:4
+#: static/repanier/bs4/js/expenses_to_be_apportioned.js:4
 msgid "Expenses to be apportioned"
 msgstr "Frais à répartir"
 
-#: static/js/export_import_stock.js:4
+#: static/repanier/bs3/js/export_import_stock.js:4
+#: static/repanier/bs4/js/export_import_stock.js:4
 msgid "Export the stock"
 msgstr "Exporter le stock"
 
-#: static/js/export_import_stock.js:5
+#: static/repanier/bs3/js/export_import_stock.js:5
+#: static/repanier/bs4/js/export_import_stock.js:5
 msgid "Import the stock"
 msgstr "Importer le stock"
 
-#: static/js/import_invoice.js:4
+#: static/repanier/bs3/js/import_invoice.js:4
+#: static/repanier/bs4/js/import_invoice.js:4
 msgid "Import an invoice"
 msgstr "Importer une facture"
 
-#: static/js/is_order_confirm_send.js:4
-msgid "✗🔓"
-msgstr "✗ - ne pas confirmer"
-
-#: static/js/is_order_confirm_send.js:5
+#: static/repanier/bs3/js/is_order_confirm_send.js:5
+#: static/repanier/bs4/js/is_order_confirm_send.js:5
 msgid "✓🔐"
 msgstr "🔑 - confirmer et vérrouiller"
+
+#~ msgid "✗🔓"
+#~ msgstr "✗ - ne pas confirmer"

@@ -67,7 +67,7 @@ class OfferItem(Item):
         validators=[MinValueValidator(0)],
     )
     is_resale_price_fixed = models.BooleanField(
-        _("The resale price is set by the producer"), default=False
+        _("The resale price is fixed (boxes, deposit)"), default=False
     )
 
     # Calculated with Purchase : Total producer purchase price vat included

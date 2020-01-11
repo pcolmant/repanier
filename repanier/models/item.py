@@ -186,7 +186,7 @@ class Item(TranslatableModel):
         self.is_box = source.is_box
 
     def recalculate_prices(
-        self, producer_price_are_wo_vat, is_resale_price_fixed, price_list_multiplier
+        self, producer_price_are_wo_vat, price_list_multiplier
     ):
         vat = DICT_VAT[self.vat_level]
         vat_rate = vat[DICT_VAT_RATE]
@@ -194,30 +194,26 @@ class Item(TranslatableModel):
             self.producer_vat.amount = (
                 self.producer_unit_price.amount * vat_rate
             ).quantize(FOUR_DECIMALS)
-            if not is_resale_price_fixed:
-                if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                    self.customer_unit_price.amount = (
-                        self.producer_unit_price.amount * price_list_multiplier
-                    ).quantize(TWO_DECIMALS)
-                else:
-                    self.customer_unit_price = self.producer_unit_price
+            if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+                self.customer_unit_price.amount = (
+                    self.producer_unit_price.amount * price_list_multiplier
+                ).quantize(TWO_DECIMALS)
+            else:
+                self.customer_unit_price = self.producer_unit_price
             self.customer_vat.amount = (
                 self.customer_unit_price.amount * vat_rate
             ).quantize(FOUR_DECIMALS)
-            if not is_resale_price_fixed:
-                self.customer_unit_price += self.customer_vat
+            self.customer_unit_price += self.customer_vat
         else:
             self.producer_vat.amount = self.producer_unit_price.amount - (
                 self.producer_unit_price.amount / (DECIMAL_ONE + vat_rate)
             ).quantize(FOUR_DECIMALS)
-            if not is_resale_price_fixed:
-                if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
-                    self.customer_unit_price.amount = (
-                        self.producer_unit_price.amount * price_list_multiplier
-                    ).quantize(TWO_DECIMALS)
-                else:
-                    self.customer_unit_price = self.producer_unit_price
-
+            if self.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
+                self.customer_unit_price.amount = (
+                    self.producer_unit_price.amount * price_list_multiplier
+                ).quantize(TWO_DECIMALS)
+            else:
+                self.customer_unit_price = self.producer_unit_price
             self.customer_vat.amount = self.customer_unit_price.amount - (
                 self.customer_unit_price.amount / (DECIMAL_ONE + vat_rate)
             ).quantize(FOUR_DECIMALS)

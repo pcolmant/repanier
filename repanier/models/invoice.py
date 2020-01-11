@@ -156,22 +156,12 @@ class CustomerInvoice(Invoice):
         validators=[MinValueValidator(0)],
     )
     min_transport = ModelMoneyField(
-        _("Minium order amount for free shipping cost"),
+        _("Minimum order amount for free shipping cost"),
         help_text=_("This is the minimum order amount to avoid shipping cost."),
         default=DECIMAL_ZERO,
         max_digits=5,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-    )
-    master_permanence = models.ForeignKey(
-        "Permanence",
-        verbose_name=_("Master permanence"),
-        related_name="child_customer_invoice",
-        blank=True,
-        null=True,
-        default=None,
-        on_delete=models.PROTECT,
-        db_index=True,
     )
     is_group = models.BooleanField(_("Group"), default=False)
 
@@ -199,6 +189,26 @@ class CustomerInvoice(Invoice):
     def get_total_tax(self):
         # round to 2 decimals
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
+
+    @classmethod
+    def get_or_create_invoice(cls, permanence, customer, delivery):
+        customer_invoice = (
+            CustomerInvoice.objects.filter(
+                permanence_id=permanence.id, customer_id=customer.id
+            )
+            .order_by("?")
+            .first()
+        )
+        if customer_invoice is None:
+            customer_invoice = CustomerInvoice.objects.create(
+                permanence_id=permanence.id,
+                customer_id=customer.id,
+                status=permanence.status,
+                customer_charged_id=customer.id,
+            )
+            customer_invoice.set_order_delivery(delivery=delivery)
+            customer_invoice.calculate_order_price()
+            customer_invoice.save()
 
     @property
     def has_purchase(self):
@@ -536,7 +546,7 @@ class CustomerInvoice(Invoice):
 
     @transaction.atomic
     def set_order_delivery(self, delivery):
-        # May not use delivery_id because it won't reload customer_invoice.delivery
+        # Don't use delivery_id because it won't reload customer_invoice.delivery
         # Important
         # If it's an invoice of a member of a group :
         #   self.customer_charged_id != self.customer_id
@@ -549,10 +559,16 @@ class CustomerInvoice(Invoice):
             if self.permanence.with_delivery_point:
                 # If the customer is member of a group set the group as default delivery point
                 delivery_point = self.customer.delivery_point
-
-                delivery = DeliveryBoard.objects.filter(
-                    delivery_point=delivery_point, permanence=self.permanence
-                ).first()
+                if delivery_point is not None:
+                    default_delivery = DeliveryBoard.objects.filter(
+                        delivery_point=delivery_point, permanence=self.permanence
+                    ).first()
+                    if default_delivery is not None:
+                        delivery = default_delivery
+                    else:
+                        # the delivery_point is
+                        # not available for this permanence
+                        delivery_point = None
 
             else:
                 delivery_point = None
@@ -573,28 +589,31 @@ class CustomerInvoice(Invoice):
                 self.transport = delivery_point.transport
                 self.min_transport = delivery_point.min_transport
             else:
+                assert (
+                    self.customer_id != customer_responsible.id
+                ), "A group may not place an order"
                 self.customer_charged = customer_responsible
                 self.price_list_multiplier = DECIMAL_ONE
                 self.transport = REPANIER_MONEY_ZERO
                 self.min_transport = REPANIER_MONEY_ZERO
-                if self.customer_id != customer_responsible.id:
-                    customer_invoice_charged = CustomerInvoice.objects.filter(
+
+                customer_invoice_charged = CustomerInvoice.objects.filter(
+                    permanence_id=self.permanence_id,
+                    customer_id=customer_responsible.id,
+                )
+                if not customer_invoice_charged.exists():
+                    CustomerInvoice.objects.create(
                         permanence_id=self.permanence_id,
                         customer_id=customer_responsible.id,
+                        status=self.status,
+                        customer_charged_id=customer_responsible.id,
+                        price_list_multiplier=customer_responsible.price_list_multiplier,
+                        transport=delivery_point.transport,
+                        min_transport=delivery_point.min_transport,
+                        is_order_confirm_send=True,
+                        is_group=True,
+                        delivery=delivery,
                     )
-                    if not customer_invoice_charged.exists():
-                        CustomerInvoice.objects.create(
-                            permanence_id=self.permanence_id,
-                            customer_id=customer_responsible.id,
-                            status=self.status,
-                            customer_charged_id=customer_responsible.id,
-                            price_list_multiplier=customer_responsible.price_list_multiplier,
-                            transport=delivery_point.transport,
-                            min_transport=delivery_point.min_transport,
-                            is_order_confirm_send=True,
-                            is_group=True,
-                            delivery=delivery,
-                        )
 
     def calculate_order_price(self):
         from repanier.models.purchase import PurchaseWoReceiver
@@ -604,10 +623,9 @@ class CustomerInvoice(Invoice):
 
         if self.customer_id == self.customer_charged_id:
             # It's an invoice of a group, or of a customer who is not member of a group :
-            #   self.customer_charged_id = self.customer_id
+            #   self.customer_charged_id == self.customer_id
             #   self.price_list_multiplier may vary
             if self.price_list_multiplier != DECIMAL_ONE:
-
                 result_set = PurchaseWoReceiver.objects.filter(
                     permanence_id=self.permanence_id,
                     customer_invoice__customer_charged_id=self.customer_id,
@@ -760,42 +778,63 @@ class CustomerInvoice(Invoice):
 
     def create_child(self, new_permanence):
         if self.customer_id != self.customer_charged_id:
-            customer_invoice = CustomerInvoice.objects.filter(
-                permanence_id=self.permanence_id, customer_id=self.customer_charged_id
-            ).only("id")
+            # An invoice must exist for the customer who will be charged
+            new_customer_charged_invoice = (
+                CustomerInvoice.objects.filter(
+                    permanence_id=new_permanence.id,
+                    customer_id=self.customer_charged_id,
+                )
+                .order_by("?")
+                .only("id")
+            )
 
-            if not customer_invoice.exists():
-                customer_invoice = CustomerInvoice.objects.create(
+            if not new_customer_charged_invoice.exists():
+                old_customer_charged_invoice = CustomerInvoice.objects.filter(
                     permanence_id=self.permanence_id,
                     customer_id=self.customer_charged_id,
+                ).order_by("?")
+                CustomerInvoice.objects.create(
+                    permanence_id=new_permanence.id,
+                    customer_id=self.customer_charged_id,
                     customer_charged_id=self.customer_charged_id,
+                    delivery_id=old_customer_charged_invoice.delivery_id,
+                    is_order_confirm_send=old_customer_charged_invoice.is_order_confirm_send,
+                    price_list_multiplier=old_customer_charged_invoice.price_list_multiplier,
+                    transport=old_customer_charged_invoice.transport,
+                    min_transport=old_customer_charged_invoice.min_transport,
+                    is_group=old_customer_charged_invoice.is_group,
                     status=new_permanence.status,
                 )
-                customer_invoice.set_order_delivery(delivery=None)
-                customer_invoice.calculate_order_price()
-                customer_invoice.save()
         return CustomerInvoice.objects.create(
             permanence_id=new_permanence.id,
             customer_id=self.customer_id,
-            master_permanence_id=self.permanence_id,
             customer_charged_id=self.customer_charged_id,
+            delivery_id=self.delivery_id,
+            is_order_confirm_send=self.is_order_confirm_send,
+            price_list_multiplier=self.price_list_multiplier,
+            transport=self.transport,
+            min_transport=self.min_transport,
+            is_group=self.is_group,
             status=new_permanence.status,
         )
 
-    def cancel_if_unconfirmed(self, permanence):
+    def cancel_if_unconfirmed(self, permanence, send_mail=True):
         if (
             settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
             and not self.is_order_confirm_send
             and self.has_purchase
         ):
-            from repanier.email.email_order import export_order_2_1_customer
+            if send_mail:
+                from repanier.email.email_order import export_order_2_1_customer
+
+                filename = "{}-{}.xlsx".format(_("Canceled order"), permanence)
+
+                export_order_2_1_customer(
+                    self.customer, filename, permanence, cancel_order=True
+                )
+
             from repanier.models.purchase import PurchaseWoReceiver
 
-            filename = "{}-{}.xlsx".format(_("Canceled order"), permanence)
-
-            export_order_2_1_customer(
-                self.customer, filename, permanence, cancel_order=True
-            )
             purchase_qs = PurchaseWoReceiver.objects.filter(
                 customer_invoice_id=self.id, is_box_content=False
             )

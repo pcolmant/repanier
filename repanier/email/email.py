@@ -51,7 +51,7 @@ class RepanierEmail(EmailMultiAlternatives):
             for email_to in send_email_to:
                 self._send_email_with_unsubscribe(email_to=email_to.strip())
 
-    @debug_parameters
+    # @debug_parameters
     def _send_email_with_unsubscribe(self, email_to=None):
         from repanier.models.customer import Customer
 

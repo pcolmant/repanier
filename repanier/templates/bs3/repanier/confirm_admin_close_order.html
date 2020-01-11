@@ -1,0 +1,163 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% trans 'Manage' %}
+        &rsaquo; <a
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% trans 'Offers in preparation' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
+        <div class="submit-row">
+            <h4>{% trans "Please confirm your close order request." %}</h4>
+            <p>&nbsp;</p>
+            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
+            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
+            </button>
+            {% if email_will_be_sent %}
+                <button type="submit" name="apply-wo-mail" value="apply-wo-mail">
+                    <h6>{% trans "Yes, I'm sure but do not send any mail" %}</h6></button>
+            {% endif %}
+        </div>
+        {% if permanence.with_delivery_point %}
+            <div class="form-group">
+                <p>&nbsp;</p>
+                <h4>{% trans "Please indicate the deviveries points you wish to close." %}</h4>
+                <p>&nbsp;</p>
+                <ul class="repanier-flex-ul">
+                    <li class="repanier-flex-ul-li">
+                        <input id="all-deliveries" name="all-deliveries"
+                               onClick="toggle_all('all-deliveries', 'deliverie_form');"
+                               autocomplete="off" type="checkbox" checked>
+                        <label for="all-deliveries">
+                            {% trans "Select all deliveries." %}
+                        </label>
+                    </li>
+                </ul>
+                <p>&nbsp;</p>
+            </div>
+            {% for delivery in deliveries %}
+                <div class="form-group">
+                    <ul class="repanier-flex-ul">
+                        <li class="repanier-flex-ul-li repanier-ban">
+                            <input id="id_deliveries-{{ forloop.counter0 }}" name="deliveries" class="deliverie_form"
+                                   onClick="toggle('all-deliveries', 'id_deliveries-{{ forloop.counter0 }}', 'deliverie_form');"
+                                   value="{{ delivery.id|unlocalize }}" type="checkbox" checked>
+                            <label for="id_deliveries-{{ forloop.counter0 }}">
+                                {{ delivery }}
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <div class="form-row">
+            <p>&nbsp;</p>
+        </div>
+        {% if form.template_order_customer_mail.value %}
+            <div class="form-row">
+                <div><h4>{% trans "Order mail to customers" %}</h4>
+                    <p>&nbsp;</p>{{ order_customer_email_will_be_sent_to }}<p>&nbsp;</p>
+                </div>
+                <div class="fieldBox">
+                    {% with id_for_label=form.template_order_customer_mail.id_for_label %}
+                        <div id="div_{{ id_for_label }}">
+                            <div class="controls col-xs-12">
+                            <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                      name="template_offer_customer_mail">{{ form.template_order_customer_mail.value }}</textarea>
+                                <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                <script>
+                                    CKEDITOR.replace("{{ id_for_label }}", {
+                                        language: 'fr',
+                                        forcePasteAsPlainText: true,
+                                        toolbar: [
+                                            ['Preview', 'Image', 'Source']
+                                        ],
+                                        contentsCss: '{% static REPANIER_BOOTSTRAP_CSS %}',
+                                        width: '100%',
+                                        height: '24em',
+                                        removePlugins: 'elementspath',
+                                        readOnly: true
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+        {% endif %}
+        {% if form.template_order_producer_mail.value %}
+            <div class="form-row">
+                <div><h4>{% trans "Order mail to producers" %}</h4>
+                    <p>&nbsp;</p>{{ order_producer_email_will_be_sent_to }}<p>&nbsp;</p>
+                </div>
+                <div class="fieldBox">
+                    {% with id_for_label=form.template_order_producer_mail.id_for_label %}
+                        <div id="div_{{ id_for_label }}">
+                            <div class="controls col-xs-12">
+                            <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                      name="template_offer_customer_mail">{{ form.template_order_producer_mail.value }}</textarea>
+                                <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                <script>
+                                    CKEDITOR.replace("{{ id_for_label }}", {
+                                        language: 'fr',
+                                        forcePasteAsPlainText: true,
+                                        toolbar: [
+                                            ['Preview', 'Image', 'Source']
+                                        ],
+                                        contentsCss: '{% static REPANIER_BOOTSTRAP_CSS %}',
+                                        width: '100%',
+                                        height: '24em',
+                                        removePlugins: 'elementspath',
+                                        readOnly: true
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+        {% endif %}
+        {% if form.template_order_producer_mail.value %}
+            <div class="form-row">
+                <div><h4>{% trans "Order mail to board" %}</h4>
+                    <p>&nbsp;</p>{{ order_board_email_will_be_sent_to }}<p>&nbsp;</p>
+                </div>
+                <div class="fieldBox">
+                    {% with id_for_label=form.template_order_staff_mail.id_for_label %}
+                        <div id="div_{{ id_for_label }}">
+                            <div class="controls col-xs-12">
+                            <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                      name="template_offer_customer_mail">{{ form.template_order_staff_mail.value }}</textarea>
+                                <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
+                                <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
+                                <script>
+                                    CKEDITOR.replace("{{ id_for_label }}", {
+                                        language: 'fr',
+                                        forcePasteAsPlainText: true,
+                                        toolbar: [
+                                            ['Preview', 'Image', 'Source']
+                                        ],
+                                        contentsCss: '{% static REPANIER_BOOTSTRAP_CSS %}',
+                                        width: '100%',
+                                        height: '24em',
+                                        removePlugins: 'elementspath',
+                                        readOnly: true
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+        {% endif %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

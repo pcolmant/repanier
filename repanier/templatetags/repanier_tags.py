@@ -2,10 +2,10 @@
 
 from django import template
 from django.conf import settings
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.template.loader import render_to_string
 
 from repanier.const import (
     EMPTY_STRING,
@@ -17,7 +17,6 @@ from repanier.const import (
 from repanier.models import Permanence
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver

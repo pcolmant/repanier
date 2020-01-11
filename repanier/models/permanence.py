@@ -10,6 +10,7 @@ from django.db.models import F, Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
@@ -107,6 +108,10 @@ class Permanence(TranslatableModel):
     invoice_sort_order = models.IntegerField(
         _("Invoice sort order"), default=None, blank=True, null=True
     )
+    # canceled_invoice_sort_order is used in admin.permanence_done to display the canceled permanence in correct order
+    canceled_invoice_sort_order = models.IntegerField(
+        _("Canceled invoice sort order"), default=None, blank=True, null=True
+    )
     picture = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True,
@@ -117,8 +122,25 @@ class Permanence(TranslatableModel):
     gauge = models.IntegerField(default=0, editable=False)
 
     @cached_property
-    def get_producers(self):
+    def get_producers_with_download(self):
+        return self.get_producers(with_download=True)
+
+    get_producers_with_download.short_description = _("Offers from")
+
+    @cached_property
+    def get_producers_without_download(self):
+        return self.get_producers(with_download=False)
+
+    get_producers_without_download.short_description = _("Offers from")
+
+    def get_producers(self, with_download):
         if self.status == PERMANENCE_PLANNED:
+            download_url = reverse("admin:permanence-export-offer", args=[self.id])
+            button_download = format_html(
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
+                download_url,
+                _("Download"),
+            )
             link = []
             if len(self.producers.all()) > 0:
                 changelist_url = reverse("admin:repanier_product_changelist")
@@ -130,13 +152,18 @@ class Permanence(TranslatableModel):
                             p.short_profile_name.replace(" ", "&nbsp;"),
                         )
                     )
-            if len(link) > 0:
-                msg_html = '<div class="wrap-text">{}</div>'.format(", ".join(link))
-            else:
-                msg_html = '<div class="wrap-text">{}</div>'.format(_("No offer"))
-        elif self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED]:
+            producers = ", ".join(link)
+        elif self.status == PERMANENCE_OPENED:
             close_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemclosed_changelist"
+            )
+            download_url = reverse(
+                "admin:permanence-export-producer-opened-order", args=[self.id]
+            )
+            button_download = format_html(
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
+                download_url,
+                _("Download"),
             )
 
             link = []
@@ -173,9 +200,20 @@ class Permanence(TranslatableModel):
                         offeritem_changelist_url, self.id, p.id, label
                     )
                 )
-            msg_html = '<div class="wrap-text">{}</div>'.format(", ".join(link))
+            producers = ", ".join(link)
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+            if self.status == PERMANENCE_SEND:
+                download_url = reverse(
+                    "admin:permanence-export-producer-closed-order", args=[self.id]
+                )
+                button_download = format_html(
+                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
+                    download_url,
+                    _("Download"),
+                )
+            else:
+                button_download = EMPTY_STRING
             send_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemsend_changelist"
             )
@@ -183,14 +221,12 @@ class Permanence(TranslatableModel):
                 "admin:repanier_customersend_changelist"
             )
             link = []
-            at_least_one_permanence_send = False
             for pi in (
                 ProducerInvoice.objects.filter(permanence_id=self.id)
                 .select_related("producer")
                 .order_by("producer")
             ):
                 if pi.status == PERMANENCE_SEND:
-                    at_least_one_permanence_send = True
                     if pi.producer.invoice_by_basket:
                         changelist_url = send_customer_changelist_url
                     else:
@@ -243,50 +279,79 @@ class Permanence(TranslatableModel):
                             label.replace(" ", "&nbsp;"),
                         )
                     )
-
             producers = ", ".join(link)
-            if at_least_one_permanence_send:
-                msg_html = '<div class="wrap-text">{}</div>'.format(producers)
-            else:
-                msg_html = """
-                    <div class="wrap-text"><button
-                    onclick="django.jQuery('#id_get_producers_{}').toggle();
-                        if(django.jQuery(this).html()=='{}'){{
-                            django.jQuery(this).html('{}')
-                        }}else{{
-                            django.jQuery(this).html('{}')
-                        }};
-                        return false;"
-                    >{}</button>
-                    <div id="id_get_producers_{}" style="display:none;">{}</div></div>
-                """.format(
-                    self.id,
-                    _("Show"),
-                    _("Hide"),
-                    _("Show"),
-                    _("Show"),
-                    self.id,
-                    producers,
-                )
         else:
-            msg_html = '<div class="wrap-text">{}</div>'.format(
-                ", ".join(
-                    [
-                        p.short_profile_name
-                        for p in Producer.objects.filter(
-                            producerinvoice__permanence_id=self.id
-                        ).only("short_profile_name")
-                    ]
-                )
+            button_download = EMPTY_STRING
+            producers = ", ".join(
+                [
+                    p.short_profile_name
+                    for p in Producer.objects.filter(
+                        producerinvoice__permanence_id=self.id
+                    ).only("short_profile_name")
+                ]
             )
-        return mark_safe(msg_html)
-
-    get_producers.short_description = _("Offers from")
+        if len(producers) > 0:
+            if not with_download:
+                button_download = EMPTY_STRING
+            msg_html = """
+    <div id="id_hide_producers_{}" style="display:block;">{}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                onclick="document.getElementById('id_show_producers_{}').style.display = 'block'; document.getElementById('id_hide_producers_{}').style.display = 'none'; return false;">
+            <i
+                    class="far fa-eye"></i></a></span>
+    </div>
+    <div id="id_show_producers_{}" style="display:none;">{}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                onclick="document.getElementById('id_show_producers_{}').style.display = 'none'; document.getElementById('id_hide_producers_{}').style.display = 'block'; return false;">
+            <i
+                    class="far fa-eye-slash"></i></a></span>
+        <p><br><div class="wrap-text">{}</div></p>
+    </div>
+            """.format(
+                self.id,
+                button_download,
+                _("Show"),
+                self.id,
+                self.id,
+                self.id,
+                button_download,
+                _("Hide"),
+                self.id,
+                self.id,
+                producers,
+            )
+            return mark_safe(msg_html)
+        else:
+            return mark_safe('<div class="wrap-text">{}</div>'.format(_("No offer")))
 
     @cached_property
-    def get_customers(self):
-        if self.status in [PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]:
+    def get_customers_with_download(self):
+        return self.get_customers(with_download=True)
+
+    get_customers_with_download.short_description = _("Orders from")
+
+    @cached_property
+    def get_customers_without_download(self):
+        return self.get_customers(with_download=False)
+
+    get_customers_without_download.short_description = _("Orders from")
+
+    def get_customers(self, with_download):
+        if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
+            if self.status == PERMANENCE_OPENED:
+                download_url = reverse(
+                    "admin:permanence-export-customer-opened-order", args=[self.id]
+                )
+            else:
+                download_url = reverse(
+                    "admin:permanence-export-customer-closed-order", args=[self.id]
+                )
+            button_download = format_html(
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span> ',
+                download_url,
+                _("Download"),
+            )
             link = []
             delivery_save = None
             for ci in (
@@ -326,6 +391,7 @@ class Permanence(TranslatableModel):
                 )
             customers = ", ".join(link)
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+            button_download = EMPTY_STRING
             link = []
             delivery_save = None
             for ci in (
@@ -364,6 +430,7 @@ class Permanence(TranslatableModel):
                 )
             customers = ", ".join(link)
         else:
+            button_download = EMPTY_STRING
             customers = ", ".join(
                 [
                     c.short_basket_name
@@ -373,19 +440,34 @@ class Permanence(TranslatableModel):
                 ]
             )
         if len(customers) > 0:
+            if not with_download:
+                button_download = EMPTY_STRING
             msg_html = """
-                <div class="wrap-text"><button
-                onclick="django.jQuery('#id_get_customers_{}').toggle();
-                    if(django.jQuery(this).html()=='{}'){{
-                        django.jQuery(this).html('{}')
-                    }}else{{
-                        django.jQuery(this).html('{}')
-                    }};
-                    return false;"
-                >{}</button>
-                <div id="id_get_customers_{}" style="display:none;">{}</div></div>
+    <div id="id_hide_customers_{}" style="display:block;">{}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                onclick="document.getElementById('id_show_customers_{}').style.display = 'block'; document.getElementById('id_hide_customers_{}').style.display = 'none'; return false;">
+            <i
+                    class="far fa-eye"></i></a></span>
+    </div>
+    <div id="id_show_customers_{}" style="display:none;">{}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                onclick="document.getElementById('id_show_customers_{}').style.display = 'none'; document.getElementById('id_hide_customers_{}').style.display = 'block'; return false;">
+            <i
+                    class="far fa-eye-slash"></i></a></span>
+        <p><br><div class="wrap-text">{}</div></p>
+    </div>
             """.format(
-                self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, customers
+                self.id,
+                button_download,
+                _("Show"),
+                self.id,
+                self.id,
+                self.id,
+                button_download,
+                _("Hide"),
+                self.id,
+                self.id,
+                customers,
             )
             return mark_safe(msg_html)
         else:
@@ -444,18 +526,29 @@ class Permanence(TranslatableModel):
         if not first_board:
             # At least one role is defined in the permanence board
             msg_html = """
-                <div class="wrap-text"><button
-                onclick="django.jQuery('#id_get_board_{}').toggle();
-                    if(django.jQuery(this).html()=='{}'){{
-                        django.jQuery(this).html('{}')
-                    }}else{{
-                        django.jQuery(this).html('{}')
-                    }};
-                    return false;"
-                >{}</button>
-                <div id="id_get_board_{}" style="display:none;">{}</div></div>
+    <div id="id_hide_board_{}" style="display:block;">
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                onclick="document.getElementById('id_show_board_{}').style.display = 'block'; document.getElementById('id_hide_board_{}').style.display = 'none'; return false;">
+            <i
+                    class="far fa-eye"></i></a></span>
+    </div>
+    <div id="id_show_board_{}" style="display:none;">
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                onclick="document.getElementById('id_show_board_{}').style.display = 'none'; document.getElementById('id_hide_board_{}').style.display = 'block'; return false;">
+            <i
+                    class="far fa-eye-slash"></i></a></span>
+        <p><br><div class="wrap-text">{}</div></p>
+    </div>
             """.format(
-                self.id, _("Show"), _("Hide"), _("Show"), _("Show"), self.id, board
+                self.id,
+                _("Show"),
+                self.id,
+                self.id,
+                self.id,
+                _("Hide"),
+                self.id,
+                self.id,
+                board,
             )
             return mark_safe(msg_html)
         else:
@@ -464,7 +557,7 @@ class Permanence(TranslatableModel):
     get_board.short_description = _("Tasks")
 
     @transaction.atomic
-    @debug_parameters
+    # @debug_parameters
     def set_status(
         self,
         old_status=None,
@@ -547,7 +640,7 @@ class Permanence(TranslatableModel):
         )
 
     @transaction.atomic
-    def close_order(self, everything, deliveries_id=()):
+    def close_order(self, everything, deliveries_id=(), send_mail=True):
         from repanier.apps import (
             REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION,
             REPANIER_SETTINGS_MEMBERSHIP_FEE,
@@ -563,7 +656,7 @@ class Permanence(TranslatableModel):
                     delivery_id__in=deliveries_id
                 )
             for customer_invoice in customer_invoice_qs:
-                customer_invoice.cancel_if_unconfirmed(self)
+                customer_invoice.cancel_if_unconfirmed(self, send_mail=send_mail)
         if everything:
             # Add membership fee
             if (
@@ -669,14 +762,14 @@ class Permanence(TranslatableModel):
                         comment=EMPTY_STRING,
                     )
         if everything:
-            # Round to multiple producer_order_by_quantity
-            offer_item_qs = OfferItem.objects.filter(
-                permanence_id=self.id,
-                may_order=True,
-                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
-                producer_order_by_quantity__gt=1,
-                quantity_invoiced__gt=0,
-            ).order_by("?")
+            # # Round to multiple producer_order_by_quantity
+            # offer_item_qs = OfferItem.objects.filter(
+            #     permanence_id=self.id,
+            #     may_order=True,
+            #     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,
+            #     producer_order_by_quantity__gt=1,
+            #     quantity_invoiced__gt=0,
+            # ).order_by("?")
 
             # Add Transport
             offer_item_qs = OfferItem.objects.filter(
@@ -695,13 +788,10 @@ class Permanence(TranslatableModel):
                 )
 
     @transaction.atomic
-    @debug_parameters
+    # @debug_parameters
     def invoice(self, payment_date):
         from repanier.models.purchase import PurchaseWoReceiver
 
-        self.set_status(
-            old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
-        )
         bank_account_latest_total = BankAccount.get_latest_total()
         producer_buyinggroup = Producer.get_or_create_group()
         customer_buyinggroup = Customer.get_or_create_group()
@@ -711,26 +801,15 @@ class Permanence(TranslatableModel):
             or customer_buyinggroup is None
         ):
             return
-        customer_invoice_buyinggroup = (
-            CustomerInvoice.objects.filter(
-                customer_id=customer_buyinggroup.id, permanence_id=self.id
-            )
-            .order_by("?")
-            .first()
+
+        self.set_status(
+            old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
         )
-        if customer_invoice_buyinggroup is None:
-            customer_invoice_buyinggroup = CustomerInvoice.objects.create(
-                customer_id=customer_buyinggroup.id,
-                permanence_id=self.id,
-                date_previous_balance=customer_buyinggroup.date_balance,
-                previous_balance=customer_buyinggroup.balance,
-                date_balance=payment_date,
-                balance=customer_buyinggroup.balance,
-                customer_charged_id=customer_buyinggroup.id,
-                transport=DECIMAL_ZERO,
-                min_transport=DECIMAL_ZERO,
-                price_list_multiplier=DECIMAL_ONE,
-            )
+
+        customer_invoice_buyinggroup = self.get_or_create_group_invoice(
+            customer_buyinggroup, payment_date, PERMANENCE_WAIT_FOR_INVOICED
+        )
+
         permanence_partially_invoiced = (
             ProducerInvoice.objects.filter(
                 permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=False
@@ -741,24 +820,31 @@ class Permanence(TranslatableModel):
         if permanence_partially_invoiced:
             # Move the producers not invoiced into a new permanence
             producers_to_keep = list(
-                Producer.objects.filter(
-                    producerinvoice__permanence_id=self.id,
-                    producerinvoice__invoice_sort_order__isnull=True,
-                    producerinvoice__to_be_paid=True,
+                ProducerInvoice.objects.filter(
+                    permanence_id=self.id,
+                    invoice_sort_order__isnull=True,
+                    to_be_paid=True,
                 )
-                .values_list("id", flat=True)
+                .values_list("producer_id", flat=True)
                 .order_by("?")
             )
             self.producers.clear()
             self.producers.add(*producers_to_keep)
             producers_to_move = list(
-                Producer.objects.filter(
-                    producerinvoice__permanence_id=self.id,
-                    producerinvoice__invoice_sort_order__isnull=True,
-                    producerinvoice__to_be_paid=False,
+                ProducerInvoice.objects.filter(
+                    permanence_id=self.id,
+                    invoice_sort_order__isnull=True,
+                    to_be_paid=False,
                 )
-                .values_list("id", flat=True)
+                .values_list("producer_id", flat=True)
                 .order_by("?")
+            )
+            customers_to_move = list(
+                CustomerProducerInvoice.objects.filter(
+                    permanence_id=self.id, producer_id__in=producers_to_move
+                )
+                .order_by("?")
+                .values_list("customer_id", flat=True)
             )
             new_permanence = self.create_child(PERMANENCE_SEND)
             new_permanence.producers.add(*producers_to_move)
@@ -768,49 +854,49 @@ class Permanence(TranslatableModel):
                 permanence_id=new_permanence.id, status=PERMANENCE_SEND
             )
             CustomerProducerInvoice.objects.filter(
-                permanence_id=self.id, producer_id__in=producers_to_move
+                permanence_id=self.id,
+                producer_id__in=producers_to_move
+                # Redundant : customer_id__in=customers_to_move
             ).order_by("?").update(permanence_id=new_permanence.id)
             OfferItemWoReceiver.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
             ).order_by("?").update(permanence_id=new_permanence.id)
 
-            customer_invoice_id_to_create = list(
-                PurchaseWoReceiver.objects.filter(
-                    permanence_id=self.id, producer_id__in=producers_to_move
-                )
-                .order_by("customer_invoice_id")
-                .distinct("customer_invoice")
-                .values_list("customer_invoice", flat=True)
-            )
-            for customer_invoice_id in customer_invoice_id_to_create:
-                customer_invoice = (
-                    CustomerInvoice.objects.filter(id=customer_invoice_id)
-                    .order_by("?")
-                    .first()
-                )
-                new_customer_invoice = customer_invoice.create_child(
+            for old_customer_invoice in CustomerInvoice.objects.filter(
+                permanence_id=self.id, customer_id__in=customers_to_move
+            ).order_by("?"):
+                new_customer_invoice = old_customer_invoice.create_child(
                     new_permanence=new_permanence
                 )
-                new_customer_invoice.set_order_delivery(customer_invoice.delivery)
-                new_customer_invoice.calculate_order_price()
-                # Save new_customer_invoice before reference it when updating the purchases
-                new_customer_invoice.save()
-                # Important : The purchase customer charged must be calculated before calculate_and_save_delta_buyinggroup
                 PurchaseWoReceiver.objects.filter(
-                    customer_invoice_id=customer_invoice.id,
+                    customer_invoice_id=old_customer_invoice.id,
                     producer_id__in=producers_to_move,
                 ).order_by("?").update(
                     permanence_id=new_permanence.id,
                     customer_invoice_id=new_customer_invoice.id,
-                    status=PERMANENCE_SEND,
+                    status=new_permanence.status,
                 )
+            for new_customer_invoice in CustomerInvoice.objects.filter(
+                permanence_id=new_permanence
+            ).order_by("?"):
+                new_customer_invoice.calculate_order_price()
+                new_customer_invoice.save()
 
             new_permanence.recalculate_order_amount(re_init=True)
             new_permanence.save()
 
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id
+        ).order_by("?"):
+            customer_invoice.calculate_order_price()
+            customer_invoice.save()
+
+        self.recalculate_order_amount(re_init=True)
         self.save()
 
-        for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id
+        ).order_by("?"):
             customer_invoice.balance = (
                 customer_invoice.previous_balance
             ) = customer_invoice.customer.balance
@@ -826,7 +912,9 @@ class Permanence(TranslatableModel):
                     customer_invoice.get_total_price_with_tax().amount
                 )
                 customer_invoice.balance.amount -= total_price_with_tax
-                Customer.objects.filter(id=customer_invoice.customer_id).update(
+                Customer.objects.filter(id=customer_invoice.customer_id).order_by(
+                    "?"
+                ).update(
                     date_balance=payment_date,
                     balance=F("balance") - total_price_with_tax,
                 )
@@ -834,12 +922,14 @@ class Permanence(TranslatableModel):
                 # ne pas modifier sa balance
                 # ajuster la balance de celui qui paye
                 # celui qui paye a droit aux réductions
-                Customer.objects.filter(id=customer_invoice.customer_id).update(
-                    date_balance=payment_date
-                )
+                Customer.objects.filter(id=customer_invoice.customer_id).order_by(
+                    "?"
+                ).update(date_balance=payment_date)
             customer_invoice.save()
 
-        for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
+        for producer_invoice in ProducerInvoice.objects.filter(
+            permanence_id=self.id
+        ).order_by("?"):
             producer_invoice.balance = (
                 producer_invoice.previous_balance
             ) = producer_invoice.producer.balance
@@ -850,7 +940,9 @@ class Permanence(TranslatableModel):
             total_price_with_tax = producer_invoice.get_total_price_with_tax().amount
             producer_invoice.balance.amount += total_price_with_tax
             producer_invoice.save()
-            Producer.objects.filter(id=producer_invoice.producer_id).update(
+            Producer.objects.filter(id=producer_invoice.producer_id).order_by(
+                "?"
+            ).update(
                 date_balance=payment_date, balance=F("balance") + total_price_with_tax
             )
             producer_invoice.save()
@@ -960,9 +1052,11 @@ class Permanence(TranslatableModel):
                 producer_invoice=None,
             )
 
-        for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id
-        ).exclude(customer_id=customer_buyinggroup.id, delta_transport=DECIMAL_ZERO):
+        for customer_invoice in (
+            CustomerInvoice.objects.filter(permanence_id=self.id)
+            .exclude(customer_id=customer_buyinggroup.id, delta_transport=DECIMAL_ZERO)
+            .order_by("?")
+        ):
             if customer_invoice.delta_transport != DECIMAL_ZERO:
                 # --> This bank movement is not a real entry
                 # customer_invoice_id=customer_invoice_buyinggroup.id
@@ -1005,7 +1099,7 @@ class Permanence(TranslatableModel):
         ):
             # --> This bank movement is not a real entry
             # It will not be counted into the customer_buyinggroup bank movements twice
-            Customer.objects.filter(id=bank_account.customer_id).update(
+            Customer.objects.filter(id=bank_account.customer_id).order_by("?").update(
                 date_balance=payment_date,
                 balance=F("balance")
                 + bank_account.bank_amount_in.amount
@@ -1013,7 +1107,7 @@ class Permanence(TranslatableModel):
             )
             CustomerInvoice.objects.filter(
                 customer_id=bank_account.customer_id, permanence_id=self.id
-            ).update(
+            ).order_by("?").update(
                 date_balance=payment_date,
                 balance=F("balance")
                 + bank_account.bank_amount_in.amount
@@ -1062,7 +1156,7 @@ class Permanence(TranslatableModel):
             customer_invoice.balance.amount += bank_amount_in - bank_amount_out
 
             customer_invoice.save()
-            Customer.objects.filter(id=bank_account.customer_id).update(
+            Customer.objects.filter(id=bank_account.customer_id).order_by("?").update(
                 date_balance=payment_date,
                 balance=F("balance") + bank_amount_in - bank_amount_out,
             )
@@ -1106,7 +1200,7 @@ class Permanence(TranslatableModel):
             producer_invoice.bank_amount_out.amount += bank_amount_out
             producer_invoice.balance.amount += bank_amount_in - bank_amount_out
             producer_invoice.save()
-            Producer.objects.filter(id=bank_account.producer_id).update(
+            Producer.objects.filter(id=bank_account.producer_id).order_by("?").update(
                 date_balance=payment_date,
                 balance=F("balance") + bank_amount_in - bank_amount_out,
             )
@@ -1135,13 +1229,15 @@ class Permanence(TranslatableModel):
             producer_invoice=None,
         )
 
-        ProducerInvoice.objects.filter(permanence_id=self.id).update(
+        ProducerInvoice.objects.filter(permanence_id=self.id).order_by("?").update(
             invoice_sort_order=bank_account.id
         )
-        CustomerInvoice.objects.filter(permanence_id=self.id).update(
+        CustomerInvoice.objects.filter(permanence_id=self.id).order_by("?").update(
             invoice_sort_order=bank_account.id
         )
-        Permanence.objects.filter(id=self.id).update(invoice_sort_order=bank_account.id)
+        Permanence.objects.filter(id=self.id).order_by("?").update(
+            invoice_sort_order=bank_account.id, canceled_invoice_sort_order=None
+        )
 
         new_status = (
             PERMANENCE_INVOICED
@@ -1155,13 +1251,37 @@ class Permanence(TranslatableModel):
             payment_date=payment_date,
         )
 
+    def get_or_create_group_invoice(self, customer_buyinggroup, payment_date, status):
+        customer_invoice_buyinggroup = (
+            CustomerInvoice.objects.filter(
+                customer_id=customer_buyinggroup.id, permanence_id=self.id
+            )
+            .order_by("?")
+            .first()
+        )
+        if customer_invoice_buyinggroup is None:
+            customer_invoice_buyinggroup = CustomerInvoice.objects.create(
+                permanence_id=self.id,
+                customer_id=customer_buyinggroup.id,
+                status=status,
+                date_previous_balance=customer_buyinggroup.date_balance,
+                previous_balance=customer_buyinggroup.balance,
+                date_balance=payment_date,
+                balance=customer_buyinggroup.balance,
+                customer_charged_id=customer_buyinggroup.id,
+                transport=DECIMAL_ZERO,
+                min_transport=DECIMAL_ZERO,
+                price_list_multiplier=DECIMAL_ONE,
+            )
+        return customer_invoice_buyinggroup
+
     @transaction.atomic
     def cancel_invoice(self, last_bank_account_total):
         self.set_status(
             old_status=PERMANENCE_INVOICED,
             new_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE,
         )
-        CustomerInvoice.objects.filter(permanence_id=self.id).update(
+        CustomerInvoice.objects.filter(permanence_id=self.id).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
             bank_amount_out=DECIMAL_ZERO,
             balance=F("previous_balance"),
@@ -1182,12 +1302,12 @@ class Permanence(TranslatableModel):
                 balance=customer_invoice.previous_balance,
                 date_balance=customer_invoice.date_previous_balance,
             )
-            BankAccount.objects.filter(customer_invoice_id=customer_invoice.id).update(
-                customer_invoice=None
-            )
+            BankAccount.objects.filter(
+                customer_invoice_id=customer_invoice.id
+            ).order_by("?").update(customer_invoice=None)
         ProducerInvoice.objects.filter(
             permanence_id=self.id, producer__represent_this_buyinggroup=False
-        ).update(
+        ).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
             bank_amount_out=DECIMAL_ZERO,
             delta_price_with_tax=DECIMAL_ZERO,
@@ -1204,7 +1324,7 @@ class Permanence(TranslatableModel):
         # Important : Restore delta from delivery points added into invoice.confirm_order()
         ProducerInvoice.objects.filter(
             permanence_id=self.id, producer__represent_this_buyinggroup=True
-        ).update(
+        ).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
             bank_amount_out=DECIMAL_ZERO,
             delta_stock_with_tax=DECIMAL_ZERO,
@@ -1226,7 +1346,7 @@ class Permanence(TranslatableModel):
             )
             BankAccount.objects.all().filter(
                 producer_invoice_id=producer_invoice.id
-            ).update(producer_invoice=None)
+            ).order_by("?").update(producer_invoice=None)
         # IMPORTANT : Do not update stock when canceling
         last_bank_account_total.delete()
         bank_account = (
@@ -1249,7 +1369,9 @@ class Permanence(TranslatableModel):
                 BANK_COMPENSATION,  # BANK_COMPENSATION may occurs in previous release of Repanier
             ],
         ).order_by("?").delete()
-        Permanence.objects.filter(id=self.id).update(invoice_sort_order=None)
+        Permanence.objects.filter(id=self.id).order_by("?").update(
+            canceled_invoice_sort_order=F("invoice_sort_order"), invoice_sort_order=None
+        )
         self.set_status(
             old_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE, new_status=PERMANENCE_SEND
         )
@@ -1278,63 +1400,125 @@ class Permanence(TranslatableModel):
         cur_language = translation.get_language()
         for date in dates[:56]:
             # Limit to 56 weeks
-            if short_name != EMPTY_STRING:
-                # Mandatory because of Parler
-                already_exists = Permanence.objects.filter(
+            same_exists = self.check_if_same_exists(date, short_name, cur_language)
+            if not same_exists:
+                creation_counter += 1
+                new_permanence = Permanence.objects.create(permanence_date=date)
+                self.duplicate_short_name(new_permanence, cur_language)
+                self.duplicate_permanence_board(new_permanence)
+                self.duplicate_delivery_board(new_permanence, cur_language)
+                self.duplicate_producers(new_permanence)
+        return creation_counter
+
+    def create_child(self, status):
+        new_child_permanence = Permanence.objects.create(
+            permanence_date=self.permanence_date,
+            master_permanence_id=self.id,
+            status=status,
+        )
+        cur_language = translation.get_language()
+        self.duplicate_short_name(new_child_permanence, cur_language)
+        self.duplicate_permanence_board_and_registration(new_child_permanence)
+        self.duplicate_delivery_board(new_child_permanence, cur_language)
+        return new_child_permanence
+
+    def check_if_same_exists(self, date, short_name, cur_language):
+        if short_name != EMPTY_STRING:
+            # Mandatory because of Parler
+            same_exists = (
+                Permanence.objects.filter(
                     permanence_date=date,
                     translations__language_code=cur_language,
                     translations__short_name=short_name,
-                ).exists()
-            else:
-                already_exists = False
-                for existing_permanence in Permanence.objects.filter(
-                    permanence_date=date
-                ):
-                    try:
-                        short_name = existing_permanence.short_name
-                        already_exists = short_name == EMPTY_STRING
-                    except TranslationDoesNotExist:
-                        already_exists = True
-                    if already_exists:
-                        break
-            if not already_exists:
-                creation_counter += 1
-                new_permanence = Permanence.objects.create(permanence_date=date)
-                self.duplicate_short_name(
-                    new_permanence, cur_language=translation.get_language()
                 )
-                for permanence_board in PermanenceBoard.objects.filter(permanence=self):
-                    PermanenceBoard.objects.create(
-                        permanence=new_permanence,
-                        permanence_role=permanence_board.permanence_role,
+                .order_by("?")
+                .exists()
+            )
+        else:
+            same_exists = False
+            for existing_permanence in Permanence.objects.filter(
+                permanence_date=date
+            ).order_by("?"):
+                try:
+                    short_name = existing_permanence.short_name
+                    same_exists = short_name == EMPTY_STRING
+                except TranslationDoesNotExist:
+                    same_exists = True
+                if same_exists:
+                    break
+        return same_exists
+
+    def duplicate_short_name(self, new_permanence, cur_language):
+        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+            language_code = language["code"]
+            translation.activate(language_code)
+            new_permanence.set_current_language(language_code)
+            self.set_current_language(language_code)
+            try:
+                new_permanence.short_name = self.safe_translation_getter(
+                    "short_name", any_language=True
+                )
+                new_permanence.save_translations()
+            except TranslationDoesNotExist:
+                pass
+        translation.activate(cur_language)
+
+    def duplicate_producers(self, new_permanence):
+        for a_producer in self.producers.all():
+            new_permanence.producers.add(a_producer)
+
+    def duplicate_delivery_board(self, new_permanence, cur_language):
+        for delivery_board in DeliveryBoard.objects.filter(permanence=self).order_by(
+            "?"
+        ):
+            new_delivery_board = DeliveryBoard.objects.create(
+                permanence=new_permanence, delivery_point=delivery_board.delivery_point
+            )
+            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                language_code = language["code"]
+                translation.activate(language_code)
+                new_delivery_board.set_current_language(language_code)
+                delivery_board.set_current_language(language_code)
+                try:
+                    new_delivery_board.delivery_comment = (
+                        delivery_board.delivery_comment
                     )
-                for delivery_board in DeliveryBoard.objects.filter(permanence=self):
-                    new_delivery_board = DeliveryBoard.objects.create(
-                        permanence=new_permanence,
-                        delivery_point=delivery_board.delivery_point,
-                    )
-                    for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                        language_code = language["code"]
-                        translation.activate(language_code)
-                        new_delivery_board.set_current_language(language_code)
-                        delivery_board.set_current_language(language_code)
-                        try:
-                            new_delivery_board.delivery_comment = (
-                                delivery_board.delivery_comment
-                            )
-                            new_delivery_board.save_translations()
-                        except TranslationDoesNotExist:
-                            pass
-                    translation.activate(cur_language)
-                for a_producer in self.producers.all():
-                    new_permanence.producers.add(a_producer)
-        return creation_counter
+                    new_delivery_board.save_translations()
+                except TranslationDoesNotExist:
+                    pass
+            translation.activate(cur_language)
+
+    def duplicate_permanence_board(self, new_permanence):
+        for permanence_board in PermanenceBoard.objects.filter(
+            permanence=self
+        ).order_by("?"):
+            PermanenceBoard.objects.create(
+                permanence=new_permanence,
+                permanence_date=new_permanence.permanence_date,
+                permanence_role=permanence_board.permanence_role,
+            )
+
+    def duplicate_permanence_board_and_registration(self, new_permanence):
+        for permanence_board in PermanenceBoard.objects.filter(
+            permanence=self
+        ).order_by("?"):
+            PermanenceBoard.objects.create(
+                permanence=new_permanence,
+                permanence_date=new_permanence.permanence_date,
+                permanence_role=permanence_board.permanence_role,
+                customer=permanence_board.customer,
+                is_registered_on=permanence_board.is_registered_on,
+            )
 
     def generate_bank_account_movement(self, payment_date):
 
-        for producer_invoice in ProducerInvoice.objects.filter(
-            permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=True
-        ).select_related("producer"):
+        for producer_invoice in (
+            ProducerInvoice.objects.filter(
+                permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=True
+            )
+            .order_by("?")
+            .select_related("producer")
+        ):
             # We have to pay something
             producer = producer_invoice.producer
             bank_not_invoiced = producer.get_bank_not_invoiced()
@@ -1425,32 +1609,6 @@ class Permanence(TranslatableModel):
 
         return
 
-    def duplicate_short_name(self, new_permanence, cur_language):
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            translation.activate(language_code)
-            new_permanence.set_current_language(language_code)
-            self.set_current_language(language_code)
-            try:
-                new_permanence.short_name = self.safe_translation_getter(
-                    "short_name", any_language=True
-                )
-                new_permanence.save_translations()
-            except TranslationDoesNotExist:
-                pass
-        translation.activate(cur_language)
-        return new_permanence
-
-    def create_child(self, status):
-        child_permanence = Permanence.objects.create(
-            permanence_date=self.permanence_date,
-            master_permanence_id=self.id,
-            status=status,
-        )
-        return self.duplicate_short_name(
-            child_permanence, cur_language=translation.get_language()
-        )
-
     def recalculate_order_amount(
         self, offer_item_qs=None, re_init=False, send_to_producer=False
     ):
@@ -1460,21 +1618,25 @@ class Permanence(TranslatableModel):
             assert (
                 offer_item_qs is None
             ), "offer_item_qs must be set to None when send_to_producer or re_init"
-            ProducerInvoice.objects.filter(permanence_id=self.id).update(
+            ProducerInvoice.objects.filter(permanence_id=self.id).order_by("?").update(
                 total_price_with_tax=DECIMAL_ZERO,
                 total_vat=DECIMAL_ZERO,
                 total_deposit=DECIMAL_ZERO,
             )
-            CustomerInvoice.objects.filter(permanence_id=self.id).update(
+            CustomerInvoice.objects.filter(permanence_id=self.id).order_by("?").update(
                 total_price_with_tax=DECIMAL_ZERO,
                 total_vat=DECIMAL_ZERO,
                 total_deposit=DECIMAL_ZERO,
             )
-            CustomerProducerInvoice.objects.filter(permanence_id=self.id).update(
+            CustomerProducerInvoice.objects.filter(permanence_id=self.id).order_by(
+                "?"
+            ).update(
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
             )
-            OfferItemWoReceiver.objects.filter(permanence_id=self.id).update(
+            OfferItemWoReceiver.objects.filter(permanence_id=self.id).order_by(
+                "?"
+            ).update(
                 quantity_invoiced=DECIMAL_ZERO,
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
@@ -1708,10 +1870,10 @@ class Permanence(TranslatableModel):
         from repanier.models.permanenceboard import PermanenceBoard
 
         board_composition = []
-        for permanenceboard in PermanenceBoard.objects.filter(
+        for permanence_board in PermanenceBoard.objects.filter(
             permanence_id=self.id
         ).order_by("permanence_role__tree_id", "permanence_role__lft"):
-            member = permanenceboard.get_html_board_member
+            member = permanence_board.get_html_board_member
             if member is not None:
                 board_composition.append(member)
 

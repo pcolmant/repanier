@@ -141,8 +141,8 @@ def purchase_pre_save(sender, **kwargs):
             )
 
             if (
-                purchase.offer_item.price_list_multiplier <= DECIMAL_ONE
-                and not purchase.offer_item.is_resale_price_fixed
+                purchase.price_list_multiplier <= DECIMAL_ONE
+                and not purchase.is_resale_price_fixed
             ):
                 delta_purchase_price = delta_selling_price
                 delta_purchase_vat = delta_selling_vat
