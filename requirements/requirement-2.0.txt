@@ -1,5 +1,5 @@
-Django==2.2.8
-django-cms==3.7.0
+Django==2.2.9
+django-cms==3.7.1
 # https://github.com/divio/django-cms/archive/develop.zip
 Pillow==6.2.0
 Unidecode==1.0.23
