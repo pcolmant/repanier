@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.template import Template, Context as TemplateContext
 
 from repanier.const import EMPTY_STRING

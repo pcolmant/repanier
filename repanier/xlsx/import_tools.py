@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.producer import Producer

@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 from os import sep as os_sep
 
 from django.contrib.auth import get_user_model

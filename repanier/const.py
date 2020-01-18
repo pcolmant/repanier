@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 from decimal import *
 from typing import Any, Union
 

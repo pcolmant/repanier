@@ -4,12 +4,16 @@ from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
 from django.db.models import F
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse_lazy, reverse
 from django.utils import translation
 from django.utils.formats import number_format
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import apply_select2
 from import_export import resources, fields
@@ -26,6 +30,8 @@ from repanier.admin.admin_filter import (
     ProductFilterByPlacement,
     ProductFilterByVatLevel,
 )
+from repanier.admin.tools import check_cancel_in_post, check_product, add_filter
+from repanier.admin.tools import get_query_filters
 from repanier.const import (
     LUT_PRODUCT_ORDER_UNIT_REVERSE,
     LUT_ALL_VAT,
@@ -458,8 +464,11 @@ class ProductDataForm(TranslatableModelForm):
 
 
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
-    change_list_template = None # get default admin selection to use customized product change_list template
+    change_list_template = (
+        None
+    )  # get default admin selection to use customized product change_list template
     form = ProductDataForm
+    change_list_url = reverse_lazy("admin:repanier_product_changelist")
     resource_class = ProductResource
     list_display = ("get_long_name_with_producer",)
     list_display_links = ("get_long_name_with_producer",)
@@ -484,6 +493,9 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
+    def get_redirect_to_change_list_url(self):
+        return "{}{}".format(self.change_list_url, get_query_filters())
+
     def deselect_is_into_offer(self, request, queryset):
         task_product.deselect_is_into_offer(queryset)
 
@@ -491,13 +503,9 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         "Remove selected products from the offer"
     )
 
-    def duplicate_product(self, request, queryset):
-        if "cancel" in request.POST:
-            user_message = _("Action canceled by the user.")
-            user_message_level = messages.INFO
-            self.message_user(request, user_message, user_message_level)
-            return
-        product = queryset.first()
+    @check_cancel_in_post
+    @check_product
+    def duplicate_product(self, request, product_id, product):
         if "apply" in request.POST:
             if "producers" in request.POST:
                 producers = request.POST.getlist("producers", [])
@@ -507,22 +515,23 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     )
                     if producer is not None:
                         user_message, user_message_level = task_product.admin_duplicate(
-                            queryset, producer
+                            product, producer
                         )
                         self.message_user(request, user_message, user_message_level)
-                    return
+                    return HttpResponseRedirect(self.get_redirect_to_change_list_url())
             user_message = _("You must select one and only one producer.")
             user_message_level = messages.ERROR
             self.message_user(request, user_message, user_message_level)
-            return
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
         template_name = get_repanier_template_name(
-            "confirm_admin_duplicate_product.html"
+            "admin/confirm_duplicate_product.html"
         )
+
         return render(
             request,
             template_name,
             {
-                "sub_title": _("Please, confirm the action : duplicate product."),
+                **self.admin_site.each_context(request),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "duplicate_product",
                 "product": product,
@@ -533,7 +542,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     duplicate_product.short_description = _("Duplicate")
 
     def get_list_display(self, request):
-        list_display = ["get_html_admin_is_into_offer", "get_long_name_with_producer"]
+        list_display = ["get_long_name_with_producer", "get_row_actions"]
         list_editable = ["producer_unit_price"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
@@ -732,11 +741,28 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ).order_by("translations__short_name")
         return form
 
-    def get_html_admin_is_into_offer(self, product):
-        return product.get_html_admin_is_into_offer()
+    def get_urls(self):
+        urls = super(ProductAdmin, self).get_urls()
+        custom_urls = [
+            url(
+                r"^(?P<product_id>.+)/duplicate-product/$",
+                self.admin_site.admin_view(self.duplicate_product),
+                name="duplicate-product",
+            )
+        ]
+        return custom_urls + urls
 
-    get_html_admin_is_into_offer.short_description = _("In offer")
-    get_html_admin_is_into_offer.admin_order_field = "is_into_offer"
+    def get_row_actions(self, product):
+        return format_html(
+            '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span> '
+            "{}",
+            add_filter(reverse("admin:duplicate-product", args=[product.pk])),
+            _("Duplicate"),
+            product.get_html_admin_is_into_offer(),
+            _("In offer"),
+        )
+
+    get_row_actions.short_description = EMPTY_STRING
 
     def save_model(self, request, product, form, change):
         super(ProductAdmin, self).save_model(request, product, form, change)

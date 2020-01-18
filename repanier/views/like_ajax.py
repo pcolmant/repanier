@@ -1,6 +1,3 @@
-# -*- coding: utf-8
-
-from django.conf import settings
 from django.http import Http404, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
@@ -15,8 +12,12 @@ def like_ajax(request):
     if request.is_ajax():
         user = request.user
         if user.is_authenticated:
-            offer_item_id = sint(request.GET.get('offer_item', 0))
-            offer_item = OfferItemWoReceiver.objects.filter(id=offer_item_id).order_by('?').first()
+            offer_item_id = sint(request.GET.get("offer_item", 0))
+            offer_item = (
+                OfferItemWoReceiver.objects.filter(id=offer_item_id)
+                .order_by("?")
+                .first()
+            )
             if offer_item is not None and offer_item.product_id is not None:
                 product = offer_item.product
                 json_dict = {}

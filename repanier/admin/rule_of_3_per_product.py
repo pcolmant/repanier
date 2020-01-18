@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
@@ -78,7 +76,7 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
         # To delete the purchase, set the quantity to zero
         return False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, **kwargs):
         return True
 
     def has_change_permission(self, request, obj=None):

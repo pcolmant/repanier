@@ -5,37 +5,36 @@
     <div class="breadcrumbs">
         {% trans 'Manage' %}
         &rsaquo; <a
-            href="{% url 'admin:repanier_permanencedone_changelist' %}">{% trans 'Billing offers' %}</a>
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% trans 'Offers in preparation' %}</a>
     </div>
 {% endblock %}
 
 {% block content %}
-    <form action="" method="post">{% csrf_token %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
-        <div class="submit-row">
-            <h4>{% trans "Please confirm your send invoices request." %}</h4>
-            <p>&nbsp;</p>
-            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
-            </button>
-        </div>
-
         <div class="form-row">
+            <h4>{% trans "Please confirm your open order request." %}</h4>
             <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
+            </button>
+            {% if email_will_be_sent %}
+                <button type="submit" class="repanier-submit-info" name="apply-wo-mail" value="apply-wo-mail">
+                    {% trans "Yes, I'm sure but do not send any mail" %}</button>
+            {% endif %}
         </div>
-
-        {% if form.template_invoice_customer_mail.value %}
+        {% if form.template_offer_customer_mail.value %}
             <div class="form-row">
-                <div><h4>{% trans "Mail invoices to customers" %}</h4>
-                    <p>&nbsp;</p>{{ invoice_customer_email_will_be_sent_to }}
+                <div><h4>{% trans "Contents of the order opening email sent to consumers authorized to order" %}</h4>
+                    <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>
                 <div class="fieldBox">
-                    {% with id_for_label=form.template_invoice_customer_mail.id_for_label %}
+                    {% with id_for_label=form.template_offer_customer_mail.id_for_label %}
                         <div id="div_{{ id_for_label }}">
                             <div class="controls col-xs-12">
                             <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
-                                      name="template_offer_customer_mail">{{ form.template_invoice_customer_mail.value }}</textarea>
+                                      name="template_offer_customer_mail">{{ form.template_offer_customer_mail.value }}</textarea>
                                 <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
                                 <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
                                 <script>
@@ -58,19 +57,19 @@
                 </div>
             </div>
         {% endif %}
-
-        {% if form.template_invoice_producer_mail.value %}
+        {% if form.template_cancel_order_customer_mail.value %}
             <div class="form-row">
-                <div><h4>{% trans "Mail invoices to producers" %}</h4>
-                    <p>&nbsp;</p>{{ invoice_producer_email_will_be_sent_to }}
+                <div>
+                    <h4>{% trans "Content of the email in case of cancellation of the order sent to the consumers concerned" %}</h4>
+                    <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>
                 <div class="fieldBox">
-                    {% with id_for_label=form.template_invoice_producer_mail.id_for_label %}
+                    {% with id_for_label=form.template_cancel_order_customer_mail.id_for_label %}
                         <div id="div_{{ id_for_label }}">
                             <div class="controls col-xs-12">
-                                <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
-                                          name="template_offer_customer_mail">{{ form.template_invoice_producer_mail.value }}</textarea>
+                            <textarea class="CMS_CKEditor texteditorwidget form-control" id="{{ id_for_label }}"
+                                      name="template_cancel_order_mail">{{ form.template_cancel_order_customer_mail.value }}</textarea>
                                 <script>window.CKEDITOR_BASEPATH = "{{ STATIC_URL}}djangocms_text_ckeditor/ckeditor/";</script>
                                 <script src="{% static "djangocms_text_ckeditor/ckeditor/ckeditor.js" %}"></script>
                                 <script>

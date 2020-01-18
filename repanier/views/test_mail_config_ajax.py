@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 import logging
 
 from django.contrib.auth.decorators import login_required

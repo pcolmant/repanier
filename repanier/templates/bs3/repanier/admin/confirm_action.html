@@ -12,13 +12,13 @@
 {% endblock %}
 
 {% block content %}
-    <form action="" method="post">{% csrf_token %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
-        <div class="submit-row">
+        <div class="form-row">
             <h4>{{ sub_title }}</h4>
             <p>&nbsp;</p>
-            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
             </button>
         </div>
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>

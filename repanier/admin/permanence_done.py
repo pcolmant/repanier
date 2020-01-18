@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 import logging
 import threading
 
@@ -32,7 +31,7 @@ from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
     check_done_in_post,
-)
+    get_query_filters)
 from repanier.const import *
 from repanier.email import email_invoice
 from repanier.email.email import RepanierEmail
@@ -124,6 +123,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if user.is_invoice_manager:
             return True
         return False
+
+    def get_redirect_to_change_list_url(self):
+        return "{}{}".format(self.change_list_url, get_query_filters())
 
     def get_list_display(self, request):
         list_display = ["get_permanence_admin_display", "get_row_actions"]
@@ -224,7 +226,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             wb.save(response)
             return response
         else:
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     @check_cancel_in_post
     @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
@@ -248,8 +250,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
-        template_name = get_repanier_template_name("confirm_admin_action.html")
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
         return render(
             request,
             template_name,
@@ -286,7 +288,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
         user_message_level = messages.WARNING
         self.message_user(request, user_message, user_message_level)
-        return HttpResponseRedirect(self.change_list_url)
+        return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     @check_done_in_post
     @check_cancel_in_post
@@ -393,7 +395,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             else 0
                         )
                         template_name = get_repanier_template_name(
-                            "confirm_admin_bank_movement.html"
+                            "admin/confirm_bank_movement.html"
                         )
                         return render(
                             request,
@@ -416,7 +418,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         user_message = _("You must select at least one producer.")
                         user_message_level = messages.WARNING
                         self.message_user(request, user_message, user_message_level)
-                        return HttpResponseRedirect(self.change_list_url)
+                        return HttpResponseRedirect(self.get_redirect_to_change_list_url())
         else:
             producers_invoiced = []
             for producer_invoice in (
@@ -470,7 +472,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 initial=producers_invoiced
             )
 
-        template_name = get_repanier_template_name("confirm_admin_invoice.html")
+        template_name = get_repanier_template_name("admin/confirm_invoice.html")
         return render(
             request,
             template_name,
@@ -492,8 +494,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
-        template_name = get_repanier_template_name("confirm_admin_action.html")
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
         return render(
             request,
             template_name,
@@ -558,8 +560,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 user_message = _("The selected invoice has been restored.")
                 user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
-        template_name = get_repanier_template_name("confirm_admin_action.html")
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
         return render(
             request,
             template_name,
@@ -614,7 +616,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             user_message = _("The invoices are being send.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
         template_invoice_customer_mail = []
         template_invoice_producer_mail = []
@@ -730,7 +732,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 ),
             }
         )
-        template_name = get_repanier_template_name("confirm_admin_send_invoice.html")
+        template_name = get_repanier_template_name("admin/confirm_send_invoice.html")
         return render(
             request,
             template_name,
@@ -746,37 +748,32 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             },
         )
 
-    def get_row_actions(self, obj):
-        permanence = (
-            Permanence.objects.filter(id=obj.pk).only("status").order_by("?").first()
-        )
-        if permanence is None:
-            return EMPTY_STRING
+    def get_row_actions(self, permanence):
 
         if permanence.status == PERMANENCE_SEND:
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 return format_html(
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span> '
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a></span> '
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span><i class="fas fa-truck"></i><i class="fas fa-slash fa-stack-2x" style="font-size: 1.5em; color:Tomato; margin-top: 3px;"></i></span></a></span> '
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a></span>',
-                    reverse("admin:permanence-export-invoice", args=[obj.pk]),
+                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>'
+                    ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-upload"></i></a></span>'
+                    ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span>'
+                    ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a></span>',
+                    reverse("admin:permanence-export-invoice", args=[permanence.pk]),
                     _("Export"),
-                    reverse("admin:permanence-import-invoice", args=[obj.pk]),
+                    reverse("admin:permanence-import-invoice", args=[permanence.pk]),
                     _("Import"),
-                    reverse("admin:permanence-cancel-delivery", args=[obj.pk]),
+                    reverse("admin:permanence-cancel-delivery", args=[permanence.pk]),
                     _("Cancel the delivery"),
-                    reverse("admin:permanence-invoice", args=[obj.pk]),
+                    reverse("admin:permanence-invoice", args=[permanence.pk]),
                     _("To invoice"),
                 )
 
             else:
                 return format_html(
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span><i class="fas fa-truck"></i><i class="fas fa-slash fa-stack-2x" style="font-size: 1.5em; color:Tomato; margin-top: 3px;"></i></span></a></span> '
-                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a></span>',
-                    reverse("admin:permanence-cancel-delivery", args=[obj.pk]),
+                    '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span>'
+                    ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a></span>',
+                    reverse("admin:permanence-cancel-delivery", args=[permanence.pk]),
                     _("Cancel the delivery"),
-                    reverse("admin:permanence-archive", args=[obj.pk]),
+                    reverse("admin:permanence-archive", args=[permanence.pk]),
                     _("To archive"),
                 )
 
@@ -791,21 +788,20 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 # This is the latest invoiced permanence
                 # Invoicing can be cancelled
                 cancel_invoice = format_html(
-                    # '<br/><a class="button" style="font-weight: 800;" href="{}">{}</a>',
-                    ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span><i class="fas fa-cash-register" style="color:black;"></i><i class="fas fa-slash fa-stack-2x" style="font-size: 1.5em; color:Tomato; margin-top: 3px;"></i></span></a></span> ',
-                    reverse("admin:permanence-cancel-invoicing", args=[obj.pk]),
+                    ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span> ',
+                    reverse("admin:permanence-cancel-invoicing", args=[permanence.pk]),
                     _("Cancel the invoicing"),
                 )
             else:
                 cancel_invoice = EMPTY_STRING
 
             return format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-file-invoice-dollar"></i></a></span> '
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-envelope-open-text"></i></a></span>'
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-file-invoice-dollar"></i></a></span>'
+                ' <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-envelope-open-text"></i></a></span>'
                 "{}",
-                reverse("admin:permanence-accounting-report", args=[obj.pk]),
+                reverse("admin:permanence-accounting-report", args=[permanence.pk]),
                 _("Accounting report"),
-                reverse("admin:permanence-send-invoices", args=[obj.pk]),
+                reverse("admin:permanence-send-invoices", args=[permanence.pk]),
                 _("Send the invoices"),
                 cancel_invoice,
             )
@@ -813,14 +809,14 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         elif permanence.status == PERMANENCE_ARCHIVED:
             return format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>',
-                reverse("admin:permanence-cancel-archiving", args=[obj.pk]),
+                reverse("admin:permanence-cancel-archiving", args=[permanence.pk]),
                 _("Restore"),
             )
 
         elif permanence.status == PERMANENCE_CANCELLED:
             return format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>',
-                reverse("admin:permanence-restore-delivery", args=[obj.pk]),
+                reverse("admin:permanence-restore-delivery", args=[permanence.pk]),
                 _("Restore"),
             )
 

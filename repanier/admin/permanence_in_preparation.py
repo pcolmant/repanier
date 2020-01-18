@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 import logging
 import threading
 
@@ -28,7 +27,7 @@ from repanier.admin.forms import (
     GeneratePermanenceForm,
 )
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
-from repanier.admin.tools import check_cancel_in_post, check_permanence
+from repanier.admin.tools import check_cancel_in_post, check_permanence, get_query_filters
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
@@ -204,6 +203,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
+    def get_redirect_to_change_list_url(self):
+        return "{}{}".format(self.change_list_url, get_query_filters())
+
     def get_list_display(self, request):
         list_display = ["get_permanence_admin_display", "get_row_actions"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
@@ -319,19 +321,23 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             wb.save(response)
             return response
         else:
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     export_offer.short_description = _("1 --- Check the offer")
 
     @check_cancel_in_post
     @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
     def export_customer_opened_order(self, request, permanence_id, permanence=None):
-        return self.export_customer_order(request, permanence, action="export_customer_opened_order")
+        return self.export_customer_order(
+            request, permanence, action="export_customer_opened_order"
+        )
 
     @check_cancel_in_post
     @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
     def export_customer_closed_order(self, request, permanence_id, permanence=None):
-        return self.export_customer_order(request, permanence, action="export_customer_closed_order")
+        return self.export_customer_order(
+            request, permanence, action="export_customer_closed_order"
+        )
 
     def export_customer_order(self, request, permanence, action):
         if not permanence.with_delivery_point:
@@ -356,7 +362,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message = _("You must select at least one delivery point.")
                     user_message_level = messages.WARNING
                     self.message_user(request, user_message, user_message_level)
-                    return HttpResponseRedirect(self.change_list_url)
+                    return HttpResponseRedirect(self.get_redirect_to_change_list_url())
                     # Also display order without delivery point -> The customer has not selected it yet
                     # deliveries_to_be_exported.append(None)
             else:
@@ -374,7 +380,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 wb.save(response)
             return response
         template_name = get_repanier_template_name(
-            "confirm_admin_export_customer_order.html"
+            "admin/confirm_export_customer_order.html"
         )
         return render(
             request,
@@ -428,7 +434,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             user_message = _("The offers are being generated.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
         template_offer_mail = []
         template_cancel_order_mail = []
@@ -516,7 +522,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 ),
             }
         )
-        template_name = get_repanier_template_name("confirm_admin_open_order.html")
+        template_name = get_repanier_template_name("admin/confirm_open_order.html")
         return render(
             request,
             template_name,
@@ -555,7 +561,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 user_message = _("You must select at least one delivery point.")
                 user_message_level = messages.WARNING
                 self.message_user(request, user_message, user_message_level)
-                return HttpResponseRedirect(self.change_list_url)
+                return HttpResponseRedirect(self.get_redirect_to_change_list_url())
             send_mail = not ("apply-wo-mail" in request.POST)
             # close_order(permanence.id, everything, deliveries_to_be_send, send_mail)
             t = threading.Thread(
@@ -566,7 +572,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             user_message = _("The orders are being send.")
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
         template_order_customer_mail = []
         template_order_producer_mail = []
@@ -717,7 +723,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             )
         else:
             deliveries = DeliveryBoard.objects.none()
-        template_name = get_repanier_template_name("confirm_admin_close_order.html")
+        template_name = get_repanier_template_name("admin/confirm_close_order.html")
         return render(
             request,
             template_name,
@@ -744,8 +750,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             user_message = _('The permanence is back to "Scheduled".')
             user_message_level = messages.INFO
             self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
-        template_name = get_repanier_template_name("confirm_admin_action.html")
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
         return render(
             request,
             template_name,
@@ -776,11 +782,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     user_message = _("{} duplicates created.").format(creation_counter)
                 user_message_level = messages.INFO
                 self.message_user(request, user_message, user_message_level)
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
         else:
             form = GeneratePermanenceForm()
         template_name = get_repanier_template_name(
-            "confirm_admin_generate_permanence.html"
+            "admin/confirm_generate_permanence.html"
         )
         return render(
             request,
@@ -797,29 +803,24 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             },
         )
 
-    def get_row_actions(self, obj):
-        permanence = (
-            Permanence.objects.filter(id=obj.pk).only("status").order_by("?").first()
-        )
-        if permanence is None:
-            return EMPTY_STRING
+    def get_row_actions(self, permanence):
 
         if permanence.status == PERMANENCE_PLANNED:
             return format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span> '
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a></span>',
-                reverse("admin:generate-permanence", args=[obj.pk]),
+                reverse("admin:generate-permanence", args=[permanence.pk]),
                 _("Duplicate"),
-                reverse("admin:permanence-open-order", args=[obj.pk]),
+                reverse("admin:permanence-open-order", args=[permanence.pk]),
                 _("Open orders"),
             )
         elif permanence.status == PERMANENCE_OPENED:
             return format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a></span> '
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a></span>',
-                reverse("admin:permanence-back-to-scheduled", args=[obj.pk]),
+                reverse("admin:permanence-back-to-scheduled", args=[permanence.pk]),
                 _("Modify the offer"),
-                reverse("admin:permanence-close-order", args=[obj.pk]),
+                reverse("admin:permanence-close-order", args=[permanence.pk]),
                 _("Close orders"),
             )
         return EMPTY_STRING

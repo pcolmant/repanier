@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _, get_language_info
 from django_mptt_admin.admin import DjangoMpttAdmin

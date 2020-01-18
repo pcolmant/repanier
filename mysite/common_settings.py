@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import codecs
 import configparser
 import logging
@@ -331,6 +330,8 @@ INSTALLED_APPS = (
     "easy_select2",
     "recurrence",
     "crispy_forms",
+    "django.forms",  # must be last! because of the FORM_RENDERER setting below.
+    # For the templates we don’t override, we still want the renderer to look in Django’s form app
 )
 
 # set djangocms and filer plugins as cmsplugin for ckeditor
@@ -359,6 +360,7 @@ MIDDLEWARE = (
     "cms.middleware.user.CurrentUserMiddleware",
     "cms.middleware.toolbar.ToolbarMiddleware",
     "cms.middleware.language.LanguageCookieMiddleware",
+    "repanier.middleware.admin_filter_middleware",
     "django.middleware.cache.FetchFromCacheMiddleware",
 )
 
@@ -381,6 +383,16 @@ CONTEXT_PROCESSORS = [
     "cms.context_processors.cms_settings",
     "repanier.context_processors.repanier_settings",
 ]
+
+# https://www.caktusgroup.com/blog/2018/06/18/make-all-your-django-forms-better/
+# The default form renderer is the DjangoTemplates renderer uses its own template engine,
+# separate from the project settings.
+# It will load the default widgets first and then look in the project settings for widget templates
+# for all custom widgets.
+#
+# The TemplateSettings renderer, instead, loads templates exactly as the rest of the project.
+
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 if DEBUG:
     TEMPLATES = [

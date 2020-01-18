@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 from urllib.parse import parse_qsl
 
 from django import forms
@@ -106,7 +105,7 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                 self._has_delete_permission = True
         return self._has_delete_permission
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, **kwargs):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
@@ -242,7 +241,7 @@ class BoxAdmin(TranslatableAdmin):
             user_message, user_message_level = task_box.admin_duplicate(queryset)
             self.message_user(request, user_message, user_message_level)
             return
-        template_name = get_repanier_template_name("confirm_admin_duplicate_box.html")
+        template_name = get_repanier_template_name("admin/confirm_duplicate_box.html")
         return render(
             request,
             template_name, {

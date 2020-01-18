@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe

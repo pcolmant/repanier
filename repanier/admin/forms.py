@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.admin.widgets import AdminDateWidget
 from django.forms.formsets import formset_factory
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
@@ -66,8 +67,8 @@ class InvoiceOrderForm(forms.Form):
 
 class PermanenceInvoicedForm(forms.Form):
     payment_date = forms.DateField(
-        label=_("Payment date"), required=True
-    )  # , widget=AdminDateWidget())
+        label=_("Payment date"), required=True, widget=AdminDateWidget()
+    )
 
     def __init__(self, *args, **kwargs):
         self.payment_date = kwargs.pop("payment_date", None)
@@ -75,19 +76,27 @@ class PermanenceInvoicedForm(forms.Form):
 
         self.fields["payment_date"].initial = self.payment_date
 
+    class Media:
+        # Needed for AdminDateWidget
+        js = (
+            # "admin/js/vendor/jquery/jquery.min.js",
+            # "admin/js/jquery.init.js",
+            "admin/js/core.js",
+        )
+
 
 class ImportStockForm(forms.Form):
-    template = get_repanier_template_name("import_stock.html")
+    template = get_repanier_template_name("admin/import_stock.html")
     file_to_import = forms.FileField(label=_("File to import"), allow_empty_file=False)
 
 
 class ImportPurchasesForm(forms.Form):
-    template = get_repanier_template_name("import_purchases.html")
+    template = get_repanier_template_name("admin/import_purchases.html")
     file_to_import = forms.FileField(label=_("File to import"), allow_empty_file=False)
 
 
 class ImportInvoiceForm(forms.Form):
-    template = get_repanier_template_name("import_invoice.html")
+    template = get_repanier_template_name("admin/import_invoice.html")
     file_to_import = forms.FileField(label=_("File to import"), allow_empty_file=False)
     # Important : Here, the length of invoice_reference must be the same as of permanence.short_name
     invoice_reference = forms.CharField(

@@ -10,17 +10,17 @@
 {% endblock %}
 
 {% block content %}
-    <form action="" method="post">{% csrf_token %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
-        <div class="submit-row">
+        <div class="form-row">
             <h4>{% trans "Please confirm your export orders request." %}</h4>
             <p>&nbsp;</p>
-            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default"><h6>{% trans "Yes, I'm sure" %}</h6>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
             </button>
         </div>
         {% if permanence.with_delivery_point %}
-            <div class="form-group">
+            <div class="form-row">
                 <p>&nbsp;</p>
                 <h4>{% trans "Please indicate the deviveries points you wish to export." %}</h4>
                 <p>&nbsp;</p>
@@ -37,7 +37,7 @@
                 <p>&nbsp;</p>
             </div>
             {% for delivery in deliveries %}
-                <div class="form-group">
+                <div class="form-row">
                     <ul class="repanier-flex-ul">
                         <li class="repanier-flex-ul-li repanier-ban">
                             <input id="id_deliveries-{{ forloop.counter0 }}" name="deliveries" class="deliverie_form"
@@ -51,7 +51,6 @@
                 </div>
             {% endfor %}
         {% endif %}
-
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>
     </form>

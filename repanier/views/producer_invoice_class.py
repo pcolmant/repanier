@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 import django
 from django.http import Http404
 from django.utils import translation

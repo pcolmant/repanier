@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from django import template
 from django.contrib.admin.views.main import (
     PAGE_VAR, )

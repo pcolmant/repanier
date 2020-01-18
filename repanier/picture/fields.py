@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from django.core.files.storage import default_storage
 from django.db.models import Field, NOT_PROVIDED
 from django.db.models.fields.files import FileDescriptor, FieldFile

@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 # non proxies
 from .bankaccount import BankAccount
 from .configuration import Configuration

@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from .box import *
 from .configuration import *
 from .customer import *

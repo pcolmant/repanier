@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django import forms
 
 from repanier.tools import get_repanier_template_name

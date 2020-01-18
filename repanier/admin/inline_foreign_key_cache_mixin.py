@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _
 

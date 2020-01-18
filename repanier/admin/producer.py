@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from collections import OrderedDict
 
 from django import forms
@@ -19,7 +17,7 @@ from import_export.widgets import CharWidget
 
 import repanier.apps
 from repanier.admin.forms import ImportStockForm
-from repanier.admin.tools import check_cancel_in_post
+from repanier.admin.tools import check_cancel_in_post, get_query_filters
 from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
@@ -286,6 +284,9 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
+    def get_redirect_to_change_list_url(self):
+        return "{}{}".format(self.change_list_url, get_query_filters())
+
     def get_urls(self):
         urls = super(ProducerAdmin, self).get_urls()
         custom_urls = [
@@ -316,7 +317,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             wb.save(response)
             return response
         else:
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     export_customer_prices.short_description = _("Export the customer tariff")
 
@@ -337,7 +338,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             wb.save(response)
             return response
         else:
-            return HttpResponseRedirect(self.change_list_url)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     @check_cancel_in_post
     def import_stock(self, request):

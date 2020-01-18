@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _

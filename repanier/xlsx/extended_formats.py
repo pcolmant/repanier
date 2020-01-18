@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 import tablib
 from import_export.formats.base_formats import TablibFormat, XLSX_IMPORT
 from django.utils.six import moves

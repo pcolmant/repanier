@@ -1,6 +1,3 @@
-# -*- coding: utf-8
-
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404
@@ -8,7 +5,6 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PRODUCT_ORDER_UNIT_DEPOSIT
 from repanier.models.product import Product
 from repanier.tools import sint
 

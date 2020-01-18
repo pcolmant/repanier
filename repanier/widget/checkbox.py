@@ -1,4 +1,3 @@
-# -*- coding: utf-8
 from django.forms import CheckboxInput
 
 from repanier.tools import get_repanier_template_name, get_repanier_static_name

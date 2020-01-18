@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.forms import NumberInput
 
 import repanier.apps

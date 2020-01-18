@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 ROW_TITLE = 0
 ROW_WIDTH = 1
 ROW_VALUE = 2

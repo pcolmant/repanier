@@ -1,7 +1,4 @@
-# -*- coding: utf-8
-
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 from django.utils import translation

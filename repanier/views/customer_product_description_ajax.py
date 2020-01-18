@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.conf import settings
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404

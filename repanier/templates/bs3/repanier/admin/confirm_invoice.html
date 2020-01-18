@@ -1,8 +1,9 @@
 {% extends "admin/base_site.html" %}
 {% load cms_tags menu_tags i18n l10n static %}
 
-{% block extrastyle %}
+{% block extrahead %}
     {{ block.super }}
+    {{ permanence_form.media }}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -13,19 +14,16 @@
 {% endblock %}
 
 {% block content %}
-    <form action="" method="post">{% csrf_token %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
-        <div class="submit-row">
+        <div class="form-row">
             <h4>{% trans "Please confirm your invoice calculation request." %}</h4>
             <p>&nbsp;</p>
-            <button type="submit" name="cancel" value="cancel"><h6>{% trans "No, cancel the action" %}</h6></button>
-            <button type="submit" name="apply" value="apply" class="default">
-                <h6>{% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}</h6>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">
+                {% trans "Yes, I'm sure and I have already encoded the customer's provisions into the bank account" %}
             </button>
             {{ producer_invoiced_formset.management_form }}
-        </div>
-        <div class="form-row">
-            <p>&nbsp;</p>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -40,11 +38,11 @@
                     {% endif %}
                     <label for="id_payment_date"
                            class="repanier-label-info">{% trans "Payment date" %}&nbsp;:</label>
-                    {{ permanence_form.payment_date }}
                 </div>
             </div>
+            {{ permanence_form.payment_date }}
         </div>
-        <div class="form-group">
+        <div class="form-row">
             <p>&nbsp;</p>
             <h4>{% trans "Please indicate the producers you wish to pay." %}</h4>
             <p>&nbsp;</p>
@@ -58,10 +56,9 @@
                     </label>
                 </li>
             </ul>
-            <p>&nbsp;</p>
         </div>
         {% for f_form in producer_invoiced_formset %}
-            <div class="form-group">
+            <div class="form-row">
                 <ul class="repanier-flex-ul">
                     <li class="repanier-flex-ul-li repanier-ban">
                         {{ f_form.id.as_hidden }}

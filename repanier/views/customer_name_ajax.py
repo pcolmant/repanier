@@ -1,5 +1,3 @@
-# -*- coding: utf-8
-
 from django.http import Http404
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
