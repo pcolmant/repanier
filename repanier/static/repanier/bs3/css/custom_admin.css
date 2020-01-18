@@ -275,9 +275,11 @@ div.repanier-submit-row {
     z-index: 1000;
 }
 
-/*div.repanier-submit-row-right {*/
-/*    margin-top: -2px;  -> replaced by align-items:center; */
-/*}*/
+div.repanier-button-row {
+    display: flex;
+    grid-column-gap: 10px;
+    align-items: baseline;
+}
 
 a.repanier-a-info {
     border-radius: var(--border-radius);

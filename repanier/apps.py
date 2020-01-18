@@ -56,7 +56,7 @@ class RepanierConfig(AppConfig):
             try:
                 db_started = connection.cursor() is not None
             except Exception:
-                logger.info("waiting for database connection")
+                logger.info("Waiting for database connection")
                 time.sleep(1)
 
         # Imports are inside the function because its point is to avoid importing

@@ -345,7 +345,6 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         super(GroupWithUserDataAdmin, self).save_model(request, group, form, change)
         delivery_point = (
             LUT_DeliveryPoint.objects.filter(customer_responsible_id=group.id)
-            .only("id")
             .order_by("?")
             .first()
         )
@@ -359,7 +358,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         delivery_point.is_active = True
         delivery_point.transport = form.cleaned_data["transport"]
         delivery_point.min_transport = form.cleaned_data["min_transport"]
-        delivery_point.short_name = form.data["short_basket_name"]
+        delivery_point.short_name = form.cleaned_data["short_basket_name"]
         delivery_point.save()
         Customer.objects.filter(delivery_point_id=delivery_point.id).update(
             delivery_point=None

@@ -653,9 +653,9 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
     class Media:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-            logger.debug(
-                "purchase admin media : {}".format(
-                    get_repanier_static_name("js/is_order_confirm_send.js")
-                )
-            )
+            # logger.debug(
+            #     "purchase admin media : {}".format(
+            #         get_repanier_static_name("js/is_order_confirm_send.js")
+            #     )
+            # )
             js = ('admin/js/jquery.init.js', get_repanier_static_name("js/is_order_confirm_send.js"),)

@@ -31,7 +31,7 @@ from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
-from repanier.tools import cap, create_or_update_one_purchase, debug_parameters
+from repanier.tools import cap, create_or_update_one_purchase
 
 logger = logging.getLogger(__name__)
 
@@ -132,8 +132,12 @@ class Permanence(TranslatableModel):
     get_producers_without_download.short_description = _("Offers from")
 
     def get_producers(self, with_download):
+        from repanier.admin.tools import add_filter
+
         if self.status == PERMANENCE_PLANNED:
-            download_url = reverse("admin:permanence-export-offer", args=[self.id])
+            download_url = add_filter(
+                reverse("admin:permanence-export-offer", args=[self.id])
+            )
             button_download = format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
                 download_url,
@@ -155,8 +159,8 @@ class Permanence(TranslatableModel):
             close_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemclosed_changelist"
             )
-            download_url = reverse(
-                "admin:permanence-export-producer-opened-order", args=[self.id]
+            download_url = add_filter(
+                reverse("admin:permanence-export-producer-opened-order", args=[self.id])
             )
             button_download = format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
@@ -202,8 +206,10 @@ class Permanence(TranslatableModel):
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             if self.status == PERMANENCE_SEND:
-                download_url = reverse(
-                    "admin:permanence-export-producer-closed-order", args=[self.id]
+                download_url = add_filter(
+                    reverse(
+                        "admin:permanence-export-producer-closed-order", args=[self.id]
+                    )
                 )
                 button_download = format_html(
                     '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
@@ -292,13 +298,13 @@ class Permanence(TranslatableModel):
             if not with_download:
                 button_download = EMPTY_STRING
             msg_html = """
-    <div id="id_hide_producers_{}" style="display:block;">{}
+    <div id="id_hide_producers_{}" style="display:block;" class="repanier-button-row">{}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_producers_{}').style.display = 'block'; document.getElementById('id_hide_producers_{}').style.display = 'none'; return false;">
             <i
                     class="far fa-eye"></i></a></span>
     </div>
-    <div id="id_show_producers_{}" style="display:none;">{}
+    <div id="id_show_producers_{}" style="display:none;" class="repanier-button-row">{}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_producers_{}').style.display = 'none'; document.getElementById('id_hide_producers_{}').style.display = 'block'; return false;">
             <i
@@ -335,15 +341,21 @@ class Permanence(TranslatableModel):
     get_customers_without_download.short_description = _("Orders from")
 
     def get_customers(self, with_download):
+        from repanier.admin.tools import add_filter
+
         if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
             if self.status == PERMANENCE_OPENED:
-                download_url = reverse(
-                    "admin:permanence-export-customer-opened-order", args=[self.id]
+                download_url = add_filter(
+                    reverse(
+                        "admin:permanence-export-customer-opened-order", args=[self.id]
+                    )
                 )
             else:
-                download_url = reverse(
-                    "admin:permanence-export-customer-closed-order", args=[self.id]
+                download_url = add_filter(
+                    reverse(
+                        "admin:permanence-export-customer-closed-order", args=[self.id]
+                    )
                 )
             button_download = format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span> ',
@@ -441,13 +453,13 @@ class Permanence(TranslatableModel):
             if not with_download:
                 button_download = EMPTY_STRING
             msg_html = """
-    <div id="id_hide_customers_{}" style="display:block;">{}
+    <div id="id_hide_customers_{}" style="display:block;" class="repanier-button-row">{}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_customers_{}').style.display = 'block'; document.getElementById('id_hide_customers_{}').style.display = 'none'; return false;">
             <i
                     class="far fa-eye"></i></a></span>
     </div>
-    <div id="id_show_customers_{}" style="display:none;">{}
+    <div id="id_show_customers_{}" style="display:none;" class="repanier-button-row">{}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_customers_{}').style.display = 'none'; document.getElementById('id_hide_customers_{}').style.display = 'block'; return false;">
             <i
@@ -486,6 +498,8 @@ class Permanence(TranslatableModel):
 
     @cached_property
     def get_board(self):
+        from repanier.admin.tools import add_filter
+
         permanenceboard_set = PermanenceBoard.objects.filter(
             permanence=self, permanence_role__rght=F("permanence_role__lft") + 1
         ).order_by("permanence_role__tree_id", "permanence_role__lft")
@@ -496,8 +510,10 @@ class Permanence(TranslatableModel):
                 r_link = EMPTY_STRING
                 r = permanenceboard_row.permanence_role
                 if r:
-                    r_url = reverse(
-                        "admin:repanier_lut_permanencerole_change", args=(r.id,)
+                    r_url = add_filter(
+                        reverse(
+                            "admin:repanier_lut_permanencerole_change", args=(r.id,)
+                        )
                     )
                     r_link = (
                         '<a href="'
@@ -509,7 +525,9 @@ class Permanence(TranslatableModel):
                 c_link = EMPTY_STRING
                 c = permanenceboard_row.customer
                 if c:
-                    c_url = reverse("admin:repanier_customer_change", args=(c.id,))
+                    c_url = add_filter(
+                        reverse("admin:repanier_customer_change", args=(c.id,))
+                    )
                     c_link = (
                         '&nbsp;->&nbsp;<a href="'
                         + c_url
@@ -524,13 +542,13 @@ class Permanence(TranslatableModel):
         if not first_board:
             # At least one role is defined in the permanence board
             msg_html = """
-    <div id="id_hide_board_{}" style="display:block;">
+    <div id="id_hide_board_{}" style="display:block;" class="repanier-button-row">
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_board_{}').style.display = 'block'; document.getElementById('id_hide_board_{}').style.display = 'none'; return false;">
             <i
                     class="far fa-eye"></i></a></span>
     </div>
-    <div id="id_show_board_{}" style="display:none;">
+    <div id="id_show_board_{}" style="display:none;" class="repanier-button-row">
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_board_{}').style.display = 'none'; document.getElementById('id_hide_board_{}').style.display = 'block'; return false;">
             <i

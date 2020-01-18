@@ -27,7 +27,12 @@ from repanier.admin.forms import (
     GeneratePermanenceForm,
 )
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
-from repanier.admin.tools import check_cancel_in_post, check_permanence, get_query_filters
+from repanier.admin.tools import (
+    check_cancel_in_post,
+    check_permanence,
+    get_query_filters,
+    add_filter,
+)
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
@@ -35,7 +40,7 @@ from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.lut import LUT_PermanenceRole, LUT_DeliveryPoint
-from repanier.models.permanence import PermanenceInPreparation, Permanence
+from repanier.models.permanence import PermanenceInPreparation
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -807,20 +812,30 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
         if permanence.status == PERMANENCE_PLANNED:
             return format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span> '
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a></span>',
-                reverse("admin:generate-permanence", args=[permanence.pk]),
+                '<div class="repanier-button-row">'
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span>'
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-play" style="color: #32CD32;"></i></a></span>'
+                "</div>",
+                add_filter(reverse("admin:generate-permanence", args=[permanence.pk])),
                 _("Duplicate"),
-                reverse("admin:permanence-open-order", args=[permanence.pk]),
+                add_filter(
+                    reverse("admin:permanence-open-order", args=[permanence.pk])
+                ),
                 _("Open orders"),
             )
         elif permanence.status == PERMANENCE_OPENED:
             return format_html(
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a></span> '
-                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a></span>',
-                reverse("admin:permanence-back-to-scheduled", args=[permanence.pk]),
+                '<div class="repanier-button-row">'
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a></span>'
+                '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-stop" style="color: red;"></i></a></span>'
+                "</div>",
+                add_filter(
+                    reverse("admin:permanence-back-to-scheduled", args=[permanence.pk])
+                ),
                 _("Modify the offer"),
-                reverse("admin:permanence-close-order", args=[permanence.pk]),
+                add_filter(
+                    reverse("admin:permanence-close-order", args=[permanence.pk])
+                ),
                 _("Close orders"),
             )
         return EMPTY_STRING

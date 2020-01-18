@@ -83,9 +83,9 @@ def send_open_order(permanence_id):
             'offer_producer': offer_producer,
             'signature': order_responsible["html_signature"]
         })
-        logger.debug("send_open_order before html_body = template.render(context)")
+        # logger.debug("send_open_order before html_body = template.render(context)")
         html_body = template.render(context)
-        logger.debug("send_open_order after html_body = template.render(context)")
+        # logger.debug("send_open_order after html_body = template.render(context)")
         to_email = list(set(to_email + order_responsible["to_email"]))
         email = RepanierEmail(
             subject=offer_customer_mail_subject,

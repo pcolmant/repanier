@@ -479,7 +479,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     filter_horizontal = ("production_mode",)
     ordering = ("producer", "translations__long_name")
     search_fields = ("translations__long_name",)
-    actions = ["deselect_is_into_offer", "duplicate_product"]
+    # actions = ["deselect_is_into_offer"]
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -496,12 +496,12 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def get_redirect_to_change_list_url(self):
         return "{}{}".format(self.change_list_url, get_query_filters())
 
-    def deselect_is_into_offer(self, request, queryset):
-        task_product.deselect_is_into_offer(queryset)
-
-    deselect_is_into_offer.short_description = _(
-        "Remove selected products from the offer"
-    )
+    # def deselect_is_into_offer(self, request, queryset):
+    #     task_product.deselect_is_into_offer(queryset)
+    #
+    # deselect_is_into_offer.short_description = _(
+    #     "Remove selected products from the offer"
+    # )
 
     @check_cancel_in_post
     @check_product
@@ -754,8 +754,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def get_row_actions(self, product):
         return format_html(
-            '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span> '
-            "{}",
+            '<div class="repanier-button-row">'
+            '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span>'
+            "{}"
+            "</div>",
             add_filter(reverse("admin:duplicate-product", args=[product.pk])),
             _("Duplicate"),
             product.get_html_admin_is_into_offer(),
