@@ -87,14 +87,14 @@ def check_product(func):
             user_message = _("Action performed.")
             user_message_level = messages.INFO
             args[0].message_user(args[1], user_message, user_message_level)
-            return HttpResponseRedirect(args[0].change_list_url)
+            return HttpResponseRedirect(args[0].get_redirect_to_change_list_url)
         product_qs = Product.objects.filter(id=kwargs["product_id"]).order_by("?")
         product = product_qs.first()
         if product is None:
             user_message = _("Product not found.")
             user_message_level = messages.INFO
             args[0].message_user(args[1], user_message, user_message_level)
-            return HttpResponseRedirect(args[0].change_list_url)
+            return HttpResponseRedirect(args[0].get_redirect_to_change_list_url)
         return func(*args, product=product, **kwargs)
 
     return func_wrapper
