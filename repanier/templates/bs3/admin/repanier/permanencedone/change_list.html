@@ -10,12 +10,10 @@
 {% endblock %}
 
 {% if REPANIER_ADMIN_MANAGE_ACCOUNTING is True %}
-{% if not is_popup %}
     {% block breadcrumbs %}
         <div class="breadcrumbs">
             {% trans 'Manage' %}
             &rsaquo; {% trans "In archiving" %}
         </div>
     {% endblock %}
-{% endif %}
 {% endif %}
