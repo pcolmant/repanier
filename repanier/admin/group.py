@@ -11,7 +11,6 @@ from django.forms import Textarea
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from import_export.formats.base_formats import CSV, ODS, JSON, XLS
 
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
 from repanier.const import REPANIER_MONEY_ZERO
@@ -19,7 +18,6 @@ from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.models import Customer
 from repanier.models import LUT_DeliveryPoint
 from repanier.models.group import Group
-from repanier.xlsx.extended_formats import XLSX_OPENPYXL_1_8_6
 from repanier.xlsx.xlsx_invoice import export_invoice
 
 
@@ -366,12 +364,3 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         Customer.objects.filter(id__in=form.cleaned_data["customers"]).update(
             delivery_point_id=delivery_point.id, price_list_multiplier=DECIMAL_ONE
         )
-
-    @staticmethod
-    def get_import_formats():
-        """
-        Returns available import formats.
-        """
-        return [
-            f for f in (CSV, ODS, JSON, XLS, XLSX_OPENPYXL_1_8_6) if f().can_import()
-        ]
