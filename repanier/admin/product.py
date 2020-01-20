@@ -18,7 +18,7 @@ from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX
+from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import ForeignKeyWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -776,21 +776,21 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             is_box=False,
             producer__is_active=True,
             # Important to also display untranslated products : translations__language_code=settings.LANGUAGE_CODE
-            translations__language_code=settings.LANGUAGE_CODE,
-        ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
+            translations__language_code=settings.LANGUAGE_CODE)
+        # ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs
 
     def get_import_formats(self):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, XLSX) if f().can_import()]
+        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
 
     def get_export_formats(self):
         """
         Returns available export formats.
         """
-        return [f for f in (CSV, XLSX) if f().can_export()]
+        return [f for f in (XLSX, CSV) if f().can_export()]
 
     class Media:
         js = ("admin/js/jquery.init.js", get_repanier_static_name("js/confirm_exit.js"))

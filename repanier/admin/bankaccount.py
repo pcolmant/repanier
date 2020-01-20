@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX
+from import_export.formats.base_formats import CSV, XLSX, XLS
 
 from repanier.admin.admin_filter import BankAccountFilterByStatus
 from repanier.const import *
@@ -412,13 +412,13 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, XLSX) if f().can_import()]
+        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
 
     def get_export_formats(self):
         """
         Returns available export formats.
         """
-        return [f for f in (CSV, XLSX) if f().can_export()]
+        return [f for f in (XLSX, CSV) if f().can_export()]
 
     # class Media:
     #     js = ('js/expenses_to_be_apportioned.js',)

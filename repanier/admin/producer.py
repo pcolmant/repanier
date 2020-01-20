@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX
+from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import CharWidget
 
 import repanier.apps
@@ -446,13 +446,13 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         """
         Returns available import formats.
         """
-        return [f for f in (CSV, XLSX) if f().can_import()]
+        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
 
     def get_export_formats(self):
         """
         Returns available export formats.
         """
-        return [f for f in (CSV, XLSX) if f().can_export()]
+        return [f for f in (XLSX, CSV) if f().can_export()]
 
     # class Media:
     #     if settings.REPANIER_SETTINGS_STOCK:
