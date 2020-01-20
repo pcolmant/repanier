@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from repanier.admin.tools import get_query_preserved_filters
+from repanier.admin.tools import get_query_preserved_filters, get_query_filters
 
 
 def repanier_settings(request):
@@ -17,7 +17,8 @@ def repanier_settings(request):
             "REPANIER_HOME_SITE": REPANIER_SETTINGS_HOME_SITE,
             "REPANIER_DISPLAY_LANGUAGE": settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE,
             "REPANIER_ADMIN_MANAGE_ACCOUNTING": settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
-            "form_url": get_query_preserved_filters()
+            "form_url": get_query_preserved_filters(),
+            "change_list_filter": get_query_filters()
         }
     else:
         # Only in the "not" admin

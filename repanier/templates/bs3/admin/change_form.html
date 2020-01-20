@@ -18,7 +18,7 @@
         <div class="breadcrumbs">
             {% trans 'Manage' %}
             &rsaquo; {% if has_view_permission %}
-            <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}
+            <a href="{% url opts|admin_urlname:'changelist' %}{{ change_list_filter }}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}
             {{ opts.verbose_name_plural|capfirst }}{% endif %}
             &rsaquo; {% if add %}{% blocktrans with name=opts.verbose_name %}Add {{ name }}{% endblocktrans %}{% else %}
             {{ original|truncatewords:"18" }}{% endif %}
