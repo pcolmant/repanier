@@ -141,7 +141,7 @@ class Permanence(TranslatableModel):
             button_download = format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
                 download_url,
-                _("Download"),
+                _("Export"),
             )
             link = []
             if len(self.producers.all()) > 0:
@@ -165,7 +165,7 @@ class Permanence(TranslatableModel):
             button_download = format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
                 download_url,
-                _("Download"),
+                _("Export"),
             )
 
             link = []
@@ -214,7 +214,7 @@ class Permanence(TranslatableModel):
                 button_download = format_html(
                     '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span>',
                     download_url,
-                    _("Download"),
+                    _("Export"),
                 )
             else:
                 button_download = EMPTY_STRING
@@ -360,7 +360,7 @@ class Permanence(TranslatableModel):
             button_download = format_html(
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-download"></i></a></span> ',
                 download_url,
-                _("Download"),
+                _("Export"),
             )
             link = []
             delivery_save = None
