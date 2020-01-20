@@ -17,8 +17,8 @@ class ProductFilterByProducer(SimpleListFilter):
     # right admin sidebar.
     title = _("Producers")
     # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'producer'
-    template = get_admin_template_name('producer_filter.html')
+    parameter_name = "producer"
+    template = get_admin_template_name("producer_filter.html")
 
     def lookups(self, request, model_admin):
         """
@@ -29,9 +29,10 @@ class ProductFilterByProducer(SimpleListFilter):
         in the right sidebar.
         """
         # This list is a collection of producer.id, .name
-        return [(c.id, c.short_profile_name) for c in
-                Producer.objects.filter(is_active=True)
-                ]
+        return [
+            (c.id, c.short_profile_name)
+            for c in Producer.objects.filter(is_active=True)
+        ]
 
     def queryset(self, request, queryset):
         """
@@ -45,32 +46,41 @@ class ProductFilterByProducer(SimpleListFilter):
         else:
             return queryset
 
+
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
     title = _("Departments")
     parameter_name = "department_for_customer"
-    template = get_admin_template_name('department_filter.html')
+    template = get_admin_template_name("department_filter.html")
 
     def lookups(self, request, model_admin):
         producer_id = request.GET.get("producer")
         if producer_id:
-            inner_qs = Product.objects.filter(producer_id=producer_id).order_by(
-                "department_for_customer").distinct(
-                "department_for_customer__id")
+            inner_qs = (
+                Product.objects.filter(producer_id=producer_id)
+                .order_by("department_for_customer")
+                .distinct("department_for_customer__id")
+            )
         else:
             permanence_id = request.GET.get("permanence")
             if permanence_id:
-                inner_qs = Product.objects.filter(offeritem__permanence_id=permanence_id).order_by(
-                    "department_for_customer").distinct(
-                    "department_for_customer__id")
+                inner_qs = (
+                    Product.objects.filter(offeritem__permanence_id=permanence_id)
+                    .order_by("department_for_customer")
+                    .distinct("department_for_customer__id")
+                )
             else:
-                inner_qs = Product.objects.all().order_by("department_for_customer").distinct(
-                    "department_for_customer__id")
+                inner_qs = (
+                    Product.objects.all()
+                    .order_by("department_for_customer")
+                    .distinct("department_for_customer__id")
+                )
 
-        return [(d.id, d.short_name) for d in
-                LUT_DepartmentForCustomer.objects.filter(
-                    product__in=inner_qs
-                ).prefetch_related('translations')
-                ]
+        return [
+            (d.id, d.short_name)
+            for d in LUT_DepartmentForCustomer.objects.filter(
+                product__in=inner_qs
+            ).prefetch_related("translations")
+        ]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -79,23 +89,27 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
             # of producer and that this producer doesn't have such products.
             # This is a way to avoid it
             producer_id = request.GET.get("producer")
-            if Product.objects.filter(
-                    producer_id=producer_id,
-                    department_for_customer_id=self.value()
-            ).order_by("?").exists():
+            if (
+                Product.objects.filter(
+                    producer_id=producer_id, department_for_customer_id=self.value()
+                )
+                .order_by("?")
+                .exists()
+            ):
                 return queryset.filter(department_for_customer_id=self.value())
         return queryset
 
 
-class ProductFilterByProductioMode(SimpleListFilter):
+class ProductFilterByProductionMode(SimpleListFilter):
     title = _("Productions modes")
-    parameter_name = 'production_mode'
-    template = get_admin_template_name('production_mode_filter.html')
+    parameter_name = "production_mode"
+    template = get_admin_template_name("production_mode_filter.html")
 
     def lookups(self, request, model_admin):
-        return [(p.id, p.short_name) for p in
-                LUT_ProductionMode.objects.filter(is_active=True)
-                ]
+        return [
+            (p.id, p.short_name)
+            for p in LUT_ProductionMode.objects.filter(is_active=True)
+        ]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -106,13 +120,11 @@ class ProductFilterByProductioMode(SimpleListFilter):
 
 class ProductFilterByPlacement(SimpleListFilter):
     title = _("Products placements")
-    parameter_name = 'placement'
-    template = get_admin_template_name('placement_filter.html')
+    parameter_name = "placement"
+    template = get_admin_template_name("placement_filter.html")
 
     def lookups(self, request, model_admin):
-        return [(p[0], p[1]) for p in
-                LUT_PRODUCT_PLACEMENT
-                ]
+        return [(p[0], p[1]) for p in LUT_PRODUCT_PLACEMENT]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -123,13 +135,11 @@ class ProductFilterByPlacement(SimpleListFilter):
 
 class ProductFilterByVatLevel(SimpleListFilter):
     title = _("VAT")
-    parameter_name = 'vat_level'
-    template = get_admin_template_name('vat_level_filter.html')
+    parameter_name = "vat_level"
+    template = get_admin_template_name("vat_level_filter.html")
 
     def lookups(self, request, model_admin):
-        return [(p[0], p[1]) for p in
-                LUT_ALL_VAT
-                ]
+        return [(p[0], p[1]) for p in LUT_ALL_VAT]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -140,21 +150,41 @@ class ProductFilterByVatLevel(SimpleListFilter):
 
 class PurchaseFilterByCustomer(SimpleListFilter):
     title = _("Customers")
-    parameter_name = 'customer'
-    template = get_admin_template_name('customer_filter.html')
+    parameter_name = "customer"
+    template = get_admin_template_name("customer_filter.html")
 
     def lookups(self, request, model_admin):
-        permanence_id = request.GET.get('permanence', None)
+        permanence_id = request.GET.get("permanence", None)
         list_filter = []
         for c in Customer.objects.filter(may_order=True):
-            ci = CustomerInvoice.objects.filter(permanence_id=permanence_id, customer_id=c.id).order_by('?').first()
+            ci = (
+                CustomerInvoice.objects.filter(
+                    permanence_id=permanence_id, customer_id=c.id
+                )
+                .order_by("?")
+                .first()
+            )
             if ci is not None:
                 if ci.is_order_confirm_send:
                     list_filter.append(
-                        (c.id, "{} {} ({})".format(settings.LOCK_UNICODE, c.short_basket_name,
-                                                   ci.get_total_price_with_tax())))
+                        (
+                            c.id,
+                            "{} {} ({})".format(
+                                settings.LOCK_UNICODE,
+                                c.short_basket_name,
+                                ci.get_total_price_with_tax(),
+                            ),
+                        )
+                    )
                 else:
-                    list_filter.append((c.id, "{} ({})".format(c.short_basket_name, ci.total_price_with_tax)))
+                    list_filter.append(
+                        (
+                            c.id,
+                            "{} ({})".format(
+                                c.short_basket_name, ci.total_price_with_tax
+                            ),
+                        )
+                    )
             else:
                 list_filter.append((c.id, c.short_basket_name))
         return list_filter
@@ -168,16 +198,27 @@ class PurchaseFilterByCustomer(SimpleListFilter):
 
 class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
     title = _("Producers")
-    parameter_name = 'producer'
-    template = get_admin_template_name('producer_filter.html')
+    parameter_name = "producer"
+    template = get_admin_template_name("producer_filter.html")
 
     def lookups(self, request, model_admin):
-        permanence_id = request.GET.get('permanence', None)
+        permanence_id = request.GET.get("permanence", None)
         list_filter = []
         for p in Producer.objects.filter(permanence=permanence_id):
-            pi = ProducerInvoice.objects.filter(permanence_id=permanence_id, producer_id=p.id).order_by('?').first()
+            pi = (
+                ProducerInvoice.objects.filter(
+                    permanence_id=permanence_id, producer_id=p.id
+                )
+                .order_by("?")
+                .first()
+            )
             if pi is not None:
-                list_filter.append((p.id, "{} ({})".format(p.short_profile_name, pi.total_price_with_tax)))
+                list_filter.append(
+                    (
+                        p.id,
+                        "{} ({})".format(p.short_profile_name, pi.total_price_with_tax),
+                    )
+                )
             else:
                 list_filter.append((p.id, p.short_profile_name))
         return list_filter
@@ -191,14 +232,17 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
 
 class PurchaseFilterByPermanence(SimpleListFilter):
     title = _("Permanences")
-    parameter_name = 'permanence'
+    parameter_name = "permanence"
 
     def lookups(self, request, model_admin):
-        permanence_id = request.GET.get('permanence', None)
+        permanence_id = request.GET.get("permanence", None)
         if permanence_id is None:
-            return [(p.id, p.get_permanence_display()) for p in
-                    Permanence.objects.filter(status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND])
-                    ]
+            return [
+                (p.id, p.get_permanence_display())
+                for p in Permanence.objects.filter(
+                    status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]
+                )
+            ]
         else:
             return []
 
@@ -212,12 +256,13 @@ class PurchaseFilterByPermanence(SimpleListFilter):
 
 class OfferItemSendFilterByPermanence(SimpleListFilter):
     title = _("Permanences")
-    parameter_name = 'permanence'
+    parameter_name = "permanence"
 
     def lookups(self, request, model_admin):
-        return [(p.id, p.get_permanence_display()) for p in
-                Permanence.objects.filter(status=PERMANENCE_SEND)
-                ]
+        return [
+            (p.id, p.get_permanence_display())
+            for p in Permanence.objects.filter(status=PERMANENCE_SEND)
+        ]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -231,10 +276,10 @@ class OfferItemSendFilterByPermanence(SimpleListFilter):
 
 class OfferItemFilter(SimpleListFilter):
     title = _("Products")
-    parameter_name = 'is_filled_exact'
+    parameter_name = "is_filled_exact"
 
     def lookups(self, request, model_admin):
-        return [(1, _('Only invoiced')), ]
+        return [(1, _("Only invoiced"))]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -245,25 +290,30 @@ class OfferItemFilter(SimpleListFilter):
 
 class BankAccountFilterByStatus(SimpleListFilter):
     title = _("Status")
-    parameter_name = 'is_filled_exact'
+    parameter_name = "is_filled_exact"
 
     def lookups(self, request, model_admin):
         return [
-            (1, _('Not invoiced')),
-            (2, _('Balance')),
-            (3, _('Loses and profits')),
-            (4, _('Taxes'))]
+            (1, _("Not invoiced")),
+            (2, _("Balance")),
+            (3, _("Loses and profits")),
+            (4, _("Taxes")),
+        ]
 
     def queryset(self, request, queryset):
         value = self.value()
         if value:
             if value == "1":
                 return queryset.filter(
-                    Q(permanence_id__isnull=True, customer_id__isnull=False) |
-                    Q(permanence_id__isnull=True, producer_id__isnull=False)
+                    Q(permanence_id__isnull=True, customer_id__isnull=False)
+                    | Q(permanence_id__isnull=True, producer_id__isnull=False)
                 )
             elif value == "2":
-                return queryset.filter(permanence_id__isnull=False, customer_id__isnull=True, producer_id__isnull=True)
+                return queryset.filter(
+                    permanence_id__isnull=False,
+                    customer_id__isnull=True,
+                    producer_id__isnull=True,
+                )
             elif value == "3":
                 return queryset.filter(operation_status=BANK_PROFIT)
             else:
