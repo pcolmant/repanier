@@ -1,42 +1,42 @@
 Django==2.2.9
 django-cms==3.7.1
 # https://github.com/divio/django-cms/archive/develop.zip
-Pillow==6.2.0
+Pillow==6.2.1
 Unidecode==1.0.23
-django-debug-toolbar==2.0
+django-debug-toolbar==2.1
 diff-match-patch==20181111
 django-classy-tags==0.9.0
-django-crispy-forms==1.7.2
-django-easy-select2==1.5.5
-django-filer==1.5.0
-django-formtools==2.1
-django-import-export==1.2.0
-django-mptt-admin==0.7.1
+django-crispy-forms==1.8.1
+django-easy-select2==1.5.6
+django-filer==1.6.0
+django-formtools==2.2
+django-import-export==2.0.1
+django-mptt-admin==1.0.0
 django-mptt==0.10.0
-django-parler==2.0
-django-polymorphic==2.0.3
+django-parler==2.0.1
+django-polymorphic==2.1.2
 django-recurrence==1.10.1
-django-reversion==3.0.4
+django-reversion==3.0.5
 django-sekizai==1.0.0
-django-treebeard==4.3
+django-treebeard==4.3.1
 djangocms-admin-style==1.4.0
 djangocms-attributes-field==1.1.0
 djangocms-file==2.3.0
-djangocms-link==2.4.0
-djangocms-picture==2.2.1
+djangocms-link==2.5.0
+djangocms-picture==2.3.0
 djangocms-text-ckeditor==3.8.0
-djangocms-video==2.1.1
-djangorestframework==3.10.3
-easy-thumbnails==2.6
+djangocms-video==2.2.0
+djangorestframework==3.11.0
+easy-thumbnails==2.7
 html5lib>=0.999999999
 jsonfield==2.0.2
 odfpy==1.4.0 # pin version number. used by tablib. see tablib requirements
 olefile==0.46
 # moved to repanier.packages : openpyxl==1.8.6, with bug fix on worker.worksheet.py lines 103-106
 openpyxl==2.6.2 # pin version number. used by tablib. see tablib requirements
-psycopg2-binary==2.8.2
+psycopg2-binary==2.8.4
 PyYAML ==5.1.1 # pin version number. used by tablib. see tablib requirements
-python-dateutil==2.8.0
+python-dateutil==2.8.1
 pytz==2019.1
 rcssmin==1.0.6
 rjsmin==1.0.12
