@@ -26,7 +26,7 @@ from parler.forms import TranslatableModelForm
 from repanier.admin.admin_filter import (
     ProductFilterByDepartmentForThisProducer,
     ProductFilterByProducer,
-    ProductFilterByProductioMode,
+    ProductFilterByProductionMode,
     ProductFilterByPlacement,
     ProductFilterByVatLevel,
 )
@@ -567,7 +567,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             "is_active",
         ]
         if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-            list_filter += [ProductFilterByProductioMode]
+            list_filter += [ProductFilterByProductionMode]
         if settings.REPANIER_SETTINGS_STOCK:
             list_filter += ["limit_order_quantity_to_stock"]
         return list_filter
