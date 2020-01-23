@@ -15,7 +15,6 @@ class PermanenceView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(PermanenceView, self).get_context_data(**kwargs)
-        context['DISPLAY_PRODUCER'] = settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM
 
         if self.request.user.is_anonymous:
             from repanier.apps import REPANIER_SETTINGS_CONFIG

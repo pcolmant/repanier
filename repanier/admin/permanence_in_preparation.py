@@ -392,7 +392,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "sub_title": _("Please, confirm the action : Export customer orders"),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "export_customer_order",
                 "permanence": permanence,
@@ -533,7 +532,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "sub_title": _("Please, confirm the action : open and send offers."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "open_order",
                 "permanence": permanence,
@@ -734,7 +732,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "sub_title": _("Please, confirm the action : send orders."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "close_order",
                 "permanence": permanence,
@@ -798,11 +795,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "sub_title": _(
-                    "How many weekly permanence(s) do you want to generate from this ?"
-                ),
                 "action": "generate_permanence",
                 "permanence": permanence,
+                "permanenceboard": PermanenceBoard.objects.filter(
+                    permanence=permanence_id
+                ).order_by("permanence_role"),
+                "deliverypoint": DeliveryBoard.objects.filter(
+                    permanence=permanence_id
+                ).order_by("delivery_point"),
                 "form": form,
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
             },

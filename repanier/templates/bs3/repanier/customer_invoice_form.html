@@ -160,7 +160,7 @@
                             </th>
                         {%  endif %}
                         <th>
-                        {% if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                        {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
                             {% trans "Producer" %}
                         {% else %}
                             {% trans "Department" %}
@@ -192,7 +192,7 @@
                                 </td>
                             {%  endif %}
                             <td>
-                            {%  if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                            {%  if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
                                 {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
                             {% else %}
                                 {{ purchase.offer_item.department_for_customer.short_name | truncatechars:15 }}
@@ -245,7 +245,7 @@
                             {% trans "Customer" %}
                         </th>
                         <th>
-                            {% if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                            {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
                                 {% trans "Producer" %}
                             {% else %}
                                 {% trans "Department" %}
@@ -275,7 +275,7 @@
                                 {{ purchase.customer.short_basket_name }}
                             </td>
                             <td>
-                                {%  if DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
+                                {%  if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
                                     {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
                                 {% else %}
                                     {{ purchase.offer_item.department_for_customer.short_name | truncatechars:15 }}

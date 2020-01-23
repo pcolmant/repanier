@@ -32,3 +32,13 @@ def repanier_admin_paginator_number(cl, i):
             mark_safe(' class="end"' if i == cl.paginator.num_pages - 1 else ''),
             i + 1,
         )
+
+
+@register.filter
+def verbose_name(obj):
+    return obj._meta.verbose_name
+
+
+@register.filter
+def verbose_name_plural(obj):
+    return obj._meta.verbose_name_plural

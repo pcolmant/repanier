@@ -742,7 +742,6 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "sub_title": _("Please, confirm the action : send invoices."),
                 "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
                 "action": "send_invoices",
                 "permanence": permanence,

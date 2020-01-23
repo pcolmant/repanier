@@ -998,11 +998,12 @@ def rule_of_3_reload_purchase(
 
 def get_recurrence_dates(first_date, recurrences):
     dates = []
-    d_start = first_date
-    dt_start = new_datetime(d_start)
-    dt_end = new_datetime(d_start + datetime.timedelta(days=const.ONE_YEAR))
-    occurrences = recurrences.between(dt_start, dt_end, dtstart=dt_start, inc=True)
-    for occurrence in occurrences:
+    # d_start = first_date
+    # dt_start = new_datetime(d_start)
+    # dt_end = new_datetime(d_start + datetime.timedelta(days=const.ONE_YEAR))
+    # occurrences = recurrences.between(dt_start, dt_end, dtstart=dt_start, inc=True)
+    # occurrences = recurrences.occurrences()
+    for occurrence in recurrences.occurrences():
         dates.append(occurrence.date())
     return dates
 

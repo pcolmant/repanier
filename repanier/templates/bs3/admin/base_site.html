@@ -3,6 +3,7 @@
 
 {% block extrastyle %}
     {{ block.super }}
+    <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
     {# PCO : remove djangocms-admin-style include #}
     {#    {% include 'admin/inc/extrastyle.html' %}#}
     <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>

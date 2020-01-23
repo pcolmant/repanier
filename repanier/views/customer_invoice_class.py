@@ -27,10 +27,6 @@ class CustomerInvoiceView(DetailView):
         if context["object"] is None:
             # This customer has never been invoiced
             context["bank_account_set"] = BankAccount.objects.none()
-            if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-                context["DISPLAY_PRODUCERS_ON_ORDER_FORM"] = True
-            else:
-                context["DISPLAY_PRODUCERS_ON_ORDER_FORM"] = False
             purchase_set = Purchase.objects.none()
             context["purchase_set"] = purchase_set
             purchase_by_other_set = Purchase.objects.none()
@@ -48,14 +44,12 @@ class CustomerInvoiceView(DetailView):
             ).order_by("operation_date")
             context["bank_account_set"] = bank_account_set
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
-                context["DISPLAY_PRODUCERS_ON_ORDER_FORM"] = True
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
                     offer_item__translations__language_code=translation.get_language(),
                     is_box_content=False,
                 ).order_by("producer", "offer_item__translations__order_sort_order")
             else:
-                context["DISPLAY_PRODUCERS_ON_ORDER_FORM"] = False
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
                     offer_item__translations__language_code=translation.get_language(),

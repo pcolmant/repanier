@@ -52,7 +52,7 @@
                                         {% endif %}
                                         <div class="row">
                                             <b>{{ permanenceboard.permanence }}</b>
-                                            {% if DISPLAY_PRODUCER %}&nbsp;:&nbsp;
+                                            {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}&nbsp;:&nbsp;
                                                 {% for producer in permanenceboard.permanence.producers.all %}
                                                     {{ producer }}{% if not forloop.last %}, {% endif %}
                                                 {% endfor %}
