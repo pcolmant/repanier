@@ -7,8 +7,6 @@ from django.contrib.sitemaps.views import sitemap
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.i18n import JavaScriptCatalog
 
-js_info_dict = {"packages": ("recurrence",)}
-
 from django.urls import path
 
 urlpatterns = i18n_patterns(
@@ -21,7 +19,9 @@ urlpatterns = i18n_patterns(
         name="django.contrib.sitemaps.views.sitemap",
     ),
     path(
-        "jsi18n/", JavaScriptCatalog.as_view(), js_info_dict, name="javascript-catalog"
+        "jsi18n/",
+        JavaScriptCatalog.as_view(packages=["recurrence"]),
+        name="javascript-catalog",
     ),
     path("", include("cms.urls")),
 )
