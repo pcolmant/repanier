@@ -435,8 +435,11 @@ div.repanier-objects-tools {
 
 /*** custom checkboxes ***/
 
-input[type=checkbox]:not(.action-select, .recurrence-widget) {
+div.form-row input[type=checkbox] {
     display: none;
+}
+div.recurrence-widget input[type=checkbox] {
+    display: inline-block;
 }
 
 /* to hide the checkbox itself */
