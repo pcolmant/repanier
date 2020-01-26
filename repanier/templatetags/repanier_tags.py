@@ -33,7 +33,7 @@ def repanier_admins(*args, **kwargs):
     return mark_safe(
         ", ".join(
             [
-                '{0} <<a href="mailto:{1}">{1}</a>>'.format(admin[0], admin[1])
+                '{0} <a href="mailto:{1}">{1}</a>'.format(admin[0], admin[1])
                 for admin in settings.ADMINS
             ]
         )
