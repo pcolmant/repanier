@@ -3,8 +3,8 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
+from django.shortcuts import render as render_to_response
 from django.shortcuts import resolve_url
-from django.template.response import TemplateResponse
 from django.utils.http import is_safe_url
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -131,4 +131,4 @@ def login_view(
     }
     if extra_context is not None:
         context.update(extra_context)
-    return TemplateResponse(request, template_name, context)
+    return render_to_response(request, template_name, context)
