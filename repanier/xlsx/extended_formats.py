@@ -1,6 +1,5 @@
 import tablib
 from import_export.formats.base_formats import TablibFormat, XLSX_IMPORT
-from django.utils.six import moves
 import repanier.packages.openpyxl as openpyxl_1_8_6
 
 
@@ -23,7 +22,7 @@ class XLSX_OPENPYXL_1_8_6(TablibFormat):
         sheet = xlsx_book.active
 
         dataset.headers = [cell.value for cell in sheet.rows[0]]
-        for i in moves.range(1, len(sheet.rows)):
+        for i in range(1, len(sheet.rows)):
             row_values = [cell.value for cell in sheet.rows[i]]
             dataset.append(row_values)
         return dataset
