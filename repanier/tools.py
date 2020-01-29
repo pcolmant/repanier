@@ -16,11 +16,9 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
-from django.utils.datetime_safe import new_datetime
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from six import string_types
 
 from repanier import apps
 from repanier import const
@@ -149,7 +147,7 @@ def cap_to_bytes_length(unicode_text, byte_limit):
 
 def cap(s, l):
     if s is not None:
-        if not isinstance(s, string_types):
+        if not isinstance(s, str):
             s = str(s)
         s = s if len(s) <= l else s[0 : l - 4] + "..."
         return s
