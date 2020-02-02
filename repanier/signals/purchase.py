@@ -66,15 +66,14 @@ def purchase_pre_save(sender, **kwargs):
     else:
         quantity = purchase.quantity_invoiced
         delta_quantity = quantity - purchase.previous_quantity_invoiced
+
+    purchase.set_customer_price_list_multiplier()
     if purchase.is_box_content:
-        purchase.is_resale_price_fixed = True
         if delta_quantity != DECIMAL_ZERO:
             OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
                 quantity_invoiced=F("quantity_invoiced") + delta_quantity
             )
     else:
-        purchase.is_resale_price_fixed = purchase.offer_item.is_resale_price_fixed
-        purchase.set_customer_price_list_multiplier()
         unit_deposit = purchase.get_unit_deposit()
         purchase.purchase_price.amount = (
             (purchase.get_producer_unit_price() + unit_deposit) * quantity

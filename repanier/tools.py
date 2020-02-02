@@ -112,39 +112,6 @@ def send_sms(sms_nr=None, sms_msg=None):
         pass
 
 
-LENGTH_BY_PREFIX = [
-    (0xC0, 2),  # first byte mask, total codepoint length
-    (0xE0, 3),
-    (0xF0, 4),
-    (0xF8, 5),
-    (0xFC, 6),
-]
-
-
-def codepoint_length(first_byte):
-    if first_byte < 128:
-        return 1  # ASCII
-    for mask, length in LENGTH_BY_PREFIX:
-        if first_byte & 0xF0 == mask:
-            return length
-        elif first_byte & 0xF8 == 0xF8:
-            return length
-    assert False, "Invalid byte %r" % first_byte
-
-
-def cap_to_bytes_length(unicode_text, byte_limit):
-    utf8_bytes = unicode_text
-    cut_index = 0
-    while cut_index < len(utf8_bytes):
-        step = codepoint_length(ord(utf8_bytes[cut_index]))
-        if cut_index + step > byte_limit:
-            # can't go a whole codepoint further, time to cut
-            return utf8_bytes[:cut_index] + "..."
-        else:
-            cut_index += step
-    return utf8_bytes
-
-
 def cap(s, l):
     if s is not None:
         if not isinstance(s, str):
@@ -701,7 +668,7 @@ def clean_offer_item(permanence, queryset):
         offer_item.manage_production = producer.represent_this_buyinggroup
         # Those offer_items not subjects to price modifications
         offer_item.is_resale_price_fixed = (
-            product.is_box or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
+            product.is_box or product.is_box_content or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
         )
         offer_item.price_list_multiplier = (
             const.DECIMAL_ONE

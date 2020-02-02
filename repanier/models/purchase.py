@@ -146,16 +146,14 @@ class Purchase(models.Model):
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, db_index=True)
 
     def set_customer_price_list_multiplier(self):
+        self.price_list_multiplier = DECIMAL_ONE
+        self.is_resale_price_fixed = self.offer_item.is_resale_price_fixed
         if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
             if (
-                self.is_resale_price_fixed
-                or self.offer_item.price_list_multiplier < DECIMAL_ONE
+                not self.is_resale_price_fixed
+                and not (self.offer_item.price_list_multiplier < DECIMAL_ONE)
             ):
-                self.price_list_multiplier = DECIMAL_ONE
-            else:
                 self.price_list_multiplier = self.customer.price_list_multiplier
-        else:
-            self.price_list_multiplier = DECIMAL_ONE
 
     def get_customer_unit_price(self):
         offer_item = self.offer_item
