@@ -380,20 +380,9 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_change_permission(self, request, bank_account=None):
         return self.has_add_permission(request)
 
-    # def get_urls(self):
-    #     urls = super(BankAccountAdmin, self).get_urls()
-    #     my_urls = [
-    #         url(r'^expenses_to_be_apportioned/$', self.expenses_to_be_apportioned),
-    #     ]
-    #     return my_urls + urls
-
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = ["is_updated_on", "customer_invoice", "producer_invoice"]
         return readonly_fields
-
-    # def expenses_to_be_apportioned(self, request):
-    #     redirect_to = reverse('admin:repanier_bankaccount_changelist', )
-    #     return HttpResponseRedirect(redirect_to)
 
     def get_actions(self, request):
         actions = super(BankAccountAdmin, self).get_actions(request)
@@ -419,6 +408,3 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         Returns available export formats.
         """
         return [f for f in (XLSX, CSV) if f().can_export()]
-
-    # class Media:
-    #     js = ('js/expenses_to_be_apportioned.js',)

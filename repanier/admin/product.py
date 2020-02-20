@@ -4,13 +4,12 @@ from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
-from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
 from django.db.models import F
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse, path
 from django.utils import translation
 from django.utils.formats import number_format
 from django.utils.html import format_html
@@ -50,7 +49,6 @@ from repanier.const import (
     LUT_VAT,
     LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
     LUT_PRODUCT_ORDER_UNIT,
-    PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
 )
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
@@ -744,8 +742,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def get_urls(self):
         urls = super(ProductAdmin, self).get_urls()
         custom_urls = [
-            url(
-                r"^(?P<product_id>.+)/duplicate-product/$",
+            path(
+                r"<int:product_id>/duplicate-product/",
                 self.admin_site.admin_view(self.duplicate_product),
                 name="duplicate-product",
             )

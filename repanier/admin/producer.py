@@ -2,12 +2,11 @@ from collections import OrderedDict
 
 from django import forms
 from django.conf import settings
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import Textarea
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, path
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from import_export import resources, fields
@@ -22,7 +21,7 @@ from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
-from repanier.tools import web_services_activated, get_repanier_static_name
+from repanier.tools import web_services_activated
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.widget import (
     IdWidget,
@@ -290,13 +289,13 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super(ProducerAdmin, self).get_urls()
         custom_urls = [
-            url(
-                r"^export-stock/$",
+            path(
+                "export-stock/",
                 self.admin_site.admin_view(self.export_stock),
                 name="producer-export-stock",
             ),
-            url(
-                r"^import-stock/$",
+            path(
+                "import-stock/",
                 self.admin_site.admin_view(self.import_stock),
                 name="producer-import-stock",
             ),

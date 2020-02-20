@@ -2,15 +2,13 @@ import logging
 from urllib.parse import parse_qsl
 
 from django import forms
-from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.urls import reverse, path
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-
 # from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
 from import_export import resources, fields
@@ -282,13 +280,10 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         urls = super(PurchaseAdmin, self).get_urls()
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             my_urls = [
-                url(
-                    r"^is_order_confirm_send/$",
+                path(
+                    "is_order_confirm_send/",
                     self.admin_site.admin_view(self.is_order_confirm_send),
                 ),
-                # url(r'^is_order_confirm_not_send/$', self.admin_site.admin_view(self.is_order_confirm_not_send)),
-                # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), {'packages': ('repanier',)}, name='javascript-catalog'),
-                # url(r'^jsi18n/$', JavaScriptCatalog.as_view(), name='javascript-catalog'),
             ]
             return my_urls + urls
         return urls

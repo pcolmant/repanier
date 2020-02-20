@@ -2,7 +2,6 @@ import logging
 import threading
 
 from django import forms
-from django.conf.urls import url
 from django.contrib import admin
 from django.core.checks import messages
 from django.db import transaction
@@ -10,7 +9,7 @@ from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse, path
 from django.utils import timezone
 from django.utils import translation
 from django.utils.html import format_html
@@ -263,48 +262,48 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     def get_urls(self):
         urls = super(PermanenceInPreparationAdmin, self).get_urls()
         custom_urls = [
-            url(
-                r"^(?P<permanence_id>.+)/export-offer/$",
+            path(
+                "<int:permanence_id>/export-offer/",
                 self.admin_site.admin_view(self.export_offer),
                 name="permanence-export-offer",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-customer-opened-order/$",
+            path(
+                "<int:permanence_id>/export-customer-opened-order/",
                 self.admin_site.admin_view(self.export_customer_opened_order),
                 name="permanence-export-customer-opened-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-customer-closed-order/$",
+            path(
+                "<int:permanence_id>/export-customer-closed-order/",
                 self.admin_site.admin_view(self.export_customer_closed_order),
                 name="permanence-export-customer-closed-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-producer-opened-order/$",
+            path(
+                "<int:permanence_id>/export-producer-opened-order/",
                 self.admin_site.admin_view(self.export_producer_opened_order),
                 name="permanence-export-producer-opened-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/export-producer-closed-order/$",
+            path(
+                "<int:permanence_id>/export-producer-closed-order/",
                 self.admin_site.admin_view(self.export_producer_closed_order),
                 name="permanence-export-producer-closed-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/open-order/$",
+            path(
+                "<int:permanence_id>/open-order/",
                 self.admin_site.admin_view(self.open_order),
                 name="permanence-open-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/close-order/$",
+            path(
+                "<int:permanence_id>/close-order/",
                 self.admin_site.admin_view(self.close_order),
                 name="permanence-close-order",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/back-to-scheduled/$",
+            path(
+                "<int:permanence_id>/back-to-scheduled/",
                 self.admin_site.admin_view(self.back_to_scheduled),
                 name="permanence-back-to-scheduled",
             ),
-            url(
-                r"^(?P<permanence_id>.+)/generate-permanence/$",
+            path(
+                "<int:permanence_id>/generate-permanence/",
                 self.admin_site.admin_view(self.generate_permanence),
                 name="generate-permanence",
             ),
