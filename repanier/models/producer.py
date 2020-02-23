@@ -1,16 +1,16 @@
 import datetime
 import uuid
 
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone, translation
-from django.utils.html import format_html
 from django.utils.formats import number_format
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 
 from repanier.const import (
     EMPTY_STRING,
@@ -22,7 +22,6 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
     PERMANENCE_OPENED,
     PERMANENCE_SEND,
-    TWO_DECIMALS,
 )
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
