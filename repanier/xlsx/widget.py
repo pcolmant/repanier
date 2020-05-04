@@ -1,7 +1,7 @@
 import datetime
 
 from django.utils import datetime_safe
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from import_export.widgets import CharWidget, ForeignKeyWidget, DecimalWidget, ManyToManyWidget, \
     BooleanWidget, Widget
 
@@ -186,7 +186,7 @@ class TranslatedManyToManyWidget(ManyToManyWidget):
         return result
 
     def render(self, array_values, obj=None):
-        ids = [smart_text(getattr(obj, self.field)) for obj in array_values.all()]
+        ids = [smart_str(getattr(obj, self.field)) for obj in array_values.all()]
         return self.separator.join(ids)
 
 
