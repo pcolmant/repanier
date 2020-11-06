@@ -9,3 +9,5 @@ cache
 /mysite/_1_dev_gassine.ini
 /mysite/_1_dev_buisson.ini
 /mysite/collect-static/
+/mysite/settings.py
+/mysite/mysite.ini
