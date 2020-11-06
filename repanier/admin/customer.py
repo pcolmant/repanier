@@ -41,13 +41,12 @@ class UserDataForm(forms.ModelForm):
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(UserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        # cleaned_data = super(UserDataForm, self).clean()
         username_field_name = "short_basket_name"
         username = self.cleaned_data.get(username_field_name)
         user_error1 = _("The given short_basket_name must be set")
@@ -80,7 +79,7 @@ class UserDataForm(forms.ModelForm):
                     self.add_error(
                         "price_list_multiplier",
                         _(
-                            "If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE."
+                            "If the customer is member of a group, the customer.price_list_multiplier must be set to ONE."
                         ),
                     )
             is_active = self.cleaned_data.get("is_active")
@@ -127,7 +126,7 @@ class UserDataForm(forms.ModelForm):
                 # return cleaned_data
 
     def save(self, *args, **kwargs):
-        super(UserDataForm, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         change = self.instance.id is not None
         short_basket_name = self.data["short_basket_name"]
         email = self.data["email"].lower()
@@ -355,7 +354,7 @@ class CustomerWithUserDataForm(UserDataForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["delivery_point"].widget.can_add_related = False
         self.fields["delivery_point"].widget.can_delete_related = False
 
@@ -412,7 +411,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     get_last_login.admin_order_field = "user__last_login"
 
     def get_actions(self, request):
-        actions = super(CustomerWithUserDataAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         this_year = timezone.now().year
         actions.update(
             OrderedDict(
@@ -516,7 +515,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         return []
 
     def get_form(self, request, customer=None, **kwargs):
-        form = super(CustomerWithUserDataAdmin, self).get_form(
+        form = super().get_form(
             request, customer, **kwargs
         )
         email_field = form.base_fields["email"]
@@ -538,7 +537,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         return form
 
     def get_queryset(self, request):
-        qs = super(CustomerWithUserDataAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(is_group=False)
         return qs
 
@@ -547,7 +546,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         form.user.is_staff = False
         form.user.is_active = customer.is_active
         form.user.save()
-        super(CustomerWithUserDataAdmin, self).save_model(
+        super().save_model(
             request, customer, form, change
         )
         if customer.delivery_point is not None:

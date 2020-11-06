@@ -146,14 +146,12 @@ class Purchase(models.Model):
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, db_index=True)
 
     def set_customer_price_list_multiplier(self):
-        self.price_list_multiplier = DECIMAL_ONE
         self.is_resale_price_fixed = self.offer_item.is_resale_price_fixed
-        if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-            if (
-                not self.is_resale_price_fixed
-                and not (self.offer_item.price_list_multiplier < DECIMAL_ONE)
-            ):
-                self.price_list_multiplier = self.customer.price_list_multiplier
+        if not self.is_resale_price_fixed:
+            # customer.price_list_multiplier == DECIMAL_ONE if not REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE
+            self.price_list_multiplier = self.customer.price_list_multiplier
+        else:
+            self.price_list_multiplier = DECIMAL_ONE
 
     def get_customer_unit_price(self):
         offer_item = self.offer_item
@@ -265,25 +263,9 @@ class Purchase(models.Model):
         if not self.pk:
             # This code only happens if the objects is not in the database yet.
             # Otherwise it would have pk
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    permanence_id=self.permanence_id, customer_id=self.customer_id
-                )
-                .only("id")
-                .order_by("?")
-                .first()
+            self.customer_invoice = self.permanence.get_or_create_invoice(
+                customer=self.customer, refresh=False
             )
-            if customer_invoice is None:
-                customer_invoice = CustomerInvoice.objects.create(
-                    permanence_id=self.permanence_id,
-                    customer_id=self.customer_id,
-                    customer_charged_id=self.customer_id,
-                    status=self.status,
-                )
-                customer_invoice.set_order_delivery(delivery=None)
-                customer_invoice.calculate_order_price()
-                customer_invoice.save()
-            self.customer_invoice = customer_invoice
             producer_invoice = (
                 ProducerInvoice.objects.filter(
                     permanence_id=self.permanence_id, producer_id=self.producer_id
@@ -316,7 +298,7 @@ class Purchase(models.Model):
                     producer_id=self.producer_id,
                 )
             self.customer_producer_invoice = customer_producer_invoice
-        super(Purchase, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @transaction.atomic
     def save_box(self):

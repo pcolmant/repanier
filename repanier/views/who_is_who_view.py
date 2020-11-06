@@ -15,23 +15,21 @@ from repanier.tools import get_repanier_template_name
 @never_cache
 def who_is_who_view(request):
     from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+
     if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
         raise Http404
-    q = request.POST.get('q', None)
-    customer_list = Customer.objects.filter(may_order=True, represent_this_buyinggroup=False).order_by(
-        "long_basket_name")
+    q = request.POST.get("q", None)
+    customer_list = Customer.objects.filter(
+        may_order=True, represent_this_buyinggroup=False
+    ).order_by("long_basket_name")
     if q is not None:
-        customer_list = customer_list.filter(Q(long_basket_name__icontains=q) | Q(city__icontains=q))
-    staff_list = Staff.objects.filter(
-        is_active=True, can_be_contacted=True
-    )
+        customer_list = customer_list.filter(
+            Q(long_basket_name__icontains=q) | Q(city__icontains=q)
+        )
+    staff_list = Staff.objects.filter(is_active=True, can_be_contacted=True)
     template_name = get_repanier_template_name("who_is_who.html")
     return render(
         request,
         template_name,
-        {
-            'staff_list': staff_list,
-            'customer_list': customer_list,
-            'q': q
-        }
+        {"staff_list": staff_list, "customer_list": customer_list, "q": q},
     )

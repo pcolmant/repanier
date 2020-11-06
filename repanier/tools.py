@@ -240,7 +240,7 @@ def payment_message(customer, permanence):
             payment_needed = total_price_with_tax
 
         bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
-        if bank_account_number is not None:
+        if bank_account_number:
             if payment_needed.amount > const.DECIMAL_ZERO:
                 if permanence.short_name:
                     communication = "{} ({})".format(
@@ -263,13 +263,18 @@ def payment_message(customer, permanence):
 
             else:
                 if customer.balance.amount != const.DECIMAL_ZERO:
-                    customer_payment_needed = '<br><font color="#51a351">{}.</font>'.format(
-                        _("Your account balance is sufficient")
+                    customer_payment_needed = (
+                        '<br><font color="#51a351">{}.</font>'.format(
+                            _("Your account balance is sufficient")
+                        )
                     )
                 else:
                     customer_payment_needed = const.EMPTY_STRING
         else:
-            customer_payment_needed = const.EMPTY_STRING
+            customer_payment_needed = "<br>{}.{}.".format(
+                _("This amount is indicative"),
+                _("Payment has to be made at the time of pick up"),
+            )
 
     return (
         customer_last_balance,
@@ -365,7 +370,7 @@ def create_or_update_one_purchase(
         if purchase is None:
             purchase = Purchase.objects.create(
                 permanence_id=offer_item.permanence_id,
-                offer_item_id=offer_item.id,
+                offer_item=offer_item,
                 producer_id=offer_item.producer_id,
                 customer_id=customer_id,
                 quantity_ordered=q_order
@@ -446,7 +451,7 @@ def create_or_update_one_purchase(
             else:
                 purchase = Purchase.objects.create(
                     permanence_id=offer_item.permanence_id,
-                    offer_item_id=offer_item.id,
+                    offer_item=offer_item,
                     producer_id=offer_item.producer_id,
                     customer_id=customer_id,
                     quantity_ordered=q_order,
@@ -795,12 +800,13 @@ def update_offer_item(product_id=None, producer_id=None):
     from repanier.models.permanence import Permanence
     from repanier.models.offeritem import OfferItem
 
-    # The user can modify the price of a product PERMANENCE_SEND via "rule_of_3_per_product"
+    # Let the user modify the price of a product PERMANENCE_SEND
     for permanence in Permanence.objects.filter(
         status__in=[
             const.PERMANENCE_PLANNED,
             const.PERMANENCE_OPENED,
             const.PERMANENCE_CLOSED,
+            const.PERMANENCE_SEND,
         ]
     ):
         if producer_id is None:
@@ -821,7 +827,7 @@ def web_services_activated(reference_site=None):
     version = None
     if reference_site:
         try:
-            url = urljoin(reference_site, reverse("version_rest"))
+            url = urljoin(reference_site, reverse("repanier:version_rest"))
             web_services = urlopen(url, timeout=0.5)
             rest_as_json = json.load(reader(web_services))
             if rest_as_json["version"] == "1":
@@ -835,16 +841,18 @@ def web_services_activated(reference_site=None):
 def get_html_basket_message(customer, permanence, status):
     invoice_msg = const.EMPTY_STRING
     payment_msg = const.EMPTY_STRING
-    customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
-        customer, permanence
-    )
+    (
+        customer_last_balance,
+        customer_on_hold_movement,
+        customer_payment_needed,
+        customer_order_amount,
+    ) = payment_message(customer, permanence)
     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING and customer_last_balance:
         invoice_msg = "<br>{} {}".format(
             customer_last_balance, customer_on_hold_movement
         )
-    if apps.REPANIER_SETTINGS_BANK_ACCOUNT is not None:
+    if customer_payment_needed:
         payment_msg = "<br>{}".format(customer_payment_needed)
-
     if status == const.PERMANENCE_OPENED:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             if permanence.with_delivery_point:
@@ -975,7 +983,7 @@ def get_recurrence_dates(first_date, recurrences):
 
 
 def round_gov_be(number):
-    """ Round according to Belgian market regulations
+    """Round according to Belgian market regulations
     http://economie.fgov.be/fr/entreprises/reglementation_de_marche/Pratiques_commerce/bienarrondir/
     If the total amount to be paid ends with 1 or 2 cents, it is rounded down to 0.00 euro.
     If the total amount to be paid ends with 3, 4, 6 or 7 cents, it is rounded to 0.05 euro.

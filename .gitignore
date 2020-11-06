@@ -6,3 +6,6 @@ cache
 .ropeproject
 
 *sublime-*
+/mysite/_1_dev_gassine.ini
+/mysite/_1_dev_buisson.ini
+/mysite/collect-static/

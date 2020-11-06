@@ -61,59 +61,21 @@ class RepanierConfig(AppConfig):
 
         # Imports are inside the function because its point is to avoid importing
         # the models when django.contrib."MODELS" isn't installed.
-        from django.contrib.auth.models import Group, Permission
-        from django.contrib.contenttypes.models import ContentType
 
         from repanier.models.configuration import Configuration
         from repanier.models.notification import Notification
-        from repanier.const import DECIMAL_ONE, WEBMASTER_GROUP
+        from repanier.const import DECIMAL_ONE
 
         try:
             # Create if needed and load RepanierSettings var when performing config.save()
             translation.activate(settings.LANGUAGE_CODE)
-
-            config = Configuration.objects.filter(id=DECIMAL_ONE).first()
-            if config is None:
-                config = Configuration.init_repanier()
-            config.save()
 
             notification = Notification.objects.filter(id=DECIMAL_ONE).first()
             if notification is None:
                 notification = Notification.objects.create()
             notification.save()
 
-            # Create groups with correct rights
-            # WEBMASTER
-            webmaster_group = (
-                Group.objects.filter(name=WEBMASTER_GROUP)
-                .only("id")
-                .order_by("?")
-                .first()
-            )
-            if webmaster_group is None:
-                webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
-            content_types = (
-                ContentType.objects.exclude(
-                    app_label__in=[
-                        "repanier",
-                        "admin",
-                        "auth",
-                        "contenttypes",
-                        "menus",
-                        "reversion",
-                        "sessions",
-                        "sites",
-                    ]
-                )
-                .only("id")
-                .order_by("?")
-            )
-            permissions = (
-                Permission.objects.filter(content_type__in=content_types)
-                .only("id")
-                .order_by("?")
-            )
-            webmaster_group.permissions.set(permissions)
+            config = Configuration.init_repanier()
 
             if not settings.DEBUG:
                 from repanier.email.email import RepanierEmail

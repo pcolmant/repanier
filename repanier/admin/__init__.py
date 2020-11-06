@@ -37,6 +37,9 @@ from repanier.admin.lut import (
     LUTDeliveryPointAdmin,
 )
 
+from django.contrib import admin
+
+
 admin.site.register(LUT_ProductionMode, LUTProductionModeAdmin)
 admin.site.register(LUT_PermanenceRole, LUTPermanenceRoleAdmin)
 admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)

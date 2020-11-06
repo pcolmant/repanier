@@ -9,11 +9,17 @@
     {{ block.super }}
 {% endblock %}
 
-{% if REPANIER_ADMIN_MANAGE_ACCOUNTING is True %}
-    {% block breadcrumbs %}
+
+{% block breadcrumbs %}
+    {% if REPANIER_ADMIN_MANAGE_ACCOUNTING is True %}
+        <div class="breadcrumbs">
+            {% trans 'Manage' %}
+            &rsaquo; {% trans "Billing offers" %}
+        </div>
+    {% else %}
         <div class="breadcrumbs">
             {% trans 'Manage' %}
             &rsaquo; {% trans "In archiving" %}
         </div>
-    {% endblock %}
-{% endif %}
+    {% endif %}
+{% endblock %}

@@ -19,7 +19,7 @@ def repanier_settings(request):
             "REPANIER_ADMIN_MANAGE_ACCOUNTING": settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
             "REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM": settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM,
             "form_url": get_query_preserved_filters(),
-            "change_list_filter": get_query_filters()
+            "change_list_filter": get_query_filters(),
         }
     else:
         # Only in the "not" admin
@@ -32,4 +32,3 @@ def repanier_settings(request):
             "REPANIER_DISPLAY_LANGUAGE": settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE,
             "REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM": settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM,
         }
-

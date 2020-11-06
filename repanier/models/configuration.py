@@ -216,70 +216,107 @@ class Configuration(TranslatableModel):
     @classmethod
     def init_repanier(cls):
         from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR
-        from repanier.models.producer import Producer
-        from repanier.models.bankaccount import BankAccount
-        from repanier.models.staff import Staff
-        from repanier.models.customer import Customer
-        from repanier.models.lut import LUT_DepartmentForCustomer
 
-        logger.debug("######## start of init_repanier")
-
-        # Create the configuration record managed via the admin UI
-        config = Configuration.objects.filter(id=DECIMAL_ONE).first()
-        if config is not None:
-            return config
         site = Site.objects.get_current()
         if site is not None:
             site.name = settings.REPANIER_SETTINGS_GROUP_NAME
             site.domain = settings.ALLOWED_HOSTS[0]
             site.save()
-        config = Configuration.objects.create(
-            group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
-            name=PERMANENCE_NAME_PERMANENCE,
-            bank_account="BE99 9999 9999 9999",
-            currency=CURRENCY_EUR,
-        )
-        config.init_email()
-        config.save()
 
+        cls.init_webmaster_group()
+
+        # Create the configuration record managed via the admin UI
+        config = Configuration.objects.filter(id=DECIMAL_ONE).first()
+        if config is None:
+            config = Configuration.objects.create(
+                group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
+                name=PERMANENCE_NAME_PERMANENCE,
+                bank_account="BE99 9999 9999 9999",
+                currency=CURRENCY_EUR,
+            )
+            config.init_email()
+            config.save()
+
+            coordinator = cls.init_firsts_users()
+            cls.init_home_page(coordinator)
+            cls.init_department()
+        else:
+            # Perform configuration_post_save
+            config.save()
+
+        return config
+
+    @classmethod
+    def init_webmaster_group(cls):
+        # Create WEBMASTER group with correct rights
+        from django.contrib.auth.models import Group, Permission
+        from django.contrib.contenttypes.models import ContentType
+
+        webmaster_group = (
+            Group.objects.filter(name=WEBMASTER_GROUP).only("id").order_by("?").first()
+        )
+        if webmaster_group is None:
+            webmaster_group = Group.objects.create(name=WEBMASTER_GROUP)
+        content_types = (
+            ContentType.objects.exclude(
+                app_label__in=[
+                    "repanier",
+                    "admin",
+                    "auth",
+                    "contenttypes",
+                    "menus",
+                    "reversion",
+                    "sessions",
+                    "sites",
+                ]
+            )
+            .only("id")
+            .order_by("?")
+        )
+        permissions = (
+            Permission.objects.filter(content_type__in=content_types)
+            .only("id")
+            .order_by("?")
+        )
+        webmaster_group.permissions.set(permissions)
+
+    @classmethod
+    def init_firsts_users(cls):
         # Create firsts users
+
+        from repanier.models.producer import Producer
+        from repanier.models.bankaccount import BankAccount
+        from repanier.models.staff import Staff
+        from repanier.models.customer import Customer
+
         Producer.get_or_create_group()
         customer_buyinggroup = Customer.get_or_create_group()
-        very_first_customer = Customer.get_or_create_the_very_first_customer()
-
-        BankAccount.open_account(
-            customer_buyinggroup=customer_buyinggroup,
-            very_first_customer=very_first_customer,
-        )
-        very_first_customer = Customer.get_or_create_the_very_first_customer()
+        BankAccount.open_account(customer_buyinggroup=customer_buyinggroup)
         coordinator = Staff.get_or_create_any_coordinator()
         Staff.get_or_create_order_responsible()
         Staff.get_or_create_invoice_responsible()
+        return coordinator
+
+    @classmethod
+    def init_home_page(cls, coordinator):
         # Create and publish first web page
-        if not coordinator.is_webmaster:
-            # This should not be the case...
-            return
 
         from cms.models import StaticPlaceholder
         from cms.constants import X_FRAME_OPTIONS_DENY
         from cms import api
+        from django.contrib.auth.models import Group
 
         page = api.create_page(
             title=_("Home"),
             soft_root=False,
             template=settings.CMS_TEMPLATE_HOME,
             language=settings.LANGUAGE_CODE,
-            published=True,
+            published=False,
             parent=None,
             xframe_options=X_FRAME_OPTIONS_DENY,
             in_navigation=True,
         )
-        try:
-            # New in CMS 3.5
-            page.set_as_homepage()
-        except:
-            pass
-
+        page.set_as_homepage()
         placeholder = page.placeholders.get(slot="home-hero")
         api.add_plugin(
             placeholder=placeholder,
@@ -287,60 +324,53 @@ class Configuration(TranslatableModel):
             language=settings.LANGUAGE_CODE,
             body=settings.CMS_TEMPLATE_HOME_HERO,
         )
-        static_placeholder = StaticPlaceholder(
-            code="footer",
-            # site_id=1
+        placeholder = page.placeholders.get(slot="home-col-1")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type="TextPlugin",
+            language=settings.LANGUAGE_CODE,
+            body=settings.CMS_TEMPLATE_HOME_COL_1,
         )
+        placeholder = page.placeholders.get(slot="home-col-2")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type="TextPlugin",
+            language=settings.LANGUAGE_CODE,
+            body=settings.CMS_TEMPLATE_HOME_COL_2,
+        )
+        placeholder = page.placeholders.get(slot="home-col-3")
+        api.add_plugin(
+            placeholder=placeholder,
+            plugin_type="TextPlugin",
+            language=settings.LANGUAGE_CODE,
+            body=settings.CMS_TEMPLATE_HOME_COL_3,
+        )
+        static_placeholder = StaticPlaceholder(code="footer")
         static_placeholder.save()
         api.add_plugin(
             placeholder=static_placeholder.draft,
             plugin_type="TextPlugin",
             language=settings.LANGUAGE_CODE,
-            body="hello world footer",
+            body=settings.CMS_TEMPLATE_FOOTER,
         )
         static_placeholder.publish(
             request=None, language=settings.LANGUAGE_CODE, force=True
         )
-        api.publish_page(
-            page=page,
-            user=coordinator.customer_responsible.user,
-            language=settings.LANGUAGE_CODE,
-        )
+        user = coordinator.customer_responsible.user
+        user.groups.clear()
+        group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+        user.groups.add(group_id)
+        api.publish_page(page=page, user=user, language=settings.LANGUAGE_CODE)
+        user.groups.remove(group_id)
+
+    @classmethod
+    def init_department(cls):
+        from repanier.models.lut import LUT_DepartmentForCustomer
 
         if LUT_DepartmentForCustomer.objects.count() == 0:
             # Generate a template of LUT_DepartmentForCustomer
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Vegetable"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Basket of vegetables"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Salad"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Tomato"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Potato"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Green"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cabbage"), parent=parent
-            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Fruit"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Basket of fruits"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Apple"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Pear"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Plum"), parent=parent
-            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Bakery"))
             LUT_DepartmentForCustomer.objects.create(
                 short_name=_("Flour"), parent=parent
@@ -368,24 +398,9 @@ class Configuration(TranslatableModel):
                 short_name=_("Beef and pork"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Veal"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
                 short_name=_("Lamb"), parent=parent
             )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Grocery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Takeaway"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Pasta"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Chocolate"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Oil"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Egg"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Jam"), parent=parent)
             LUT_DepartmentForCustomer.objects.create(
                 short_name=_("Cookie"), parent=parent
             )
@@ -415,16 +430,6 @@ class Configuration(TranslatableModel):
             LUT_DepartmentForCustomer.objects.create(
                 short_name=_("Icecream in frisco"), parent=parent
             )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Icecream cake"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Sorbet"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cup of sorbet"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Sorbet per liter"), parent=parent
-            )
             parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Drink"))
             LUT_DepartmentForCustomer.objects.create(
                 short_name=_("Juice"), parent=parent
@@ -439,21 +444,6 @@ class Configuration(TranslatableModel):
             LUT_DepartmentForCustomer.objects.create(
                 short_name=_("Wine"), parent=parent
             )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Aperitif"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Liqueurs"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Hygiene"))
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Deposit"))
-            parent = LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Subscription")
-            )
-
-        logger.debug("######## end of init_repanier")
-
-        return config
 
     def init_email(self):
         for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:

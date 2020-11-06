@@ -172,7 +172,7 @@ class ProducerDataForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ProducerDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.id:
             self.fields["permanences"].initial = self.instance.permanence_set.all()
 
@@ -226,7 +226,7 @@ class ProducerDataForm(forms.ModelForm):
             )
 
     def save(self, *args, **kwargs):
-        instance = super(ProducerDataForm, self).save(*args, **kwargs)
+        instance = super().save(*args, **kwargs)
         if instance.id is not None:
             updated_permanences = (
                 Permanence.objects.filter(producers=instance.pk)
@@ -287,7 +287,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return "{}{}".format(self.change_list_url, get_query_filters())
 
     def get_urls(self):
-        urls = super(ProducerAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             path(
                 "export-stock/",
@@ -322,9 +322,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def export_stock(self, request):
         wb = export_producer_stock(
-            producers=Producer.objects.all().order_by(
-                "short_profile_name"
-            ),
+            producers=Producer.objects.all().order_by("short_profile_name"),
             wb=None,
         )
         if wb is not None:
@@ -353,7 +351,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         )
 
     def get_actions(self, request):
-        actions = super(ProducerAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         this_year = timezone.now().year
         actions.update(
             OrderedDict(
@@ -439,7 +437,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         producer.web_services_activated, _, _ = web_services_activated(
             producer.reference_site
         )
-        super(ProducerAdmin, self).save_model(request, producer, form, change)
+        super().save_model(request, producer, form, change)
 
     def get_import_formats(self):
         """

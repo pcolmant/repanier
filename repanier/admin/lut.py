@@ -9,7 +9,7 @@ from repanier.const import ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
 
 class LUTDataForm(TranslatableModelForm):
     def __init__(self, *args, **kwargs):
-        super(LUTDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
@@ -57,7 +57,7 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
             kwargs["queryset"] = self.model.objects.filter(
                 level__lt=self.mptt_level_limit
             )
-        return super(LUTAdmin, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -85,10 +85,10 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
                             )
                         )
                     )
-        super(LUTAdmin, self).do_move(instance, position, target_instance)
+        super().do_move(instance, position, target_instance)
 
     def get_queryset(self, request):
-        qs = super(LUTAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(
             # Important to also display untranslated items : translations__language_code=settings.LANGUAGE_CODE
             translations__language_code=settings.LANGUAGE_CODE
@@ -112,7 +112,7 @@ class LUTDeliveryPointAdmin(LUTAdmin):
         return fields
 
     def get_queryset(self, request):
-        qs = super(LUTDeliveryPointAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(customer_responsible__isnull=True)
         return qs
 

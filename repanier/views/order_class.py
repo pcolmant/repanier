@@ -31,7 +31,7 @@ class OrderView(ListView):
     paginate_orphans = 2
 
     def __init__(self, **kwargs):
-        super(OrderView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.user = None
         self.first_page = False
         self.producer_id = "all"
@@ -94,7 +94,7 @@ class OrderView(ListView):
         else:
             self.communication = False
 
-        return super(OrderView, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         from repanier.apps import (
@@ -103,7 +103,7 @@ class OrderView(ListView):
             REPANIER_SETTINGS_NOTIFICATION,
         )
 
-        context = super(OrderView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context["first_page"] = self.first_page
         context["permanence"] = self.permanence
         context["permanence_id"] = self.permanence.id
@@ -183,27 +183,10 @@ class OrderView(ListView):
             if customer is None:
                 raise Http404
             translation.activate(customer.language)
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    permanence_id=self.permanence.id, customer_id=customer.id
-                )
-                .order_by("?")
-                .first()
+            customer_invoice = self.permanence.get_or_create_invoice(
+                customer=customer, refresh=False
             )
-            if customer_invoice is None:
-                customer_invoice = CustomerInvoice.objects.create(
-                    permanence_id=self.permanence.id,
-                    customer_id=customer.id,
-                    status=self.permanence.status,
-                    customer_charged_id=customer.id,
-                )
-                customer_invoice.set_order_delivery(delivery=None)
-                customer_invoice.calculate_order_price()
-                customer_invoice.save()
-            if customer_invoice.delivery is not None:
-                status = customer_invoice.delivery.status
-            else:
-                status = customer_invoice.status
+            status = customer_invoice.status
             basket_message = get_html_basket_message(customer, self.permanence, status)
             html = customer_invoice.get_html_my_order_confirmation(
                 permanence=self.permanence,

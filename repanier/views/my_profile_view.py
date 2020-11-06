@@ -82,7 +82,7 @@ class CustomerForm(forms.Form):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
         self.request = kwargs.pop("request", None)
-        super(CustomerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 @login_required()

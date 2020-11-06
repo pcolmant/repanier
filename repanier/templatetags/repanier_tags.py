@@ -113,7 +113,7 @@ def repanier_user_bs3(context, *args, **kwargs):
                 )
                 nodes.append(
                     '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
-                        reverse("order_view", args=(p_permanence_id,))
+                        reverse("repanier:order_view", args=(p_permanence_id,))
                     )
                 )
                 nodes.append("</li>")
@@ -130,19 +130,19 @@ def repanier_user_bs3(context, *args, **kwargs):
             )
             nodes.append(
                 '<li><a href="{}">{}</a></li>'.format(
-                    reverse("send_mail_to_coordinators_view"), _("Inform")
+                    reverse("repanier:send_mail_to_coordinators_view"), _("Inform")
                 )
             )
             if REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
                 nodes.append(
                     '<li><a href="{}">{}</a></li>'.format(
-                        reverse("who_is_who_view"), _("Who's who")
+                        reverse("repanier:who_is_who_view"), _("Who's who")
                     )
                 )
             if user.customer_id is not None:
                 nodes.append(
                     '<li><a href="{}">{}</a></li>'.format(
-                        reverse("my_profile_view"), _("My profile")
+                        reverse("repanier:my_profile_view"), _("My profile")
                     )
                 )
                 if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -178,12 +178,12 @@ def repanier_user_bs3(context, *args, **kwargs):
                         my_balance = _("My balance")
                     nodes.append(
                         '<li><a href="{}">{}</a></li>'.format(
-                            reverse("customer_invoice_view", args=(0,)), my_balance
+                            reverse("repanier:customer_invoice_view", args=(0,)), my_balance
                         )
                     )
                 nodes.append('<li class="divider"></li>')
             nodes.append(
-                '<li><a href="{}">{}</a></li>'.format(reverse("logout"), _("Logout"))
+                '<li><a href="{}">{}</a></li>'.format(reverse("repanier:logout"), _("Logout"))
             )
             nodes.append("</ul></li>")
 
@@ -205,7 +205,7 @@ def repanier_user_bs3(context, *args, **kwargs):
         else:
             nodes = [
                 '<li class="dropdown"><a href="{}">{}</a></li>'.format(
-                    reverse("login_form"), _("Login")
+                    reverse("repanier:login_form"), _("Login")
                 )
             ]
 

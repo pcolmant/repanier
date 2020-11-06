@@ -57,6 +57,7 @@ from repanier.views.test_mail_config_ajax import test_mail_config_ajax
 from repanier.views.unsubscribe_view import unsubscribe_view
 from repanier.views.who_is_who_view import who_is_who_view
 
+app_name = "repanier"
 # https://consideratecode.com/2018/05/02/django-2-0-url-to-path-cheatsheet/
 urlpatterns = [
     path("go_repanier/", login_view, name="login_form"),

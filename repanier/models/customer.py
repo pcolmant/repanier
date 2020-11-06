@@ -79,12 +79,6 @@ class Customer(models.Model):
     membership_fee_valid_until = models.DateField(
         _("Membership fee valid until"), default=datetime.date.today
     )
-    # If this customer is member of a closed group, the customer.price_list_multiplier is not used
-    # Invoices are sent to the consumer responsible of the group who is
-    # also responsible for collecting the payments.
-    # The LUT_DeliveryPoint.price_list_multiplier will be used when invoicing the consumer responsible
-    # At this stage, the link between the customer invoice and this customer responsible is made with
-    # CustomerInvoice.customer_charged
     price_list_multiplier = models.DecimalField(
         _(
             "Coefficient applied to the producer tariff to calculate the consumer tariff"
@@ -136,7 +130,7 @@ class Customer(models.Model):
     # or in the admin at customer level.
     may_order = models.BooleanField(_("May order"), default=True)
     zero_waste = models.BooleanField(_("Zero waste"), default=False)
-    valid_email = models.NullBooleanField(_("Valid email"), default=None)
+    valid_email = models.BooleanField(_("Valid email"), null=True, default=None)
     subscribe_to_email = models.BooleanField(
         _("Agree to receive mails from this site"), default=True
     )
@@ -263,94 +257,82 @@ class Customer(models.Model):
         )
 
     def get_order_not_invoiced(self):
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = (
-                CustomerInvoice.objects.filter(
-                    customer_id=self.id,
-                    status__gte=PERMANENCE_OPENED,
-                    status__lte=PERMANENCE_SEND,
-                    customer_charged_id=self.id,
-                )
-                .order_by("?")
-                .aggregate(
-                    total_price=Sum(
-                        "total_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+        result_set = (
+            CustomerInvoice.objects.filter(
+                customer_id=self.id,
+                status__gte=PERMANENCE_OPENED,
+                status__lte=PERMANENCE_SEND,
+                customer_charged_id=self.id,
+            )
+            .order_by("?")
+            .aggregate(
+                total_price=Sum(
+                    "total_price_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    delta_price=Sum(
-                        "delta_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                delta_price=Sum(
+                    "delta_price_with_tax",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    delta_transport=Sum(
-                        "delta_transport",
-                        output_field=DecimalField(
-                            max_digits=5, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                delta_transport=Sum(
+                    "delta_transport",
+                    output_field=DecimalField(
+                        max_digits=5, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
-            total_price = (
-                result_set["total_price"]
-                if result_set["total_price"] is not None
-                else DECIMAL_ZERO
-            )
-            delta_price = (
-                result_set["delta_price"]
-                if result_set["delta_price"] is not None
-                else DECIMAL_ZERO
-            )
-            delta_transport = (
-                result_set["delta_transport"]
-                if result_set["delta_transport"] is not None
-                else DECIMAL_ZERO
-            )
-            order_not_invoiced = RepanierMoney(
-                total_price + delta_price + delta_transport
-            )
-        else:
-            order_not_invoiced = REPANIER_MONEY_ZERO
-        return order_not_invoiced
+        )
+        total_price = (
+            result_set["total_price"]
+            if result_set["total_price"] is not None
+            else DECIMAL_ZERO
+        )
+        delta_price = (
+            result_set["delta_price"]
+            if result_set["delta_price"] is not None
+            else DECIMAL_ZERO
+        )
+        delta_transport = (
+            result_set["delta_transport"]
+            if result_set["delta_transport"] is not None
+            else DECIMAL_ZERO
+        )
+        return RepanierMoney(total_price + delta_price + delta_transport)
 
     def get_bank_not_invoiced(self):
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            result_set = (
-                BankAccount.objects.filter(
-                    customer_id=self.id, customer_invoice__isnull=True
-                )
-                .order_by("?")
-                .aggregate(
-                    bank_in=Sum(
-                        "bank_amount_in",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+        result_set = (
+            BankAccount.objects.filter(
+                customer_id=self.id, customer_invoice__isnull=True
+            )
+            .order_by("?")
+            .aggregate(
+                bank_in=Sum(
+                    "bank_amount_in",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                    bank_out=Sum(
-                        "bank_amount_out",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
+                ),
+                bank_out=Sum(
+                    "bank_amount_out",
+                    output_field=DecimalField(
+                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
-                )
+                ),
             )
-            bank_in = (
-                result_set["bank_in"]
-                if result_set["bank_in"] is not None
-                else DECIMAL_ZERO
-            )
-            bank_out = (
-                result_set["bank_out"]
-                if result_set["bank_out"] is not None
-                else DECIMAL_ZERO
-            )
-            bank_not_invoiced = bank_in - bank_out
-        else:
-            bank_not_invoiced = DECIMAL_ZERO
-        return RepanierMoney(bank_not_invoiced)
+        )
+        bank_in = (
+            result_set["bank_in"] if result_set["bank_in"] is not None else DECIMAL_ZERO
+        )
+        bank_out = (
+            result_set["bank_out"]
+            if result_set["bank_out"] is not None
+            else DECIMAL_ZERO
+        )
+        return RepanierMoney(bank_in - bank_out)
 
     def get_balance(self):
         last_customer_invoice = CustomerInvoice.objects.filter(
@@ -361,21 +343,21 @@ class Customer(models.Model):
             if balance.amount >= 30:
                 return format_html(
                     '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
-                    reverse("customer_invoice_view", args=(0,)),
+                    reverse("repanier:customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
             elif balance.amount >= -10:
                 return format_html(
                     '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
-                    reverse("customer_invoice_view", args=(0,)),
+                    reverse("repanier:customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
             else:
                 return format_html(
                     '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
-                    reverse("customer_invoice_view", args=(0,)),
+                    reverse("repanier:customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
@@ -396,45 +378,40 @@ class Customer(models.Model):
         order_not_invoiced=None,
         total_price_with_tax=REPANIER_MONEY_ZERO,
     ):
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            bank_not_invoiced = (
-                bank_not_invoiced
-                if bank_not_invoiced is not None
-                else self.get_bank_not_invoiced()
-            )
-            order_not_invoiced = (
-                order_not_invoiced
-                if order_not_invoiced is not None
-                else self.get_order_not_invoiced()
-            )
-            other_order_not_invoiced = order_not_invoiced - total_price_with_tax
-        else:
-            bank_not_invoiced = REPANIER_MONEY_ZERO
-            other_order_not_invoiced = REPANIER_MONEY_ZERO
+        if not settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            return EMPTY_STRING
+        bank_not_invoiced = (
+            bank_not_invoiced
+            if bank_not_invoiced is not None
+            else self.get_bank_not_invoiced()
+        )
+        order_not_invoiced = (
+            order_not_invoiced
+            if order_not_invoiced is not None
+            else self.get_order_not_invoiced()
+        )
+        other_order_not_invoiced = order_not_invoiced - total_price_with_tax
 
-        if (
-            other_order_not_invoiced.amount != DECIMAL_ZERO
-            or bank_not_invoiced.amount != DECIMAL_ZERO
-        ):
-            if other_order_not_invoiced.amount != DECIMAL_ZERO:
-                if bank_not_invoiced.amount == DECIMAL_ZERO:
-                    customer_on_hold_movement = _(
-                        "This balance does not take account of any unbilled sales %(other_order)s."
-                    ) % {"other_order": other_order_not_invoiced}
-                else:
-                    customer_on_hold_movement = _(
-                        "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
-                    ) % {
-                        "bank": bank_not_invoiced,
-                        "other_order": other_order_not_invoiced,
-                    }
+        if other_order_not_invoiced.amount != DECIMAL_ZERO:
+            if bank_not_invoiced.amount == DECIMAL_ZERO:
+                customer_on_hold_movement = _(
+                    "This balance does not take account of any unbilled sales %(other_order)s."
+                ) % {"other_order": other_order_not_invoiced}
             else:
+                customer_on_hold_movement = _(
+                    "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                ) % {
+                    "bank": bank_not_invoiced,
+                    "other_order": other_order_not_invoiced,
+                }
+        else:
+            if bank_not_invoiced.amount == DECIMAL_ZERO:
                 customer_on_hold_movement = _(
                     "This balance does not take account of any unrecognized payments %(bank)s."
                 ) % {"bank": bank_not_invoiced}
-            customer_on_hold_movement = mark_safe(customer_on_hold_movement)
-        else:
-            customer_on_hold_movement = EMPTY_STRING
+            else:
+                customer_on_hold_movement = EMPTY_STRING
+        customer_on_hold_movement = mark_safe(customer_on_hold_movement)
 
         return customer_on_hold_movement
 
@@ -536,7 +513,8 @@ class Customer(models.Model):
         return "https://{}{}".format(
             self._get_unsubscribe_site(),
             reverse(
-                "unsubscribe_view", kwargs={"customer_id": customer_id, "token": token}
+                "repanier:unsubscribe_view",
+                kwargs={"customer_id": customer_id, "token": token},
             ),
         )
 

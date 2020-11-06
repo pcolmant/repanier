@@ -9,14 +9,12 @@ class RepanierCheckboxWidget(CheckboxInput):
     def __init__(self, label, attrs=None, check_test=None):
         # the label is rendered by the Widget class rather than by BoundField.label_tag()
         self.repanier_label = label
-        super(RepanierCheckboxWidget, self).__init__(attrs=attrs, check_test=check_test)
+        super().__init__(attrs=attrs, check_test=check_test)
 
     def get_context(self, name, value, attrs):
-        context = super(RepanierCheckboxWidget, self).get_context(name, value, attrs)
-        context['repanier_label'] = self.repanier_label
+        context = super().get_context(name, value, attrs)
+        context["repanier_label"] = self.repanier_label
         return context
 
     class Media:
-        css = {
-            'all': (get_repanier_static_name("css/widgets/checkbox.css"),)
-        }
+        css = {"all": (get_repanier_static_name("css/widgets/checkbox.css"),)}

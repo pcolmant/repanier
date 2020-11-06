@@ -214,7 +214,7 @@ class MoneyFieldProxy(object):
 class ModelMoneyField(models.DecimalField):
     def formfield(self, **kwargs):
         kwargs.update({"form_class": FormMoneyField})
-        return super(ModelMoneyField, self).formfield(**kwargs)
+        return super().formfield(**kwargs)
 
     def to_python(self, value):
         if isinstance(value, Expression):
@@ -223,17 +223,17 @@ class ModelMoneyField(models.DecimalField):
             value = value.amount
         if isinstance(value, tuple):
             value = value[0]
-        return super(ModelMoneyField, self).to_python(value)
+        return super().to_python(value)
 
     def get_db_prep_save(self, value, connection):
         if isinstance(value, Expression):
             return value
         if isinstance(value, RepanierMoney):
             value = value.amount
-        return super(ModelMoneyField, self).get_db_prep_save(value, connection)
+        return super().get_db_prep_save(value, connection)
 
     def contribute_to_class(self, cls, name, private_only=False):
-        super(ModelMoneyField, self).contribute_to_class(
+        super().contribute_to_class(
             cls, name, private_only=private_only
         )
         setattr(cls, self.name, MoneyFieldProxy(self))
@@ -245,7 +245,7 @@ class FormMoneyField(DecimalField):
     def to_python(self, value):
         # Important : Do not validate if self.disabled
         value = (
-            not self.disabled and super(FormMoneyField, self).to_python(value)
+            not self.disabled and super().to_python(value)
         ) or DECIMAL_ZERO
         return RepanierMoney(value)
 

@@ -4,8 +4,8 @@ import repanier.packages.openpyxl as openpyxl_1_8_6
 
 
 class XLSX_OPENPYXL_1_8_6(TablibFormat):
-    TABLIB_MODULE = 'tablib.formats._xlsx'
-    CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    TABLIB_MODULE = "tablib.formats._xlsx"
+    CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
     def can_import(self):
         return XLSX_IMPORT
@@ -16,6 +16,7 @@ class XLSX_OPENPYXL_1_8_6(TablibFormat):
         """
         assert XLSX_IMPORT
         from io import BytesIO
+
         xlsx_book = openpyxl_1_8_6.load_workbook(BytesIO(in_stream))
 
         dataset = tablib.Dataset()

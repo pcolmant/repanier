@@ -88,7 +88,7 @@ class PermanenceMenu(Menu):
             submenu_id += 1
             node = NavigationNode(
                 _("Registration for tasks"),
-                reverse("permanence_view"),
+                reverse("repanier:permanence_view"),
                 id=submenu_id,
                 parent_id=parent_node.id,
                 visible=True,
@@ -98,9 +98,11 @@ class PermanenceMenu(Menu):
 
         return submenu_id, separator_needed
 
-    def append_permanence(self, nodes, parent_node, submenu_id, is_anonymous, permanence):
+    def append_permanence(
+        self, nodes, parent_node, submenu_id, is_anonymous, permanence
+    ):
 
-        path = reverse("order_view", args=(permanence.id,))
+        path = reverse("repanier:order_view", args=(permanence.id,))
         if not is_anonymous and permanence.status > PERMANENCE_OPENED:
             path = path + "?is_basket=yes"
         submenu_id += 1

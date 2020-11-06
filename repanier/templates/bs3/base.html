@@ -131,7 +131,7 @@
                 {% addtoblock "lastjs" %}{% spaceless %}
                     <script type="text/javascript">
                         $(document).ready(function () {
-                            lien = '{% url 'home_info_bs3' %}';
+                            lien = '{% url 'repanier:home_info_bs3' %}';
                             $.ajax({
                                 url: lien,
                                 cache: false,

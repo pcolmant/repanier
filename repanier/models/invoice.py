@@ -188,26 +188,6 @@ class CustomerInvoice(Invoice):
         # round to 2 decimals
         return RepanierMoney(self.total_vat.amount + self.delta_vat.amount)
 
-    @classmethod
-    def get_or_create_invoice(cls, permanence, customer, delivery):
-        customer_invoice = (
-            CustomerInvoice.objects.filter(
-                permanence_id=permanence.id, customer_id=customer.id
-            )
-            .order_by("?")
-            .first()
-        )
-        if customer_invoice is None:
-            customer_invoice = CustomerInvoice.objects.create(
-                permanence_id=permanence.id,
-                customer_id=customer.id,
-                status=permanence.status,
-                customer_charged_id=customer.id,
-            )
-            customer_invoice.set_order_delivery(delivery=delivery)
-            customer_invoice.calculate_order_price()
-            customer_invoice.save()
-
     @property
     def has_purchase(self):
         if (
@@ -430,8 +410,10 @@ class CustomerInvoice(Invoice):
                                 permanence.with_delivery_point and self.delivery is None
                             ) or not self.has_purchase:
                                 btn_disabled = "disabled"
-                            msg_confirmation1 = '<span style="color: red; ">{}</span><br>'.format(
-                                _("⚠ Unconfirmed orders will be canceled.")
+                            msg_confirmation1 = (
+                                '<span style="color: red; ">{}</span><br>'.format(
+                                    _("⚠ Unconfirmed orders will be canceled.")
+                                )
                             )
                             msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;{}'.format(
                                 _(
@@ -439,10 +421,12 @@ class CustomerInvoice(Invoice):
                                 )
                             )
                     else:
-                        href = reverse("order_view", args=(permanence.id,))
+                        href = reverse("repanier:order_view", args=(permanence.id,))
                         if self.status == PERMANENCE_OPENED:
-                            msg_confirmation1 = '<span style="color: red; ">{}</span><br>'.format(
-                                _("⚠ Unconfirmed orders will be canceled.")
+                            msg_confirmation1 = (
+                                '<span style="color: red; ">{}</span><br>'.format(
+                                    _("⚠ Unconfirmed orders will be canceled.")
+                                )
                             )
                             msg_confirmation2 = _(
                                 "➜ Go to the confirmation step of my order."
@@ -529,10 +513,8 @@ class CustomerInvoice(Invoice):
             PurchaseWoReceiver.objects.filter(customer_invoice__id=self.id).update(
                 quantity_confirmed=F("quantity_ordered")
             )
-        # Recalculate transport cost
         self.is_order_confirm_send = True
 
-    @transaction.atomic
     def cancel_confirm_order(self):
         if self.is_order_confirm_send:
             # Change of confirmation status
@@ -543,43 +525,85 @@ class CustomerInvoice(Invoice):
             return False
 
     @transaction.atomic
-    def set_order_delivery(self, delivery):
-        # Don't use delivery_id because it won't reload customer_invoice.delivery
-        # Important
-        # If it's an invoice of a member of a group :
-        #   self.customer_charged_id != self.customer_id
-        #   self.customer_charged_id == owner of the group
-        #   price_list_multiplier = DECIMAL_ONE
-        # Else :
-        #   self.customer_charged_id = self.customer_id
-        #   price_list_multiplier may vary
-        if delivery is None:
+    def set_delivery_context(self, delivery_board=None):
+        """
+        Calculate
+            (1) keep a valid delivery (with default as self.customer.delivery_point) or None
+            (2) based on delivery.delivery_point calculate
+                self.customer_charged
+                self.price_list_multiplier
+                self.transport
+                self.min_transport
+                self.status
+            (3) if needed, create an invoice for customer_charged
+
+        :param delivery_board: Don't use delivery_board_id because it won't reload customer_invoice.delivery
+
+        Important
+        If it's an invoice of a member of a group :
+          self.customer_charged_id != self.customer_id
+          self.customer_charged_id == owner of the group
+          price_list_multiplier = DECIMAL_ONE
+        Else :
+          self.customer_charged_id = self.customer_id
+          price_list_multiplier may vary
+
+        """
+
+        if delivery_board is None:
             if self.permanence.with_delivery_point:
-                # If the customer is member of a group set the group as default delivery point
-                delivery_point = self.customer.delivery_point
-                if delivery_point is not None:
-                    default_delivery = DeliveryBoard.objects.filter(
-                        delivery_point=delivery_point, permanence=self.permanence
-                    ).first()
-                    if default_delivery is not None:
-                        delivery = default_delivery
-                    else:
-                        # the delivery_point is
-                        # not available for this permanence
-                        delivery_point = None
+                if self.customer.delivery_point is not None:
+                    # The customer is member of a group
+                    qs = DeliveryBoard.objects.filter(
+                        Q(
+                            permanence_id=self.permanence_id,
+                            delivery_point_id=self.customer.delivery_point_id,
+                            status=PERMANENCE_OPENED,
+                        )
+                        | Q(
+                            permanence_id=self.permanence_id,
+                            delivery_point__customer_responsible__isnull=True,
+                            status=PERMANENCE_OPENED,
+                        )
+                    ).order_by("?")
+                else:
+                    qs = DeliveryBoard.objects.filter(
+                        permanence_id=self.permanence_id,
+                        delivery_point__customer_responsible__isnull=True,
+                        status=PERMANENCE_OPENED,
+                    ).order_by("?")
+                valid_delivery_board = qs.first()
 
             else:
-                delivery_point = None
+                valid_delivery_board = None
         else:
-            delivery_point = delivery.delivery_point
-        self.delivery = delivery
+            if self.permanence.with_delivery_point:
+                assert (
+                    self.permanence_id == delivery_board.permanence_id
+                ), "Wrong permanence for the delivery"
+                valid_delivery_board = (
+                    DeliveryBoard.objects.filter(id=delivery_board.id)
+                    .order_by("?")
+                    .first()
+                )
+            else:
+                valid_delivery_board = None
 
-        if delivery_point is None:
+        if valid_delivery_board is None:
+            status = self.permanence.status
+        else:
+            status = valid_delivery_board.status
+
+        self.delivery = valid_delivery_board
+        self.status = status
+
+        if self.delivery is None:
             self.customer_charged = self.customer
             self.price_list_multiplier = DECIMAL_ONE
             self.transport = DECIMAL_ZERO
             self.min_transport = DECIMAL_ZERO
         else:
+            delivery_point = self.delivery.delivery_point
             customer_responsible = delivery_point.customer_responsible
             if customer_responsible is None:
                 self.customer_charged = self.customer
@@ -603,17 +627,26 @@ class CustomerInvoice(Invoice):
                     CustomerInvoice.objects.create(
                         permanence_id=self.permanence_id,
                         customer_id=customer_responsible.id,
-                        status=self.status,
+                        status=status,
                         customer_charged_id=customer_responsible.id,
                         price_list_multiplier=customer_responsible.price_list_multiplier,
                         transport=delivery_point.transport,
                         min_transport=delivery_point.min_transport,
-                        is_order_confirm_send=True,
+                        is_order_confirm_send=True,  # None ?
                         is_group=True,
-                        delivery=delivery,
+                        delivery=self.delivery,
                     )
 
-    def calculate_order_price(self):
+    def set_total(self):
+        #
+        # return :
+        # - total_price_with_tax
+        # - delta_price_with_tax
+        # - total_vat
+        # - delta_vat
+        # - total_deposit
+        # - delta_transport
+
         from repanier.models.purchase import PurchaseWoReceiver
 
         self.delta_price_with_tax.amount = DECIMAL_ZERO
@@ -748,9 +781,9 @@ class CustomerInvoice(Invoice):
             )
             total_price_gov_be = round_gov_be(total_price)
             self.delta_price_with_tax.amount += total_price_gov_be - total_price
-        self.calculate_order_transport()
+        self.set_transport()
 
-    def calculate_order_transport(self):
+    def set_transport(self):
         if self.customer_id == self.customer_charged_id:
             # It's an invoice of a group, or of a customer who is not member of a group :
             #   self.customer_charged_id = self.customer_id
@@ -773,6 +806,40 @@ class CustomerInvoice(Invoice):
                 self.delta_transport.amount = DECIMAL_ZERO
         else:
             self.delta_transport.amount = DECIMAL_ZERO
+
+    def set_invoice_context(self, payment_date):
+        from repanier.models.bankaccount import BankAccount
+
+        # is_order_confirm_send = False,
+        # invoice_sort_order = None,
+        self.date_previous_balance = self.customer.date_balance
+        self.date_balance = payment_date
+        self.balance = self.previous_balance = self.customer.balance
+
+        delta_bank = DECIMAL_ZERO
+        for bank_account in (
+            BankAccount.objects.select_for_update()
+            .filter(
+                customer_invoice__isnull=True,
+                producer_invoice__isnull=True,
+                customer=self.customer,
+                operation_date__lte=payment_date,
+            )
+            .order_by("?")
+        ):
+            bank_amount_in = bank_account.bank_amount_in
+            bank_amount_out = bank_account.bank_amount_out
+            self.bank_amount_in.amount += bank_amount_in
+            self.bank_amount_out.amount += bank_amount_out
+
+            delta_bank = bank_amount_in - bank_amount_out
+
+            bank_account.customer_invoice_id = self.id
+            bank_account.permanence_id = self.permanence_id
+            bank_account.save()
+
+        delta_balance = self.get_total_price_with_tax().amount + delta_bank
+        self.balance.amount -= delta_balance
 
     def create_child(self, new_permanence):
         if self.customer_id != self.customer_charged_id:
@@ -865,27 +932,7 @@ class ProducerInvoice(Invoice):
         on_delete=models.PROTECT,
     )
 
-    delta_stock_with_tax = ModelMoneyField(
-        _("Amount deducted from the stock"),
-        default=DECIMAL_ZERO,
-        max_digits=8,
-        decimal_places=2,
-    )
-
-    delta_stock_vat = ModelMoneyField(
-        _("Total VAT deducted from the stock"),
-        default=DECIMAL_ZERO,
-        max_digits=9,
-        decimal_places=4,
-    )
     delta_deposit = ModelMoneyField(
-        _("Deposit"),
-        help_text=_("+ Deposit"),
-        default=DECIMAL_ZERO,
-        max_digits=8,
-        decimal_places=2,
-    )
-    delta_stock_deposit = ModelMoneyField(
         _("Deposit"),
         help_text=_("+ Deposit"),
         default=DECIMAL_ZERO,
@@ -923,17 +970,28 @@ class ProducerInvoice(Invoice):
 
     def get_total_price_with_tax(self):
         return (
-            self.total_price_with_tax
-            + self.delta_price_with_tax
-            + self.delta_transport
-            + self.delta_stock_with_tax
+            self.total_price_with_tax + self.delta_price_with_tax + self.delta_transport
         )
 
-    def get_total_vat(self):
-        return self.total_vat + self.delta_stock_vat
+    def get_total_tax(self):
+        return self.total_vat
 
     def get_total_deposit(self):
-        return self.total_deposit + self.delta_stock_deposit
+        return self.total_deposit
+
+    def set_invoice_context(self, payment_date):
+        from repanier.models.producer import Producer
+
+        # invoice_sort_order = None,
+        self.date_previous_balance = self.producer.date_balance
+        self.date_balance = payment_date
+        self.balance = self.previous_balance = self.producer.balance
+
+        total_price_with_tax = self.get_total_price_with_tax().amount
+        self.balance.amount += total_price_with_tax
+        Producer.objects.filter(id=self.producer_id).order_by("?").update(
+            date_balance=payment_date, balance=F("balance") + total_price_with_tax
+        )
 
     def get_order_json(self):
         a_producer = self.producer

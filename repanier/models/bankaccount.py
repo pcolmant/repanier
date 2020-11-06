@@ -1,3 +1,5 @@
+import logging
+
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -7,6 +9,8 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
+
+logger = logging.getLogger(__name__)
 
 
 class BankAccount(models.Model):
@@ -77,7 +81,7 @@ class BankAccount(models.Model):
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True)
 
     @classmethod
-    def open_account(cls, customer_buyinggroup, very_first_customer):
+    def open_account(cls, customer_buyinggroup):
         bank_account = BankAccount.objects.filter().order_by("?")
         if not bank_account.exists():
             BankAccount.objects.create(
@@ -91,21 +95,15 @@ class BankAccount(models.Model):
                 customer=customer_buyinggroup,
                 operation_comment=_("Initial balance"),
             )
-            # Create this also prevent the deletion of the very first customer
-            BankAccount.objects.create(
-                operation_date=timezone.now().date(),
-                customer=very_first_customer,
-                operation_comment=_("Initial balance"),
-            )
 
     @classmethod
     def get_closest_to(cls, target):
         # https://stackoverflow.com/questions/15855715/filter-on-datetime-closest-to-the-given-datetime
         # https://www.vinta.com.br/blog/2017/advanced-django-querying-sorting-events-date/
         # Get closest bank_account (sub-)total from target date
-        qs = cls.objects.filter(producer__isnull=True, customer__isnull=True).order_by(
-            "?"
-        )
+        qs = BankAccount.objects.filter(
+            producer__isnull=True, customer__isnull=True
+        ).order_by("?")
         closest_greater_qs = qs.filter(operation_date__gt=target).order_by(
             "operation_date"
         )
@@ -132,11 +130,17 @@ class BankAccount(models.Model):
 
     @classmethod
     def get_latest_total(cls):
-        return (
+        latest_total = (
             BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
             .order_by("?")
             .first()
         )
+        if latest_total is None:
+            logger.error(
+                "The bank account should have been initialized in Configuration.init_repanier()"
+            )
+
+        return latest_total
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:

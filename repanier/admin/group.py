@@ -26,13 +26,12 @@ class UserDataForm(forms.ModelForm):
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(UserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        # cleaned_data = super(UserDataForm, self).clean()
         short_basket_name_field = "short_basket_name"
         username = self.cleaned_data.get(short_basket_name_field)
         user_error1 = _("The given short_basket_name must be set")
@@ -85,7 +84,7 @@ class UserDataForm(forms.ModelForm):
                 # return cleaned_data
 
     def save(self, *args, **kwargs):
-        super(UserDataForm, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         change = self.instance.id is not None
         short_basket_name = self.data["short_basket_name"]
         email = self.data["email"].lower()
@@ -171,7 +170,7 @@ class GroupWithUserDataForm(UserDataForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(GroupWithUserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.id:
             delivery_point = (
                 LUT_DeliveryPoint.objects.filter(
@@ -257,7 +256,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     get_last_login.admin_order_field = "user__last_login"
 
     def get_actions(self, request):
-        actions = super(GroupWithUserDataAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         this_year = timezone.now().year
         actions.update(
             OrderedDict(
@@ -317,7 +316,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return []
 
     def get_form(self, request, group=None, **kwargs):
-        form = super(GroupWithUserDataAdmin, self).get_form(request, group, **kwargs)
+        form = super().get_form(request, group, **kwargs)
         email_field = form.base_fields["email"]
 
         if group is not None:
@@ -331,7 +330,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return form
 
     def get_queryset(self, request):
-        qs = super(GroupWithUserDataAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(is_group=True)
         return qs
 
@@ -340,7 +339,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         form.user.is_staff = False
         form.user.is_active = group.is_active
         form.user.save()
-        super(GroupWithUserDataAdmin, self).save_model(request, group, form, change)
+        super().save_model(request, group, form, change)
         delivery_point = (
             LUT_DeliveryPoint.objects.filter(customer_responsible_id=group.id)
             .order_by("?")

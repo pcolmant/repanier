@@ -44,7 +44,7 @@ def customer_pre_save(sender, **kwargs):
         and customer.price_list_multiplier <= DECIMAL_ZERO
     ):
         customer.price_list_multiplier = DECIMAL_ONE
-    customer.city = "{}".format(customer.city).upper()
+    customer.city = "{}".format(customer.city or EMPTY_STRING).upper()
     customer.login_attempt_counter = DECIMAL_ZERO
     customer.valid_email = None
 

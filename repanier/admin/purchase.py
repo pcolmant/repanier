@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse, path
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
+
 # from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
 from import_export import resources, fields
@@ -137,7 +138,7 @@ class PurchaseForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(PurchaseForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         purchase = self.instance
         if purchase.id is not None:
             if purchase.status < PERMANENCE_SEND:
@@ -212,7 +213,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     # change_list_template = 'admin/purchase_change_list.html'
 
     def __init__(self, model, admin_site):
-        super(PurchaseAdmin, self).__init__(model, admin_site)
+        super().__init__(model, admin_site)
         self.producer_id = None
 
     def get_department_for_customer(self, obj):
@@ -224,7 +225,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         permanence_id = request.GET.get("permanence", None)
         if permanence_id is not None:
             return (
-                super(PurchaseAdmin, self)
+                super()
                 .get_queryset(request)
                 .filter(
                     permanence=permanence_id,
@@ -235,7 +236,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             )
         else:
             return (
-                super(PurchaseAdmin, self)
+                super()
                 .get_queryset(request)
                 .filter(
                     offer_item__translations__language_code=translation.get_language(),
@@ -277,7 +278,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return False
 
     def get_urls(self):
-        urls = super(PurchaseAdmin, self).get_urls()
+        urls = super().get_urls()
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             my_urls = [
                 path(
@@ -420,7 +421,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return ["is_updated_on"]
 
     def get_form(self, request, purchase=None, **kwargs):
-        form = super(PurchaseAdmin, self).get_form(request, purchase, **kwargs)
+        form = super().get_form(request, purchase, **kwargs)
         # /purchase/add/?_changelist_filters=permanence%3D6%26customer%3D3
         # If we are coming from a list screen, use the filter to pre-fill the form
         permanence_id = None
@@ -603,9 +604,13 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
             purchase.offer_item = offer_item
             if status < PERMANENCE_SEND:
-                purchase.quantity_ordered = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+                purchase.quantity_ordered = form.cleaned_data.get(
+                    "quantity", DECIMAL_ZERO
+                )
             else:
-                purchase.quantity_invoiced = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+                purchase.quantity_invoiced = form.cleaned_data.get(
+                    "quantity", DECIMAL_ZERO
+                )
 
             purchase.status = status
             purchase.producer = offer_item.producer
@@ -613,22 +618,14 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             purchase.save()
             purchase.save_box()
             # The customer_invoice may be created with "purchase.save()"
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    customer_id=purchase.customer_id,
-                    permanence_id=purchase.permanence_id,
-                )
-                .order_by("?")
-                .first()
+            customer_invoice = CustomerInvoice.get_or_create_invoice(
+                permanence=purchase.permanence, customer=purchase.customer, refresh=True
             )
-            customer_invoice.status = status
-            customer_invoice.set_order_delivery(delivery)
-            customer_invoice.calculate_order_price()
             customer_invoice.confirm_order()
             customer_invoice.save()
 
     def get_actions(self, request):
-        actions = super(PurchaseAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         if not actions:
@@ -653,4 +650,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             #         get_repanier_static_name("js/is_order_confirm_send.js")
             #     )
             # )
-            js = ('admin/js/jquery.init.js', get_repanier_static_name("js/is_order_confirm_send.js"),)
+            js = (
+                "admin/js/jquery.init.js",
+                get_repanier_static_name("js/is_order_confirm_send.js"),
+            )

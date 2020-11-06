@@ -34,7 +34,7 @@ class RepanierEmail(EmailMultiAlternatives):
             "show_customer_may_unsubscribe", True
         )
         self.send_even_if_unsubscribed = kwargs.pop("send_even_if_unsubscribed", False)
-        super(RepanierEmail, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def send_email(self):
         self.body = strip_tags(self.html_body)

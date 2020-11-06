@@ -17,13 +17,13 @@ class CustomerInvoiceView(DetailView):
     def get_object(self, queryset=None):
         # Important to handle customer without any invoice
         try:
-            obj = super(CustomerInvoiceView, self).get_object(queryset)
+            obj = super().get_object(queryset)
         except Http404:
             obj = None
         return obj
 
     def get_context_data(self, **kwargs):
-        context = super(CustomerInvoiceView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         if context["object"] is None:
             # This customer has never been invoiced
             context["bank_account_set"] = BankAccount.objects.none()

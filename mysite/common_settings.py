@@ -1,8 +1,7 @@
 import codecs
-import configparser
-import logging
 import os
 import sys
+import configparser
 
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
@@ -12,16 +11,12 @@ from django.utils.translation import ugettext_lazy as _
 from .settings import *
 
 EMPTY_STRING = ""
-
-
-# gettext = lambda s: s
+# LOGGING is ignored in Django settings.py :
+# https://stackoverflow.com/questions/53014435/why-is-logging-in-my-django-settings-py-ignored
 
 
 def gettext(s):
     return s
-
-
-logger = logging.getLogger(__name__)
 
 
 # def get_allowed_mail_extension(site_name):
@@ -44,22 +39,18 @@ def get_group_name(site_name):
 
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-PROJECT_DIR = os.path.realpath(os.path.dirname(__file__))
+PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
-logger.info("Python path is : %s", sys.path)
+print("---- common_settings.py - Python path is : %s", sys.path)
 
-config = configparser.RawConfigParser(allow_no_value=True)
 conf_file_name = "{}.ini".format(os.path.join(PROJECT_DIR, DJANGO_SETTINGS_SITE_NAME))
-
-try:
-    # Open the file with the correct encoding
-    with codecs.open(conf_file_name, "r", encoding="utf-8") as f:
-        # TODO : Use parser.read_file() instead of readfp()
-        config.readfp(f)
-except IOError:
-    logger.exception("Unable to open %s settings", conf_file_name)
+if not (os.path.exists(conf_file_name)):
+    print("---- common_settings.py - Settings file %s not found", conf_file_name)
     raise SystemExit(-1)
+
+config = configparser.ConfigParser()
+config.read(conf_file_name, encoding="utf-8")
 
 ADMIN_EMAIL = config.get("DJANGO_SETTINGS", "DJANGO_SETTINGS_ADMIN_EMAIL")
 ADMIN_NAME = config.get("DJANGO_SETTINGS", "DJANGO_SETTINGS_ADMIN_NAME")
@@ -193,8 +184,9 @@ for name in config.options("ALLOWED_HOSTS"):
     if allowed_host.startswith("demo"):
         REPANIER_SETTINGS_DEMO = True
     ALLOWED_HOSTS.append(allowed_host)
-logger.info("Settings loaded from: %s", conf_file_name)
-logger.info("Allowed hosts: %s", ALLOWED_HOSTS)
+
+print("---- common_settings.py - Settings loaded from: {}".format(conf_file_name))
+print("---- common_settings.py - Allowed hosts: {}".format(ALLOWED_HOSTS))
 # REPANIER_SETTINGS_ALLOWED_MAIL_EXTENSION = get_allowed_mail_extension(DJANGO_SETTINGS_ALLOWED_HOSTS[0])
 REPANIER_SETTINGS_GROUP_NAME = config.get(
     "REPANIER_SETTINGS",
@@ -209,22 +201,17 @@ DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
-if DJANGO_SETTINGS_SITE_NAME == "mysite":
-    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-    STATICFILES_DIRS = (os.path.join(PROJECT_PATH, "collect-static"),)
-else:
-    # Activate ManifestStaticFilesStorage also when in debug mode
-    STATICFILES_STORAGE = "repanier.big_blind_static.BigBlindManifestStaticFilesStorage"
+STATICFILES_STORAGE = "repanier.big_blind_static.BigBlindManifestStaticFilesStorage"
 
 # Directory where working files, such as media and databases are kept
 MEDIA_DIR = os.path.join(PROJECT_DIR, "media")
-logger.debug("------- media dir : %s", MEDIA_DIR)
+print("---- common_settings.py - media dir : {}".format(MEDIA_DIR))
 
 MEDIA_PUBLIC_DIR = os.path.join(MEDIA_DIR, "public")
-logger.debug("------- media public dir : %s", MEDIA_PUBLIC_DIR)
+print("---- common_settings.py - media public dir : {}".format(MEDIA_PUBLIC_DIR))
 
 STATIC_DIR = os.path.join(PROJECT_DIR, "collect-static")
-logger.debug("------- static dir : %s", STATIC_DIR)
+print("---- common_settings.py - static dir : {}".format(STATIC_DIR))
 
 MEDIA_ROOT = MEDIA_PUBLIC_DIR
 MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
@@ -248,7 +235,11 @@ REPANIER_SETTINGS_BRANDING_CSS_PATH = get_repanier_css_name(
     os.path.join("css", "branding.css")
 )
 
-logger.debug("------- bootstrap path dir : %s", REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH)
+print(
+    "---- common_settings.py - bootstrap css path : {}".format(
+        REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH
+    )
+)
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
@@ -293,12 +284,20 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_FILE_PATH = DJANGO_SETTINGS_SESSION
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 1  # 3600 = 1 hour; 31536000 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = True
+SECURE_REFERRER_POLICY = "same-origin"
 
-##################### Django & Django CMS
+
+##################### Application definition : Django & Django CMS
 LOCALE_PATHS = (os.path.join(PROJECT_DIR, "locale"),)
 
 INSTALLED_APPS = (
-    "repanier",  # ! Important : for template precedence Repanier must be first INSTALLED_APPS after django.contrib
+    "repanier.apps.RepanierConfig",  # ! Important : First installed app for template precedence
     "djangocms_admin_style",  # note this needs to be above the 'django.contrib.admin' entry
     "django.contrib.admin",
     "django.contrib.auth",
@@ -308,6 +307,7 @@ INSTALLED_APPS = (
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "django.contrib.messages",
+    "django.contrib.postgres",
     "djangocms_text_ckeditor",  # note this needs to be above the 'cms' entry
     # 'django_select2',
     "djangocms_link",
@@ -347,17 +347,20 @@ text_only_plugins = [
     "VideoPlayerPlugin",  # djangocms_video
 ]
 
+MIGRATION_MODULES = {'repanier': 'repanier.migrations.{}'.format(DJANGO_SETTINGS_SITE_NAME)}
+
 # http://docs.django-cms.org/en/develop/how_to/caching.html
 
 MIDDLEWARE = (
     "django.middleware.cache.UpdateCacheMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "cms.middleware.utils.ApphookReloadMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.locale.LocaleMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "cms.middleware.page.CurrentPageMiddleware",
     "cms.middleware.user.CurrentUserMiddleware",
@@ -373,19 +376,22 @@ if DJANGO_SETTINGS_DEBUG_TOOLBAR:
     MIDDLEWARE = ("debug_toolbar.middleware.DebugToolbarMiddleware",) + MIDDLEWARE
 
 CONTEXT_PROCESSORS = [
-    "django.contrib.auth.context_processors.auth",
     "django.template.context_processors.debug",
+    "django.template.context_processors.request",
     "django.template.context_processors.i18n",
     "django.template.context_processors.media",
     "django.template.context_processors.static",
     "django.template.context_processors.tz",
     "django.template.context_processors.csrf",
-    "django.template.context_processors.request",
+    "django.contrib.auth.context_processors.auth",
     "django.contrib.messages.context_processors.messages",
     "sekizai.context_processors.sekizai",
     "cms.context_processors.cms_settings",
     "repanier.context_processors.repanier_settings",
 ]
+
+# Django 3.0
+X_FRAME_OPTIONS = "SAMEORIGIN"  # Needed for Django CMS
 
 # https://www.caktusgroup.com/blog/2018/06/18/make-all-your-django-forms-better/
 # The default form renderer is the DjangoTemplates renderer uses its own template engine,
@@ -448,9 +454,7 @@ if REPANIER_SETTINGS_TEMPLATE == "bs3":
 else:
     CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-CMS_PERMISSION = (
-    False
-)  # When set to True, don't forget 'cms.middleware.user.CurrentUserMiddleware'
+CMS_PERMISSION = False
 CMS_PUBLIC_FOR = "all"
 CMS_SHOW_START_DATE = False
 CMS_SHOW_END_DATE = False
@@ -657,7 +661,10 @@ CMS_LANGUAGES = {
 PARLER_DEFAULT_LANGUAGE_CODE = LANGUAGE_CODE
 PARLER_LANGUAGES = {
     SITE_ID: ({"code": LANGUAGE_CODE},),
-    "default": {"fallbacks": [LANGUAGE_CODE], "hide_untranslated": False},
+    "default": {
+        "fallbacks": [LANGUAGE_CODE],  # defaults to PARLER_DEFAULT_LANGUAGE_CODE
+        "hide_untranslated": False,  # the default; let .active_translations() return fallbacks too.
+    },
 }
 
 if DJANGO_SETTINGS_LANGUAGE == "es":

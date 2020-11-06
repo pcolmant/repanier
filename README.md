@@ -24,7 +24,7 @@ Active producer :
 
 Licence : GPL v3
 
-# How to setup `Repanier` on Debian 9
+# How to setup `Repanier` on Debian 10
 
 This procedure shows you step by step how to install `Repanier` on a server.
 By applying it, you have all the elements to update a `Repanier` website with a new version of `Repanier`.
@@ -77,11 +77,7 @@ If you want to install `Repanier` on a container, a good starting point is [Toda
 8. If you encounter ***no issue*** to execute the *`sudo -l`*, then close all active ssh sessions.
 9. On a new SSH session, log you in with user `repanier`. Then install needed linux packages.
     ```commandline
-    sudo apt-get install -y build-essential gettext unzip git \
-            python3-dev virtualenv \
-            postgresql libpq-dev \
-            nginx uwsgi uwsgi-plugin-python3 \
-            zlib1g-dev libtiff5-dev libjpeg62-turbo-dev libfreetype6-dev liblcms2-dev libwebp-dev
+    sudo apt-get install build-essential wget gettext unzip git virtualenv postgresql nginx uwsgi uwsgi-plugin-python3
     sudo rm /etc/nginx/sites-enabled/default
     ```
 10. Reboot to apply changes on all active processes.

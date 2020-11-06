@@ -45,7 +45,7 @@ class CustomerPurchaseSendInlineForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(CustomerPurchaseSendInlineForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         purchase = self.instance
         self.fields["previous_purchase_price"].initial = purchase.purchase_price
         try:
@@ -79,7 +79,7 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
         # To delete the purchase, set the quantity to zero
         return False
 
-    def has_add_permission(self, request, **kwargs):
+    def has_add_permission(self, request, obj):
         return True
 
     def has_change_permission(self, request, obj=None):
@@ -87,7 +87,7 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
 
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_object = obj
-        return super(CustomerPurchaseSendInline, self).get_formset(
+        return super().get_formset(
             request, obj, **kwargs
         )
 
@@ -105,12 +105,12 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
                 .order_by("translations__preparation_sort_order")
                 .distinct()
             )
-        return super(CustomerPurchaseSendInline, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
     def get_queryset(self, request):
-        qs = super(CustomerPurchaseSendInline, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return (
             qs.filter(
                 is_box_content=False,
@@ -141,7 +141,7 @@ class CustomerSendForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(CustomerSendForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         customer_producer_invoice = self.instance
         self.fields[
             "offer_purchase_price"
@@ -170,7 +170,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     ordering = ("customer",)
 
     def get_form(self, request, obj=None, **kwargs):
-        form = super(CustomerSendAdmin, self).get_form(request, obj, **kwargs)
+        form = super().get_form(request, obj, **kwargs)
 
         permanence_field = form.base_fields["permanence"]
         customer_field = form.base_fields["customer"]
@@ -209,7 +209,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
         return False
 
     def get_actions(self, request):
-        actions = super(CustomerSendAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         if not actions:
@@ -222,7 +222,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
         return actions
 
     def save_model(self, request, customer_producer_invoice, form, change):
-        super(CustomerSendAdmin, self).save_model(
+        super().save_model(
             request, customer_producer_invoice, form, change
         )
 

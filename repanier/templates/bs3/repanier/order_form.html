@@ -48,7 +48,7 @@
             </div>
             {% if page_obj.has_next %}
                 <div class="loading" style="display: none;">
-                    <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}"
+                    <a href="?page={{ page_obj.next_page_number }}&producer={{ producer_id }}&department={{ department_id }}&is_like={{ is_like }}{% if q %}&q={{ q }}{% endif %}{% if is_basket %}&is_basket={{ is_basket }}{% endif %}"
                    class="infinite-more-link btn btn-info not-active"><span class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% trans "Loading..." %}</a>
                 </div>
             {% endif %}

@@ -108,9 +108,11 @@ class OfferItem(Item):
         return DECIMAL_ZERO, DECIMAL_ZERO, DECIMAL_ZERO
 
     def get_html_producer_qty_stock_invoiced(self):
-        invoiced_qty, taken_from_stock, customer_qty = (
-            self.get_producer_qty_stock_invoiced()
-        )
+        (
+            invoiced_qty,
+            taken_from_stock,
+            customer_qty,
+        ) = self.get_producer_qty_stock_invoiced()
         if invoiced_qty == DECIMAL_ZERO:
             if taken_from_stock == DECIMAL_ZERO:
                 return EMPTY_STRING
@@ -138,9 +140,11 @@ class OfferItem(Item):
     get_html_producer_qty_stock_invoiced.admin_order_field = "quantity_invoiced"
 
     def get_producer_qty_invoiced(self):
-        invoiced_qty, taken_from_stock, customer_qty = (
-            self.get_producer_qty_stock_invoiced()
-        )
+        (
+            invoiced_qty,
+            taken_from_stock,
+            customer_qty,
+        ) = self.get_producer_qty_stock_invoiced()
         return invoiced_qty
 
     def get_producer_unit_price_invoiced(self):
@@ -217,13 +221,13 @@ class OfferItem(Item):
         return qty_display
 
     def get_long_name(self, customer_price=True, is_html=False):
-        return super(OfferItem, self).get_long_name(customer_price=customer_price)
+        return super().get_long_name(customer_price=customer_price)
 
     def get_html_long_name(self):
         return mark_safe(self.get_long_name(is_html=True))
 
     def get_long_name_with_producer(self, is_html=False):
-        return super(OfferItem, self).get_long_name_with_producer()
+        return super().get_long_name_with_producer()
 
     def get_html_long_name_with_producer(self):
         return mark_safe(self.get_long_name_with_producer(is_html=True))

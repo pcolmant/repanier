@@ -11,39 +11,82 @@ from repanier.xlsx.export_tools import *
 def export_customer_prices(producer_qs, wb=None, producer_prices=True):
     now = timezone.now()
     if producer_prices:
-        wb, ws = new_landscape_a4_sheet(wb, "{}".format(_("Producer prices list")),
-                                        now.strftime(settings.DJANGO_SETTINGS_DATETIME))
+        wb, ws = new_landscape_a4_sheet(
+            wb,
+            "{}".format(_("Producer prices list")),
+            now.strftime(settings.DJANGO_SETTINGS_DATETIME),
+        )
     else:
-        wb, ws = new_landscape_a4_sheet(wb, "{}".format(_("Customer prices list")),
-                                        now.strftime(settings.DJANGO_SETTINGS_DATETIME))
+        wb, ws = new_landscape_a4_sheet(
+            wb,
+            "{}".format(_("Customer prices list")),
+            now.strftime(settings.DJANGO_SETTINGS_DATETIME),
+        )
     row_num = 0
-    products = Product.objects.filter(
-        is_active=True,
-        is_into_offer=True,
-        translations__language_code=translation.get_language(),
-        producer__in=producer_qs
-    ).order_by(
-        "department_for_customer",
-        "translations__long_name",
-        "order_average_weight",
-    ).select_related(
-        'producer', 'department_for_customer'
-    ).iterator()
+    products = (
+        Product.objects.filter(
+            is_active=True,
+            is_into_offer=True,
+            translations__language_code=translation.get_language(),
+            producer__in=producer_qs,
+        )
+        .order_by(
+            "department_for_customer",
+            "translations__long_name",
+            "order_average_weight",
+        )
+        .select_related("producer", "department_for_customer")
+        .iterator()
+    )
     product = next_row(products)
     while product is not None:
         row = [
-            (_("Reference"), 10, product.reference if len(product.reference) < 36 else EMPTY_STRING,
-             NumberFormat.FORMAT_TEXT, False),
-            (_("Department"), 15,
-             product.department_for_customer.short_name if product.department_for_customer is not None else " ",
-             NumberFormat.FORMAT_TEXT, False),
+            (
+                _("Reference"),
+                10,
+                product.reference if len(product.reference) < 36 else EMPTY_STRING,
+                NumberFormat.FORMAT_TEXT,
+                False,
+            ),
+            (
+                _("Department"),
+                15,
+                product.department_for_customer.short_name
+                if product.department_for_customer is not None
+                else " ",
+                NumberFormat.FORMAT_TEXT,
+                False,
+            ),
             # (_("is_into_offer"), 7, _("Yes") if product.is_into_offer else _("No"),
             #  NumberFormat.FORMAT_TEXT, False),
-            (_("Wrapped"), 7, _("Yes") if product.wrapped else _("No"),
-             NumberFormat.FORMAT_TEXT, False),
-            (_("Producer"), 15, product.producer.short_profile_name, NumberFormat.FORMAT_TEXT, False),
-            (_("Long name"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
-            (_("VAT"), 10, product.get_vat_level_display(), NumberFormat.FORMAT_TEXT, False),
+            (
+                _("Wrapped"),
+                7,
+                _("Yes") if product.wrapped else _("No"),
+                NumberFormat.FORMAT_TEXT,
+                False,
+            ),
+            (
+                _("Producer"),
+                15,
+                product.producer.short_profile_name,
+                NumberFormat.FORMAT_TEXT,
+                False,
+            ),
+            (
+                _("Long name"),
+                60,
+                product.get_long_name(),
+                NumberFormat.FORMAT_TEXT,
+                False,
+            ),
+            (
+                _("VAT"),
+                10,
+                product.get_vat_level_display(),
+                NumberFormat.FORMAT_TEXT,
+                False,
+            ),
         ]
 
         if row_num == 0:

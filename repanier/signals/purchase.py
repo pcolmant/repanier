@@ -53,6 +53,9 @@ def purchase_pre_save(sender, **kwargs):
 
     purchase = kwargs["instance"]
     # logger.info("purchase pre save : {}".format(purchase.id))
+    if purchase.id is None:
+        purchase.set_customer_price_list_multiplier()
+
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
         quantity = purchase.quantity_ordered
         delta_quantity = quantity - purchase.previous_quantity_ordered
@@ -67,7 +70,6 @@ def purchase_pre_save(sender, **kwargs):
         quantity = purchase.quantity_invoiced
         delta_quantity = quantity - purchase.previous_quantity_invoiced
 
-    purchase.set_customer_price_list_multiplier()
     if purchase.is_box_content:
         if delta_quantity != DECIMAL_ZERO:
             OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(

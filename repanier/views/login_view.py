@@ -1,3 +1,5 @@
+import logging
+
 from cms.utils.conf import get_cms_setting
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, login as auth_login
@@ -14,6 +16,8 @@ from repanier.auth_backend import RepanierAuthBackend
 from repanier.const import EMPTY_STRING
 from repanier.models.staff import Staff
 from repanier.tools import sint, get_repanier_template_name
+
+logger = logging.getLogger(__name__)
 
 
 @sensitive_post_parameters()
@@ -38,6 +42,7 @@ def login_view(
 
     staff_responsibilities = None
     user = request.user
+    print("---------- Hello")
 
     if request.method == "POST":
         form = authentication_form(request, data=request.POST)

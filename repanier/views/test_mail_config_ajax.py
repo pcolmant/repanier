@@ -19,9 +19,7 @@ def test_mail_config_ajax(request):
     to_email = request.user.email
 
     # Send test email
-    email_send = RepanierEmail.send_test_email(
-        to_email=to_email
-    )
+    email_send = RepanierEmail.send_test_email(to_email=to_email)
     json_dict = {"#{}".format(html_id): email_send}
 
     return JsonResponse(json_dict)

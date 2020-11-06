@@ -39,7 +39,7 @@ def get_row(worksheet, header, row_num):
 def get_customer_2_id_dict():
     customer_2_id_dict = {}
     represent_this_buyinggroup = None
-    customer_set = Customer.objects.filter(is_active=True).order_by('?')
+    customer_set = Customer.objects.filter(is_active=True).order_by("?")
     for customer in customer_set:
         customer_2_id_dict[customer.short_basket_name] = customer.id
         if customer.represent_this_buyinggroup:
@@ -49,7 +49,7 @@ def get_customer_2_id_dict():
 
 def get_customer_email_2_id_dict():
     customer_2_id_dict = {}
-    customer_set = Customer.objects.filter(is_active=True).order_by('?')
+    customer_set = Customer.objects.filter(is_active=True).order_by("?")
     for customer in customer_set:
         customer_2_id_dict[customer.user.email] = customer.id
     return customer_2_id_dict
@@ -58,7 +58,7 @@ def get_customer_email_2_id_dict():
 def get_producer_2_id_dict():
     producer_2_id_dict = {}
     represent_this_buyinggroup = None
-    producer_set = Producer.objects.filter(is_active=True).order_by('?')
+    producer_set = Producer.objects.filter(is_active=True).order_by("?")
     for producer in producer_set:
         producer_2_id_dict[producer.short_profile_name] = producer.id
         if producer.represent_this_buyinggroup:
@@ -68,7 +68,11 @@ def get_producer_2_id_dict():
 
 def get_department_for_customer_2_id_dict():
     department_for_customer_2_id_dict = {}
-    department_for_customer_set = LUT_DepartmentForCustomer.objects.filter(is_active=True).order_by('?')
+    department_for_customer_set = LUT_DepartmentForCustomer.objects.filter(
+        is_active=True
+    ).order_by("?")
     for department_for_customer in department_for_customer_set:
-        department_for_customer_2_id_dict[department_for_customer.short_name] = department_for_customer.id
+        department_for_customer_2_id_dict[
+            department_for_customer.short_name
+        ] = department_for_customer.id
     return department_for_customer_2_id_dict

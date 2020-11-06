@@ -49,6 +49,7 @@ from repanier.const import (
     LUT_VAT,
     LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
     LUT_PRODUCT_ORDER_UNIT,
+    PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
 )
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
@@ -250,7 +251,7 @@ class ProductResource(resources.ModelResource):
 
 class ProductDataForm(TranslatableModelForm):
     def __init__(self, *args, **kwargs):
-        super(ProductDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
@@ -462,9 +463,7 @@ class ProductDataForm(TranslatableModelForm):
 
 
 class ProductAdmin(ImportExportMixin, TranslatableAdmin):
-    change_list_template = (
-        None
-    )  # get default admin selection to use customized product change_list template
+    change_list_template = None  # get default admin selection to use customized product change_list template
     form = ProductDataForm
     change_list_url = reverse_lazy("admin:repanier_product_changelist")
     resource_class = ProductResource
@@ -653,7 +652,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ),
         )
 
-        form = super(ProductAdmin, self).get_form(request, product, **kwargs)
+        form = super().get_form(request, product, **kwargs)
 
         producer_field = form.base_fields["producer"]
         department_for_customer_field = form.base_fields["department_for_customer"]
@@ -684,12 +683,12 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if product is not None:
             producer_field.empty_label = None
             producer_field.queryset = producer_queryset
-            department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
-                rght=F("lft") + 1,
-                is_active=True,
-                translations__language_code=translation.get_language(),
-            ).order_by(
-                "translations__short_name"
+            department_for_customer_field.queryset = (
+                LUT_DepartmentForCustomer.objects.filter(
+                    rght=F("lft") + 1,
+                    is_active=True,
+                    translations__language_code=translation.get_language(),
+                ).order_by("translations__short_name")
             )
             if production_mode_field is not None:
                 production_mode_field.empty_label = None
@@ -708,16 +707,18 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 ]
                 producer_field.disabled = True
             if department_for_customer_id is not None:
-                department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
-                    id=department_for_customer_id
+                department_for_customer_field.queryset = (
+                    LUT_DepartmentForCustomer.objects.filter(
+                        id=department_for_customer_id
+                    )
                 )
             else:
-                department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
-                    rght=F("lft") + 1,
-                    is_active=True,
-                    translations__language_code=translation.get_language(),
-                ).order_by(
-                    "translations__short_name"
+                department_for_customer_field.queryset = (
+                    LUT_DepartmentForCustomer.objects.filter(
+                        rght=F("lft") + 1,
+                        is_active=True,
+                        translations__language_code=translation.get_language(),
+                    ).order_by("translations__short_name")
                 )
             if is_active_value:
                 is_active_field = form.base_fields["is_active"]
@@ -740,7 +741,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return form
 
     def get_urls(self):
-        urls = super(ProductAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             path(
                 r"<int:product_id>/duplicate-product/",
@@ -765,17 +766,17 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     get_row_actions.short_description = EMPTY_STRING
 
     def save_model(self, request, product, form, change):
-        super(ProductAdmin, self).save_model(request, product, form, change)
+        super().save_model(request, product, form, change)
         update_offer_item(product_id=product.id)
 
     def get_queryset(self, request):
-        qs = super(ProductAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(
             is_box=False,
             producer__is_active=True,
             # Important to also display untranslated products : translations__language_code=settings.LANGUAGE_CODE
-            translations__language_code=settings.LANGUAGE_CODE)
-        # ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
+            translations__language_code=settings.LANGUAGE_CODE,
+        ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs
 
     def get_import_formats(self):

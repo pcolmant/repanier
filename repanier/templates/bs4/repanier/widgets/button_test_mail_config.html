@@ -38,7 +38,7 @@
 
                     $('#{{ id }}').html('{% trans "Please wait..." %}');
                     var id_email = $("#id_email").val();
-                    var lien = '{% url 'test_mail_config_ajax' %}';
+                    var lien = '{% url 'repanier:test_mail_config_ajax' %}';
                     var csrftoken = getCsrftoken();
                     $.ajaxSetup({
                         beforeSend: function (xhr, settings) {

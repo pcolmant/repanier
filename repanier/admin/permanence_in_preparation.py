@@ -1,5 +1,6 @@
 import logging
 import threading
+from typing import Tuple
 
 from django import forms
 from django.contrib import admin
@@ -82,14 +83,14 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
                 self._has_add_or_delete_permission = True
         return self._has_add_or_delete_permission
 
-    def has_add_permission(self, request, **kwargs):
+    def has_add_permission(self, request, obj):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
     def get_formset(self, request, obj=None, **kwargs):
-        formset = super(PermanenceBoardInline, self).get_formset(request, obj, **kwargs)
+        formset = super().get_formset(request, obj, **kwargs)
         form = formset.form
         widget = form.base_fields["permanence_role"].widget
         widget.can_add_related = True
@@ -108,7 +109,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(PermanenceBoardInline, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -143,14 +144,14 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
                 self._has_add_or_delete_permission = True
         return self._has_add_or_delete_permission
 
-    def has_add_permission(self, request, **kwargs):
+    def has_add_permission(self, request, obj):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
 
     def get_formset(self, request, obj=None, **kwargs):
-        formset = super(DeliveryBoardInline, self).get_formset(request, obj, **kwargs)
+        formset = super().get_formset(request, obj, **kwargs)
         form = formset.form
         widget = form.base_fields["delivery_comment"].widget
         widget.attrs["size"] = "100%"
@@ -165,7 +166,7 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
             kwargs["queryset"] = LUT_DeliveryPoint.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(DeliveryBoardInline, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -186,13 +187,16 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     form = PermanenceInPreparationForm
     change_list_url = reverse_lazy("admin:repanier_permanenceinpreparation_changelist")
 
-    list_per_page = 10
+    list_per_page = 20
     list_max_show_all = 10
     filter_horizontal = ("producers", "boxes")
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = "permanence_date"
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
+    search_fields: Tuple[str] = [
+        "producers__short_profile_name",
+    ]
     ordering = ("-status", "permanence_date", "id")
 
     def has_delete_permission(self, request, obj=None):
@@ -260,7 +264,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             yield inline.get_formset(request, obj), inline
 
     def get_urls(self):
-        urls = super(PermanenceInPreparationAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             path(
                 "<int:permanence_id>/export-offer/",
@@ -580,13 +584,18 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         template_order_producer_mail = []
         template_order_staff_mail = []
         email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
-        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
-            is_email_send=True
-        )
-        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
-            is_email_send=True
-        )
-        order_board_email_will_be_sent, order_board_email_will_be_sent_to = RepanierEmail.send_email_to_who(
+        (
+            order_customer_email_will_be_sent,
+            order_customer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(is_email_send=True)
+        (
+            order_producer_email_will_be_sent,
+            order_producer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(is_email_send=True)
+        (
+            order_board_email_will_be_sent,
+            order_board_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
             board=True,
         )
@@ -846,17 +855,17 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
         if db_field.name == "boxes":
             kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
-        return super(PermanenceInPreparationAdmin, self).formfield_for_manytomany(
+        return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
 
     def get_queryset(self, request):
-        qs = super(PermanenceInPreparationAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs.filter(status__lte=PERMANENCE_SEND)
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
-        super(PermanenceInPreparationAdmin, self).save_related(
+        super().save_related(
             request, form, formsets, change
         )
         permanence = form.instance
@@ -870,6 +879,6 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date
             )
-        super(PermanenceInPreparationAdmin, self).save_model(
+        super().save_model(
             request, permanence, form, change
         )

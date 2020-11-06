@@ -18,6 +18,4 @@ class NotificationAdmin(TranslatableAdmin):
         return False
 
     def get_fields(self, request, obj=None):
-        return [
-            'notification'
-        ]
+        return ["notification"]

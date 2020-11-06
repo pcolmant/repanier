@@ -183,9 +183,7 @@ class Item(TranslatableModel):
         self.producer_order_by_quantity = source.producer_order_by_quantity
         self.is_box = source.is_box
 
-    def recalculate_prices(
-        self, producer_price_are_wo_vat, price_list_multiplier
-    ):
+    def recalculate_prices(self, producer_price_are_wo_vat, price_list_multiplier):
         vat = DICT_VAT[self.vat_level]
         vat_rate = vat[DICT_VAT_RATE]
         if producer_price_are_wo_vat:

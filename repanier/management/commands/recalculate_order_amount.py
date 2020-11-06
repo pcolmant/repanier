@@ -4,14 +4,16 @@ from repanier.models.permanence import Permanence
 
 
 class Command(BaseCommand):
-    args = '<none>'
-    help = 'Recalculate order amount'
+    args = "<none>"
+    help = "Recalculate order amount"
 
     def handle(self, *args, **options):
-        for permanence in Permanence.objects.filter(
-            id=223
-        ).order_by('permanence_date'):
-            print ("Cancel {} {}".format(permanence.permanence_date, permanence.get_status_display()))
+        for permanence in Permanence.objects.filter(id=223).order_by("permanence_date"):
+            print(
+                "Cancel {} {}".format(
+                    permanence.permanence_date, permanence.get_status_display()
+                )
+            )
             permanence.recalculate_order_amount(re_init=True)
 
         # latest_total = BankAccount.objects.filter(
@@ -65,7 +67,7 @@ class Command(BaseCommand):
         #                 permanence_id=permanence.id,
         #             ).order_by('?').first()
         #             customer_invoice.delivery = delivery
-        #         customer_invoice.set_order_delivery(customer_invoice.delivery)
+        #         customer_invoice.set_delivery_context(customer_invoice.delivery)
         #         if customer_invoice.is_order_confirm_send:
         #             customer_invoice.confirm_order()
         #         customer_invoice.save()
@@ -97,7 +99,7 @@ class Command(BaseCommand):
         #                 permanence_id=permanence.id,
         #             ).order_by('?').first()
         #             customer_invoice.delivery = delivery
-        #         customer_invoice.set_order_delivery(customer_invoice.delivery)
+        #         customer_invoice.set_delivery_context(customer_invoice.delivery)
         #         if customer_invoice.is_order_confirm_send:
         #             customer_invoice.confirm_order()
         #         customer_invoice.save()
@@ -111,5 +113,3 @@ class Command(BaseCommand):
         #     # if permanence.highest_status == PERMANENCE_INVOICED:
         #     # else:
         #     pass
-
-

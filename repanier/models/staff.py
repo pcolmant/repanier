@@ -76,38 +76,36 @@ class Staff(MPTTModel, TranslatableModel):
     @classmethod
     def get_or_create_any_coordinator(cls):
         coordinator = (
-            (
-                cls.objects.filter(
-                    is_active=True, is_repanier_admin=True, can_be_contacted=True
-                )
-                .order_by("id")
-                .first()
+            Staff.objects.filter(
+                is_active=True, is_repanier_admin=True, can_be_contacted=True
             )
-            or (
-                cls.objects.filter(is_active=True, is_repanier_admin=True)
-                .order_by("id")
-                .first()
-            )
-            or (cls.objects.filter(is_active=True).order_by("id").first())
-            or (cls.objects.order_by("id").first())
+            .order_by("id")
+            .first()
+        ) or (
+            Staff.objects.filter(is_active=True, is_repanier_admin=True)
+            .order_by("id")
+            .first()
         )
         if coordinator is None:
             # Create the very first staff member
             from repanier.models.customer import Customer
 
-            very_first_customer = Customer.get_or_create_the_very_first_customer()
+            customer_buyinggroup = Customer.get_or_create_group()
             coordinator = Staff.objects.create(
                 is_active=True,
                 is_repanier_admin=True,
+                is_order_manager=True,  # The first coordinator is also order manager (by default)
+                is_invoice_manager=True,  # The first coordinator is also invoice manager (by default)
                 is_webmaster=True,
-                customer_responsible=very_first_customer,
+                customer_responsible=customer_buyinggroup,
                 can_be_contacted=True,
+                long_name=_("Coordinator"),
             )
             cur_language = translation.get_language()
             for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
                 language_code = language["code"]
                 translation.activate(language_code)
-                coordinator.set_current_language(language_code)
+                coordinator.set_current_language(language_code, initialize=True)
                 coordinator.long_name = _("Coordinator")
                 coordinator.save()
             translation.activate(cur_language)
@@ -118,19 +116,12 @@ class Staff(MPTTModel, TranslatableModel):
         signature = []
         html_signature = []
         to_email = []
-        order_responsible_qs = cls.objects.filter(
+        order_responsible_qs = Staff.objects.filter(
             is_active=True, is_order_manager=True
         ).order_by("?")
-        if not order_responsible_qs.exists():
-            order_responsible = Staff.get_or_create_any_coordinator()
-            order_responsible.is_active = True
-            order_responsible.is_order_manager = True
-            order_responsible.save(update_fields=["is_active", "is_order_manager"])
         for order_responsible in order_responsible_qs:
-            customer_responsible = order_responsible.customer_responsible
-            can_be_contacted = order_responsible.can_be_contacted
-            if customer_responsible is not None:
-                if can_be_contacted:
+            if order_responsible.customer_responsible is not None:
+                if order_responsible.can_be_contacted:
                     signature.append(order_responsible.get_str_member)
                     html_signature.append(order_responsible.get_html_signature)
                 to_email.extend(order_responsible.get_to_email)
@@ -146,19 +137,12 @@ class Staff(MPTTModel, TranslatableModel):
         signature = []
         html_signature = []
         to_email = []
-        invoice_responsible_qs = cls.objects.filter(
+        invoice_responsible_qs = Staff.objects.filter(
             is_active=True, is_invoice_manager=True
         ).order_by("?")
-        if not invoice_responsible_qs.exists():
-            invoice_responsible = Staff.get_or_create_any_coordinator()
-            invoice_responsible.is_active = True
-            invoice_responsible.is_order_manager = True
-            invoice_responsible.save(update_fields=["is_active", "is_order_manager"])
         for invoice_responsible in invoice_responsible_qs:
-            customer_responsible = invoice_responsible.customer_responsible
-            can_be_contacted = invoice_responsible.can_be_contacted
-            if customer_responsible is not None:
-                if can_be_contacted:
+            if invoice_responsible.customer_responsible is not None:
+                if invoice_responsible.can_be_contacted:
                     signature.append(invoice_responsible.get_str_member)
                     html_signature.append(invoice_responsible.get_html_signature)
                 to_email.extend(invoice_responsible.get_to_email)
@@ -205,7 +189,13 @@ class Staff(MPTTModel, TranslatableModel):
     def get_str_member(self):
         if self.customer_responsible is not None:
             return "{} : {}{}".format(
-                self,
+                # --
+                # Django 3.0, python 3.7
+                # if use "self" : TypeError: __str__ returned non-string (type __proxy__)
+                self.safe_translation_getter(
+                    "long_name", any_language=True, default=EMPTY_STRING
+                ),
+                # --
                 self.customer_responsible.long_basket_name or self.customer_responsible,
                 self.customer_responsible.get_phone1(prefix=" (", postfix=")"),
             )

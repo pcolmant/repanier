@@ -13,7 +13,7 @@ from .lut import LUTAdmin
 
 class UserDataForm(TranslatableModelForm):
     def __init__(self, *args, **kwargs):
-        super(UserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
@@ -113,7 +113,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
             kwargs["queryset"] = Customer.objects.filter(
                 is_active=True
             )  # , represent_this_buyinggroup=False)
-        return super(StaffWithUserDataAdmin, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -128,7 +128,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
             and old_customer_responsible_field.id != new_customer_responsible_field.id
         )
 
-        super(StaffWithUserDataAdmin, self).save_model(request, staff, form, change)
+        super().save_model(request, staff, form, change)
         if (
             change_previous_customer_responsible
             and old_customer_responsible_field.user is not None

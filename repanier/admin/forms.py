@@ -23,7 +23,7 @@ class OpenAndSendOfferForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
-        super(OpenAndSendOfferForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class CloseAndSendOrderForm(forms.Form):
@@ -39,7 +39,7 @@ class CloseAndSendOrderForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
-        super(CloseAndSendOrderForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class GeneratePermanenceForm(forms.Form):
@@ -49,7 +49,7 @@ class GeneratePermanenceForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
-        super(GeneratePermanenceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class InvoiceOrderForm(forms.Form):
@@ -62,7 +62,7 @@ class InvoiceOrderForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
-        super(InvoiceOrderForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class PermanenceInvoicedForm(forms.Form):
@@ -72,7 +72,7 @@ class PermanenceInvoicedForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.payment_date = kwargs.pop("payment_date", None)
-        super(PermanenceInvoicedForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields["payment_date"].initial = self.payment_date
 
@@ -109,7 +109,7 @@ class ImportInvoiceForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ImportInvoiceForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["invoice_reference"].widget.attrs[
             "style"
         ] = "width:450px !important"
@@ -141,7 +141,7 @@ class ProducerInvoicedForm(forms.Form):
     producer_price_are_wo_vat = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
-        super(ProducerInvoicedForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["id"].widget.attrs["readonly"] = True
         # self.fields["id"].widget.attrs["hidden"] = True
         self.fields["to_be_invoiced_balance"].widget.attrs[

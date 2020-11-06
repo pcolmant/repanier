@@ -1,5 +1,6 @@
 import logging
 import threading
+from typing import Tuple
 
 from django import forms
 from django.contrib import admin
@@ -66,7 +67,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return True
 
-    def has_add_permission(self, request, **kwargs):
+    def has_add_permission(self, request, obj):
         return True
 
     def has_change_permission(self, request, obj=None):
@@ -79,7 +80,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(PermanenceBoardInline, self).formfield_for_foreignkey(
+        return super().formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
@@ -97,21 +98,31 @@ class PermanenceDoneForm(TranslatableModelForm):
 
 class PermanenceDoneAdmin(TranslatableAdmin):
     form = PermanenceDoneForm
-    change_list_url = reverse_lazy("admin:repanier_permanencedone_changelist")
+    change_list_url = reverse_lazy(
+        "admin:repanier_permanencedone_changelist"
+    )
 
-    fields = ("permanence_date", "short_name", "invoice_description")
-    readonly_fields = ("status", "automatically_closed")
-    list_per_page = 10
+    fields: Tuple[str, str, str] = [
+        "permanence_date",
+        "short_name",
+        "invoice_description",
+    ]
+    readonly_fields: Tuple[str, str] = ["status", "automatically_closed"]
+    list_per_page: int = 20
     list_max_show_all = 10
     inlines = [PermanenceBoardInline]
     date_hierarchy = "permanence_date"
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
-    ordering = (
+    search_fields: Tuple[str] = [
+        "customerproducerinvoice__producer__short_profile_name",
+        "customerproducerinvoice__customer__short_basket_name",
+    ]
+    ordering: Tuple[str, str, str] = [
         "-invoice_sort_order",
         "-canceled_invoice_sort_order",
         "-permanence_date",
-    )
+    ]
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -141,7 +152,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         return list_display
 
     def get_urls(self):
-        urls = super(PermanenceDoneAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             path(
                 "import-new-invoice/",
@@ -341,8 +352,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             selected = producer_invoiced_form.cleaned_data.get(
                                 "selected"
                             )
-                            short_profile_name = producer_invoiced_form.cleaned_data.get(
-                                "short_profile_name"
+                            short_profile_name = (
+                                producer_invoiced_form.cleaned_data.get(
+                                    "short_profile_name"
+                                )
                             )
                             producer_invoice = (
                                 ProducerInvoice.objects.filter(
@@ -355,11 +368,15 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             )
                             if selected:
                                 at_least_one_selected = True
-                                producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
-                                    "to_be_invoiced_balance"
+                                producer_invoice.to_be_invoiced_balance = (
+                                    producer_invoiced_form.cleaned_data.get(
+                                        "to_be_invoiced_balance"
+                                    )
                                 )
-                                producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
-                                    "invoice_reference", EMPTY_STRING
+                                producer_invoice.invoice_reference = (
+                                    producer_invoiced_form.cleaned_data.get(
+                                        "invoice_reference", EMPTY_STRING
+                                    )
                                 )
                                 producer_invoice.to_be_paid = True
                             else:
@@ -435,8 +452,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 if not producer.represent_this_buyinggroup:
                     # We have already pay to much (look at the bank movements).
                     # So we do not need to pay anything
-                    producer_invoice.calculated_invoiced_balance.amount = producer.get_calculated_invoiced_balance(
-                        permanence_id
+                    producer_invoice.calculated_invoiced_balance.amount = (
+                        producer.get_calculated_invoiced_balance(permanence_id)
                     )
                 else:
                     producer_invoice.calculated_invoiced_balance.amount = RepanierMoney(
@@ -623,10 +640,16 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
         template_invoice_customer_mail = []
         template_invoice_producer_mail = []
-        invoice_customer_email_will_be_sent, invoice_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
+        (
+            invoice_customer_email_will_be_sent,
+            invoice_customer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
         )
-        invoice_producer_email_will_be_sent, invoice_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
+        (
+            invoice_producer_email_will_be_sent,
+            invoice_producer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
         )
 
@@ -865,7 +888,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
     get_row_actions.short_description = EMPTY_STRING
 
     def get_actions(self, request):
-        actions = super(PermanenceDoneAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
 
@@ -884,12 +907,12 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
         # Finally I found the use of EMPTY_STRING nicer on the UI
         extra_context["module_name"] = EMPTY_STRING
-        return super(PermanenceDoneAdmin, self).changelist_view(
+        return super().changelist_view(
             request, extra_context=extra_context
         )
 
     def get_queryset(self, request):
-        qs = super(PermanenceDoneAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs.filter(status__gte=PERMANENCE_SEND)
 
     def save_model(self, request, permanence, form, change):
@@ -897,7 +920,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date
             )
-        super(PermanenceDoneAdmin, self).save_model(request, permanence, form, change)
+        super().save_model(request, permanence, form, change)
 
     # class Media:
     #     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:

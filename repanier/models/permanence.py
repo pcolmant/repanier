@@ -134,6 +134,9 @@ class Permanence(TranslatableModel):
     def get_producers(self, with_download):
         from repanier.admin.tools import add_filter
 
+        print(dir(self))
+
+        producers = []
         if self.status == PERMANENCE_PLANNED:
             download_url = add_filter(
                 reverse("admin:permanence-export-offer", args=[self.id])
@@ -143,18 +146,16 @@ class Permanence(TranslatableModel):
                 download_url,
                 _("Export"),
             )
-            link = []
             if len(self.producers.all()) > 0:
                 changelist_url = reverse("admin:repanier_product_changelist")
                 for p in self.producers.all():
-                    link.append(
+                    producers.append(
                         '<a href="{}?producer={}">&nbsp;{}</a>'.format(
                             changelist_url,
                             p.id,
                             p.short_profile_name.replace(" ", "&nbsp;"),
                         )
                     )
-            producers = ", ".join(link)
         elif self.status == PERMANENCE_OPENED:
             close_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemclosed_changelist"
@@ -168,7 +169,7 @@ class Permanence(TranslatableModel):
                 _("Export"),
             )
 
-            link = []
+
             for p in self.producers.all().only("id"):
                 pi = (
                     ProducerInvoice.objects.filter(
@@ -197,12 +198,11 @@ class Permanence(TranslatableModel):
                 else:
                     label = ("{} ".format(p.short_profile_name)).replace(" ", "&nbsp;")
                     offeritem_changelist_url = close_offeritem_changelist_url
-                link.append(
+                producers.append(
                     '<a href="{}?permanence={}&producer={}">{}</a>'.format(
                         offeritem_changelist_url, self.id, p.id, label
                     )
                 )
-            producers = ", ".join(link)
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             if self.status == PERMANENCE_SEND:
@@ -224,7 +224,6 @@ class Permanence(TranslatableModel):
             send_customer_changelist_url = reverse(
                 "admin:repanier_customersend_changelist"
             )
-            link = []
             for pi in (
                 ProducerInvoice.objects.filter(permanence_id=self.id)
                 .select_related("producer")
@@ -239,7 +238,7 @@ class Permanence(TranslatableModel):
                     label = "{} ({})".format(
                         pi.producer.short_profile_name, pi.get_total_price_with_tax()
                     )
-                    link.append(
+                    producers.append(
                         '<a href="{}?permanence={}&producer={}">&nbsp;{}</a>'.format(
                             changelist_url,
                             self.id,
@@ -276,54 +275,60 @@ class Permanence(TranslatableModel):
                             continue
                     # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                     # Such that they can be accessed by the producer and by the staff
-                    link.append(
+                    producers.append(
                         '<a href="{}?producer={}" target="_blank">{}</a>'.format(
-                            reverse("producer_invoice_view", args=(pi.id,)),
+                            reverse("repanier:producer_invoice_view", args=(pi.id,)),
                             pi.producer_id,
                             label.replace(" ", "&nbsp;"),
                         )
                     )
-            producers = ", ".join(link)
         else:
             button_download = EMPTY_STRING
-            producers = ", ".join(
-                [
+            producers = [
                     p.short_profile_name
                     for p in Producer.objects.filter(
                         producerinvoice__permanence_id=self.id
                     ).only("short_profile_name")
                 ]
-            )
         if len(producers) > 0:
             if not with_download:
                 button_download = EMPTY_STRING
-            msg_html = """
-    <div id="id_hide_producers_{}" style="display:block;" class="repanier-button-row">{}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_producers_{}').style.display = 'block'; document.getElementById('id_hide_producers_{}').style.display = 'none'; return false;">
-            <i
-                    class="far fa-eye"></i></a></span>
-    </div>
-    <div id="id_show_producers_{}" style="display:none;" class="repanier-button-row">{}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_producers_{}').style.display = 'none'; document.getElementById('id_hide_producers_{}').style.display = 'block'; return false;">
-            <i
-                    class="far fa-eye-slash"></i></a></span>
-        <p><br><div class="wrap-text">{}</div></p>
-    </div>
-            """.format(
-                self.id,
-                button_download,
-                _("Show"),
-                self.id,
-                self.id,
-                self.id,
-                button_download,
-                _("Hide"),
-                self.id,
-                self.id,
-                producers,
-            )
+            if len(producers) > 3:
+                msg_html = """
+        <div id="id_hide_producers_{}" style="display:block;" class="repanier-button-row">{}
+            <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                    onclick="document.getElementById('id_show_producers_{}').style.display = 'block'; document.getElementById('id_hide_producers_{}').style.display = 'none'; return false;">
+                <i
+                        class="far fa-eye"></i></a></span>
+        </div>
+        <div id="id_show_producers_{}" style="display:none;" class="repanier-button-row">{}
+            <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
+                    onclick="document.getElementById('id_show_producers_{}').style.display = 'none'; document.getElementById('id_hide_producers_{}').style.display = 'block'; return false;">
+                <i
+                        class="far fa-eye-slash"></i></a></span>
+            <p><br><div class="wrap-text">{}</div></p>
+        </div>
+                """.format(
+                    self.id,
+                    button_download,
+                    _("Show"),
+                    self.id,
+                    self.id,
+                    self.id,
+                    button_download,
+                    _("Hide"),
+                    self.id,
+                    self.id,
+                    ", ".join(producers),
+                )
+            else:
+                msg_html = """
+        <div style="display:block;" class="repanier-button-row">
+            <p><div class="wrap-text">{}</div></p>
+        </div>
+                """.format(
+                    ", ".join(producers),
+                )
             return mark_safe(msg_html)
         else:
             return mark_safe('<div class="wrap-text">{}</div>'.format(_("No offer")))
@@ -343,6 +348,7 @@ class Permanence(TranslatableModel):
     def get_customers(self, with_download):
         from repanier.admin.tools import add_filter
 
+        customers = []
         if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
             if self.status == PERMANENCE_OPENED:
@@ -362,7 +368,7 @@ class Permanence(TranslatableModel):
                 download_url,
                 _("Export"),
             )
-            link = []
+
             delivery_save = None
             for ci in (
                 CustomerInvoice.objects.filter(permanence_id=self.id)
@@ -372,11 +378,11 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append(
+                        customers.append(
                             "<br><b>{}</b>".format(ci.delivery.get_delivery_display())
                         )
                     else:
-                        link.append("<br><br>--")
+                        customers.append("<br><br>--")
                 total_price_with_tax = ci.get_total_price_with_tax(
                     customer_charged=True
                 )
@@ -391,7 +397,7 @@ class Permanence(TranslatableModel):
                     "</i></b>" if ci.is_group else EMPTY_STRING,
                 )
                 # Important : no target="_blank"
-                link.append(
+                customers.append(
                     '<a href="{}?permanence={}&customer={}">{}</a>'.format(
                         changelist_url,
                         self.id,
@@ -399,10 +405,8 @@ class Permanence(TranslatableModel):
                         label.replace(" ", "&nbsp;"),
                     )
                 )
-            customers = ", ".join(link)
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             button_download = EMPTY_STRING
-            link = []
             delivery_save = None
             for ci in (
                 CustomerInvoice.objects.filter(permanence_id=self.id)
@@ -412,11 +416,11 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append(
+                        customers.append(
                             "<br><b>{}</b>".format(ci.delivery.get_delivery_display())
                         )
                     else:
-                        link.append("<br><br>--")
+                        customers.append("<br><br>--")
                 total_price_with_tax = ci.get_total_price_with_tax(
                     customer_charged=True
                 )
@@ -431,28 +435,26 @@ class Permanence(TranslatableModel):
                 )
                 # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                 # Such that they can be accessed by the customer and by the staff
-                link.append(
+                customers.append(
                     '<a href="{}?customer={}" target="_blank">{}</a>'.format(
-                        reverse("customer_invoice_view", args=(ci.id,)),
+                        reverse("repanier:customer_invoice_view", args=(ci.id,)),
                         ci.customer_id,
                         label.replace(" ", "&nbsp;"),
                     )
                 )
-            customers = ", ".join(link)
         else:
             button_download = EMPTY_STRING
-            customers = ", ".join(
-                [
+            customers = [
                     c.short_basket_name
                     for c in Customer.objects.filter(
                         customerinvoice__permanence_id=self.id
                     ).only("short_basket_name")
                 ]
-            )
         if len(customers) > 0:
             if not with_download:
                 button_download = EMPTY_STRING
-            msg_html = """
+            if len(customers) > 3:
+                msg_html = """
     <div id="id_hide_customers_{}" style="display:block;" class="repanier-button-row">{}
         <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
                 onclick="document.getElementById('id_show_customers_{}').style.display = 'block'; document.getElementById('id_hide_customers_{}').style.display = 'none'; return false;">
@@ -466,19 +468,27 @@ class Permanence(TranslatableModel):
                     class="far fa-eye-slash"></i></a></span>
         <p><br><div class="wrap-text">{}</div></p>
     </div>
-            """.format(
-                self.id,
-                button_download,
-                _("Show"),
-                self.id,
-                self.id,
-                self.id,
-                button_download,
-                _("Hide"),
-                self.id,
-                self.id,
-                customers,
-            )
+                """.format(
+                    self.id,
+                    button_download,
+                    _("Show"),
+                    self.id,
+                    self.id,
+                    self.id,
+                    button_download,
+                    _("Hide"),
+                    self.id,
+                    self.id,
+                    ", ".join(customers),
+                )
+            else:
+                msg_html = """
+    <div style="display:block;" class="repanier-button-row">
+        <p><div class="wrap-text">{}</div></p>
+    </div>
+                """.format(
+                    ", ".join(customers),
+                )
             return mark_safe(msg_html)
         else:
             return mark_safe('<div class="wrap-text">{}</div>'.format(_("No purchase")))
@@ -709,8 +719,8 @@ class Permanence(TranslatableModel):
                     if not customer.represent_this_buyinggroup:
                         # Should pay a membership fee
                         if customer.membership_fee_valid_until < self.permanence_date:
-                            membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(
-                                self
+                            membership_fee_offer_item = (
+                                membership_fee_product.get_or_create_offer_item(self)
                             )
                             self.producers.add(membership_fee_offer_item.producer_id)
                             create_or_update_one_purchase(
@@ -809,22 +819,24 @@ class Permanence(TranslatableModel):
         from repanier.models.purchase import PurchaseWoReceiver
 
         bank_account_latest_total = BankAccount.get_latest_total()
+
+        new_bank_latest_total = (
+            bank_account_latest_total.bank_amount_in.amount
+            - bank_account_latest_total.bank_amount_out.amount
+        )
+
         producer_buyinggroup = Producer.get_or_create_group()
         customer_buyinggroup = Customer.get_or_create_group()
-        if (
-            bank_account_latest_total is None
-            or producer_buyinggroup is None
-            or customer_buyinggroup is None
-        ):
-            return
 
         self.set_status(
             old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
         )
 
-        customer_invoice_buyinggroup = self.get_or_create_group_invoice(
-            customer_buyinggroup, payment_date, PERMANENCE_WAIT_FOR_INVOICED
+        customer_invoice_buyinggroup = self.get_or_create_invoice(
+            customer=customer_buyinggroup, refresh=True
         )
+        customer_invoice_buyinggroup.set_invoice_context(payment_date)
+        customer_invoice_buyinggroup.save()
 
         permanence_partially_invoiced = (
             ProducerInvoice.objects.filter(
@@ -895,16 +907,16 @@ class Permanence(TranslatableModel):
             for new_customer_invoice in CustomerInvoice.objects.filter(
                 permanence_id=new_permanence
             ).order_by("?"):
-                new_customer_invoice.calculate_order_price()
+                new_customer_invoice.set_total()
                 new_customer_invoice.save()
 
             new_permanence.recalculate_order_amount(re_init=True)
             new_permanence.save()
 
         for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id
+            permanence_id=self.id, customer_id=F("customer_charged_id")
         ).order_by("?"):
-            customer_invoice.calculate_order_price()
+            customer_invoice.set_total()
             customer_invoice.save()
 
         self.recalculate_order_amount(re_init=True)
@@ -913,54 +925,13 @@ class Permanence(TranslatableModel):
         for customer_invoice in CustomerInvoice.objects.filter(
             permanence_id=self.id
         ).order_by("?"):
-            customer_invoice.balance = (
-                customer_invoice.previous_balance
-            ) = customer_invoice.customer.balance
-            customer_invoice.date_previous_balance = (
-                customer_invoice.customer.date_balance
-            )
-            customer_invoice.date_balance = payment_date
-
-            if customer_invoice.customer_id == customer_invoice.customer_charged_id:
-                # ajuster sa balance
-                # il a droit aux réductions
-                total_price_with_tax = (
-                    customer_invoice.get_total_price_with_tax().amount
-                )
-                customer_invoice.balance.amount -= total_price_with_tax
-                Customer.objects.filter(id=customer_invoice.customer_id).order_by(
-                    "?"
-                ).update(
-                    date_balance=payment_date,
-                    balance=F("balance") - total_price_with_tax,
-                )
-            else:
-                # ne pas modifier sa balance
-                # ajuster la balance de celui qui paye
-                # celui qui paye a droit aux réductions
-                Customer.objects.filter(id=customer_invoice.customer_id).order_by(
-                    "?"
-                ).update(date_balance=payment_date)
+            customer_invoice.set_invoice_context(payment_date)
             customer_invoice.save()
 
         for producer_invoice in ProducerInvoice.objects.filter(
             permanence_id=self.id
         ).order_by("?"):
-            producer_invoice.balance = (
-                producer_invoice.previous_balance
-            ) = producer_invoice.producer.balance
-            producer_invoice.date_previous_balance = (
-                producer_invoice.producer.date_balance
-            )
-            producer_invoice.date_balance = payment_date
-            total_price_with_tax = producer_invoice.get_total_price_with_tax().amount
-            producer_invoice.balance.amount += total_price_with_tax
-            producer_invoice.save()
-            Producer.objects.filter(id=producer_invoice.producer_id).order_by(
-                "?"
-            ).update(
-                date_balance=payment_date, balance=F("balance") + total_price_with_tax
-            )
+            producer_invoice.set_invoice_context(payment_date)
             producer_invoice.save()
 
         result_set = (
@@ -1096,11 +1067,6 @@ class Permanence(TranslatableModel):
         # generate bank account movements
         self.generate_bank_account_movement(payment_date=payment_date)
 
-        new_bank_latest_total = (
-            bank_account_latest_total.bank_amount_in.amount
-            - bank_account_latest_total.bank_amount_out.amount
-        )
-
         # Calculate new current balance : Bank
         for bank_account in (
             BankAccount.objects.select_for_update()
@@ -1143,42 +1109,16 @@ class Permanence(TranslatableModel):
             .order_by("?")
         ):
 
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    customer_id=bank_account.customer_id, permanence_id=self.id
-                )
-                .order_by("?")
-                .first()
+            customer_invoice = self.get_or_create_invoice(
+                customer=bank_account.customer, refresh=False
             )
-            if customer_invoice is None:
-                customer_invoice = CustomerInvoice.objects.create(
-                    customer_id=bank_account.customer_id,
-                    permanence_id=self.id,
-                    date_previous_balance=bank_account.customer.date_balance,
-                    previous_balance=bank_account.customer.balance,
-                    date_balance=payment_date,
-                    balance=bank_account.customer.balance,
-                    customer_charged_id=bank_account.customer_id,
-                    transport=DECIMAL_ZERO,
-                    min_transport=DECIMAL_ZERO,
-                )
-            bank_amount_in = bank_account.bank_amount_in.amount
-            new_bank_latest_total += bank_amount_in
-            bank_amount_out = bank_account.bank_amount_out.amount
-            new_bank_latest_total -= bank_amount_out
-            customer_invoice.date_balance = payment_date
-            customer_invoice.bank_amount_in.amount += bank_amount_in
-            customer_invoice.bank_amount_out.amount += bank_amount_out
-            customer_invoice.balance.amount += bank_amount_in - bank_amount_out
+            customer_invoice.set_invoice_context(payment_date=payment_date)
 
             customer_invoice.save()
             Customer.objects.filter(id=bank_account.customer_id).order_by("?").update(
                 date_balance=payment_date,
-                balance=F("balance") + bank_amount_in - bank_amount_out,
+                balance=customer_invoice.balance,
             )
-            bank_account.customer_invoice_id = customer_invoice.id
-            bank_account.permanence_id = self.id
-            bank_account.save()
 
         for bank_account in (
             BankAccount.objects.select_for_update()
@@ -1267,29 +1207,61 @@ class Permanence(TranslatableModel):
             payment_date=payment_date,
         )
 
-    def get_or_create_group_invoice(self, customer_buyinggroup, payment_date, status):
-        customer_invoice_buyinggroup = (
+    def create_invoice(self, customer):
+        customer_invoice = CustomerInvoice.objects.create(
+            permanence_id=self.id,
+            customer_id=customer.id,
+            #
+            #
+            delta_price_with_tax=DECIMAL_ZERO,
+            delta_vat=DECIMAL_ZERO,
+            total_vat=DECIMAL_ZERO,
+            total_deposit=DECIMAL_ZERO,
+            total_price_with_tax=DECIMAL_ZERO,
+            delta_transport=DECIMAL_ZERO,
+            #
+            #
+            is_order_confirm_send=False,
+            invoice_sort_order=None,
+            # 	date_previous_balance = undefined (today)
+            # 	previous_balance = undefined (DECIMAL_ZERO)
+            # 	date_balance = undefined (today)
+            # 	balance = undefined (DECIMAL_ZERO)
+        )
+        customer_invoice.set_delivery_context()
+        #   validated delivery = f(delivery/customer, default delivery = None)
+        #   status = f(permanence, validated delivery),
+        # 	is_group= f(validated delivery)
+        #   group =  f(validated delivery)
+        # 	customer_charged_id=f(groupe)
+        # 	price_list_multiplier= f(group), default 1
+        # 	transport= f(validated delivery/group), default 0
+        # 	min_transport= f(validated delivery/group), default 0
+        customer_invoice.save()
+        return customer_invoice
+
+    def get_or_create_invoice(self, customer, refresh=True):
+        customer_invoice = (
             CustomerInvoice.objects.filter(
-                customer_id=customer_buyinggroup.id, permanence_id=self.id
+                permanence_id=self.id, customer_id=customer.id
             )
             .order_by("?")
             .first()
         )
-        if customer_invoice_buyinggroup is None:
-            customer_invoice_buyinggroup = CustomerInvoice.objects.create(
-                permanence_id=self.id,
-                customer_id=customer_buyinggroup.id,
-                status=status,
-                date_previous_balance=customer_buyinggroup.date_balance,
-                previous_balance=customer_buyinggroup.balance,
-                date_balance=payment_date,
-                balance=customer_buyinggroup.balance,
-                customer_charged_id=customer_buyinggroup.id,
-                transport=DECIMAL_ZERO,
-                min_transport=DECIMAL_ZERO,
-                price_list_multiplier=DECIMAL_ONE,
-            )
-        return customer_invoice_buyinggroup
+        if customer_invoice is None:
+            customer_invoice = self.create_invoice(customer)
+        elif refresh:
+            if customer_invoice.invoice_sort_order is None:
+                # if not already invoiced, update all totals
+                customer_invoice.set_total()
+                # 	delta_price_with_tax
+                # 	delta_vat
+                # 	total_vat
+                # 	total_deposit
+                # 	total_price_with_tax
+                # 	delta_transport = f(total_price_with_tax, transport, min_transport)
+                customer_invoice.save()
+        return customer_invoice
 
     @transaction.atomic
     def cancel_invoice(self, last_bank_account_total):
@@ -1330,9 +1302,6 @@ class Permanence(TranslatableModel):
             delta_vat=DECIMAL_ZERO,
             delta_transport=DECIMAL_ZERO,
             delta_deposit=DECIMAL_ZERO,
-            delta_stock_with_tax=DECIMAL_ZERO,
-            delta_stock_vat=DECIMAL_ZERO,
-            delta_stock_deposit=DECIMAL_ZERO,
             balance=F("previous_balance"),
             date_balance=F("date_previous_balance"),
             invoice_sort_order=None,
@@ -1343,9 +1312,6 @@ class Permanence(TranslatableModel):
         ).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
             bank_amount_out=DECIMAL_ZERO,
-            delta_stock_with_tax=DECIMAL_ZERO,
-            delta_stock_vat=DECIMAL_ZERO,
-            delta_stock_deposit=DECIMAL_ZERO,
             balance=F("previous_balance"),
             date_balance=F("date_previous_balance"),
             invoice_sort_order=None,
@@ -1780,7 +1746,7 @@ class Permanence(TranslatableModel):
         else:
             message = self.get_status_display()
         if need_to_refresh_status:
-            url = reverse("display_status", args=(self.id,))
+            url = reverse("repanier:display_status", args=(self.id,))
             if force_refresh:
                 # force self.gauge to 3 so that next call the guage will be set to 0
                 self.gauge = 3
@@ -1875,7 +1841,7 @@ class Permanence(TranslatableModel):
                 <div class="excerpt">{offer_description}</div>
             </a>
             """.format(
-                    href=reverse("order_view", args=(self.id,)),
+                    href=reverse("repanier:order_view", args=(self.id,)),
                     title=self.get_html_permanence_display(),
                     offer_description=offer_description.words(30, html=True),
                 )
