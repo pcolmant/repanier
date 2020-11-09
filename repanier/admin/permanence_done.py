@@ -1,9 +1,9 @@
 import logging
 import threading
-from typing import Tuple
 
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import helpers
 from django.core.checks import messages
 from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
@@ -64,16 +64,16 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     fields = ["permanence_role", "customer"]
     extra = 1
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, request, obj=None) -> bool:
         return True
 
-    def has_add_permission(self, request, obj):
+    def has_add_permission(self, request, obj) -> bool:
         return True
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, obj=None) -> bool:
         return True
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    def formfield_for_foreignkey(self, db_field, request, **kwargs) -> object:
         if db_field.name == "customer":
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
         if db_field.name == "permanence_role":
@@ -124,19 +124,19 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         "-permanence_date",
     ]
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, request, obj=None) -> bool:
         return False
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request) -> bool:
         return False
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request, obj=None) -> bool:
         user = request.user
         if user.is_invoice_manager:
             return True
         return False
 
-    def get_redirect_to_change_list_url(self):
+    def get_redirect_to_change_list_url(self) -> str:
         return "{}{}".format(self.change_list_url, get_query_filters())
 
     def get_list_display(self, request):
@@ -273,7 +273,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 "sub_title": _("Please, confirm the action : cancel delivery."),
                 "action": "cancel_delivery",
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -324,7 +324,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
         if max_payment_date < min_payment_date:
             max_payment_date = min_payment_date
-        if "apply" in request.POST and admin.ACTION_CHECKBOX_NAME in request.POST:
+        if "apply" in request.POST and helpers.ACTION_CHECKBOX_NAME in request.POST:
             permanence_form = PermanenceInvoicedForm(request.POST)
             producer_invoiced_formset = ProducerInvoicedFormSet(request.POST)
             if permanence_form.is_valid() and producer_invoiced_formset.is_valid():
@@ -429,7 +429,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                     customer__isnull=True,
                                     operation_status=BANK_CALCULATED_INVOICE,
                                 ).order_by("producer", "-operation_date", "-id"),
-                                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
                             },
                         )
                     else:
@@ -502,7 +502,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 "permanence": permanence,
                 "permanence_form": permanence_form,
                 "producer_invoiced_formset": producer_invoiced_formset,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -525,7 +525,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 "sub_title": _("Please, confirm the action : generate archive."),
                 "action": "archive",
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -591,7 +591,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 "sub_title": sub_title,
                 "action": action,
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -764,7 +764,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
                 "action": "send_invoices",
                 "permanence": permanence,
                 "form": form,

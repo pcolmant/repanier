@@ -69,14 +69,14 @@
                class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-left"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
         {% endif %}
         {% if next_producer_invoice_id %}
-            <a href="{% if uuid %}{% url 'producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
+            <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
                class="btn btn-disabled"> {% trans "Invoice" %} </a>
         {% else %}
             <span class="btn btn-disabled">{% trans "Invoice" %}</span>
         {% endif %}
         {% if next_producer_invoice_id %}
             <a href="
-                    {% if uuid %}{% url 'producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
+                    {% if uuid %}{% url 'repanier:producer_invoice_uuid_view' next_producer_invoice_id uuid %}{% else %}{% url 'repanier:producer_invoice_view' next_producer_invoice_id %}?producer={{ object.producer.id }}{% endif %}"
                class="btn btn-info btn-disabled">&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-arrow-right"></span>&nbsp;&nbsp;&nbsp;&nbsp;</a>
         {% endif %}
     </div>
@@ -138,7 +138,7 @@
 {% addtoblock "lastjs" %}
     <script type="text/javascript">
         $(document).ready(function () {
-            lien = '{% url 'order_name' %}';
+            lien = '{% url 'repanier:order_name' %}';
             $.ajax({
                 url: lien,
                 cache: false,
@@ -162,7 +162,7 @@
 {% if not next_producer_invoice_id %}
 <script type="text/javascript">
     $(document).ready(function () {
-        var lien = '{% url 'producer_basket_message_form_ajax' producer.id producer.uuid %}';
+        var lien = '{% url 'repanier:producer_basket_message_form_ajax' producer.id producer.uuid %}';
         $.ajax({
             url: lien,
             cache: false,

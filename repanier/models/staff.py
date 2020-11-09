@@ -90,7 +90,7 @@ class Staff(MPTTModel, TranslatableModel):
             # Create the very first staff member
             from repanier.models.customer import Customer
 
-            customer_buyinggroup = Customer.get_or_create_group()
+            customer_buyinggroup = Customer.get_or_create_default()
             coordinator = Staff.objects.create(
                 is_active=True,
                 is_repanier_admin=True,

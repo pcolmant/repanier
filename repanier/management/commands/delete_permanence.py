@@ -35,7 +35,7 @@ class Command(BaseCommand):
                     permanence_id=permanence_id
                 ).delete()
                 BankAccount.objects.filter(permanence_id=permanence_id).delete()
-                customer_buyinggroup = Customer.get_or_create_group()
+                customer_buyinggroup = Customer.get_or_create_default()
 
                 BankAccount.open_account(customer_buyinggroup=customer_buyinggroup)
                 Permanence.objects.filter(id=permanence.id).delete()

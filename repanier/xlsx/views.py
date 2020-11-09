@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.admin import helpers
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
@@ -71,7 +72,7 @@ def import_xslx_view(
             )
         return HttpResponseRedirect(request.get_full_path())
     form = form_klass(
-        initial={"_selected_action": request.POST.getlist(admin.ACTION_CHECKBOX_NAME)}
+        initial={"_selected_action": request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)}
     )
     return render(
         request,
@@ -81,6 +82,6 @@ def import_xslx_view(
             "object": obj,
             "form": form,
             "action": action,
-            "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+            "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
         },
     )

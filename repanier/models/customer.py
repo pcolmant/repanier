@@ -137,13 +137,13 @@ class Customer(models.Model):
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
 
     @classmethod
-    def get_or_create_group(cls):
-        customer_buyinggroup = (
+    def get_or_create_default(cls):
+        default = (
             Customer.objects.filter(represent_this_buyinggroup=True)
             .order_by("?")
             .first()
         )
-        if customer_buyinggroup is None:
+        if default is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
             user = User.objects.filter(username=short_name).order_by("?").first()
@@ -155,14 +155,14 @@ class Customer(models.Model):
                     first_name=EMPTY_STRING,
                     last_name=long_name,
                 )
-            customer_buyinggroup = Customer.objects.create(
+            default = Customer.objects.create(
                 user=user,
                 short_basket_name=short_name,
                 long_basket_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True,
             )
-        return customer_buyinggroup
+        return default
 
     @classmethod
     def get_or_create_the_very_first_customer(cls):

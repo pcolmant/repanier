@@ -99,7 +99,7 @@
                     var delivery = $("#delivery");
                     var delivery_val = $("option:selected", delivery).val();
 
-                    var lien = '{% url 'delivery_ajax' %}?is_basket=True&delivery=' + delivery_val + "&permanence=" + {{ permanence_id|unlocalize }};
+                    var lien = '{% url 'repanier:delivery_ajax' %}?is_basket=True&delivery=' + delivery_val + "&permanence=" + {{ permanence_id|unlocalize }};
                     $.ajax({
                         url: lien,
                         cache: false,
@@ -118,7 +118,7 @@
                 function show_select_delivery_list_ajax(delivery_id) {
                     if (saved_delivery_id !== delivery_id) {
                         saved_delivery_id = delivery_id;
-                        var lien2 = '{% url 'delivery_select_ajax' %}?permanence=' + {{ permanence_id|unlocalize }} +'{% if is_basket %}&is_basket=yes{% endif %}';
+                        var lien2 = '{% url 'repanier:delivery_select_ajax' %}?permanence=' + {{ permanence_id|unlocalize }} +'{% if is_basket %}&is_basket=yes{% endif %}';
                         $.ajax({
                             url: lien2,
                             cache: false,
@@ -138,7 +138,7 @@
                     receive_email.attr("disabled", true);
                     receive_email.html('<span class="fas fa-sync-alt fa-spin"></span> ' + '{% trans "Your order is being processed..." %}');
 
-                    var lien = '{% url 'btn_confirm_order_ajax' %}?permanence=' + {{ permanence_id|unlocalize }};
+                    var lien = '{% url 'repanier:btn_confirm_order_ajax' %}?permanence=' + {{ permanence_id|unlocalize }};
                     $.ajax({
                         url: lien,
                         cache: false,
@@ -525,7 +525,7 @@
                     }).on('show.bs.modal', function (event) {
                         t_row = $(event.relatedTarget);
                         var getIdFromRow = t_row.data('id');
-                        var lien = '{% url 'customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
+                        var lien = '{% url 'repanier:customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
                         $.ajax({
                             url: lien,
                             cache: false,
@@ -545,7 +545,7 @@
                     {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
                     var saved_offer_item_id = -1;
                     $(document).ready(function () {
-                        var lien = '{% url 'order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
+                        var lien = '{% url 'repanier:order_init_ajax' %}?pe={{ permanence.id|unlocalize }}{% if communication %}&co={{ communication }}{% endif %}{% if is_basket %}&ba=yes{% endif %}';
                         $.ajax({
                             url: lien,
                             cache: false,
@@ -577,7 +577,7 @@
                             $('#otherQtyModalLabel').html(getProductFromRow);
                             $('#otherQtyModal').modal('show');
                         } else {
-                            var lien = '{% url 'order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if is_basket %}&is_basket=yes{%  endif %}";
+                            var lien = '{% url 'repanier:order_ajax' %}?value=' + offer_item_val + "&offer_item=" + offer_item_id + "{% if is_basket %}&is_basket=yes{%  endif %}";
                             $.ajax({
                                 url: lien,
                                 cache: false,
@@ -597,7 +597,7 @@
                     function show_select_order_list_ajax(offer_item_id) {
                         if (saved_offer_item_id !== offer_item_id) {
                             saved_offer_item_id = offer_item_id;
-                            var lien1 = '{% url 'order_select_ajax' %}?offer_item=' + offer_item_id;
+                            var lien1 = '{% url 'repanier:order_select_ajax' %}?offer_item=' + offer_item_id;
                             $.ajax({
                                 url: lien1,
                                 cache: false,
@@ -613,7 +613,7 @@
                     }
 
                     function like_ajax(offer_item_id) {
-                        var lien = '{% url 'like_ajax' %}?offer_item=' + offer_item_id;
+                        var lien = '{% url 'repanier:like_ajax' %}?offer_item=' + offer_item_id;
                         $.ajax({
                             url: lien,
                             cache: false,

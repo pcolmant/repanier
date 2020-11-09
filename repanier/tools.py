@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from functools import wraps
+from typing import AnyStr
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
@@ -64,21 +65,21 @@ else:
         return func_wrapper
 
 
-def get_admin_template_name(template_name):
+def get_admin_template_name(template_name) -> AnyStr:
     return os.path.join(
         settings.REPANIER_SETTINGS_TEMPLATE, "admin", "repanier", template_name
     )
 
 
-def get_repanier_template_name(template_name):
+def get_repanier_template_name(template_name) -> AnyStr:
     return os.path.join(settings.REPANIER_SETTINGS_TEMPLATE, "repanier", template_name)
 
 
-def get_repanier_static_name(template_name):
+def get_repanier_static_name(template_name) -> AnyStr:
     return os.path.join("repanier", settings.REPANIER_SETTINGS_TEMPLATE, template_name)
 
 
-def next_row(query_iterator):
+def next_row(query_iterator) -> object:
     try:
         return next(query_iterator)
     except StopIteration:
@@ -86,9 +87,11 @@ def next_row(query_iterator):
         return
 
 
-def send_sms(sms_nr=None, sms_msg=None):
+def send_sms(
+    sms_nr: str = "", sms_msg: str = ""
+) -> None:
     try:
-        if sms_nr is not None and sms_msg is not None:
+        if sms_nr and sms_msg:
             valid_nr = "0"
             i = 0
             while i < len(sms_nr) and not sms_nr[i] == "4":
@@ -112,14 +115,14 @@ def send_sms(sms_nr=None, sms_msg=None):
         pass
 
 
-def cap(s, l):
-    if s is not None:
+def cap(s: str, l:int) -> str:
+    if s:
         if not isinstance(s, str):
             s = str(s)
         s = s if len(s) <= l else s[0 : l - 4] + "..."
         return s
     else:
-        return
+        return const.EMPTY_STRING
 
 
 def permanence_ok_or_404(permanence):

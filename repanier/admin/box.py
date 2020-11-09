@@ -2,7 +2,7 @@ from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
+from django.contrib.admin import helpers
 from django.contrib import messages
 from django.contrib.admin import TabularInline
 from django.forms import ModelForm, BaseInlineFormSet
@@ -292,7 +292,7 @@ class BoxAdmin(TranslatableAdmin):
             template_name,
             {
                 "sub_title": _("Please, confirm the action : duplicate box."),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
                 "action": "duplicate_box",
                 "product": box,
             },
@@ -340,7 +340,7 @@ class BoxAdmin(TranslatableAdmin):
     def get_form(self, request, box=None, **kwargs):
 
         producer_queryset = Producer.objects.filter(
-            id=Producer.get_or_create_group().id
+            id=Producer.get_or_create_default().id
         )
         form = super().get_form(request, box, **kwargs)
         producer_field = form.base_fields["producer"]

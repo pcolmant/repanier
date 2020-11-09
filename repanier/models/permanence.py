@@ -1,5 +1,6 @@
 import datetime
 import logging
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
@@ -134,9 +135,7 @@ class Permanence(TranslatableModel):
     def get_producers(self, with_download):
         from repanier.admin.tools import add_filter
 
-        print(dir(self))
-
-        producers = []
+        producers: List[str] = []
         if self.status == PERMANENCE_PLANNED:
             download_url = add_filter(
                 reverse("admin:permanence-export-offer", args=[self.id])
@@ -168,7 +167,6 @@ class Permanence(TranslatableModel):
                 download_url,
                 _("Export"),
             )
-
 
             for p in self.producers.all().only("id"):
                 pi = (
@@ -285,11 +283,11 @@ class Permanence(TranslatableModel):
         else:
             button_download = EMPTY_STRING
             producers = [
-                    p.short_profile_name
-                    for p in Producer.objects.filter(
-                        producerinvoice__permanence_id=self.id
-                    ).only("short_profile_name")
-                ]
+                p.short_profile_name
+                for p in Producer.objects.filter(
+                    producerinvoice__permanence_id=self.id
+                ).only("short_profile_name")
+            ]
         if len(producers) > 0:
             if not with_download:
                 button_download = EMPTY_STRING
@@ -348,7 +346,7 @@ class Permanence(TranslatableModel):
     def get_customers(self, with_download):
         from repanier.admin.tools import add_filter
 
-        customers = []
+        customers: List[str] = []
         if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
             if self.status == PERMANENCE_OPENED:
@@ -445,11 +443,11 @@ class Permanence(TranslatableModel):
         else:
             button_download = EMPTY_STRING
             customers = [
-                    c.short_basket_name
-                    for c in Customer.objects.filter(
-                        customerinvoice__permanence_id=self.id
-                    ).only("short_basket_name")
-                ]
+                c.short_basket_name
+                for c in Customer.objects.filter(
+                    customerinvoice__permanence_id=self.id
+                ).only("short_basket_name")
+            ]
         if len(customers) > 0:
             if not with_download:
                 button_download = EMPTY_STRING
@@ -801,7 +799,7 @@ class Permanence(TranslatableModel):
             offer_item_qs = OfferItem.objects.filter(
                 permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_TRANSPORTATION
             ).order_by("?")
-            group_id = Customer.get_or_create_group().id
+            group_id = Customer.get_or_create_default().id
             for offer_item in offer_item_qs:
                 create_or_update_one_purchase(
                     customer_id=group_id,
@@ -825,60 +823,44 @@ class Permanence(TranslatableModel):
             - bank_account_latest_total.bank_amount_out.amount
         )
 
-        producer_buyinggroup = Producer.get_or_create_group()
-        customer_buyinggroup = Customer.get_or_create_group()
+        default_producer = Producer.get_or_create_default()
+        default_customer = Customer.get_or_create_default()
 
         self.set_status(
             old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
         )
 
-        customer_invoice_buyinggroup = self.get_or_create_invoice(
-            customer=customer_buyinggroup, refresh=True
+        default_customer_invoice = self.get_or_create_invoice(
+            customer=default_customer, refresh=True
         )
-        customer_invoice_buyinggroup.set_invoice_context(payment_date)
-        customer_invoice_buyinggroup.save()
+        default_customer_invoice.set_invoice_context(payment_date)
+        default_customer_invoice.save()
 
-        permanence_partially_invoiced = (
-            ProducerInvoice.objects.filter(
-                permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=False
-            )
-            .order_by("?")
-            .exists()
-        )
-        if permanence_partially_invoiced:
+        if ProducerInvoice.objects.not_to_be_invoiced(permanence_id=self.id).exists():
             # Move the producers not invoiced into a new permanence
             producers_to_keep = list(
-                ProducerInvoice.objects.filter(
+                ProducerInvoice.objects.to_be_invoiced(
                     permanence_id=self.id,
-                    invoice_sort_order__isnull=True,
-                    to_be_paid=True,
-                )
-                .values_list("producer_id", flat=True)
-                .order_by("?")
+                ).values_list("producer_id", flat=True)
             )
             self.producers.clear()
             self.producers.add(*producers_to_keep)
             producers_to_move = list(
-                ProducerInvoice.objects.filter(
+                ProducerInvoice.objects.not_to_be_invoiced(
                     permanence_id=self.id,
-                    invoice_sort_order__isnull=True,
-                    to_be_paid=False,
-                )
-                .values_list("producer_id", flat=True)
-                .order_by("?")
+                ).values_list("producer_id", flat=True)
             )
             customers_to_move = list(
                 CustomerProducerInvoice.objects.filter(
                     permanence_id=self.id, producer_id__in=producers_to_move
                 )
-                .order_by("?")
                 .values_list("customer_id", flat=True)
             )
             new_permanence = self.create_child(PERMANENCE_SEND)
             new_permanence.producers.add(*producers_to_move)
             ProducerInvoice.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
-            ).order_by("?").update(
+            ).update(
                 permanence_id=new_permanence.id, status=PERMANENCE_SEND
             )
             CustomerProducerInvoice.objects.filter(
@@ -1004,7 +986,7 @@ class Permanence(TranslatableModel):
             BankAccount.objects.create(
                 permanence_id=self.id,
                 producer=None,
-                customer_id=customer_buyinggroup.id,
+                customer_id=default_customer.id,
                 operation_date=payment_date,
                 operation_status=BANK_PROFIT,
                 operation_comment=_("Profit")
@@ -1023,7 +1005,7 @@ class Permanence(TranslatableModel):
             BankAccount.objects.create(
                 permanence_id=self.id,
                 producer=None,
-                customer_id=customer_buyinggroup.id,
+                customer_id=default_customer.id,
                 operation_date=payment_date,
                 operation_status=BANK_TAX,
                 operation_comment=_("VAT to be paid to the administration")
@@ -1041,7 +1023,7 @@ class Permanence(TranslatableModel):
 
         for customer_invoice in (
             CustomerInvoice.objects.filter(permanence_id=self.id)
-            .exclude(customer_id=customer_buyinggroup.id, delta_transport=DECIMAL_ZERO)
+            .exclude(customer_id=default_customer.id, delta_transport=DECIMAL_ZERO)
             .order_by("?")
         ):
             if customer_invoice.delta_transport != DECIMAL_ZERO:
@@ -1052,7 +1034,7 @@ class Permanence(TranslatableModel):
                 BankAccount.objects.create(
                     permanence_id=self.id,
                     producer=None,
-                    customer_id=customer_buyinggroup.id,
+                    customer_id=default_customer.id,
                     operation_date=payment_date,
                     operation_status=BANK_PROFIT,
                     operation_comment="{} : {}".format(
@@ -1060,7 +1042,7 @@ class Permanence(TranslatableModel):
                     ),
                     bank_amount_in=customer_invoice.delta_transport,
                     bank_amount_out=DECIMAL_ZERO,
-                    customer_invoice_id=customer_invoice_buyinggroup.id,
+                    customer_invoice_id=default_customer_invoice.id,
                     producer_invoice=None,
                 )
 
@@ -1074,7 +1056,7 @@ class Permanence(TranslatableModel):
                 customer_invoice__isnull=True,
                 producer_invoice__isnull=True,
                 operation_status__in=[BANK_PROFIT, BANK_TAX],
-                customer_id=customer_buyinggroup.id,
+                customer_id=default_customer.id,
                 operation_date__lte=payment_date,
             )
             .order_by("?")
@@ -1095,7 +1077,7 @@ class Permanence(TranslatableModel):
                 + bank_account.bank_amount_in.amount
                 - bank_account.bank_amount_out.amount,
             )
-            bank_account.customer_invoice_id = customer_invoice_buyinggroup.id
+            bank_account.customer_invoice_id = default_customer_invoice.id
             bank_account.save(update_fields=["customer_invoice"])
 
         for bank_account in (
@@ -1348,7 +1330,6 @@ class Permanence(TranslatableModel):
                 BANK_PROFIT,
                 BANK_TAX,
                 BANK_MEMBERSHIP_FEE,
-                BANK_COMPENSATION,  # BANK_COMPENSATION may occurs in previous release of Repanier
             ],
         ).order_by("?").delete()
         Permanence.objects.filter(id=self.id).order_by("?").update(
@@ -1568,7 +1549,7 @@ class Permanence(TranslatableModel):
             ).quantize(TWO_DECIMALS)
             if delta != DECIMAL_ZERO:
                 # Profit or loss for the group
-                customer_buyinggroup = Customer.get_or_create_group()
+                customer_buyinggroup = Customer.get_or_create_default()
                 operation_comment = _("Correction %(producer)s") % {
                     "producer": producer.short_profile_name
                 }

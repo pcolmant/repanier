@@ -1,10 +1,9 @@
-# -*- coding: utf-8
 from os import sep as os_sep
 from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
+from django.contrib.admin import helpers
 from django.core.checks import messages
 from django.db.models import F
 from django.http import HttpResponseRedirect
@@ -529,7 +528,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
                 "action": "duplicate_product",
                 "product": product,
                 "producers": Producer.objects.filter(is_active=True),

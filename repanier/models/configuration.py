@@ -289,8 +289,8 @@ class Configuration(TranslatableModel):
         from repanier.models.staff import Staff
         from repanier.models.customer import Customer
 
-        Producer.get_or_create_group()
-        customer_buyinggroup = Customer.get_or_create_group()
+        Producer.get_or_create_default()
+        customer_buyinggroup = Customer.get_or_create_default()
         BankAccount.open_account(customer_buyinggroup=customer_buyinggroup)
         coordinator = Staff.get_or_create_any_coordinator()
         Staff.get_or_create_order_responsible()

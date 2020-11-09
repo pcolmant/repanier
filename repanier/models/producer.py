@@ -137,16 +137,16 @@ class Producer(models.Model):
     is_anonymized = models.BooleanField(default=False)
 
     @classmethod
-    def get_or_create_group(cls):
-        producer_buyinggroup = (
+    def get_or_create_default(cls):
+        default = (
             Producer.objects.filter(represent_this_buyinggroup=True)
             .order_by("?")
             .first()
         )
-        if producer_buyinggroup is None:
+        if default is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
-            producer_buyinggroup = Producer.objects.create(
+            default = Producer.objects.create(
                 short_profile_name=short_name,
                 long_profile_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
@@ -158,7 +158,7 @@ class Producer(models.Model):
             ).order_by("?")
             if not membership_fee_product.exists():
                 membership_fee_product = Product.objects.create(
-                    producer_id=producer_buyinggroup.id,
+                    producer_id=default.id,
                     order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                     vat_level=VAT_100,
                 )
@@ -170,7 +170,7 @@ class Producer(models.Model):
                     membership_fee_product.long_name = "{}".format(_("Membership fee"))
                     membership_fee_product.save()
                 translation.activate(cur_language)
-        return producer_buyinggroup
+        return default
 
     def get_phone1(self, prefix=EMPTY_STRING):
         # return ", phone1" if prefix = ", "

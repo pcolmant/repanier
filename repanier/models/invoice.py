@@ -916,12 +916,30 @@ class CustomerInvoice(Invoice):
                 )
 
     def __str__(self):
-        return "{}, {}".format(self.customer, self.permanence)
+        return f"{self.customer}, {self.permanence}"
 
     class Meta:
         verbose_name = _("Customer invoice")
         verbose_name_plural = _("Customers invoices")
         unique_together = (("permanence", "customer"),)
+
+
+class ProducerInvoiceQuerySet(models.QuerySet):
+    def not_to_be_invoiced(self, permanence_id: int, **kwargs):
+        return self.filter(
+            permanence_id=permanence_id,
+            invoice_sort_order__isnull=True,
+            to_be_paid=False,
+            **kwargs,
+        )
+
+    def to_be_invoiced(self, permanence_id: int, **kwargs):
+        return self.filter(
+            permanence_id=permanence_id,
+            invoice_sort_order__isnull=True,
+            to_be_paid=True,
+            **kwargs,
+        )
 
 
 class ProducerInvoice(Invoice):
@@ -1009,8 +1027,10 @@ class ProducerInvoice(Invoice):
             )
         return json_dict
 
+    objects = ProducerInvoiceQuerySet.as_manager()
+
     def __str__(self):
-        return "{}, {}".format(self.producer, self.permanence)
+        return f"{self.producer}, {self.permanence}"
 
     class Meta:
         verbose_name = _("Producer invoice")
@@ -1054,7 +1074,7 @@ class CustomerProducerInvoice(models.Model):
     get_html_producer_price_purchased.admin_order_field = "total_purchase_with_tax"
 
     def __str__(self):
-        return "{}, {}".format(self.producer, self.customer)
+        return f"{self.producer}, {self.customer}"
 
     class Meta:
         unique_together = (("permanence", "customer", "producer"),)
@@ -1062,7 +1082,7 @@ class CustomerProducerInvoice(models.Model):
 
 class CustomerSend(CustomerProducerInvoice):
     def __str__(self):
-        return "{}, {}".format(self.producer, self.customer)
+        return f"{self.producer}, {self.customer}"
 
     class Meta:
         proxy = True

@@ -10,7 +10,7 @@
                             <div class="panel panel-primary">
                                 <div class="panel-body">
                                     <div class="col-sm-3">
-                                        <a href="{% url "login_form" %}?next={% url 'permanence_view' %}"
+                                        <a href="{% url "login_form" %}?next={% url 'repanier:permanence_view' %}"
                                            class="btn btn-info">{% trans "Login me" %}</a>
                                     </div>
                                     {% if how_to_register %}
@@ -119,7 +119,7 @@
                 <script type="text/javascript">
                     function task_ajax(task_id) {
                         var $task = $("#task" + task_id);
-                        var lien = '{% url 'task_form_ajax' %}?value=' + $task.val() + "&task=" + task_id;
+                        var lien = '{% url 'repanier:task_form_ajax' %}?value=' + $task.val() + "&task=" + task_id;
                         $.ajax({
                             url: lien,
                             cache: false,
