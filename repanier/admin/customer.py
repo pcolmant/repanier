@@ -47,10 +47,10 @@ class UserDataForm(forms.ModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        username_field_name = "short_basket_name"
+        username_field_name = "short_name"
         username = self.cleaned_data.get(username_field_name)
-        user_error1 = _("The given short_basket_name must be set")
-        user_error2 = _("The given short_basket_name is used by another user.")
+        user_error1 = _("The given short_name must be set")
+        user_error2 = _("The given short_name is used by another user.")
         if not username:
             self.add_error(username_field_name, user_error1)
         # Check that the email is set
@@ -128,7 +128,7 @@ class UserDataForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         change = self.instance.id is not None
-        short_basket_name = self.data["short_basket_name"]
+        short_name = self.data["short_name"]
         email = self.data["email"].lower()
         user_model = get_user_model()
         if change:
@@ -136,7 +136,7 @@ class UserDataForm(forms.ModelForm):
             user.username = email
             user.email = email
             user.first_name = EMPTY_STRING
-            user.last_name = short_basket_name
+            user.last_name = short_name
             user.save()
         else:
             user = user_model.objects.create_user(
@@ -144,7 +144,7 @@ class UserDataForm(forms.ModelForm):
                 email=email,
                 password=None,
                 first_name=EMPTY_STRING,
-                last_name=short_basket_name,
+                last_name=short_name,
             )
         self.user = user
         return self.instance
@@ -233,7 +233,7 @@ class CustomerResource(resources.ModelResource):
             email=instance.user.email, is_staff=False
         ).order_by("?")
         user_username_qs = user_model.objects.filter(
-            username=instance.short_basket_name
+            username=instance.short_name
         ).order_by("?")
         if instance.id is not None:
             customer = (
@@ -254,26 +254,26 @@ class CustomerResource(resources.ModelResource):
             )
         if user_username_qs.exists():
             raise ValueError(
-                _("The short_basket_name {} is already used by another user.").format(
-                    instance.short_basket_name
+                _("The short_name {} is already used by another user.").format(
+                    instance.short_name
                 )
             )
         if using_transactions or not dry_run:
             if instance.id is not None:
                 email = instance.user.email
                 instance.user = user_model.objects.get(id=customer.user_id)
-                instance.user.username = instance.short_basket_name
+                instance.user.username = instance.short_name
                 instance.user.first_name = EMPTY_STRING
-                instance.user.last_name = instance.short_basket_name
+                instance.user.last_name = instance.short_name
                 instance.user.email = email
                 instance.user.save()
             else:
                 instance.user = user_model.objects.create_user(
-                    username=instance.short_basket_name,
+                    username=instance.short_name,
                     email=instance.user.email,
                     password=uuid.uuid1().hex,
                     first_name=EMPTY_STRING,
-                    last_name=instance.short_basket_name,
+                    last_name=instance.short_name,
                 )
                 instance.user_id = instance.user.id
 
@@ -282,8 +282,8 @@ class CustomerResource(resources.ModelResource):
         fields = (
             "id",
             "may_order",
-            "short_basket_name",
-            "long_basket_name",
+            "short_name",
+            "long_name",
             "email",
             "email2",
             "language",
@@ -374,8 +374,8 @@ class CustomerWithUserDataForm(UserDataForm):
 class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     form = CustomerWithUserDataForm
     resource_class = CustomerResource
-    list_display = ("short_basket_name",)
-    search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2")
+    list_display = ("short_name",)
+    search_fields = ("short_name", "long_name", "user__email", "email2")
     list_filter = ("may_order", "is_active", "valid_email")
     list_per_page = 16
     list_max_show_all = 16
@@ -427,7 +427,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "__str__",
                 "get_balance",
                 "may_order",
-                "long_basket_name",
+                "long_name",
                 "phone1",
                 "get_email",
                 "get_last_login",
@@ -437,7 +437,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             return (
                 "__str__",
                 "may_order",
-                "long_basket_name",
+                "long_name",
                 "phone1",
                 "get_email",
                 "get_last_login",
@@ -446,7 +446,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_fieldsets(self, request, customer=None):
         fields_basic = [
-            ("short_basket_name", "long_basket_name", "language"),
+            ("short_name", "long_name", "language"),
             ("email", "email2"),
             ("phone1", "phone2"),
             "membership_fee_valid_until",

@@ -5,7 +5,7 @@
         <div class="container">
             <div class="row">
                 <div class="col">
-                    <h4>{{ customer.long_basket_name }}</h4>
+                    <h4>{{ customer.long_name }}</h4>
                 </div>
             </div>
             {% if object %}
@@ -136,7 +136,7 @@
                 <div class="col-lg-12">
                     <div class="btn-group">
                         {% if previous_customer_invoice_id %}
-                            <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id %}"
+                            <a href="{% url 'repanier:customer_invoice_view' previous_customer_invoice_id object.customer.id %}"
                                class="btn btn-info btn-disabled">
                                 <span class="fas fa-arrow-left"></span>
                             </a>
@@ -147,9 +147,9 @@
                                     class="fas fa-save"></span> </a>
                         {% endif %}
                         {% if next_customer_invoice_id %}
-                            <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id %}"
+                            <a href="{% url 'repanier:customer_invoice_view' next_customer_invoice_id object.customer.id %}"
                                class="btn btn-info btn-disabled"><span class="fas fa-arrow-right"></span></a>
-                            <a href="{% url 'repanier:customer_invoice_view' 0 %}?customer={{ object.customer.id }}"
+                            <a href="{% url 'repanier:customer_invoice_view' 0 object.customer.id %}"
                                class="btn btn-info btn-disabled"> <span class="fas fa-arrow-right"></span>
                                 <span class="fas fa-arrow-right"></span> </a>
                         {% endif %}
@@ -199,21 +199,21 @@
                                 <tr>
                                     {% if purchase_by_other_set %}
                                         <td>
-                                            {{ purchase.customer.short_basket_name }}
+                                            {{ purchase.customer.short_name }}
                                         </td>
                                     {% endif %}
                                     <td>
                                         {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                            {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
+                                            {{ purchase.offer_item.producer.short_name | truncatechars:15 }}
                                         {% else %}
-                                            {{ purchase.offer_item.department_for_customer.short_name | truncatechars:15 }}
+                                            {{ purchase.offer_item.department.short_name | truncatechars:15 }}
                                         {% endif %}
                                     </td>
                                     <td>
                                         {{ purchase.get_long_name }}
                                     </td>
                                     <td align="right">
-                                        {{ purchase.quantity_invoiced | floatformat:3 }}
+                                        {{ purchase.qty_invoiced | floatformat:3 }}
                                     </td>
                                     <td align="right">
                                         {{ purchase.get_customer_unit_price }}
@@ -289,20 +289,20 @@
                             {% for purchase in purchase_by_other_set %}
                                 <tr>
                                     <td>
-                                        {{ purchase.customer.short_basket_name }}
+                                        {{ purchase.customer.short_name }}
                                     </td>
                                     <td>
                                         {% if REPANIER_DISPLAY_PRODUCERS_ON_ORDER_FORM == True %}
-                                            {{ purchase.offer_item.producer.short_profile_name | truncatechars:15 }}
+                                            {{ purchase.offer_item.producer.short_name | truncatechars:15 }}
                                         {% else %}
-                                            {{ purchase.offer_item.department_for_customer.short_name | truncatechars:15 }}
+                                            {{ purchase.offer_item.department.short_name | truncatechars:15 }}
                                         {% endif %}
                                     </td>
                                     <td>
                                         {{ purchase.get_long_name }}
                                     </td>
                                     <td align="right">
-                                        {{ purchase.quantity_invoiced | floatformat:3 }}
+                                        {{ purchase.qty_invoiced | floatformat:3 }}
                                     </td>
                                     <td align="right">
                                         {{ purchase.get_customer_unit_price }}

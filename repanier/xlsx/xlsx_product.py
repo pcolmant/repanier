@@ -31,11 +31,11 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
             producer__in=producer_qs,
         )
         .order_by(
-            "department_for_customer",
+            "department",
             "translations__long_name",
             "order_average_weight",
         )
-        .select_related("producer", "department_for_customer")
+        .select_related("producer", "department")
         .iterator()
     )
     product = next_row(products)
@@ -51,8 +51,8 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
             (
                 _("Department"),
                 15,
-                product.department_for_customer.short_name
-                if product.department_for_customer is not None
+                product.department.short_name
+                if product.department is not None
                 else " ",
                 NumberFormat.FORMAT_TEXT,
                 False,
@@ -69,7 +69,7 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
             (
                 _("Producer"),
                 15,
-                product.producer.short_profile_name,
+                product.producer.short_name,
                 NumberFormat.FORMAT_TEXT,
                 False,
             ),

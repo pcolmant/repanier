@@ -79,7 +79,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             ),
                             "  {} - {}{}".format(
                                 customer.preparation_order,
-                                customer.long_basket_name,
+                                customer.long_name,
                                 confirmed,
                             ),
                             customer.get_phone1(),
@@ -148,10 +148,10 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     row = [
                         "{} - {}{}".format(
                             customer.preparation_order,
-                            customer.short_basket_name,
+                            customer.short_name,
                             confirmed,
                         ),
-                        customer.long_basket_name,
+                        customer.long_name,
                         customer.get_phone1(),
                         customer.get_phone2(),
                         invoice.get_total_price_with_tax().amount,
@@ -210,7 +210,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             next_permanence.permanence_date,
                             NumberFormat.FORMAT_DATE_DMYSLASH,
                         ),
-                        (customer.long_basket_name, NumberFormat.FORMAT_TEXT),
+                        (customer.long_name, NumberFormat.FORMAT_TEXT),
                         (customer.get_phone1(), NumberFormat.FORMAT_TEXT),
                         (customer.get_phone2(), NumberFormat.FORMAT_TEXT),
                         (
@@ -259,7 +259,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 )
                 row = [
                     staff_function,
-                    customer_responsible.long_basket_name,
+                    customer_responsible.long_name,
                     customer_responsible.get_phone1(),
                 ]
                 for col_num in range(len(row)):
@@ -288,7 +288,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
 
             # Producer info
             for producer in Producer.objects.filter(permanence=permanence).order_by(
-                "short_profile_name"
+                "short_name"
             ):
                 invoice = (
                     ProducerInvoice.objects.filter(
@@ -307,8 +307,8 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             "Minimum order amount not reached"
                         )
                 row = [
-                    producer.short_profile_name,
-                    producer.long_profile_name,
+                    producer.short_name,
+                    producer.long_name,
                     producer.get_phone1(),
                     producer.get_phone2(),
                     total_price_with_tax.amount,
@@ -353,7 +353,7 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
 
     for customer in customer_set:
         customer_identifier = "{} - {}".format(
-            customer.preparation_order, customer.short_basket_name
+            customer.preparation_order, customer.short_name
         )
         s = [
             placement_id
@@ -460,7 +460,7 @@ def export_preparation_for_a_delivery(
 ):
     producer_set = Producer.objects.filter(
         producerinvoice__permanence_id=permanence.id
-    ).only("invoice_by_basket", "short_profile_name")
+    ).only("invoice_by_basket", "short_name")
     if delivery_id is not None:
         producer_set = producer_set.filter(
             purchase__customer_invoice__delivery_id=delivery_id
@@ -506,11 +506,11 @@ def export_preparation_for_a_delivery(
                         offer_item__translations__language_code=translation.get_language(),
                     )
                     .order_by(
-                        "customer__short_basket_name",
+                        "customer__short_name",
                         "offer_item__translations__preparation_sort_order",
                     )
                     .select_related(
-                        "customer", "offer_item", "offer_item__department_for_customer"
+                        "customer", "offer_item", "offer_item__department"
                     )
                 )
                 if delivery_id is not None:
@@ -532,19 +532,19 @@ def export_preparation_for_a_delivery(
                         purchase is not None
                         and customer_save.id == purchase.customer_id
                     ):
-                        department_for_customer_save = (
-                            purchase.offer_item.department_for_customer
+                        department_save = (
+                            purchase.offer_item.department
                         )
-                        department_for_customer_save__short_name = (
-                            department_for_customer_save.short_name
-                            if department_for_customer_save is not None
+                        department_save__short_name = (
+                            department_save.short_name
+                            if department_save is not None
                             else EMPTY_STRING
                         )
                         while (
                             purchase is not None
                             and customer_save.id == purchase.customer_id
-                            and department_for_customer_save
-                            == purchase.offer_item.department_for_customer
+                            and department_save
+                            == purchase.offer_item.department
                         ):
                             qty = purchase.get_producer_quantity()
                             if qty != DECIMAL_ZERO:
@@ -568,12 +568,12 @@ def export_preparation_for_a_delivery(
                                     if placement_save != c.value:
                                         hide_column_placement = False
                                 c = ws.cell(row=row_num, column=3)
-                                c.value = "{}".format(producer_save.short_profile_name)
+                                c.value = "{}".format(producer_save.short_name)
                                 c = ws.cell(row=row_num, column=5)
-                                if department_for_customer_save__short_name is not None:
+                                if department_save__short_name is not None:
                                     c.value = "{} - {}".format(
                                         purchase.get_long_name(),
-                                        department_for_customer_save__short_name,
+                                        department_save__short_name,
                                     )
                                 else:
                                     c.value = "{}".format(purchase.get_long_name())
@@ -584,7 +584,7 @@ def export_preparation_for_a_delivery(
                                 c = ws.cell(row=row_num, column=6)
                                 c.value = "{} - {}".format(
                                     customer_save.preparation_order,
-                                    customer_save.short_basket_name,
+                                    customer_save.short_name,
                                 )
                                 c.style.number_format.format_code = (
                                     NumberFormat.FORMAT_TEXT
@@ -696,7 +696,7 @@ def export_preparation_for_a_delivery(
                     row_num -= 1
                     #############################################################################################################################
             else:
-                # Using quantity_for_preparation_sort_order the order is by customer__short_basket_name if the product
+                # Using qty_for_preparation_sort_order the order is by customer__short_name if the product
                 # is to be distributed by piece, otherwise by lower qty first.
                 for offer_item in OfferItemWoReceiver.objects.filter(
                     permanence_id=permanence.id,
@@ -706,13 +706,13 @@ def export_preparation_for_a_delivery(
                     purchase_set = (
                         Purchase.objects.filter(offer_item_id=offer_item.id)
                         .order_by(
-                            "quantity_for_preparation_sort_order",
-                            "customer__short_basket_name",
+                            "qty_for_preparation_sort_order",
+                            "customer__short_name",
                         )
                         .select_related(
                             "customer",
                             "offer_item",
-                            "offer_item__department_for_customer",
+                            "offer_item__department",
                         )
                     )
                     if delivery_id is not None:
@@ -724,12 +724,12 @@ def export_preparation_for_a_delivery(
                     while purchase is not None:
                         at_least_one_product = True
                         while purchase is not None:
-                            department_for_customer_save = (
-                                purchase.offer_item.department_for_customer
+                            department_save = (
+                                purchase.offer_item.department
                             )
-                            department_for_customer_save__short_name = (
-                                department_for_customer_save.short_name
-                                if department_for_customer_save is not None
+                            department_save__short_name = (
+                                department_save.short_name
+                                if department_save is not None
                                 else None
                             )
                             offer_item_save = purchase.offer_item
@@ -765,16 +765,16 @@ def export_preparation_for_a_delivery(
                                                 hide_column_placement = False
                                         c = ws.cell(row=row_num, column=3)
                                         c.value = "{}".format(
-                                            producer_save.short_profile_name
+                                            producer_save.short_name
                                         )
                                     c = ws.cell(row=row_num, column=5)
                                     if (
-                                        department_for_customer_save__short_name
+                                        department_save__short_name
                                         is not None
                                     ):
                                         c.value = "{} - {}".format(
                                             purchase.get_long_name(),
-                                            department_for_customer_save__short_name,
+                                            department_save__short_name,
                                         )
                                     else:
                                         c.value = "{}".format(purchase.get_long_name())
@@ -787,7 +787,7 @@ def export_preparation_for_a_delivery(
                                     c = ws.cell(row=row_num, column=6)
                                     c.value = "{} - {}".format(
                                         purchase.customer.preparation_order,
-                                        purchase.customer.short_basket_name,
+                                        purchase.customer.short_name,
                                     )
                                     c.style.number_format.format_code = (
                                         NumberFormat.FORMAT_TEXT
@@ -906,7 +906,7 @@ def export_producer_by_product(permanence, producer, wb=None):
         (_("Total Price"), 12),
     ]
     show_column_reference = False
-    hide_column_short_basket_name = True
+    hide_column_short_name = True
     hide_column_unit_deposit = True
     formula_main_total = []
     offer_items = (
@@ -916,14 +916,14 @@ def export_producer_by_product(permanence, producer, wb=None):
             translations__language_code=translation.get_language(),
             quantity_invoiced__gt=DECIMAL_ZERO,
         )
-        .order_by("department_for_customer", "translations__producer_sort_order")
+        .order_by("department", "translations__producer_sort_order")
         .iterator()
     )
     offer_item = next_row(offer_items)
     if offer_item:
         wb, ws = new_landscape_a4_sheet(
             wb,
-            "{} {}".format(producer.short_profile_name, _("by product")),
+            "{} {}".format(producer.short_name, _("by product")),
             permanence,
             header,
         )
@@ -939,11 +939,11 @@ def export_producer_by_product(permanence, producer, wb=None):
             .status
         )
         while offer_item is not None:
-            department_for_customer_save = offer_item.department_for_customer
+            department_save = offer_item.department
             c = ws.cell(row=row_num, column=1)
             c.value = (
-                "{}".format(department_for_customer_save.short_name)
-                if department_for_customer_save is not None
+                "{}".format(department_save.short_name)
+                if department_save is not None
                 else "---"
             )
             c.style.font.bold = True
@@ -952,7 +952,7 @@ def export_producer_by_product(permanence, producer, wb=None):
             department_purchases_price = DECIMAL_ZERO
             while (
                 offer_item is not None
-                and department_for_customer_save == offer_item.department_for_customer
+                and department_save == offer_item.department
             ):
                 if offer_item.unit_deposit != DECIMAL_ZERO:
                     hide_column_unit_deposit = False
@@ -960,14 +960,14 @@ def export_producer_by_product(permanence, producer, wb=None):
                     show_column_reference | len(offer_item.reference) < 36
                 )
                 if offer_item.wrapped:
-                    hide_column_short_basket_name = False
+                    hide_column_short_name = False
                     first_purchase = True
                     purchase_set = Purchase.objects.filter(
                         offer_item_id=offer_item.id,
                         offer_item__translations__language_code=translation.get_language(),
                     ).order_by(
                         "offer_item__translations__producer_sort_order",
-                        "customer__short_basket_name",
+                        "customer__short_name",
                     )
                     for purchase in purchase_set:
                         if offer_item.limit_order_quantity_to_stock:
@@ -978,7 +978,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         if qty != DECIMAL_ZERO:
                             base_unit = get_base_unit(offer_item.order_unit, qty)
                             c = ws.cell(row=row_num, column=0)
-                            c.value = "{}".format(purchase.customer.short_basket_name)
+                            c.value = "{}".format(purchase.customer.short_name)
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=1)
@@ -1195,16 +1195,16 @@ def export_producer_by_product(permanence, producer, wb=None):
                         c.value = "{} {} {}".format(
                             _("Total Price"),
                             _("wo VAT"),
-                            department_for_customer_save.short_name
-                            if department_for_customer_save is not None
+                            department_save.short_name
+                            if department_save is not None
                             else "---",
                         )
                     else:
                         c.value = "{} {} {}".format(
                             _("Total Price"),
                             _("w TVA"),
-                            department_for_customer_save.short_name
-                            if department_for_customer_save is not None
+                            department_save.short_name
+                            if department_save is not None
                             else "---",
                         )
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -1262,7 +1262,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                     yellowFill,
                 )
 
-        if hide_column_short_basket_name:
+        if hide_column_short_name:
             ws.column_dimensions[get_column_letter(1)].visible = False
         if not show_column_reference:
             ws.column_dimensions[get_column_letter(4)].visible = False
@@ -1301,7 +1301,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
             offer_item__translations__language_code=translation.get_language(),
         )
         .order_by(
-            "customer__short_basket_name",
+            "customer__short_name",
             "offer_item__translations__producer_sort_order",
         )
         .select_related("offer_item")
@@ -1311,7 +1311,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
     if purchase:
         wb, ws = new_landscape_a4_sheet(
             wb,
-            "{} {}".format(producer.short_profile_name, _("duplicate, by basket")),
+            "{} {}".format(producer.short_name, _("duplicate, by basket")),
             permanence,
             header,
         )
@@ -1321,11 +1321,11 @@ def export_producer_by_customer(permanence, producer, wb=None):
             c = ws.cell(row=row_num, column=0)
             if customer_save.zero_waste:
                 c.value = "{} --------------- {}".format(
-                    customer_save.short_basket_name, _("Zero waste")
+                    customer_save.short_name, _("Zero waste")
                 )
                 c.style.fill = yellowFill
             else:
-                c.value = "{}".format(customer_save.short_basket_name)
+                c.value = "{}".format(customer_save.short_name)
             c.style.font.bold = True
             row_num += 1
             row_start_customer = row_num
@@ -1408,13 +1408,13 @@ def export_producer_by_customer(permanence, producer, wb=None):
                         c.value = "{} {} {}".format(
                             _("Total Price"),
                             _("wo VAT"),
-                            customer_save.short_basket_name,
+                            customer_save.short_name,
                         )
                     else:
                         c.value = "{} {} {}".format(
                             _("Total Price"),
                             _("w VAT"),
-                            customer_save.short_basket_name,
+                            customer_save.short_name,
                         )
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 if col_num == 6:
@@ -1546,7 +1546,7 @@ def export_customer_for_a_delivery(
                     "offer_item__order_average_weight",
                 )
                 .select_related(
-                    "customer", "offer_item", "offer_item__department_for_customer"
+                    "customer", "offer_item", "offer_item__department"
                 )
             )
         else:
@@ -1563,7 +1563,7 @@ def export_customer_for_a_delivery(
                     "offer_item__order_average_weight",
                 )
                 .select_related(
-                    "customer", "offer_item", "offer_item__department_for_customer"
+                    "customer", "offer_item", "offer_item__department"
                 )
             )
     else:
@@ -1576,13 +1576,13 @@ def export_customer_for_a_delivery(
                     offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT,
                 )
                 .order_by(
-                    "customer__short_basket_name",
+                    "customer__short_name",
                     "offer_item__producer",
                     "offer_item__translations__long_name",
                     "offer_item__order_average_weight",
                 )
                 .select_related(
-                    "customer", "offer_item", "offer_item__department_for_customer"
+                    "customer", "offer_item", "offer_item__department"
                 )
             )
         else:
@@ -1594,13 +1594,13 @@ def export_customer_for_a_delivery(
                 )
                 .exclude(offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT)
                 .order_by(
-                    "customer__short_basket_name",
+                    "customer__short_name",
                     "offer_item__producer",
                     "offer_item__translations__long_name",
                     "offer_item__order_average_weight",
                 )
                 .select_related(
-                    "customer", "offer_item", "offer_item__department_for_customer"
+                    "customer", "offer_item", "offer_item__department"
                 )
             )
         if delivery_id is not None:
@@ -1685,19 +1685,19 @@ def export_customer_for_a_delivery(
             else:
                 delta_transport_save = customer_invoice.delta_transport
             while purchase is not None and customer_save.id == purchase.customer_id:
-                department_for_customer_save__id = (
-                    offer_item_save.department_for_customer_id
+                department_save__id = (
+                    offer_item_save.department_id
                 )
-                department_for_customer_save__short_name = (
-                    offer_item_save.department_for_customer.short_name
-                    if offer_item_save.department_for_customer is not None
+                department_save__short_name = (
+                    offer_item_save.department.short_name
+                    if offer_item_save.department is not None
                     else None
                 )
                 while (
                     purchase is not None
                     and customer_save.id == purchase.customer_id
-                    and offer_item_save.department_for_customer_id
-                    == department_for_customer_save__id
+                    and offer_item_save.department_id
+                    == department_save__id
                 ):
                     if placement_save != offer_item_save.placement:
                         hide_column_placement = False
@@ -1716,14 +1716,14 @@ def export_customer_for_a_delivery(
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=3)
-                        c.value = "{}".format(purchase.producer.short_profile_name)
+                        c.value = "{}".format(purchase.producer.short_name)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=4)
-                        if department_for_customer_save__short_name is not None:
+                        if department_save__short_name is not None:
                             c.value = "{} - {}".format(
                                 purchase.get_long_name(),
-                                department_for_customer_save__short_name,
+                                department_save__short_name,
                             )
                         else:
                             c.value = "{}".format(purchase.get_long_name())
@@ -1819,10 +1819,10 @@ def export_customer_for_a_delivery(
                         if xlsx_formula:
                             c.value = "{} - {}".format(
                                 purchase.customer.preparation_order,
-                                purchase.customer.short_basket_name,
+                                purchase.customer.short_name,
                             )
                         else:
-                            c.value = "{}".format(purchase.customer.long_basket_name)
+                            c.value = "{}".format(purchase.customer.long_name)
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if first_purchase:
@@ -1862,7 +1862,7 @@ def export_customer_for_a_delivery(
                 c.style.font.bold = True
                 c = ws.cell(row=row_num, column=8)
                 c.value = "{} {}".format(
-                    _("Total Price"), customer_save.long_basket_name
+                    _("Total Price"), customer_save.long_name
                 )
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True

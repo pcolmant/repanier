@@ -153,7 +153,7 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                 .select_related("producer")
                 .prefetch_related("translations")
                 .order_by(
-                    "producer__short_profile_name",
+                    "producer__short_name",
                     "translations__long_name",
                     "order_average_weight",
                 )

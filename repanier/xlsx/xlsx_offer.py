@@ -19,7 +19,7 @@ def export_offer(permanence, wb=None):
         )
 
         for product in (
-            Product.objects.prefetch_related("producer", "department_for_customer")
+            Product.objects.prefetch_related("producer", "department")
             .filter(
                 producer__in=producers_in_this_permanence,
                 is_into_offer=True,
@@ -27,15 +27,15 @@ def export_offer(permanence, wb=None):
                 translations__language_code=translation.get_language(),
             )
             .order_by(
-                "producer__short_profile_name",
-                "department_for_customer",
+                "producer__short_name",
+                "department",
                 "translations__long_name",
                 "order_average_weight",
             )
         ):
             row_num = export_offer_row(product, row_num, ws)
         for product in (
-            Product.objects.prefetch_related("producer", "department_for_customer")
+            Product.objects.prefetch_related("producer", "department")
             .filter(
                 is_into_offer=True,
                 is_box=True,
@@ -47,7 +47,7 @@ def export_offer(permanence, wb=None):
 
     elif permanence.status == PERMANENCE_OPENED:
         for offer_item in (
-            OfferItem.objects.prefetch_related("producer", "department_for_customer")
+            OfferItem.objects.prefetch_related("producer", "department")
             .filter(
                 permanence_id=permanence.id,
                 is_active=True,
@@ -67,15 +67,15 @@ def export_offer_row(product, row_num, ws):
         (
             _("Producer"),
             15,
-            product.producer.short_profile_name,
+            product.producer.short_name,
             NumberFormat.FORMAT_TEXT,
             False,
         ),
         (
             _("Department"),
             15,
-            product.department_for_customer.short_name
-            if product.department_for_customer is not None
+            product.department.short_name
+            if product.department is not None
             else EMPTY_STRING,
             NumberFormat.FORMAT_TEXT,
             False,

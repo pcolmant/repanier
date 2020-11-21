@@ -71,7 +71,7 @@ def order_ajax(request):
                 json_dict[
                     "#offer_item{}".format(offer_item.id)
                 ] = get_html_selected_value(
-                    offer_item, purchase.quantity_ordered, is_open=True
+                    offer_item, purchase.qty_ordered, is_open=True
                 )
             if updated and offer_item.is_box:
                 # update the content
@@ -90,14 +90,14 @@ def order_ajax(request):
                                 offer_item_id=box_offer_item.id,
                                 is_box_content=False,
                             )
-                            .only("quantity_ordered")
+                            .only("qty_ordered")
                             .first()
                         )
                         if purchase is not None:
                             json_dict[
                                 "#offer_item{}".format(box_offer_item.id)
                             ] = get_html_selected_value(
-                                box_offer_item, purchase.quantity_ordered, is_open=True
+                                box_offer_item, purchase.qty_ordered, is_open=True
                             )
                         box_purchase = (
                             PurchaseWoReceiver.objects.filter(
@@ -105,14 +105,14 @@ def order_ajax(request):
                                 offer_item_id=box_offer_item.id,
                                 is_box_content=True,
                             )
-                            .only("quantity_ordered")
+                            .only("qty_ordered")
                             .first()
                         )
                         if box_purchase is not None:
                             json_dict[
                                 "#box_offer_item{}".format(box_offer_item.id)
                             ] = get_html_selected_box_value(
-                                box_offer_item, box_purchase.quantity_ordered
+                                box_offer_item, box_purchase.qty_ordered
                             )
 
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:

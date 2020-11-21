@@ -172,7 +172,7 @@
                                     <ul class="nav nav-stacked">
                                 {% for producer in producer_set.all %}
                                     <li><a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer.id|unlocalize }}&department={{ department_id }}"
-                                           {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_profile_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span></a>
+                                           {% if producer.id == producer_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ producer.short_name | truncatechars:15 }}&nbsp;<span id="order_procent{{ producer.id|unlocalize }}" class="badge"></span></a>
                                     </li>
                                 {% endfor %}
                                     </ul>
@@ -237,7 +237,7 @@
                         <div class="modal-body">
                 <span id="otherQtyDetails">
                   {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
-                  <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
+                  <b>{{ staff_order.customer_responsible.long_name }}</b><br>
                   <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.get_phone1 }}</b><br>
                   <a href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br>
                 </span>

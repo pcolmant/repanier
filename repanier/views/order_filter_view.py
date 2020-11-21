@@ -45,7 +45,7 @@ def order_filter_view(request, permanence_id):
 
     if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
         producer_set = Producer.objects.filter(permanence=permanence_id).only(
-            "id", "short_profile_name"
+            "id", "short_name"
         )
     else:
         producer_set = None

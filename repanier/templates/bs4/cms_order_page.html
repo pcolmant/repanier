@@ -191,7 +191,7 @@
                                          data-parent="#filtersAccordion">
                                         <a href="{% url "order_view" permanence_id %}?date={{ date_id }}&producer={{ producer.id|unlocalize }}"
                                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{% if producer.id == producer_id|add:0 %} active{% endif %}">
-                                            {{ producer.short_profile_name | truncatechars:15 }}&nbsp;
+                                            {{ producer.short_name | truncatechars:15 }}&nbsp;
                                             <span id="order_procent{{ producer.id|unlocalize }}"
                                                 class="badge badge-success"></span>
                                         </a>
@@ -479,7 +479,7 @@
                     <div class="modal-body">
         <span id="otherQtyDetails">
           {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
-          <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
+          <b>{{ staff_order.customer_responsible.long_name }}</b><br>
           <span class="fas fa-phone"></span>  <b>{{ staff_order.customer_responsible.get_phone1 }}</b><br>
           <a href="mailto:{{ staff_order.user.email }}"
              style="color : inherit;">{{ staff_order.user.email }}</a><br>

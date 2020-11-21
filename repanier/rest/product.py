@@ -8,9 +8,9 @@ from repanier.models.product import Product
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    producer_name = serializers.ReadOnlyField(source="producer.short_profile_name")
-    department_for_customer = serializers.ReadOnlyField(
-        source="department_for_customer.short_name"
+    producer_name = serializers.ReadOnlyField(source="producer.short_name")
+    department = serializers.ReadOnlyField(
+        source="department.short_name"
     )
     label = serializers.StringRelatedField(
         source="production_mode", read_only=True, many=True
@@ -33,7 +33,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "is_into_offer",
             "producer_name",
             "long_name",
-            "department_for_customer",
+            "department",
             "order_unit",
             "get_order_unit_display",
             "order_average_weight",
@@ -53,13 +53,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 @csrf_exempt
-def products_rest(request, producer_short_profile_name):
+def products_rest(request, producer_short_name):
     """
     List all code snippets, or create a new snippet.
     """
     if request.method == "GET":
         products = Product.objects.filter(
-            producer__short_profile_name=producer_short_profile_name.decode(
+            producer__short_name=producer_short_name.decode(
                 "unicode-escape"
             ),
             order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
@@ -70,7 +70,7 @@ def products_rest(request, producer_short_profile_name):
 
 
 @csrf_exempt
-def product_rest(request, producer_short_profile_name, reference):
+def product_rest(request, producer_short_name, reference):
     """
     Retrieve, update or delete a code snippet.
     """
@@ -78,7 +78,7 @@ def product_rest(request, producer_short_profile_name, reference):
         product = (
             Product.objects.filter(
                 reference=reference,
-                producer__short_profile_name=producer_short_profile_name.decode(
+                producer__short_name=producer_short_name.decode(
                     "unicode-escape"
                 ),
                 order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,

@@ -64,17 +64,17 @@
                     <span>&nbsp;</span>
                 </label>
                 <label for="id_form-{{ forloop.counter0 }}-selected" class="btn active">
-                    {{ f_form.short_profile_name.value | truncatechars:20 }}
+                    {{ f_form.short_name.value | truncatechars:20 }}
                     {% trans ", calculated : " %}
-                    {{ f_form.calculated_invoiced_balance.value }}
+                    {{ f_form.balance_calculated.value }}
                     {% trans ", invoiced : " %}
-                    {{ f_form.to_be_invoiced_balance }}
+                    {{ f_form.balance_invoiced }}
                     {% if f_form.producer_price_are_wo_vat %}{% trans "wo VAT" %}{% else %}
                         {% trans "w VAT" %}{% endif %}
-                    {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
-                    <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_profile_name"
-                           name="form-{{ forloop.counter0 }}-short_profile_name"
-                           value="{{ f_form.short_profile_name.value }}"/>
+                    {% trans ", invoice reference : " %} {{ f_form.reference }}
+                    <input type="hidden" id="id_form-{{ forloop.counter0 }}-short_name"
+                           name="form-{{ forloop.counter0 }}-short_name"
+                           value="{{ f_form.short_name.value }}"/>
                 </label>
             </div>
         </div>

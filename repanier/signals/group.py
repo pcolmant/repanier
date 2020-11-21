@@ -10,6 +10,7 @@ def group_pre_save(sender, **kwargs):
     customer_pre_save(sender, **kwargs)
     group = kwargs["instance"]
     group.is_group = True
+    # A group cannot place an order
     group.may_order = False
     group.delivery_point = None
     # find or create delivery point with this group:

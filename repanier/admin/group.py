@@ -32,12 +32,12 @@ class UserDataForm(forms.ModelForm):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        short_basket_name_field = "short_basket_name"
-        username = self.cleaned_data.get(short_basket_name_field)
-        user_error1 = _("The given short_basket_name must be set")
-        user_error2 = _("The given short_basket_name is used by another user.")
+        short_name_field = "short_name"
+        username = self.cleaned_data.get(short_name_field)
+        user_error1 = _("The given short_name must be set")
+        user_error2 = _("The given short_name is used by another user.")
         if not username:
-            self.add_error(short_basket_name_field, user_error1)
+            self.add_error(short_name_field, user_error1)
         # Check that the email is set
         # if not "email" in self.cleaned_data:
         #     self.add_error('email', _('The given email must be set'))
@@ -56,7 +56,7 @@ class UserDataForm(forms.ModelForm):
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.user_id)
         if qs.exists():
-            self.add_error(short_basket_name_field, user_error2)
+            self.add_error(short_name_field, user_error2)
         bank_account1 = self.cleaned_data["bank_account1"]
         if bank_account1:
             qs = Group.objects.filter(
@@ -86,7 +86,7 @@ class UserDataForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         change = self.instance.id is not None
-        short_basket_name = self.data["short_basket_name"]
+        short_name = self.data["short_name"]
         email = self.data["email"].lower()
         user_model = get_user_model()
         if change:
@@ -94,7 +94,7 @@ class UserDataForm(forms.ModelForm):
             user.username = email
             user.email = email
             user.first_name = EMPTY_STRING
-            user.last_name = short_basket_name
+            user.last_name = short_name
             user.save()
         else:
             user = user_model.objects.create_user(
@@ -102,7 +102,7 @@ class UserDataForm(forms.ModelForm):
                 email=email,
                 password=None,
                 first_name=EMPTY_STRING,
-                last_name=short_basket_name,
+                last_name=short_name,
             )
         self.user = user
         return self.instance
@@ -221,8 +221,8 @@ class GroupWithUserDataForm(UserDataForm):
 
 class GroupWithUserDataAdmin(admin.ModelAdmin):
     form = GroupWithUserDataForm
-    list_display = ("short_basket_name",)
-    search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2")
+    list_display = ("short_name",)
+    search_fields = ("short_name", "long_name", "user__email", "email2")
     list_filter = ("is_active", "valid_email")
     list_per_page = 16
     list_max_show_all = 16
@@ -271,17 +271,17 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             return (
                 "__str__",
                 "get_balance",
-                "long_basket_name",
+                "long_name",
                 "phone1",
                 "get_email",
                 "valid_email",
             )
         else:
-            return ("__str__", "long_basket_name", "phone1", "get_email", "valid_email")
+            return ("__str__", "long_name", "phone1", "get_email", "valid_email")
 
     def get_fieldsets(self, request, customer=None):
         fields_basic = [
-            ("short_basket_name", "long_basket_name", "language"),
+            ("short_name", "long_name", "language"),
             ("email", "email2"),
             ("phone1", "phone2"),
             "memo",
@@ -329,10 +329,10 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             email_field.initial = EMPTY_STRING
         return form
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.filter(is_group=True)
-        return qs
+    # def get_queryset(self, request):
+    #     qs = super().get_queryset(request)
+    #     qs = qs.filter(is_group=True)
+    #     return qs
 
     def save_model(self, request, group, form, change):
         group.user = form.user
@@ -355,7 +355,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         delivery_point.is_active = True
         delivery_point.transport = form.cleaned_data["transport"]
         delivery_point.min_transport = form.cleaned_data["min_transport"]
-        delivery_point.short_name = form.cleaned_data["short_basket_name"]
+        delivery_point.short_name = form.cleaned_data["short_name"]
         delivery_point.save()
         Customer.objects.filter(delivery_point_id=delivery_point.id).update(
             delivery_point=None

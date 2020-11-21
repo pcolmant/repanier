@@ -18,8 +18,6 @@ from repanier.tools import (
     get_invoice_unit,
     get_reverse_invoice_unit,
     create_or_update_one_purchase,
-    reorder_offer_items,
-    reorder_purchases,
 )
 from repanier.xlsx.export_tools import *
 from repanier.xlsx.import_tools import get_customer_email_2_id_dict, get_header, get_row
@@ -81,7 +79,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after = customer.initial_balance.amount
 
         row = [
-            (_("Name"), 40, customer.long_basket_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 40, customer.long_name, NumberFormat.FORMAT_TEXT),
             (
                 _("Previous balance"),
                 15,
@@ -112,7 +110,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after,
                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
-            (_("Name"), 20, customer.short_basket_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 20, customer.short_name, NumberFormat.FORMAT_TEXT),
         ]
 
         if row_num == 0:
@@ -163,7 +161,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after = -producer.initial_balance.amount
 
         row = [
-            (_("Name"), 40, producer.long_profile_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 40, producer.long_name, NumberFormat.FORMAT_TEXT),
             (
                 _("Previous balance"),
                 15,
@@ -194,7 +192,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 balance_after,
                 repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
-            (_("Name"), 20, producer.short_profile_name, NumberFormat.FORMAT_TEXT),
+            (_("Name"), 20, producer.short_name, NumberFormat.FORMAT_TEXT),
         ]
 
         if row_num == 0:
@@ -279,7 +277,7 @@ def export_invoice(
 
         for purchase in purchase_set:
 
-            qty = purchase.quantity_invoiced
+            qty = purchase.qty_invoiced
 
             if purchase.offer_item.unit_deposit.amount != DECIMAL_ZERO:
                 hide_column_deposit = False
@@ -296,22 +294,22 @@ def export_invoice(
                 (
                     _("Producer"),
                     15,
-                    purchase.producer.short_profile_name,
+                    purchase.producer.short_name,
                     NumberFormat.FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Basket"),
                     20,
-                    purchase.customer.short_basket_name,
+                    purchase.customer.short_name,
                     NumberFormat.FORMAT_TEXT,
                     False,
                 ),
                 (
                     _("Department"),
                     15,
-                    purchase.offer_item.department_for_customer.short_name
-                    if purchase.offer_item.department_for_customer is not None
+                    purchase.offer_item.department.short_name
+                    if purchase.offer_item.department is not None
                     else EMPTY_STRING,
                     NumberFormat.FORMAT_TEXT,
                     False,
@@ -533,7 +531,7 @@ def export_invoice(
 
 
 def import_invoice_sheet(
-    worksheet, invoice_reference=EMPTY_STRING, customer_2_id_dict=None, producer=None
+    worksheet, reference=EMPTY_STRING, customer_2_id_dict=None, producer=None
 ):
     error = False
     error_msg = None
@@ -548,7 +546,7 @@ def import_invoice_sheet(
 
             permanence = Permanence.objects.create(
                 permanence_date=now,
-                short_name=invoice_reference,
+                short_name=reference,
                 status=PERMANENCE_SEND,
                 highest_status=PERMANENCE_SEND,
             )
@@ -611,8 +609,8 @@ def import_invoice_sheet(
 
                 row_num += 1
                 row = get_row(worksheet, header, row_num)
-            reorder_offer_items(permanence.id)
-            reorder_purchases(permanence.id)
+            permanence.reorder_offer_items()
+            permanence.reorder_purchases()
 
         except KeyError as e:
             # Missing field
@@ -637,7 +635,7 @@ def import_invoice_sheet(
 
 
 def handle_uploaded_invoice(
-    request, permanences, file_to_import, producer, invoice_reference
+    request, permanences, file_to_import, producer, reference
 ):
     if producer is None:
         error = True
@@ -649,7 +647,7 @@ def handle_uploaded_invoice(
         ws = wb.worksheets[0]
         error, error_msg = import_invoice_sheet(
             ws,
-            invoice_reference=invoice_reference,
+            reference=reference,
             customer_2_id_dict=customer_2_id_dict,
             producer=producer,
         )

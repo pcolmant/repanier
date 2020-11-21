@@ -68,21 +68,21 @@
                                onClick="toggle('all-producers', 'id_form-{{ forloop.counter0 }}-selected' , 'producer_invoiced_form');"
                                autocomplete="off" type="checkbox" checked>
                         <label for="id_form-{{ forloop.counter0 }}-selected">
-                            {{ f_form.short_profile_name.value }}
+                            {{ f_form.short_name.value }}
                         </label>
                     </li>
                     <li class="repanier-flex-ul-li">
                         {% trans ", calculated : " %}
-                        {{ f_form.calculated_invoiced_balance.value }}&nbsp;{% trans "w VAT" %}
+                        {{ f_form.balance_calculated.value }}&nbsp;{% trans "w VAT" %}
                         {% trans ", invoiced : " %}&nbsp;
                     </li>
                     <li class="repanier-flex-ul-li">
-                        {{ f_form.to_be_invoiced_balance }}
+                        {{ f_form.balance_invoiced }}
                     </li>
                     <li class="repanier-flex-ul-li">
                         &nbsp;{% if f_form.producer_price_are_wo_vat is True %}{% trans "wo VAT" %}{% else %}
                         {% trans "w VAT" %}{% endif %}
-                        {% trans ", invoice reference : " %} {{ f_form.invoice_reference }}
+                        {% trans ", invoice reference : " %} {{ f_form.reference }}
                     </li>
                 </ul>
             </div>

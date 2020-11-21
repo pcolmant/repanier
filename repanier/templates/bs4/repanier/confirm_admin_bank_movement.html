@@ -13,7 +13,7 @@
         <fieldset class="module aligned ">
         <div class="submit-row repanier-submit-row">
             {% for bankaccount in bankaccounts %}
-                <h6>{{ bankaccount.producer.short_profile_name }}, {{ bankaccount.bank_amount_out }},
+                <h6>{{ bankaccount.producer.short_name }}, {{ bankaccount.bank_amount_out }},
                 {{ bankaccount.operation_comment }}</h6>
             {% endfor %}
         </div>

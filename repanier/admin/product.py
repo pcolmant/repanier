@@ -75,11 +75,11 @@ class ProductResource(resources.ModelResource):
     id = fields.Field(attribute="id", widget=IdWidget(), readonly=True)
     producer_name = fields.Field(
         attribute="producer",
-        widget=ForeignKeyWidget(Producer, field="short_profile_name"),
+        widget=ForeignKeyWidget(Producer, field="short_name"),
     )
     long_name = fields.Field(attribute="long_name")
-    department_for_customer = fields.Field(
-        attribute="department_for_customer",
+    department = fields.Field(
+        attribute="department",
         widget=TranslatedForeignKeyWidget(
             LUT_DepartmentForCustomer, field="short_name"
         ),
@@ -117,9 +117,6 @@ class ProductResource(resources.ModelResource):
         widget=DecimalBooleanWidget(),
         readonly=False,
     )
-    producer_order_by_quantity = fields.Field(
-        attribute="producer_order_by_quantity", widget=ThreeDecimalsWidget()
-    )
     label = fields.Field(
         attribute="production_mode",
         widget=TranslatedManyToManyWidget(
@@ -154,8 +151,6 @@ class ProductResource(resources.ModelResource):
             instance.customer_alert_order_quantity = DECIMAL_ZERO
         if instance.stock is None:
             instance.stock = DECIMAL_ZERO
-        if instance.producer_order_by_quantity is None:
-            instance.producer_order_by_quantity = DECIMAL_ZERO
         if instance.order_unit is None:
             raise ValueError(_("The order unit must be set."))
         if instance.order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
@@ -221,7 +216,7 @@ class ProductResource(resources.ModelResource):
             "id",
             "producer_name",
             "reference",
-            "department_for_customer",
+            "department",
             "long_name",
             "order_unit",
             "wrapped",
@@ -235,7 +230,6 @@ class ProductResource(resources.ModelResource):
             "customer_alert_order_quantity",
             "stock",
             "limit_order_quantity_to_stock",
-            "producer_order_by_quantity",
             "label",
             "picture",
             "is_into_offer",
@@ -457,7 +451,7 @@ class ProductDataForm(TranslatableModelForm):
             "order_unit": SelectAdminOrderUnitWidget(
                 attrs={"style": "width:100% !important"}
             ),
-            "department_for_customer": apply_select2(forms.Select),
+            "department": apply_select2(forms.Select),
         }
 
 
@@ -469,7 +463,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     list_display = ("get_long_name_with_producer",)
     list_display_links = ("get_long_name_with_producer",)
     readonly_fields = ("is_updated_on",)
-    list_select_related = ("producer", "department_for_customer")
+    list_select_related = ("producer", "department")
     list_per_page = 16
     list_max_show_all = 16
     filter_horizontal = ("production_mode",)
@@ -569,7 +563,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         return list_filter
 
     def get_form(self, request, product=None, **kwargs):
-        department_for_customer_id = None
+        department_id = None
         is_active_value = None
         is_into_offer_value = None
         producer_queryset = Producer.objects.none()
@@ -587,8 +581,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                         producer_queryset = Producer.objects.filter(
                             id=producer_id
                         ).order_by("?")
-                if "department_for_customer" in param:
-                    department_for_customer_id = param["department_for_customer"]
+                if "department" in param:
+                    department_id = param["department"]
                 if "is_active__exact" in param:
                     is_active_value = param["is_active__exact"]
                 if "is_into_offer__exact" in param:
@@ -625,7 +619,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     )
                 ]
         fields_advanced_descriptions = [
-            ("department_for_customer", "placement"),
+            ("department", "placement"),
             "offer_description",
         ]
 
@@ -633,8 +627,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
         if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
             fields_advanced_descriptions += ["production_mode"]
-        if settings.REPANIER_SETTINGS_STOCK:
-            fields_advanced_options += ["producer_order_by_quantity"]
         fields_advanced_options += ["reference"]
         fields_advanced_options += ["vat_level"]
         fields_advanced_options += [("is_into_offer", "is_active")]
@@ -654,7 +646,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         form = super().get_form(request, product, **kwargs)
 
         producer_field = form.base_fields["producer"]
-        department_for_customer_field = form.base_fields["department_for_customer"]
+        department_field = form.base_fields["department"]
 
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
@@ -664,7 +656,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         producer_field.widget.can_add_related = False
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs["readonly"] = True
-        department_for_customer_field.widget.can_delete_related = False
+        department_field.widget.can_delete_related = False
 
         production_mode_field = form.base_fields.get("production_mode")
 
@@ -682,7 +674,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if product is not None:
             producer_field.empty_label = None
             producer_field.queryset = producer_queryset
-            department_for_customer_field.queryset = (
+            department_field.queryset = (
                 LUT_DepartmentForCustomer.objects.filter(
                     rght=F("lft") + 1,
                     is_active=True,
@@ -705,14 +697,14 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     )
                 ]
                 producer_field.disabled = True
-            if department_for_customer_id is not None:
-                department_for_customer_field.queryset = (
+            if department_id is not None:
+                department_field.queryset = (
                     LUT_DepartmentForCustomer.objects.filter(
-                        id=department_for_customer_id
+                        id=department_id
                     )
                 )
             else:
-                department_for_customer_field.queryset = (
+                department_field.queryset = (
                     LUT_DepartmentForCustomer.objects.filter(
                         rght=F("lft") + 1,
                         is_active=True,

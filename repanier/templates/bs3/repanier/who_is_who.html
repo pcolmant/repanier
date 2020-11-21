@@ -44,15 +44,15 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
-                                {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}
+                                {{ customer.long_name }}{% if customer.city %} ({{ customer.city }}
                                     ){% endif %}</h4>
                         </div>
                         <div class="panel-body">
                             <div class="col-xs-2">
                                 {% if customer.picture %}
                                     <img class="img-rounded" style="margin: 5px;"
-                                         alt="{{ customer.long_basket_name }}"
-                                         title="{{ customer.long_basket_name }}"
+                                         alt="{{ customer.long_name }}"
+                                         title="{{ customer.long_name }}"
                                          src="{{ MEDIA_URL }}{{ customer.picture }}"/>
                                 {% endif %}
                             </div>

@@ -44,7 +44,7 @@ def send_open_order(permanence_id):
             settings.REPANIER_SETTINGS_GROUP_NAME, permanence
         )
         offer_producer = ", ".join(
-            [p.short_profile_name for p in permanence.producers.all()]
+            [p.short_name for p in permanence.producers.all()]
         )
         qs = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
@@ -56,7 +56,7 @@ def send_open_order(permanence_id):
             "".join(
                 "<li>{}, {}, {}</li>".format(
                     o.get_long_name(),
-                    o.producer.short_profile_name,
+                    o.producer.short_name,
                     o.email_offer_price_with_vat,
                 )
                 for o in qs
@@ -91,7 +91,7 @@ def send_open_order(permanence_id):
                 ),
                 "offer_description": mark_safe(offer_description),
                 "offer_detail": mark_safe(offer_detail),
-                "offer_recent_detail": mark_safe(permanence.get_new_products),
+                "offer_recent_detail": mark_safe(permanence.get_html_new_products),
                 "offer_producer": offer_producer,
                 "signature": order_responsible["html_signature"],
             }

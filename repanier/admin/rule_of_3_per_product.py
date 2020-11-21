@@ -46,7 +46,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
                     else:
                         values.add(value)
                     qty_invoiced += form.cleaned_data.get(
-                        "quantity_invoiced", DECIMAL_ZERO
+                        "qty_invoiced", DECIMAL_ZERO
                     ).quantize(THREE_DECIMALS)
 
 
@@ -83,7 +83,7 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
     form = OfferItemPurchaseSendInlineForm
     formset = OfferItemPurchaseSendInlineFormSet
     model = Purchase
-    fields = ["customer", "quantity_invoiced", "purchase_price", "comment"]
+    fields = ["customer", "qty_invoiced", "purchase_price", "comment"]
     extra = 0
     fk_name = "offer_item"
 
@@ -209,7 +209,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     inlines = [OfferItemPurchaseSendInline]
     search_fields = ("translations__long_name",)
     list_display = [
-        "department_for_customer",
+        "department",
         "producer",
         "get_long_name_with_producer_price",
         "get_html_producer_qty_stock_invoiced",
@@ -222,7 +222,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         OfferItemFilter,
         ProductFilterByDepartmentForThisProducer,
     )
-    list_select_related = ("producer", "department_for_customer")
+    list_select_related = ("producer", "department")
     list_per_page = 16
     list_max_show_all = 16
     # Important : Do not order by 'translations__order_sort_order'
@@ -246,7 +246,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             self.fields = (
                 (
                     "permanence",
-                    "department_for_customer",
+                    "department",
                     "product",
                     "get_vat_level",
                 ),
@@ -260,7 +260,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
             self.fields = (
                 (
                     "permanence",
-                    "department_for_customer",
+                    "department",
                     "product",
                     "get_vat_level",
                 ),
@@ -270,30 +270,30 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
         form = super().get_form(request, obj, **kwargs)
         permanence_field = form.base_fields["permanence"]
-        department_for_customer_field = form.base_fields["department_for_customer"]
+        department_field = form.base_fields["department"]
         product_field = form.base_fields["product"]
 
         permanence_field.widget.can_add_related = False
-        department_for_customer_field.widget.can_add_related = False
+        department_field.widget.can_add_related = False
         product_field.widget.can_add_related = False
         permanence_field.widget.can_delete_related = False
-        department_for_customer_field.widget.can_delete_related = False
+        department_field.widget.can_delete_related = False
         product_field.widget.can_delete_related = False
         permanence_field.empty_label = None
-        department_for_customer_field.empty_label = None
+        department_field.empty_label = None
         product_field.empty_label = None
 
         if obj is not None:
             permanence_field.queryset = Permanence.objects.filter(id=obj.permanence_id)
-            department_for_customer_field.queryset = (
+            department_field.queryset = (
                 LUT_DepartmentForCustomer.objects.filter(
-                    id=obj.department_for_customer_id
+                    id=obj.department_id
                 )
             )
             product_field.queryset = Product.objects.filter(id=obj.product_id)
         else:
             permanence_field.queryset = Permanence.objects.none()
-            department_for_customer_field.queryset = (
+            department_field.queryset = (
                 LUT_DepartmentForCustomer.objects.none()
             )
             product_field.queryset = Product.objects.none()
@@ -351,7 +351,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     .first()
                 )
                 if purchase is not None:
-                    purchase.quantity_invoiced = DECIMAL_ZERO
+                    purchase.qty_invoiced = DECIMAL_ZERO
                     purchase.save()
                     purchase.save_box()
         for purchase_form in formset:
@@ -380,15 +380,15 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 if purchase_price != previous_purchase_price:
                     purchase.purchase_price = purchase_price
                     if offer_item.producer_unit_price.amount != DECIMAL_ZERO:
-                        purchase.quantity_invoiced = (
+                        purchase.qty_invoiced = (
                             purchase_price.amount
                             / offer_item.producer_unit_price.amount
                         ).quantize(FOUR_DECIMALS)
                     else:
-                        purchase.quantity_invoiced = DECIMAL_ZERO
+                        purchase.qty_invoiced = DECIMAL_ZERO
                 else:
                     purchase.purchase_price.amount = (
-                        purchase.quantity_invoiced
+                        purchase.qty_invoiced
                         * offer_item.producer_unit_price.amount
                     ).quantize(TWO_DECIMALS)
 
@@ -432,18 +432,18 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                                         offer_item.producer_unit_price.amount
                                         != DECIMAL_ZERO
                                     ):
-                                        purchase.quantity_invoiced = (
+                                        purchase.qty_invoiced = (
                                             delta
                                             / offer_item.producer_unit_price.amount
                                         ).quantize(FOUR_DECIMALS)
                                     else:
-                                        purchase.quantity_invoiced = DECIMAL_ZERO
+                                        purchase.qty_invoiced = DECIMAL_ZERO
                                 else:
-                                    purchase.quantity_invoiced = (
-                                        purchase.quantity_invoiced * ratio
+                                    purchase.qty_invoiced = (
+                                        purchase.qty_invoiced * ratio
                                     ).quantize(FOUR_DECIMALS)
                                     adjusted_invoice += (
-                                        purchase.quantity_invoiced
+                                        purchase.qty_invoiced
                                         * offer_item.producer_unit_price.amount
                                     ).quantize(TWO_DECIMALS)
                                 purchase.save()

@@ -81,23 +81,23 @@ class ProducerResource(resources.ModelResource):
         Override to add additional logic.
         """
         producer_qs = Producer.objects.filter(
-            short_profile_name=instance.short_profile_name
+            short_name=instance.short_name
         ).order_by("?")
         if instance.id is not None:
             producer_qs = producer_qs.exclude(id=instance.id)
         if producer_qs.exists():
             raise ValueError(
                 _(
-                    "The short_basket_name {} is already used by another producer."
-                ).format(instance.short_profile_name)
+                    "The short_name {} is already used by another producer."
+                ).format(instance.short_name)
             )
 
     class Meta:
         model = Producer
         fields = (
             "id",
-            "short_profile_name",
-            "long_profile_name",
+            "short_name",
+            "long_name",
             "email",
             "email2",
             "email3",
@@ -213,16 +213,16 @@ class ProducerDataForm(forms.ModelForm):
                         "Some products of this producer are in a box. This implies that this producer cannot invoice by basket."
                     ),
                 )
-        short_profile_name = self.cleaned_data["short_profile_name"]
-        qs = Producer.objects.filter(short_profile_name=short_profile_name).order_by(
+        short_name = self.cleaned_data["short_name"]
+        qs = Producer.objects.filter(short_name=short_name).order_by(
             "?"
         )
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.id)
         if qs.exists():
             self.add_error(
-                "short_profile_name",
-                _("The given short_profile_name is used by another producer."),
+                "short_name",
+                _("The given short_name is used by another producer."),
             )
 
     def save(self, *args, **kwargs):
@@ -263,7 +263,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = ProducerResource
     change_list_url = reverse_lazy("admin:repanier_producer_changelist")
 
-    search_fields = ("short_profile_name", "email")
+    search_fields = ("short_name", "email")
     list_per_page = 16
     list_max_show_all = 16
     list_filter = ("is_active", "invoice_by_basket")
@@ -322,7 +322,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def export_stock(self, request):
         wb = export_producer_stock(
-            producers=Producer.objects.all().order_by("short_profile_name"),
+            producers=Producer.objects.all().order_by("short_name"),
             wb=None,
         )
         if wb is not None:
@@ -370,7 +370,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [
-            ("short_profile_name", "long_profile_name", "language"),
+            ("short_name", "long_name", "language"),
             ("email", "email2", "email3"),
             ("phone1", "phone2", "fax"),
         ]

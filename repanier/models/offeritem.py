@@ -53,12 +53,6 @@ class OfferItem(Item):
         _("Producer price are without vat"), default=False
     )
     price_list_multiplier = models.DecimalField(
-        _(
-            "Coefficient applied to the producer tariff to calculate the consumer tariff"
-        ),
-        help_text=_(
-            "This multiplier is applied to each price automatically imported/pushed."
-        ),
         default=DECIMAL_ZERO,
         max_digits=5,
         decimal_places=4,
@@ -87,13 +81,22 @@ class OfferItem(Item):
     # If Permanence.status < SEND this is the order quantity
     # During sending the orders to the producer this become the invoiced quantity
     # via permanence.recalculate_order_amount(..., send_to_producer=True)
-    quantity_invoiced = models.DecimalField(
-        _("Qty invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    qty_invoiced = models.DecimalField(
+        _("Qty invoiced"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+        # db_column="quantity_invoiced"
     )
     use_order_unit_converted = models.BooleanField(default=False)
 
     may_order = models.BooleanField(_("May order"), default=True)
     manage_production = models.BooleanField(default=False)
+
+    # TBD
+    quantity_invoiced = models.DecimalField(
+        _("Qty invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO,
+    )
 
     def get_vat_level(self):
         return self.get_vat_level_display()
@@ -103,8 +106,8 @@ class OfferItem(Item):
 
     def get_producer_qty_stock_invoiced(self):
         # Return quantity to buy to the producer and stock used to deliver the invoiced quantity
-        if self.quantity_invoiced > DECIMAL_ZERO:
-            return self.quantity_invoiced, DECIMAL_ZERO, self.quantity_invoiced
+        if self.qty_invoiced > DECIMAL_ZERO:
+            return self.qty_invoiced, DECIMAL_ZERO, self.qty_invoiced
         return DECIMAL_ZERO, DECIMAL_ZERO, DECIMAL_ZERO
 
     def get_html_producer_qty_stock_invoiced(self):

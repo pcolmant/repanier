@@ -1,19 +1,23 @@
+import logging
+
 from django.core.management.base import BaseCommand
+from django.db.models import F, Subquery, OuterRef
 
+from repanier.const import PERMANENCE_WAIT_FOR_SEND, PRODUCT_ORDER_UNIT_PC_KG
 from repanier.models.permanence import Permanence
+from repanier.models.offeritem import OfferItem
+from repanier.models.purchase import PurchaseWoReceiver
 
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     args = "<none>"
     help = "Recalculate order amount"
 
     def handle(self, *args, **options):
-        for permanence in Permanence.objects.filter(id=223).order_by("permanence_date"):
-            print(
-                "Cancel {} {}".format(
-                    permanence.permanence_date, permanence.get_status_display()
-                )
-            )
+        for permanence in Permanence.objects.filter(id=796).order_by("permanence_date"):
+            permanence.set_qty_invoiced()
             permanence.recalculate_order_amount(re_init=True)
 
         # latest_total = BankAccount.objects.filter(

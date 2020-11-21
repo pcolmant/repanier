@@ -117,7 +117,7 @@ class OrderView(ListView):
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 producer_set = Producer.objects.filter(
                     permanence=self.permanence.id
-                ).only("id", "short_profile_name")
+                ).only("id", "short_name")
             else:
                 producer_set = None
             context["producer_set"] = producer_set
@@ -183,8 +183,8 @@ class OrderView(ListView):
             if customer is None:
                 raise Http404
             translation.activate(customer.language)
-            customer_invoice = self.permanence.get_or_create_invoice(
-                customer=customer, refresh=False
+            customer_invoice = CustomerInvoice.get_or_create(
+                permanence_id=self.permanence.id, customer_id=customer.id
             )
             status = customer_invoice.status
             basket_message = get_html_basket_message(customer, self.permanence, status)
@@ -253,7 +253,7 @@ class OrderView(ListView):
                     permanence_id=self.permanence.id,
                     may_order=True,  # Don't display technical products.
                     purchase__customer__user=self.user,
-                    purchase__quantity_ordered__gt=0,
+                    purchase__qty_ordered__gt=0,
                     # is_box=False,
                     translations__language_code=translation.get_language(),
                 )
@@ -284,9 +284,9 @@ class OrderView(ListView):
                     )
                     if department is not None:
                         tmp_qs = qs.filter(
-                            department_for_customer__lft__gte=department.lft,
-                            department_for_customer__rght__lte=department.rght,
-                            department_for_customer__tree_id=department.tree_id,
+                            department__lft__gte=department.lft,
+                            department__rght__lte=department.rght,
+                            department__tree_id=department.tree_id,
                         )
                         if tmp_qs.exists():
                             # Restrict to this department only if no product exists in it

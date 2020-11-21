@@ -15,8 +15,7 @@ from repanier.models.invoice import ProducerInvoice
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.models.product import Product
-from repanier.tools import reorder_offer_items, debug_parameters
-from repanier.tools import reorder_purchases
+from repanier.tools import debug_parameters
 
 
 @transaction.atomic
@@ -64,7 +63,7 @@ def open_order(permanence_id, send_mail=True):
     for box in boxes_in_this_permanence:
         box.get_or_create_offer_item(permanence)
     # Calculate the sort order of the order display screen
-    reorder_offer_items(permanence.id)
+    permanence.reorder_offer_items()
     # Calculate the Purchase 'sum' for each customer
     permanence.recalculate_order_amount()
 
@@ -163,8 +162,8 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
         everything=everything,
         deliveries_id=deliveries_id,
     )
-    permanence.recalculate_order_amount(send_to_producer=True)
-    reorder_purchases(permanence.id)
+    permanence.set_qty_invoiced()
+    permanence.reorder_purchases()
     if send_mail:
         email_order.email_order(
             permanence.id, everything=everything, deliveries_id=deliveries_id

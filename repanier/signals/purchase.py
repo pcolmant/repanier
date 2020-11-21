@@ -25,24 +25,22 @@ def purchase_post_init(sender, **kwargs):
     purchase = kwargs["instance"]
     # logger.info("purchase post init : {}".format(purchase.id))
     if purchase.id is not None:
-        purchase.previous_quantity_ordered = purchase.quantity_ordered
-        purchase.previous_quantity_invoiced = purchase.quantity_invoiced
+        purchase.previous_qty_ordered = purchase.qty_ordered
+        purchase.previous_qty_invoiced = purchase.qty_invoiced
         purchase.previous_purchase_price = purchase.purchase_price.amount
         purchase.previous_selling_price = purchase.selling_price.amount
         purchase.previous_producer_vat = purchase.producer_vat.amount
         purchase.previous_customer_vat = purchase.customer_vat.amount
         purchase.previous_deposit = purchase.deposit.amount
-        purchase.previous_comment = purchase.comment
     else:
-        purchase.previous_quantity_ordered = DECIMAL_ZERO
-        purchase.previous_quantity_invoiced = DECIMAL_ZERO
+        purchase.previous_qty_ordered = DECIMAL_ZERO
+        purchase.previous_qty_invoiced = DECIMAL_ZERO
         purchase.previous_quantity = DECIMAL_ZERO
         purchase.previous_purchase_price = DECIMAL_ZERO
         purchase.previous_selling_price = DECIMAL_ZERO
         purchase.previous_producer_vat = DECIMAL_ZERO
         purchase.previous_customer_vat = DECIMAL_ZERO
         purchase.previous_deposit = DECIMAL_ZERO
-        purchase.previous_comment = EMPTY_STRING
 
 
 @receiver(pre_save, sender=Purchase)
@@ -57,23 +55,23 @@ def purchase_pre_save(sender, **kwargs):
         purchase.set_customer_price_list_multiplier()
 
     if purchase.status < PERMANENCE_WAIT_FOR_SEND:
-        quantity = purchase.quantity_ordered
-        delta_quantity = quantity - purchase.previous_quantity_ordered
+        quantity = purchase.qty_ordered
+        delta_quantity = quantity - purchase.previous_qty_ordered
         if purchase.offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
             # This quantity is used to calculate the price
             # The unit price is for 1 kg.
             # 1 = 1 piece of order_average_weight
-            # 2 = 2 pices of order_average_weight
+            # 2 = 2 pieces of order_average_weight
             quantity *= purchase.offer_item.order_average_weight
-
+            purchase.qty_invoiced = quantity
     else:
-        quantity = purchase.quantity_invoiced
-        delta_quantity = quantity - purchase.previous_quantity_invoiced
+        quantity = purchase.qty_invoiced
+        delta_quantity = quantity - purchase.previous_qty_invoiced
 
     if purchase.is_box_content:
         if delta_quantity != DECIMAL_ZERO:
             OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
-                quantity_invoiced=F("quantity_invoiced") + delta_quantity
+                qty_invoiced=F("qty_invoiced") + delta_quantity
             )
     else:
         unit_deposit = purchase.get_unit_deposit()
@@ -115,7 +113,7 @@ def purchase_pre_save(sender, **kwargs):
             delta_deposit = purchase.deposit.amount - purchase.previous_deposit
 
             OfferItemWoReceiver.objects.filter(id=purchase.offer_item_id).update(
-                quantity_invoiced=F("quantity_invoiced") + delta_quantity,
+                qty_invoiced=F("qty_invoiced") + delta_quantity,
                 total_purchase_with_tax=F("total_purchase_with_tax")
                 + delta_purchase_price,
                 total_selling_with_tax=F("total_selling_with_tax")
@@ -153,8 +151,3 @@ def purchase_pre_save(sender, **kwargs):
                 total_vat=F("total_vat") + delta_purchase_vat,
                 total_deposit=F("total_deposit") + delta_deposit,
             )
-    # Do not do it twice
-    purchase.previous_quantity_ordered = purchase.quantity_ordered
-    purchase.previous_quantity_invoiced = purchase.quantity_invoiced
-    purchase.previous_purchase_price = purchase.purchase_price.amount
-    purchase.previous_selling_price = purchase.selling_price.amount

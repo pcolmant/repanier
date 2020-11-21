@@ -129,18 +129,21 @@ class BankAccount(models.Model):
                 return closest_greater
 
     @classmethod
-    def get_latest_total(cls):
+    def get_balance(cls):
         latest_total = (
             BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
             .order_by("?")
             .first()
         )
         if latest_total is None:
-            logger.error(
+            logger.fatal(
                 "The bank account should have been initialized in Configuration.init_repanier()"
             )
 
-        return latest_total
+        return (
+            latest_total.bank_amount_in.amount
+            - latest_total.bank_amount_out.amount
+        )
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
@@ -180,7 +183,7 @@ class BankAccount(models.Model):
 
     def get_producer(self):
         if self.producer is not None:
-            return self.producer.short_profile_name
+            return self.producer.short_name
         else:
             if self.customer is None:
                 # This is a total, show it
@@ -199,7 +202,7 @@ class BankAccount(models.Model):
 
     def get_customer(self):
         if self.customer is not None:
-            return self.customer.short_basket_name
+            return self.customer.short_name
         else:
             if self.producer is None:
                 # This is a total, show it

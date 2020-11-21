@@ -25,7 +25,7 @@ def departments_for_customers_rest(request):
 
 
 @csrf_exempt
-def department_for_customer_rest(request, short_name):
+def department_rest(request, short_name):
     """
     Retrieve, update or delete a code snippet.
     """

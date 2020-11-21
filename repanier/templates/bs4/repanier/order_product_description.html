@@ -6,8 +6,8 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         </div>
         <div class="modal-body">
-            {{ offer.producer.short_profile_name }}<br>
-            <small>{{ offer.department_for_customer.short_name }}</small><br>
+            {{ offer.producer.short_name }}<br>
+            <small>{{ offer.department.short_name }}</small><br>
             {% if offer.picture2 %}
                 <img class="img-responsive img-thumbnail" style="float: left; margin: 5px;" alt="{{ offer.get_long_name }}"
                      title="{{ offer.get_long_name }}" src="{{ MEDIA_URL }}{{ offer.picture2 }}"/>

@@ -18,7 +18,6 @@ from repanier.const import (
     DECIMAL_ONE,
     VAT_100,
     REPANIER_MONEY_ZERO,
-    PRODUCT_ORDER_UNIT_DEPOSIT,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
     PERMANENCE_OPENED,
     PERMANENCE_SEND,
@@ -26,30 +25,40 @@ from repanier.const import (
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import ProducerInvoice
-from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
 from repanier.picture.fields import RepanierPictureField
 
 
 class Producer(models.Model):
-    short_profile_name = models.CharField(
+    short_name = models.CharField(
         _("Short name"),
         max_length=25,
         blank=False,
         default=EMPTY_STRING,
         db_index=True,
-        unique=True,
+        # unique=True,
+        # db_column="short_profile_name"
     )
-    long_profile_name = models.CharField(
-        _("Long name"), max_length=100, blank=True, default=EMPTY_STRING
+    long_name = models.CharField(
+        _("Long name"),
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING,
+        # db_column="long_profile_name"
     )
     email = models.EmailField(_("Email"), null=True, blank=True, default=EMPTY_STRING)
     email2 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+        _("Secondary email"),
+        null=True,
+        blank=True,
+        default=EMPTY_STRING
     )
     email3 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
+        _("Secondary email"),
+        null=True,
+        blank=True,
+        default=EMPTY_STRING
     )
     language = models.CharField(
         max_length=5,
@@ -65,48 +74,83 @@ class Producer(models.Model):
         size=SIZE_L,
     )
     phone1 = models.CharField(
-        _("Phone1"), max_length=25, blank=True, default=EMPTY_STRING
+        _("Phone1"),
+        max_length=25,
+        blank=True,
+        default=EMPTY_STRING
     )
     phone2 = models.CharField(
-        _("Phone2"), max_length=25, blank=True, default=EMPTY_STRING
+        _("Phone2"),
+        max_length=25,
+        blank=True,
+        default=EMPTY_STRING
     )
     bank_account = models.CharField(
-        _("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
+        _("Bank account"),
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING
     )
     vat_id = models.CharField(
-        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
+        _("VAT id"),
+        max_length=20,
+        blank=True,
+        default=EMPTY_STRING
     )
-    fax = models.CharField(_("Fax"), max_length=100, blank=True, default=EMPTY_STRING)
-    address = models.TextField(_("Address"), blank=True, default=EMPTY_STRING)
-    city = models.CharField(_("City"), max_length=50, blank=True, default=EMPTY_STRING)
-    memo = models.TextField(_("Memo"), blank=True, default=EMPTY_STRING)
+    fax = models.CharField(
+        _("Fax"),
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING
+    )
+    address = models.TextField(
+        _("Address"),
+        blank=True,
+        default=EMPTY_STRING
+    )
+    city = models.CharField(
+        _("City"),
+        max_length=50,
+        blank=True,
+        default=EMPTY_STRING
+    )
+    memo = models.TextField(
+        _("Memo"),
+        blank=True,
+        default=EMPTY_STRING
+    )
     reference_site = models.URLField(
-        _("Reference site"), null=True, blank=True, default=EMPTY_STRING
+        _("Reference site"),
+        null=True,
+        blank=True,
+        default=EMPTY_STRING
     )
     web_services_activated = models.BooleanField(
-        _("Web services activated"), default=False
+        _("Web services activated"),
+        default=False
     )
     # uuid used to access to producer invoices without login
-    uuid = models.CharField("uuid", max_length=36, default=EMPTY_STRING, db_index=True)
-    offer_uuid = models.CharField(
-        "uuid", max_length=36, default=EMPTY_STRING, db_index=True
+    login_uuid = models.CharField(
+        "uuid",
+        max_length=36,
+        default=EMPTY_STRING,
+        # unique=True, # TODO : Add it after migration
+        db_index=True
     )
-    offer_filled = models.BooleanField(_("Offer filled"), default=False)
-    invoice_by_basket = models.BooleanField(_("Invoice by basket"), default=False)
+    invoice_by_basket = models.BooleanField(
+        _("Invoice by basket"),
+        default=False
+    )
     producer_price_are_wo_vat = models.BooleanField(
-        _("Producer price are wo vat"), default=False
+        _("Producer price are wo vat"),
+        default=False
     )
     sort_products_by_reference = models.BooleanField(
-        _("Sort products by reference"), default=False
+        _("Sort products by reference"),
+        default=False
     )
 
     price_list_multiplier = models.DecimalField(
-        _(
-            "Coefficient applied to the producer tariff to calculate the consumer tariff"
-        ),
-        help_text=_(
-            "This multiplier is applied to each price automatically imported/pushed."
-        ),
         default=DECIMAL_ONE,
         max_digits=5,
         decimal_places=4,
@@ -121,34 +165,64 @@ class Producer(models.Model):
         default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)],
     )
-
-    date_balance = models.DateField(_("Date_balance"), default=datetime.date.today)
+    date_balance = models.DateField(
+        _("Date_balance"),
+        default=datetime.date.today
+    )
     balance = ModelMoneyField(
-        _("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+        _("Balance"),
+        max_digits=8,
+        decimal_places=2,
+        default=DECIMAL_ZERO
     )
     initial_balance = ModelMoneyField(
-        _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+        _("Initial balance"),
+        max_digits=8,
+        decimal_places=2,
+        default=DECIMAL_ZERO
     )
     represent_this_buyinggroup = models.BooleanField(
-        _("Represent this buyinggroup"), default=False
+        _("Represent this buyinggroup"),
+        default=False
     )
-    is_active = models.BooleanField(_("Active"), default=True)
+    is_active = models.BooleanField(
+        _("Active"),
+        default=True
+    )
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR
-    is_anonymized = models.BooleanField(default=False)
+    is_anonymized = models.BooleanField(
+        default=False
+    )
+
+    # TBD
+    short_profile_name = models.CharField(
+        max_length=25,
+        blank=False,
+        default=EMPTY_STRING,
+        db_index=True,
+        unique=True,
+    )
+    long_profile_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING,
+    )
+    uuid = models.CharField(
+        "uuid",
+        max_length=36,
+        default=EMPTY_STRING,
+        db_index=True
+    )
 
     @classmethod
     def get_or_create_default(cls):
-        default = (
-            Producer.objects.filter(represent_this_buyinggroup=True)
-            .order_by("?")
-            .first()
-        )
+        default = Producer.objects.filter(represent_this_buyinggroup=True).first()
         if default is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
             default = Producer.objects.create(
-                short_profile_name=short_name,
-                long_profile_name=long_name,
+                short_name=short_name,
+                long_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True,
             )
@@ -293,60 +367,6 @@ class Producer(models.Model):
 
         return bank_not_invoiced
 
-    def get_calculated_invoiced_balance(self, permanence_id):
-        bank_not_invoiced = self.get_bank_not_invoiced()
-        # Do not take into account product whose order unit is >= PRODUCT_ORDER_UNIT_DEPOSIT
-
-        result_set = (
-            OfferItemWoReceiver.objects.filter(
-                permanence_id=permanence_id,
-                producer_id=self.id,
-                price_list_multiplier__lt=1,
-            )
-            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
-            .order_by("?")
-            .aggregate(
-                total_selling_price_with_tax=Sum(
-                    "total_selling_with_tax",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                )
-            )
-        )
-
-        payment_needed = (
-            result_set["total_selling_price_with_tax"]
-            if result_set["total_selling_price_with_tax"] is not None
-            else DECIMAL_ZERO
-        )
-
-        result_set = (
-            OfferItemWoReceiver.objects.filter(
-                permanence_id=permanence_id,
-                producer_id=self.id,
-                price_list_multiplier__gte=1,
-            )
-            .exclude(order_unit__gte=PRODUCT_ORDER_UNIT_DEPOSIT)
-            .order_by("?")
-            .aggregate(
-                total_purchase_price_with_tax=Sum(
-                    "total_purchase_with_tax",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                )
-            )
-        )
-
-        if result_set["total_purchase_price_with_tax"] is not None:
-            payment_needed += result_set["total_purchase_price_with_tax"]
-
-        calculated_invoiced_balance = self.balance - bank_not_invoiced + payment_needed
-        return calculated_invoiced_balance
-
-    get_calculated_invoiced_balance.short_description = _("Balance")
-
     def get_balance(self):
         last_producer_invoice_set = ProducerInvoice.objects.filter(
             producer_id=self.id, invoice_sort_order__isnull=False
@@ -365,9 +385,8 @@ class Producer(models.Model):
 
         if last_producer_invoice_set.exists():
             return format_html(
-                '<a href="{}?producer={}" class="repanier-a-info" target="_blank"><span style="color:{}">{}</span></a>',
-                reverse("repanier:producer_invoice_view", args=(0,)),
-                str(self.id),
+                '<a href="{}" class="repanier-a-info" target="_blank"><span style="color:{}">{}</span></a>',
+                reverse("repanier:producer_invoice_view", args=(0, self.login_uuid)),
                 color,
                 -balance,
             )
@@ -444,12 +463,12 @@ class Producer(models.Model):
         if self.represent_this_buyinggroup:
             if not also_group:
                 return
-            self.short_profile_name = "{}-{}".format(_("GROUP"), self.id)
-            self.long_profile_name = "{} {}".format(_("Group"), self.id)
+            self.short_name = "{}-{}".format(_("GROUP"), self.id)
+            self.long_name = "{} {}".format(_("Group"), self.id)
         else:
-            self.short_profile_name = "{}-{}".format(_("PRODUCER"), self.id)
-            self.long_profile_name = "{} {}".format(_("Producer"), self.id)
-        self.email = "{}@repanier.be".format(self.short_profile_name)
+            self.short_name = "{}-{}".format(_("PRODUCER"), self.id)
+            self.long_name = "{} {}".format(_("Producer"), self.id)
+        self.email = "{}@repanier.be".format(self.short_name)
         self.email2 = EMPTY_STRING
         self.email3 = EMPTY_STRING
         self.phone1 = EMPTY_STRING
@@ -459,23 +478,22 @@ class Producer(models.Model):
         self.fax = EMPTY_STRING
         self.address = EMPTY_STRING
         self.memo = EMPTY_STRING
-        self.uuid = uuid.uuid1()
-        self.offer_uuid = uuid.uuid1()
+        self.login_uuid = uuid.uuid1()
         self.is_anonymized = True
         self.save()
 
     def __str__(self):
         if self.producer_price_are_wo_vat:
-            return "{} {}".format(self.short_profile_name, _("wo VAT"))
-        return self.short_profile_name
+            return "{} {}".format(self.short_name, _("wo VAT"))
+        return self.short_name
 
     class Meta:
         verbose_name = _("Producer")
         verbose_name_plural = _("Producers")
-        ordering = ("-represent_this_buyinggroup", "short_profile_name")
+        ordering = ("-represent_this_buyinggroup", "short_name")
         indexes = [
             models.Index(
-                fields=["-represent_this_buyinggroup", "short_profile_name"],
+                fields=["-represent_this_buyinggroup", "short_name"],
                 name="producer_order_idx",
             )
         ]

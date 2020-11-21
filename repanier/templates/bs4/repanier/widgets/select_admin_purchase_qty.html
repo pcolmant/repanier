@@ -12,16 +12,16 @@
         (function($){
             switch (value) {
                 {{ case_show_show }}
-                    $("div.form-row.field-quantity_ordered").show();
-                    $("div.form-row.field-quantity_invoiced").show();
+                    $("div.form-row.field-qty_ordered").show();
+                    $("div.form-row.field-qty_invoiced").show();
                     break;
                 {{ case_show_hide }}
-                    $("div.form-row.field-quantity_ordered").show();
-                    $("div.form-row.field-quantity_invoiced").hide();
+                    $("div.form-row.field-qty_ordered").show();
+                    $("div.form-row.field-qty_invoiced").hide();
                     break;
                 {{ case_hide_show }}
-                    $("div.form-row.field-quantity_ordered").hide();
-                    $("div.form-row.field-quantity_invoiced").show();
+                    $("div.form-row.field-qty_ordered").hide();
+                    $("div.form-row.field-qty_invoiced").show();
                     break;
             }
         }(django.jQuery))

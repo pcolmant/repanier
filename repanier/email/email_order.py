@@ -104,10 +104,10 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             language=language_code,
         ).order_by("?")
         for producer in producer_set:
-            long_profile_name = (
-                producer.long_profile_name
-                if producer.long_profile_name is not None
-                else producer.short_profile_name
+            long_name = (
+                producer.long_name
+                if producer.long_name is not None
+                else producer.short_name
             )
             wb = generate_producer_xlsx(
                 permanence=permanence, producer=producer, wb=None
@@ -123,8 +123,8 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             template = Template(order_producer_mail)
             context = TemplateContext(
                 {
-                    "name": long_profile_name,
-                    "long_profile_name": long_profile_name,
+                    "name": long_name,
+                    "long_name": long_name,
                     "order_empty": wb is None,
                     "duplicate": wb is not None,
                     "permanence_link": mark_safe(
@@ -158,7 +158,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 )
                 order_producer_mail_subject = _(
                     "⚠ Mail not send to our producer {} because the minimum order value has not been reached."
-                ).format(long_profile_name)
+                ).format(long_name)
             else:
                 if producer.email:
                     to_email.append(producer.email)
@@ -239,17 +239,17 @@ def export_order_2_1_group(
             settings.REPANIER_SETTINGS_GROUP_NAME, permanence
         )
 
-        long_basket_name = customer_responsible.long_basket_name or str(
+        long_name = customer_responsible.long_name or str(
             customer_responsible
         )
 
         template = Template(order_customer_mail)
         context = TemplateContext(
             {
-                "name": long_basket_name,
-                "long_basket_name": long_basket_name,  # deprecated
+                "name": long_name,
+                "long_name": long_name,  # deprecated
                 "basket_name": str(customer_responsible),
-                "short_basket_name": str(customer_responsible),  # deprecated
+                "short_name": str(customer_responsible),  # deprecated
                 "permanence_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
@@ -260,7 +260,7 @@ def export_order_2_1_group(
                 "last_balance_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
-                        reverse("repanier:customer_invoice_view", args=(0,)),
+                        reverse("repanier:customer_invoice_view", args=(0, 0)),
                         _("Group invoices"),
                     )
                 ),
@@ -345,10 +345,10 @@ def export_order_2_1_customer(
                 customer_payment_needed,
                 customer_order_amount,
             ) = payment_message(customer, permanence)
-            long_basket_name = (
-                customer.long_basket_name
-                if customer.long_basket_name is not None
-                else customer.short_basket_name
+            long_name = (
+                customer.long_name
+                if customer.long_name is not None
+                else customer.short_name
             )
             if cancel_order:
                 order_customer_mail = config.safe_translation_getter(
@@ -372,10 +372,10 @@ def export_order_2_1_customer(
             template = Template(order_customer_mail)
             context = TemplateContext(
                 {
-                    "name": long_basket_name,
-                    "long_basket_name": long_basket_name,
-                    "basket_name": customer.short_basket_name,
-                    "short_basket_name": customer.short_basket_name,
+                    "name": long_name,
+                    "long_name": long_name,
+                    "basket_name": customer.short_name,
+                    "short_name": customer.short_name,
                     "permanence_link": mark_safe(
                         '<a href="https://{}{}">{}</a>'.format(
                             settings.ALLOWED_HOSTS[0],
@@ -386,7 +386,7 @@ def export_order_2_1_customer(
                     "last_balance_link": mark_safe(
                         '<a href="https://{}{}">{}</a>'.format(
                             settings.ALLOWED_HOSTS[0],
-                            reverse("repanier:customer_invoice_view", args=(0,)),
+                            reverse("repanier:customer_invoice_view", args=(0, 0)),
                             customer_last_balance,
                         )
                     ),

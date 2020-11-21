@@ -462,9 +462,9 @@ class Configuration(TranslatableModel):
                     {{ signature }}
                     """
                 self.order_customer_mail = """
-                    Bonjour {{ long_basket_name }},<br>
+                    Bonjour {{ long_name }},<br>
                     <br>
-                    En pièce jointe vous trouverez le montant de votre panier {{ short_basket_name }} de la {{ permanence_link }}.<br>
+                    En pièce jointe vous trouverez le montant de votre panier {{ short_name }} de la {{ permanence_link }}.<br>
                     <br>
                     {{ last_balance }}<br>
                     {{ order_amount }}<br>
@@ -475,9 +475,9 @@ class Configuration(TranslatableModel):
                     {{ signature }}
                     """
                 self.cancel_order_customer_mail = """
-                    Bonjour {{ long_basket_name }},<br>
+                    Bonjour {{ long_name }},<br>
                     <br>
-                    La commande ci-jointe de votre panier {{ short_basket_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
+                    La commande ci-jointe de votre panier {{ short_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
                     <br>
                     {{ signature }}
                     """

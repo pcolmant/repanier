@@ -64,7 +64,7 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
     model = Purchase
     fields = [
         "offer_item",
-        "quantity_invoiced",
+        "qty_invoiced",
         "get_html_producer_unit_price",
         "get_html_unit_deposit",
         "purchase_price",
@@ -166,7 +166,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     inlines = [CustomerPurchaseSendInline]
     list_display = ["producer", "customer", "get_html_producer_price_purchased"]
     list_display_links = ("customer",)
-    search_fields = ("customer__short_basket_name",)
+    search_fields = ("customer__short_name",)
     ordering = ("customer",)
 
     def get_form(self, request, obj=None, **kwargs):
@@ -257,7 +257,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
                     .first()
                 )
                 if purchase is not None:
-                    purchase.quantity_invoiced = DECIMAL_ZERO
+                    purchase.qty_invoiced = DECIMAL_ZERO
                     purchase.save()
                     purchase.save_box()
         for purchase_form in formset:
@@ -277,12 +277,12 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 ].initial
                 if purchase.purchase_price != previous_purchase_price:
                     if purchase.get_producer_unit_price() != DECIMAL_ZERO:
-                        purchase.quantity_invoiced = (
+                        purchase.qty_invoiced = (
                             purchase.purchase_price.amount
                             / purchase.get_producer_unit_price()
                         ).quantize(FOUR_DECIMALS)
                     else:
-                        purchase.quantity_invoiced = DECIMAL_ZERO
+                        purchase.qty_invoiced = DECIMAL_ZERO
                 purchase.save()
         rule_of_3 = form.cleaned_data["rule_of_3"]
         if rule_of_3:
@@ -326,18 +326,18 @@ class CustomerSendAdmin(admin.ModelAdmin):
                                 if purchase.get_producer_unit_price() != DECIMAL_ZERO:
                                     delta = rule_of_3_target - adjusted_invoice
                                     if selling_price:
-                                        purchase.quantity_invoiced = (
+                                        purchase.qty_invoiced = (
                                             delta / purchase.get_customer_unit_price()
                                         ).quantize(FOUR_DECIMALS)
                                     else:
-                                        purchase.quantity_invoiced = (
+                                        purchase.qty_invoiced = (
                                             delta / purchase.get_producer_unit_price()
                                         ).quantize(FOUR_DECIMALS)
                                 else:
-                                    purchase.quantity_invoiced = DECIMAL_ZERO
+                                    purchase.qty_invoiced = DECIMAL_ZERO
                             else:
-                                purchase.quantity_invoiced = (
-                                    purchase.quantity_invoiced * ratio
+                                purchase.qty_invoiced = (
+                                    purchase.qty_invoiced * ratio
                                 ).quantize(FOUR_DECIMALS)
 
                             purchase.save()

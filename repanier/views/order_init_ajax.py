@@ -49,7 +49,7 @@ def order_init_ajax(request):
         .only(
             "id",
             "vat_id",
-            "short_basket_name",
+            "short_name",
             "email2",
             "delivery_point",
             "balance",
@@ -60,8 +60,8 @@ def order_init_ajax(request):
     )
     if customer is None:
         raise Http404
-    customer_invoice = permanence.get_or_create_invoice(
-        customer=customer, refresh=False
+    customer_invoice = CustomerInvoice.get_or_create(
+        permanence_id=permanence_id, customer_id=customer.id
     )
     if customer_invoice is None:
         raise Http404

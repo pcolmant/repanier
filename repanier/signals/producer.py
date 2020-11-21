@@ -22,8 +22,8 @@ def producer_pre_save(sender, **kwargs):
         producer.email3 = producer.email3.lower()
     if producer.price_list_multiplier <= DECIMAL_ZERO:
         producer.price_list_multiplier = DECIMAL_ONE
-    if not producer.uuid:
-        producer.uuid = uuid.uuid1()
+    if not producer.login_uuid:
+        producer.login_uuid = uuid.uuid1()
 
 
 @receiver(post_save, sender=Producer)

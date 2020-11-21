@@ -24,12 +24,12 @@ def customer_basket_message_form_ajax(request, pk):
 
 @never_cache
 @require_GET
-def producer_basket_message_form_ajax(request, pk, uuid):
+def producer_basket_message_form_ajax(request, login_uuid):
     if request.is_ajax():
         user = request.user
         if not (user.is_anonymous or request.user.is_staff):
             raise Http404
-        producer = Producer.objects.filter(id=pk, uuid=uuid).order_by("?").first()
+        producer = Producer.objects.filter(login_uuid=login_uuid).order_by("?").first()
         if producer is None:
             raise Http404
         json = {"#basket_message": producer.get_html_on_hold_movement()}

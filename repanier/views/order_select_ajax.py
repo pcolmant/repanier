@@ -48,7 +48,7 @@ def order_select_ajax(request):
             customer_id=customer.id, offer_item_id=offer_item_id, is_box_content=False
         )
         .order_by("?")
-        .only("quantity_ordered")
+        .only("qty_ordered")
         .first()
     )
     producer_invoice = ProducerInvoice.objects.filter(
@@ -77,7 +77,7 @@ def order_select_ajax(request):
                     )
                     q_min = offer_item.customer_minimum_order_quantity
                     if purchase is not None:
-                        q_previous_order = purchase.quantity_ordered
+                        q_previous_order = purchase.qty_ordered
                     else:
                         q_previous_order = DECIMAL_ZERO
                     if (
@@ -86,7 +86,7 @@ def order_select_ajax(request):
                     ):
                         q_alert = (
                             offer_item.stock
-                            - offer_item.quantity_invoiced
+                            - offer_item.qty_invoiced
                             + q_previous_order
                         )
                         if q_alert < DECIMAL_ZERO:
@@ -168,9 +168,9 @@ def order_select_ajax(request):
         else:
             html = '<option value="0" selected>---</option>'
     else:
-        if purchase is not None and purchase.quantity_ordered != DECIMAL_ZERO:
+        if purchase is not None and purchase.qty_ordered != DECIMAL_ZERO:
             html = get_html_selected_value(
-                offer_item, purchase.quantity_ordered, is_open=True
+                offer_item, purchase.qty_ordered, is_open=True
             )
         else:
             html = '<option value="0" selected>{}</option>'.format(_("Closed"))

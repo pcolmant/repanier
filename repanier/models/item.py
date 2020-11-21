@@ -38,12 +38,14 @@ class Item(TranslatableModel):
     producer = models.ForeignKey(
         "Producer", verbose_name=_("Producer"), on_delete=models.PROTECT
     )
-    department_for_customer = models.ForeignKey(
+    department = models.ForeignKey(
         "LUT_DepartmentForCustomer",
+        related_name="+",
         verbose_name=_("Department"),
         blank=True,
         null=True,
         on_delete=models.PROTECT,
+        # db_column="department_for_customer",
     )
 
     picture2 = RepanierPictureField(
@@ -122,13 +124,6 @@ class Item(TranslatableModel):
         decimal_places=3,
         validators=[MinValueValidator(0)],
     )
-    producer_order_by_quantity = models.DecimalField(
-        _("Producer order by quantity"),
-        default=DECIMAL_ZERO,
-        max_digits=6,
-        decimal_places=3,
-        validators=[MinValueValidator(0)],
-    )
     placement = models.CharField(
         max_length=3,
         choices=LUT_PRODUCT_PLACEMENT,
@@ -150,6 +145,15 @@ class Item(TranslatableModel):
     is_box = models.BooleanField(default=False)
     is_active = models.BooleanField(_("Active"), default=True)
 
+    # TBD
+    department_for_customer = models.ForeignKey(
+        "LUT_DepartmentForCustomer",
+        verbose_name=_("Department"),
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
+
     @property
     def email_offer_price_with_vat(self):
         offer_price = self.get_reference_price()
@@ -161,7 +165,7 @@ class Item(TranslatableModel):
         self.is_active = source.is_active
         self.picture2 = source.picture2
         self.reference = source.reference
-        self.department_for_customer_id = source.department_for_customer_id
+        self.department_id = source.department_id
         self.producer_id = source.producer_id
         self.order_unit = source.order_unit
         self.wrapped = source.wrapped
@@ -180,7 +184,6 @@ class Item(TranslatableModel):
             source.customer_increment_order_quantity
         )
         self.customer_alert_order_quantity = source.customer_alert_order_quantity
-        self.producer_order_by_quantity = source.producer_order_by_quantity
         self.is_box = source.is_box
 
     def recalculate_prices(self, producer_price_are_wo_vat, price_list_multiplier):
@@ -494,7 +497,7 @@ class Item(TranslatableModel):
     def get_long_name_with_producer(self):
         if self.id is not None:
             return "{}, {}".format(
-                self.producer.short_profile_name, self.get_long_name()
+                self.producer.short_name, self.get_long_name()
             )
         else:
             # Nedeed for django import export since django_import_export-0.4.5

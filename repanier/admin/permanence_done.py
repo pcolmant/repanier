@@ -102,23 +102,23 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         "admin:repanier_permanencedone_changelist"
     )
 
-    fields: Tuple[str, str, str] = [
+    fields = [
         "permanence_date",
         "short_name",
         "invoice_description",
     ]
-    readonly_fields: Tuple[str, str] = ["status", "automatically_closed"]
+    readonly_fields = ["status", "automatically_closed"]
     list_per_page: int = 20
     list_max_show_all = 10
     inlines = [PermanenceBoardInline]
     date_hierarchy = "permanence_date"
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
-    search_fields: Tuple[str] = [
-        "customerproducerinvoice__producer__short_profile_name",
-        "customerproducerinvoice__customer__short_basket_name",
+    search_fields = [
+        "customerproducerinvoice__producer__short_name",
+        "customerproducerinvoice__customer__short_name",
     ]
-    ordering: Tuple[str, str, str] = [
+    ordering = [
         "-invoice_sort_order",
         "-canceled_invoice_sort_order",
         "-permanence_date",
@@ -144,9 +144,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
         list_display += [
-            "get_producers_without_download",
-            "get_customers_without_download",
-            "get_board",
+            "get_html_producers_without_download",
+            "get_html_customers_without_download",
+            "get_html_board",
             "get_html_status_display",
         ]
         return list_display
@@ -352,9 +352,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             selected = producer_invoiced_form.cleaned_data.get(
                                 "selected"
                             )
-                            short_profile_name = (
+                            short_name = (
                                 producer_invoiced_form.cleaned_data.get(
-                                    "short_profile_name"
+                                    "short_name"
                                 )
                             )
                             producer_invoice = (
@@ -368,32 +368,30 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             )
                             if selected:
                                 at_least_one_selected = True
-                                producer_invoice.to_be_invoiced_balance = (
+                                producer_invoice.balance_invoiced = (
                                     producer_invoiced_form.cleaned_data.get(
-                                        "to_be_invoiced_balance"
+                                        "balance_invoiced"
                                     )
                                 )
-                                producer_invoice.invoice_reference = (
+                                producer_invoice.reference = (
                                     producer_invoiced_form.cleaned_data.get(
-                                        "invoice_reference", EMPTY_STRING
+                                        "reference", EMPTY_STRING
                                     )
                                 )
-                                producer_invoice.to_be_paid = True
+                                producer_invoice.is_to_be_paid = True
                             else:
-                                producer_invoice.to_be_invoiced_balance = DECIMAL_ZERO
-                                producer_invoice.invoice_reference = EMPTY_STRING
-                                producer_invoice.to_be_paid = False
+                                producer_invoice.balance_invoiced = DECIMAL_ZERO
+                                producer_invoice.reference = EMPTY_STRING
+                                producer_invoice.is_to_be_paid = False
                             producer_invoice.delta_vat = DECIMAL_ZERO
-                            producer_invoice.delta_deposit = DECIMAL_ZERO
                             producer_invoice.delta_price_with_tax = DECIMAL_ZERO
                             producer_invoice.save(
                                 update_fields=[
-                                    "to_be_invoiced_balance",
-                                    "invoice_reference",
+                                    "balance_invoiced",
+                                    "reference",
                                     "delta_vat",
-                                    "delta_deposit",
                                     "delta_price_with_tax",
-                                    "to_be_paid",
+                                    "is_to_be_paid",
                                 ]
                             )
                     if at_least_one_selected:
@@ -446,37 +444,28 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     permanence_id=permanence_id, invoice_sort_order__isnull=True
                 )
                 .order_by("producer")
-                .select_related("producer")
             ):
-                producer = producer_invoice.producer
-                if not producer.represent_this_buyinggroup:
-                    # We have already pay to much (look at the bank movements).
-                    # So we do not need to pay anything
-                    producer_invoice.calculated_invoiced_balance.amount = (
-                        producer.get_calculated_invoiced_balance(permanence_id)
-                    )
-                else:
-                    producer_invoice.calculated_invoiced_balance.amount = RepanierMoney(
-                        producer_invoice.get_total_price_with_tax().amount
-                    )
+                producer_invoice.balance_calculated.amount = RepanierMoney(
+                    producer_invoice.get_total_price_with_tax().amount
+                )
                 # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
-                producer_invoice.to_be_invoiced_balance = (
-                    producer_invoice.calculated_invoiced_balance
+                producer_invoice.balance_invoiced = (
+                    producer_invoice.balance_calculated
                 )
                 producer_invoice.save(
                     update_fields=[
-                        "calculated_invoiced_balance",
-                        "to_be_invoiced_balance",
+                        "balance_calculated",
+                        "balance_invoiced",
                     ]
                 )
                 producers_invoiced.append(
                     {
                         "id": producer_invoice.producer_id,
                         "selected": True,
-                        "short_profile_name": producer_invoice.producer.short_profile_name,
-                        "calculated_invoiced_balance": producer_invoice.calculated_invoiced_balance,
-                        "to_be_invoiced_balance": producer_invoice.to_be_invoiced_balance,
-                        "invoice_reference": producer_invoice.invoice_reference,
+                        "short_name": producer_invoice.producer.short_name,
+                        "balance_calculated": producer_invoice.balance_calculated,
+                        "balance_invoiced": producer_invoice.balance_invoiced,
+                        "reference": producer_invoice.reference,
                         "producer_price_are_wo_vat": producer_invoice.producer.producer_price_are_wo_vat,
                     }
                 )
@@ -708,9 +697,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     context = TemplateContext(
                         {
                             "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
+                            "long_name": _("Long name"),
                             "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
+                            "short_name": _("Short name"),
                             "permanence_link": mark_safe(
                                 '<a href="#">{}</a>'.format(permanence)
                             ),
@@ -737,7 +726,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     context = TemplateContext(
                         {
                             "name": _("Long name"),
-                            "long_profile_name": _("Long name"),
+                            "long_name": _("Long name"),
                             "permanence_link": mark_safe(
                                 '<a href="#">{}</a>'.format(permanence)
                             ),

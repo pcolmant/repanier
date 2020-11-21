@@ -6,7 +6,7 @@ from django.views.decorators.cache import never_cache
 from repanier.picture.views import ajax_picture
 from repanier.rest.lut import (
     departments_for_customers_rest,
-    department_for_customer_rest,
+    department_rest,
 )
 from repanier.rest.permanence import (
     permanences_rest,
@@ -149,7 +149,7 @@ urlpatterns = [
         name="customer_basket_message_form_ajax",
     ),
     path(
-        "ajax/producer-basket-message/<int:pk>/<uuid:uuid>/",
+        "ajax/producer-basket-message/<uuid:login_uuid>/",
         producer_basket_message_form_ajax,
         name="producer_basket_message_form_ajax",
     ),
@@ -176,18 +176,13 @@ urlpatterns = [
     path("ajax/test-mail-config/", test_mail_config_ajax, name="test_mail_config_ajax"),
     path("permanence/", never_cache(PermanenceView.as_view()), name="permanence_view"),
     path(
-        "customer-invoice/<int:pk>/",
+        "customer-invoice/<int:pk>/<int:customer_id>",
         login_required(CustomerInvoiceView.as_view()),
         name="customer_invoice_view",
     ),
     path(
-        "producer-invoice/<int:pk>/<uuid:uuid>/",
+        "producer-invoice/<int:pk>/<uuid:login_uuid>/",
         ProducerInvoiceView.as_view(),
-        name="producer_invoice_uuid_view",
-    ),
-    path(
-        "producer-invoice/<int:pk>/",
-        login_required(ProducerInvoiceView.as_view()),
         name="producer_invoice_view",
     ),
     path(
@@ -215,20 +210,20 @@ urlpatterns = [
     ),
     path(
         "rest/department-for-customer/<str:short_name>/",
-        department_for_customer_rest,
-        name="department_for_customer_rest",
+        department_rest,
+        name="department_rest",
     ),
     path("rest/producers/", producers_list, name="producers_rest"),
     path(
-        "rest/producer/<str:short_profile_name>/", producer_detail, name="producer_rest"
+        "rest/producer/<str:short_name>/", producer_detail, name="producer_rest"
     ),
     path(
-        "rest/products/<str:producer_short_profile_name>/",
+        "rest/products/<str:producer_short_name>/",
         products_rest,
         name="products_rest",
     ),
     path(
-        "rest/product/<str:producer_short_profile_name>/<str:reference>/",
+        "rest/product/<str:producer_short_name>/<str:reference>/",
         product_rest,
         name="product_rest",
     ),

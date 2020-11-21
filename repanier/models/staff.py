@@ -160,7 +160,7 @@ class Staff(MPTTModel, TranslatableModel):
         )
         if self.customer_responsible is not None:
             customer = self.customer_responsible
-            customer_name = customer.long_basket_name or customer.short_basket_name
+            customer_name = customer.long_name or customer.short_name
             customer_contact_info = "{}{}".format(
                 customer_name, customer.get_phone1(prefix=" - ")
             )
@@ -196,7 +196,7 @@ class Staff(MPTTModel, TranslatableModel):
                     "long_name", any_language=True, default=EMPTY_STRING
                 ),
                 # --
-                self.customer_responsible.long_basket_name or self.customer_responsible,
+                self.customer_responsible.long_name or self.customer_responsible,
                 self.customer_responsible.get_phone1(prefix=" (", postfix=")"),
             )
         else:

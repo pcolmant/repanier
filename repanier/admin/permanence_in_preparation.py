@@ -130,18 +130,18 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
                         id=request.resolver_match.args[0]
                     )
                     .only("status")
-                    .order_by("?")
                     .first()
                 )
                 if (
                     parent_object is not None
-                    and parent_object.status == PERMANENCE_PLANNED
+                    and parent_object.highest_status == PERMANENCE_PLANNED
                 ):
                     self._has_add_or_delete_permission = True
                 else:
+                    # A customer may already have bought something that needs to be delivered there.
                     self._has_add_or_delete_permission = False
             except:
-                self._has_add_or_delete_permission = True
+                self._has_add_or_delete_permission = False
         return self._has_add_or_delete_permission
 
     def has_add_permission(self, request, obj):
@@ -195,7 +195,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
     search_fields: Tuple[str] = [
-        "producers__short_profile_name",
+        "producers__short_name",
     ]
     ordering = ("-status", "permanence_date", "id")
 
@@ -219,9 +219,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
         list_display += [
-            "get_producers_with_download",
-            "get_customers_with_download",
-            "get_board",
+            "get_html_producers_with_download",
+            "get_html_customers_with_download",
+            "get_html_board",
             "get_html_status_display",
         ]
         return list_display
@@ -422,7 +422,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         )
         wb = None
         producer_set = Producer.objects.filter(permanence=permanence).order_by(
-            "short_profile_name"
+            "short_name"
         )
         for producer in producer_set:
             wb = generate_producer_xlsx(permanence, producer=producer, wb=wb)
@@ -465,7 +465,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         "offer_description", any_language=True, default=EMPTY_STRING
                     )
                 offer_producer = ", ".join(
-                    [p.short_profile_name for p in permanence.producers.all()]
+                    [p.short_name for p in permanence.producers.all()]
                 )
                 qs = Product.objects.filter(
                     producer=permanence.producers.first(),
@@ -475,7 +475,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 offer_detail = "<ul>{}</ul>".format(
                     "".join(
                         "<li>{}, {}</li>".format(
-                            p.get_long_name(), p.producer.short_profile_name
+                            p.get_long_name(), p.producer.short_name
                         )
                         for p in qs
                     )
@@ -506,9 +506,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     context = TemplateContext(
                         {
                             "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
+                            "long_name": _("Long name"),
                             "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
+                            "short_name": _("Short name"),
                             "permanence_link": mark_safe(
                                 '<a href="#">{}</a>'.format(permanence)
                             ),
@@ -653,9 +653,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     context = TemplateContext(
                         {
                             "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
+                            "long_name": _("Long name"),
                             "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
+                            "short_name": _("Short name"),
                             "permanence_link": mark_safe(
                                 '<a href="#">{}</a>'.format(permanence)
                             ),
@@ -680,7 +680,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                     context = TemplateContext(
                         {
                             "name": _("Long name"),
-                            "long_profile_name": _("Long name"),
+                            "long_name": _("Long name"),
                             "order_empty": False,
                             "duplicate": True,
                             "permanence_link": format_html(

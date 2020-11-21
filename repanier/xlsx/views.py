@@ -23,11 +23,11 @@ def import_xslx_view(
             file_to_import = request.FILES["file_to_import"]
             if (".xlsx" in file_to_import.name) and (file_to_import.size <= 1000000):
                 producer = form.cleaned_data.get("producer")
-                invoice_reference = form.cleaned_data.get(
-                    "invoice_reference", EMPTY_STRING
+                reference = form.cleaned_data.get(
+                    "reference", EMPTY_STRING
                 )
                 error, error_msg = handle_uploaded_file(
-                    request, obj, file_to_import, producer, invoice_reference
+                    request, obj, file_to_import, producer, reference
                 )
                 if error:
                     if error_msg is None:

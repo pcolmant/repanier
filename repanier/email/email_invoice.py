@@ -41,10 +41,10 @@ def send_invoice(permanence_id):
                     to_email.append(producer.email3)
                 if to_email:
                     to_email = list(set(to_email + invoice_responsible["to_email"]))
-                    long_profile_name = (
-                        producer.long_profile_name
-                        if producer.long_profile_name is not None
-                        else producer.short_profile_name
+                    long_name = (
+                        producer.long_name
+                        if producer.long_name is not None
+                        else producer.short_name
                     )
                     if (
                         Purchase.objects.filter(
@@ -65,14 +65,14 @@ def send_invoice(permanence_id):
                         template = Template(invoice_producer_mail)
                         context = TemplateContext(
                             {
-                                "name": long_profile_name,
-                                "long_profile_name": long_profile_name,
+                                "name": long_name,
+                                "long_name": long_name,
                                 "permanence_link": mark_safe(
                                     '<a href="https://{}{}">{}</a>'.format(
                                         settings.ALLOWED_HOSTS[0],
                                         reverse(
-                                            "repanier:producer_invoice_uuid_view",
-                                            args=(0, producer.uuid),
+                                            "repanier:producer_invoice_view",
+                                            args=(0, producer.login_uuid),
                                         ),
                                         permanence,
                                     )
@@ -100,10 +100,10 @@ def send_invoice(permanence_id):
                 represent_this_buyinggroup=False,
                 language=language_code,
             ).order_by("?"):
-                long_basket_name = (
-                    customer.long_basket_name
-                    if customer.long_basket_name is not None
-                    else customer.short_basket_name
+                long_name = (
+                    customer.long_name
+                    if customer.long_name is not None
+                    else customer.short_name
                 )
                 if (
                     Purchase.objects.filter(
@@ -133,10 +133,10 @@ def send_invoice(permanence_id):
                     template = Template(invoice_customer_mail)
                     context = TemplateContext(
                         {
-                            "name": long_basket_name,
-                            "long_basket_name": long_basket_name,
-                            "basket_name": customer.short_basket_name,
-                            "short_basket_name": customer.short_basket_name,
+                            "name": long_name,
+                            "long_name": long_name,
+                            "basket_name": customer.short_name,
+                            "short_name": customer.short_name,
                             "permanence_link": mark_safe(
                                 '<a href="https://{}{}">{}</a>'.format(
                                     settings.ALLOWED_HOSTS[0],
@@ -150,7 +150,7 @@ def send_invoice(permanence_id):
                                 '<a href="https://{}{}">{}</a>'.format(
                                     settings.ALLOWED_HOSTS[0],
                                     reverse(
-                                        "repanier:customer_invoice_view", args=(0,)
+                                        "repanier:customer_invoice_view", args=(0, 0)
                                     ),
                                     customer_last_balance,
                                 )

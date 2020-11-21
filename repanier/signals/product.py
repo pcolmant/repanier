@@ -64,7 +64,6 @@ def product_pre_save(sender, **kwargs):
 
     if settings.REPANIER_SETTINGS_STOCK:
         if producer.represent_this_buyinggroup:
-            product.producer_order_by_quantity = DECIMAL_ZERO
             product.limit_order_quantity_to_stock = True
             # IMPORTANT : Deactivate offeritem whose stock is not > 0 and product is into offer
             product.is_into_offer = (

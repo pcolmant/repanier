@@ -8,18 +8,18 @@ from repanier.models.producer import Producer
 
 
 class ProducerSerializer(serializers.ModelSerializer):
-    id = serializers.SerializerMethodField("get_short_profile_name")
-    name = serializers.SerializerMethodField("get_long_profile_name")
+    id = serializers.SerializerMethodField("get_short_name")
+    name = serializers.SerializerMethodField("get_long_name")
     # minimum_order_value_amount = DecimalField(max_digits=8, decimal_places=2, source='minimum_order_value.amount',
     #                                           read_only=True)
 
     @staticmethod
-    def get_short_profile_name(obj):
-        return obj.short_profile_name
+    def get_short_name(obj):
+        return obj.short_name
 
     @staticmethod
-    def get_long_profile_name(obj):
-        return obj.long_profile_name
+    def get_long_name(obj):
+        return obj.long_name
 
     class Meta:
         model = Producer
@@ -43,14 +43,14 @@ def producers_list(request):
 
 
 @csrf_exempt
-def producer_detail(request, short_profile_name):
+def producer_detail(request, short_name):
     """
     Retrieve, update or delete a code snippet.
     """
     if request.method == "GET":
         producer = (
             Producer.objects.filter(
-                short_profile_name=short_profile_name.decode("unicode-escape"),
+                short_name=short_name.decode("unicode-escape"),
                 is_active=True,
                 represent_this_buyinggroup=False,
             )

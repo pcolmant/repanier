@@ -38,7 +38,7 @@
         <div class="container p-2">
             <div class="row">
                 <div class="col">
-                    {{ customer.long_basket_name }}{% if customer.city %} ({{ customer.city }}
+                    {{ customer.long_name }}{% if customer.city %} ({{ customer.city }}
                         ){% endif %}
                 </div>
             </div>
@@ -48,8 +48,8 @@
                 <div class="col">
                     {% if customer.picture %}
                         <img class="rounded" style="margin: 5px;"
-                             alt="{{ customer.long_basket_name }}"
-                             title="{{ customer.long_basket_name }}"
+                             alt="{{ customer.long_name }}"
+                             title="{{ customer.long_name }}"
                              src="{{ MEDIA_URL }}{{ customer.picture }}"/><br>
                     {% endif %}
                     {% if customer.about_me and customer.about_me.strip %}<i class="fas fa-info-circle"></i>

@@ -166,11 +166,11 @@ msgid "The given username is used by another user"
 msgstr "L'e-mail est utilisé par un autre utilisateur"
 
 #: admin/customer.py:80 admin/staff.py:71
-msgid "The given short_basket_name must be set"
+msgid "The given short_name must be set"
 msgstr "Un nom du panier doit être renseigné"
 
 #: admin/customer.py:81 admin/staff.py:72
-msgid "The given short_basket_name is used by another user"
+msgid "The given short_name is used by another user"
 msgstr "Ce nom de panier est déjà attribué à un autre utilisateur"
 
 #: admin/customer.py:89 admin/staff.py:80
@@ -193,7 +193,7 @@ msgstr "L'e-mail %s est déjà utilisé par un autre utilisateur."
 
 #: admin/customer.py:164
 #, python-format
-msgid "The short_basket_name %s is already used by another user."
+msgid "The short_name %s is already used by another user."
 msgstr "Ce nom de panier %s est déjà attribué à un autre utilisateur."
 
 #: admin/customer.py:227 models/producer.py:30
@@ -309,7 +309,7 @@ msgstr "Archiver"
 #: admin/permanence_done.py:196 admin/permanence_done.py:197
 #: admin/permanence_in_preparation.py:458
 #: admin/permanence_in_preparation.py:459 models/customer.py:37
-msgid "long_basket_name"
+msgid "long_name"
 msgstr "Dénomination étendue du panier"
 
 #: admin/permanence_done.py:211 admin/permanence_done.py:212
@@ -317,7 +317,7 @@ msgstr "Dénomination étendue du panier"
 #: admin/permanence_in_preparation.py:283
 #: admin/permanence_in_preparation.py:477
 #: admin/permanence_in_preparation.py:478 models/producer.py:28
-msgid "long_profile_name"
+msgid "long_name"
 msgstr "Nom étendu"
 
 #: admin/permanence_done.py:243
@@ -440,7 +440,7 @@ msgstr "avec comme communication"
 #: admin/permanence_in_preparation.py:456
 #: admin/permanence_in_preparation.py:460
 #: admin/permanence_in_preparation.py:461 models/customer.py:34
-msgid "short_basket_name"
+msgid "short_name"
 msgstr "Dénomination abrégée du panier"
 
 #: admin/permanence_in_preparation.py:512
@@ -507,7 +507,7 @@ msgstr "  - (Générer des permanences hebdomadaires à partir de celle-ci)"
 
 #: admin/producer.py:48
 #, python-format
-msgid "The short_basket_name %s is already used by another producer."
+msgid "The short_name %s is already used by another producer."
 msgstr "Ce nom %s est déjà attribué à un autre producteur."
 
 #: admin/producer.py:73
@@ -1933,7 +1933,7 @@ msgid "permanences board"
 msgstr "Tableaux des tâches"
 
 #: models/producer.py:25
-msgid "short_profile_name"
+msgid "short_name"
 msgstr "Nom abrégé"
 
 #: models/producer.py:46

@@ -51,7 +51,7 @@ def export_permanence_stock(
                 translations__language_code=translation.get_language(),
             )
             .order_by("producer", "translations__long_name", "order_average_weight")
-            .select_related("producer", "department_for_customer")
+            .select_related("producer", "department")
             .iterator()
         )
         offer_item = next_row(offer_items)
@@ -84,26 +84,26 @@ def export_permanence_stock(
                 producer_save = offer_item.producer
                 row_start_producer = row_num + 1
                 c = ws.cell(row=row_num, column=2)
-                c.value = "{}".format(producer_save.short_profile_name)
+                c.value = "{}".format(producer_save.short_name)
                 c.style.font.bold = True
                 c.style.font.italic = True
                 while (
                     offer_item is not None
                     and producer_save.id == offer_item.producer_id
                 ):
-                    department_for_customer_save__id = (
-                        offer_item.department_for_customer_id
+                    department_save__id = (
+                        offer_item.department_id
                     )
-                    department_for_customer_save__short_name = (
-                        offer_item.department_for_customer.short_name
-                        if offer_item.department_for_customer is not None
+                    department_save__short_name = (
+                        offer_item.department.short_name
+                        if offer_item.department is not None
                         else None
                     )
                     while (
                         offer_item is not None
                         and producer_save.id == offer_item.producer_id
-                        and department_for_customer_save__id
-                        == offer_item.department_for_customer_id
+                        and department_save__id
+                        == offer_item.department_id
                     ):
                         if len(offer_item.reference) < 36:
                             if offer_item.reference.isdigit():
@@ -118,7 +118,7 @@ def export_permanence_stock(
                             offer_item_reference = EMPTY_STRING
                         if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
 
-                            asked = offer_item.quantity_invoiced
+                            asked = offer_item.qty_invoiced
                             stock = offer_item.stock
                             c = ws.cell(row=row_num, column=0)
                             c.value = offer_item.producer_id
@@ -129,10 +129,10 @@ def export_permanence_stock(
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=3)
-                            if department_for_customer_save__short_name is not None:
+                            if department_save__short_name is not None:
                                 c.value = "{} - {}".format(
                                     offer_item.get_long_name(),
-                                    department_for_customer_save__short_name,
+                                    department_save__short_name,
                                 )
                             else:
                                 c.value = "{}".format(offer_item.get_long_name())
@@ -229,7 +229,7 @@ def export_permanence_stock(
                 row_num += 1
                 c = ws.cell(row=row_num, column=3)
                 c.value = "{} {}".format(
-                    _("Total price"), producer_save.short_profile_name
+                    _("Total price"), producer_save.short_name
                 )
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
@@ -367,7 +367,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 translations__language_code=translation.get_language(),
             )
             .order_by("translations__long_name", "order_average_weight")
-            .select_related("producer", "department_for_customer")
+            .select_related("producer", "department")
             .iterator()
         )
         product = next_row(products)
@@ -391,10 +391,10 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=3)
-                if product.department_for_customer is not None:
+                if product.department is not None:
                     c.value = "{} - {}".format(
                         product.get_long_name(),
-                        product.department_for_customer.short_name,
+                        product.department.short_name,
                     )
                 else:
                     c.value = product.get_long_name()

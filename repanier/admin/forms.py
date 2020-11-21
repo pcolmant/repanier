@@ -98,8 +98,8 @@ class ImportPurchasesForm(forms.Form):
 class ImportInvoiceForm(forms.Form):
     template = get_repanier_template_name("admin/import_invoice.html")
     file_to_import = forms.FileField(label=_("File to import"), allow_empty_file=False)
-    # Important : Here, the length of invoice_reference must be the same as of permanence.short_name
-    invoice_reference = forms.CharField(
+    # Important : Here, the length of reference must be the same as of permanence.short_name
+    reference = forms.CharField(
         label=_("Invoice reference"), max_length=50, required=False
     )
     producer = forms.ModelChoiceField(
@@ -110,7 +110,7 @@ class ImportInvoiceForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["invoice_reference"].widget.attrs[
+        self.fields["reference"].widget.attrs[
             "style"
         ] = "width:450px !important"
 
@@ -118,24 +118,24 @@ class ImportInvoiceForm(forms.Form):
 class ProducerInvoicedForm(forms.Form):
     selected = forms.BooleanField(required=False)
     id = forms.IntegerField(label=EMPTY_STRING)
-    short_profile_name = forms.CharField(
+    short_name = forms.CharField(
         label=_("Short name"), max_length=25, required=False
     )
-    calculated_invoiced_balance = FormMoneyField(
+    balance_calculated = FormMoneyField(
         label=_("Amount due to the producer as calculated by Repanier"),
         max_digits=8,
         decimal_places=2,
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    to_be_invoiced_balance = FormMoneyField(
+    balance_invoiced = FormMoneyField(
         label=_("Amount claimed by the producer"),
         max_digits=8,
         decimal_places=2,
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    invoice_reference = forms.CharField(
+    reference = forms.CharField(
         label=_("Invoice reference"), max_length=100, required=False
     )
     producer_price_are_wo_vat = forms.BooleanField(required=False)
@@ -144,14 +144,14 @@ class ProducerInvoicedForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields["id"].widget.attrs["readonly"] = True
         # self.fields["id"].widget.attrs["hidden"] = True
-        self.fields["to_be_invoiced_balance"].widget.attrs[
+        self.fields["balance_invoiced"].widget.attrs[
             "style"
         ] = "width:100px !important"
-        self.fields["invoice_reference"].widget.attrs[
+        self.fields["reference"].widget.attrs[
             "style"
         ] = "width:250px !important"
-        self.fields["calculated_invoiced_balance"].widget.attrs["readonly"] = True
-        # self.fields["calculated_invoiced_balance"].widget.attrs['style'] = "width:100px"
+        self.fields["balance_calculated"].widget.attrs["readonly"] = True
+        # self.fields["balance_calculated"].widget.attrs['style'] = "width:100px"
 
 
 ProducerInvoicedFormSet = formset_factory(ProducerInvoicedForm, extra=0)

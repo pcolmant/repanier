@@ -29,16 +29,21 @@ class Customer(models.Model):
         _("Login attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
     )
 
-    short_basket_name = models.CharField(
+    short_name = models.CharField(
         _("Short name"),
         max_length=25,
         blank=False,
         default=EMPTY_STRING,
         db_index=True,
-        unique=True,
+        # unique=True,
+        # db_column="short_basket_name",
     )
-    long_basket_name = models.CharField(
-        _("Long name"), max_length=100, blank=True, default=EMPTY_STRING
+    long_name = models.CharField(
+        _("Long name"),
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING,
+        # db_column="long_basket_name",
     )
     email2 = models.EmailField(
         _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
@@ -135,6 +140,18 @@ class Customer(models.Model):
         _("Agree to receive mails from this site"), default=True
     )
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
+    short_basket_name = models.CharField(
+        max_length=25,
+        blank=False,
+        default=EMPTY_STRING,
+        db_index=True,
+        unique=True,
+    )
+    long_basket_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING,
+    )
 
     @classmethod
     def get_or_create_default(cls):
@@ -157,8 +174,8 @@ class Customer(models.Model):
                 )
             default = Customer.objects.create(
                 user=user,
-                short_basket_name=short_name,
-                long_basket_name=long_name,
+                short_name=short_name,
+                long_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=True,
             )
@@ -186,8 +203,8 @@ class Customer(models.Model):
                 )
             very_first_customer = Customer.objects.create(
                 user=user,
-                short_basket_name=short_name,
-                long_basket_name=long_name,
+                short_name=short_name,
+                long_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
                 represent_this_buyinggroup=False,
             )
@@ -255,6 +272,24 @@ class Customer(models.Model):
             if self.email2
             else sep.join([self.user.email, EMPTY_STRING])
         )
+
+    def get_or_create_invoice(self, permanence_id):
+        customer_invoice = CustomerInvoice.objects.filter(
+            permanence_id=permanence_id, customer_id=self.id
+        ).first()
+        if customer_invoice is None:
+            customer_invoice = self.create_invoice(permanence_id)
+        elif customer_invoice.invoice_sort_order is None:
+            # if not already invoiced, update all totals
+            customer_invoice.set_total()
+            # 	delta_price_with_tax
+            # 	delta_vat
+            # 	total_vat
+            # 	total_deposit
+            # 	total_price_with_tax
+            # 	delta_transport = f(total_price_with_tax, transport, min_transport)
+            customer_invoice.save()
+        return customer_invoice
 
     def get_order_not_invoiced(self):
         result_set = (
@@ -342,23 +377,20 @@ class Customer(models.Model):
         if last_customer_invoice.exists():
             if balance.amount >= 30:
                 return format_html(
-                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
-                    reverse("repanier:customer_invoice_view", args=(0,)),
-                    str(self.id),
+                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
+                    reverse("repanier:customer_invoice_view", args=(0, self.id)),
                     balance,
                 )
             elif balance.amount >= -10:
                 return format_html(
-                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
-                    reverse("repanier:customer_invoice_view", args=(0,)),
-                    str(self.id),
+                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
+                    reverse("repanier:customer_invoice_view", args=(0, self.id)),
                     balance,
                 )
             else:
                 return format_html(
-                    '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
-                    reverse("repanier:customer_invoice_view", args=(0,)),
-                    str(self.id),
+                    '<a href="{}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
+                    reverse("repanier:customer_invoice_view", args=(0, self.id)),
                     balance,
                 )
         else:
@@ -537,8 +569,8 @@ class Customer(models.Model):
         if self.represent_this_buyinggroup or self.is_group:
             # Do not anonymize groups
             return
-        self.short_basket_name = "{}-{}".format(_("BASKET"), self.id).lower()
-        self.long_basket_name = "{} {}".format(_("Family"), self.id)
+        self.short_name = "{}-{}".format(_("BASKET"), self.id).lower()
+        self.long_name = "{} {}".format(_("Family"), self.id)
         self.email2 = EMPTY_STRING
         self.picture = EMPTY_STRING
         self.phone1 = EMPTY_STRING
@@ -549,11 +581,9 @@ class Customer(models.Model):
         self.address = EMPTY_STRING
         self.about_me = EMPTY_STRING
         self.memo = EMPTY_STRING
-        self.user.username = self.user.email = "{}@repanier.be".format(
-            self.short_basket_name
-        )
+        self.user.username = self.user.email = "{}@repanier.be".format(self.short_name)
         self.user.first_name = EMPTY_STRING
-        self.user.last_name = self.short_basket_name
+        self.user.last_name = self.short_name
         self.user.set_password(None)
         self.user.save()
         self.is_anonymized = True
@@ -563,17 +593,17 @@ class Customer(models.Model):
 
     def __str__(self):
         if self.delivery_point is None:
-            return self.short_basket_name
+            return self.short_name
         else:
-            return "{} - {}".format(self.delivery_point, self.short_basket_name)
+            return "{} - {}".format(self.delivery_point, self.short_name)
 
     class Meta:
         verbose_name = _("Customer")
         verbose_name_plural = _("Customers")
-        ordering = ("-represent_this_buyinggroup", "short_basket_name")
+        ordering = ("-represent_this_buyinggroup", "short_name")
         indexes = [
             models.Index(
-                fields=["-represent_this_buyinggroup", "short_basket_name"],
+                fields=["-represent_this_buyinggroup", "short_name"],
                 name="customer_order_idx",
             )
         ]

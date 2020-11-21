@@ -50,7 +50,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         OfferItemFilter,
         ProductFilterByDepartmentForThisProducer,
     )
-    list_select_related = ("producer", "department_for_customer")
+    list_select_related = ("producer", "department")
     list_per_page = 13
     list_max_show_all = 13
     ordering = ("translations__long_name",)
@@ -77,7 +77,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             if settings.REPANIER_SETTINGS_STOCK:
                 self.list_editable = ("stock",)
                 return (
-                    "department_for_customer",
+                    "department",
                     "get_html_long_name_with_producer",
                     "stock",
                     "limit_order_quantity_to_stock",
@@ -85,42 +85,42 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
                 )
             else:
                 return (
-                    "department_for_customer",
+                    "department",
                     "get_html_long_name_with_producer",
                     "get_html_producer_qty_stock_invoiced",
                 )
         else:
             return (
-                "department_for_customer",
+                "department",
                 "get_html_long_name_with_producer",
                 "get_html_producer_qty_stock_invoiced",
             )
 
     def get_form(self, request, offer_item=None, **kwargs):
         fields_basic = [
-            ("permanence", "department_for_customer", "product"),
+            ("permanence", "department", "product"),
             ("producer_qty_stock_invoiced",),
         ]
         self.fieldsets = ((None, {"fields": fields_basic}),)
 
         form = super().get_form(request, offer_item, **kwargs)
         permanence_field = form.base_fields["permanence"]
-        department_for_customer_field = form.base_fields["department_for_customer"]
+        department_field = form.base_fields["department"]
         product_field = form.base_fields["product"]
 
         permanence_field.widget.can_add_related = False
-        department_for_customer_field.widget.can_add_related = False
+        department_field.widget.can_add_related = False
         product_field.widget.can_add_related = False
         permanence_field.empty_label = None
-        department_for_customer_field.empty_label = None
+        department_field.empty_label = None
         product_field.empty_label = None
 
         permanence_field.queryset = Permanence.objects.filter(
             id=offer_item.permanence_id
         )
-        department_for_customer_field.queryset = (
+        department_field.queryset = (
             LUT_DepartmentForCustomer.objects.filter(
-                id=offer_item.department_for_customer_id
+                id=offer_item.department_id
             )
         )
         product_field.queryset = Product.objects.filter(id=offer_item.product_id)

@@ -178,7 +178,7 @@ def repanier_user_bs3(context, *args, **kwargs):
                         my_balance = _("My balance")
                     nodes.append(
                         '<li><a href="{}">{}</a></li>'.format(
-                            reverse("repanier:customer_invoice_view", args=(0,)), my_balance
+                            reverse("repanier:customer_invoice_view", args=(0, user.customer_id)), my_balance
                         )
                     )
                 nodes.append('<li class="divider"></li>')
@@ -188,26 +188,11 @@ def repanier_user_bs3(context, *args, **kwargs):
             nodes.append("</ul></li>")
 
     else:
-        p_offer_uuid = kwargs.get("offer_uuid", None)
-        if len(p_offer_uuid) == 36:
-            producer = (
-                Producer.objects.filter(offer_uuid=p_offer_uuid)
-                .only("long_profile_name")
-                .order_by("?")
-                .first()
+        nodes = [
+            '<li class="dropdown"><a href="{}">{}</a></li>'.format(
+                reverse("repanier:login_form"), _("Login")
             )
-            if producer is not None:
-                nodes = [
-                    '<li><a href="#">{} {}</a></li>'.format(
-                        _("Welkom"), producer.long_profile_name
-                    )
-                ]
-        else:
-            nodes = [
-                '<li class="dropdown"><a href="{}">{}</a></li>'.format(
-                    reverse("repanier:login_form"), _("Login")
-                )
-            ]
+        ]
 
     return mark_safe("".join(nodes))
 
@@ -256,14 +241,6 @@ def repanier_user_bs4(context, *args, **kwargs):
             else:
                 my_balance = _("My balance")
 
-    else:
-        p_offer_uuid = kwargs.get("offer_uuid", None)
-        if len(p_offer_uuid) == 36:
-            producer = (
-                Producer.objects.filter(offer_uuid=p_offer_uuid)
-                .only("long_profile_name")
-                .first()
-            )
 
     return mark_safe(
         render_to_string(
@@ -352,22 +329,22 @@ def repanier_select_task(context, *args, **kwargs):
                         <select name="value" id="task{task_id}"
                         onchange="task_ajax({task_id})" class="form-control">
                         <option value="0">---</option>
-                        <option value="1" selected>{long_basket_name}</option>
+                        <option value="1" selected>{long_name}</option>
                         </select>
                         </i></b>
                         """.format(
                             task_id=permanence_board.id,
-                            long_basket_name=user.customer.long_basket_name,
+                            long_name=user.customer.long_name,
                         )
                     else:
                         result = """
                         <select name="value" id="task{task_id}"
                         class="form-control">
-                        <option value="0" selected>{long_basket_name}</option>
+                        <option value="0" selected>{long_name}</option>
                         </select>
                         """.format(
                             task_id=permanence_board.id,
-                            long_basket_name=permanence_board.customer.long_basket_name,
+                            long_name=permanence_board.customer.long_name,
                         )
                 else:
                     if permanence_board.permanence_role.customers_may_register:
@@ -377,12 +354,12 @@ def repanier_select_task(context, *args, **kwargs):
                             <select name="value" id="task{task_id}"
                             onchange="task_ajax({task_id})" class="form-control">
                             <option value="0" selected>---</option>
-                            <option value="1">{long_basket_name}</option>
+                            <option value="1">{long_name}</option>
                             </select>
                             </i></b>
                             """.format(
                                 task_id=permanence_board.id,
-                                long_basket_name=user.customer.long_basket_name,
+                                long_name=user.customer.long_name,
                             )
                         else:
                             result = """
@@ -413,14 +390,14 @@ def repanier_select_offer_item(context, *args, **kwargs):
                 is_box_content=True,
             )
             .order_by("?")
-            .only("quantity_ordered")
+            .only("qty_ordered")
             .first()
         )
         if box_purchase is None:
-            quantity_ordered = DECIMAL_ZERO
+            qty_ordered = DECIMAL_ZERO
         else:
-            quantity_ordered = box_purchase.quantity_ordered
-        html = get_html_selected_box_value(offer_item, quantity_ordered)
+            qty_ordered = box_purchase.qty_ordered
+        html = get_html_selected_box_value(offer_item, qty_ordered)
         result.append(
             '<select id="box_offer_item{id}" name="box_offer_item{id}" disabled class="form-control">{option}</select>'.format(
                 result=result, id=offer_item.id, option=html
@@ -435,13 +412,13 @@ def select_offer_item(offer_item, result, user):
             customer_id=user.customer, offer_item_id=offer_item.id, is_box_content=False
         )
         .order_by("?")
-        .only("quantity_ordered")
+        .only("qty_ordered")
         .first()
     )
     if purchase is not None:
         is_open = purchase.status == PERMANENCE_OPENED
         html = get_html_selected_value(
-            offer_item, purchase.quantity_ordered, is_open=is_open
+            offer_item, purchase.qty_ordered, is_open=is_open
         )
     else:
         is_open = (

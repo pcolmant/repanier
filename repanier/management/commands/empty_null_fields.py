@@ -37,7 +37,7 @@ class Command(BaseCommand):
                     "UPDATE repanier_customer SET city = '' WHERE city IS NULL"
                 )
                 cursor.execute(
-                    "UPDATE repanier_customer SET long_basket_name = '' WHERE long_basket_name IS NULL"
+                    "UPDATE repanier_customer SET long_name = '' WHERE long_name IS NULL"
                 )
                 cursor.execute(
                     "UPDATE repanier_customer SET memo = '' WHERE memo IS NULL"
@@ -64,7 +64,7 @@ class Command(BaseCommand):
                     "UPDATE repanier_producer SET fax = '' WHERE fax IS NULL"
                 )
                 cursor.execute(
-                    "UPDATE repanier_producer SET long_profile_name = '' WHERE long_profile_name IS NULL"
+                    "UPDATE repanier_producer SET long_name = '' WHERE long_name IS NULL"
                 )
                 cursor.execute(
                     "UPDATE repanier_producer SET memo = '' WHERE memo IS NULL"
@@ -85,7 +85,7 @@ class Command(BaseCommand):
                     "UPDATE repanier_producer SET vat_id = '' WHERE vat_id IS NULL"
                 )
                 cursor.execute(
-                    "UPDATE repanier_producerinvoice SET invoice_reference = '' WHERE invoice_reference IS NULL"
+                    "UPDATE repanier_producerinvoice SET reference = '' WHERE reference IS NULL"
                 )
                 cursor.execute(
                     "UPDATE repanier_product SET reference = '' WHERE reference IS NULL"

@@ -36,7 +36,7 @@ class PermanenceBoard(models.Model):
             customer_name = EMPTY_STRING
             customer_phone_or_email = EMPTY_STRING
         else:
-            customer_name = self.customer.long_basket_name
+            customer_name = self.customer.long_name
             customer_phone_or_email = self.customer.get_phone1(
                 prefix=", "
             ) or self.customer.get_email1(prefix=", ")

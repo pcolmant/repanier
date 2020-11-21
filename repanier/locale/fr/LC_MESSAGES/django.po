@@ -280,11 +280,11 @@ msgid "Invoicing mails"
 msgstr "✉ mails de facturation des commandes"
 
 #: admin/customer.py:53 admin/group.py:38
-msgid "The given short_basket_name must be set"
+msgid "The given short_name must be set"
 msgstr "Un nom du panier doit être renseigné"
 
 #: admin/customer.py:54 admin/group.py:39
-msgid "The given short_basket_name is used by another user."
+msgid "The given short_name is used by another user."
 msgstr "Ce nom de panier est déjà attribué à un autre consommateur."
 
 #: admin/customer.py:66 admin/customer.py:252 admin/group.py:54
@@ -317,7 +317,7 @@ msgid "This bank account already belongs to another customer."
 msgstr "Ce compte en banque appartient déjà à un autre consommateur."
 
 #: admin/customer.py:258
-msgid "The short_basket_name {} is already used by another user."
+msgid "The short_name {} is already used by another user."
 msgstr "Ce nom de panier {} est déjà attribué à un autre consommateur."
 
 #: admin/customer.py:335 admin/group.py:126 models/invoice.py:93
@@ -707,7 +707,7 @@ msgid "Close orders"
 msgstr "Clôturer les commandes"
 
 #: admin/producer.py:92
-msgid "The short_basket_name {} is already used by another producer."
+msgid "The short_name {} is already used by another producer."
 msgstr "Ce nom {} est déjà attribué à un autre producteur."
 
 #: admin/producer.py:144 templates/bs3/repanier/customer_invoice_form.html:94
@@ -740,7 +740,7 @@ msgstr ""
 "un nouveau producteur et désactivez celui-ci."
 
 #: admin/producer.py:226
-msgid "The given short_profile_name is used by another producer."
+msgid "The given short_name is used by another producer."
 msgstr "Ce nom abrégé est déjà attribué à un autre producteur."
 
 #: admin/producer.py:315
@@ -4639,7 +4639,7 @@ msgstr "Ligne %(row_num)d : Une colonne requise est absente du fichier."
 #~ msgstr "Photo"
 
 #, fuzzy
-#~| msgid "The given short_basket_name is used by another user."
+#~| msgid "The given short_name is used by another user."
 #~ msgid "The given email is used by another user"
 #~ msgstr "Ce nom de panier est déjà attribué à un autre consommateur."
 

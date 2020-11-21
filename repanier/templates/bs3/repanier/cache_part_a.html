@@ -1,7 +1,7 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}{% spaceless %}
-<b>{{ offer.get_order_name }}</b><br>{{ offer.producer.short_profile_name }}
+<b>{{ offer.get_order_name }}</b><br>{{ offer.producer.short_name }}
 {% if offer.product.offer_description|length > 0 %} <b><span class="glyphicon glyphicon-info-sign"></span></b>{% endif %}
-{% if offer.department_for_customer %}<br><small>{{ offer.department_for_customer.short_name }}</small>{% endif %}
+{% if offer.department %}<br><small>{{ offer.department.short_name }}</small>{% endif %}
 {% for production_mode in offer.product.production_mode.all %}
     {% if forloop.first %}<br>{% endif %}
     {% if production_mode.picture2 %}

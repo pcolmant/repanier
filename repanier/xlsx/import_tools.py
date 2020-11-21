@@ -41,7 +41,7 @@ def get_customer_2_id_dict():
     represent_this_buyinggroup = None
     customer_set = Customer.objects.filter(is_active=True).order_by("?")
     for customer in customer_set:
-        customer_2_id_dict[customer.short_basket_name] = customer.id
+        customer_2_id_dict[customer.short_name] = customer.id
         if customer.represent_this_buyinggroup:
             represent_this_buyinggroup = customer.id
     return represent_this_buyinggroup, customer_2_id_dict
@@ -60,19 +60,19 @@ def get_producer_2_id_dict():
     represent_this_buyinggroup = None
     producer_set = Producer.objects.filter(is_active=True).order_by("?")
     for producer in producer_set:
-        producer_2_id_dict[producer.short_profile_name] = producer.id
+        producer_2_id_dict[producer.short_name] = producer.id
         if producer.represent_this_buyinggroup:
             represent_this_buyinggroup = producer.id
     return represent_this_buyinggroup, producer_2_id_dict
 
 
-def get_department_for_customer_2_id_dict():
-    department_for_customer_2_id_dict = {}
-    department_for_customer_set = LUT_DepartmentForCustomer.objects.filter(
+def get_department_2_id_dict():
+    department_2_id_dict = {}
+    department_set = LUT_DepartmentForCustomer.objects.filter(
         is_active=True
     ).order_by("?")
-    for department_for_customer in department_for_customer_set:
-        department_for_customer_2_id_dict[
-            department_for_customer.short_name
-        ] = department_for_customer.id
-    return department_for_customer_2_id_dict
+    for department in department_set:
+        department_2_id_dict[
+            department.short_name
+        ] = department.id
+    return department_2_id_dict

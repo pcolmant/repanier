@@ -22,7 +22,7 @@ class PermanenceSerializer(serializers.Serializer):
             "status_code": obj.status,
             "status": obj.get_status_display(),
             "producers": list(
-                obj.producers.values_list("short_profile_name", flat=True)
+                obj.producers.values_list("short_name", flat=True)
             ),
         }
 
@@ -41,7 +41,7 @@ class OfferItemSerializer(serializers.Serializer):
         fields = (
             "reference",
             "get_long_name",
-            "quantity_invoiced",
+            "qty_invoiced",
             "stock",
         )
 
@@ -51,7 +51,7 @@ class OfferItemSerializer(serializers.Serializer):
 def permanence_producer_rest(request, permanence_id, producer_name):
     offer_item = OfferItemWoReceiver.objects.filter(
         permanence_id=permanence_id,
-        producer__short_profile_name=producer_name.decode("unicode-escape"),
+        producer__short_name=producer_name.decode("unicode-escape"),
         status=PERMANENCE_OPENED,
     ).order_by("?")
     if offer_item.exists():
@@ -67,7 +67,7 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
     if request.method == "GET":
         offer_item = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
-            producer__short_profile_name=producer_name.decode("unicode-escape"),
+            producer__short_name=producer_name.decode("unicode-escape"),
             reference=reference.decode("unicode-escape"),
             status=PERMANENCE_OPENED,
         ).order_by("?")

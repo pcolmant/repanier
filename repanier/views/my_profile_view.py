@@ -18,7 +18,7 @@ from repanier.widget.picture import RepanierPictureWidget
 
 
 class CustomerForm(forms.Form):
-    long_basket_name = fields.CharField(label=_("My name is"), max_length=100)
+    long_name = fields.CharField(label=_("My name is"), max_length=100)
     zero_waste = fields.BooleanField(
         label=EMPTY_STRING,
         required=False,
@@ -114,7 +114,7 @@ def my_profile_view(request):
             # Process the data in form.cleaned_data
             # ...
             if customer is not None:
-                customer.long_basket_name = form.cleaned_data.get("long_basket_name")
+                customer.long_name = form.cleaned_data.get("long_name")
                 customer.phone1 = form.cleaned_data.get("phone1")
                 customer.phone2 = form.cleaned_data.get("phone2")
                 customer.email2 = form.cleaned_data.get("email2").lower()
@@ -135,7 +135,7 @@ def my_profile_view(request):
                     # user.email != email for case unsensitive SQL query
                     customer.user.username = customer.user.email = email.lower()
                     # customer.user.first_name = EMPTY_STRING
-                    # customer.user.last_name = customer.short_basket_name
+                    # customer.user.last_name = customer.short_name
                     customer.user.save()
                 # User feed back : Display email in lower case.
                 data = form.data.copy()
@@ -164,8 +164,8 @@ def my_profile_view(request):
         )
     else:
         form = CustomerForm()  # An unbound form
-        field = form.fields["long_basket_name"]
-        field.initial = customer.long_basket_name
+        field = form.fields["long_name"]
+        field.initial = customer.long_name
         field = form.fields["phone1"]
         field.initial = customer.phone1
         field = form.fields["phone2"]

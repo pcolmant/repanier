@@ -53,10 +53,10 @@ class PurchaseResource(resources.ModelResource):
     product = fields.Field(attribute="offer_item__get_long_name", readonly=True)
     producer_id = fields.Field(attribute="producer__id", readonly=True)
     producer_name = fields.Field(
-        attribute="producer__short_profile_name", readonly=True
+        attribute="producer__short_name", readonly=True
     )
     customer_id = fields.Field(attribute="customer__id", readonly=True)
-    customer_name = fields.Field(attribute="customer__short_basket_name", readonly=True)
+    customer_name = fields.Field(attribute="customer__short_name", readonly=True)
     unit_deposit = fields.Field(
         attribute="offer_item__unit_deposit", widget=TwoMoneysWidget(), readonly=True
     )
@@ -76,8 +76,8 @@ class PurchaseResource(resources.ModelResource):
     customer_vat = fields.Field(
         attribute="offer_item__customer_vat", widget=TwoMoneysWidget(), readonly=True
     )
-    quantity_invoiced = fields.Field(
-        attribute="quantity_invoiced", widget=FourDecimalsWidget(), readonly=True
+    qty_invoiced = fields.Field(
+        attribute="qty_invoiced", widget=FourDecimalsWidget(), readonly=True
     )
     producer_row_price = fields.Field(
         attribute="purchase_price", widget=TwoMoneysWidget(), readonly=True
@@ -103,7 +103,7 @@ class PurchaseResource(resources.ModelResource):
             "product",
             "customer_id",
             "customer_name",
-            "quantity_invoiced",
+            "qty_invoiced",
             "unit_deposit",
             "producer_unit_price_wo_tax",
             "producer_vat",
@@ -142,12 +142,12 @@ class PurchaseForm(forms.ModelForm):
         purchase = self.instance
         if purchase.id is not None:
             if purchase.status < PERMANENCE_SEND:
-                self.fields["quantity"].initial = purchase.quantity_ordered
+                self.fields["quantity"].initial = purchase.qty_ordered
             else:
-                self.fields["quantity"].initial = purchase.quantity_invoiced
+                self.fields["quantity"].initial = purchase.qty_invoiced
 
     def clean_product(self):
-        product_id = sint(self.cleaned_data.get("product"), 0)
+        product_id = sint(self.cleaned_data.get("product"))
         if product_id <= 0:
             if product_id == -1:
                 self.add_error(
@@ -216,10 +216,10 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         super().__init__(model, admin_site)
         self.producer_id = None
 
-    def get_department_for_customer(self, obj):
-        return obj.offer_item.department_for_customer
+    def get_department(self, obj):
+        return obj.offer_item.department
 
-    get_department_for_customer.short_description = _("Department")
+    get_department.short_description = _("Department")
 
     def get_queryset(self, request):
         permanence_id = request.GET.get("permanence", None)
@@ -604,11 +604,11 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
             purchase.offer_item = offer_item
             if status < PERMANENCE_SEND:
-                purchase.quantity_ordered = form.cleaned_data.get(
+                purchase.qty_ordered = form.cleaned_data.get(
                     "quantity", DECIMAL_ZERO
                 )
             else:
-                purchase.quantity_invoiced = form.cleaned_data.get(
+                purchase.qty_invoiced = form.cleaned_data.get(
                     "quantity", DECIMAL_ZERO
                 )
 
@@ -618,8 +618,8 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             purchase.save()
             purchase.save_box()
             # The customer_invoice may be created with "purchase.save()"
-            customer_invoice = CustomerInvoice.get_or_create_invoice(
-                permanence=purchase.permanence, customer=purchase.customer, refresh=True
+            customer_invoice = CustomerInvoice.get_or_create(
+                permanence_id=purchase.permanence_id, customer_id=purchase.customer_id
             )
             customer_invoice.confirm_order()
             customer_invoice.save()

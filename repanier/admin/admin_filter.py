@@ -30,7 +30,7 @@ class ProductFilterByProducer(SimpleListFilter):
         """
         # This list is a collection of producer.id, .name
         return [
-            (c.id, c.short_profile_name)
+            (c.id, c.short_name)
             for c in Producer.objects.filter(is_active=True)
         ]
 
@@ -49,7 +49,7 @@ class ProductFilterByProducer(SimpleListFilter):
 
 class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
     title = _("Departments")
-    parameter_name = "department_for_customer"
+    parameter_name = "department"
     template = get_admin_template_name("department_filter.html")
 
     def lookups(self, request, model_admin):
@@ -57,22 +57,22 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
         if producer_id:
             inner_qs = (
                 Product.objects.filter(producer_id=producer_id)
-                .order_by("department_for_customer")
-                .distinct("department_for_customer__id")
+                .order_by("department")
+                .distinct("department__id")
             )
         else:
             permanence_id = request.GET.get("permanence")
             if permanence_id:
                 inner_qs = (
                     Product.objects.filter(offeritem__permanence_id=permanence_id)
-                    .order_by("department_for_customer")
-                    .distinct("department_for_customer__id")
+                    .order_by("department")
+                    .distinct("department__id")
                 )
             else:
                 inner_qs = (
                     Product.objects.all()
-                    .order_by("department_for_customer")
-                    .distinct("department_for_customer__id")
+                    .order_by("department")
+                    .distinct("department__id")
                 )
 
         return [
@@ -91,12 +91,12 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
             producer_id = request.GET.get("producer")
             if (
                 Product.objects.filter(
-                    producer_id=producer_id, department_for_customer_id=self.value()
+                    producer_id=producer_id, department_id=self.value()
                 )
                 .order_by("?")
                 .exists()
             ):
-                return queryset.filter(department_for_customer_id=self.value())
+                return queryset.filter(department_id=self.value())
         return queryset
 
 
@@ -171,7 +171,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
                             c.id,
                             "{} {} ({})".format(
                                 settings.LOCK_UNICODE,
-                                c.short_basket_name,
+                                c.short_name,
                                 ci.get_total_price_with_tax(),
                             ),
                         )
@@ -181,12 +181,12 @@ class PurchaseFilterByCustomer(SimpleListFilter):
                         (
                             c.id,
                             "{} ({})".format(
-                                c.short_basket_name, ci.total_price_with_tax
+                                c.short_name, ci.total_price_with_tax
                             ),
                         )
                     )
             else:
-                list_filter.append((c.id, c.short_basket_name))
+                list_filter.append((c.id, c.short_name))
         return list_filter
 
     def queryset(self, request, queryset):
@@ -216,11 +216,11 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
                 list_filter.append(
                     (
                         p.id,
-                        "{} ({})".format(p.short_profile_name, pi.total_price_with_tax),
+                        "{} ({})".format(p.short_name, pi.total_price_with_tax),
                     )
                 )
             else:
-                list_filter.append((p.id, p.short_profile_name))
+                list_filter.append((p.id, p.short_name))
         return list_filter
 
     def queryset(self, request, queryset):
@@ -248,7 +248,7 @@ class PurchaseFilterByPermanence(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            permanence_id = sint(self.value(), 0)
+            permanence_id = sint(self.value())
             if permanence_id > 0:
                 return queryset.filter(permanence_id=permanence_id)
         return queryset
@@ -266,7 +266,7 @@ class OfferItemSendFilterByPermanence(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            permanence_id = sint(self.value(), 0)
+            permanence_id = sint(self.value())
             if permanence_id > 0:
                 return queryset.filter(permanence_id=permanence_id)
         else:
@@ -283,7 +283,7 @@ class OfferItemFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.exclude(quantity_invoiced=DECIMAL_ZERO)
+            return queryset.exclude(qty_invoiced=DECIMAL_ZERO)
         else:
             return queryset
 

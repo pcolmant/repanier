@@ -29,11 +29,11 @@ class BankAccountResource(resources.ModelResource):
     operation_status = fields.Field(attribute="operation_status", readonly=True)
     producer_name = fields.Field(
         attribute="producer",
-        widget=ProducerNameWidget(Producer, field="short_profile_name"),
+        widget=ProducerNameWidget(Producer, field="short_name"),
     )
     customer_name = fields.Field(
         attribute="customer",
-        widget=CustomerNameWidget(Customer, field="short_basket_name"),
+        widget=CustomerNameWidget(Customer, field="short_name"),
     )
     bank_amount_in = fields.Field(attribute="bank_amount_in", widget=TwoMoneysWidget())
     bank_amount_out = fields.Field(
@@ -177,7 +177,7 @@ class CustomerModelChoiceField(forms.ModelChoiceField):
         bank_account2 = "-{}".format(
             obj.bank_account2 if obj.bank_account2 else EMPTY_STRING
         )
-        return "{}{}{}".format(obj.short_basket_name, bank_account1, bank_account2)
+        return "{}{}{}".format(obj.short_name, bank_account1, bank_account2)
 
 
 class ProducerModelChoiceField(forms.ModelChoiceField):
@@ -186,7 +186,7 @@ class ProducerModelChoiceField(forms.ModelChoiceField):
         bank_account = "-{}".format(
             obj.bank_account if obj.bank_account else EMPTY_STRING
         )
-        return "{}{}".format(obj.short_profile_name, bank_account)
+        return "{}{}".format(obj.short_name, bank_account)
 
 
 class BankAccountDataForm(forms.ModelForm):
@@ -362,8 +362,8 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     list_filter = (BankAccountFilterByStatus,)
     ordering = ("-operation_date", "-id")
     search_fields = (
-        "producer__short_profile_name",
-        "customer__short_basket_name",
+        "producer__short_name",
+        "customer__short_name",
         "operation_comment",
     )
     actions = []

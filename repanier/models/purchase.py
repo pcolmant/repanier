@@ -52,19 +52,24 @@ class Purchase(models.Model):
         max_length=3,
         choices=LUT_PERMANENCE_STATUS,
         default=PERMANENCE_PLANNED,
-        verbose_name=_("Invoice status"),
     )
     offer_item = models.ForeignKey(
-        "OfferItem", verbose_name=_("Offer item"), on_delete=models.PROTECT
+        "OfferItem",
+        on_delete=models.PROTECT
     )
     producer = models.ForeignKey(
-        "Producer", verbose_name=_("Producer"), on_delete=models.PROTECT
+        "Producer",
+        on_delete=models.PROTECT
     )
     customer = models.ForeignKey(
-        "Customer", verbose_name=_("Customer"), on_delete=models.PROTECT, db_index=True
+        "Customer",
+        on_delete=models.PROTECT,
+        db_index=True
     )
     customer_producer_invoice = models.ForeignKey(
-        "CustomerProducerInvoice", on_delete=models.PROTECT, db_index=True
+        "CustomerProducerInvoice",
+        on_delete=models.PROTECT,
+        db_index=True
     )
     producer_invoice = models.ForeignKey(
         "ProducerInvoice",
@@ -78,52 +83,85 @@ class Purchase(models.Model):
         on_delete=models.PROTECT,
         db_index=True,
     )
-
     is_box = models.BooleanField(default=False)
     is_box_content = models.BooleanField(default=False)
-
-    quantity_ordered = models.DecimalField(
-        _("Quantity ordered"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    qty = models.DecimalField(
+        _("Quantity"),
+        max_digits=7,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
     )
-    quantity_confirmed = models.DecimalField(
-        _("Quantity confirmed"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    qty_for_confirmation = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
     )
     # 0 if this is not a KG product -> the preparation list for this product will be produced by family
     # qty if not -> the preparation list for this product will be produced by qty then by family
-    quantity_for_preparation_sort_order = models.DecimalField(
-        _("Quantity for preparation order_by"),
+    qty_for_preparation_sort_order = models.DecimalField(
         max_digits=9,
         decimal_places=4,
         default=DECIMAL_ZERO,
     )
-    # If Permanence.status < SEND this is the order quantity
-    # During sending the orders to the producer this become the invoiced quantity
-    # via tools.recalculate_order_amount(..., send_to_producer=True)
-    quantity_invoiced = models.DecimalField(
-        _("Quantity invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
+    deposit = ModelMoneyField(
+        _("Deposit"),
+        max_digits=7,
+        decimal_places=2,
+        default=DECIMAL_ZERO,
+        validators=[MinValueValidator(0)],
     )
-    purchase_price = ModelMoneyField(
-        _("Producer row price"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+    at_producer_rate = ModelMoneyField(
+        _("Row @ producer rate"),
+        max_digits=7,
+        decimal_places=2,
+        default=DECIMAL_ZERO
     )
-    selling_price = ModelMoneyField(
-        _("Customer row price"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
+    at_purchase_rate = ModelMoneyField(
+        _("Row @ purchase rate"),
+        max_digits=7,
+        decimal_places=2,
+        default=DECIMAL_ZERO
+    )
+    tax_at_purchase_rate = ModelMoneyField(
+        _("Row tax @ purchase rate"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO
+    )
+    at_customer_rate = ModelMoneyField(
+        _("Row @ customer rate"),
+        max_digits=7,
+        decimal_places=2,
+        default=DECIMAL_ZERO
+    )
+    at_sales_rate = ModelMoneyField(
+        _("Row @ sales rate"),
+        max_digits=7,
+        decimal_places=2,
+        default=DECIMAL_ZERO
+    )
+    tax_at_sales_rate = ModelMoneyField(
+        _("Row tax @ sales rate"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO
+    )
+    comment = models.CharField(
+        _("Comment"),
+        max_length=100,
+        blank=True,
+        default=EMPTY_STRING
+    )
+    is_updated_on = models.DateTimeField(
+        _("Updated on"),
+        auto_now=True,
+        db_index=True
     )
 
-    producer_vat = ModelMoneyField(
-        _("VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=4
-    )
+    # Fields TBD
     customer_vat = ModelMoneyField(
         _("VAT"), default=DECIMAL_ZERO, max_digits=8, decimal_places=4
     )
-    deposit = ModelMoneyField(
-        _("Deposit"),
-        help_text=_("Deposit to add to the original unit price"),
-        default=DECIMAL_ZERO,
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(0)],
-    )
-
     price_list_multiplier = models.DecimalField(
         _(
             "Coefficient applied to the producer tariff to calculate the consumer tariff"
@@ -140,10 +178,60 @@ class Purchase(models.Model):
     is_resale_price_fixed = models.BooleanField(
         _("Customer prices are set by the producer"), default=False
     )
-    comment = models.CharField(
-        _("Comment"), max_length=100, blank=True, default=EMPTY_STRING
+    purchase_price = ModelMoneyField(
+        _("Producer row price"),
+        max_digits=8,
+        decimal_places=2,
+        default=DECIMAL_ZERO
     )
-    is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, db_index=True)
+    selling_price = ModelMoneyField(
+        _("Customer row price"),
+        max_digits=8,
+        decimal_places=2,
+        default=DECIMAL_ZERO
+    )
+    producer_vat = ModelMoneyField(
+        _("VAT"),
+        max_digits=8,
+        decimal_places=4,
+        default=DECIMAL_ZERO
+    )
+    qty_ordered = models.DecimalField(
+        _("Quantity ordered"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+        # db_column="quantity_ordered"
+    )
+    qty_invoiced = models.DecimalField(
+        _("Quantity invoiced"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+        # db_column="quantity_invoiced"
+    )
+    quantity_for_preparation_sort_order = models.DecimalField(
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+    )
+    quantity_confirmed = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+    )
+    quantity_ordered = models.DecimalField(
+        _("Quantity ordered"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+    )
+    quantity_invoiced = models.DecimalField(
+        _("Quantity invoiced"),
+        max_digits=9,
+        decimal_places=4,
+        default=DECIMAL_ZERO,
+    )
 
     def set_customer_price_list_multiplier(self):
         self.is_resale_price_fixed = self.offer_item.is_resale_price_fixed
@@ -229,23 +317,23 @@ class Purchase(models.Model):
 
     def get_quantity(self):
         if self.status < PERMANENCE_WAIT_FOR_SEND:
-            return self.quantity_ordered
+            return self.qty_ordered
         else:
-            return self.quantity_invoiced
+            return self.qty_invoiced
 
     get_quantity.short_description = _("Quantity invoiced")
 
     def get_producer_quantity(self):
         if self.status < PERMANENCE_WAIT_FOR_SEND:
-            return self.quantity_ordered
+            return self.qty_ordered
         else:
             offer_item = self.offer_item
             if offer_item.order_unit == PRODUCT_ORDER_UNIT_PC_KG:
                 if offer_item.order_average_weight != 0:
                     return (
-                        self.quantity_invoiced / offer_item.order_average_weight
+                        self.qty_invoiced / offer_item.order_average_weight
                     ).quantize(FOUR_DECIMALS)
-            return self.quantity_invoiced
+            return self.qty_invoiced
 
     def get_long_name(self, customer_price=True):
         return self.offer_item.get_long_name(customer_price=customer_price)
@@ -263,8 +351,8 @@ class Purchase(models.Model):
         if not self.pk:
             # This code only happens if the objects is not in the database yet.
             # Otherwise it would have pk
-            self.customer_invoice = self.permanence.get_or_create_invoice(
-                customer=self.customer, refresh=False
+            self.customer_invoice = CustomerInvoice.get_or_create(
+                permanence_id=self.permanence_id, customer_id=self.customer_id
             )
             producer_invoice = (
                 ProducerInvoice.objects.filter(
@@ -325,20 +413,20 @@ class Purchase(models.Model):
                         offer_item=content_offer_item,
                         producer=self.producer,
                         customer=self.customer,
-                        quantity_ordered=self.quantity_ordered
+                        qty_ordered=self.qty_ordered
                         * content.content_quantity,
-                        quantity_invoiced=self.quantity_invoiced
+                        qty_invoiced=self.qty_invoiced
                         * content.content_quantity,
                         is_box_content=True,
                         status=self.status,
                     )
                 else:
                     content_purchase.status = self.status
-                    content_purchase.quantity_ordered = (
-                        self.quantity_ordered * content.content_quantity
+                    content_purchase.qty_ordered = (
+                        self.qty_ordered * content.content_quantity
                     )
-                    content_purchase.quantity_invoiced = (
-                        self.quantity_invoiced * content.content_quantity
+                    content_purchase.qty_invoiced = (
+                        self.qty_invoiced * content.content_quantity
                     )
                     content_purchase.save()
                 content_purchase.permanence.producers.add(content_offer_item.producer)

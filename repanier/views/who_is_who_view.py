@@ -21,10 +21,10 @@ def who_is_who_view(request):
     q = request.POST.get("q", None)
     customer_list = Customer.objects.filter(
         may_order=True, represent_this_buyinggroup=False
-    ).order_by("long_basket_name")
+    ).order_by("long_name")
     if q is not None:
         customer_list = customer_list.filter(
-            Q(long_basket_name__icontains=q) | Q(city__icontains=q)
+            Q(long_name__icontains=q) | Q(city__icontains=q)
         )
     staff_list = Staff.objects.filter(is_active=True, can_be_contacted=True)
     template_name = get_repanier_template_name("who_is_who.html")
