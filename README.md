@@ -293,7 +293,6 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_COUNTRY  (be, fr, ch, es) : Allows you to change the applicable VAT. The currency (EUR, CHF, ...) is configured directly in the management interface of `Repanier`.
 - REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : If present, email address to put in bcc of all the mails
 - REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by `Repanier`.
-- REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE (True, *False*) : If True, Repanier lets you define a custom selling price coefficient at customer level.
 - REPANIER_SETTINGS_DELIVERY_POINT (True, *False*) : If True, Repanier lets you manage more than one delivery point per offer.
 - REPANIER_SETTINGS_GROUP (True, *False*) : Others groups may be members of the `Repanier` site. Orders from a group member are billed to the group and not to the member.
 - REPANIER_SETTINGS_IS_MINIMALIST (*True*, False) : Remove the rare option from the Repanier administration screens, for e.g. configure the currency need that this option is set to `False`.

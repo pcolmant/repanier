@@ -1,25 +1,20 @@
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
-
-from django.utils.dateparse import parse_date
 from django.utils.formats import number_format
-from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatedFields
 
-from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
 from repanier.const import (
     DECIMAL_ZERO,
     EMPTY_STRING,
-    FOUR_DECIMALS,
-    TWO_DECIMALS,
     BOX_UNICODE,
     PRODUCT_ORDER_UNIT_KG,
 )
-from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
+from repanier.fields.RepanierMoneyField import ModelMoneyField
+from repanier.globals import REPANIER_SETTINGS_SALE_NAME
 from repanier.models.item import Item
 
 
@@ -39,7 +34,7 @@ class OfferItem(Item):
     )
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        verbose_name=REPANIER_SETTINGS_SALE_NAME,
         on_delete=models.PROTECT,
         db_index=True,
     )
@@ -53,6 +48,12 @@ class OfferItem(Item):
         _("Producer price are without vat"), default=False
     )
     price_list_multiplier = models.DecimalField(
+        _(
+            "Coefficient applied to the producer tariff to calculate the consumer tariff"
+        ),
+        help_text=_(
+            "This multiplier is applied to each price automatically imported/pushed."
+        ),
         default=DECIMAL_ZERO,
         max_digits=5,
         decimal_places=4,
@@ -81,22 +82,13 @@ class OfferItem(Item):
     # If Permanence.status < SEND this is the order quantity
     # During sending the orders to the producer this become the invoiced quantity
     # via permanence.recalculate_order_amount(..., send_to_producer=True)
-    qty_invoiced = models.DecimalField(
-        _("Qty invoiced"),
-        max_digits=9,
-        decimal_places=4,
-        default=DECIMAL_ZERO,
-        # db_column="quantity_invoiced"
+    quantity_invoiced = models.DecimalField(
+        _("Qty invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO
     )
     use_order_unit_converted = models.BooleanField(default=False)
 
     may_order = models.BooleanField(_("May order"), default=True)
     manage_production = models.BooleanField(default=False)
-
-    # TBD
-    quantity_invoiced = models.DecimalField(
-        _("Qty invoiced"), max_digits=9, decimal_places=4, default=DECIMAL_ZERO,
-    )
 
     def get_vat_level(self):
         return self.get_vat_level_display()
@@ -106,8 +98,8 @@ class OfferItem(Item):
 
     def get_producer_qty_stock_invoiced(self):
         # Return quantity to buy to the producer and stock used to deliver the invoiced quantity
-        if self.qty_invoiced > DECIMAL_ZERO:
-            return self.qty_invoiced, DECIMAL_ZERO, self.qty_invoiced
+        if self.quantity_invoiced > DECIMAL_ZERO:
+            return self.quantity_invoiced, DECIMAL_ZERO, self.quantity_invoiced
         return DECIMAL_ZERO, DECIMAL_ZERO, DECIMAL_ZERO
 
     def get_html_producer_qty_stock_invoiced(self):
@@ -211,26 +203,26 @@ class OfferItem(Item):
                 qty_display = self.get_display(
                     qty=1,
                     order_unit=PRODUCT_ORDER_UNIT_KG,
-                    for_customer=False,
-                    without_price_display=True,
+                    with_qty_display=False,
+                    with_price_display=False,
                 )
             else:
                 qty_display = self.get_display(
                     qty=1,
                     order_unit=self.order_unit,
-                    for_customer=False,
-                    without_price_display=True,
+                    with_qty_display=False,
+                    with_price_display=False,
                 )
         return qty_display
 
     def get_long_name(self, customer_price=True, is_html=False):
-        return super().get_long_name(customer_price=customer_price)
+        return super(OfferItem, self).get_long_name(customer_price=customer_price)
 
     def get_html_long_name(self):
         return mark_safe(self.get_long_name(is_html=True))
 
     def get_long_name_with_producer(self, is_html=False):
-        return super().get_long_name_with_producer()
+        return super(OfferItem, self).get_long_name_with_producer()
 
     def get_html_long_name_with_producer(self):
         return mark_safe(self.get_long_name_with_producer(is_html=True))

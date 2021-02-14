@@ -40,6 +40,13 @@ div.help {
     margin-left: 0 !important;
 }
 
+/*.aligned label + p, .aligned label + div.help, .aligned label + div.readonly {*/
+/*    padding: 24px 0;*/
+/*    margin-top: 0;*/
+/*    margin-bottom: 0;*/
+/*    margin-left: 0px;*/
+/*}*/
+
 /*{#  vvvvvvvvv django cms admin style 1.2.6  #}*/
 label.translatable-field:before {
     color: tomato;

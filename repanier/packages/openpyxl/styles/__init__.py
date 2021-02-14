@@ -35,12 +35,8 @@ from .protection import Protection
 
 class Style(HashableObject):
     """Style object containing all formatting details."""
-    __fields__ = ('font',
-                  'fill',
-                  'borders',
-                  'alignment',
-                  'number_format',
-                  'protection')
+
+    __fields__ = ("font", "fill", "borders", "alignment", "number_format", "protection")
     __slots__ = __fields__
 
     def __init__(self, static=False):
@@ -62,5 +58,5 @@ class Style(HashableObject):
         new_style.protection = deepcopy(self.protection)
         return new_style
 
-DEFAULTS = Style()
 
+DEFAULTS = Style()

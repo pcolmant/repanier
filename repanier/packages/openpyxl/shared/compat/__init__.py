@@ -24,15 +24,7 @@ from __future__ import absolute_import
 
 from tempfile import NamedTemporaryFile
 
-from .strings import (
-    basestring,
-    unicode,
-    StringIO,
-    file,
-    BytesIO,
-    tempfile,
-    safe_string
-    )
+from .strings import basestring, unicode, StringIO, file, BytesIO, tempfile, safe_string
 from .numbers import long
 from .itertools import xrange, ifilter, iteritems, iterkeys
 

@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.invoice import CustomerInvoice
 
@@ -12,7 +13,7 @@ from repanier.models.invoice import CustomerInvoice
 @never_cache
 @require_GET
 def my_balance_ajax(request):
-    if request.is_ajax():
+    if is_ajax():
         user = request.user
         if user.is_anonymous or user.is_repanier_staff:
             return HttpResponse(EMPTY_STRING)

@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db.models import Q
 from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
@@ -11,7 +10,7 @@ from repanier.models import Customer
 def customer_pre_save(sender, **kwargs):
     customer = kwargs["instance"]
 
-    if customer.represent_this_buyinggroup:
+    if customer.is_default:
         # The buying group may not be de activated
         customer.is_active = True
         customer.is_group = False
@@ -39,10 +38,7 @@ def customer_pre_save(sender, **kwargs):
             customer.bank_account2 = EMPTY_STRING
     if not customer.is_active:
         customer.may_order = False
-    if (
-        settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE
-        and customer.price_list_multiplier <= DECIMAL_ZERO
-    ):
+    if customer.price_list_multiplier <= DECIMAL_ZERO:
         customer.price_list_multiplier = DECIMAL_ONE
     customer.city = "{}".format(customer.city or EMPTY_STRING).upper()
     customer.login_attempt_counter = DECIMAL_ZERO

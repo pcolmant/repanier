@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from repanier.models.customer import Customer
 
+
 class GroupManager(Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_group=True)

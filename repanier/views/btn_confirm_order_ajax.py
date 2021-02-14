@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.email.email_order import export_order_2_1_customer
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice
@@ -21,7 +22,7 @@ from repanier.tools import (
 @require_GET
 @login_required
 def btn_confirm_order_ajax(request):
-    if not request.is_ajax():
+    if not is_ajax():
         raise Http404
     user = request.user
     customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
@@ -45,7 +46,7 @@ def btn_confirm_order_ajax(request):
     customer_invoice.save()
     json_dict = my_basket(
         customer_invoice.is_order_confirm_send,
-        customer_invoice.get_total_price_with_tax(),
+        customer_invoice.balance_calculated,
     )
     if customer_invoice.delivery is not None:
         status = customer_invoice.delivery.status

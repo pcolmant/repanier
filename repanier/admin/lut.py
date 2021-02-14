@@ -1,13 +1,12 @@
 from django.conf import settings
+from django import forms
 from django.utils.translation import ugettext_lazy as _, get_language_info
 from django_mptt_admin.admin import DjangoMpttAdmin
-from parler.admin import TranslatableAdmin
-from parler.forms import TranslatableModelForm
 
 from repanier.const import ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
 
 
-class LUTDataForm(TranslatableModelForm):
+class LUTDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -30,7 +29,7 @@ class LUTDataForm(TranslatableModelForm):
                 )
 
 
-class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
+class LUTAdmin(DjangoMpttAdmin):
     form = LUTDataForm
     list_display = ("__str__", "is_active")
     list_display_links = ("__str__",)
@@ -57,9 +56,7 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
             kwargs["queryset"] = self.model.objects.filter(
                 level__lt=self.mptt_level_limit
             )
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def do_move(self, instance, position, target_instance):
         """
@@ -87,24 +84,16 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
                     )
         super().do_move(instance, position, target_instance)
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        qs = qs.filter(
-            # Important to also display untranslated items : translations__language_code=settings.LANGUAGE_CODE
-            translations__language_code=settings.LANGUAGE_CODE
-        )
-        return qs
 
-
-class LUTProductionModeAdmin(LUTAdmin):
+class LabelAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):
-        fields = ["parent", "short_name", "picture2", "is_active"]
+        fields = ["parent", "short_name", "picture", "is_active"]
         return fields
 
 
-class LUTDeliveryPointAdmin(LUTAdmin):
+class DeliveryPointAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):
@@ -121,7 +110,7 @@ class LUTDeliveryPointAdmin(LUTAdmin):
         return qs.filter(customer_responsible__isnull=True)
 
 
-class LUTDepartmentForCustomerAdmin(LUTAdmin):
+class DepartmentAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):
@@ -129,7 +118,7 @@ class LUTDepartmentForCustomerAdmin(LUTAdmin):
         return fields
 
 
-class LUTPermanenceRoleAdmin(LUTAdmin):
+class ActivityAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):

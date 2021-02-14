@@ -8,10 +8,7 @@ from repanier.models import OfferItem, OfferItemSend, OfferItemClosed
 def offer_item_pre_save(sender, **kwargs):
     offer_item = kwargs["instance"]
 
-    offer_item.recalculate_prices(
-        offer_item.producer_price_are_wo_vat,
-        offer_item.price_list_multiplier,
-    )
+    offer_item.recalculate_prices(offer_item.producer)
 
 
 @receiver(pre_save, sender=OfferItemSend)

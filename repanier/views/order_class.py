@@ -97,7 +97,7 @@ class OrderView(ListView):
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        from repanier.apps import (
+        from repanier.globals import (
             REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM,
             REPANIER_SETTINGS_CONFIG,
             REPANIER_SETTINGS_NOTIFICATION,
@@ -125,7 +125,7 @@ class OrderView(ListView):
                 department_set = (
                     LUT_DepartmentForCustomer.objects.filter(
                         offeritem__permanence_id=self.permanence.id,
-                        offeritem__is_active=True,
+                        offeritem__can_be_displayed=True,
                         offeritem__is_box=False,
                     )
                     .order_by("tree_id", "lft")
@@ -136,7 +136,7 @@ class OrderView(ListView):
                     LUT_DepartmentForCustomer.objects.filter(
                         offeritem__producer_id=self.producer_id,
                         offeritem__permanence_id=self.permanence.id,
-                        offeritem__is_active=True,
+                        offeritem__can_be_displayed=True,
                         offeritem__is_box=False,
                     )
                     .order_by("tree_id", "lft")
@@ -146,8 +146,9 @@ class OrderView(ListView):
             context["box_set"] = OfferItemWoReceiver.objects.filter(
                 permanence_id=self.permanence.id,
                 is_box=True,
-                is_active=True,
-                may_order=True,
+                # is_active=True,
+                can_be_displayed=True,
+                # may_order=True,
                 translations__language_code=translation.get_language(),
             ).order_by("customer_unit_price", "unit_deposit", "translations__long_name")
             context["staff_order"] = Staff.get_or_create_order_responsible()
@@ -210,7 +211,7 @@ class OrderView(ListView):
         return context
 
     def get_queryset(self):
-        from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
+        from repanier.globals import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
 
         if self.is_anonymous and (
             not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
@@ -221,10 +222,12 @@ class OrderView(ListView):
         if self.is_box:
             offer_item = (
                 OfferItemWoReceiver.objects.filter(
-                    id=self.box_id, permanence_id=self.permanence.id, may_order=True
+                    id=self.box_id,
+                    permanence_id=self.permanence.id,
+                    # may_order=True
+                    can_be_displayed=True,
                 )
                 .only("product_id")
-                .order_by("?")
                 .first()
             )
             if offer_item is not None and offer_item.product_id is not None:
@@ -236,13 +239,15 @@ class OrderView(ListView):
             qs = OfferItemWoReceiver.objects.filter(
                 Q(
                     permanence_id=self.permanence.id,
-                    may_order=True,
+                    can_be_displayed=True,
+                    # may_order=True,
                     product=box_id,
                     translations__language_code=translation.get_language(),
                 )
                 | Q(
                     permanence_id=self.permanence.id,
-                    may_order=True,
+                    can_be_sold=True,
+                    # may_order=True,
                     product__box_content__in=product_ids,
                     translations__language_code=translation.get_language(),
                 )
@@ -251,27 +256,28 @@ class OrderView(ListView):
             if self.is_basket:
                 qs = OfferItemWoReceiver.objects.filter(
                     permanence_id=self.permanence.id,
-                    may_order=True,  # Don't display technical products.
+                    can_be_displayed=True,
+                    # may_order=True,  # Don't display technical products.
                     purchase__customer__user=self.user,
-                    purchase__qty_ordered__gt=0,
+                    purchase__qty__gt=0,
                     # is_box=False,
                     translations__language_code=translation.get_language(),
                 )
             else:
                 qs = OfferItemWoReceiver.objects.filter(
-                    Q(
-                        permanence_id=self.permanence.id,
-                        is_active=True,
-                        is_box=False,  # Don't display boxes -> Added from customers reactions.
-                        may_order=True,  # Don't display technical products.
-                        translations__language_code=translation.get_language(),
-                    )
-                    | Q(
-                        permanence_id=self.permanence.id,
-                        is_box_content=True,
-                        may_order=True,  # Don't display technical products.
-                        translations__language_code=translation.get_language(),
-                    )
+                    # Q(
+                    permanence_id=self.permanence.id,
+                    can_be_displayed=True,
+                    # is_box=False,  # Don't display boxes -> Added from customers reactions.
+                    # may_order=True,  # Don't display technical products.
+                    translations__language_code=translation.get_language(),
+                    # )
+                    # | Q(
+                    #     permanence_id=self.permanence.id,
+                    #     is_box_content=True,
+                    #     may_order=True,  # Don't display technical products.
+                    #     translations__language_code=translation.get_language(),
+                    # )
                 )
                 if self.producer_id != "all":
                     qs = qs.filter(producer_id=self.producer_id)

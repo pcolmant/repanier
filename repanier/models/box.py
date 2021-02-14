@@ -11,26 +11,25 @@ from repanier.models.product import Product
 class Box(Product):
     def get_calculated_stock(self):
         # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)
-        stock = DECIMAL_MAX_STOCK
+        qty_on_sale = DECIMAL_MAX_STOCK
         for box_content in (
             BoxContent.objects.filter(
                 box_id=self.id,
-                product__limit_order_quantity_to_stock=True,
                 content_quantity__gt=DECIMAL_ZERO,
                 product__is_box=False,  # Disallow recursivity
             )
             .prefetch_related("product")
             .only(
                 "content_quantity",
-                "product__stock",
-                "product__limit_order_quantity_to_stock",
+                "product__qty_on_sale",
             )
             .order_by("?")
         ):
-            stock = min(
-                stock, box_content.product.stock // box_content.content_quantity
+            qty_on_sale = min(
+                qty_on_sale,
+                box_content.product.qty_on_sale // box_content.content_quantity,
             )
-        return stock
+        return qty_on_sale
 
     def get_calculated_price(self):
         result_set = BoxContent.objects.filter(box_id=self.id).aggregate(
@@ -47,12 +46,8 @@ class Box(Product):
                 ),
             ),
         )
-        box_price = (
-            result_set["price"] if result_set["price"] is not None else DECIMAL_ZERO
-        )
-        box_deposit = (
-            result_set["deposit"] if result_set["deposit"] is not None else DECIMAL_ZERO
-        )
+        box_price = result_set["price"] or DECIMAL_ZERO
+        box_deposit = result_set["deposit"] or DECIMAL_ZERO
 
         return RepanierMoney(box_price), RepanierMoney(box_deposit)
 
@@ -69,7 +64,7 @@ class Box(Product):
         proxy = True
         verbose_name = _("Box")
         verbose_name_plural = _("Boxes")
-        # ordering = ("sort_order",)
+        # ordering = ["sort_order",]
 
 
 class BoxContent(models.Model):

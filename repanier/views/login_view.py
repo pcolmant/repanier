@@ -120,7 +120,7 @@ def login_view(
     form = authentication_form(request)
 
     if user.is_anonymous:
-        from repanier.apps import REPANIER_SETTINGS_CONFIG
+        from repanier.globals import REPANIER_SETTINGS_CONFIG
 
         how_to_register = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
             "how_to_register", any_language=True, default=EMPTY_STRING

@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.models.product import Product
 from repanier.tools import sint
 
@@ -14,7 +15,7 @@ from repanier.tools import sint
 @transaction.atomic
 @login_required
 def is_into_offer(request, product_id):
-    if request.is_ajax():
+    if is_ajax():
         user = request.user
         if user.is_order_manager:
             product_id = sint(product_id)

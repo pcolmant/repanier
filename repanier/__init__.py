@@ -1,1 +1,1 @@
-default_app_config = 'repanier.apps.RepanierConfig'
+default_app_config = "repanier.apps.RepanierConfig"

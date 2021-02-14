@@ -9,9 +9,7 @@ from repanier.models.product import Product
 
 class ProductSerializer(serializers.ModelSerializer):
     producer_name = serializers.ReadOnlyField(source="producer.short_name")
-    department = serializers.ReadOnlyField(
-        source="department.short_name"
-    )
+    department = serializers.ReadOnlyField(source="department.short_name")
     label = serializers.StringRelatedField(
         source="production_mode", read_only=True, many=True
     )
@@ -43,7 +41,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "get_vat_level_display",
             "customer_minimum_order_quantity",
             "customer_increment_order_quantity",
-            "customer_alert_order_quantity",
             "wrapped",
             "stock",
             "label",
@@ -59,9 +56,7 @@ def products_rest(request, producer_short_name):
     """
     if request.method == "GET":
         products = Product.objects.filter(
-            producer__short_name=producer_short_name.decode(
-                "unicode-escape"
-            ),
+            producer__short_name=producer_short_name.decode("unicode-escape"),
             order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
         )
         serializer = ProductSerializer(products, many=True)
@@ -78,9 +73,7 @@ def product_rest(request, producer_short_name, reference):
         product = (
             Product.objects.filter(
                 reference=reference,
-                producer__short_name=producer_short_name.decode(
-                    "unicode-escape"
-                ),
+                producer__short_name=producer_short_name.decode("unicode-escape"),
                 order_unit__lte=PRODUCT_ORDER_UNIT_DEPOSIT,
             )
             .order_by("?")

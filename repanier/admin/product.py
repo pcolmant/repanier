@@ -1,5 +1,4 @@
 from os import sep as os_sep
-from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
@@ -10,15 +9,11 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy, reverse, path
 from django.utils import translation
-from django.utils.formats import number_format
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import apply_select2
 from import_export import resources, fields
-from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import ForeignKeyWidget
-from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from repanier.admin.admin_filter import (
@@ -28,14 +23,13 @@ from repanier.admin.admin_filter import (
     ProductFilterByPlacement,
     ProductFilterByVatLevel,
 )
-from repanier.admin.tools import check_cancel_in_post, check_product, add_filter
-from repanier.admin.tools import get_query_filters
+from repanier.admin.admin_model import RepanierAdminTranslatableImportExport
+from repanier.admin.tools import check_cancel_in_post, check_product
 from repanier.const import (
     LUT_PRODUCT_ORDER_UNIT_REVERSE,
     LUT_ALL_VAT,
     LUT_ALL_VAT_REVERSE,
     REPANIER_MONEY_ZERO,
-    DECIMAL_ONE,
     DECIMAL_ZERO,
     PRODUCT_ORDER_UNIT_DEPOSIT,
     PRODUCT_ORDER_UNIT_PC,
@@ -43,13 +37,12 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_PC_PRICE_KG,
     PRODUCT_ORDER_UNIT_PC_PRICE_PC,
     EMPTY_STRING,
-    LIMIT_ORDER_QTY_ITEM,
     PRODUCT_ORDER_UNIT_PC_PRICE_LT,
     LUT_VAT,
-    LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
     LUT_PRODUCT_ORDER_UNIT,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
 )
+from repanier.middleware import add_filter, get_query_filters, get_query_params
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -68,6 +61,7 @@ from repanier.xlsx.widget import (
     ThreeDecimalsWidget,
     TranslatedManyToManyWidget,
     TwoMoneysWidget,
+    HTMLWidget,
 )
 
 
@@ -78,6 +72,7 @@ class ProductResource(resources.ModelResource):
         widget=ForeignKeyWidget(Producer, field="short_name"),
     )
     long_name = fields.Field(attribute="long_name")
+    offer_description = fields.Field(attribute="offer_description", widget=HTMLWidget())
     department = fields.Field(
         attribute="department",
         widget=TranslatedForeignKeyWidget(
@@ -91,15 +86,15 @@ class ProductResource(resources.ModelResource):
     order_average_weight = fields.Field(
         attribute="order_average_weight", widget=ThreeDecimalsWidget()
     )
-    producer_unit_price = fields.Field(
-        attribute="producer_unit_price", widget=TwoMoneysWidget()
+    at_producer_tariff = fields.Field(
+        attribute="at_producer_tariff", widget=TwoMoneysWidget()
     )
-    customer_unit_price = fields.Field(
-        attribute="customer_unit_price", widget=TwoMoneysWidget()
+    at_customer_tariff = fields.Field(
+        attribute="at_customer_tariff", widget=TwoMoneysWidget()
     )
-    unit_deposit = fields.Field(attribute="unit_deposit", widget=TwoMoneysWidget())
-    vat_level = fields.Field(
-        attribute="vat_level", widget=ChoiceWidget(LUT_ALL_VAT, LUT_ALL_VAT_REVERSE)
+    deposit = fields.Field(attribute="deposit", widget=TwoMoneysWidget())
+    tax_level = fields.Field(
+        attribute="tax_level", widget=ChoiceWidget(LUT_ALL_VAT, LUT_ALL_VAT_REVERSE)
     )
     customer_minimum_order_quantity = fields.Field(
         attribute="customer_minimum_order_quantity", widget=ThreeDecimalsWidget()
@@ -107,16 +102,11 @@ class ProductResource(resources.ModelResource):
     customer_increment_order_quantity = fields.Field(
         attribute="customer_increment_order_quantity", widget=ThreeDecimalsWidget()
     )
-    customer_alert_order_quantity = fields.Field(
-        attribute="customer_alert_order_quantity", widget=ThreeDecimalsWidget()
-    )
     wrapped = fields.Field(attribute="wrapped", widget=DecimalBooleanWidget())
-    stock = fields.Field(attribute="stock", widget=ThreeDecimalsWidget())
-    limit_order_quantity_to_stock = fields.Field(
-        attribute="limit_order_quantity_to_stock",
-        widget=DecimalBooleanWidget(),
-        readonly=False,
+    is_into_offer = fields.Field(
+        attribute="is_into_offer", widget=DecimalBooleanWidget(), readonly=True
     )
+    qty_on_sale = fields.Field(attribute="qty_on_sale", widget=ThreeDecimalsWidget())
     label = fields.Field(
         attribute="production_mode",
         widget=TranslatedManyToManyWidget(
@@ -124,9 +114,6 @@ class ProductResource(resources.ModelResource):
         ),
     )
     picture = fields.Field(attribute="picture2", readonly=True)
-    is_into_offer = fields.Field(
-        attribute="is_into_offer", widget=DecimalBooleanWidget(), readonly=True
-    )
     is_active = fields.Field(
         attribute="is_active", widget=DecimalBooleanWidget(), readonly=True
     )
@@ -137,26 +124,24 @@ class ProductResource(resources.ModelResource):
         """
         if instance.wrapped is None:
             instance.wrapped = False
-        if instance.producer_unit_price is None:
-            instance.producer_unit_price = REPANIER_MONEY_ZERO
-        if instance.customer_unit_price is None:
-            instance.customer_unit_price = REPANIER_MONEY_ZERO
-        if instance.unit_deposit is None:
-            instance.unit_deposit = REPANIER_MONEY_ZERO
+        if instance.at_producer_tariff is None:
+            instance.at_producer_tariff = REPANIER_MONEY_ZERO
+        if instance.at_customer_tariff is None:
+            instance.at_customer_tariff = REPANIER_MONEY_ZERO
+        if instance.deposit is None:
+            instance.deposit = REPANIER_MONEY_ZERO
         if instance.customer_minimum_order_quantity is None:
             instance.customer_minimum_order_quantity = DECIMAL_ZERO
         if instance.customer_increment_order_quantity is None:
             instance.customer_increment_order_quantity = DECIMAL_ZERO
-        if instance.customer_alert_order_quantity is None:
-            instance.customer_alert_order_quantity = DECIMAL_ZERO
-        if instance.stock is None:
-            instance.stock = DECIMAL_ZERO
+        if instance.qty_on_sale is None:
+            instance.qty_on_sale = DECIMAL_ZERO
         if instance.order_unit is None:
             raise ValueError(_("The order unit must be set."))
         if instance.order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
-            if instance.producer_unit_price < DECIMAL_ZERO:
+            if instance.at_producer_tariff < DECIMAL_ZERO:
                 raise ValueError(_("The price must be greater than or equal to zero."))
-            if instance.customer_unit_price < DECIMAL_ZERO:
+            if instance.at_customer_tariff < DECIMAL_ZERO:
                 raise ValueError(_("The price must be greater than or equal to zero."))
             if instance.order_unit in [
                 PRODUCT_ORDER_UNIT_PC,
@@ -178,26 +163,14 @@ class ProductResource(resources.ModelResource):
                     != instance.customer_increment_order_quantity // 1
                 ):
                     raise ValueError(_("The increment must be an integer."))
-                if instance.stock != instance.stock // 1:
-                    raise ValueError(_("The stock must be an integer."))
-                if (
-                    instance.customer_alert_order_quantity
-                    != instance.customer_alert_order_quantity // 1
-                ):
-                    raise ValueError(_("The alert quantity must be an integer."))
+                if instance.qty_on_sale != instance.qty_on_sale // 1:
+                    raise ValueError(_("The qty_on_sale must be an integer."))
 
         if instance.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
             if instance.customer_minimum_order_quantity <= DECIMAL_ZERO:
                 raise ValueError(
                     _("The minimum order quantity must be greater than zero.")
                 )
-
-            if (
-                instance.customer_minimum_order_quantity
-                != instance.customer_alert_order_quantity
-                and instance.customer_increment_order_quantity <= DECIMAL_ZERO
-            ):
-                raise ValueError(_("The increment must be greater than zero."))
 
         qs = Product.objects.filter(
             reference=instance.reference, producer=instance.producer
@@ -221,19 +194,18 @@ class ProductResource(resources.ModelResource):
             "order_unit",
             "wrapped",
             "order_average_weight",
-            "producer_unit_price",
-            "customer_unit_price",
-            "unit_deposit",
-            "vat_level",
+            "at_producer_tariff",
+            "at_customer_tariff",
+            "deposit",
+            "tax_level",
             "customer_minimum_order_quantity",
             "customer_increment_order_quantity",
-            "customer_alert_order_quantity",
-            "stock",
-            "limit_order_quantity_to_stock",
+            "is_into_offer",
+            "qty_on_sale",
             "label",
             "picture",
-            "is_into_offer",
             "is_active",
+            "offer_description",
         )
         export_order = fields
         import_id_fields = ("id",)
@@ -243,9 +215,6 @@ class ProductResource(resources.ModelResource):
 
 
 class ProductDataForm(TranslatableModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
@@ -264,17 +233,18 @@ class ProductDataForm(TranslatableModelForm):
                     },
                 )
 
-        producer = self.cleaned_data.get("producer", None)
+        producer = self.cleaned_data["producer"]
         if producer is None:
             self.add_error(
                 "producer",
                 _("Please select first a producer in the filter of previous screen..."),
             )
+            return
         else:
             reference = self.cleaned_data.get("reference", EMPTY_STRING)
             if reference:
                 qs = Product.objects.filter(
-                    reference=reference, producer_id=producer.id
+                    reference=reference, producer_id=producer
                 ).order_by("?")
                 if self.instance.id is not None:
                     qs = qs.exclude(id=self.instance.id)
@@ -287,19 +257,19 @@ class ProductDataForm(TranslatableModelForm):
 
         order_unit = self.cleaned_data.get("order_unit", PRODUCT_ORDER_UNIT_PC)
         if order_unit != PRODUCT_ORDER_UNIT_DEPOSIT:
-            producer_unit_price = self.cleaned_data["producer_unit_price"]
-            if producer_unit_price < DECIMAL_ZERO:
+            at_producer_tariff = self.cleaned_data["at_producer_tariff"]
+            if at_producer_tariff < DECIMAL_ZERO:
                 self.add_error(
-                    "producer_unit_price",
+                    "at_producer_tariff",
                     _("The price must be greater than or equal to zero."),
                 )
 
-            customer_unit_price = self.cleaned_data.get(
-                "customer_unit_price", DECIMAL_ZERO
+            at_customer_tariff = self.cleaned_data.get(
+                "at_customer_tariff", DECIMAL_ZERO
             )
-            if customer_unit_price < DECIMAL_ZERO:
+            if at_customer_tariff < DECIMAL_ZERO:
                 self.add_error(
-                    "customer_unit_price",
+                    "at_customer_tariff",
                     _("The price must be greater than or equal to zero."),
                 )
 
@@ -310,28 +280,6 @@ class ProductDataForm(TranslatableModelForm):
             customer_increment_order_quantity = self.cleaned_data.get(
                 "customer_increment_order_quantity", DECIMAL_ZERO
             )
-            field_customer_alert_order_quantity_is_present = (
-                "customer_alert_order_quantity" in self.cleaned_data
-            )
-            customer_alert_order_quantity = self.cleaned_data.get(
-                "customer_alert_order_quantity", LIMIT_ORDER_QTY_ITEM
-            )
-            if not settings.REPANIER_SETTINGS_STOCK:
-                limit_order_quantity_to_stock = False
-            else:
-                # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
-                # if the pre-opening of offer is activated fro this producer.
-                limit_order_quantity_to_stock = self.cleaned_data.get(
-                    "limit_order_quantity_to_stock", False
-                )
-                if not limit_order_quantity_to_stock and producer is not None:
-                    if producer.represent_this_buyinggroup:
-                        self.add_error(
-                            "limit_order_quantity_to_stock",
-                            _(
-                                "You must limit the order quantity to the stock because the producer represent this buyinggroup."
-                            ),
-                        )
 
             if order_unit in [
                 PRODUCT_ORDER_UNIT_PC,
@@ -357,97 +305,17 @@ class ProductDataForm(TranslatableModelForm):
                         "customer_increment_order_quantity",
                         _("The increment must be an integer."),
                     )
-                if limit_order_quantity_to_stock:
-                    stock = self.cleaned_data.get("stock", DECIMAL_ZERO)
-                    if stock != stock // 1:
-                        self.add_error("stock", _("The stock must be an integer."))
-                elif (
-                    customer_alert_order_quantity != customer_alert_order_quantity // 1
-                ):
-                    self.add_error(
-                        "customer_alert_order_quantity",
-                        _("The alert quantity must be an integer."),
-                    )
             if customer_minimum_order_quantity <= DECIMAL_ZERO:
                 self.add_error(
                     "customer_minimum_order_quantity",
                     _("The minimum order quantity must be greater than zero."),
                 )
 
-            if (
-                customer_minimum_order_quantity != customer_alert_order_quantity
-                and customer_increment_order_quantity <= DECIMAL_ZERO
-            ):
-                self.add_error(
-                    "customer_increment_order_quantity",
-                    _("The increment must be greater than zero."),
-                )
-            elif not limit_order_quantity_to_stock:
-                if customer_increment_order_quantity <= customer_minimum_order_quantity:
-                    if customer_minimum_order_quantity != customer_alert_order_quantity:
-                        order_qty_item = (
-                            customer_alert_order_quantity
-                            - customer_minimum_order_quantity
-                        ) / customer_increment_order_quantity
-                        q_max = (
-                            customer_minimum_order_quantity
-                            + int(order_qty_item) * customer_increment_order_quantity
-                        )
-                        if order_qty_item > (LIMIT_ORDER_QTY_ITEM - 1):
-                            q_max = (
-                                customer_minimum_order_quantity
-                                + LIMIT_ORDER_QTY_ITEM
-                                * customer_increment_order_quantity
-                            )
-                    else:
-                        order_qty_item = DECIMAL_ONE
-                        q_max = customer_alert_order_quantity
-                else:
-                    order_qty_item = (
-                        customer_alert_order_quantity
-                        / customer_increment_order_quantity
-                    )
-                    q_max = int(order_qty_item) * customer_increment_order_quantity
-                    if order_qty_item > LIMIT_ORDER_QTY_ITEM:
-                        q_max = (
-                            customer_minimum_order_quantity
-                            + LIMIT_ORDER_QTY_ITEM * customer_increment_order_quantity
-                        )
-                if field_customer_alert_order_quantity_is_present:
-                    if order_qty_item > LIMIT_ORDER_QTY_ITEM:
-                        self.add_error(
-                            "customer_alert_order_quantity",
-                            _(
-                                "This alert quantity will generate more than %(qty_item)d choices for the customer into the order form."
-                            )
-                            % {"qty_item": LIMIT_ORDER_QTY_ITEM},
-                        )
-                    elif (
-                        customer_alert_order_quantity < customer_minimum_order_quantity
-                    ):
-                        self.add_error(
-                            "customer_alert_order_quantity",
-                            _(
-                                "The alert quantity must be greater than or equal to the minimum order quantity."
-                            ),
-                        )
-                    if (
-                        q_max != customer_alert_order_quantity
-                        and q_max > customer_minimum_order_quantity
-                    ):
-                        self.add_error(
-                            "customer_alert_order_quantity",
-                            _(
-                                "This alert quantity is not reachable. %(q_max)s is the best lower choice."
-                            )
-                            % {"q_max": number_format(q_max, 3)},
-                        )
-
     class Meta:
         model = Product
         fields = "__all__"
         widgets = {
-            "long_name": forms.TextInput(attrs={"style": "width:450px !important"}),
+            "long_name": forms.TextInput(attrs={"style": "width:100% !important"}),
             "order_unit": SelectAdminOrderUnitWidget(
                 attrs={"style": "width:100% !important"}
             ),
@@ -455,7 +323,7 @@ class ProductDataForm(TranslatableModelForm):
         }
 
 
-class ProductAdmin(ImportExportMixin, TranslatableAdmin):
+class ProductAdmin(RepanierAdminTranslatableImportExport):
     change_list_template = None  # get default admin selection to use customized product change_list template
     form = ProductDataForm
     change_list_url = reverse_lazy("admin:repanier_product_changelist")
@@ -467,7 +335,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     list_per_page = 16
     list_max_show_all = 16
     filter_horizontal = ("production_mode",)
-    ordering = ("producer", "translations__long_name")
+    ordering = [
+        "producer",
+        "translations__long_name",
+    ]
     search_fields = ("translations__long_name",)
     # actions = ["deselect_is_into_offer"]
 
@@ -533,17 +404,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def get_list_display(self, request):
         list_display = ["get_long_name_with_producer", "get_row_actions"]
-        list_editable = ["producer_unit_price"]
         if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
             list_display += ["language_column"]
-        list_display += ["producer_unit_price"]
-        if settings.REPANIER_SETTINGS_STOCK:
-            list_display += ["stock"]
-            list_editable += ["stock"]
-        else:
-            if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-                list_display += ["get_customer_alert_order_quantity"]
-        self.list_editable = list_editable
+        list_display += ["at_producer_tariff", "qty_on_sale"]
+        self.list_editable = ["at_producer_tariff", "qty_on_sale"]
         return list_display
 
     def get_list_filter(self, request):
@@ -555,83 +419,35 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             ProductFilterByPlacement,
             ProductFilterByVatLevel,
             "is_active",
+            ProductFilterByProductionMode,
         ]
-        if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-            list_filter += [ProductFilterByProductionMode]
-        if settings.REPANIER_SETTINGS_STOCK:
-            list_filter += ["limit_order_quantity_to_stock"]
         return list_filter
 
-    def get_form(self, request, product=None, **kwargs):
-        department_id = None
-        is_active_value = None
-        is_into_offer_value = None
-        producer_queryset = Producer.objects.none()
-        if product is not None:
-            producer_queryset = Producer.objects.filter(
-                id=product.producer_id
-            ).order_by("?")
-        else:
-            preserved_filters = request.GET.get("_changelist_filters", None)
-            if preserved_filters:
-                param = dict(parse_qsl(preserved_filters))
-                if "producer" in param:
-                    producer_id = param["producer"]
-                    if producer_id:
-                        producer_queryset = Producer.objects.filter(
-                            id=producer_id
-                        ).order_by("?")
-                if "department" in param:
-                    department_id = param["department"]
-                if "is_active__exact" in param:
-                    is_active_value = param["is_active__exact"]
-                if "is_into_offer__exact" in param:
-                    is_into_offer_value = param["is_into_offer__exact"]
-        producer = producer_queryset.first()
+    def get_fieldsets(self, request, product=None):
         fields_basic = [
-            ("producer", "long_name", "picture2"),
+            "producer",
+            "department",
+            "long_name",
+            "picture2",
             "order_unit",
+            ("at_producer_tariff", "deposit", "order_average_weight"),
+            (
+                "customer_minimum_order_quantity",
+                "customer_increment_order_quantity",
+            ),
             "wrapped",
-            ("producer_unit_price", "unit_deposit", "order_average_weight"),
+            "is_into_offer",
+            "qty_on_sale",
         ]
-        if settings.REPANIER_SETTINGS_STOCK:
-            fields_basic += [
-                (
-                    "customer_minimum_order_quantity",
-                    "customer_increment_order_quantity",
-                ),
-                "limit_order_quantity_to_stock",
-                "stock",
-            ]
-        else:
-            if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-                # Important : do not use ( ) for minimalist. The UI will be more logical.
-                fields_basic += [
-                    "customer_minimum_order_quantity",
-                    "customer_increment_order_quantity",
-                ]
-            else:
-                fields_basic += [
-                    (
-                        "customer_minimum_order_quantity",
-                        "customer_increment_order_quantity",
-                        "customer_alert_order_quantity",
-                    )
-                ]
         fields_advanced_descriptions = [
-            ("department", "placement"),
+            "placement",
             "offer_description",
+            "production_mode",
         ]
 
-        fields_advanced_options = []
+        fields_advanced_options = ["reference", "tax_level", "is_active"]
 
-        if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-            fields_advanced_descriptions += ["production_mode"]
-        fields_advanced_options += ["reference"]
-        fields_advanced_options += ["vat_level"]
-        fields_advanced_options += [("is_into_offer", "is_active")]
-
-        self.fieldsets = (
+        fieldsets = (
             (None, {"fields": fields_basic}),
             (
                 _("Advanced descriptions"),
@@ -642,75 +458,71 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 {"classes": ("collapse",), "fields": fields_advanced_options},
             ),
         )
+        return fieldsets
 
+    def get_form(self, request, product=None, **kwargs):
+        department_id = None
+        is_active_value = None
+        is_into_offer_value = None
+
+        if product is not None:
+            producer_queryset = Producer.objects.filter(id=product.producer_id)
+        else:
+            producer_queryset = Producer.objects.none()
+            query_params = get_query_params()
+            if "producer" in query_params:
+                producer_id = query_params["producer"]
+                if producer_id:
+                    producer_queryset = Producer.objects.filter(id=producer_id)
+            if "department" in query_params:
+                department_id = query_params["department"]
+            if "is_active__exact" in query_params:
+                is_active_value = query_params["is_active__exact"]
+            if "is_into_offer__exact" in query_params:
+                is_into_offer_value = query_params["is_into_offer__exact"]
+
+        producer = producer_queryset.first()
         form = super().get_form(request, product, **kwargs)
 
         producer_field = form.base_fields["producer"]
+        producer_field.widget.can_delete_related = False
         department_field = form.base_fields["department"]
-
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
-        vat_level_field = form.base_fields["vat_level"]
+        tax_level_field = form.base_fields["tax_level"]
+        production_mode_field = form.base_fields["production_mode"]
+
         # TODO : Make it dependent of the producer country
-        vat_level_field.widget.choices = LUT_VAT
-        producer_field.widget.can_add_related = False
-        producer_field.widget.can_delete_related = False
-        producer_field.widget.attrs["readonly"] = True
+        tax_level_field.widget.choices = LUT_VAT
+
         department_field.widget.can_delete_related = False
-
-        production_mode_field = form.base_fields.get("production_mode")
-
-        order_unit_choices = LUT_PRODUCT_ORDER_UNIT
         if producer is not None:
+            producer_field.widget.attrs["readonly"] = True
+            producer_field.initial = producer.id
             # One folder by producer for clarity
             if hasattr(picture_field.widget, "upload_to"):
                 picture_field.widget.upload_to = "{}{}{}".format(
                     "product", os_sep, producer.id
                 )
-            if producer.represent_this_buyinggroup:
-                order_unit_choices = LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST
-        order_unit_field.choices = order_unit_choices
+        order_unit_field.choices = LUT_PRODUCT_ORDER_UNIT
 
         if product is not None:
-            producer_field.empty_label = None
-            producer_field.queryset = producer_queryset
-            department_field.queryset = (
-                LUT_DepartmentForCustomer.objects.filter(
+            department_field.queryset = LUT_DepartmentForCustomer.objects.filter(
+                rght=F("lft") + 1,
+                is_active=True,
+                translations__language_code=translation.get_language(),
+            ).order_by("translations__short_name")
+        else:
+            if department_id is not None:
+                department_field.queryset = LUT_DepartmentForCustomer.objects.filter(
+                    id=department_id
+                )
+            else:
+                department_field.queryset = LUT_DepartmentForCustomer.objects.filter(
                     rght=F("lft") + 1,
                     is_active=True,
                     translations__language_code=translation.get_language(),
                 ).order_by("translations__short_name")
-            )
-            if production_mode_field is not None:
-                production_mode_field.empty_label = None
-        else:
-            if producer is not None:
-                producer_field.empty_label = None
-                producer_field.queryset = producer_queryset
-            else:
-                producer_field.choices = [
-                    (
-                        "-1",
-                        _(
-                            "Please select first a producer in the filter of previous screen..."
-                        ),
-                    )
-                ]
-                producer_field.disabled = True
-            if department_id is not None:
-                department_field.queryset = (
-                    LUT_DepartmentForCustomer.objects.filter(
-                        id=department_id
-                    )
-                )
-            else:
-                department_field.queryset = (
-                    LUT_DepartmentForCustomer.objects.filter(
-                        rght=F("lft") + 1,
-                        is_active=True,
-                        translations__language_code=translation.get_language(),
-                    ).order_by("translations__short_name")
-                )
             if is_active_value:
                 is_active_field = form.base_fields["is_active"]
                 if is_active_value == "0":
@@ -723,12 +535,12 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                     is_into_offer_field.initial = False
                 else:
                     is_into_offer_field.initial = True
-        if production_mode_field is not None:
-            production_mode_field.queryset = LUT_ProductionMode.objects.filter(
-                rght=F("lft") + 1,
-                is_active=True,
-                translations__language_code=translation.get_language(),
-            ).order_by("translations__short_name")
+        production_mode_field.empty_label = None
+        production_mode_field.queryset = LUT_ProductionMode.objects.filter(
+            rght=F("lft") + 1,
+            is_active=True,
+            translations__language_code=translation.get_language(),
+        ).order_by("translations__short_name")
         return form
 
     def get_urls(self):
@@ -764,23 +576,10 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         qs = super().get_queryset(request)
         qs = qs.filter(
             is_box=False,
-            producer__is_active=True,
             # Important to also display untranslated products : translations__language_code=settings.LANGUAGE_CODE
             translations__language_code=settings.LANGUAGE_CODE,
         ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs
-
-    def get_import_formats(self):
-        """
-        Returns available import formats.
-        """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
-
-    def get_export_formats(self):
-        """
-        Returns available export formats.
-        """
-        return [f for f in (XLSX, CSV) if f().can_export()]
 
     class Media:
         js = ("admin/js/jquery.init.js", get_repanier_static_name("js/confirm_exit.js"))

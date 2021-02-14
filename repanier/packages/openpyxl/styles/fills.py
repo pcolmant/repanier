@@ -27,32 +27,30 @@ from .hashable import HashableObject
 
 class Fill(HashableObject):
     """Area fill patterns for use in styles."""
-    FILL_NONE = None
-    FILL_SOLID = 'solid'
-    FILL_GRADIENT_LINEAR = 'linear'
-    FILL_GRADIENT_PATH = 'path'
-    FILL_PATTERN_DARKDOWN = 'darkDown'
-    FILL_PATTERN_DARKGRAY = 'darkGray'
-    FILL_PATTERN_DARKGRID = 'darkGrid'
-    FILL_PATTERN_DARKHORIZONTAL = 'darkHorizontal'
-    FILL_PATTERN_DARKTRELLIS = 'darkTrellis'
-    FILL_PATTERN_DARKUP = 'darkUp'
-    FILL_PATTERN_DARKVERTICAL = 'darkVertical'
-    FILL_PATTERN_GRAY0625 = 'gray0625'
-    FILL_PATTERN_GRAY125 = 'gray125'
-    FILL_PATTERN_LIGHTDOWN = 'lightDown'
-    FILL_PATTERN_LIGHTGRAY = 'lightGray'
-    FILL_PATTERN_LIGHTGRID = 'lightGrid'
-    FILL_PATTERN_LIGHTHORIZONTAL = 'lightHorizontal'
-    FILL_PATTERN_LIGHTTRELLIS = 'lightTrellis'
-    FILL_PATTERN_LIGHTUP = 'lightUp'
-    FILL_PATTERN_LIGHTVERTICAL = 'lightVertical'
-    FILL_PATTERN_MEDIUMGRAY = 'mediumGray'
 
-    __fields__ = ('fill_type',
-                  'rotation',
-                  'start_color',
-                  'end_color')
+    FILL_NONE = None
+    FILL_SOLID = "solid"
+    FILL_GRADIENT_LINEAR = "linear"
+    FILL_GRADIENT_PATH = "path"
+    FILL_PATTERN_DARKDOWN = "darkDown"
+    FILL_PATTERN_DARKGRAY = "darkGray"
+    FILL_PATTERN_DARKGRID = "darkGrid"
+    FILL_PATTERN_DARKHORIZONTAL = "darkHorizontal"
+    FILL_PATTERN_DARKTRELLIS = "darkTrellis"
+    FILL_PATTERN_DARKUP = "darkUp"
+    FILL_PATTERN_DARKVERTICAL = "darkVertical"
+    FILL_PATTERN_GRAY0625 = "gray0625"
+    FILL_PATTERN_GRAY125 = "gray125"
+    FILL_PATTERN_LIGHTDOWN = "lightDown"
+    FILL_PATTERN_LIGHTGRAY = "lightGray"
+    FILL_PATTERN_LIGHTGRID = "lightGrid"
+    FILL_PATTERN_LIGHTHORIZONTAL = "lightHorizontal"
+    FILL_PATTERN_LIGHTTRELLIS = "lightTrellis"
+    FILL_PATTERN_LIGHTUP = "lightUp"
+    FILL_PATTERN_LIGHTVERTICAL = "lightVertical"
+    FILL_PATTERN_MEDIUMGRAY = "mediumGray"
+
+    __fields__ = ("fill_type", "rotation", "start_color", "end_color")
     __slots__ = __fields__
 
     def __init__(self):

@@ -31,13 +31,12 @@ from repanier.admin.tools import (
     check_permanence,
     check_cancel_in_post,
     check_done_in_post,
-    get_query_filters,
-    add_filter,
 )
 from repanier.const import *
 from repanier.email import email_invoice
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.middleware import add_filter, get_query_filters
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
 from repanier.models.invoice import ProducerInvoice
@@ -60,7 +59,10 @@ logger = logging.getLogger(__name__)
 
 class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     model = PermanenceBoard
-    ordering = ("permanence_role__tree_id", "permanence_role__lft")
+    ordering = [
+        "permanence_role__tree_id",
+        "permanence_role__lft",
+    ]
     fields = ["permanence_role", "customer"]
     extra = 1
 
@@ -80,9 +82,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class PermanenceDoneForm(TranslatableModelForm):
@@ -98,9 +98,7 @@ class PermanenceDoneForm(TranslatableModelForm):
 
 class PermanenceDoneAdmin(TranslatableAdmin):
     form = PermanenceDoneForm
-    change_list_url = reverse_lazy(
-        "admin:repanier_permanencedone_changelist"
-    )
+    change_list_url = reverse_lazy("admin:repanier_permanencedone_changelist")
 
     fields = [
         "permanence_date",
@@ -225,7 +223,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             form_klass=ImportInvoiceForm,
         )
 
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def export_purchases(self, request, permanence_id, permanence=None):
         wb = export_purchase(permanence=permanence, wb=None)
         if wb is not None:
@@ -241,7 +239,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             return HttpResponseRedirect(self.get_redirect_to_change_list_url())
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def import_updated_purchases(self, request, permanence_id, permanence=None):
         return import_xslx_view(
             self,
@@ -255,7 +253,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def cancel_delivery(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             permanence.cancel_delivery()
@@ -277,7 +275,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             },
         )
 
-    @check_permanence(PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR)
+    @check_permanence(SALE_INVOICED, SALE_INVOICED_STR)
     def accounting_report(self, request, permanence_id, permanence=None):
         wb = export_bank(permanence=permanence, wb=None, sheet_name=permanence)
         wb = export_invoice(permanence=permanence, wb=wb, sheet_name=permanence)
@@ -304,7 +302,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     @check_done_in_post
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def invoice(self, request, permanence_id, permanence=None):
         max_payment_date = timezone.now().date()
         bank_account = (
@@ -352,10 +350,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             selected = producer_invoiced_form.cleaned_data.get(
                                 "selected"
                             )
-                            short_name = (
-                                producer_invoiced_form.cleaned_data.get(
-                                    "short_name"
-                                )
+                            short_name = producer_invoiced_form.cleaned_data.get(
+                                "short_name"
                             )
                             producer_invoice = (
                                 ProducerInvoice.objects.filter(
@@ -384,13 +380,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                 producer_invoice.reference = EMPTY_STRING
                                 producer_invoice.is_to_be_paid = False
                             producer_invoice.delta_vat = DECIMAL_ZERO
-                            producer_invoice.delta_price_with_tax = DECIMAL_ZERO
                             producer_invoice.save(
                                 update_fields=[
                                     "balance_invoiced",
                                     "reference",
                                     "delta_vat",
-                                    "delta_price_with_tax",
                                     "is_to_be_paid",
                                 ]
                             )
@@ -423,7 +417,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                                 "bankaccounts": BankAccount.objects.filter(
                                     id__gt=previous_latest_total_id,
                                     producer__isnull=False,
-                                    producer__represent_this_buyinggroup=False,
+                                    producer__is_default=False,
                                     customer__isnull=True,
                                     operation_status=BANK_CALCULATED_INVOICE,
                                 ).order_by("producer", "-operation_date", "-id"),
@@ -439,19 +433,14 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         )
         else:
             producers_invoiced = []
-            for producer_invoice in (
-                ProducerInvoice.objects.filter(
-                    permanence_id=permanence_id, invoice_sort_order__isnull=True
-                )
-                .order_by("producer")
-            ):
+            for producer_invoice in ProducerInvoice.objects.filter(
+                permanence_id=permanence_id, invoice_sort_order__isnull=True
+            ).order_by("producer"):
                 producer_invoice.balance_calculated.amount = RepanierMoney(
-                    producer_invoice.get_total_price_with_tax().amount
+                    producer_invoice.balance_calculated.amount
                 )
                 # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
-                producer_invoice.balance_invoiced = (
-                    producer_invoice.balance_calculated
-                )
+                producer_invoice.balance_invoiced = producer_invoice.balance_calculated
                 producer_invoice.save(
                     update_fields=[
                         "balance_calculated",
@@ -466,7 +455,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         "balance_calculated": producer_invoice.balance_calculated,
                         "balance_invoiced": producer_invoice.balance_invoiced,
                         "reference": producer_invoice.reference,
-                        "producer_price_are_wo_vat": producer_invoice.producer.producer_price_are_wo_vat,
+                        "producer_tariff_is_wo_tax": producer_invoice.producer.producer_tariff_is_wo_tax,
                     }
                 )
             if permanence.payment_date is not None:
@@ -496,7 +485,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def archive(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             permanence.archive()
@@ -522,7 +511,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         self, request, permanence, action, sub_title
     ):
         if "apply" in request.POST:
-            if permanence.status == PERMANENCE_INVOICED:
+            if permanence.status == SALE_INVOICED:
                 last_bank_account_total = (
                     BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
                     .only("permanence")
@@ -555,16 +544,16 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     user_message = _("The selected invoice has been canceled.")
                     user_message_level = messages.INFO
                     permanence.set_status(
-                        old_status=PERMANENCE_INVOICED, new_status=PERMANENCE_SEND
+                        old_status=SALE_INVOICED, new_status=SALE_SEND
                     )
             else:
-                if permanence.status == PERMANENCE_ARCHIVED:
+                if permanence.status == SALE_ARCHIVED:
                     permanence.set_status(
-                        old_status=PERMANENCE_ARCHIVED, new_status=PERMANENCE_SEND
+                        old_status=SALE_ARCHIVED, new_status=SALE_SEND
                     )
-                if permanence.status == PERMANENCE_CANCELLED:
+                if permanence.status == SALE_CANCELLED:
                     permanence.set_status(
-                        old_status=PERMANENCE_CANCELLED, new_status=PERMANENCE_SEND
+                        old_status=SALE_CANCELLED, new_status=SALE_SEND
                     )
                 user_message = _("The selected invoice has been restored.")
                 user_message_level = messages.INFO
@@ -585,7 +574,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR)
+    @check_permanence(SALE_INVOICED, SALE_INVOICED_STR)
     def cancel_invoicing(self, request, permanence_id, permanence=None):
         return self.cancel_invoice_or_archive_or_cancelled(
             request,
@@ -595,7 +584,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR)
+    @check_permanence(SALE_ARCHIVED, SALE_ARCHIVED_STR)
     def cancel_archiving(self, request, permanence_id, permanence=None):
         return self.cancel_invoice_or_archive_or_cancelled(
             request,
@@ -605,7 +594,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR)
+    @check_permanence(SALE_CANCELLED, SALE_CANCELLED_STR)
     def restore_delivery(self, request, permanence_id, permanence=None):
         return self.cancel_invoice_or_archive_or_cancelled(
             request,
@@ -615,7 +604,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR)
+    @check_permanence(SALE_INVOICED, SALE_INVOICED_STR)
     def send_invoices(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             t = threading.Thread(
@@ -633,13 +622,13 @@ class PermanenceDoneAdmin(TranslatableAdmin):
             invoice_customer_email_will_be_sent,
             invoice_customer_email_will_be_sent_to,
         ) = RepanierEmail.send_email_to_who(
-            is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
+            is_email_send=repanier.globals.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
         )
         (
             invoice_producer_email_will_be_sent,
             invoice_producer_email_will_be_sent_to,
         ) = RepanierEmail.send_email_to_who(
-            is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
+            is_email_send=repanier.globals.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
         )
 
         if invoice_customer_email_will_be_sent or invoice_producer_email_will_be_sent:
@@ -651,10 +640,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
                 if invoice_customer_email_will_be_sent:
                     with switch_language(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+                        repanier.globals.REPANIER_SETTINGS_CONFIG, language_code
                     ):
                         template = Template(
-                            repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_customer_mail
+                            repanier.globals.REPANIER_SETTINGS_CONFIG.invoice_customer_mail
                         )
                     with switch_language(permanence, language_code):
                         invoice_description = permanence.safe_translation_getter(
@@ -672,7 +661,9 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                         "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
                         "balance": RepanierMoney(123.45),
                     }
-                    bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
+                    bank_account_number = (
+                        repanier.globals.REPANIER_SETTINGS_BANK_ACCOUNT
+                    )
                     if bank_account_number is not None:
                         group_name = settings.REPANIER_SETTINGS_GROUP_NAME
                         if permanence.short_name:
@@ -718,10 +709,10 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
                 if invoice_producer_email_will_be_sent:
                     with switch_language(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+                        repanier.globals.REPANIER_SETTINGS_CONFIG, language_code
                     ):
                         template = Template(
-                            repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail
+                            repanier.globals.REPANIER_SETTINGS_CONFIG.invoice_producer_mail
                         )
                     context = TemplateContext(
                         {
@@ -764,7 +755,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
     def get_row_actions(self, permanence):
 
-        if permanence.status == PERMANENCE_SEND:
+        if permanence.status == SALE_SEND:
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 return format_html(
                     '<div class="repanier-button-row">'
@@ -811,7 +802,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                     _("To archive"),
                 )
 
-        elif permanence.status == PERMANENCE_INVOICED:
+        elif permanence.status == SALE_INVOICED:
             if (
                 BankAccount.objects.filter(
                     operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
@@ -850,7 +841,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 cancel_invoice,
             )
 
-        elif permanence.status == PERMANENCE_ARCHIVED:
+        elif permanence.status == SALE_ARCHIVED:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>'
@@ -861,7 +852,7 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 _("Restore"),
             )
 
-        elif permanence.status == PERMANENCE_CANCELLED:
+        elif permanence.status == SALE_CANCELLED:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>'
@@ -896,13 +887,11 @@ class PermanenceDoneAdmin(TranslatableAdmin):
         # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
         # Finally I found the use of EMPTY_STRING nicer on the UI
         extra_context["module_name"] = EMPTY_STRING
-        return super().changelist_view(
-            request, extra_context=extra_context
-        )
+        return super().changelist_view(request, extra_context=extra_context)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(status__gte=PERMANENCE_SEND)
+        return qs.filter(status__gte=SALE_SEND)
 
     def save_model(self, request, permanence, form, change):
         if change and ("permanence_date" in form.changed_data):

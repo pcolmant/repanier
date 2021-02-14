@@ -1,8 +1,7 @@
-from django.conf import settings
 from django.db.models import F
 from django.views.generic import ListView
 
-from repanier.const import PERMANENCE_SEND, EMPTY_STRING
+from repanier.const import SALE_SEND, EMPTY_STRING
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import get_repanier_template_name
 
@@ -17,7 +16,7 @@ class PermanenceView(ListView):
         context = super().get_context_data(**kwargs)
 
         if self.request.user.is_anonymous:
-            from repanier.apps import REPANIER_SETTINGS_CONFIG
+            from repanier.globals import REPANIER_SETTINGS_CONFIG
 
             context[
                 "how_to_register"
@@ -31,7 +30,7 @@ class PermanenceView(ListView):
 
     def get_queryset(self):
         qs = PermanenceBoard.objects.filter(
-            permanence__status__lte=PERMANENCE_SEND,
+            permanence__status__lte=SALE_SEND,
             permanence__master_permanence__isnull=True,
             permanence_role__rght=F("permanence_role__lft") + 1,
             permanence_role__is_active=True,

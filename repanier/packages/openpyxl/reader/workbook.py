@@ -23,40 +23,57 @@
 
 """Read in global settings to be maintained by the workbook object."""
 
-# package imports
-from ..shared.xmltools import fromstring
-from ..shared.ooxml import NAMESPACES, DCORE_NS, COREPROPS_NS, DCTERMS_NS, SHEET_MAIN_NS, CONTYPES_NS
-from ..workbook import DocumentProperties
-from ..shared.date_time import W3CDTF_to_datetime,CALENDAR_WINDOWS_1900,CALENDAR_MAC_1904
-from ..namedrange import NamedRange, NamedRangeContainingValue, split_named_range, refers_to_range
-
 import datetime
 
+from ..namedrange import (
+    NamedRange,
+    NamedRangeContainingValue,
+    split_named_range,
+    refers_to_range,
+)
+from ..shared.date_time import (
+    W3CDTF_to_datetime,
+    CALENDAR_WINDOWS_1900,
+    CALENDAR_MAC_1904,
+)
+from ..shared.ooxml import (
+    DCORE_NS,
+    COREPROPS_NS,
+    DCTERMS_NS,
+    SHEET_MAIN_NS,
+    CONTYPES_NS,
+)
+
+# package imports
+from ..shared.xmltools import fromstring
+from ..workbook import DocumentProperties
+
 # constants
-BUGGY_NAMED_RANGES = ['NA()', '#REF!']
-DISCARDED_RANGES = ['Excel_BuiltIn', 'Print_Area']
+BUGGY_NAMED_RANGES = ["NA()", "#REF!"]
+DISCARDED_RANGES = ["Excel_BuiltIn", "Print_Area"]
+
 
 def get_sheet_ids(xml_source):
 
     sheet_names = read_sheets_titles(xml_source)
 
-    return dict((sheet, 'sheet%d.xml' % (i + 1)) for i, sheet in enumerate(sheet_names))
+    return dict((sheet, "sheet%d.xml" % (i + 1)) for i, sheet in enumerate(sheet_names))
 
 
 def read_properties_core(xml_source):
     """Read assorted file properties."""
     properties = DocumentProperties()
     root = fromstring(xml_source)
-    properties.creator = root.findtext('{%s}creator' % DCORE_NS, '')
-    properties.last_modified_by = root.findtext('{%s}lastModifiedBy' % COREPROPS_NS, '')
+    properties.creator = root.findtext("{%s}creator" % DCORE_NS, "")
+    properties.last_modified_by = root.findtext("{%s}lastModifiedBy" % COREPROPS_NS, "")
 
-    created_node = root.find('{%s}created' % DCTERMS_NS)
+    created_node = root.find("{%s}created" % DCTERMS_NS)
     if created_node is not None:
         properties.created = W3CDTF_to_datetime(created_node.text)
     else:
         properties.created = datetime.datetime.now()
 
-    modified_node = root.find('{%s}modified' % DCTERMS_NS)
+    modified_node = root.find("{%s}modified" % DCTERMS_NS)
     if modified_node is not None:
         properties.modified = W3CDTF_to_datetime(modified_node.text)
     else:
@@ -66,9 +83,9 @@ def read_properties_core(xml_source):
 
 
 def read_excel_base_date(xml_source):
-    root = fromstring(text = xml_source)
-    wbPr = root.find('{%s}workbookPr' % SHEET_MAIN_NS)
-    if wbPr is not None and wbPr.get('date1904') in ('1', 'true'):
+    root = fromstring(text=xml_source)
+    wbPr = root.find("{%s}workbookPr" % SHEET_MAIN_NS)
+    if wbPr is not None and wbPr.get("date1904") in ("1", "true"):
         return CALENDAR_MAC_1904
 
     return CALENDAR_WINDOWS_1900
@@ -78,28 +95,30 @@ def read_excel_base_date(xml_source):
 def read_content_types(xml_source):
     """Read content types."""
     root = fromstring(xml_source)
-    contents_root = root.findall('{%s}Override' % CONTYPES_NS)
+    contents_root = root.findall("{%s}Override" % CONTYPES_NS)
     for type in contents_root:
-        yield type.get('PartName'), type.get('ContentType')
+        yield type.get("PartName"), type.get("ContentType")
+
 
 def read_sheets_titles(xml_source):
     """Read titles for all sheets."""
     root = fromstring(xml_source)
-    titles_root = root.find('{%s}sheets' % SHEET_MAIN_NS)
+    titles_root = root.find("{%s}sheets" % SHEET_MAIN_NS)
 
-    return [sheet.get('name') for sheet in titles_root]
+    return [sheet.get("name") for sheet in titles_root]
+
 
 def read_named_ranges(xml_source, workbook):
     """Read named ranges, excluding poorly defined ranges."""
     named_ranges = []
     root = fromstring(xml_source)
-    names_root = root.find('{%s}definedNames' %SHEET_MAIN_NS)
+    names_root = root.find("{%s}definedNames" % SHEET_MAIN_NS)
     if names_root is not None:
         for name_node in names_root:
-            range_name = name_node.get('name')
-            node_text = name_node.text or ''
+            range_name = name_node.get("name")
+            node_text = name_node.text or ""
 
-            if name_node.get("hidden", '0') == '1':
+            if name_node.get("hidden", "0") == "1":
                 continue
 
             valid = True

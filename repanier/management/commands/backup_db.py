@@ -59,7 +59,7 @@ class Command(BaseCommand):
                 )
                 email.send()
                 for customer in Customer.objects.filter(
-                    represent_this_buyinggroup=False,
+                    is_default=False,
                     subscribe_to_email=False,
                     is_group=False,
                     is_anonymized=False,

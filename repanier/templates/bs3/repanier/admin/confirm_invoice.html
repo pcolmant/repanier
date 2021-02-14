@@ -80,7 +80,7 @@
                         {{ f_form.balance_invoiced }}
                     </li>
                     <li class="repanier-flex-ul-li">
-                        &nbsp;{% if f_form.producer_price_are_wo_vat is True %}{% trans "wo VAT" %}{% else %}
+                        &nbsp;{% if f_form.producer_tariff_is_wo_tax is True %}{% trans "wo VAT" %}{% else %}
                         {% trans "w VAT" %}{% endif %}
                         {% trans ", invoice reference : " %} {{ f_form.reference }}
                     </li>

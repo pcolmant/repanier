@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.apps import REPANIER_SETTINGS_PERMANENCE_NAME
+from repanier.globals import REPANIER_SETTINGS_SALE_NAME
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class BankAccount(models.Model):
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,
+        verbose_name=REPANIER_SETTINGS_SALE_NAME,
         on_delete=models.PROTECT,
         blank=True,
         null=True,
@@ -140,10 +140,7 @@ class BankAccount(models.Model):
                 "The bank account should have been initialized in Configuration.init_repanier()"
             )
 
-        return (
-            latest_total.bank_amount_in.amount
-            - latest_total.bank_amount_out.amount
-        )
+        return latest_total.bank_amount_in.amount - latest_total.bank_amount_out.amount
 
     def get_bank_amount_in(self):
         if self.operation_status in [BANK_PROFIT, BANK_TAX]:
@@ -206,7 +203,7 @@ class BankAccount(models.Model):
         else:
             if self.producer is None:
                 # This is a total, show it
-                from repanier.apps import REPANIER_SETTINGS_BANK_ACCOUNT
+                from repanier.globals import REPANIER_SETTINGS_BANK_ACCOUNT
 
                 if self.operation_status == BANK_LATEST_TOTAL:
 
@@ -230,10 +227,15 @@ class BankAccount(models.Model):
     class Meta:
         verbose_name = _("Bank account transaction")
         verbose_name_plural = _("Bank account transactions")
-        ordering = ("-operation_date", "-id")
+        # ordering = ["-operation_date", "-id"]
         index_together = [
-            ["operation_date", "id"],
             ["customer_invoice", "operation_date", "id"],
             ["producer_invoice", "operation_date", "operation_date", "id"],
             ["permanence", "customer", "producer", "operation_date", "id"],
+        ]
+        indexes = [
+            models.Index(
+                fields=["-operation_date", "-id"],
+                name="bankaccount_order_idx",
+            )
         ]

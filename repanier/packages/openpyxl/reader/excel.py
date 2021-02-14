@@ -23,49 +23,66 @@
 
 """Read an xlsx file into Python"""
 
+import warnings
+from sys import exc_info
+
 # Python stdlib imports
 from zipfile import ZipFile, ZIP_DEFLATED, BadZipfile
-from sys import exc_info
-import warnings
 
-# compatibility imports
-
+from ..reader.comments import read_comments, get_comments_file
+from ..reader.strings import read_string_table
+from ..reader.style import read_style_table
+from ..reader.workbook import (
+    read_sheets_titles,
+    read_named_ranges,
+    read_properties_core,
+    read_excel_base_date,
+    read_content_types,
+)
+from ..reader.worksheet import read_worksheet
 from ..shared.compat import unicode, file, StringIO
 
 # package imports
 from ..shared.exc import OpenModeError, InvalidFileException
-from ..shared.ooxml import (ARC_SHARED_STRINGS, ARC_CORE, ARC_WORKBOOK,
-                                   PACKAGE_WORKSHEETS, ARC_STYLE, ARC_THEME,
-                                   ARC_CONTENT_TYPES)
+from ..shared.ooxml import (
+    ARC_SHARED_STRINGS,
+    ARC_CORE,
+    ARC_WORKBOOK,
+    PACKAGE_WORKSHEETS,
+    ARC_STYLE,
+    ARC_THEME,
+    ARC_CONTENT_TYPES,
+)
 from ..workbook import Workbook, DocumentProperties
-from ..reader.strings import read_string_table
-from ..reader.style import read_style_table
-from ..reader.workbook import (read_sheets_titles, read_named_ranges,
-        read_properties_core, read_excel_base_date,
-        read_content_types)
-from ..reader.worksheet import read_worksheet
-from ..reader.comments import read_comments, get_comments_file
+
+# compatibility imports
+
 # Use exc_info for Python 2 compatibility with "except Exception[,/ as] e"
 
 
-VALID_WORKSHEET = "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"
-VALID_CHARTSHEET = "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml"
+VALID_WORKSHEET = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"
+)
+VALID_CHARTSHEET = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml"
+)
 WORK_OR_CHART_TYPE = [VALID_WORKSHEET, VALID_CHARTSHEET]
 
 
-CENTRAL_DIRECTORY_SIGNATURE = '\x50\x4b\x05\x06'
+CENTRAL_DIRECTORY_SIGNATURE = "\x50\x4b\x05\x06"
+
 
 def repair_central_directory(zipFile, is_file_instance):
-    ''' trims trailing data from the central directory
+    """trims trailing data from the central directory
     code taken from http://stackoverflow.com/a/7457686/570216, courtesy of Uri Cohen
-    '''
+    """
 
-    f = zipFile if is_file_instance else open(zipFile, 'r+b')
+    f = zipFile if is_file_instance else open(zipFile, "r+b")
     data = f.read()
     if hasattr(data, "decode"):
         data = data.decode("utf-8")
     pos = data.find(CENTRAL_DIRECTORY_SIGNATURE)  # End of central directory signature
-    if (pos > 0):
+    if pos > 0:
         sio = StringIO(data)
         sio.seek(pos + 22)  # size of 'ZIP end of central directory record'
         sio.truncate()
@@ -76,7 +93,9 @@ def repair_central_directory(zipFile, is_file_instance):
     return f
 
 
-def load_workbook(filename, use_iterators=False, keep_vba=False, guess_types=True, data_only=False):
+def load_workbook(
+    filename, use_iterators=False, keep_vba=False, guess_types=True, data_only=False
+):
     """Open the given filename and return the workbook
 
     :param filename: the path to open or a file-like object
@@ -108,15 +127,15 @@ def load_workbook(filename, use_iterators=False, keep_vba=False, guess_types=Tru
     if is_file_instance:
         # fileobject must have been opened with 'rb' flag
         # it is required by zipfile
-        if 'b' not in filename.mode:
+        if "b" not in filename.mode:
             raise OpenModeError("File-object must be opened in binary mode")
 
     try:
-        archive = ZipFile(filename, 'r', ZIP_DEFLATED)
+        archive = ZipFile(filename, "r", ZIP_DEFLATED)
     except BadZipfile:
         try:
             f = repair_central_directory(filename, is_file_instance)
-            archive = ZipFile(f, 'r', ZIP_DEFLATED)
+            archive = ZipFile(f, "r", ZIP_DEFLATED)
         except BadZipfile:
             e = exc_info()[1]
             raise InvalidFileException(unicode(e))
@@ -128,9 +147,11 @@ def load_workbook(filename, use_iterators=False, keep_vba=False, guess_types=Tru
     if use_iterators:
         wb._set_optimized_read()
         if not guess_types:
-            warnings.warn('please note that data types are not guessed '
-                          'when using iterator reader, so you do not need '
-                          'to use guess_types=False')
+            warnings.warn(
+                "please note that data types are not guessed "
+                "when using iterator reader, so you do not need "
+                "to use guess_types=False"
+            )
 
     try:
         _load_workbook(wb, archive, filename, use_iterators, keep_vba)
@@ -167,40 +188,64 @@ def _load_workbook(wb, archive, filename, use_iterators, keep_vba):
     except KeyError:
         string_table = {}
     try:
-        wb.loaded_theme = archive.read(ARC_THEME)  # some writers don't output a theme, live with it (fixes #160)
+        wb.loaded_theme = archive.read(
+            ARC_THEME
+        )  # some writers don't output a theme, live with it (fixes #160)
     except KeyError:
-        assert wb.loaded_theme == None, "even though the theme information is missing there is a theme object ?"
+        assert (
+            wb.loaded_theme == None
+        ), "even though the theme information is missing there is a theme object ?"
 
     style_properties = read_style_table(archive.read(ARC_STYLE))
-    style_table = style_properties.pop('table')
+    style_table = style_properties.pop("table")
     wb.style_properties = style_properties
 
-    wb.properties.excel_base_date = read_excel_base_date(xml_source=archive.read(ARC_WORKBOOK))
+    wb.properties.excel_base_date = read_excel_base_date(
+        xml_source=archive.read(ARC_WORKBOOK)
+    )
 
     # get worksheets
     wb.worksheets = []  # remove preset worksheet
     content_types = read_content_types(archive.read(ARC_CONTENT_TYPES))
-    sheet_types = [(sheet, contyp) for sheet, contyp in content_types if contyp in WORK_OR_CHART_TYPE]
+    sheet_types = [
+        (sheet, contyp)
+        for sheet, contyp in content_types
+        if contyp in WORK_OR_CHART_TYPE
+    ]
     sheet_names = read_sheets_titles(archive.read(ARC_WORKBOOK))
-    worksheet_names = [worksheet for worksheet, sheet_type in zip(sheet_names, sheet_types) if sheet_type[1] == VALID_WORKSHEET]
+    worksheet_names = [
+        worksheet
+        for worksheet, sheet_type in zip(sheet_names, sheet_types)
+        if sheet_type[1] == VALID_WORKSHEET
+    ]
     for i, sheet_name in enumerate(worksheet_names):
 
-        sheet_codename = 'sheet%d.xml' % (i + 1)
-        worksheet_path = '%s/%s' % (PACKAGE_WORKSHEETS, sheet_codename)
+        sheet_codename = "sheet%d.xml" % (i + 1)
+        worksheet_path = "%s/%s" % (PACKAGE_WORKSHEETS, sheet_codename)
 
         if not worksheet_path in valid_files:
             continue
 
         if not use_iterators:
-            new_ws = read_worksheet(archive.read(worksheet_path), wb,
-                                    sheet_name, string_table, style_table,
-                                    color_index=style_properties['color_index'],
-                                    keep_vba=keep_vba)
+            new_ws = read_worksheet(
+                archive.read(worksheet_path),
+                wb,
+                sheet_name,
+                string_table,
+                style_table,
+                color_index=style_properties["color_index"],
+                keep_vba=keep_vba,
+            )
         else:
-            new_ws = read_worksheet(None, wb, sheet_name, string_table,
-                                    style_table,
-                                    color_index=style_properties['color_index'],
-                                    sheet_codename=sheet_codename)
+            new_ws = read_worksheet(
+                None,
+                wb,
+                sheet_name,
+                string_table,
+                style_table,
+                color_index=style_properties["color_index"],
+                sheet_codename=sheet_codename,
+            )
         wb.add_sheet(new_ws, index=i)
 
         if not use_iterators:

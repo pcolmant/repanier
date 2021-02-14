@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -12,6 +13,36 @@ from repanier.tools import clean_offer_item
 
 
 class Product(Item):
+    description = TranslatedField()
+    label = models.ManyToManyField("Label", verbose_name=_("Label"), blank=True)
+    sales = models.ManyToManyField("Sale", through="ForSale", blank=True)
+    is_active = models.BooleanField(_("Active"), default=True)
+    is_for_sale = models.BooleanField(_("In offer"), default=True)
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="likes")
+    is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, blank=True)
+    min_sale_qty = models.DecimalField(
+        _("Minimum order qty"),
+        default=DECIMAL_ONE,
+        max_digits=7,
+        decimal_places=3,
+        validators=[MinValueValidator(0)],
+    )
+    inc_sale_qty = models.DecimalField(
+        _("Then qty of"),
+        default=DECIMAL_ONE,
+        max_digits=7,
+        decimal_places=3,
+        validators=[MinValueValidator(0)],
+    )
+    max_sale_qty = models.DecimalField(
+        _("Qty on sales"),
+        default=DECIMAL_MAX_STOCK,
+        max_digits=7,
+        decimal_places=3,
+        validators=[MinValueValidator(0)],
+    )
+
+    ###### TODO BEGIN OF OLD FIELD : TBD
     long_name = TranslatedField()
     offer_description = TranslatedField()
     production_mode = models.ManyToManyField(
@@ -19,8 +50,7 @@ class Product(Item):
     )
     permanences = models.ManyToManyField("Permanence", through="OfferItem", blank=True)
     is_into_offer = models.BooleanField(_("In offer"), default=True)
-    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="likes")
-    is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True, blank=True)
+    ###### TODO END OF OLD FIELD : TBD
 
     @property
     def total_likes(self):
@@ -29,6 +59,18 @@ class Product(Item):
         :return: Integer: Likes for the product
         """
         return self.likes.count()
+
+    def get_customer_alert_order_quantity(self):
+        q_alert = (
+            self.customer_minimum_order_quantity
+            + self.customer_increment_order_quantity * (LIMIT_ORDER_QTY_ITEM - 1)
+        )
+        q_available = self.max_sale_qty
+        if q_available < DECIMAL_ZERO:
+            # Thi should never occurs, but...
+            q_available = DECIMAL_ZERO
+        q_alert = min(q_alert, q_available)
+        return q_alert
 
     @transaction.atomic()
     def get_or_create_offer_item(self, permanence):
@@ -82,7 +124,7 @@ class Product(Item):
         from django.contrib.admin.templatetags.admin_list import _boolean_icon
 
         css_class = ' class = "repanier-a-info"'
-        is_into_offer = self.is_into_offer
+        is_into_offer = self.is_for_sale
         switch_is_into_offer = reverse("repanier:is_into_offer", args=(self.id,))
         javascript = """
                 (function($) {{
@@ -113,8 +155,8 @@ class Product(Item):
             qty_display = self.get_display(
                 qty=1,
                 order_unit=self.order_unit,
-                for_customer=False,
-                without_price_display=True,
+                with_qty_display=False,
+                with_price_display=False,
             )
         return qty_display
 

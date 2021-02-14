@@ -21,9 +21,9 @@ class OpenAndSendOfferForm(forms.Form):
         required=False,
     )
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request", None)
+    #     super().__init__(*args, **kwargs)
 
 
 class CloseAndSendOrderForm(forms.Form):
@@ -37,9 +37,9 @@ class CloseAndSendOrderForm(forms.Form):
         label=_("Email content"), widget=TextEditorWidget, required=False
     )
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request", None)
+    #     super().__init__(*args, **kwargs)
 
 
 class GeneratePermanenceForm(forms.Form):
@@ -47,9 +47,9 @@ class GeneratePermanenceForm(forms.Form):
     # repeat_step = forms.IntegerField(label=_("Number of week(s) between two permanences"), min_value=0, max_value=12)
     recurrences = RecurrenceField()
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request", None)
+    #     super().__init__(*args, **kwargs)
 
 
 class InvoiceOrderForm(forms.Form):
@@ -60,9 +60,9 @@ class InvoiceOrderForm(forms.Form):
         label=_("Email content"), widget=TextEditorWidget, required=False
     )
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     self.request = kwargs.pop("request", None)
+    #     super().__init__(*args, **kwargs)
 
 
 class PermanenceInvoicedForm(forms.Form):
@@ -110,17 +110,13 @@ class ImportInvoiceForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["reference"].widget.attrs[
-            "style"
-        ] = "width:450px !important"
+        self.fields["reference"].widget.attrs["style"] = "width:450px !important"
 
 
 class ProducerInvoicedForm(forms.Form):
     selected = forms.BooleanField(required=False)
     id = forms.IntegerField(label=EMPTY_STRING)
-    short_name = forms.CharField(
-        label=_("Short name"), max_length=25, required=False
-    )
+    short_name = forms.CharField(label=_("Short name"), max_length=25, required=False)
     balance_calculated = FormMoneyField(
         label=_("Amount due to the producer as calculated by Repanier"),
         max_digits=8,
@@ -138,18 +134,14 @@ class ProducerInvoicedForm(forms.Form):
     reference = forms.CharField(
         label=_("Invoice reference"), max_length=100, required=False
     )
-    producer_price_are_wo_vat = forms.BooleanField(required=False)
+    producer_tariff_is_wo_tax = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["id"].widget.attrs["readonly"] = True
         # self.fields["id"].widget.attrs["hidden"] = True
-        self.fields["balance_invoiced"].widget.attrs[
-            "style"
-        ] = "width:100px !important"
-        self.fields["reference"].widget.attrs[
-            "style"
-        ] = "width:250px !important"
+        self.fields["balance_invoiced"].widget.attrs["style"] = "width:100px !important"
+        self.fields["reference"].widget.attrs["style"] = "width:250px !important"
         self.fields["balance_calculated"].widget.attrs["readonly"] = True
         # self.fields["balance_calculated"].widget.attrs['style'] = "width:100px"
 

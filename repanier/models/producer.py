@@ -10,7 +10,7 @@ from django.utils import timezone, translation
 from django.utils.formats import number_format
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _lazy, ugettext as _
 
 from repanier.const import (
     EMPTY_STRING,
@@ -19,8 +19,9 @@ from repanier.const import (
     VAT_100,
     REPANIER_MONEY_ZERO,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-    PERMANENCE_OPENED,
-    PERMANENCE_SEND,
+    SALE_OPENED,
+    SALE_SEND,
+    SHOP_UNICODE,
 )
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
@@ -32,7 +33,7 @@ from repanier.picture.fields import RepanierPictureField
 
 class Producer(models.Model):
     short_name = models.CharField(
-        _("Short name"),
+        _lazy("Short name"),
         max_length=25,
         blank=False,
         default=EMPTY_STRING,
@@ -41,93 +42,59 @@ class Producer(models.Model):
         # db_column="short_profile_name"
     )
     long_name = models.CharField(
-        _("Long name"),
+        _lazy("Long name"),
         max_length=100,
         blank=True,
         default=EMPTY_STRING,
         # db_column="long_profile_name"
     )
-    email = models.EmailField(_("Email"), null=True, blank=True, default=EMPTY_STRING)
+    email = models.EmailField(
+        _lazy("✉ #1"), null=True, blank=True, default=EMPTY_STRING
+    )
     email2 = models.EmailField(
-        _("Secondary email"),
-        null=True,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("✉ #2"), null=True, blank=True, default=EMPTY_STRING
     )
     email3 = models.EmailField(
-        _("Secondary email"),
-        null=True,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("✉ #3"), null=True, blank=True, default=EMPTY_STRING
     )
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE,
-        verbose_name=_("Language"),
+        verbose_name=_lazy("Language"),
     )
     picture = RepanierPictureField(
-        verbose_name=_("Picture"),
+        verbose_name=_lazy("Picture"),
         null=True,
         blank=True,
         upload_to="producer",
         size=SIZE_L,
     )
     phone1 = models.CharField(
-        _("Phone1"),
-        max_length=25,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("✆ #1"), max_length=25, blank=True, default=EMPTY_STRING
     )
     phone2 = models.CharField(
-        _("Phone2"),
-        max_length=25,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("✆ #2"), max_length=25, blank=True, default=EMPTY_STRING
     )
     bank_account = models.CharField(
-        _("Bank account"),
-        max_length=100,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
     )
     vat_id = models.CharField(
-        _("VAT id"),
-        max_length=20,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
     )
     fax = models.CharField(
-        _("Fax"),
-        max_length=100,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("Fax"), max_length=100, blank=True, default=EMPTY_STRING
     )
-    address = models.TextField(
-        _("Address"),
-        blank=True,
-        default=EMPTY_STRING
-    )
+    address = models.TextField(_lazy("Address"), blank=True, default=EMPTY_STRING)
     city = models.CharField(
-        _("City"),
-        max_length=50,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("City"), max_length=50, blank=True, default=EMPTY_STRING
     )
-    memo = models.TextField(
-        _("Memo"),
-        blank=True,
-        default=EMPTY_STRING
-    )
+    memo = models.TextField(_lazy("Memo"), blank=True, default=EMPTY_STRING)
     reference_site = models.URLField(
-        _("Reference site"),
-        null=True,
-        blank=True,
-        default=EMPTY_STRING
+        _lazy("Reference site"), null=True, blank=True, default=EMPTY_STRING
     )
     web_services_activated = models.BooleanField(
-        _("Web services activated"),
-        default=False
+        _lazy("Web services activated"), default=False
     )
     # uuid used to access to producer invoices without login
     login_uuid = models.CharField(
@@ -135,22 +102,31 @@ class Producer(models.Model):
         max_length=36,
         default=EMPTY_STRING,
         # unique=True, # TODO : Add it after migration
-        db_index=True
+        db_index=True,
     )
-    invoice_by_basket = models.BooleanField(
-        _("Invoice by basket"),
-        default=False
+    invoice_by_customer = models.BooleanField(
+        _lazy("Invoice each customer separately"), default=False
     )
-    producer_price_are_wo_vat = models.BooleanField(
-        _("Producer price are wo vat"),
-        default=False
+    producer_tariff_is_wo_tax = models.BooleanField(
+        _lazy("The producer's tariff is exclusive of tax"), default=False
     )
     sort_products_by_reference = models.BooleanField(
-        _("Sort products by reference"),
-        default=False
+        _lazy("Sort products by reference"), default=False
     )
-
-    price_list_multiplier = models.DecimalField(
+    purchase_margin = models.DecimalField(
+        _(
+            "Coefficient that the producer applies to his tariff to calculate our purchase tariff"
+        ),
+        default=DECIMAL_ONE,
+        max_digits=5,
+        decimal_places=4,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    customer_margin = models.DecimalField(
+        _(
+            "Coefficient applied to our purchase price to calculate our public tariff of selling to customers"
+        ),
         default=DECIMAL_ONE,
         max_digits=5,
         decimal_places=4,
@@ -158,43 +134,26 @@ class Producer(models.Model):
         validators=[MinValueValidator(0)],
     )
     minimum_order_value = ModelMoneyField(
-        _("Minimum order value"),
-        help_text=_("0 mean : no minimum order value."),
+        _lazy("Minimum order value"),
+        help_text=_lazy("0 mean : no minimum order value."),
         max_digits=8,
         decimal_places=2,
         default=DECIMAL_ZERO,
         validators=[MinValueValidator(0)],
     )
-    date_balance = models.DateField(
-        _("Date_balance"),
-        default=datetime.date.today
-    )
+    date_balance = models.DateField(_lazy("Date_balance"), default=datetime.date.today)
     balance = ModelMoneyField(
-        _("Balance"),
-        max_digits=8,
-        decimal_places=2,
-        default=DECIMAL_ZERO
+        _lazy("Balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
     initial_balance = ModelMoneyField(
-        _("Initial balance"),
-        max_digits=8,
-        decimal_places=2,
-        default=DECIMAL_ZERO
+        _lazy("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
-    represent_this_buyinggroup = models.BooleanField(
-        _("Represent this buyinggroup"),
-        default=False
-    )
-    is_active = models.BooleanField(
-        _("Active"),
-        default=True
-    )
+    is_default = models.BooleanField(_lazy("Represent this buyinggroup"), default=False)
+    is_active = models.BooleanField(_lazy("Active"), default=True)
     # This indicate that the user record data have been replaced with anonymous data in application of GDPR
-    is_anonymized = models.BooleanField(
-        default=False
-    )
+    is_anonymized = models.BooleanField(default=False)
 
-    # TBD
+    ###### TODO BEGIN OF OLD FIELD : TBD
     short_profile_name = models.CharField(
         max_length=25,
         blank=False,
@@ -207,16 +166,28 @@ class Producer(models.Model):
         blank=True,
         default=EMPTY_STRING,
     )
-    uuid = models.CharField(
-        "uuid",
-        max_length=36,
-        default=EMPTY_STRING,
-        db_index=True
+    uuid = models.CharField("uuid", max_length=36, default=EMPTY_STRING, db_index=True)
+    producer_price_are_wo_vat = models.BooleanField(
+        _lazy("The producer's tariff is excluding tax"), default=False
     )
+    price_list_multiplier = models.DecimalField(
+        default=DECIMAL_ONE,
+        max_digits=5,
+        decimal_places=4,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    invoice_by_basket = models.BooleanField(
+        _lazy("Invoice each customer separately"), default=False
+    )
+    represent_this_buyinggroup = models.BooleanField(
+        _lazy("Represent this buyinggroup"), default=False
+    )
+    ###### TODO END OF OLD FIELD : TBD
 
     @classmethod
     def get_or_create_default(cls):
-        default = Producer.objects.filter(represent_this_buyinggroup=True).first()
+        default = Producer.objects.filter(is_default=True).first()
         if default is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
@@ -224,7 +195,7 @@ class Producer(models.Model):
                 short_name=short_name,
                 long_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
-                represent_this_buyinggroup=True,
+                is_default=True,
             )
             # Create this to also prevent the deletion of the producer representing the buying group
             membership_fee_product = Product.objects.filter(
@@ -275,22 +246,22 @@ class Producer(models.Model):
     def get_admin_date_balance(self):
         return timezone.now().strftime(settings.DJANGO_SETTINGS_DATETIME)
 
-    get_admin_date_balance.short_description = _("Date balance")
+    get_admin_date_balance.short_description = _lazy("Date balance")
 
     def get_admin_balance(self):
         return (
             self.balance - self.get_bank_not_invoiced() + self.get_order_not_invoiced()
         )
 
-    get_admin_balance.short_description = _("Balance")
+    get_admin_balance.short_description = _lazy("Balance")
 
     def get_order_not_invoiced(self):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             result_set = (
                 ProducerInvoice.objects.filter(
                     producer_id=self.id,
-                    status__gte=PERMANENCE_OPENED,
-                    status__lte=PERMANENCE_SEND,
+                    status__gte=SALE_OPENED,
+                    status__lte=SALE_SEND,
                 )
                 .order_by("?")
                 .aggregate(
@@ -300,28 +271,11 @@ class Producer(models.Model):
                             max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                         ),
                     ),
-                    delta_price_with_tax=Sum(
-                        "delta_price_with_tax",
-                        output_field=DecimalField(
-                            max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                        ),
-                    ),
-                    delta_transport=Sum(
-                        "delta_transport",
-                        output_field=DecimalField(
-                            max_digits=5, decimal_places=2, default=DECIMAL_ZERO
-                        ),
-                    ),
                 )
             )
-            if result_set["total_price_with_tax"] is not None:
-                order_not_invoiced = RepanierMoney(result_set["total_price_with_tax"])
-            else:
-                order_not_invoiced = REPANIER_MONEY_ZERO
-            if result_set["delta_price_with_tax"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_price_with_tax"])
-            if result_set["delta_transport"] is not None:
-                order_not_invoiced += RepanierMoney(result_set["delta_transport"])
+            order_not_invoiced = RepanierMoney(
+                result_set["total_price_with_tax"] or DECIMAL_ZERO
+            )
         else:
             order_not_invoiced = REPANIER_MONEY_ZERO
         return order_not_invoiced
@@ -349,16 +303,8 @@ class Producer(models.Model):
                 )
             )
 
-            total_bank_amount_in = (
-                result_set["bank_amount_in"]
-                if result_set["bank_amount_in"] is not None
-                else DECIMAL_ZERO
-            )
-            total_bank_amount_out = (
-                result_set["bank_amount_out"]
-                if result_set["bank_amount_out"] is not None
-                else DECIMAL_ZERO
-            )
+            total_bank_amount_in = result_set["bank_amount_in"] or DECIMAL_ZERO
+            total_bank_amount_out = result_set["bank_amount_out"] or DECIMAL_ZERO
             bank_not_invoiced = RepanierMoney(
                 total_bank_amount_out - total_bank_amount_in
             )
@@ -393,7 +339,7 @@ class Producer(models.Model):
         else:
             return format_html('<span style="color:{}">{}</span>', color, -balance)
 
-    get_balance.short_description = _("Balance")
+    get_balance.short_description = _lazy("Balance")
     get_balance.allow_tags = True
     get_balance.admin_order_field = "balance"
 
@@ -406,7 +352,7 @@ class Producer(models.Model):
             .first()
         )
         if producer_last_invoice is not None:
-            total_price_with_tax = producer_last_invoice.get_total_price_with_tax()
+            total_price_with_tax = producer_last_invoice.balance_calculated
             if total_price_with_tax < DECIMAL_ZERO:
                 return format_html(
                     '<span style="color:#298A08">{}</span>',
@@ -432,7 +378,7 @@ class Producer(models.Model):
                 '<span style="color:#32CD32">{}</span>', number_format(0, 2)
             )
 
-    get_last_invoice.short_description = _("Last invoice")
+    get_last_invoice.short_description = _lazy("Last invoice")
 
     def get_html_on_hold_movement(self):
         bank_not_invoiced = self.get_bank_not_invoiced()
@@ -460,7 +406,7 @@ class Producer(models.Model):
         return EMPTY_STRING
 
     def anonymize(self, also_group=False):
-        if self.represent_this_buyinggroup:
+        if self.is_default:
             if not also_group:
                 return
             self.short_name = "{}-{}".format(_("GROUP"), self.id)
@@ -483,17 +429,17 @@ class Producer(models.Model):
         self.save()
 
     def __str__(self):
-        if self.producer_price_are_wo_vat:
-            return "{} {}".format(self.short_name, _("wo VAT"))
-        return self.short_name
+        shop = SHOP_UNICODE if self.is_default else EMPTY_STRING
+        tax = _("excl. tax") if self.producer_tariff_is_wo_tax else EMPTY_STRING
+        return " ".join([shop, self.short_name, tax])
 
     class Meta:
-        verbose_name = _("Producer")
-        verbose_name_plural = _("Producers")
-        ordering = ("-represent_this_buyinggroup", "short_name")
+        verbose_name = _lazy("Producer")
+        verbose_name_plural = _lazy("Producers")
+        # ordering = ["-is_default", "short_name"]
         indexes = [
             models.Index(
-                fields=["-represent_this_buyinggroup", "short_name"],
+                fields=["-is_default", "short_name"],
                 name="producer_order_idx",
             )
         ]

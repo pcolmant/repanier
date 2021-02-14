@@ -1,11 +1,8 @@
 from django import forms
 from django.contrib import admin
-from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Sum, DecimalField
 from django.forms import BaseInlineFormSet
 from django.utils import translation
-from django.utils.formats import number_format
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 
@@ -17,7 +14,7 @@ from repanier.admin.admin_filter import (
 )
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
-from repanier.fields.RepanierMoneyField import FormMoneyField, RepanierMoney
+from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.models import LUT_DepartmentForCustomer
 from repanier.models.customer import Customer
 from repanier.models.offeritem import OfferItem
@@ -32,7 +29,7 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        qty_invoiced = DECIMAL_ZERO
+        qty = DECIMAL_ZERO
         values = set()
         for form in self.forms:
             if form.cleaned_data and not form.cleaned_data.get("DELETE"):
@@ -45,9 +42,9 @@ class OfferItemPurchaseSendInlineFormSet(BaseInlineFormSet):
                         )
                     else:
                         values.add(value)
-                    qty_invoiced += form.cleaned_data.get(
-                        "qty_invoiced", DECIMAL_ZERO
-                    ).quantize(THREE_DECIMALS)
+                    qty += form.cleaned_data.get("qty", DECIMAL_ZERO).quantize(
+                        THREE_DECIMALS
+                    )
 
 
 class OfferItemPurchaseSendInlineForm(forms.ModelForm):
@@ -83,9 +80,9 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
     form = OfferItemPurchaseSendInlineForm
     formset = OfferItemPurchaseSendInlineFormSet
     model = Purchase
-    fields = ["customer", "qty_invoiced", "purchase_price", "comment"]
+    fields = ["customer", "qty", "purchase_price", "comment"]
     extra = 0
-    fk_name = "offer_item"
+    fk_name = "for_sale"
 
     def has_delete_permission(self, request, obj=None):
         # To delete the purchase, set the quantity to zero
@@ -100,9 +97,7 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer":
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -155,14 +150,14 @@ class OfferItemSendDataForm(forms.ModelForm):
             "previous_customer_unit_price"
         ].initial = offer_item.customer_unit_price
         self.fields["previous_unit_deposit"].initial = offer_item.unit_deposit
-        self.fields["offer_purchase_price"].initial = offer_item.total_purchase_with_tax
+        self.fields["offer_purchase_price"].initial = offer_item.at_producer_tariff
         if offer_item.wrapped or offer_item.order_unit not in [
             PRODUCT_ORDER_UNIT_KG,
             PRODUCT_ORDER_UNIT_PC_KG,
         ]:
             self.fields["offer_purchase_price"].widget.attrs["readonly"] = True
             self.fields["offer_purchase_price"].disabled = True
-        if offer_item.producer_price_are_wo_vat:
+        if offer_item.producer_tariff_is_wo_tax:
             self.fields["offer_purchase_price"].label = _(
                 "Producer amount invoiced wo VAT"
             )
@@ -204,7 +199,7 @@ class OfferItemSendDataForm(forms.ModelForm):
         return offer_item
 
 
-class OfferItemSendAdmin(admin.ModelAdmin):
+class ForSaleSendAdmin(admin.ModelAdmin):
     form = OfferItemSendDataForm
     inlines = [OfferItemPurchaseSendInline]
     search_fields = ("translations__long_name",)
@@ -212,8 +207,6 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         "department",
         "producer",
         "get_long_name_with_producer_price",
-        "get_html_producer_qty_stock_invoiced",
-        "get_html_producer_price_purchased",
     ]
     list_display_links = ("get_long_name_with_producer_price",)
     list_filter = (
@@ -227,8 +220,10 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     list_max_show_all = 16
     # Important : Do not order by 'translations__order_sort_order'
     # because in this case, when searching on the long_name, records may be duplicated in the admin result list.
-    ordering = ("translations__long_name",)
-    readonly_fields = ("get_html_producer_qty_stock_invoiced", "get_vat_level")
+    ordering = [
+        "translations__long_name",
+    ]
+    readonly_fields = ("qty_sold",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -285,17 +280,13 @@ class OfferItemSendAdmin(admin.ModelAdmin):
 
         if obj is not None:
             permanence_field.queryset = Permanence.objects.filter(id=obj.permanence_id)
-            department_field.queryset = (
-                LUT_DepartmentForCustomer.objects.filter(
-                    id=obj.department_id
-                )
+            department_field.queryset = LUT_DepartmentForCustomer.objects.filter(
+                id=obj.department_id
             )
             product_field.queryset = Product.objects.filter(id=obj.product_id)
         else:
             permanence_field.queryset = Permanence.objects.none()
-            department_field.queryset = (
-                LUT_DepartmentForCustomer.objects.none()
-            )
+            department_field.queryset = LUT_DepartmentForCustomer.objects.none()
             product_field.queryset = Product.objects.none()
         return form
 
@@ -351,7 +342,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                     .first()
                 )
                 if purchase is not None:
-                    purchase.qty_invoiced = DECIMAL_ZERO
+                    purchase.qty = DECIMAL_ZERO
                     purchase.save()
                     purchase.save_box()
         for purchase_form in formset:
@@ -380,16 +371,15 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 if purchase_price != previous_purchase_price:
                     purchase.purchase_price = purchase_price
                     if offer_item.producer_unit_price.amount != DECIMAL_ZERO:
-                        purchase.qty_invoiced = (
+                        purchase.qty = (
                             purchase_price.amount
                             / offer_item.producer_unit_price.amount
                         ).quantize(FOUR_DECIMALS)
                     else:
-                        purchase.qty_invoiced = DECIMAL_ZERO
+                        purchase.qty = DECIMAL_ZERO
                 else:
                     purchase.purchase_price.amount = (
-                        purchase.qty_invoiced
-                        * offer_item.producer_unit_price.amount
+                        purchase.qty * offer_item.producer_unit_price.amount
                     ).quantize(TWO_DECIMALS)
 
         if not offer_item.wrapped and offer_item.order_unit in [
@@ -432,18 +422,18 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                                         offer_item.producer_unit_price.amount
                                         != DECIMAL_ZERO
                                     ):
-                                        purchase.qty_invoiced = (
+                                        purchase.qty = (
                                             delta
                                             / offer_item.producer_unit_price.amount
                                         ).quantize(FOUR_DECIMALS)
                                     else:
-                                        purchase.qty_invoiced = DECIMAL_ZERO
+                                        purchase.qty = DECIMAL_ZERO
                                 else:
-                                    purchase.qty_invoiced = (
-                                        purchase.qty_invoiced * ratio
-                                    ).quantize(FOUR_DECIMALS)
+                                    purchase.qty = (purchase.qty * ratio).quantize(
+                                        FOUR_DECIMALS
+                                    )
                                     adjusted_invoice += (
-                                        purchase.qty_invoiced
+                                        purchase.qty
                                         * offer_item.producer_unit_price.amount
                                     ).quantize(TWO_DECIMALS)
                                 purchase.save()

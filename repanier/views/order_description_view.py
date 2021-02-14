@@ -9,7 +9,7 @@ from django.views.decorators.http import require_GET
 from repanier.const import EMPTY_STRING
 from repanier.models import Customer
 from repanier.models import Permanence
-from repanier.tools import permanence_ok_or_404, get_repanier_template_name, sint
+from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 
 
 @never_cache

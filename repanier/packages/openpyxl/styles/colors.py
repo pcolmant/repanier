@@ -26,18 +26,19 @@ from .hashable import HashableObject
 
 class Color(HashableObject):
     """Named colors for use in styles."""
-    BLACK = 'FF000000'
-    WHITE = 'FFFFFFFF'
-    RED = 'FFFF0000'
-    DARKRED = 'FF800000'
-    BLUE = 'FF0000FF'
-    DARKBLUE = 'FF000080'
-    GREEN = 'FF00FF00'
-    DARKGREEN = 'FF008000'
-    YELLOW = 'FFFFFF00'
-    DARKYELLOW = 'FF808000'
 
-    __fields__ = ('index',)
+    BLACK = "FF000000"
+    WHITE = "FFFFFFFF"
+    RED = "FFFF0000"
+    DARKRED = "FF800000"
+    BLUE = "FF0000FF"
+    DARKBLUE = "FF000080"
+    GREEN = "FF00FF00"
+    DARKGREEN = "FF008000"
+    YELLOW = "FFFFFF00"
+    DARKYELLOW = "FF808000"
+
+    __fields__ = ("index",)
     __slots__ = __fields__
     __leaf__ = True
 

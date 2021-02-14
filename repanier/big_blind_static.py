@@ -22,11 +22,7 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
                 except ValueError:
                     # Solve the reverted https://github.com/divio/django-cms/pull/5860/
                     new_context = static_with_version(context)
-                    return (
-                        super()
-                        .url(new_context, True)
-                        .replace(__version__, "")
-                    )
+                    return super().url(new_context, True).replace(__version__, "")
             except:
                 if (
                     context
@@ -38,10 +34,6 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
                 except ValueError:
                     # Solve the reverted https://github.com/divio/django-cms/pull/5860/
                     new_context = static_with_version(context)
-                    return (
-                        super()
-                        .url(new_context, True)
-                        .replace(__version__, "")
-                    )
+                    return super().url(new_context, True).replace(__version__, "")
         except:
             pass

@@ -2,6 +2,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.models.customer import Customer
 from repanier.models.producer import Producer
 
@@ -9,7 +10,7 @@ from repanier.models.producer import Producer
 @never_cache
 @require_GET
 def customer_basket_message_form_ajax(request, pk):
-    if request.is_ajax():
+    if is_ajax():
         user = request.user
         if user.is_anonymous:
             raise Http404
@@ -25,7 +26,7 @@ def customer_basket_message_form_ajax(request, pk):
 @never_cache
 @require_GET
 def producer_basket_message_form_ajax(request, login_uuid):
-    if request.is_ajax():
+    if is_ajax():
         user = request.user
         if not (user.is_anonymous or request.user.is_staff):
             raise Http404

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
-        from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
+        from repanier.globals import REPANIER_SETTINGS_PERMANENCES_NAME
 
         user = request.user
         if user.is_anonymous or user.is_staff:
@@ -39,7 +39,7 @@ class PermanenceMenu(Menu):
         displayed_permanence_counter = 0
         first_pass = True
         for permanence in (
-            Permanence.objects.filter(status=PERMANENCE_OPENED)
+            Permanence.objects.filter(status=SALE_OPENED)
             .only("id", "permanence_date", "status")
             .order_by("permanence_date", "id")
         ):
@@ -56,7 +56,7 @@ class PermanenceMenu(Menu):
         if displayed_permanence_counter <= 4:
             for permanence in (
                 Permanence.objects.filter(
-                    status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+                    status__in=[SALE_CLOSED, SALE_SEND],
                     master_permanence__isnull=True,
                 )
                 .only("id", "permanence_date")
@@ -78,7 +78,7 @@ class PermanenceMenu(Menu):
     def append_permanence_board(self, nodes, parent_node, submenu_id):
         permanence_board_set = (
             PermanenceBoard.objects.filter(
-                permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED
+                permanence__status__lte=SALE_WAIT_FOR_INVOICED
             )
             .only("id")
             .order_by("?")
@@ -103,7 +103,7 @@ class PermanenceMenu(Menu):
     ):
 
         path = reverse("repanier:order_view", args=(permanence.id,))
-        if not is_anonymous and permanence.status > PERMANENCE_OPENED:
+        if not is_anonymous and permanence.status > SALE_OPENED:
             path = path + "?is_basket=yes"
         submenu_id += 1
         node = NavigationNode(

@@ -2,6 +2,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.tools import sint
 
@@ -9,7 +10,7 @@ from repanier.tools import sint
 @never_cache
 @require_GET
 def like_ajax(request):
-    if request.is_ajax():
+    if is_ajax():
         user = request.user
         if user.is_authenticated:
             offer_item_id = sint(request.GET.get("offer_item", 0))

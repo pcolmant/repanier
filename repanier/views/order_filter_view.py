@@ -7,13 +7,13 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET
 
-from repanier.models import Customer
 from repanier.const import EMPTY_STRING
+from repanier.models import Customer
 from repanier.models import Permanence
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.producer import Producer
-from repanier.tools import permanence_ok_or_404, sint, get_repanier_template_name
+from repanier.tools import permanence_ok_or_404, get_repanier_template_name
 
 
 @never_cache

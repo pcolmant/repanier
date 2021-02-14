@@ -1,15 +1,13 @@
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED
+from repanier.middleware import is_ajax
+from repanier.const import SALE_OPENED
 from repanier.models.customer import Customer
-from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanence import Permanence
 from repanier.tools import (
@@ -29,7 +27,7 @@ template_communication_confirm_order = get_repanier_template_name(
 @require_GET
 @login_required
 def delivery_ajax(request):
-    if not request.is_ajax():
+    if not is_ajax():
         raise Http404
     user = request.user
     permanence_id = sint(request.GET.get("permanence", 0))
@@ -55,32 +53,11 @@ def delivery_ajax(request):
     if customer_invoice is None:
         raise Http404
     json_dict = {}
-    if customer_invoice.status == PERMANENCE_OPENED:
+    if customer_invoice.status == SALE_OPENED:
         delivery_board_id = sint(request.GET.get("delivery", 0))
-        if customer.delivery_point is not None:
-            # The customer is member of a group
-            qs = DeliveryBoard.objects.filter(
-                Q(
-                    id=delivery_board_id,
-                    permanence_id=permanence_id,
-                    delivery_point_id=customer.delivery_point_id,
-                    # delivery_point__customer_responsible__isnull=False,
-                    status=PERMANENCE_OPENED,
-                )
-                | Q(
-                    id=delivery_board_id,
-                    permanence_id=permanence_id,
-                    delivery_point__customer_responsible__isnull=True,
-                    status=PERMANENCE_OPENED,
-                )
-            )
-        else:
-            qs = DeliveryBoard.objects.filter(
-                id=delivery_board_id,
-                permanence_id=permanence_id,
-                delivery_point__customer_responsible__isnull=True,
-                status=PERMANENCE_OPENED,
-            ).order_by("?")
+        qs = customer.get_available_deliveries_qs(
+            permanence_id=permanence_id, delivery_board_id=delivery_board_id
+        )
         delivery_board = qs.first()
         if delivery_board is None:
             raise Http404
@@ -97,7 +74,7 @@ def delivery_ajax(request):
             json_dict.update(
                 my_basket(
                     customer_invoice.is_order_confirm_send,
-                    customer_invoice.get_total_price_with_tax(),
+                    customer_invoice.balance_calculated,
                 )
             )
 

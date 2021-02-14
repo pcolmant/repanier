@@ -23,23 +23,24 @@
 
 """Read the shared strings table."""
 
+from ..shared.compat import unicode
+from ..shared.ooxml import SHEET_MAIN_NS, XML_NS
+
 # package imports
 from ..shared.xmltools import fromstring
-from ..shared.ooxml import SHEET_MAIN_NS, XML_NS
-from ..shared.compat import unicode
 
 
 def read_string_table(xml_source):
     """Read in all shared strings in the table"""
     table = {}
     root = fromstring(text=xml_source)
-    string_index_nodes = root.findall('{%s}si' % SHEET_MAIN_NS)
+    string_index_nodes = root.findall("{%s}si" % SHEET_MAIN_NS)
     for index, string_index_node in enumerate(string_index_nodes):
 
         string = get_string(string_index_node)
 
         # fix XML escaping sequence for '_x'
-        string = string.replace('x005F_', '')
+        string = string.replace("x005F_", "")
 
         table[index] = string
 
@@ -48,22 +49,22 @@ def read_string_table(xml_source):
 
 def get_string(string_index_node):
     """Read the contents of a specific string index"""
-    rich_nodes = string_index_node.findall('{%s}r' % SHEET_MAIN_NS)
+    rich_nodes = string_index_node.findall("{%s}r" % SHEET_MAIN_NS)
     if rich_nodes:
         reconstructed_text = []
         for rich_node in rich_nodes:
             partial_text = get_text(rich_node)
             reconstructed_text.append(partial_text)
-        return unicode(''.join(reconstructed_text))
+        return unicode("".join(reconstructed_text))
     else:
         return get_text(string_index_node)
 
 
 def get_text(rich_node):
     """Read rich text, discarding formatting if not disallowed"""
-    text_node = rich_node.find('{%s}t' % SHEET_MAIN_NS)
-    partial_text = text_node.text or unicode('')
+    text_node = rich_node.find("{%s}t" % SHEET_MAIN_NS)
+    partial_text = text_node.text or unicode("")
 
-    if text_node.get('{%s}space' % XML_NS) != 'preserve':
+    if text_node.get("{%s}space" % XML_NS) != "preserve":
         partial_text = partial_text.strip()
     return unicode(partial_text)

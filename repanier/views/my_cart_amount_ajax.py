@@ -3,6 +3,7 @@ from django.http import Http404, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.models.invoice import CustomerInvoice
 from repanier.tools import my_basket
 
@@ -11,7 +12,7 @@ from repanier.tools import my_basket
 @require_GET
 @login_required
 def my_cart_amount_ajax(request, permanence_id):
-    if not request.is_ajax():
+    if not is_ajax():
         raise Http404
     user = request.user
     customer_invoice = (
@@ -25,6 +26,6 @@ def my_cart_amount_ajax(request, permanence_id):
         raise Http404
     json_dict = my_basket(
         customer_invoice.is_order_confirm_send,
-        customer_invoice.get_total_price_with_tax(),
+        customer_invoice.balance_calculated,
     )
     return JsonResponse(json_dict)

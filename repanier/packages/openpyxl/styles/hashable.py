@@ -26,10 +26,10 @@ try:
 except ImportError:
     from md5 import md5
 
-from copy import deepcopy
 
 class HashableObject(object):
     """Define how to hash property classes."""
+
     __fields__ = None
     __leaf__ = False
 

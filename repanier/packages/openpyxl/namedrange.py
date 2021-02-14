@@ -31,17 +31,21 @@ from .shared.compat import unicode
 from .shared.exc import NamedRangeException
 
 # constants
-NAMED_RANGE_RE = re.compile("^(('(?P<quoted>([^']|'')*)')|(?P<notquoted>[^']*))!(?P<range>(\$([A-Za-z]+))?(\$([0-9]+))?(:(\$([A-Za-z]+))?(\$([0-9]+))?)?)")
+NAMED_RANGE_RE = re.compile(
+    "^(('(?P<quoted>([^']|'')*)')|(?P<notquoted>[^']*))!(?P<range>(\$([A-Za-z]+))?(\$([0-9]+))?(:(\$([A-Za-z]+))?(\$([0-9]+))?)?)"
+)
 SPLIT_NAMED_RANGE_RE = re.compile(r"((?:[^,']|'(?:[^']|'')*')+)")
+
 
 class NamedRange(object):
     """A named group of cells
 
     Scope is a worksheet object or None for workbook scope names (the default)
     """
-    __slots__ = ('name', 'destinations', 'scope')
 
-    str_format = unicode('%s!%s')
+    __slots__ = ("name", "destinations", "scope")
+
+    str_format = unicode("%s!%s")
     repr_format = unicode('<%s "%s">')
 
     def __init__(self, name, destinations, scope=None):
@@ -50,14 +54,18 @@ class NamedRange(object):
         self.scope = scope
 
     def __str__(self):
-        return  ','.join([self.str_format % (sheet, name) for sheet, name in self.destinations])
+        return ",".join(
+            [self.str_format % (sheet, name) for sheet, name in self.destinations]
+        )
 
     def __repr__(self):
-        return  self.repr_format % (self.__class__.__name__, str(self))
+        return self.repr_format % (self.__class__.__name__, str(self))
+
 
 class NamedRangeContainingValue(object):
     """A named value"""
-    __slots__ = ('name', 'value', 'scope')
+
+    __slots__ = ("name", "value", "scope")
 
     def __init__(self, name, value):
         self.name = name
@@ -69,19 +77,22 @@ def split_named_range(range_string):
     """Separate a named range into its component parts"""
 
     destinations = []
-    for range_string in SPLIT_NAMED_RANGE_RE.split(range_string)[1::2]: # Skip first and from there every second item
+    for range_string in SPLIT_NAMED_RANGE_RE.split(range_string)[
+        1::2
+    ]:  # Skip first and from there every second item
 
         match = NAMED_RANGE_RE.match(range_string)
         if not match:
             raise NamedRangeException('Invalid named range string: "%s"' % range_string)
         else:
             match = match.groupdict()
-            sheet_name = match['quoted'] or match['notquoted']
-            xlrange = match['range']
-            sheet_name = sheet_name.replace("''", "'") # Unescape '
+            sheet_name = match["quoted"] or match["notquoted"]
+            xlrange = match["range"]
+            sheet_name = sheet_name.replace("''", "'")  # Unescape '
             destinations.append((sheet_name, xlrange))
 
     return destinations
+
 
 def refers_to_range(range_string):
     return range_string and bool(NAMED_RANGE_RE.match(range_string))

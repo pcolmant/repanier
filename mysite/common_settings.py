@@ -131,9 +131,6 @@ REPANIER_SETTINGS_BCC_ALL_EMAIL_TO = config.get(
 REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER", fallback=False
 )
-REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE", fallback=False
-)
 REPANIER_SETTINGS_DELIVERY_POINT = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_DELIVERY_POINT", fallback=False
 )
@@ -146,14 +143,8 @@ REPANIER_SETTINGS_DEMO = config.getboolean(
 REPANIER_SETTINGS_GROUP = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_GROUP", fallback=False
 )
-REPANIER_SETTINGS_IS_MINIMALIST = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_IS_MINIMALIST", fallback=True
-)
 REPANIER_SETTINGS_MANAGE_ACCOUNTING = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_MANAGE_ACCOUNTING", fallback=True
-)
-REPANIER_SETTINGS_PRODUCT_LABEL = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_PRODUCT_LABEL", fallback=False
 )
 REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO = config.get(
     "REPANIER_SETTINGS",
@@ -170,9 +161,6 @@ REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM = config.getboolean(
 )
 REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_SMS_GATEWAY_MAIL", fallback=EMPTY_STRING
-)
-REPANIER_SETTINGS_STOCK = config.getboolean(
-    "REPANIER_SETTINGS", "REPANIER_SETTINGS_STOCK", fallback=False
 )
 REPANIER_SETTINGS_TEMPLATE = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_TEMPLATE", fallback="bs3"
@@ -243,7 +231,7 @@ print(
 
 ###################### LUT_CONFIRM
 if REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-    LOCK_UNICODE = "📧"  # "🔑"  # "✓"  # "✉" "📧"
+    LOCK_UNICODE = "📧"  # "🔑"  # "✓"  # "✉" "📧" "🔏"
 else:
     LOCK_UNICODE = EMPTY_STRING
 
@@ -638,7 +626,7 @@ if DJANGO_SETTINGS_LOGGING:
             }
         },
         "loggers": {
-            "django.db.backends": {"level": "WARNING", "handlers": ["console"]},
+            "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
             "repanier": {"level": "DEBUG", "handlers": ["console"]},
             "django.template": {"level": "DEBUG", "handlers": ["console"]},
         },
@@ -842,6 +830,7 @@ CMS_PAGE_CACHE = True
 CMS_PLACEHOLDER_CACHE = True
 CMS_PLUGIN_CACHE = True
 CMS_TOOLBAR_ANONYMOUS_ON = False
+CMS_TOOLBAR_HIDE = True
 CMS_PAGE_WIZARD_DEFAULT_TEMPLATE = CMS_TEMPLATE_SUB_PAGE
 CMS_PAGE_WIZARD_CONTENT_PLACEHOLDER = "subpage_content"
 

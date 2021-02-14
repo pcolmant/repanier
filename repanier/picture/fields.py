@@ -24,9 +24,7 @@ class RepanierPictureField(Field):
     def contribute_to_class(
         self, cls, name, private_only=False, virtual_only=NOT_PROVIDED
     ):
-        super().contribute_to_class(
-            cls, name, private_only=private_only
-        )
+        super().contribute_to_class(cls, name, private_only=private_only)
         setattr(cls, self.name, self.descriptor_class(self))
 
     def get_prep_value(self, value):

@@ -1,8 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
-from rest_framework.fields import DecimalField
-from rest_framework.renderers import JSONRenderer
 
 from repanier.models.producer import Producer
 
@@ -52,7 +50,7 @@ def producer_detail(request, short_name):
             Producer.objects.filter(
                 short_name=short_name.decode("unicode-escape"),
                 is_active=True,
-                represent_this_buyinggroup=False,
+                is_default=False,
             )
             .order_by("?")
             .first()

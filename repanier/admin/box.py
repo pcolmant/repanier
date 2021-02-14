@@ -1,10 +1,8 @@
-from urllib.parse import parse_qsl
-
 from django import forms
 from django.conf import settings
-from django.contrib.admin import helpers
 from django.contrib import messages
 from django.contrib.admin import TabularInline
+from django.contrib.admin import helpers
 from django.forms import ModelForm, BaseInlineFormSet
 from django.forms.formsets import DELETION_FIELD_NAME
 from django.shortcuts import render
@@ -16,11 +14,12 @@ from parler.forms import TranslatableModelForm
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import (
     DECIMAL_ZERO,
-    PERMANENCE_PLANNED,
+    SALE_PLANNED,
     DECIMAL_MAX_STOCK,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
     LUT_VAT,
 )
+from repanier.middleware import get_query_params
 from repanier.models import Producer
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemWoReceiver
@@ -47,19 +46,13 @@ class BoxContentInlineFormSet(BaseInlineFormSet):
 
 class BoxContentInlineForm(ModelForm):
     previous_product = forms.ModelChoiceField(Product.objects.none(), required=False)
-    if settings.REPANIER_SETTINGS_STOCK:
-        stock = forms.DecimalField(
-            label=_("Inventory"),
-            max_digits=9,
-            decimal_places=3,
-            required=False,
-            initial=DECIMAL_ZERO,
-        )
-        limit_order_quantity_to_stock = forms.BooleanField(
-            label=_("Limit maximum order qty of the group to stock qty"),
-            required=False,
-            initial=True,
-        )
+    qty_on_sale = forms.DecimalField(
+        label=_("Inventory"),
+        max_digits=9,
+        decimal_places=3,
+        required=False,
+        initial=DECIMAL_ZERO,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,15 +60,9 @@ class BoxContentInlineForm(ModelForm):
         self.fields["product"].widget.can_delete_related = False
         if self.instance.id is not None:
             self.fields["previous_product"].initial = self.instance.product
-            if settings.REPANIER_SETTINGS_STOCK:
-                self.fields["stock"].initial = self.instance.product.stock
-                self.fields[
-                    "limit_order_quantity_to_stock"
-                ].initial = self.instance.product.limit_order_quantity_to_stock
+            self.fields["qty_on_sale"].initial = self.instance.product.qty_on_sale
 
-        if settings.REPANIER_SETTINGS_STOCK:
-            self.fields["stock"].disabled = True
-            self.fields["limit_order_quantity_to_stock"].disabled = True
+        self.fields["qty_on_sale"].disabled = True
 
     class Meta:
         widgets = {"product": Select2(select2attrs={"width": "450px"})}
@@ -85,51 +72,40 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
     form = BoxContentInlineForm
     formset = BoxContentInlineFormSet
     model = BoxContent
-    ordering = ("product",)
-    if not settings.REPANIER_SETTINGS_STOCK:
-        fields = [
-            "product",
-            "content_quantity",
-            "get_calculated_customer_content_price",
-        ]
-    else:
-        fields = [
-            "product",
-            "content_quantity",
-            "stock",
-            "limit_order_quantity_to_stock",
-            "get_calculated_customer_content_price",
-        ]
+    ordering = [
+        "product",
+    ]
+    fields = [
+        "product",
+        "content_quantity",
+        "qty_on_sale",
+        "get_calculated_customer_content_price",
+    ]
     extra = 0
     fk_name = "box"
-    # The stock and limit_order_quantity_to_stock are read only to have only one place to update it : the product.
     readonly_fields = ["get_calculated_customer_content_price"]
     _has_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
-        if self._has_delete_permission is None:
-            try:
-                parent_object = (
-                    Box.objects.filter(id=request.resolver_match.args[0])
-                    .only("id")
-                    .order_by("?")
-                    .first()
-                )
+        if self._has_add_or_delete_permission is None:
+            object_id = request.resolver_match.kwargs.get("object_id", None)
+            if object_id:
+                # Update
+                parent_object = Box.objects.filter(id=object_id).only("id").first()
                 if (
                     parent_object is not None
                     and OfferItemWoReceiver.objects.filter(
                         product=parent_object.id,
-                        permanence__status__gt=PERMANENCE_PLANNED,
-                    )
-                    .order_by("?")
-                    .exists()
+                        permanence__status__gt=SALE_PLANNED,
+                    ).exists()
                 ):
-                    self._has_delete_permission = False
+                    self._has_add_or_delete_permission = False
                 else:
-                    self._has_delete_permission = True
-            except:
-                self._has_delete_permission = True
-        return self._has_delete_permission
+                    self._has_add_or_delete_permission = True
+            else:
+                # Create
+                self._has_add_or_delete_permission = True
+        return self._has_add_or_delete_permission
 
     def has_add_permission(self, request, obj):
         return self.has_delete_permission(request)
@@ -158,14 +134,12 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                     "order_average_weight",
                 )
             )
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class BoxForm(TranslatableModelForm):
     calculated_customer_box_price = forms.DecimalField(
-        label=_("Consumer rate per unit calculated"),
+        label=_("Consumer tariff per unit calculated"),
         max_digits=8,
         decimal_places=2,
         required=False,
@@ -178,14 +152,13 @@ class BoxForm(TranslatableModelForm):
         required=False,
         initial=DECIMAL_ZERO,
     )
-    if settings.REPANIER_SETTINGS_STOCK:
-        calculated_stock = forms.DecimalField(
-            label=_("Calculated inventory"),
-            max_digits=9,
-            decimal_places=3,
-            required=False,
-            initial=DECIMAL_ZERO,
-        )
+    calculated_stock = forms.DecimalField(
+        label=_("Calculated inventory"),
+        max_digits=9,
+        decimal_places=3,
+        required=False,
+        initial=DECIMAL_ZERO,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -194,13 +167,11 @@ class BoxForm(TranslatableModelForm):
             box_price, box_deposit = box.get_calculated_price()
             self.fields["calculated_customer_box_price"].initial = box_price
             self.fields["calculated_box_deposit"].initial = box_deposit
-            if settings.REPANIER_SETTINGS_STOCK:
-                self.fields["calculated_stock"].initial = box.get_calculated_stock()
+            self.fields["calculated_stock"].initial = box.get_calculated_stock()
 
         self.fields["calculated_customer_box_price"].disabled = True
         self.fields["calculated_box_deposit"].disabled = True
-        if settings.REPANIER_SETTINGS_STOCK:
-            self.fields["calculated_stock"].disabled = True
+        self.fields["calculated_stock"].disabled = True
 
     def clean(self):
         if any(self.errors):
@@ -226,21 +197,22 @@ class BoxAdmin(TranslatableAdmin):
     model = Box
 
     list_display = (
-        "is_into_offer",
+        "get_html_is_into_offer",
         "get_box_admin_display",
-        "language_column",
+        "stock",
     )
+    list_editable = ("stock",)
     list_display_links = ("get_box_admin_display",)
     list_per_page = 16
     list_max_show_all = 16
     inlines = (BoxContentInline,)
-    ordering = (
+    search_fields = ("translations__long_name",)
+    list_filter = ("is_into_offer", "is_active")
+    ordering = [
         "customer_unit_price",
         "unit_deposit",
         "translations__long_name",
-    )
-    search_fields = ("translations__long_name",)
-    list_filter = ("is_into_offer", "is_active")
+    ]
     actions = ["flip_flop_select_for_offer_status", "duplicate_box"]
 
     def has_delete_permission(self, request, box=None):
@@ -261,11 +233,9 @@ class BoxAdmin(TranslatableAdmin):
             list_display += [
                 "language_column",
             ]
-        if settings.REPANIER_SETTINGS_STOCK:
-            self.list_editable = ("stock",)
-            list_display += [
-                "stock",
-            ]
+        list_display += [
+            "stock",
+        ]
         return list_display
 
     def flip_flop_select_for_offer_status(self, request, queryset):
@@ -301,22 +271,15 @@ class BoxAdmin(TranslatableAdmin):
     duplicate_box.short_description = _("Duplicate")
 
     def get_fieldsets(self, request, box=None):
-        if not settings.REPANIER_SETTINGS_STOCK:
-            fields_basic = [
-                ("producer", "long_name", "picture2"),
-                ("customer_unit_price", "unit_deposit"),
-                ("calculated_customer_box_price", "calculated_box_deposit"),
-            ]
-        else:
-            fields_basic = [
-                ("producer", "long_name", "picture2"),
-                ("stock", "customer_unit_price", "unit_deposit"),
-                (
-                    "calculated_stock",
-                    "calculated_customer_box_price",
-                    "calculated_box_deposit",
-                ),
-            ]
+        fields_basic = [
+            ("producer", "long_name", "picture2"),
+            ("stock", "customer_unit_price", "unit_deposit"),
+            (
+                "calculated_stock",
+                "calculated_customer_box_price",
+                "calculated_box_deposit",
+            ),
+        ]
         fields_advanced_descriptions = [
             "offer_description",
         ]
@@ -360,23 +323,21 @@ class BoxAdmin(TranslatableAdmin):
         producer_field.queryset = producer_queryset
 
         if box is None:
-            preserved_filters = request.GET.get("_changelist_filters", None)
-            if preserved_filters:
-                param = dict(parse_qsl(preserved_filters))
-                if "is_active__exact" in param:
-                    is_active_value = param["is_active__exact"]
-                    is_active_field = form.base_fields["is_active"]
-                    if is_active_value == "0":
-                        is_active_field.initial = False
-                    else:
-                        is_active_field.initial = True
-                if "is_into_offer__exact" in param:
-                    is_into_offer_value = param["is_into_offer__exact"]
-                    is_into_offer_field = form.base_fields["is_into_offer"]
-                    if is_into_offer_value == "0":
-                        is_into_offer_field.initial = False
-                    else:
-                        is_into_offer_field.initial = True
+            query_params = get_query_params()
+            if "is_active__exact" in query_params:
+                is_active_value = query_params["is_active__exact"]
+                is_active_field = form.base_fields["is_active"]
+                if is_active_value == "0":
+                    is_active_field.initial = False
+                else:
+                    is_active_field.initial = True
+            if "is_into_offer__exact" in query_params:
+                is_into_offer_value = query_params["is_into_offer__exact"]
+                is_into_offer_field = form.base_fields["is_into_offer"]
+                if is_into_offer_value == "0":
+                    is_into_offer_field.initial = False
+                else:
+                    is_into_offer_field.initial = True
         return form
 
     def get_html_is_into_offer(self, product):

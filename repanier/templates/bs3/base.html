@@ -76,7 +76,7 @@
                 {% else %}
                     <span id="link_to_order_or_filter_view"></span>
                     {% if user.is_authenticated %}
-                        <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right"
+                        <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right"
                            style="margin-right: 10px;">
                             <span id="prepared_amount_visible_xs"></span>
                         </a>
@@ -99,6 +99,7 @@
                     </ul>
                     {# <!-- Right Nav Section --> #}
                     <ul class="nav navbar-nav navbar-right">
+                        {% block repanier_permanence_basket_bs3 %}{% endblock %}
                         {% repanier_user_bs3 permanence_id=permanence_id %}
                         {% if REPANIER_DISPLAY_LANGUAGE %}
                             <li class="dropdown">

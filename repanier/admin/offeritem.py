@@ -1,16 +1,13 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.utils import translation
 from django.utils.html import strip_tags
-from django.utils.translation import ugettext_lazy as _
 
 from repanier.admin.admin_filter import (
     PurchaseFilterByProducerForThisPermanence,
     ProductFilterByDepartmentForThisProducer,
     OfferItemFilter,
 )
-from repanier.const import PERMANENCE_CLOSED
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
@@ -19,22 +16,18 @@ from repanier.tools import sint, update_offer_item
 
 
 class OfferItemClosedDataForm(forms.ModelForm):
-    producer_qty_stock_invoiced = forms.CharField(
-        label=_("Quantity invoiced by the producer"), required=False, initial=0
-    )
+    stock_reserved = forms.CharField(required=False, initial=0)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         offer_item = self.instance
-        self.fields["producer_qty_stock_invoiced"].initial = strip_tags(
-            offer_item.get_html_producer_qty_stock_invoiced()
-        )
-        self.fields["producer_qty_stock_invoiced"].widget.attrs["readonly"] = True
-        self.fields["producer_qty_stock_invoiced"].disabled = True
+        self.fields["stock_reserved"].initial = strip_tags(offer_item.qty_sold)
+        self.fields["stock_reserved"].widget.attrs["readonly"] = True
+        self.fields["stock_reserved"].disabled = True
 
     def get_readonly_fields(self, request, obj=None):
         return [
-            "qty_invoiced",
+            "stock_reserved",
         ]
 
 
@@ -53,7 +46,9 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
     list_select_related = ("producer", "department")
     list_per_page = 13
     list_max_show_all = 13
-    ordering = ("translations__long_name",)
+    ordering = [
+        "translations__long_name",
+    ]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -70,39 +65,34 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             producer = None
         # permanence_id = sint(request.GET.get('permanence', 0))
         # permanence_open = False
-        # permanence = Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED).order_by('?')
+        # permanence = Permanence.objects.filter(id=permanence_id, status=SALE_OPENED).order_by('?')
         # if permanence.exists():
         #     permanence_open = True
         if producer is not None:
-            if settings.REPANIER_SETTINGS_STOCK:
-                self.list_editable = ("stock",)
-                return (
-                    "department",
-                    "get_html_long_name_with_producer",
-                    "stock",
-                    "limit_order_quantity_to_stock",
-                    "get_html_producer_qty_stock_invoiced",
-                )
-            else:
-                return (
-                    "department",
-                    "get_html_long_name_with_producer",
-                    "get_html_producer_qty_stock_invoiced",
-                )
+            self.list_editable = ("stock",)
+            return (
+                "department",
+                "get_html_long_name_with_producer",
+                "stock",
+                "qty",
+            )
         else:
             return (
                 "department",
                 "get_html_long_name_with_producer",
-                "get_html_producer_qty_stock_invoiced",
+                "qty",
             )
 
-    def get_form(self, request, offer_item=None, **kwargs):
+    def get_fieldsets(self, request, offer_item=None):
         fields_basic = [
             ("permanence", "department", "product"),
-            ("producer_qty_stock_invoiced",),
+            ("stock_reserved",),
         ]
-        self.fieldsets = ((None, {"fields": fields_basic}),)
 
+        fieldsets = ((None, {"fields": fields_basic}),)
+        return fieldsets
+
+    def get_form(self, request, offer_item=None, **kwargs):
         form = super().get_form(request, offer_item, **kwargs)
         permanence_field = form.base_fields["permanence"]
         department_field = form.base_fields["department"]
@@ -118,10 +108,8 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         permanence_field.queryset = Permanence.objects.filter(
             id=offer_item.permanence_id
         )
-        department_field.queryset = (
-            LUT_DepartmentForCustomer.objects.filter(
-                id=offer_item.department_id
-            )
+        department_field.queryset = LUT_DepartmentForCustomer.objects.filter(
+            id=offer_item.department_id
         )
         product_field.queryset = Product.objects.filter(id=offer_item.product_id)
         return form

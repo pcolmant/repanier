@@ -166,17 +166,16 @@ class ProducerProductForm(forms.Form):
         required=True,
     )
 
-    if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-        production_mode = forms.ModelChoiceField(
-            LUT_ProductionMode.objects.filter(
-                rght=F("lft") + 1,
-                is_active=True,
-                translations__language_code=translation.get_language(),
-            ).order_by("translations__short_name"),
-            label=_("Production mode"),
-            widget=SelectBootstrapWidget,
-            required=False,
-        )
+    production_mode = forms.ModelChoiceField(
+        LUT_ProductionMode.objects.filter(
+            rght=F("lft") + 1,
+            is_active=True,
+            translations__language_code=translation.get_language(),
+        ).order_by("translations__short_name"),
+        label=_("Production mode"),
+        widget=SelectBootstrapWidget,
+        required=False,
+    )
 
     customer_increment_order_quantity = forms.DecimalField(
         max_digits=4, decimal_places=1

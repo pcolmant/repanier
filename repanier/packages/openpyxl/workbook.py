@@ -27,36 +27,36 @@ __docformat__ = "restructuredtext en"
 
 # Python stdlib imports
 import datetime
-import os
 import threading
+
+from .namedrange import NamedRange
+from .shared.date_time import CALENDAR_WINDOWS_1900
+from .shared.exc import ReadOnlyWorkbookException
+from .shared.ooxml import SHEET_MAIN_NS
+from .shared.xmltools import fromstring
+from .style import Style
 
 # package imports
 from .worksheet import Worksheet
 from .writer.dump_worksheet import DumpWorksheet, save_dump
-from .writer.strings import StringTableBuilder
-from .namedrange import NamedRange
-from .style import Style
 from .writer.excel import save_workbook
-from .shared.exc import ReadOnlyWorkbookException
-from .shared.date_time import CALENDAR_WINDOWS_1900, CALENDAR_MAC_1904
-from .shared.xmltools import fromstring
-from .shared.ooxml import NAMESPACES, SHEET_MAIN_NS
+from .writer.strings import StringTableBuilder
 
 
 class DocumentProperties(object):
     """High-level properties of the document."""
 
     def __init__(self):
-        self.creator = 'Unknown'
+        self.creator = "Unknown"
         self.last_modified_by = self.creator
         self.created = datetime.datetime.now()
         self.modified = datetime.datetime.now()
-        self.title = 'Untitled'
-        self.subject = ''
-        self.description = ''
-        self.keywords = ''
-        self.category = ''
-        self.company = 'Microsoft Corporation'
+        self.title = "Untitled"
+        self.subject = ""
+        self.description = ""
+        self.keywords = ""
+        self.category = ""
+        self.company = "Microsoft Corporation"
         self.excel_base_date = CALENDAR_WINDOWS_1900
 
 
@@ -67,18 +67,22 @@ class DocumentSecurity(object):
         self.lock_revision = False
         self.lock_structure = False
         self.lock_windows = False
-        self.revision_password = ''
-        self.workbook_password = ''
+        self.revision_password = ""
+        self.workbook_password = ""
 
 
 class Workbook(object):
     """Workbook is the container for all other parts of the document."""
 
-    def __init__(self, optimized_write=False, encoding='utf-8',
-                 worksheet_class=Worksheet,
-                 optimized_worksheet_class=DumpWorksheet,
-                 guess_types=True,
-                 data_only=False):
+    def __init__(
+        self,
+        optimized_write=False,
+        encoding="utf-8",
+        worksheet_class=Worksheet,
+        optimized_worksheet_class=DumpWorksheet,
+        guess_types=True,
+        data_only=False,
+    ):
         self.worksheets = []
         self._active_sheet_index = 0
         self._named_ranges = []
@@ -106,12 +110,12 @@ class Workbook(object):
 
     def read_workbook_settings(self, xml_source):
         root = fromstring(xml_source)
-        view = root.find('*/' '{%s}workbookView' % SHEET_MAIN_NS)
+        view = root.find("*/" "{%s}workbookView" % SHEET_MAIN_NS)
         if view is None:
             return
 
-        if 'activeTab' in view.attrib:
-            self.active = int(view.attrib['activeTab'])
+        if "activeTab" in view.attrib:
+            self.active = int(view.attrib["activeTab"])
 
     @property
     def _local_data(self):
@@ -147,15 +151,15 @@ class Workbook(object):
         """
 
         if self.__optimized_read:
-            raise ReadOnlyWorkbookException('Cannot create new sheet in a read-only workbook')
+            raise ReadOnlyWorkbookException(
+                "Cannot create new sheet in a read-only workbook"
+            )
 
-        if self.__optimized_write :
-            new_ws = self._optimized_worksheet_class(
-                parent_workbook=self, title=title)
+        if self.__optimized_write:
+            new_ws = self._optimized_worksheet_class(parent_workbook=self, title=title)
         else:
             if title is not None:
-                new_ws = self._worksheet_class(
-                    parent_workbook=self, title=title)
+                new_ws = self._worksheet_class(parent_workbook=self, title=title)
             else:
                 new_ws = self._worksheet_class(parent_workbook=self)
 
@@ -165,7 +169,10 @@ class Workbook(object):
     def add_sheet(self, worksheet, index=None):
         """Add an existing worksheet (at an optional index)."""
         if not isinstance(worksheet, self._worksheet_class):
-            raise TypeError("The parameter you have given is not of the type '%s'" % self._worksheet_class.__name__)
+            raise TypeError(
+                "The parameter you have given is not of the type '%s'"
+                % self._worksheet_class.__name__
+            )
 
         if index is None:
             self.worksheets.append(worksheet)

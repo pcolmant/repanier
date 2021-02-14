@@ -30,8 +30,8 @@ class Configuration(TranslatableModel):
     )
     name = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_NAME,
-        default=PERMANENCE_NAME_PERMANENCE,
+        choices=LUT_SALE_NAME,
+        default=SALE_NAME_PERMANENCE,
         verbose_name=_("Offers name"),
     )
     currency = models.CharField(
@@ -215,7 +215,7 @@ class Configuration(TranslatableModel):
 
     @classmethod
     def init_repanier(cls):
-        from repanier.const import DECIMAL_ONE, PERMANENCE_NAME_PERMANENCE, CURRENCY_EUR
+        from repanier.const import DECIMAL_ONE, SALE_NAME_PERMANENCE, CURRENCY_EUR
 
         site = Site.objects.get_current()
         if site is not None:
@@ -230,7 +230,7 @@ class Configuration(TranslatableModel):
         if config is None:
             config = Configuration.objects.create(
                 group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
-                name=PERMANENCE_NAME_PERMANENCE,
+                name=SALE_NAME_PERMANENCE,
                 bank_account="BE99 9999 9999 9999",
                 currency=CURRENCY_EUR,
             )

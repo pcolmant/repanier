@@ -1,6 +1,7 @@
 import datetime
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
@@ -12,9 +13,20 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import *
+from repanier.const import (
+    DECIMAL_ZERO,
+    EMPTY_STRING,
+    DECIMAL_ONE,
+    SALE_OPENED,
+    SALE_SEND,
+    REPANIER_MONEY_ZERO,
+    PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
+    ONE_YEAR,
+    SHOP_UNICODE,
+)
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
+from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.picture.const import SIZE_S
@@ -36,18 +48,14 @@ class Customer(models.Model):
         default=EMPTY_STRING,
         db_index=True,
         # unique=True,
-        # db_column="short_basket_name",
     )
     long_name = models.CharField(
         _("Long name"),
         max_length=100,
         blank=True,
         default=EMPTY_STRING,
-        # db_column="long_basket_name",
     )
-    email2 = models.EmailField(
-        _("Secondary email"), null=True, blank=True, default=EMPTY_STRING
-    )
+    email2 = models.EmailField(_("✉ #2"), null=True, blank=True, default=EMPTY_STRING)
     language = models.CharField(
         max_length=5,
         choices=settings.LANGUAGES,
@@ -63,19 +71,16 @@ class Customer(models.Model):
         size=SIZE_S,
     )
     phone1 = models.CharField(
-        _("Phone1"), max_length=25, blank=True, default=EMPTY_STRING
+        _("✆ #1"), max_length=25, blank=True, default=EMPTY_STRING
     )
     phone2 = models.CharField(
-        _("Phone2"), max_length=25, blank=True, default=EMPTY_STRING
+        _("✆ #2"), max_length=25, blank=True, default=EMPTY_STRING
     )
     bank_account1 = models.CharField(
-        _("Main bank account"), max_length=100, blank=True, default=EMPTY_STRING
+        _("Bank account #1"), max_length=100, blank=True, default=EMPTY_STRING
     )
     bank_account2 = models.CharField(
-        _("Secondary bank account"), max_length=100, blank=True, default=EMPTY_STRING
-    )
-    vat_id = models.CharField(
-        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
+        _("Bank account #2"), max_length=100, blank=True, default=EMPTY_STRING
     )
     address = models.TextField(_("Address"), blank=True, default=EMPTY_STRING)
     city = models.CharField(_("City"), max_length=50, blank=True, default=EMPTY_STRING)
@@ -84,12 +89,9 @@ class Customer(models.Model):
     membership_fee_valid_until = models.DateField(
         _("Membership fee valid until"), default=datetime.date.today
     )
-    price_list_multiplier = models.DecimalField(
+    custom_tariff_margin = models.DecimalField(
         _(
-            "Coefficient applied to the producer tariff to calculate the consumer tariff"
-        ),
-        help_text=_(
-            "This multiplier is applied to each product ordered by this customer."
+            "Coefficient applied to our pubilc tariff of selling to customers to calculate the personal sales tariff"
         ),
         default=DECIMAL_ONE,
         max_digits=5,
@@ -109,12 +111,10 @@ class Customer(models.Model):
     initial_balance = ModelMoneyField(
         _("Initial balance"), max_digits=8, decimal_places=2, default=DECIMAL_ZERO
     )
-    represent_this_buyinggroup = models.BooleanField(
-        _("Represent_this_buyinggroup"), default=False
-    )
+    is_default = models.BooleanField(_("Represent this buyinggroup"), default=False)
     delivery_point = models.ForeignKey(
         "LUT_DeliveryPoint",
-        verbose_name=_("Delivery point"),
+        verbose_name=_("Group"),
         blank=True,
         null=True,
         default=None,
@@ -130,6 +130,9 @@ class Customer(models.Model):
     # A group is a customer that groups several other customers.
     # The value of this field is set in "group_pre_save" signal
     is_group = models.BooleanField(_("Group"), default=False)
+    display_group_tariff = models.BooleanField(
+        _("Show the personal sales tariff to the customer"), default=False
+    )
     # A group may not place an order.
     # The value of this field is set in "group_pre_save" signal
     # or in the admin at customer level.
@@ -140,6 +143,7 @@ class Customer(models.Model):
         _("Agree to receive mails from this site"), default=True
     )
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
+    # TODO TBD
     short_basket_name = models.CharField(
         max_length=25,
         blank=False,
@@ -152,14 +156,29 @@ class Customer(models.Model):
         blank=True,
         default=EMPTY_STRING,
     )
+    represent_this_buyinggroup = models.BooleanField(
+        _("Represent this buyinggroup"), default=False
+    )
+    price_list_multiplier = models.DecimalField(
+        _(
+            "Coefficient applied to the producer tariff to calculate the consumer tariff"
+        ),
+        help_text=_(
+            "This multiplier is applied to each product ordered by this customer."
+        ),
+        default=DECIMAL_ONE,
+        max_digits=5,
+        decimal_places=4,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
+    vat_id = models.CharField(
+        _("VAT id"), max_length=20, blank=True, default=EMPTY_STRING
+    )
 
     @classmethod
     def get_or_create_default(cls):
-        default = (
-            Customer.objects.filter(represent_this_buyinggroup=True)
-            .order_by("?")
-            .first()
-        )
+        default = Customer.objects.filter(is_default=True).order_by("?").first()
         if default is None:
             long_name = settings.REPANIER_SETTINGS_GROUP_NAME
             short_name = long_name[:25]
@@ -177,14 +196,14 @@ class Customer(models.Model):
                 short_name=short_name,
                 long_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
-                represent_this_buyinggroup=True,
+                is_default=True,
             )
         return default
 
     @classmethod
     def get_or_create_the_very_first_customer(cls):
         very_first_customer = (
-            Customer.objects.filter(represent_this_buyinggroup=False, is_active=True)
+            Customer.objects.filter(is_default=False, is_active=True)
             .order_by("id")
             .first()
         )
@@ -206,7 +225,7 @@ class Customer(models.Model):
                 short_name=short_name,
                 long_name=long_name,
                 phone1=settings.REPANIER_SETTINGS_COORDINATOR_PHONE,
-                represent_this_buyinggroup=False,
+                is_default=False,
             )
         return very_first_customer
 
@@ -243,6 +262,48 @@ class Customer(models.Model):
         )
 
     get_admin_balance.short_description = _("Balance")
+
+    def get_available_deliveries_qs(self, permanence_id, delivery_board_id=0):
+        if delivery_board_id > 0:
+            if self.delivery_point is not None:
+                # The customer is member of a group
+                qs = DeliveryBoard.objects.filter(
+                    Q(
+                        id=delivery_board_id,
+                        permanence_id=permanence_id,
+                        delivery_point_id=self.delivery_point_id,
+                    )
+                    | Q(
+                        id=delivery_board_id,
+                        permanence_id=permanence_id,
+                        delivery_point__customer_responsible__isnull=True,
+                    )
+                )
+            else:
+                qs = DeliveryBoard.objects.filter(
+                    id=delivery_board_id,
+                    permanence_id=permanence_id,
+                    delivery_point__customer_responsible__isnull=True,
+                )
+        else:
+            if self.delivery_point is not None:
+                # The customer is member of a group
+                qs = DeliveryBoard.objects.filter(
+                    Q(
+                        permanence_id=permanence_id,
+                        delivery_point_id=self.delivery_point_id,
+                    )
+                    | Q(
+                        permanence_id=permanence_id,
+                        delivery_point__customer_responsible__isnull=True,
+                    )
+                )
+            else:
+                qs = DeliveryBoard.objects.filter(
+                    permanence_id=permanence_id,
+                    delivery_point__customer_responsible__isnull=True,
+                )
+        return qs
 
     def get_phone1(self, prefix=EMPTY_STRING, postfix=EMPTY_STRING):
         # return ", phone1" if prefix = ", "
@@ -282,12 +343,6 @@ class Customer(models.Model):
         elif customer_invoice.invoice_sort_order is None:
             # if not already invoiced, update all totals
             customer_invoice.set_total()
-            # 	delta_price_with_tax
-            # 	delta_vat
-            # 	total_vat
-            # 	total_deposit
-            # 	total_price_with_tax
-            # 	delta_transport = f(total_price_with_tax, transport, min_transport)
             customer_invoice.save()
         return customer_invoice
 
@@ -295,8 +350,8 @@ class Customer(models.Model):
         result_set = (
             CustomerInvoice.objects.filter(
                 customer_id=self.id,
-                status__gte=PERMANENCE_OPENED,
-                status__lte=PERMANENCE_SEND,
+                status__gte=SALE_OPENED,
+                status__lte=SALE_SEND,
                 customer_charged_id=self.id,
             )
             .order_by("?")
@@ -307,36 +362,10 @@ class Customer(models.Model):
                         max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                     ),
                 ),
-                delta_price=Sum(
-                    "delta_price_with_tax",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                ),
-                delta_transport=Sum(
-                    "delta_transport",
-                    output_field=DecimalField(
-                        max_digits=5, decimal_places=2, default=DECIMAL_ZERO
-                    ),
-                ),
             )
         )
-        total_price = (
-            result_set["total_price"]
-            if result_set["total_price"] is not None
-            else DECIMAL_ZERO
-        )
-        delta_price = (
-            result_set["delta_price"]
-            if result_set["delta_price"] is not None
-            else DECIMAL_ZERO
-        )
-        delta_transport = (
-            result_set["delta_transport"]
-            if result_set["delta_transport"] is not None
-            else DECIMAL_ZERO
-        )
-        return RepanierMoney(total_price + delta_price + delta_transport)
+        total_price = result_set["total_price"] or DECIMAL_ZERO
+        return RepanierMoney(total_price)
 
     def get_bank_not_invoiced(self):
         result_set = (
@@ -359,17 +388,13 @@ class Customer(models.Model):
                 ),
             )
         )
-        bank_in = (
-            result_set["bank_in"] if result_set["bank_in"] is not None else DECIMAL_ZERO
-        )
-        bank_out = (
-            result_set["bank_out"]
-            if result_set["bank_out"] is not None
-            else DECIMAL_ZERO
-        )
+        bank_in = result_set["bank_in"] or DECIMAL_ZERO
+        bank_out = result_set["bank_out"] or DECIMAL_ZERO
         return RepanierMoney(bank_in - bank_out)
 
     def get_balance(self):
+        if not settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+            return EMPTY_STRING
         last_customer_invoice = CustomerInvoice.objects.filter(
             customer_id=self.id, invoice_sort_order__isnull=False
         ).order_by("?")
@@ -566,7 +591,7 @@ class Customer(models.Model):
         return True
 
     def anonymize(self, also_group=False):
-        if self.represent_this_buyinggroup or self.is_group:
+        if self.is_default or self.is_group:
             # Do not anonymize groups
             return
         self.short_name = "{}-{}".format(_("BASKET"), self.id).lower()
@@ -591,19 +616,24 @@ class Customer(models.Model):
         self.subscribe_to_email = False
         self.save()
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+
+        return reverse(
+            "repanier:published_customer_view", kwargs={"customer_id": self.id}
+        )
+
     def __str__(self):
-        if self.delivery_point is None:
-            return self.short_name
-        else:
-            return "{} - {}".format(self.delivery_point, self.short_name)
+        shop = SHOP_UNICODE if self.is_default else EMPTY_STRING
+        return " ".join([shop, self.short_name])
 
     class Meta:
         verbose_name = _("Customer")
         verbose_name_plural = _("Customers")
-        ordering = ("-represent_this_buyinggroup", "short_name")
+        # ordering = ["-is_default", "short_name"]
         indexes = [
             models.Index(
-                fields=["-represent_this_buyinggroup", "short_name"],
+                fields=["-is_default", "short_name"],
                 name="customer_order_idx",
             )
         ]

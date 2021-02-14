@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.models.permanence import Permanence
 
 
@@ -11,7 +12,7 @@ from repanier.models.permanence import Permanence
 @require_GET
 @login_required
 def display_status(request, permanence_id):
-    if request.is_ajax():
+    if is_ajax():
         if request.user.is_staff:
             permanence = (
                 Permanence.objects.filter(id=permanence_id).order_by("?").first()

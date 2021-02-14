@@ -64,7 +64,7 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
     model = Purchase
     fields = [
         "offer_item",
-        "qty_invoiced",
+        "qty",
         "get_html_producer_unit_price",
         "get_html_unit_deposit",
         "purchase_price",
@@ -87,9 +87,7 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
 
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_object = obj
-        return super().get_formset(
-            request, obj, **kwargs
-        )
+        return super().get_formset(request, obj, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "offer_item":
@@ -105,9 +103,7 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
                 .order_by("translations__preparation_sort_order")
                 .distinct()
             )
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -129,7 +125,7 @@ class CustomerSendForm(forms.ModelForm):
         required=False,
         initial=REPANIER_MONEY_ZERO,
     )
-    offer_selling_price = FormMoneyField(
+    offer_customer_price = FormMoneyField(
         label=_("Invoiced to the consumer including VAT"),
         max_digits=8,
         decimal_places=2,
@@ -145,21 +141,21 @@ class CustomerSendForm(forms.ModelForm):
         customer_producer_invoice = self.instance
         self.fields[
             "offer_purchase_price"
-        ].initial = customer_producer_invoice.total_purchase_with_tax
+        ].initial = customer_producer_invoice.at_producer_tariff
         self.fields[
-            "offer_selling_price"
-        ].initial = customer_producer_invoice.total_selling_with_tax
-        if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:
-            self.fields["offer_selling_price"].widget = forms.HiddenInput()
-        else:
+            "offer_customer_price"
+        ].initial = customer_producer_invoice.at_sales_tariff
+        if customer_producer_invoice.producer.purchase_tariff_margin == DECIMAL_ONE:
             self.fields["offer_purchase_price"].widget = forms.HiddenInput()
+        if customer_producer_invoice.producer.customer_tariff_margin == DECIMAL_ONE:
+            self.fields["offer_customer_price"].widget = forms.HiddenInput()
 
 
 class CustomerSendAdmin(admin.ModelAdmin):
     form = CustomerSendForm
     fields = (
         ("permanence", "customer", "producer"),
-        ("offer_purchase_price", "offer_selling_price", "rule_of_3"),
+        ("offer_purchase_price", "offer_customer_price", "rule_of_3"),
     )
     list_per_page = 16
     list_max_show_all = 16
@@ -167,7 +163,9 @@ class CustomerSendAdmin(admin.ModelAdmin):
     list_display = ["producer", "customer", "get_html_producer_price_purchased"]
     list_display_links = ("customer",)
     search_fields = ("customer__short_name",)
-    ordering = ("customer",)
+    ordering = [
+        "customer",
+    ]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -222,9 +220,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
         return actions
 
     def save_model(self, request, customer_producer_invoice, form, change):
-        super().save_model(
-            request, customer_producer_invoice, form, change
-        )
+        super().save_model(request, customer_producer_invoice, form, change)
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
@@ -257,7 +253,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
                     .first()
                 )
                 if purchase is not None:
-                    purchase.qty_invoiced = DECIMAL_ZERO
+                    purchase.qty = DECIMAL_ZERO
                     purchase.save()
                     purchase.save_box()
         for purchase_form in formset:
@@ -277,23 +273,24 @@ class CustomerSendAdmin(admin.ModelAdmin):
                 ].initial
                 if purchase.purchase_price != previous_purchase_price:
                     if purchase.get_producer_unit_price() != DECIMAL_ZERO:
-                        purchase.qty_invoiced = (
+                        purchase.qty = (
                             purchase.purchase_price.amount
                             / purchase.get_producer_unit_price()
                         ).quantize(FOUR_DECIMALS)
                     else:
-                        purchase.qty_invoiced = DECIMAL_ZERO
+                        purchase.qty = DECIMAL_ZERO
                 purchase.save()
         rule_of_3 = form.cleaned_data["rule_of_3"]
         if rule_of_3:
-            if customer_producer_invoice.producer.price_list_multiplier >= DECIMAL_ONE:
+            # TODO : What if both are displayed ?
+            selling_price = False
+            # if customer_producer_invoice.producer.purchase_tariff_margin != DECIMAL_ONE:
+            rule_of_3_target = form.cleaned_data[
+                "offer_purchase_price"
+            ].amount.quantize(TWO_DECIMALS)
+            if customer_producer_invoice.producer.customer_tariff_margin != DECIMAL_ONE:
                 rule_of_3_target = form.cleaned_data[
-                    "offer_purchase_price"
-                ].amount.quantize(TWO_DECIMALS)
-                selling_price = False
-            else:
-                rule_of_3_target = form.cleaned_data[
-                    "offer_selling_price"
+                    "offer_customer_price"
                 ].amount.quantize(TWO_DECIMALS)
                 selling_price = True
             rule_of_3_source = DECIMAL_ZERO
@@ -326,19 +323,19 @@ class CustomerSendAdmin(admin.ModelAdmin):
                                 if purchase.get_producer_unit_price() != DECIMAL_ZERO:
                                     delta = rule_of_3_target - adjusted_invoice
                                     if selling_price:
-                                        purchase.qty_invoiced = (
+                                        purchase.qty = (
                                             delta / purchase.get_customer_unit_price()
                                         ).quantize(FOUR_DECIMALS)
                                     else:
-                                        purchase.qty_invoiced = (
+                                        purchase.qty = (
                                             delta / purchase.get_producer_unit_price()
                                         ).quantize(FOUR_DECIMALS)
                                 else:
-                                    purchase.qty_invoiced = DECIMAL_ZERO
+                                    purchase.qty = DECIMAL_ZERO
                             else:
-                                purchase.qty_invoiced = (
-                                    purchase.qty_invoiced * ratio
-                                ).quantize(FOUR_DECIMALS)
+                                purchase.qty = (purchase.qty * ratio).quantize(
+                                    FOUR_DECIMALS
+                                )
 
                             purchase.save()
                             purchase.save_box()

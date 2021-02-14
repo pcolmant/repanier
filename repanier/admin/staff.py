@@ -113,9 +113,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
             kwargs["queryset"] = Customer.objects.filter(
                 is_active=True
             )  # , represent_this_buyinggroup=False)
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, staff, form, change):
         old_customer_responsible_field = form.base_fields[

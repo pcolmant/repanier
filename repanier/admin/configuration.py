@@ -36,8 +36,7 @@ class ConfigurationDataForm(TranslatableModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop("request", None)
-        # Voilà, now you can access request anywhere in your form methods by using self.request!
+        # self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
         self.fields["group_name"].widget.attrs["readonly"] = True
         self.fields["email"].widget.attrs["readonly"] = True
@@ -152,33 +151,32 @@ class ConfigurationAdmin(TranslatableAdmin):
                 ),
             ]
 
-        if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-            fields = [
-                "home_site",
-                "group_label",
-                # 'page_break_on_customer_check',
-                "xlsx_portrait",
-                ("currency", "vat_id"),
-            ]
-            fieldsets += [
-                (
-                    _("Advanced options"),
-                    {
-                        "classes": ("collapse",),
-                        "fields": fields,
-                    },
-                ),
-            ]
+        fields = [
+            "home_site",
+            "group_label",
+            # 'page_break_on_customer_check',
+            "xlsx_portrait",
+            ("currency", "vat_id"),
+        ]
+        fieldsets += [
+            (
+                _("Advanced options"),
+                {
+                    "classes": ("collapse",),
+                    "fields": fields,
+                },
+            ),
+        ]
 
         return fieldsets
 
-    def get_form(self, request, obj=None, **kwargs):
-
-        form = super().get_form(request, obj, **kwargs)
-
-        class FormWithRequest(form):
-            def __new__(cls, *args, **kwargs):
-                kwargs["request"] = request
-                return form(*args, **kwargs)
-
-        return FormWithRequest
+    # def get_form(self, request, obj=None, **kwargs):
+    #
+    #     form_class = super().get_form(request, obj, **kwargs)
+    #
+    #     class FormWithRequest(form_class):
+    #         def __new__(cls, *args, **kwargs):
+    #             kwargs["request"] = request
+    #             return form_class(*args, **kwargs)
+    #
+    #     return FormWithRequest

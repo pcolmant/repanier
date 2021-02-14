@@ -23,16 +23,26 @@
 
 from collections import Mapping
 
-from ..shared.compat import iteritems, OrderedDict
 from .colors import Color
+from ..shared.compat import iteritems, OrderedDict
 
 
 class FormatRule(Mapping):
     """Utility dictionary for formatting rules with specified keys only"""
 
-    __slots__ = ('aboveAverage', 'bottom', 'dxfId', 'equalAverage',
-                 'operator', 'percent', 'priority', 'rank', 'stdDev', 'stopIfTrue',
-                 'text')
+    __slots__ = (
+        "aboveAverage",
+        "bottom",
+        "dxfId",
+        "equalAverage",
+        "operator",
+        "percent",
+        "priority",
+        "rank",
+        "stdDev",
+        "stopIfTrue",
+        "text",
+    )
 
     def update(self, dictionary):
         for k, v in iteritems(dictionary):
@@ -78,12 +88,23 @@ class FormatRule(Mapping):
         return len(self.keys())
 
 
-
 class ConditionalFormatting(object):
     """Conditional formatting rules."""
-    rule_attributes = ('aboveAverage', 'bottom', 'dxfId', 'equalAverage', 'operator', 'percent', 'priority', 'rank',
-                       'stdDev', 'stopIfTrue', 'text')
-    icon_attributes = ('iconSet', 'showValue', 'reverse')
+
+    rule_attributes = (
+        "aboveAverage",
+        "bottom",
+        "dxfId",
+        "equalAverage",
+        "operator",
+        "percent",
+        "priority",
+        "rank",
+        "stdDev",
+        "stopIfTrue",
+        "text",
+    )
+    icon_attributes = ("iconSet", "showValue", "reverse")
 
     def __init__(self):
         self.cf_rules = OrderedDict()
@@ -101,14 +122,14 @@ class ConditionalFormatting(object):
         for range_string, rules in iteritems(cfRules):
             self.cf_rules[range_string] = rules
             for rule in rules:
-                priorityMap.append(int(rule['priority']))
+                priorityMap.append(int(rule["priority"]))
         priorityMap.sort()
         for range_string, rules in iteritems(cfRules):
             self.cf_rules[range_string] = rules
             for rule in rules:
-                priority = priorityMap.index(int(rule['priority'])) + 1
-                rule['priority'] = str(priority)
-                if 'priority' in rule and priority > self.max_priority:
+                priority = priorityMap.index(int(rule["priority"])) + 1
+                rule["priority"] = str(priority)
+                if "priority" in rule and priority > self.max_priority:
                     self.max_priority = priority
 
     def addDxfStyle(self, wb, font, border, fill):
@@ -124,20 +145,20 @@ class ConditionalFormatting(object):
         :return: dxfId (excel uses a 0 based index for the dxfId)
         """
         if not wb.style_properties:
-            wb.style_properties = {'dxf_list': []}
-        elif 'dxf_list' not in wb.style_properties:
-            wb.style_properties['dxf_list'] = []
+            wb.style_properties = {"dxf_list": []}
+        elif "dxf_list" not in wb.style_properties:
+            wb.style_properties["dxf_list"] = []
 
         dxf = {}
         if font:
-            dxf['font'] = [font]
+            dxf["font"] = [font]
         if border:
-            dxf['border'] = [border]
+            dxf["border"] = [border]
         if fill:
-            dxf['fill'] = [fill]
+            dxf["fill"] = [fill]
 
-        wb.style_properties['dxf_list'].append(dxf)
-        return len(wb.style_properties['dxf_list']) - 1
+        wb.style_properties["dxf_list"].append(dxf)
+        return len(wb.style_properties["dxf_list"]) - 1
 
     def addCustomRule(self, range_string, rule):
         """Add a custom rule.  Rule is a dictionary containing a key called type, and other keys, as found in
@@ -147,13 +168,22 @@ class ConditionalFormatting(object):
         {'type': 'colorScale', 'colorScale': {'cfvo': [{'type': 'min'}, {'type': 'max'}],
                                               'color': [Color('FFFF7128'), Color('FFFFEF9C')]}
         """
-        rule['priority'] = self.max_priority + 1
+        rule["priority"] = self.max_priority + 1
         self.max_priority += 1
         if range_string not in self.cf_rules:
             self.cf_rules[range_string] = []
         self.cf_rules[range_string].append(rule)
 
-    def add2ColorScale(self, range_string, start_type, start_value, start_rgb, end_type, end_value, end_rgb):
+    def add2ColorScale(
+        self,
+        range_string,
+        start_type,
+        start_value,
+        start_rgb,
+        end_type,
+        end_value,
+        end_rgb,
+    ):
         """
         Add a 2-color scale to the conditional formatting.
 
@@ -165,37 +195,62 @@ class ConditionalFormatting(object):
         :param end_value: Ending value.
         :param end_rgb: End RGB color, such as 'FFAABB11'
         """
-        rule = {'type': 'colorScale', 'colorScale': {'color': [Color(start_rgb), Color(end_rgb)], 'cfvo': []}}
-        if start_type in ('max', 'min'):
-            rule['colorScale']['cfvo'].append({'type': start_type})
+        rule = {
+            "type": "colorScale",
+            "colorScale": {"color": [Color(start_rgb), Color(end_rgb)], "cfvo": []},
+        }
+        if start_type in ("max", "min"):
+            rule["colorScale"]["cfvo"].append({"type": start_type})
         else:
-            rule['colorScale']['cfvo'].append({'type': start_type, 'val': str(start_value)})
-        if end_type in ('max', 'min'):
-            rule['colorScale']['cfvo'].append({'type': end_type})
+            rule["colorScale"]["cfvo"].append(
+                {"type": start_type, "val": str(start_value)}
+            )
+        if end_type in ("max", "min"):
+            rule["colorScale"]["cfvo"].append({"type": end_type})
         else:
-            rule['colorScale']['cfvo'].append({'type': end_type, 'val': str(end_value)})
+            rule["colorScale"]["cfvo"].append({"type": end_type, "val": str(end_value)})
         self.addCustomRule(range_string, rule)
 
-    def add3ColorScale(self, range_string, start_type, start_value, start_rgb, mid_type, mid_value, mid_rgb, end_type,
-                       end_value, end_rgb):
+    def add3ColorScale(
+        self,
+        range_string,
+        start_type,
+        start_value,
+        start_rgb,
+        mid_type,
+        mid_value,
+        mid_rgb,
+        end_type,
+        end_value,
+        end_rgb,
+    ):
         """Add a 3-color scale to the conditional formatting.  See `add2ColorScale` for parameter descriptions."""
-        rule = {'type': 'colorScale', 'colorScale': {'color': [Color(start_rgb), Color(mid_rgb), Color(end_rgb)],
-                                                     'cfvo': []}}
-        if start_type in ('max', 'min'):
-            rule['colorScale']['cfvo'].append({'type': start_type})
+        rule = {
+            "type": "colorScale",
+            "colorScale": {
+                "color": [Color(start_rgb), Color(mid_rgb), Color(end_rgb)],
+                "cfvo": [],
+            },
+        }
+        if start_type in ("max", "min"):
+            rule["colorScale"]["cfvo"].append({"type": start_type})
         else:
-            rule['colorScale']['cfvo'].append({'type': start_type, 'val': str(start_value)})
-        if mid_type in ('max', 'min'):
-            rule['colorScale']['cfvo'].append({'type': mid_type})
+            rule["colorScale"]["cfvo"].append(
+                {"type": start_type, "val": str(start_value)}
+            )
+        if mid_type in ("max", "min"):
+            rule["colorScale"]["cfvo"].append({"type": mid_type})
         else:
-            rule['colorScale']['cfvo'].append({'type': mid_type, 'val': str(mid_value)})
-        if end_type in ('max', 'min'):
-            rule['colorScale']['cfvo'].append({'type': end_type})
+            rule["colorScale"]["cfvo"].append({"type": mid_type, "val": str(mid_value)})
+        if end_type in ("max", "min"):
+            rule["colorScale"]["cfvo"].append({"type": end_type})
         else:
-            rule['colorScale']['cfvo'].append({'type': end_type, 'val': str(end_value)})
+            rule["colorScale"]["cfvo"].append({"type": end_type, "val": str(end_value)})
         self.addCustomRule(range_string, rule)
 
-    def addCellIs(self, range_string, operator, formula, stopIfTrue, wb, font, border, fill):
+    def addCellIs(
+        self, range_string, operator, formula, stopIfTrue, wb, font, border, fill
+    ):
         """Add a conditional formatting of type cellIs.
 
         Formula is in a list to handle multiple formula's, such as ['a1']
@@ -204,13 +259,24 @@ class ConditionalFormatting(object):
         'between', 'notBetween', 'equal', 'notEqual', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual'
         """
         # Excel doesn't use >, >=, etc, but allow for ease of python development
-        expand = {">": "greaterThan", ">=": "greaterThanOrEqual", "<": "lessThan", "<=": "lessThanOrEqual",
-                  "=": "equal", "==": "equal", "!=": "notEqual"}
+        expand = {
+            ">": "greaterThan",
+            ">=": "greaterThanOrEqual",
+            "<": "lessThan",
+            "<=": "lessThanOrEqual",
+            "=": "equal",
+            "==": "equal",
+            "!=": "notEqual",
+        }
         operator = expand.get(operator, operator)
 
         dxfId = self.addDxfStyle(wb, font, border, fill)
-        rule = {'type': 'cellIs', 'dxfId': dxfId, 'operator': operator, 'formula': formula}
+        rule = {
+            "type": "cellIs",
+            "dxfId": dxfId,
+            "operator": operator,
+            "formula": formula,
+        }
         if stopIfTrue:
-            rule['stopIfTrue'] = '1'
+            rule["stopIfTrue"] = "1"
         self.addCustomRule(range_string, rule)
-

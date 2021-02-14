@@ -1,5 +1,4 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.utils import translation
 from django.utils.safestring import mark_safe
@@ -7,9 +6,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
+from repanier.middleware import is_ajax
+from repanier.const import SALE_OPENED, EMPTY_STRING
 from repanier.models.customer import Customer
-from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
 from repanier.tools import sint
 
@@ -18,7 +17,7 @@ from repanier.tools import sint
 @require_GET
 @login_required
 def delivery_select_ajax(request):
-    if not request.is_ajax():
+    if not is_ajax():
         raise Http404
     # construct a list which will contain all of the data for the response
     user = request.user
@@ -38,43 +37,22 @@ def delivery_select_ajax(request):
     )
     if customer_invoice is None:
         raise Http404
-    if customer.delivery_point is not None:
-        qs = DeliveryBoard.objects.filter(
-            Q(
-                permanence_id=permanence_id,
-                delivery_point_id=customer.delivery_point_id,
-                status=PERMANENCE_OPENED,
-            )
-            | Q(
-                permanence_id=permanence_id,
-                delivery_point__customer_responsible__isnull=True,
-                status=PERMANENCE_OPENED,
-            )
-        )
-    else:
-        qs = DeliveryBoard.objects.filter(
-            permanence_id=permanence_id,
-            delivery_point__customer_responsible__isnull=True,
-            status=PERMANENCE_OPENED,
-        )
+    qs = customer.get_available_deliveries_qs(permanence_id=permanence_id)
     is_selected = False
     delivery_counter = 0
     html = EMPTY_STRING
-    # IMPORTANT : Do not limit to delivery.status=PERMANENCE_OPENED to include potentialy closed
+    # IMPORTANT : Do not limit to delivery.status=SALE_OPENED to include potentialy closed
     # delivery already selected by the customer
     for delivery in qs:
         if delivery.id == customer_invoice.delivery_id:
             is_selected = True
             html += '<option value="{}" selected>{}</option>'.format(
-                delivery.id, delivery.get_delivery_customer_display()
+                delivery.id, delivery.get_delivery_status_display()
             )
-        elif (
-            delivery.status == PERMANENCE_OPENED
-            and customer_invoice.status == PERMANENCE_OPENED
-        ):
+        elif delivery.status == SALE_OPENED and customer_invoice.status == SALE_OPENED:
             delivery_counter += 1
             html += '<option value="{}">{}</option>'.format(
-                delivery.id, delivery.get_delivery_customer_display()
+                delivery.id, delivery.get_delivery_status_display()
             )
     if not is_selected:
         if delivery_counter == 0:

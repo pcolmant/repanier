@@ -27,23 +27,23 @@ from .hashable import HashableObject
 
 class Border(HashableObject):
     """Border options for use in styles."""
-    BORDER_NONE = 'none'
-    BORDER_DASHDOT = 'dashDot'
-    BORDER_DASHDOTDOT = 'dashDotDot'
-    BORDER_DASHED = 'dashed'
-    BORDER_DOTTED = 'dotted'
-    BORDER_DOUBLE = 'double'
-    BORDER_HAIR = 'hair'
-    BORDER_MEDIUM = 'medium'
-    BORDER_MEDIUMDASHDOT = 'mediumDashDot'
-    BORDER_MEDIUMDASHDOTDOT = 'mediumDashDotDot'
-    BORDER_MEDIUMDASHED = 'mediumDashed'
-    BORDER_SLANTDASHDOT = 'slantDashDot'
-    BORDER_THICK = 'thick'
-    BORDER_THIN = 'thin'
 
-    __fields__ = ('border_style',
-                  'color')
+    BORDER_NONE = "none"
+    BORDER_DASHDOT = "dashDot"
+    BORDER_DASHDOTDOT = "dashDotDot"
+    BORDER_DASHED = "dashed"
+    BORDER_DOTTED = "dotted"
+    BORDER_DOUBLE = "double"
+    BORDER_HAIR = "hair"
+    BORDER_MEDIUM = "medium"
+    BORDER_MEDIUMDASHDOT = "mediumDashDot"
+    BORDER_MEDIUMDASHDOTDOT = "mediumDashDotDot"
+    BORDER_MEDIUMDASHED = "mediumDashed"
+    BORDER_SLANTDASHDOT = "slantDashDot"
+    BORDER_THICK = "thick"
+    BORDER_THIN = "thin"
+
+    __fields__ = ("border_style", "color")
     __slots__ = __fields__
 
     def __init__(self):
@@ -53,22 +53,25 @@ class Border(HashableObject):
 
 class Borders(HashableObject):
     """Border positioning for use in styles."""
+
     DIAGONAL_NONE = 0
     DIAGONAL_UP = 1
     DIAGONAL_DOWN = 2
     DIAGONAL_BOTH = 3
 
-    __fields__ = ('left',
-                  'right',
-                  'top',
-                  'bottom',
-                  'diagonal',
-                  'diagonal_direction',
-                  'all_borders',
-                  'outline',
-                  'inside',
-                  'vertical',
-                  'horizontal')
+    __fields__ = (
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "diagonal",
+        "diagonal_direction",
+        "all_borders",
+        "outline",
+        "inside",
+        "vertical",
+        "horizontal",
+    )
     __slots__ = __fields__
 
     def __init__(self):

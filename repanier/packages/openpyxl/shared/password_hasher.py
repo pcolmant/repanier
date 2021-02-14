@@ -24,7 +24,7 @@
 """Basic password hashing."""
 
 
-def hash_password(plaintext_password=''):
+def hash_password(plaintext_password=""):
     """Create a password hash from a given string.
 
     This method is based on the algorithm provided by
@@ -37,8 +37,8 @@ def hash_password(plaintext_password=''):
     for char in plaintext_password:
         value = ord(char) << i
         rotated_bits = value >> 15
-        value &= 0x7fff
-        password ^= (value | rotated_bits)
+        value &= 0x7FFF
+        password ^= value | rotated_bits
         i += 1
     password ^= len(plaintext_password)
     password ^= 0xCE4B

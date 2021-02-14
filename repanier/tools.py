@@ -12,7 +12,6 @@ from urllib.request import urlopen
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import F
 from django.http import Http404
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -22,7 +21,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
-from repanier import apps
+from repanier import globals
 from repanier import const
 
 logger = logging.getLogger(__name__)
@@ -88,9 +87,7 @@ def next_row(query_iterator) -> object:
         return
 
 
-def send_sms(
-    sms_nr: str = "", sms_msg: str = ""
-) -> None:
+def send_sms(sms_nr: str = "", sms_msg: str = "") -> None:
     try:
         if sms_nr and sms_msg:
             valid_nr = "0"
@@ -116,7 +113,7 @@ def send_sms(
         pass
 
 
-def cap(s: str, l:int) -> str:
+def cap(s: str, l: int) -> str:
     if s:
         if not isinstance(s, str):
             s = str(s)
@@ -130,11 +127,11 @@ def permanence_ok_or_404(permanence):
     if permanence is None:
         raise Http404
     if permanence.status not in [
-        const.PERMANENCE_OPENED,
-        const.PERMANENCE_CLOSED,
-        const.PERMANENCE_SEND,
+        const.SALE_OPENED,
+        const.SALE_CLOSED,
+        const.SALE_SEND,
     ]:
-        if permanence.status in [const.PERMANENCE_INVOICED, const.PERMANENCE_ARCHIVED]:
+        if permanence.status in [const.SALE_INVOICED, const.SALE_ARCHIVED]:
             if (
                 permanence.permanence_date
                 < (
@@ -243,7 +240,7 @@ def payment_message(customer, permanence):
         else:
             payment_needed = total_price_with_tax
 
-        bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
+        bank_account_number = globals.REPANIER_SETTINGS_BANK_ACCOUNT
         if bank_account_number:
             if payment_needed.amount > const.DECIMAL_ZERO:
                 if permanence.short_name:
@@ -288,24 +285,19 @@ def payment_message(customer, permanence):
     )
 
 
-def get_html_selected_value(offer_item, qty_ordered, is_open=True):
+def get_html_selected_value(offer_item, qty, is_open=True):
     if offer_item is not None and offer_item.may_order:
-        if qty_ordered <= const.DECIMAL_ZERO:
+        if qty <= const.DECIMAL_ZERO:
             if is_open:
                 if offer_item.is_box:
                     label = _("Sold out")
                 else:
-                    q_min = offer_item.customer_minimum_order_quantity
-                    if offer_item.limit_order_quantity_to_stock:
-                        q_alert = offer_item.stock - offer_item.qty_invoiced
-                        if q_alert < const.DECIMAL_ZERO:
-                            q_alert = const.DECIMAL_ZERO
-                    else:
-                        q_alert = offer_item.customer_alert_order_quantity
-                    if q_min <= q_alert:
-                        label = "---"
-                    else:
-                        label = _("Sold out")
+                    label = "---"
+                    if offer_item.product.is_into_offer:
+                        q_min = offer_item.product.customer_minimum_order_quantity
+                        q_max = offer_item.product.qty_on_sale - qty
+                        if q_min > q_max:
+                            label = _("Sold out")
             else:
                 label = _("Closed")
             html = '<option value="0" selected>{}</option>'.format(label)
@@ -315,27 +307,23 @@ def get_html_selected_value(offer_item, qty_ordered, is_open=True):
                 offer_item.customer_unit_price.amount + offer_item.unit_deposit.amount
             )
             display = offer_item.get_display(
-                qty=qty_ordered,
+                qty=qty,
                 order_unit=offer_item.order_unit,
                 unit_price_amount=unit_price_amount,
-                for_order_select=True,
             )
-            html = '<option value="{}" selected>{}</option>'.format(
-                qty_ordered, display
-            )
+            html = '<option value="{}" selected>{}</option>'.format(qty, display)
     else:
         html = const.EMPTY_STRING
     return mark_safe(html)
 
 
-def get_html_selected_box_value(offer_item, qty_ordered):
+def get_html_selected_box_value(offer_item, qty):
     # Select one purchase
-    if qty_ordered > const.DECIMAL_ZERO:
+    if qty > const.DECIMAL_ZERO:
         qty_display = offer_item.get_display(
-            qty=qty_ordered,
+            qty=qty,
             order_unit=offer_item.order_unit,
-            for_order_select=True,
-            without_price_display=True,
+            with_price_display=False,
         )
     else:
         qty_display = "---"
@@ -360,16 +348,12 @@ def create_or_update_one_purchase(
 
     # The batch_job flag is used because we need to forbid
     # customers to add purchases during the close_orders_async or other batch_job process
-    # when the status is PERMANENCE_WAIT_FOR_SEND
-    purchase = (
-        Purchase.objects.filter(
-            customer_id=customer_id,
-            offer_item_id=offer_item.id,
-            is_box_content=is_box_content,
-        )
-        .order_by("?")
-        .first()
-    )
+    # when the status is SALE_WAIT_FOR_SEND
+    purchase = Purchase.objects.filter(
+        customer_id=customer_id,
+        offer_item_id=offer_item.id,
+        is_box_content=is_box_content,
+    ).first()
     if batch_job:
         if purchase is None:
             purchase = Purchase.objects.create(
@@ -377,42 +361,30 @@ def create_or_update_one_purchase(
                 offer_item=offer_item,
                 producer_id=offer_item.producer_id,
                 customer_id=customer_id,
-                qty_ordered=q_order
-                if status < const.PERMANENCE_SEND
-                else const.DECIMAL_ZERO,
-                qty_invoiced=q_order
-                if status >= const.PERMANENCE_SEND
-                else const.DECIMAL_ZERO,
+                qty=q_order,
                 is_box_content=is_box_content,
                 status=status,
                 comment=comment,
             )
         else:
             purchase.set_comment(comment)
-            if status < const.PERMANENCE_SEND:
-                purchase.qty_ordered = q_order
-            else:
-                purchase.qty_invoiced = q_order
+            purchase.qty = q_order
             purchase.save()
         return purchase, True
     else:
-        permanence_is_opened = (
-            CustomerInvoice.objects.filter(
-                permanence_id=offer_item.permanence_id,
-                customer_id=customer_id,
-                status=status,
-            )
-            .order_by("?")
-            .exists()
-        )
+        permanence_is_opened = CustomerInvoice.objects.filter(
+            permanence_id=offer_item.permanence_id,
+            customer_id=customer_id,
+            status=status,
+        ).exists()
         if permanence_is_opened:
-            if offer_item.limit_order_quantity_to_stock:
-                if purchase is not None:
-                    q_previous_order = purchase.qty_ordered
-                else:
-                    q_previous_order = const.DECIMAL_ZERO
-                q_alert = (
-                    offer_item.stock - offer_item.qty_invoiced + q_previous_order
+            if purchase is not None:
+                q_previous_purchase = purchase.qty
+            else:
+                q_previous_purchase = const.DECIMAL_ZERO
+            if offer_item.product.qty_on_sale > const.DECIMAL_ZERO:
+                q_alert = offer_item.get_customer_alert_order_quantity(
+                    q_previous_purchase
                 )
                 if is_box_content and q_alert < q_order:
                     # Select one purchase
@@ -426,18 +398,18 @@ def create_or_update_one_purchase(
                         .first()
                     )
                     if non_box_purchase is not None:
-                        tbd_qty = min(
-                            q_order - q_alert, non_box_purchase.qty_ordered
-                        )
-                        tbk_qty = non_box_purchase.qty_ordered - tbd_qty
-                        non_box_purchase.qty_ordered = tbk_qty
+                        q_to_be_deleted = min(q_order - q_alert, non_box_purchase.qty)
+                        q_to_be_keep = non_box_purchase.qty - q_to_be_deleted
+                        non_box_purchase.qty = q_to_be_keep
                         non_box_purchase.save()
-                        q_alert += tbd_qty
+                        q_alert += q_to_be_deleted
             else:
                 if is_box_content:
                     q_alert = q_order
                 else:
-                    q_alert = offer_item.customer_alert_order_quantity
+                    q_alert = offer_item.get_customer_alert_order_quantity(
+                        q_previous_purchase
+                    )
             if purchase is not None:
                 purchase.set_comment(comment)
                 if q_order <= q_alert:
@@ -445,10 +417,10 @@ def create_or_update_one_purchase(
                         not settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER
                         or purchase.qty_confirmed <= q_order
                     ):
-                        purchase.qty_ordered = q_order
+                        purchase.qty = q_order
                         purchase.save()
                     else:
-                        purchase.qty_ordered = purchase.qty_confirmed
+                        purchase.qty = purchase.qty_confirmed
                         purchase.save()
                 else:
                     return purchase, False
@@ -458,8 +430,7 @@ def create_or_update_one_purchase(
                     offer_item=offer_item,
                     producer_id=offer_item.producer_id,
                     customer_id=customer_id,
-                    qty_ordered=q_order,
-                    qty_invoiced=const.DECIMAL_ZERO,
+                    qty=q_order,
                     is_box_content=is_box_content,
                     status=status,
                     comment=comment,
@@ -521,7 +492,7 @@ def create_or_update_one_cart_item(
                 .first()
             )
             if purchase is not None:
-                delta_q_order = q_order - purchase.qty_ordered
+                delta_q_order = q_order - purchase.qty
             else:
                 delta_q_order = q_order
             with transaction.atomic():
@@ -553,19 +524,18 @@ def create_or_update_one_cart_item(
                             .first()
                         )
                         if purchase is not None:
-                            qty_ordered = (
-                                purchase.qty_ordered
-                                + delta_q_order * content.content_quantity
+                            qty = (
+                                purchase.qty + delta_q_order * content.content_quantity
                             )
                         else:
-                            qty_ordered = delta_q_order * content.content_quantity
-                        if qty_ordered < const.DECIMAL_ZERO:
-                            qty_ordered = const.DECIMAL_ZERO
+                            qty = delta_q_order * content.content_quantity
+                        if qty < const.DECIMAL_ZERO:
+                            qty = const.DECIMAL_ZERO
                         purchase, is_box_updated = create_or_update_one_purchase(
                             customer_id=customer.id,
                             offer_item=box_offer_item,
-                            status=const.PERMANENCE_OPENED,
-                            q_order=qty_ordered,
+                            status=const.SALE_OPENED,
+                            q_order=qty,
                             batch_job=batch_job,
                             is_box_content=True,
                             comment=const.EMPTY_STRING,
@@ -582,7 +552,7 @@ def create_or_update_one_cart_item(
             return create_or_update_one_purchase(
                 customer_id=customer.id,
                 offer_item=offer_item,
-                status=const.PERMANENCE_OPENED,
+                status=const.SALE_OPENED,
                 q_order=q_order,
                 batch_job=batch_job,
                 is_box_content=False,
@@ -662,11 +632,11 @@ def my_basket(is_order_confirm_send, order_amount):
 
 
 def clean_offer_item(permanence, queryset):
-    if permanence.status > const.PERMANENCE_SEND:
+    if permanence.status > const.SALE_SEND:
         # The purchases are already invoiced.
         # The offer item may not be modified any more
         raise ValueError(
-            "Not offer item may be created when permanece status > PERMANENCE_SEND"
+            "Not offer item may be created when permanece status > SALE_SEND"
         )
     for offer_item in queryset.select_related("producer", "product"):
         product = offer_item.product
@@ -674,16 +644,12 @@ def clean_offer_item(permanence, queryset):
 
         offer_item.set_from(product)
 
-        offer_item.manage_production = producer.represent_this_buyinggroup
         # Those offer_items not subjects to price modifications
         # product.is_box or product.is_box_content or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
         offer_item.is_resale_price_fixed = (
-            product.is_box or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT or not(producer.represent_this_buyinggroup)
-        )
-        offer_item.price_list_multiplier = (
-            const.DECIMAL_ONE
-            if offer_item.is_resale_price_fixed
-            else producer.price_list_multiplier
+            product.is_box
+            or product.order_unit >= const.PRODUCT_ORDER_UNIT_DEPOSIT
+            or not (producer.is_default)
         )
 
         offer_item.may_order = False
@@ -692,9 +658,9 @@ def clean_offer_item(permanence, queryset):
 
         # The group must pay the VAT, so it's easier to allways have
         # offer_item with VAT included
-        if producer.producer_price_are_wo_vat:
+        if producer.producer_tariff_is_wo_tax:
             offer_item.producer_unit_price += offer_item.producer_vat
-        offer_item.producer_price_are_wo_vat = False
+        offer_item.producer_tariff_is_wo_tax = False
 
         offer_item.save()
 
@@ -704,9 +670,7 @@ def clean_offer_item(permanence, queryset):
     template_cache_part_b = get_repanier_template_name("cache_part_b.html")
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
         translation.activate(language["code"])
-        for offer_item in queryset.select_related(
-            "producer", "department"
-        ):
+        for offer_item in queryset.select_related("producer", "department"):
             offer_item.long_name = offer_item.product.long_name
             offer_item.cache_part_a = render_to_string(
                 template_cache_part_a,
@@ -725,13 +689,13 @@ def update_offer_item(product_id=None, producer_id=None):
     from repanier.models.permanence import Permanence
     from repanier.models.offeritem import OfferItem
 
-    # Let the user modify the price of a product PERMANENCE_SEND
+    # Let the user modify the price of a product SALE_SEND
     for permanence in Permanence.objects.filter(
         status__in=[
-            const.PERMANENCE_PLANNED,
-            const.PERMANENCE_OPENED,
-            const.PERMANENCE_CLOSED,
-            const.PERMANENCE_SEND,
+            const.SALE_PLANNED,
+            const.SALE_OPENED,
+            const.SALE_CLOSED,
+            const.SALE_SEND,
         ]
     ):
         if producer_id is None:
@@ -778,7 +742,7 @@ def get_html_basket_message(customer, permanence, status):
         )
     if customer_payment_needed:
         payment_msg = "<br>{}".format(customer_payment_needed)
-    if status == const.PERMANENCE_OPENED:
+    if status == const.SALE_OPENED:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             if permanence.with_delivery_point:
                 you_can_change = _(
@@ -844,7 +808,7 @@ def html_box_content(offer_item, user):
                             .first()
                             .content_quantity,
                             order_unit=box_offer_item.order_unit,
-                            without_price_display=True,
+                            with_price_display=False,
                         )
                     ),
                     box_offer_item.long_name,
@@ -880,14 +844,13 @@ def rule_of_3_reload_purchase(
             offer_item=offer_item,
             producer=offer_item.producer,
             customer=customer,
-            qty_ordered=const.DECIMAL_ZERO,
-            qty_invoiced=const.DECIMAL_ZERO,
+            qty=const.DECIMAL_ZERO,
             comment=purchase_form_instance.comment,
             is_box_content=False,
-            status=const.PERMANENCE_SEND,
+            status=const.SALE_SEND,
         )
     # And set the form's values
-    purchase.qty_invoiced = purchase_form_instance.qty_invoiced
+    purchase.qty = purchase_form_instance.qty
     purchase.purchase_price = purchase_form_instance.purchase_price
     purchase.comment = purchase_form_instance.comment
     # Set it as new form instance

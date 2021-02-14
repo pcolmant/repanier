@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # @debug_parameters
 def email_order(permanence_id, everything=True, deliveries_id=()):
-    from repanier.apps import (
+    from repanier.globals import (
         REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
         REPANIER_SETTINGS_CONFIG,
     )
@@ -79,7 +79,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                     to_email = []
                     for permanence_board in PermanenceBoard.objects.filter(
                         permanence_id=permanence.id
-                    ).order_by("?"):
+                    ):
                         if permanence_board.customer:
                             to_email.append(permanence_board.customer.user.email)
                     to_email = list(set(to_email + order_responsible["to_email"]))
@@ -102,7 +102,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
         producer_set = Producer.objects.filter(
             permanence=permanence,
             language=language_code,
-        ).order_by("?")
+        )
         for producer in producer_set:
             long_name = (
                 producer.long_name
@@ -139,19 +139,15 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
             )
             html_body = template.render(context)
 
-            producer_invoice = (
-                ProducerInvoice.objects.filter(
-                    producer_id=producer.id, permanence_id=permanence.id
-                )
-                .order_by("?")
-                .first()
-            )
+            producer_invoice = ProducerInvoice.objects.filter(
+                producer_id=producer.id, permanence_id=permanence.id
+            ).first()
 
             to_email = []
+            send_email = False
             if (
                 producer_invoice is not None
-                and producer_invoice.get_total_price_with_tax()
-                < producer.minimum_order_value
+                and producer_invoice.balance_calculated < producer.minimum_order_value
             ):
                 html_body = "{}<br><br>{}".format(
                     order_producer_mail_subject, html_body
@@ -159,39 +155,44 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 order_producer_mail_subject = _(
                     "⚠ Mail not send to our producer {} because the minimum order value has not been reached."
                 ).format(long_name)
+                send_email = True
             else:
                 if producer.email:
                     to_email.append(producer.email)
+                    send_email = True
                 if producer.email2:
                     to_email.append(producer.email2)
+                    send_email = True
                 if producer.email3:
                     to_email.append(producer.email3)
-            to_email = list(set(to_email + order_responsible["to_email"]))
-            email = RepanierEmail(
-                subject=order_producer_mail_subject,
-                html_body=html_body,
-                to=to_email,
-            )
-            if wb is not None:
-                if producer.represent_this_buyinggroup:
-                    if abstract_ws is not None:
-                        wb.add_sheet(abstract_ws, index=0)
-                email.attach(
-                    filename,
-                    save_virtual_workbook(wb),
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    send_email = True
+            if send_email:
+                to_email = list(set(to_email + order_responsible["to_email"]))
+                email = RepanierEmail(
+                    subject=order_producer_mail_subject,
+                    html_body=html_body,
+                    to=to_email,
                 )
+                if wb is not None:
+                    if producer.is_default:
+                        if abstract_ws is not None:
+                            wb.add_sheet(abstract_ws, index=0)
+                    email.attach(
+                        filename,
+                        save_virtual_workbook(wb),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
 
-            email.send_email()
+                email.send_email()
 
         if everything:
             # Orders send to our customers only if they don't have already received it
             customer_set = Customer.objects.filter(
-                represent_this_buyinggroup=False,
+                is_default=False,
                 customerinvoice__is_order_confirm_send=False,
                 customerinvoice__permanence_id=permanence.id,
                 language=language_code,
-            ).order_by("?")
+            )
             if len(deliveries_id) > 0:
                 customer_set = customer_set.filter(
                     customerinvoice__delivery_id__in=deliveries_id,
@@ -200,13 +201,9 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 export_order_2_1_customer(
                     customer, filename, permanence, order_responsible, abstract_ws
                 )
-                customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        customer_id=customer.id, permanence_id=permanence_id
-                    )
-                    .order_by("?")
-                    .first()
-                )
+                customer_invoice = CustomerInvoice.objects.filter(
+                    customer_id=customer.id, permanence_id=permanence_id
+                ).first()
                 customer_invoice.confirm_order()
                 customer_invoice.save()
     translation.activate(cur_language)
@@ -218,7 +215,6 @@ def export_order_2_1_group(
     delivery_board = (
         DeliveryBoard.objects.filter(id=delivery_id)
         .exclude(delivery_point__customer_responsible=None)
-        .order_by("?")
         .first()
     )
     if delivery_board is None:
@@ -239,9 +235,7 @@ def export_order_2_1_group(
             settings.REPANIER_SETTINGS_GROUP_NAME, permanence
         )
 
-        long_name = customer_responsible.long_name or str(
-            customer_responsible
-        )
+        long_name = customer_responsible.long_name or str(customer_responsible)
 
         template = Template(order_customer_mail)
         context = TemplateContext(
@@ -301,19 +295,15 @@ def export_order_2_1_customer(
     abstract_ws=None,
     cancel_order=False,
 ):
-    from repanier.apps import (
+    from repanier.globals import (
         REPANIER_SETTINGS_SEND_ABSTRACT_ORDER_MAIL_TO_CUSTOMER,
         REPANIER_SETTINGS_CONFIG,
     )
 
     config = REPANIER_SETTINGS_CONFIG
-    customer_invoice = (
-        CustomerInvoice.objects.filter(
-            permanence_id=permanence.id, customer_id=customer.id
-        )
-        .order_by("?")
-        .first()
-    )
+    customer_invoice = CustomerInvoice.objects.filter(
+        permanence_id=permanence.id, customer_id=customer.id
+    ).first()
     if customer_invoice is not None:
         if order_responsible is None:
             order_responsible = Staff.get_or_create_order_responsible()

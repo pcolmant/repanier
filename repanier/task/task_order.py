@@ -23,11 +23,9 @@ def automatically_open():
     translation.activate(settings.LANGUAGE_CODE)
     something_to_open = False
     for permanence in Permanence.objects.filter(
-        status=PERMANENCE_PLANNED, automatically_closed=True
+        status=SALE_PLANNED, automatically_closed=True
     ):
-        permanence.set_status(
-            old_status=PERMANENCE_PLANNED, new_status=PERMANENCE_WAIT_FOR_OPEN
-        )
+        permanence.set_status(old_status=SALE_PLANNED, new_status=SALE_WAIT_FOR_OPEN)
         open_order(permanence.id)
         something_to_open = True
     return something_to_open
@@ -40,9 +38,7 @@ def open_order(permanence_id, send_mail=True):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
     permanence = Permanence.objects.filter(id=permanence_id).order_by("?").first()
-    permanence.set_status(
-        old_status=PERMANENCE_PLANNED, new_status=PERMANENCE_WAIT_FOR_OPEN
-    )
+    permanence.set_status(old_status=SALE_PLANNED, new_status=SALE_WAIT_FOR_OPEN)
 
     # Create offer items which can be purchased depending on selection in the admin
     producers_in_this_permanence = (
@@ -84,19 +80,17 @@ def open_order(permanence_id, send_mail=True):
             ProducerInvoice.objects.create(
                 permanence_id=permanence.id,
                 producer_id=producer.id,
-                status=PERMANENCE_WAIT_FOR_OPEN,
+                status=SALE_WAIT_FOR_OPEN,
             )
 
     if send_mail:
         email_offer.send_open_order(permanence_id)
-    permanence.set_status(
-        old_status=PERMANENCE_WAIT_FOR_OPEN, new_status=PERMANENCE_OPENED
-    )
+    permanence.set_status(old_status=SALE_WAIT_FOR_OPEN, new_status=SALE_OPENED)
 
 
 def back_to_scheduled(permanence):
     permanence.back_to_scheduled()
-    permanence.set_status(old_status=PERMANENCE_OPENED, new_status=PERMANENCE_PLANNED)
+    permanence.set_status(old_status=SALE_OPENED, new_status=SALE_PLANNED)
 
 
 @transaction.atomic
@@ -104,12 +98,12 @@ def automatically_closed():
     translation.activate(settings.LANGUAGE_CODE)
     something_to_close = False
     for permanence in Permanence.objects.filter(
-        status=PERMANENCE_OPENED, automatically_closed=True
+        status=SALE_OPENED, automatically_closed=True
     ):
         if permanence.with_delivery_point:
             deliveries_id = list(
                 DeliveryBoard.objects.filter(
-                    permanence_id=permanence.id, status=PERMANENCE_OPENED
+                    permanence_id=permanence.id, status=SALE_OPENED
                 )
                 .values_list("id", flat=True)
                 .order_by("?")
@@ -131,7 +125,7 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
     # for the "thread" processing
 
     permanence = (
-        Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED)
+        Permanence.objects.filter(id=permanence_id, status=SALE_OPENED)
         .order_by("?")
         .first()
     )
@@ -142,8 +136,8 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
             return
 
     permanence.set_status(
-        old_status=PERMANENCE_OPENED,
-        new_status=PERMANENCE_WAIT_FOR_CLOSED,
+        old_status=SALE_OPENED,
+        new_status=SALE_WAIT_FOR_CLOSED,
         everything=everything,
         deliveries_id=deliveries_id,
     )
@@ -151,14 +145,14 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
         everything=everything, deliveries_id=deliveries_id, send_mail=send_mail
     )
     permanence.set_status(
-        old_status=PERMANENCE_WAIT_FOR_CLOSED,
-        new_status=PERMANENCE_CLOSED,
+        old_status=SALE_WAIT_FOR_CLOSED,
+        new_status=SALE_CLOSED,
         everything=everything,
         deliveries_id=deliveries_id,
     )
     permanence.set_status(
-        old_status=PERMANENCE_CLOSED,
-        new_status=PERMANENCE_WAIT_FOR_SEND,
+        old_status=SALE_CLOSED,
+        new_status=SALE_WAIT_FOR_SEND,
         everything=everything,
         deliveries_id=deliveries_id,
     )
@@ -169,8 +163,8 @@ def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True
             permanence.id, everything=everything, deliveries_id=deliveries_id
         )
     permanence.set_status(
-        old_status=PERMANENCE_WAIT_FOR_SEND,
-        new_status=PERMANENCE_SEND,
+        old_status=SALE_WAIT_FOR_SEND,
+        new_status=SALE_SEND,
         everything=everything,
         deliveries_id=deliveries_id,
     )

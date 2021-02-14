@@ -26,12 +26,12 @@ from .hashable import HashableObject
 
 class Protection(HashableObject):
     """Protection options for use in styles."""
-    PROTECTION_INHERIT = 'inherit'
-    PROTECTION_PROTECTED = 'protected'
-    PROTECTION_UNPROTECTED = 'unprotected'
 
-    __fields__ = ('locked',
-                  'hidden')
+    PROTECTION_INHERIT = "inherit"
+    PROTECTION_PROTECTED = "protected"
+    PROTECTION_UNPROTECTED = "unprotected"
+
+    __fields__ = ("locked", "hidden")
     __slots__ = __fields__
     __leaf__ = True
 

@@ -1,15 +1,11 @@
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db.models import F, Subquery, OuterRef
 
-from repanier.const import PERMANENCE_WAIT_FOR_SEND, PRODUCT_ORDER_UNIT_PC_KG
 from repanier.models.permanence import Permanence
-from repanier.models.offeritem import OfferItem
-from repanier.models.purchase import PurchaseWoReceiver
-
 
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     args = "<none>"
@@ -31,7 +27,7 @@ class Command(BaseCommand):
         # ).first()
         # while latest_total:
         #     permanence = latest_total.permanence
-        #     if permanence.status == PERMANENCE_INVOICED:
+        #     if permanence.status == SALE_INVOICED:
         #         print ("Cancel %s %s" % (permanence.permanence_date, permanence.get_status_display()))
         #         task_invoice.admin_cancel(permanence)
         #     else:
@@ -47,13 +43,13 @@ class Command(BaseCommand):
         #     ).first()
         #
         # for permanence in Permanence.objects.filter(
-        #         status=PERMANENCE_ARCHIVED
+        #         status=SALE_ARCHIVED
         # ).order_by('permanence_date'):
         #     print ("Cancel %s %s" % (permanence.permanence_date, permanence.get_status_display()))
         #     task_invoice.admin_cancel(permanence)
         #
         # for permanence in Permanence.objects.filter(
-        #     status__lt=PERMANENCE_CLOSED
+        #     status__lt=SALE_CLOSED
         # ).order_by('permanence_date'):
         #     print ("Recalculate %s %s" % (permanence.permanence_date, permanence.get_status_display()))
         #     recalculate_order_amount(
@@ -78,15 +74,15 @@ class Command(BaseCommand):
         #         # if customer_invoice.is_order_confirm_send:
         #         #     confirm_customer_invoice(permanence.id, customer_invoice.customer_id)
         # for permanence in Permanence.objects.filter(
-        #     status__gte=PERMANENCE_CLOSED,
-        #     status__lt=PERMANENCE_INVOICED
+        #     status__gte=SALE_CLOSED,
+        #     status__lt=SALE_INVOICED
         # ).order_by('permanence_date'):
         #     # Important : Do not reclaculte if permanence is invoiced or archived.
         #     # First, cancel the invoice / archiving.
         #     print ("Recalculate %s %s" % (permanence.permanence_date, permanence.get_status_display()))
         #     status = permanence.status
         #     permanence.set_status(status)
-        #     # if status >= PERMANENCE_SEND:
+        #     # if status >= SALE_SEND:
         #     recalculate_order_amount(
         #         permanence_id=permanence.id,
         #         re_init=True
@@ -109,11 +105,11 @@ class Command(BaseCommand):
         #         customer_invoice.save()
         #
         # for permanence in Permanence.objects.filter(
-        #     status=PERMANENCE_SEND,
-        #     highest_status__in=[PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]
+        #     status=SALE_SEND,
+        #     highest_status__in=[SALE_INVOICED, SALE_ARCHIVED]
         # ).order_by(
         #     "payment_date", "is_updated_on"
         # ):
-        #     # if permanence.highest_status == PERMANENCE_INVOICED:
+        #     # if permanence.highest_status == SALE_INVOICED:
         #     # else:
         #     pass

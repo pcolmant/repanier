@@ -14,14 +14,14 @@ from repanier.tools import get_repanier_template_name
 @csrf_protect
 @never_cache
 def who_is_who_view(request):
-    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+    from repanier.globals import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
     if not REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO:
         raise Http404
     q = request.POST.get("q", None)
-    customer_list = Customer.objects.filter(
-        may_order=True, represent_this_buyinggroup=False
-    ).order_by("long_name")
+    customer_list = Customer.objects.filter(may_order=True, is_default=False).order_by(
+        "long_name"
+    )
     if q is not None:
         customer_list = customer_list.filter(
             Q(long_name__icontains=q) | Q(city__icontains=q)

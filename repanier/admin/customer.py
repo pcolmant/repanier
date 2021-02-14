@@ -5,7 +5,6 @@ from os import sep as os_sep
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -15,10 +14,10 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
-from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import CharWidget
 
+from repanier.admin.admin_filter import CustomerFilterByGroup
+from repanier.admin.admin_model import RepanierAdminImportExport
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
@@ -70,18 +69,17 @@ class UserDataForm(forms.ModelForm):
         if qs.exists():
             self.add_error(username_field_name, user_error2)
         if self.instance.id is not None:
-            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                if (
-                    self.instance.delivery_point is not None
-                    and self.instance.delivery_point.customer_responsible is not None
-                    and self.cleaned_data.get("price_list_multiplier") != DECIMAL_ONE
-                ):
-                    self.add_error(
-                        "price_list_multiplier",
-                        _(
-                            "If the customer is member of a group, the customer.price_list_multiplier must be set to ONE."
-                        ),
-                    )
+            if (
+                self.instance.delivery_point is not None
+                and self.instance.delivery_point.customer_responsible is not None
+                and self.cleaned_data.get("custom_tariff_margin") != DECIMAL_ONE
+            ):
+                self.add_error(
+                    "custom_tariff_margin",
+                    _(
+                        "If the customer is member of a group, the customer.custom_tariff_margin must be set to ONE."
+                    ),
+                )
             is_active = self.cleaned_data.get("is_active")
             if is_active is not None and not is_active:
                 delivery_point = (
@@ -181,8 +179,8 @@ class CustomerResource(resources.ModelResource):
         widget=DecimalBooleanWidget(),
         readonly=False,
     )
-    represent_this_buyinggroup = fields.Field(
-        attribute="represent_this_buyinggroup",
+    is_default = fields.Field(
+        attribute="is_default",
         default=False,
         widget=DecimalBooleanWidget(),
         readonly=True,
@@ -295,13 +293,13 @@ class CustomerResource(resources.ModelResource):
             "bank_account2",
             "date_balance",
             "balance",
-            "price_list_multiplier",
+            "custom_tariff_margin",
             "membership_fee_valid_until",
             "last_membership_fee",
             "last_membership_fee_date",
             "participation",
             "purchase",
-            "represent_this_buyinggroup",
+            "is_default",
             "is_group",
             "is_active",
             "delivery_point",
@@ -371,12 +369,23 @@ class CustomerWithUserDataForm(UserDataForm):
         fields = "__all__"
 
 
-class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
+class CustomerWithUserDataAdmin(RepanierAdminImportExport):
     form = CustomerWithUserDataForm
     resource_class = CustomerResource
-    list_display = ("short_name",)
+    list_display = (
+        "__str__",
+        "delivery_point",
+        "get_balance",
+        "may_order",
+        "long_name",
+        "phone1",
+        "get_email",
+        "get_last_login",
+        "valid_email",
+    )
     search_fields = ("short_name", "long_name", "user__email", "email2")
-    list_filter = ("may_order", "is_active", "valid_email")
+    list_filter = ("may_order", CustomerFilterByGroup, "is_active", "valid_email")
+    ordering = ["-is_default", "short_name"]
     list_per_page = 16
     list_max_show_all = 16
 
@@ -421,29 +430,6 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         )
         return actions
 
-    def get_list_display(self, request):
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            return (
-                "__str__",
-                "get_balance",
-                "may_order",
-                "long_name",
-                "phone1",
-                "get_email",
-                "get_last_login",
-                "valid_email",
-            )
-        else:
-            return (
-                "__str__",
-                "may_order",
-                "long_name",
-                "phone1",
-                "get_email",
-                "get_last_login",
-                "valid_email",
-            )
-
     def get_fieldsets(self, request, customer=None):
         fields_basic = [
             ("short_name", "long_name", "language"),
@@ -452,16 +438,15 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             "membership_fee_valid_until",
         ]
         if customer is not None:
-            if customer.represent_this_buyinggroup:
+            if customer.is_default:
                 fields_basic += [
                     "get_admin_balance",
                     "get_admin_date_balance",
-                    ("may_order", "represent_this_buyinggroup"),
+                    "may_order",
                 ]
             else:
                 fields_basic += ["subscribe_to_email"]
-                if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                    fields_basic += ["price_list_multiplier"]
+                fields_basic += ["custom_tariff_margin"]
                 if settings.REPANIER_SETTINGS_GROUP:
                     fields_basic += ["delivery_point"]
                 fields_basic += [
@@ -481,9 +466,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "get_purchase_counter",
             ]
         else:
-            fields_basic += [("may_order", "is_active")]
-            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                fields_basic += ["price_list_multiplier"]
+            fields_basic += [("may_order", "is_active", "zero_waste")]
+            fields_basic += ["custom_tariff_margin"]
             # Do not accept the picture because there is no customer.id for the "upload_to"
             fields_basic += [("address", "city"), "memo"]
             fields_advanced = ["bank_account1", "bank_account2", "zero_waste"]
@@ -509,15 +493,13 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                 "get_last_membership_fee",
                 "get_last_membership_fee_date",
             ]
-            if customer.represent_this_buyinggroup:
-                readonly_fields += ["represent_this_buyinggroup"]
+            if customer.is_default:
+                readonly_fields += ["is_default"]
             return readonly_fields
         return []
 
     def get_form(self, request, customer=None, **kwargs):
-        form = super().get_form(
-            request, customer, **kwargs
-        )
+        form = super().get_form(request, customer, **kwargs)
         email_field = form.base_fields["email"]
 
         if customer is not None:
@@ -546,30 +528,27 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         form.user.is_staff = False
         form.user.is_active = customer.is_active
         form.user.save()
-        super().save_model(
-            request, customer, form, change
-        )
+        super().save_model(request, customer, form, change)
         if customer.delivery_point is not None:
             customer_price = EMPTY_STRING
-            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                if customer.price_list_multiplier < DECIMAL_ONE:
-                    customer_price = _(
-                        " in addition to the %(discount)s%% personal discount rate on to the pricelist"
-                    ) % {
-                        "discount": Decimal(
-                            (DECIMAL_ONE - customer.price_list_multiplier) * 100
-                        ).quantize(TWO_DECIMALS)
-                    }
-                elif customer.price_list_multiplier > DECIMAL_ONE:
-                    customer_price = _(
-                        " in addition to the %(surcharge)s%% personal surcharge on to the pricelist"
-                    ) % {
-                        "surcharge": Decimal(
-                            (customer.price_list_multiplier - DECIMAL_ONE) * 100
-                        ).quantize(TWO_DECIMALS)
-                    }
+            if customer.custom_tariff_margin < DECIMAL_ONE:
+                customer_price = _(
+                    " in addition to the %(discount)s%% personal discount rate on to the pricelist"
+                ) % {
+                    "discount": Decimal(
+                        (DECIMAL_ONE - customer.custom_tariff_margin) * 100
+                    ).quantize(TWO_DECIMALS)
+                }
+            elif customer.custom_tariff_margin > DECIMAL_ONE:
+                customer_price = _(
+                    " in addition to the %(surcharge)s%% personal surcharge on to the pricelist"
+                ) % {
+                    "surcharge": Decimal(
+                        (customer.custom_tariff_margin - DECIMAL_ONE) * 100
+                    ).quantize(TWO_DECIMALS)
+                }
             if (
-                customer.delivery_point.customer_responsible.price_list_multiplier
+                customer.delivery_point.customer_responsible.custom_tariff_margin
                 < DECIMAL_ONE
             ):
                 messages.add_message(
@@ -582,7 +561,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                         "discount": Decimal(
                             (
                                 DECIMAL_ONE
-                                - customer.delivery_point.customer_responsible.price_list_multiplier
+                                - customer.delivery_point.customer_responsible.custom_tariff_margin
                             )
                             * 100
                         ).quantize(TWO_DECIMALS),
@@ -591,7 +570,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     },
                 )
             elif (
-                customer.delivery_point.customer_responsible.price_list_multiplier
+                customer.delivery_point.customer_responsible.custom_tariff_margin
                 > DECIMAL_ONE
             ):
                 messages.add_message(
@@ -603,7 +582,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                     % {
                         "surcharge": Decimal(
                             (
-                                customer.delivery_point.customer_responsible.price_list_multiplier
+                                customer.delivery_point.customer_responsible.custom_tariff_margin
                                 - DECIMAL_ONE
                             )
                             * 100
@@ -612,15 +591,3 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                         "customer_price": customer_price,
                     },
                 )
-
-    def get_import_formats(self):
-        """
-        Returns available import formats.
-        """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
-
-    def get_export_formats(self):
-        """
-        Returns available export formats.
-        """
-        return [f for f in (XLSX, CSV) if f().can_export()]

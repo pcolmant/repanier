@@ -38,7 +38,7 @@ class ProducerInvoiceView(DetailView):
                     producer_id=producer_invoice.producer_id,
                     translations__language_code=translation.get_language(),
                 )
-                .exclude(qty_invoiced=DECIMAL_ZERO)
+                .exclude(qty=DECIMAL_ZERO)
                 .order_by("translations__producer_sort_order")
                 .distinct()
             )

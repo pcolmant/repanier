@@ -24,10 +24,10 @@
 import math
 from numbers import Number
 
-from .style import NumberFormat, is_date_format, is_builtin
+from .cell import get_column_letter
 from .drawing import Drawing, Shape
 from .shared.units import pixels_to_EMU, short_color
-from .cell import get_column_letter
+from .style import NumberFormat, is_builtin
 
 
 def less_than_one(value):
@@ -37,13 +37,13 @@ def less_than_one(value):
     value = abs(value)
     if value < 1:
         exp = int(math.log10(value))
-        return 10**((abs(exp)) + 1)
+        return 10 ** ((abs(exp)) + 1)
 
 
 class Axis(object):
 
-    POSITION_BOTTOM = 'b'
-    POSITION_LEFT = 'l'
+    POSITION_BOTTOM = "b"
+    POSITION_LEFT = "l"
     ORIENTATION_MIN_MAX = "minMax"
 
     position = None
@@ -62,7 +62,7 @@ class Axis(object):
         self.min = 0
         self.max = 0
         self.unit = None
-        self.title = ''
+        self.title = ""
 
     def _max_min(self):
         """
@@ -71,7 +71,7 @@ class Axis(object):
         """
         value = length = self._max - self._min
 
-        sign = value/value
+        sign = value / value
         zoom = less_than_one(value) or 1
         value = value * zoom
         ab = abs(value)
@@ -81,7 +81,7 @@ class Axis(object):
         l = math.log10(abs(value))
         exp = int(l)
         mant = l - exp
-        unit = math.ceil(math.ceil(10**mant) * 10**(exp-1))
+        unit = math.ceil(math.ceil(10 ** mant) * 10 ** (exp - 1))
         # recalculate max
         value = math.ceil(value / unit) * unit
         unit = unit / zoom
@@ -131,10 +131,10 @@ class CategoryAxis(Axis):
     id = 60871424
     cross = 60873344
     position = Axis.POSITION_BOTTOM
-    tick_label_position = 'nextTo'
+    tick_label_position = "nextTo"
     crosses = "autoZero"
     auto = True
-    label_align = 'ctr'
+    label_align = "ctr"
     label_offset = 100
     cross_between = "midCat"
     type = "catAx"
@@ -146,11 +146,11 @@ class ValueAxis(Axis):
     cross = 60871424
     position = Axis.POSITION_LEFT
     major_gridlines = None
-    tick_label_position = 'nextTo'
-    crosses = 'autoZero'
+    tick_label_position = "nextTo"
+    crosses = "autoZero"
     auto = False
-    cross_between = 'between'
-    type= "valAx"
+    cross_between = "between"
+    type = "valAx"
 
 
 class Reference(object):
@@ -173,7 +173,7 @@ class Reference(object):
 
     @data_type.setter
     def data_type(self, value):
-        if value not in ['n', 's']:
+        if value not in ["n", "s"]:
             raise ValueError("References must be either numeric or strings")
         self._data_type = value
 
@@ -204,7 +204,7 @@ class Reference(object):
                 for col in range(int(self.pos1[1]), int(self.pos2[1] + 1)):
                     cell = self.sheet.cell(row=row, column=col)
                     self._values.append(cell.internal_value)
-                    if cell.internal_value == '':
+                    if cell.internal_value == "":
                         continue
                     if self.data_type is None and cell.data_type:
                         self.data_type = cell.data_type
@@ -214,23 +214,31 @@ class Reference(object):
         """ format excel reference notation """
 
         if self.pos2:
-            return "'%s'!$%s$%s:$%s$%s" % (self.sheet.title,
-                get_column_letter(self.pos1[1] + 1), self.pos1[0] + 1,
-                get_column_letter(self.pos2[1] + 1), self.pos2[0] + 1)
+            return "'%s'!$%s$%s:$%s$%s" % (
+                self.sheet.title,
+                get_column_letter(self.pos1[1] + 1),
+                self.pos1[0] + 1,
+                get_column_letter(self.pos2[1] + 1),
+                self.pos2[0] + 1,
+            )
         else:
-            return "'%s'!$%s$%s" % (self.sheet.title,
-                get_column_letter(self.pos1[1] + 1), self.pos1[0] + 1)
+            return "'%s'!$%s$%s" % (
+                self.sheet.title,
+                get_column_letter(self.pos1[1] + 1),
+                self.pos1[0] + 1,
+            )
 
 
 class Series(object):
     """ a serie of data and possibly associated labels """
 
-    MARKER_NONE = 'none'
+    MARKER_NONE = "none"
     _title = None
     _legend = None
 
-    def __init__(self, values, title=None, labels=None, color=None,
-                 xvalues=None, legend=None):
+    def __init__(
+        self, values, title=None, labels=None, color=None, xvalues=None, legend=None
+    ):
 
         self.marker = Series.MARKER_NONE
         self.values = values
@@ -259,8 +267,11 @@ class Series(object):
     @legend.setter
     def legend(self, value):
         from warnings import warn
-        warn("Series titles can be set directly using series.title. Series legend will be removed in 2.0")
-        value.data_type = 's'
+
+        warn(
+            "Series titles can be set directly using series.title. Series legend will be removed in 2.0"
+        )
+        value.data_type = "s"
         self._legend = value
 
     @property
@@ -319,7 +330,7 @@ class Series(object):
         else:
             self._labels = None
 
-    def max(self, attr='values'):
+    def max(self, attr="values"):
         """
         Return the maximum value for numeric series.
         NB None has a value of u'' which is ignored
@@ -331,7 +342,7 @@ class Series(object):
         if cleaned:
             return max(cleaned)
 
-    def min(self, attr='values'):
+    def min(self, attr="values"):
         """
         Return the minimum value for numeric series
         NB None has a value of u'' which is ignored
@@ -347,8 +358,7 @@ class Series(object):
     def _error_bar_values(self):
         """Documentation required here"""
         err_cache = self.error_bar.values
-        vals = [v + err_cache[i] \
-            for i, v in enumerate(self.values)]
+        vals = [v + err_cache[i] for i, v in enumerate(self.values)]
         return vals
 
     def get_min_max(self):
@@ -359,15 +369,15 @@ class Series(object):
 
         return len(self.values)
 
+
 # backwards compatibility
 Serie = Series
 
 
 class Legend(object):
-
     def __init__(self):
 
-        self.position = 'r'
+        self.position = "r"
         self.layout = None
 
 
@@ -401,7 +411,7 @@ class ErrorBar(object):
 class Chart(object):
     """ raw chart class """
 
-    GROUPING = 'standard'
+    GROUPING = "standard"
     TYPE = None
 
     def mymax(self, values):
@@ -413,14 +423,14 @@ class Chart(object):
     def __init__(self):
 
         self.series = []
-        self._series = self.series # backwards compatible
+        self._series = self.series  # backwards compatible
 
         # public api
         self.legend = Legend()
         self.show_legend = True
-        self.lang = 'en-GB'
-        self.title = ''
-        self.print_margins = dict(b=.75, l=.7, r=.7, t=.75, header=0.3, footer=.3)
+        self.lang = "en-GB"
+        self.title = ""
+        self.print_margins = dict(b=0.75, l=0.7, r=0.7, t=0.75, header=0.3, footer=0.3)
 
         # the containing drawing
         self.drawing = Drawing()
@@ -430,15 +440,15 @@ class Chart(object):
         self.drawing.width = 800
 
         # the offset for the plot part in percentage of the drawing size
-        self.width = .6
-        self.height = .6
+        self.width = 0.6
+        self.height = 0.6
         self._margin_top = 1
         self._margin_top = self.margin_top
         self._margin_left = 0
 
         # the user defined shapes
         self.shapes = []
-        self._shapes = self.shapes # backwards compatible
+        self._shapes = self.shapes  # backwards compatible
 
     def append(self, obj):
         """Add a series or a shape"""
@@ -514,7 +524,7 @@ class GraphChart(Chart):
         self.y_axis._max_min()
 
         if not None in [s.xvalues for s in self]:
-            mini, maxi = self._get_extremes('xvalues')
+            mini, maxi = self._get_extremes("xvalues")
             self.x_axis.min = mini
             self.x_axis.max = maxi
             self.x_axis._max_min()
@@ -529,7 +539,7 @@ class GraphChart(Chart):
         dh = pixels_to_EMU(self.drawing.height)
         return (dh * self.height) / self.y_axis.max
 
-    def _get_extremes(self, attr='values'):
+    def _get_extremes(self, attr="values"):
         """Calculate the maximum and minimum values of all series for an axis
         'values' for columns
         'xvalues for rows

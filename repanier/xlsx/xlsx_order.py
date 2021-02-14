@@ -42,11 +42,11 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 wb, permanence, EMPTY_STRING, header=header, add_print_title=False
             )
             for delivery_ref, delivery in enumerate(
-                DeliveryBoard.objects.filter(id__in=deliveries_id).order_by("id")
+                DeliveryBoard.objects.filter(id__in=deliveries_id)
             ):
                 customer_set = Customer.objects.filter(
                     customerinvoice__permanence_id=permanence.id,
-                    represent_this_buyinggroup=False,
+                    is_default=False,
                     is_group=False,
                     customerinvoice__delivery_id=delivery.id,
                 )
@@ -84,7 +84,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             ),
                             customer.get_phone1(),
                             customer.get_phone2(),
-                            invoice.get_total_price_with_tax().amount,
+                            invoice.balance_calculated.amount,
                             # Used to send mail to customer with an order (via copy-paste to mail)
                             customer.get_emails(),
                         ]
@@ -93,7 +93,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                             c.value = "{}".format(row[col_num])
                             if col_num == 4:
                                 c.style.number_format.format_code = (
-                                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                                 )
                             else:
                                 c.style.number_format.format_code = (
@@ -120,7 +120,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
             )
             customer_set = Customer.objects.filter(
                 customerinvoice__permanence_id=permanence.id,
-                represent_this_buyinggroup=False,
+                is_default=False,
             )
             for customer in customer_set:
                 invoice = (
@@ -154,7 +154,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         customer.long_name,
                         customer.get_phone1(),
                         customer.get_phone2(),
-                        invoice.get_total_price_with_tax().amount,
+                        invoice.balance_calculated.amount,
                         # Used to send mail to customer with an order (via copy-paste to mail)
                         customer.get_emails(),
                     ]
@@ -163,7 +163,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                         c.value = "{}".format(row[col_num])
                         if col_num == 4:
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                         else:
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -301,7 +301,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                 if invoice is None:
                     total_price_with_tax = REPANIER_MONEY_ZERO
                 else:
-                    total_price_with_tax = invoice.get_total_price_with_tax()
+                    total_price_with_tax = invoice.balance_calculated
                     if total_price_with_tax < producer.minimum_order_value:
                         minimum_order_amount_reached = _(
                             "Minimum order amount not reached"
@@ -319,7 +319,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
                     c.value = "{}".format(row[col_num])
                     if col_num == 4:
                         c.style.number_format.format_code = (
-                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                         )
                     else:
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
@@ -337,7 +337,7 @@ def export_customer_label(permanence, deliveries_id=(), wb=None):
     row_num = 0
     customer_set = Customer.objects.filter(
         customerinvoice__permanence_id=permanence.id,
-        represent_this_buyinggroup=False,
+        is_default=False,
         preparation_order__gt=0,
     ).order_by("preparation_order")
 
@@ -482,7 +482,6 @@ def export_preparation_for_a_delivery(
             c.style.font.bold = True
             c.value = (
                 DeliveryBoard.objects.filter(id=delivery_id)
-                .order_by("?")
                 .first()
                 .get_delivery_display()
             )
@@ -495,7 +494,7 @@ def export_preparation_for_a_delivery(
             producer_save = producer
             at_least_one_product = False
             ######################################################################################################################
-            if producer.invoice_by_basket and not producer.represent_this_buyinggroup:
+            if producer.invoice_by_basket and not producer.is_default:
                 # If the producer manage the production, he need to go into his field to pick up products.
                 # In this cas, the preparation list must not be done by basket.
                 # But the invoice must be done by basket.
@@ -509,9 +508,7 @@ def export_preparation_for_a_delivery(
                         "customer__short_name",
                         "offer_item__translations__preparation_sort_order",
                     )
-                    .select_related(
-                        "customer", "offer_item", "offer_item__department"
-                    )
+                    .select_related("customer", "offer_item", "offer_item__department")
                 )
                 if delivery_id is not None:
                     purchase_set = purchase_set.filter(
@@ -532,9 +529,7 @@ def export_preparation_for_a_delivery(
                         purchase is not None
                         and customer_save.id == purchase.customer_id
                     ):
-                        department_save = (
-                            purchase.offer_item.department
-                        )
+                        department_save = purchase.offer_item.department
                         department_save__short_name = (
                             department_save.short_name
                             if department_save is not None
@@ -543,8 +538,7 @@ def export_preparation_for_a_delivery(
                         while (
                             purchase is not None
                             and customer_save.id == purchase.customer_id
-                            and department_save
-                            == purchase.offer_item.department
+                            and department_save == purchase.offer_item.department
                         ):
                             qty = purchase.get_producer_quantity()
                             if qty != DECIMAL_ZERO:
@@ -640,7 +634,7 @@ def export_preparation_for_a_delivery(
                                     c = ws.cell(row=row_num, column=9)
                                     if purchase.offer_item.wrapped:
                                         c.value = "{} :".format(
-                                            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                            repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY
                                         )
                                     else:
                                         c.value = "{}".format(_("kg :"))
@@ -651,7 +645,7 @@ def export_preparation_for_a_delivery(
                                     if purchase.offer_item.wrapped:
                                         c = ws.cell(row=row_num, column=9)
                                         c.value = "{} :".format(
-                                            repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                            repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY
                                         )
                                         c.style.number_format.format_code = (
                                             NumberFormat.FORMAT_TEXT
@@ -679,7 +673,7 @@ def export_preparation_for_a_delivery(
                     else:
                         c.value = DECIMAL_ZERO
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.color = Color(Color.BLUE)
                     ws.conditional_formatting.addCellIs(
@@ -724,9 +718,7 @@ def export_preparation_for_a_delivery(
                     while purchase is not None:
                         at_least_one_product = True
                         while purchase is not None:
-                            department_save = (
-                                purchase.offer_item.department
-                            )
+                            department_save = purchase.offer_item.department
                             department_save__short_name = (
                                 department_save.short_name
                                 if department_save is not None
@@ -764,14 +756,9 @@ def export_preparation_for_a_delivery(
                                             if placement_save != c.value:
                                                 hide_column_placement = False
                                         c = ws.cell(row=row_num, column=3)
-                                        c.value = "{}".format(
-                                            producer_save.short_name
-                                        )
+                                        c.value = "{}".format(producer_save.short_name)
                                     c = ws.cell(row=row_num, column=5)
-                                    if (
-                                        department_save__short_name
-                                        is not None
-                                    ):
+                                    if department_save__short_name is not None:
                                         c.value = "{} - {}".format(
                                             purchase.get_long_name(),
                                             department_save__short_name,
@@ -818,7 +805,7 @@ def export_preparation_for_a_delivery(
                                         c = ws.cell(row=row_num, column=9)
                                         if offer_item_save.wrapped:
                                             c.value = "{} :".format(
-                                                repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                                repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY
                                             )
                                         else:
                                             c.value = "{}".format(_("kg :"))
@@ -829,7 +816,7 @@ def export_preparation_for_a_delivery(
                                         if offer_item_save.wrapped:
                                             c = ws.cell(row=row_num, column=9)
                                             c.value = "{} :".format(
-                                                repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY
+                                                repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY
                                             )
                                             c.style.number_format.format_code = (
                                                 NumberFormat.FORMAT_TEXT
@@ -950,10 +937,7 @@ def export_producer_by_product(permanence, producer, wb=None):
             row_num += 1
             row_start_department = row_num
             department_purchases_price = DECIMAL_ZERO
-            while (
-                offer_item is not None
-                and department_save == offer_item.department
-            ):
+            while offer_item is not None and department_save == offer_item.department:
                 if offer_item.unit_deposit != DECIMAL_ZERO:
                     hide_column_unit_deposit = False
                 show_column_reference = (
@@ -970,7 +954,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         "customer__short_name",
                     )
                     for purchase in purchase_set:
-                        if offer_item.limit_order_quantity_to_stock:
+                        if offer_item.product.qty_on_sale > DECIMAL_ZERO:
                             # Don't purchase anything to the producer in this case
                             qty = DECIMAL_ZERO
                         else:
@@ -1032,14 +1016,14 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 unit_price = customer_unit_price
                             c.value = unit_price
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=6)
                             unit_deposit = offer_item.unit_deposit.amount
                             c.value = unit_deposit
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=7)
@@ -1060,7 +1044,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                                 price_qty * (unit_price + unit_deposit)
                             ).quantize(TWO_DECIMALS)
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             department_purchases_price += purchase_price
@@ -1081,11 +1065,11 @@ def export_producer_by_product(permanence, producer, wb=None):
                         qty,
                         taken_from_stock,
                         customer_qty,
-                    ) = offer_item.get_producer_qty_stock_invoiced()
+                    ) = offer_item.get_stock_reserved()
                     if qty != DECIMAL_ZERO:
                         # Important : in this case, the qty comes from offer item.
-                        # Offer item contains weight, not pieces
-                        if offer_item.use_order_unit_converted:
+                        if status >= SALE_SEND:
+                            # Offer item contains weight, not pieces
                             if offer_item.order_average_weight > DECIMAL_ZERO:
                                 qty = (qty / offer_item.order_average_weight).quantize(
                                     TWO_DECIMALS
@@ -1142,14 +1126,14 @@ def export_producer_by_product(permanence, producer, wb=None):
                             unit_price = customer_unit_price
                         c.value = unit_price
                         c.style.number_format.format_code = (
-                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                         )
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=6)
                         unit_deposit = offer_item.unit_deposit.amount
                         c.value = unit_deposit
                         c.style.number_format.format_code = (
-                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                         )
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=7)
@@ -1170,7 +1154,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             price_qty * (unit_price + unit_deposit)
                         ).quantize(TWO_DECIMALS)
                         c.style.number_format.format_code = (
-                            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                            repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                         )
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         department_purchases_price += purchase_price
@@ -1191,7 +1175,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 if col_num == 4:
-                    if producer.producer_price_are_wo_vat:
+                    if producer.producer_tariff_is_wo_tax:
                         c.value = "{} {} {}".format(
                             _("Total Price"),
                             _("wo VAT"),
@@ -1212,7 +1196,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                     formula = "SUM(H{}:H{})".format(row_start_department, row_num)
                     c.value = "=" + formula
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.bold = True
                     producer_purchases_price += department_purchases_price
@@ -1232,7 +1216,7 @@ def export_producer_by_product(permanence, producer, wb=None):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 1:
-                if producer.producer_price_are_wo_vat:
+                if producer.producer_tariff_is_wo_tax:
                     c.value = "{} {} {}".format(
                         _("Total Price"),
                         _("wo VAT"),
@@ -1248,7 +1232,7 @@ def export_producer_by_product(permanence, producer, wb=None):
             if col_num == 7:
                 c.value = "=" + "+".join(formula_main_total)
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.font.bold = True
                 ws.conditional_formatting.addCellIs(
@@ -1373,13 +1357,13 @@ def export_producer_by_customer(permanence, producer, wb=None):
                         unit_price = customer_unit_price
                     c.value = unit_price
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=5)
                     c.value = offer_item_save.unit_deposit.amount
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=6)
@@ -1395,7 +1379,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                             row_num + 1, row_num + 1, row_num + 1
                         )
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     row_num += 1
@@ -1404,7 +1388,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                 c = ws.cell(row=row_num, column=col_num)
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 if col_num == 3:
-                    if producer.producer_price_are_wo_vat:
+                    if producer.producer_tariff_is_wo_tax:
                         c.value = "{} {} {}".format(
                             _("Total Price"),
                             _("wo VAT"),
@@ -1430,7 +1414,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
             c = ws.cell(row=row_num, column=col_num)
             c.style.borders.bottom.border_style = Border.BORDER_THIN
             if col_num == 0:
-                if producer.producer_price_are_wo_vat:
+                if producer.producer_tariff_is_wo_tax:
                     c.value = "{} {} {}".format(
                         _("Total Price"),
                         _("wo VAT"),
@@ -1446,7 +1430,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
             if col_num == 6:
                 c.value = "=" + "+".join(formula_main_total)
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.font.bold = True
         if hide_column_unit_deposit:
@@ -1526,7 +1510,7 @@ def export_customer_for_a_delivery(
     yellowFill,
     xlsx_formula,
 ):
-    from repanier.apps import REPANIER_SETTINGS_CONFIG
+    from repanier.globals import REPANIER_SETTINGS_CONFIG
 
     language_code = translation.get_language()
     if customer_invoice is not None:
@@ -1545,9 +1529,7 @@ def export_customer_for_a_delivery(
                     "offer_item__translations__long_name",
                     "offer_item__order_average_weight",
                 )
-                .select_related(
-                    "customer", "offer_item", "offer_item__department"
-                )
+                .select_related("customer", "offer_item", "offer_item__department")
             )
         else:
             purchase_set = (
@@ -1562,9 +1544,7 @@ def export_customer_for_a_delivery(
                     "offer_item__translations__long_name",
                     "offer_item__order_average_weight",
                 )
-                .select_related(
-                    "customer", "offer_item", "offer_item__department"
-                )
+                .select_related("customer", "offer_item", "offer_item__department")
             )
     else:
         if deposit:
@@ -1581,9 +1561,7 @@ def export_customer_for_a_delivery(
                     "offer_item__translations__long_name",
                     "offer_item__order_average_weight",
                 )
-                .select_related(
-                    "customer", "offer_item", "offer_item__department"
-                )
+                .select_related("customer", "offer_item", "offer_item__department")
             )
         else:
             purchase_set = (
@@ -1599,9 +1577,7 @@ def export_customer_for_a_delivery(
                     "offer_item__translations__long_name",
                     "offer_item__order_average_weight",
                 )
-                .select_related(
-                    "customer", "offer_item", "offer_item__department"
-                )
+                .select_related("customer", "offer_item", "offer_item__department")
             )
         if delivery_id is not None:
             purchase_set = purchase_set.filter(
@@ -1622,7 +1598,7 @@ def export_customer_for_a_delivery(
                 header,
             )
         else:
-            if repanier.apps.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
+            if repanier.globals.REPANIER_SETTINGS_PAGE_BREAK_ON_CUSTOMER_CHECK:
                 # Change the orientation to reduce the number of page breaks, i.e. the number of printed pages
                 wb, ws = new_portrait_a4_sheet(
                     wb,
@@ -1652,7 +1628,6 @@ def export_customer_for_a_delivery(
             c.style.font.bold = True
             c.value = "{}".format(
                 DeliveryBoard.objects.filter(id=delivery_id)
-                .order_by("?")
                 .first()
                 .get_delivery_display()
             )
@@ -1673,21 +1648,19 @@ def export_customer_for_a_delivery(
             total_price = DECIMAL_ZERO
             something_ordered = False
             if customer_invoice is None:
-                delta_transport_save = (
+                transport_save = (
                     CustomerInvoice.objects.filter(
                         permanence_id=purchase.permanence_id,
                         customer_id=customer_save.id,
                     )
-                    .only("delta_transport")
+                    .only("transport")
                     .first()
-                    .delta_transport
+                    .transport.amount
                 )
             else:
-                delta_transport_save = customer_invoice.delta_transport
+                transport_save = customer_invoice.transport.amount
             while purchase is not None and customer_save.id == purchase.customer_id:
-                department_save__id = (
-                    offer_item_save.department_id
-                )
+                department_save__id = offer_item_save.department_id
                 department_save__short_name = (
                     offer_item_save.department.short_name
                     if offer_item_save.department is not None
@@ -1696,8 +1669,7 @@ def export_customer_for_a_delivery(
                 while (
                     purchase is not None
                     and customer_save.id == purchase.customer_id
-                    and offer_item_save.department_id
-                    == department_save__id
+                    and offer_item_save.department_id == department_save__id
                 ):
                     if placement_save != offer_item_save.placement:
                         hide_column_placement = False
@@ -1769,14 +1741,14 @@ def export_customer_for_a_delivery(
                             customer_unit_price = purchase.get_customer_unit_price()
                             c.value = customer_unit_price
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=8)
                             unit_deposit = offer_item_save.unit_deposit.amount
                             c.value = unit_deposit
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=9)
@@ -1800,7 +1772,7 @@ def export_customer_for_a_delivery(
                                 c.value = purchases_price
                                 total_price += purchases_price
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             if xlsx_formula:
@@ -1839,16 +1811,16 @@ def export_customer_for_a_delivery(
                     #     page_break = Break(id=row_number)  # create Break obj
                     #     ws.page_breaks.append(page_break)
             if something_ordered:
-                if delta_transport_save.amount > DECIMAL_ZERO:
+                if transport_save > DECIMAL_ZERO:
                     # Show possible delivery costs
                     row_num += 1
                     c = ws.cell(row=row_num, column=4)
                     c.value = "{}".format(_("Delivery costs"))
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c = ws.cell(row=row_num, column=9)
-                    c.value = delta_transport_save.amount
+                    c.value = transport_save
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                 c = ws.cell(row=row_num, column=8)
                 c.value = "{}".format(permanence)
@@ -1861,9 +1833,7 @@ def export_customer_for_a_delivery(
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
                 c = ws.cell(row=row_num, column=8)
-                c.value = "{} {}".format(
-                    _("Total Price"), customer_save.long_name
-                )
+                c.value = "{} {}".format(_("Total Price"), customer_save.long_name)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
                 c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
@@ -1873,7 +1843,7 @@ def export_customer_for_a_delivery(
                 else:
                     c.value = total_price
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.font.bold = True
                 # Display a separator line between customers

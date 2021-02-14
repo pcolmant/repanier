@@ -1,14 +1,23 @@
 from django.conf import settings
 
-from repanier.admin.tools import get_query_preserved_filters, get_query_filters
+from repanier.middleware import (
+    get_query_preserved_filters,
+    get_query_filters,
+    get_query_params,
+)
 
 
 def repanier_settings(request):
-    from repanier.apps import REPANIER_SETTINGS_HOME_SITE
+    from repanier.globals import REPANIER_SETTINGS_HOME_SITE
 
     user = getattr(request, "user", None)
     if user is not None and user.is_staff:
         # Only in the admin
+
+        # print("########## get_query_filters() : {}".format(get_query_filters()))
+        # print("########## get_query_preserved_filters() : {}".format(get_query_preserved_filters()))
+        # print("########## get_query_params() : {}".format(get_query_params()))
+
         return {
             "REPANIER_BOOTSTRAP_CSS": settings.REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH,
             "REPANIER_CUSTOM_CSS": settings.REPANIER_SETTINGS_CUSTOM_CSS_PATH,

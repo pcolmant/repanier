@@ -10,10 +10,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from repanier.middleware import is_ajax
 from repanier.const import (
     DECIMAL_ZERO,
-    PERMANENCE_WAIT_FOR_INVOICED,
-    PERMANENCE_OPENED,
+    SALE_WAIT_FOR_INVOICED,
+    SALE_OPENED,
     EMPTY_STRING,
 )
 from repanier.models.customer import Customer
@@ -38,7 +39,7 @@ def order_init_ajax(request):
     Open an order for a customer when arriving on the order page (i.e. create the corresponding `CustomerInvoice`)
     """
 
-    if not request.is_ajax():
+    if not is_ajax():
         raise Http404
     permanence_id = sint(request.GET.get("pe", 0))
     permanence = Permanence.objects.filter(id=permanence_id).first()
@@ -48,7 +49,6 @@ def order_init_ajax(request):
         Customer.objects.filter(user_id=user.id, may_order=True)
         .only(
             "id",
-            "vat_id",
             "short_name",
             "email2",
             "delivery_point",
@@ -69,7 +69,7 @@ def order_init_ajax(request):
     basket = sboolean(request.GET.get("ba", False))
 
     status = customer_invoice.status
-    if status <= PERMANENCE_OPENED:
+    if status <= SALE_OPENED:
         basket_message = get_html_basket_message(customer, permanence, status)
     else:
         if customer_invoice.delivery is not None:
@@ -86,7 +86,7 @@ def order_init_ajax(request):
         if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
             for producer_invoice in ProducerInvoice.objects.filter(
                 permanence_id=permanence.id
-            ).only("total_price_with_tax", "status"):
+            ).only("balance_calculated", "status"):
                 json_dict.update(producer_invoice.get_order_json())
         communication = sboolean(request.GET.get("co", False))
         if communication:
@@ -94,9 +94,9 @@ def order_init_ajax(request):
             permanence_boards = PermanenceBoard.objects.filter(
                 customer_id=customer.id,
                 permanence_date__gte=now,
-                permanence__status__lte=PERMANENCE_WAIT_FOR_INVOICED,
+                permanence__status__lte=SALE_WAIT_FOR_INVOICED,
             ).order_by("permanence_date")[:2]
-            from repanier.apps import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
+            from repanier.globals import REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION
 
             if (
                 REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION > DECIMAL_ZERO
@@ -127,7 +127,7 @@ def order_init_ajax(request):
     json_dict.update(
         my_basket(
             customer_invoice.is_order_confirm_send,
-            customer_invoice.get_total_price_with_tax(),
+            customer_invoice.balance_calculated,
         )
     )
     return JsonResponse(json_dict)

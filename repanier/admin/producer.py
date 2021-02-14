@@ -9,119 +9,22 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy, path
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from import_export import resources, fields
-from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
-from import_export.widgets import CharWidget
 
 import repanier.apps
+from repanier.admin.admin_model import RepanierAdminImportExport
 from repanier.admin.forms import ImportStockForm
-from repanier.admin.tools import check_cancel_in_post, get_query_filters
-from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
+from repanier.admin.tools import check_cancel_in_post
+from repanier.const import SALE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
+from repanier.impexport.producer import ProducerResource
+from repanier.middleware import get_query_filters
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
 from repanier.tools import web_services_activated
 from repanier.xlsx.views import import_xslx_view
-from repanier.xlsx.widget import (
-    IdWidget,
-    TwoDecimalsWidget,
-    DecimalBooleanWidget,
-    TwoMoneysWidget,
-    DateWidgetExcel,
-)
 from repanier.xlsx.xlsx_invoice import export_invoice
 from repanier.xlsx.xlsx_product import export_customer_prices
 from repanier.xlsx.xlsx_stock import handle_uploaded_stock, export_producer_stock
-
-
-class ProducerResource(resources.ModelResource):
-
-    id = fields.Field(attribute="id", widget=IdWidget(), readonly=True)
-    phone1 = fields.Field(attribute="phone1", widget=CharWidget(), readonly=False)
-    phone2 = fields.Field(attribute="phone2", widget=CharWidget(), readonly=False)
-
-    price_list_multiplier = fields.Field(
-        attribute="price_list_multiplier",
-        default=DECIMAL_ONE,
-        widget=TwoDecimalsWidget(),
-        readonly=False,
-    )
-    date_balance = fields.Field(
-        attribute="get_admin_date_balance", widget=DateWidgetExcel(), readonly=True
-    )
-    balance = fields.Field(
-        attribute="get_admin_balance", widget=TwoMoneysWidget(), readonly=True
-    )
-    invoice_by_basket = fields.Field(
-        attribute="invoice_by_basket",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=False,
-    )
-    sort_products_by_reference = fields.Field(
-        attribute="sort_products_by_reference",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=False,
-    )
-    represent_this_buyinggroup = fields.Field(
-        attribute="represent_this_buyinggroup",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=True,
-    )
-    is_active = fields.Field(
-        attribute="is_active", widget=DecimalBooleanWidget(), readonly=True
-    )
-    reference_site = fields.Field(attribute="reference_site", readonly=True)
-
-    def before_save_instance(self, instance, using_transactions, dry_run):
-        """
-        Override to add additional logic.
-        """
-        producer_qs = Producer.objects.filter(
-            short_name=instance.short_name
-        ).order_by("?")
-        if instance.id is not None:
-            producer_qs = producer_qs.exclude(id=instance.id)
-        if producer_qs.exists():
-            raise ValueError(
-                _(
-                    "The short_name {} is already used by another producer."
-                ).format(instance.short_name)
-            )
-
-    class Meta:
-        model = Producer
-        fields = (
-            "id",
-            "short_name",
-            "long_name",
-            "email",
-            "email2",
-            "email3",
-            "language",
-            "phone1",
-            "phone2",
-            "fax",
-            "address",
-            "invoice_by_basket",
-            "sort_products_by_reference",
-            "producer_price_are_wo_vat",
-            "price_list_multiplier",
-            "reference_site",
-            "bank_account",
-            "date_balance",
-            "balance",
-            "represent_this_buyinggroup",
-            "is_active",
-        )
-        export_order = fields
-        import_id_fields = ("id",)
-        skip_unchanged = True
-        report_skipped = False
-        use_transactions = False
 
 
 def create__producer_action(year):
@@ -155,13 +58,13 @@ def create__producer_action(year):
 
 
 class ProducerDataForm(forms.ModelForm):
-    from repanier.apps import REPANIER_SETTINGS_PERMANENCES_NAME
+    from repanier.globals import REPANIER_SETTINGS_PERMANENCES_NAME
 
     permanences = forms.ModelMultipleChoiceField(
-        Permanence.objects.filter(status=PERMANENCE_PLANNED),
+        Permanence.objects.filter(status=SALE_PLANNED),
         label="{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
         widget=FilteredSelectMultiple(
-            repanier.apps.REPANIER_SETTINGS_PERMANENCE_ON_NAME, False
+            repanier.globals.REPANIER_SETTINGS_SALE_ON_NAME, False
         ),
         required=False,
     )
@@ -176,16 +79,27 @@ class ProducerDataForm(forms.ModelForm):
         if self.instance.id:
             self.fields["permanences"].initial = self.instance.permanence_set.all()
 
-    def clean_price_list_multiplier(self):
-        price_list_multiplier = self.cleaned_data["price_list_multiplier"]
-        if price_list_multiplier is None:
-            price_list_multiplier = DECIMAL_ONE
-        elif price_list_multiplier < DECIMAL_ZERO:
+    def clean_customer_tariff_margin(self):
+        customer_tariff_margin = self.cleaned_data["customer_tariff_margin"]
+        if customer_tariff_margin is None:
+            customer_tariff_margin = DECIMAL_ONE
+        elif customer_tariff_margin < DECIMAL_ZERO:
             self.add_error(
-                "price_list_multiplier",
-                _("The price must be greater than or equal to zero."),
+                "customer_tariff_margin",
+                _("The customer tariff margin must be greater than or equal to zero."),
             )
-        return price_list_multiplier
+        return customer_tariff_margin
+
+    def clean_purchase_tariff_margin(self):
+        purchase_tariff_margin = self.cleaned_data["purchase_tariff_margin"]
+        if purchase_tariff_margin is None:
+            purchase_tariff_margin = DECIMAL_ONE
+        elif purchase_tariff_margin < DECIMAL_ZERO:
+            self.add_error(
+                "purchase_tariff_margin",
+                _("The customer tariff margin must be greater than or equal to zero."),
+            )
+        return purchase_tariff_margin
 
     def clean(self):
         if any(self.errors):
@@ -199,9 +113,6 @@ class ProducerDataForm(forms.ModelForm):
                 )
                 break
         invoice_by_basket = self.cleaned_data.get("invoice_by_basket", False)
-        price_list_multiplier = self.cleaned_data.get(
-            "price_list_multiplier", DECIMAL_ONE
-        )
 
         if invoice_by_basket and self.instance.id is not None:
             if BoxContent.objects.filter(
@@ -214,9 +125,7 @@ class ProducerDataForm(forms.ModelForm):
                     ),
                 )
         short_name = self.cleaned_data["short_name"]
-        qs = Producer.objects.filter(short_name=short_name).order_by(
-            "?"
-        )
+        qs = Producer.objects.filter(short_name=short_name).order_by("?")
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.id)
         if qs.exists():
@@ -230,7 +139,7 @@ class ProducerDataForm(forms.ModelForm):
         if instance.id is not None:
             updated_permanences = (
                 Permanence.objects.filter(producers=instance.pk)
-                .exclude(status=PERMANENCE_PLANNED)
+                .exclude(status=SALE_PLANNED)
                 .order_by("?")
             )
             instance.permanence_set.set(updated_permanences)
@@ -258,7 +167,7 @@ class ProducerDataForm(forms.ModelForm):
         fields = "__all__"
 
 
-class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
+class ProducerAdmin(RepanierAdminImportExport):
     form = ProducerDataForm
     resource_class = ProducerResource
     change_list_url = reverse_lazy("admin:repanier_producer_changelist")
@@ -267,6 +176,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     list_per_page = 16
     list_max_show_all = 16
     list_filter = ("is_active", "invoice_by_basket")
+    ordering = ["-is_default", "short_name"]
     actions = ["export_customer_prices"]
 
     # change_list_template = 'admin/producer_change_list.html'
@@ -311,7 +221,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
             response["Content-Disposition"] = "attachment; filename={0}.xlsx".format(
-                _("Customer rate")
+                _("Consumer tariff")
             )
             wb.save(response)
             return response
@@ -373,36 +283,38 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             ("short_name", "long_name", "language"),
             ("email", "email2", "email3"),
             ("phone1", "phone2", "fax"),
+            ("address", "city"),
+            "memo",
+            "invoice_by_basket",
         ]
         if producer is not None:
+            if not producer.is_default:
+                fields_basic += [
+                    "producer_tariff_is_wo_tax",
+                    "is_active",
+                    "minimum_order_value",
+                    "purchase_tariff_margin",
+                    "customer_tariff_margin",
+                    "bank_account",
+                    "vat_id",
+                ]
             fields_basic += [
-                ("address", "city", "picture"),
-                "memo",
-                "is_active",
-                "producer_price_are_wo_vat",
                 "permanences",
                 "get_admin_balance",
                 "get_admin_date_balance",
             ]
         else:
-            # Do not accept the picture because there is no producer.id for the "upload_to"
             fields_basic += [
-                ("address", "city"),
-                "memo",
-                "producer_price_are_wo_vat",
+                "producer_tariff_is_wo_tax",
                 "is_active",
+                "minimum_order_value",
+                "purchase_tariff_margin",
+                "customer_tariff_margin",
+                "bank_account",
+                "vat_id",
             ]
-        if producer is not None and producer.represent_this_buyinggroup:
-            fields_advanced = ["represent_this_buyinggroup"]
-        else:
-            fields_advanced = []
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            fields_advanced += ["bank_account", "vat_id"]
-        fields_advanced += [
+        fields_advanced = [
             "sort_products_by_reference",
-            "invoice_by_basket",
-            "minimum_order_value",
-            "price_list_multiplier",
             "reference_site",
             "web_services_activated",
         ]
@@ -417,10 +329,10 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, producer=None):
         if producer is not None:
-            if producer.represent_this_buyinggroup:
+            if producer.is_default:
                 return [
                     "web_services_activated",
-                    "represent_this_buyinggroup",
+                    "is_default",
                     "get_admin_date_balance",
                     "get_admin_balance",
                 ]
@@ -438,18 +350,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
             producer.reference_site
         )
         super().save_model(request, producer, form, change)
-
-    def get_import_formats(self):
-        """
-        Returns available import formats.
-        """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
-
-    def get_export_formats(self):
-        """
-        Returns available export formats.
-        """
-        return [f for f in (XLSX, CSV) if f().can_export()]
 
     # class Media:
     #     if settings.REPANIER_SETTINGS_STOCK:

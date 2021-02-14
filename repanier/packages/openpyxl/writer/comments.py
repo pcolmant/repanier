@@ -22,14 +22,15 @@
 # @license: http://www.opensource.org/licenses/mit-license.php
 # @author: see AUTHORS file
 
-from ..shared.compat import iteritems
-from ..shared.ooxml import COMMENTS_NS, REL_NS, PKG_REL_NS, SHEET_MAIN_NS
-from ..shared.xmltools import Element, SubElement, get_document_content
 from ..cell import column_index_from_string
+from ..shared.compat import iteritems
+from ..shared.ooxml import SHEET_MAIN_NS
+from ..shared.xmltools import Element, SubElement, get_document_content
 
-vmlns="urn:schemas-microsoft-com:vml"
-officens="urn:schemas-microsoft-com:office:office"
-excelns="urn:schemas-microsoft-com:office:excel"
+vmlns = "urn:schemas-microsoft-com:vml"
+officens = "urn:schemas-microsoft-com:office:office"
+excelns = "urn:schemas-microsoft-com:office:excel"
+
 
 class CommentWriter(object):
     def __init__(self, sheet):
@@ -59,10 +60,14 @@ class CommentWriter(object):
 
         commentlist_tag = SubElement(root, "{%s}commentList" % SHEET_MAIN_NS)
         for comment in self.comments:
-            attrs = {'ref': comment._parent.get_coordinate(),
-                     'authorId': self.author_to_id[comment.author],
-                     'shapeId': '0'}
-            comment_tag = SubElement(commentlist_tag, "{%s}comment" % SHEET_MAIN_NS, attrs)
+            attrs = {
+                "ref": comment._parent.get_coordinate(),
+                "authorId": self.author_to_id[comment.author],
+                "shapeId": "0",
+            }
+            comment_tag = SubElement(
+                commentlist_tag, "{%s}comment" % SHEET_MAIN_NS, attrs
+            )
 
             text_tag = SubElement(comment_tag, "{%s}text" % SHEET_MAIN_NS)
             run_tag = SubElement(text_tag, "{%s}r" % SHEET_MAIN_NS)
@@ -74,15 +79,30 @@ class CommentWriter(object):
 
     def write_comments_vml(self):
         root = Element("xml")
-        shape_layout = SubElement(root, "{%s}shapelayout" % officens, {"{%s}ext" % vmlns: "edit"})
-        SubElement(shape_layout, "{%s}idmap" % officens, {"{%s}ext" % vmlns: "edit", "data": "1"})
-        shape_type=SubElement(root, "{%s}shapetype" % vmlns, {"id": "_x0000_t202",
-                                                              "coordsize": "21600,21600",
-                                                              "{%s}spt" % officens: "202",
-                                                              "path": "m,l,21600r21600,l21600,xe"})
+        shape_layout = SubElement(
+            root, "{%s}shapelayout" % officens, {"{%s}ext" % vmlns: "edit"}
+        )
+        SubElement(
+            shape_layout,
+            "{%s}idmap" % officens,
+            {"{%s}ext" % vmlns: "edit", "data": "1"},
+        )
+        shape_type = SubElement(
+            root,
+            "{%s}shapetype" % vmlns,
+            {
+                "id": "_x0000_t202",
+                "coordsize": "21600,21600",
+                "{%s}spt" % officens: "202",
+                "path": "m,l,21600r21600,l21600,xe",
+            },
+        )
         SubElement(shape_type, "{%s}stroke" % vmlns, {"joinstyle": "miter"})
-        SubElement(shape_type, "{%s}path" % vmlns, {"gradientshapeok": "t",
-                                                    "{%s}connecttype" % officens: "rect"})
+        SubElement(
+            shape_type,
+            "{%s}path" % vmlns,
+            {"gradientshapeok": "t", "{%s}connecttype" % officens: "rect"},
+        )
 
         for i, comment in enumerate(self.comments):
             self._write_comment_shape(root, comment, i)
@@ -95,20 +115,24 @@ class CommentWriter(object):
         column = column_index_from_string(comment._parent.column) - 1
 
         attrs = {
-            "id": "_x0000_s%s" % (idx+1026),
+            "id": "_x0000_s%s" % (idx + 1026),
             "type": "#_x0000_t202",
             "style": "position:absolute; margin-left:59.25pt;margin-top:1.5pt;width:108pt;height:59.25pt;z-index:1;visibility:hidden",
             "fillcolor": "#ffffe1",
-            "{%s}insetmode" % officens: "auto"
+            "{%s}insetmode" % officens: "auto",
         }
         shape = SubElement(root, "{%s}shape" % vmlns, attrs)
 
-        SubElement(shape, "{%s}fill" % vmlns, {"color2":"#ffffe1"})
-        SubElement(shape, "{%s}shadow" % vmlns, {"color":"black", "obscured":"t"})
-        SubElement(shape, "{%s}path" % vmlns, {"{%s}connecttype"%officens:"none"})
-        textbox = SubElement(shape, "{%s}textbox" % vmlns, {"style":"mso-direction-alt:auto"})
+        SubElement(shape, "{%s}fill" % vmlns, {"color2": "#ffffe1"})
+        SubElement(shape, "{%s}shadow" % vmlns, {"color": "black", "obscured": "t"})
+        SubElement(shape, "{%s}path" % vmlns, {"{%s}connecttype" % officens: "none"})
+        textbox = SubElement(
+            shape, "{%s}textbox" % vmlns, {"style": "mso-direction-alt:auto"}
+        )
         SubElement(textbox, "div", {"style": "text-align:left"})
-        client_data = SubElement(shape, "{%s}ClientData" % excelns, {"ObjectType": "Note"})
+        client_data = SubElement(
+            shape, "{%s}ClientData" % excelns, {"ObjectType": "Note"}
+        )
         SubElement(client_data, "{%s}MoveWithCells" % excelns)
         SubElement(client_data, "{%s}SizeWithCells" % excelns)
         SubElement(client_data, "{%s}AutoFill" % excelns).text = "False"

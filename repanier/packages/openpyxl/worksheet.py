@@ -29,25 +29,21 @@ import re
 
 # package imports
 from repanier.packages import openpyxl
-from .cell import (
-    coordinate_from_string,
-    column_index_from_string,
-    get_column_letter
-    )
+from .cell import coordinate_from_string, column_index_from_string, get_column_letter
+from .namedrange import NamedRangeContainingValue
+from .shared import DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT
+from .shared.compat import OrderedDict, unicode, xrange, basestring
+from .shared.compat.itertools import iteritems
 from .shared.exc import (
     SheetTitleException,
     InsufficientCoordinatesException,
     CellCoordinatesException,
-    NamedRangeException
-    )
-from .shared.units import points_to_pixels
-from .shared import DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT
+    NamedRangeException,
+)
 from .shared.password_hasher import hash_password
+from .shared.units import points_to_pixels
 from .styles import Style, DEFAULTS as DEFAULTS_STYLE
 from .styles.formatting import ConditionalFormatting
-from .namedrange import NamedRangeContainingValue
-from .shared.compat import OrderedDict, unicode, xrange, basestring
-from .shared.compat.itertools import iteritems
 
 _DEFAULTS_STYLE_HASH = hash(DEFAULTS_STYLE)
 
@@ -56,7 +52,8 @@ def flatten(results):
     """Return cell values row-by-row"""
 
     for row in results:
-        yield(c.value for c in row)
+        yield (c.value for c in row)
+
 
 from .shared.ooxml import REL_NS, PKG_REL_NS
 from .shared.xmltools import Element, SubElement, get_document_content
@@ -64,6 +61,7 @@ from .shared.xmltools import Element, SubElement, get_document_content
 
 class Relationship(object):
     """Represents many kinds of relationships."""
+
     # TODO: Use this object for workbook relationships as well as
     # worksheet relationships
 
@@ -85,8 +83,17 @@ class Relationship(object):
 
 class PageSetup(object):
     """Information about page layout for this sheet"""
-    valid_setup = ("orientation", "paperSize", "scale", "fitToPage",
-                   "fitToHeight", "fitToWidth", "firstPageNumber", "useFirstPageNumber")
+
+    valid_setup = (
+        "orientation",
+        "paperSize",
+        "scale",
+        "fitToPage",
+        "fitToHeight",
+        "fitToWidth",
+        "firstPageNumber",
+        "useFirstPageNumber",
+    )
     valid_options = ("horizontalCentered", "verticalCentered")
     orientation = None
     paperSize = None
@@ -105,12 +112,15 @@ class PageSetup(object):
         for setup_name in self.valid_setup:
             setup_value = getattr(self, setup_name)
             if setup_value is not None:
-                if setup_name == 'orientation':
-                    setupGroup[setup_name] = '%s' % setup_value
-                elif setup_name in ('paperSize', 'scale'):
-                    setupGroup[setup_name] = '%d' % int(setup_value)
-                elif setup_name in ('fitToHeight', 'fitToWidth') and int(setup_value) >= 0:
-                    setupGroup[setup_name] = '%d' % int(setup_value)
+                if setup_name == "orientation":
+                    setupGroup[setup_name] = "%s" % setup_value
+                elif setup_name in ("paperSize", "scale"):
+                    setupGroup[setup_name] = "%d" % int(setup_value)
+                elif (
+                    setup_name in ("fitToHeight", "fitToWidth")
+                    and int(setup_value) >= 0
+                ):
+                    setupGroup[setup_name] = "%d" % int(setup_value)
 
         return setupGroup
 
@@ -120,7 +130,7 @@ class PageSetup(object):
         for options_name in self.valid_options:
             options_value = getattr(self, options_name)
             if options_value is not None:
-                optionsGroup[options_name] = '1'
+                optionsGroup[options_name] = "1"
 
         return optionsGroup
 
@@ -128,50 +138,47 @@ class PageSetup(object):
 class HeaderFooterItem(object):
     """Individual left/center/right header/footer items
 
-       Header & Footer ampersand codes:
+    Header & Footer ampersand codes:
 
-       * &A   Inserts the worksheet name
-       * &B   Toggles bold
-       * &D or &[Date]   Inserts the current date
-       * &E   Toggles double-underline
-       * &F or &[File]   Inserts the workbook name
-       * &I   Toggles italic
-       * &N or &[Pages]   Inserts the total page count
-       * &S   Toggles strikethrough
-       * &T   Inserts the current time
-       * &[Tab]   Inserts the worksheet name
-       * &U   Toggles underline
-       * &X   Toggles superscript
-       * &Y   Toggles subscript
-       * &P or &[Page]   Inserts the current page number
-       * &P+n   Inserts the page number incremented by n
-       * &P-n   Inserts the page number decremented by n
-       * &[Path]   Inserts the workbook path
-       * &&   Escapes the ampersand character
-       * &"fontname"   Selects the named font
-       * &nn   Selects the specified 2-digit font point size
+    * &A   Inserts the worksheet name
+    * &B   Toggles bold
+    * &D or &[Date]   Inserts the current date
+    * &E   Toggles double-underline
+    * &F or &[File]   Inserts the workbook name
+    * &I   Toggles italic
+    * &N or &[Pages]   Inserts the total page count
+    * &S   Toggles strikethrough
+    * &T   Inserts the current time
+    * &[Tab]   Inserts the worksheet name
+    * &U   Toggles underline
+    * &X   Toggles superscript
+    * &Y   Toggles subscript
+    * &P or &[Page]   Inserts the current page number
+    * &P+n   Inserts the page number incremented by n
+    * &P-n   Inserts the page number decremented by n
+    * &[Path]   Inserts the workbook path
+    * &&   Escapes the ampersand character
+    * &"fontname"   Selects the named font
+    * &nn   Selects the specified 2-digit font point size
     """
-    CENTER = 'C'
-    LEFT = 'L'
-    RIGHT = 'R'
+
+    CENTER = "C"
+    LEFT = "L"
+    RIGHT = "R"
 
     REPLACE_LIST = (
-        ('\n', '_x000D_'),
-        ('&[Page]', '&P'),
-        ('&[Pages]', '&N'),
-        ('&[Date]', '&D'),
-        ('&[Time]', '&T'),
-        ('&[Path]', '&Z'),
-        ('&[File]', '&F'),
-        ('&[Tab]', '&A'),
-        ('&[Picture]', '&G')
-        )
+        ("\n", "_x000D_"),
+        ("&[Page]", "&P"),
+        ("&[Pages]", "&N"),
+        ("&[Date]", "&D"),
+        ("&[Time]", "&T"),
+        ("&[Path]", "&Z"),
+        ("&[File]", "&F"),
+        ("&[Tab]", "&A"),
+        ("&[Picture]", "&G"),
+    )
 
-    __slots__ = ('type',
-                 'font_name',
-                 'font_size',
-                 'font_color',
-                 'text')
+    __slots__ = ("type", "font_name", "font_size", "font_color", "text")
 
     def __init__(self, type):
         self.type = type
@@ -186,44 +193,47 @@ class HeaderFooterItem(object):
     def get(self):
         t = []
         if self.text:
-            t.append('&%s' % self.type)
+            t.append("&%s" % self.type)
             t.append('&"%s"' % self.font_name)
             if self.font_size:
-                t.append('&%d' % self.font_size)
-            t.append('&K%s' % self.font_color)
+                t.append("&%d" % self.font_size)
+            t.append("&K%s" % self.font_color)
             text = self.text
             for old, new in self.REPLACE_LIST:
                 text = text.replace(old, new)
             t.append(text)
-        return ''.join(t)
+        return "".join(t)
 
     def set(self, itemArray):
         textArray = []
         for item in itemArray[1:]:
             if len(item) and textArray:
-                textArray.append('&%s' % item)
+                textArray.append("&%s" % item)
             elif len(item) and not textArray:
                 if item[0] == '"':
-                    self.font_name = item.replace('"', '')
-                elif item[0] == 'K':
+                    self.font_name = item.replace('"', "")
+                elif item[0] == "K":
                     self.font_color = item[1:7]
                     textArray.append(item[7:])
                 else:
                     try:
                         self.font_size = int(item)
                     except:
-                        textArray.append('&%s' % item)
-        self.text = ''.join(textArray)
+                        textArray.append("&%s" % item)
+        self.text = "".join(textArray)
+
 
 class HeaderFooter(object):
-    """Information about the header/footer for this sheet.
-    """
-    __slots__ = ('left_header',
-                 'center_header',
-                 'right_header',
-                 'left_footer',
-                 'center_footer',
-                 'right_footer')
+    """Information about the header/footer for this sheet."""
+
+    __slots__ = (
+        "left_header",
+        "center_header",
+        "right_header",
+        "left_footer",
+        "center_footer",
+        "right_footer",
+    )
 
     def __init__(self):
         self.left_header = HeaderFooterItem(HeaderFooterItem.LEFT)
@@ -234,10 +244,22 @@ class HeaderFooter(object):
         self.right_footer = HeaderFooterItem(HeaderFooterItem.RIGHT)
 
     def hasHeader(self):
-        return True if self.left_header.has() or self.center_header.has() or self.right_header.has() else False
+        return (
+            True
+            if self.left_header.has()
+            or self.center_header.has()
+            or self.right_header.has()
+            else False
+        )
 
     def hasFooter(self):
-        return True if self.left_footer.has() or self.center_footer.has() or self.right_footer.has() else False
+        return (
+            True
+            if self.left_footer.has()
+            or self.center_footer.has()
+            or self.right_footer.has()
+            else False
+        )
 
     def getHeader(self):
         t = []
@@ -247,7 +269,7 @@ class HeaderFooter(object):
             t.append(self.center_header.get())
         if self.right_header.has():
             t.append(self.right_header.get())
-        return ''.join(t)
+        return "".join(t)
 
     def getFooter(self):
         t = []
@@ -257,13 +279,16 @@ class HeaderFooter(object):
             t.append(self.center_footer.get())
         if self.right_footer.has():
             t.append(self.right_footer.get())
-        return ''.join(t)
+        return "".join(t)
 
     def setHeader(self, item):
-        itemArray = [i.replace('#DOUBLEAMP#', '&&') for i in item.replace('&&', '#DOUBLEAMP#').split('&')]
-        l = itemArray.index('L') if 'L' in itemArray else None
-        c = itemArray.index('C') if 'C' in itemArray else None
-        r = itemArray.index('R') if 'R' in itemArray else None
+        itemArray = [
+            i.replace("#DOUBLEAMP#", "&&")
+            for i in item.replace("&&", "#DOUBLEAMP#").split("&")
+        ]
+        l = itemArray.index("L") if "L" in itemArray else None
+        c = itemArray.index("C") if "C" in itemArray else None
+        r = itemArray.index("R") if "R" in itemArray else None
         if l:
             if c:
                 self.left_header.set(itemArray[l:c])
@@ -280,10 +305,13 @@ class HeaderFooter(object):
             self.right_header.set(itemArray[r:])
 
     def setFooter(self, item):
-        itemArray = [i.replace('#DOUBLEAMP#', '&&') for i in item.replace('&&', '#DOUBLEAMP#').split('&')]
-        l = itemArray.index('L') if 'L' in itemArray else None
-        c = itemArray.index('C') if 'C' in itemArray else None
-        r = itemArray.index('R') if 'R' in itemArray else None
+        itemArray = [
+            i.replace("#DOUBLEAMP#", "&&")
+            for i in item.replace("&&", "#DOUBLEAMP#").split("&")
+        ]
+        l = itemArray.index("L") if "L" in itemArray else None
+        c = itemArray.index("C") if "C" in itemArray else None
+        r = itemArray.index("R") if "R" in itemArray else None
         if l:
             if c:
                 self.left_footer.set(itemArray[l:c])
@@ -299,19 +327,24 @@ class HeaderFooter(object):
         if r:
             self.right_footer.set(itemArray[r:])
 
+
 class SheetView(object):
     """Information about the visible portions of this sheet."""
+
     pass
 
 
 class RowDimension(object):
     """Information about the display properties of a row."""
-    __slots__ = ('row_index',
-                 'height',
-                 'visible',
-                 'outline_level',
-                 'collapsed',
-                 'style_index',)
+
+    __slots__ = (
+        "row_index",
+        "height",
+        "visible",
+        "outline_level",
+        "collapsed",
+        "style_index",
+    )
 
     def __init__(self, index=0):
         self.row_index = index
@@ -324,22 +357,27 @@ class RowDimension(object):
 
 class ColumnDimension(object):
     """Information about the display properties of a column."""
-    __slots__ = ('column_index',
-                 'width',
-                 'auto_size',
-                 'visible',
-                 'outline_level',
-                 'collapsed',
-                 'style_index',)
 
-    def __init__(self,
-                 index='A',
-                 width=-1,
-                 auto_size=False,
-                 visible=True,
-                 outline_level=0,
-                 collapsed=False,
-                 style_index=0):
+    __slots__ = (
+        "column_index",
+        "width",
+        "auto_size",
+        "visible",
+        "outline_level",
+        "collapsed",
+        "style_index",
+    )
+
+    def __init__(
+        self,
+        index="A",
+        width=-1,
+        auto_size=False,
+        visible=True,
+        outline_level=0,
+        collapsed=False,
+        style_index=0,
+    ):
         self.column_index = index
         self.width = float(width)
         self.auto_size = False
@@ -355,7 +393,9 @@ class PageMargins(object):
     valid_margins = ("left", "right", "top", "bottom", "header", "footer")
 
     def __init__(self):
-        self.left = self.right = self.top = self.bottom = self.header = self.footer = None
+        self.left = (
+            self.right
+        ) = self.top = self.bottom = self.header = self.footer = None
 
     @property
     def margins(self):
@@ -366,6 +406,7 @@ class PageMargins(object):
                 margins[margin_name] = "%0.2f" % margin_value
 
         return margins
+
 
 class SheetProtection(object):
     """Information about protection of various aspects of a sheet."""
@@ -387,9 +428,9 @@ class SheetProtection(object):
         self.auto_filter = False
         self.pivot_tables = False
         self.select_unlocked_cells = False
-        self._password = ''
+        self._password = ""
 
-    def set_password(self, value='', already_hashed=False):
+    def set_password(self, value="", already_hashed=False):
         """Set a password on this sheet."""
         if not already_hashed:
             value = hash_password(value)
@@ -403,9 +444,11 @@ class SheetProtection(object):
         """Return the password value, regardless of hash."""
         return self._password
 
-    password = property(_get_raw_password, _set_raw_password,
-            'get/set the password (if already hashed, '
-            'use set_password() instead)')
+    password = property(
+        _get_raw_password,
+        _set_raw_password,
+        "get/set the password (if already hashed, " "use set_password() instead)",
+    )
 
 
 class Worksheet(object):
@@ -415,40 +458,40 @@ class Worksheet(object):
     use :func:`openpyxl.workbook.Workbook.create_sheet` instead
 
     """
-    repr_format = unicode('<Worksheet "%s">')
-    bad_title_char_re = re.compile(r'[\\*?:/\[\]]')
 
+    repr_format = unicode('<Worksheet "%s">')
+    bad_title_char_re = re.compile(r"[\\*?:/\[\]]")
 
     BREAK_NONE = 0
     BREAK_ROW = 1
     BREAK_COLUMN = 2
 
-    SHEETSTATE_VISIBLE = 'visible'
-    SHEETSTATE_HIDDEN = 'hidden'
-    SHEETSTATE_VERYHIDDEN = 'veryHidden'
+    SHEETSTATE_VISIBLE = "visible"
+    SHEETSTATE_HIDDEN = "hidden"
+    SHEETSTATE_VERYHIDDEN = "veryHidden"
 
     # Paper size
-    PAPERSIZE_LETTER = '1'
-    PAPERSIZE_LETTER_SMALL = '2'
-    PAPERSIZE_TABLOID = '3'
-    PAPERSIZE_LEDGER = '4'
-    PAPERSIZE_LEGAL = '5'
-    PAPERSIZE_STATEMENT = '6'
-    PAPERSIZE_EXECUTIVE = '7'
-    PAPERSIZE_A3 = '8'
-    PAPERSIZE_A4 = '9'
-    PAPERSIZE_A4_SMALL = '10'
-    PAPERSIZE_A5 = '11'
+    PAPERSIZE_LETTER = "1"
+    PAPERSIZE_LETTER_SMALL = "2"
+    PAPERSIZE_TABLOID = "3"
+    PAPERSIZE_LEDGER = "4"
+    PAPERSIZE_LEGAL = "5"
+    PAPERSIZE_STATEMENT = "6"
+    PAPERSIZE_EXECUTIVE = "7"
+    PAPERSIZE_A3 = "8"
+    PAPERSIZE_A4 = "9"
+    PAPERSIZE_A4_SMALL = "10"
+    PAPERSIZE_A5 = "11"
 
     # Page orientation
-    ORIENTATION_PORTRAIT = 'portrait'
-    ORIENTATION_LANDSCAPE = 'landscape'
+    ORIENTATION_PORTRAIT = "portrait"
+    ORIENTATION_LANDSCAPE = "landscape"
 
-    def __init__(self, parent_workbook, title='Sheet'):
+    def __init__(self, parent_workbook, title="Sheet"):
         self._parent = parent_workbook
-        self._title = ''
+        self._title = ""
         if not title:
-            self.title = 'Sheet%d' % (1 + len(self._parent.worksheets))
+            self.title = "Sheet%d" % (1 + len(self._parent.worksheets))
         else:
             self.title = title
         self.row_dimensions = {}
@@ -462,8 +505,8 @@ class Worksheet(object):
         self._merged_cells = []
         self.relationships = []
         self._data_validations = []
-        self.selected_cell = 'A1'
-        self.active_cell = 'A1'
+        self.selected_cell = "A1"
+        self.active_cell = "A1"
         self.sheet_state = self.SHEETSTATE_VISIBLE
         self.page_setup = PageSetup()
         self.page_margins = PageMargins()
@@ -497,10 +540,19 @@ class Worksheet(object):
 
     def garbage_collect(self):
         """Delete cells that are not storing a value."""
-        delete_list = [coordinate for coordinate, cell in \
-            iteritems(self._cells) if (not cell.merged and cell.value in ('', None) and \
-            cell.comment is None and (coordinate not in self._styles or
-            hash(cell.style) == _DEFAULTS_STYLE_HASH))]
+        delete_list = [
+            coordinate
+            for coordinate, cell in iteritems(self._cells)
+            if (
+                not cell.merged
+                and cell.value in ("", None)
+                and cell.comment is None
+                and (
+                    coordinate not in self._styles
+                    or hash(cell.style) == _DEFAULTS_STYLE_HASH
+                )
+            )
+        ]
         for coordinate in delete_list:
             del self._cells[coordinate]
 
@@ -516,13 +568,13 @@ class Worksheet(object):
     @title.setter
     def title(self, value):
         """Set a sheet title, ensuring it is valid.
-           Limited to 31 characters, no special characters."""
+        Limited to 31 characters, no special characters."""
         if self.bad_title_char_re.search(value):
-            msg = 'Invalid character found in sheet title'
+            msg = "Invalid character found in sheet title"
             raise SheetTitleException(msg)
         value = self.unique_sheet_name(value)
         if len(value) > 31:
-            msg = 'Maximum 31 characters allowed in sheet title'
+            msg = "Maximum 31 characters allowed in sheet title"
             raise SheetTitleException(msg)
         self._title = value
 
@@ -532,7 +584,7 @@ class Worksheet(object):
         sheets = self._parent.get_sheet_names()
         if value in sheets:
             sheets = ",".join(sheets)
-            sheet_title_regex=re.compile("(?P<title>%s)(?P<count>\d?),?" % value)
+            sheet_title_regex = re.compile("(?P<title>%s)(?P<count>\d?),?" % value)
             matches = sheet_title_regex.findall(sheets)
             if matches:
                 # use name, but append with the next highest integer
@@ -541,7 +593,7 @@ class Worksheet(object):
                     highest = max(counts)
                 else:
                     highest = 0
-                value = "%s%d" % (value, highest+1)
+                value = "%s%d" % (value, highest + 1)
         return value
 
     @property
@@ -556,7 +608,7 @@ class Worksheet(object):
         elif isinstance(cell_range, str):
             cell_range = cell_range.upper()
         else:  # Assume a range
-            cell_range = cell_range[0][0].address + ':' + cell_range[-1][-1].address
+            cell_range = cell_range[0][0].address + ":" + cell_range[-1][-1].address
         self._auto_filter = cell_range
 
     @property
@@ -571,20 +623,20 @@ class Worksheet(object):
             topLeftCell = topLeftCell.upper()
         else:  # Assume a cell
             topLeftCell = topLeftCell.address
-        if topLeftCell == 'A1':
+        if topLeftCell == "A1":
             topLeftCell = None
         self._freeze_panes = topLeftCell
 
-    def add_print_title(self, n, rows_or_cols='rows'):
-        """ Print Titles are rows or columns that are repeated on each printed sheet.
+    def add_print_title(self, n, rows_or_cols="rows"):
+        """Print Titles are rows or columns that are repeated on each printed sheet.
         This adds n rows or columns at the top or left of the sheet
         """
-        if rows_or_cols == 'cols':
-            r = '$A:$%s' % get_column_letter(n)
+        if rows_or_cols == "cols":
+            r = "$A:$%s" % get_column_letter(n)
         else:
-            r = '$1:$%d' % n
+            r = "$1:$%d" % n
 
-        self.parent.create_named_range('_xlnm.Print_Titles', self, r, self)
+        self.parent.create_named_range("_xlnm.Print_Titles", self, r, self)
 
     def cell(self, coordinate=None, row=None, column=None):
         """Returns a cell object based on the given coordinates.
@@ -612,14 +664,16 @@ class Worksheet(object):
 
         """
         if not coordinate:
-            if  (row is None or column is None):
-                msg = "You have to provide a value either for " \
-                        "'coordinate' or for 'row' *and* 'column'"
+            if row is None or column is None:
+                msg = (
+                    "You have to provide a value either for "
+                    "'coordinate' or for 'row' *and* 'column'"
+                )
                 raise InsufficientCoordinatesException(msg)
             else:
-                coordinate = '%s%s' % (get_column_letter(column + 1), row + 1)
+                coordinate = "%s%s" % (get_column_letter(column + 1), row + 1)
         else:
-            coordinate = coordinate.replace('$', '')
+            coordinate = coordinate.replace("$", "")
 
         return self._get_cell(coordinate)
 
@@ -660,15 +714,21 @@ class Worksheet(object):
         :rtype: int
         """
         if self.column_dimensions:
-            return max([column_index_from_string(column_index)
-                            for column_index in self.column_dimensions])
+            return max(
+                [
+                    column_index_from_string(column_index)
+                    for column_index in self.column_dimensions
+                ]
+            )
         else:
             return 1
 
     def calculate_dimension(self):
         """Return the minimum bounding range for all cells containing data."""
-        return 'A1:%s%d' % (get_column_letter(self.get_highest_column()),
-                            self.get_highest_row())
+        return "A1:%s%d" % (
+            get_column_letter(self.get_highest_column()),
+            self.get_highest_row(),
+        )
 
     def range(self, range_string, row=0, column=0):
         """Returns a 2D array of cells, with optional row and column offsets.
@@ -685,17 +745,15 @@ class Worksheet(object):
         :rtype: tuples of tuples of :class:`openpyxl.cell.Cell`
 
         """
-        if ':' in range_string:
+        if ":" in range_string:
             # R1C1 range
             result = []
-            min_range, max_range = range_string.split(':')
+            min_range, max_range = range_string.split(":")
             min_col, min_row = coordinate_from_string(min_range)
             max_col, max_row = coordinate_from_string(max_range)
             if column:
-                min_col = get_column_letter(
-                        column_index_from_string(min_col) + column)
-                max_col = get_column_letter(
-                        column_index_from_string(max_col) + column)
+                min_col = get_column_letter(column_index_from_string(min_col) + column)
+                max_col = get_column_letter(column_index_from_string(max_col) + column)
             min_col = column_index_from_string(min_col)
             max_col = column_index_from_string(max_col)
             cache_cols = {}
@@ -706,23 +764,22 @@ class Worksheet(object):
             for row in rows:
                 new_row = []
                 for col in cols:
-                    new_row.append(self.cell('%s%s' % (cache_cols[col], row)))
+                    new_row.append(self.cell("%s%s" % (cache_cols[col], row)))
                 result.append(tuple(new_row))
             return tuple(result)
         else:
             try:
-                return self.cell(coordinate=range_string, row=row,
-                        column=column)
+                return self.cell(coordinate=range_string, row=row, column=column)
             except CellCoordinatesException:
                 pass
 
             # named range
             named_range = self._parent.get_named_range(range_string)
             if named_range is None:
-                msg = '%s is not a valid range name' % range_string
+                msg = "%s is not a valid range name" % range_string
                 raise NamedRangeException(msg)
             if isinstance(named_range, NamedRangeContainingValue):
-                msg = '%s refers to a value, not a range' % range_string
+                msg = "%s refers to a value, not a range" % range_string
                 raise NamedRangeException(msg)
 
             result = []
@@ -731,8 +788,10 @@ class Worksheet(object):
                 worksheet, cells_range = destination
 
                 if worksheet is not self:
-                    msg = 'Range %s is not defined on worksheet %s' % \
-                            (cells_range, self.title)
+                    msg = "Range %s is not defined on worksheet %s" % (
+                        cells_range,
+                        self.title,
+                    )
                     raise NamedRangeException(msg)
 
                 content = self.range(cells_range)
@@ -761,7 +820,10 @@ class Worksheet(object):
 
         self.page_setup.paperSize = paper_size
         if orientation not in (self.ORIENTATION_PORTRAIT, self.ORIENTATION_LANDSCAPE):
-            raise ValueError("Values should be %s or %s" % (self.ORIENTATION_PORTRAIT, self.ORIENTATION_LANDSCAPE))
+            raise ValueError(
+                "Values should be %s or %s"
+                % (self.ORIENTATION_PORTRAIT, self.ORIENTATION_LANDSCAPE)
+            )
         self.page_setup.orientation = orientation
 
     def create_relationship(self, rel_type):
@@ -769,13 +831,13 @@ class Worksheet(object):
         rel = Relationship(rel_type)
         self.relationships.append(rel)
         rel_id = self.relationships.index(rel)
-        rel.id = 'rId' + str(rel_id + 1)
+        rel.id = "rId" + str(rel_id + 1)
         return self.relationships[rel_id]
 
     def add_data_validation(self, data_validation):
-        """ Add a data-validation object to the sheet.  The data-validation
-            object defines the type of data-validation to be applied and the
-            cell or range of cells it should apply to.
+        """Add a data-validation object to the sheet.  The data-validation
+        object defines the type of data-validation to be applied and the
+        cell or range of cells it should apply to.
         """
         data_validation._sheet = self
         self._data_validations.append(data_validation)
@@ -800,24 +862,43 @@ class Worksheet(object):
         """Drawings and hyperlinks create relationships"""
         self._parent.relationships.append(obj)
 
-    def merge_cells(self, range_string=None, start_row=None, start_column=None, end_row=None, end_column=None):
+    def merge_cells(
+        self,
+        range_string=None,
+        start_row=None,
+        start_column=None,
+        end_row=None,
+        end_column=None,
+    ):
         """ Set merge on a cell range.  Range is a cell range (e.g. A1:E1) """
         if not range_string:
-            if  start_row is None or start_column is None or end_row is None or end_column is None:
-                msg = "You have to provide a value either for "\
-                      "'coordinate' or for 'start_row', 'start_column', 'end_row' *and* 'end_column'"
+            if (
+                start_row is None
+                or start_column is None
+                or end_row is None
+                or end_column is None
+            ):
+                msg = (
+                    "You have to provide a value either for "
+                    "'coordinate' or for 'start_row', 'start_column', 'end_row' *and* 'end_column'"
+                )
                 raise InsufficientCoordinatesException(msg)
             else:
-                range_string = '%s%s:%s%s' % (get_column_letter(start_column + 1), start_row + 1, get_column_letter(end_column + 1), end_row + 1)
-        elif len(range_string.split(':')) != 2:
-                msg = "Range must be a cell range (e.g. A1:E1)"
-                raise InsufficientCoordinatesException(msg)
+                range_string = "%s%s:%s%s" % (
+                    get_column_letter(start_column + 1),
+                    start_row + 1,
+                    get_column_letter(end_column + 1),
+                    end_row + 1,
+                )
+        elif len(range_string.split(":")) != 2:
+            msg = "Range must be a cell range (e.g. A1:E1)"
+            raise InsufficientCoordinatesException(msg)
         else:
-            range_string = range_string.replace('$', '')
+            range_string = range_string.replace("$", "")
 
         # Make sure top_left cell exists - is this necessary?
-        min_col, min_row = coordinate_from_string(range_string.split(':')[0])
-        max_col, max_row = coordinate_from_string(range_string.split(':')[1])
+        min_col, min_row = coordinate_from_string(range_string.split(":")[0])
+        max_col, max_row = coordinate_from_string(range_string.split(":")[1])
         min_col = column_index_from_string(min_col)
         max_col = column_index_from_string(max_col)
         # Blank out the rest of the cells in the range
@@ -825,40 +906,61 @@ class Worksheet(object):
             for row in xrange(min_row, max_row + 1):
                 if not (row == min_row and col == min_col):
                     # PHPExcel adds cell and specifically blanks it out if it doesn't exist
-                    self._get_cell('%s%s' % (get_column_letter(col), row)).value = None
-                    self._get_cell('%s%s' % (get_column_letter(col), row)).merged = True
+                    self._get_cell("%s%s" % (get_column_letter(col), row)).value = None
+                    self._get_cell("%s%s" % (get_column_letter(col), row)).merged = True
 
         if range_string not in self._merged_cells:
             self._merged_cells.append(range_string)
 
-    def unmerge_cells(self, range_string=None, start_row=None, start_column=None, end_row=None, end_column=None):
+    def unmerge_cells(
+        self,
+        range_string=None,
+        start_row=None,
+        start_column=None,
+        end_row=None,
+        end_column=None,
+    ):
         """ Remove merge on a cell range.  Range is a cell range (e.g. A1:E1) """
         if not range_string:
-            if start_row is None or start_column is None or end_row is None or end_column is None:
-                msg = "You have to provide a value either for "\
-                      "'coordinate' or for 'start_row', 'start_column', 'end_row' *and* 'end_column'"
+            if (
+                start_row is None
+                or start_column is None
+                or end_row is None
+                or end_column is None
+            ):
+                msg = (
+                    "You have to provide a value either for "
+                    "'coordinate' or for 'start_row', 'start_column', 'end_row' *and* 'end_column'"
+                )
                 raise InsufficientCoordinatesException(msg)
             else:
-                range_string = '%s%s:%s%s' % (get_column_letter(start_column + 1), start_row + 1, get_column_letter(end_column + 1), end_row + 1)
-        elif len(range_string.split(':')) != 2:
+                range_string = "%s%s:%s%s" % (
+                    get_column_letter(start_column + 1),
+                    start_row + 1,
+                    get_column_letter(end_column + 1),
+                    end_row + 1,
+                )
+        elif len(range_string.split(":")) != 2:
             msg = "Range must be a cell range (e.g. A1:E1)"
             raise InsufficientCoordinatesException(msg)
         else:
-            range_string = range_string.replace('$', '')
+            range_string = range_string.replace("$", "")
 
         if range_string in self._merged_cells:
             self._merged_cells.remove(range_string)
-            min_col, min_row = coordinate_from_string(range_string.split(':')[0])
-            max_col, max_row = coordinate_from_string(range_string.split(':')[1])
+            min_col, min_row = coordinate_from_string(range_string.split(":")[0])
+            max_col, max_row = coordinate_from_string(range_string.split(":")[1])
             min_col = column_index_from_string(min_col)
             max_col = column_index_from_string(max_col)
             # Mark cell as unmerged
             for col in xrange(min_col, max_col + 1):
                 for row in xrange(min_row, max_row + 1):
                     if not (row == min_row and col == min_col):
-                        self._get_cell('%s%s' % (get_column_letter(col), row)).merged = False
+                        self._get_cell(
+                            "%s%s" % (get_column_letter(col), row)
+                        ).merged = False
         else:
-            msg = 'Cell range %s not known as merged.' % range_string
+            msg = "Cell range %s not known as merged." % range_string
             raise InsufficientCoordinatesException(msg)
 
     def append(self, list_or_dict):
@@ -891,7 +993,7 @@ class Worksheet(object):
                 self.cell(row=row_idx, column=col_idx).value = content
 
         else:
-            raise TypeError('list_or_dict must be a list or a dict')
+            raise TypeError("list_or_dict must be a list or a dict")
 
     @property
     def rows(self):
@@ -903,15 +1005,15 @@ class Worksheet(object):
         cols = []
         for col_idx in range(self.get_highest_column()):
             col = get_column_letter(col_idx + 1)
-            res = self.range('%s1:%s%d' % (col, col, max_row))
+            res = self.range("%s1:%s%d" % (col, col, max_row))
             cols.append(tuple([x[0] for x in res]))
 
         return tuple(cols)
 
     def point_pos(self, left=0, top=0):
-        """ tells which cell is under the given coordinates (in pixels)
+        """tells which cell is under the given coordinates (in pixels)
         counting from the top-left corner of the sheet.
-        Can be used to locate images and charts on the worksheet """
+        Can be used to locate images and charts on the worksheet"""
         current_col = 1
         current_row = 1
         column_dimensions = self.column_dimensions
@@ -942,4 +1044,3 @@ class Worksheet(object):
             top_pos += default_height
 
         return (letter, row)
-

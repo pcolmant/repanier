@@ -17,7 +17,7 @@ from repanier.xlsx.import_tools import get_row, get_header
 def export_permanence_stock(
     permanence, deliveries_id=(), customer_price=False, wb=None, ws_customer_title=None
 ):
-    if settings.REPANIER_SETTINGS_STOCK and wb is not None:
+    if wb is not None:
         yellowFill = Fill()
         yellowFill.start_color.index = "FFEEEE11"
         yellowFill.end_color.index = "FFEEEE11"
@@ -38,16 +38,15 @@ def export_permanence_stock(
             (_("Asked"), 10),
             (_("Quantity ordered"), 10),
             (_("Initial stock"), 10),
-            (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
+            (repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
             (_("Stock used"), 10),
             (_("Additional"), 10),
             (_("Remaining stock"), 10),
-            (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
+            (repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
         ]
         offer_items = (
             OfferItemWoReceiver.objects.filter(
                 permanence_id=permanence.id,
-                manage_production=True,
                 translations__language_code=translation.get_language(),
             )
             .order_by("producer", "translations__long_name", "order_average_weight")
@@ -91,9 +90,7 @@ def export_permanence_stock(
                     offer_item is not None
                     and producer_save.id == offer_item.producer_id
                 ):
-                    department_save__id = (
-                        offer_item.department_id
-                    )
+                    department_save__id = offer_item.department_id
                     department_save__short_name = (
                         offer_item.department.short_name
                         if offer_item.department is not None
@@ -102,8 +99,7 @@ def export_permanence_stock(
                     while (
                         offer_item is not None
                         and producer_save.id == offer_item.producer_id
-                        and department_save__id
-                        == offer_item.department_id
+                        and department_save__id == offer_item.department_id
                     ):
                         if len(offer_item.reference) < 36:
                             if offer_item.reference.isdigit():
@@ -118,8 +114,8 @@ def export_permanence_stock(
                             offer_item_reference = EMPTY_STRING
                         if offer_item.order_unit < PRODUCT_ORDER_UNIT_DEPOSIT:
 
-                            asked = offer_item.qty_invoiced
-                            stock = offer_item.stock
+                            asked = offer_item.qty_sold
+                            stock = offer_item.product.qty_on_sale
                             c = ws.cell(row=row_num, column=0)
                             c.value = offer_item.producer_id
                             c = ws.cell(row=row_num, column=1)
@@ -147,13 +143,13 @@ def export_permanence_stock(
                             )
                             c.value = unit_price.amount
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=5)
                             c.value = offer_item.unit_deposit.amount
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=6)
@@ -202,7 +198,7 @@ def export_permanence_stock(
                                 row_num + 1, row_num + 1, row_num + 1
                             )
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=10)
@@ -221,16 +217,14 @@ def export_permanence_stock(
                                 row_num + 1, row_num + 1, row_num + 1
                             )
                             c.style.number_format.format_code = (
-                                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                             )
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             row_num += 1
                         offer_item = next_row(offer_items)
                 row_num += 1
                 c = ws.cell(row=row_num, column=3)
-                c.value = "{} {}".format(
-                    _("Total price"), producer_save.short_name
-                )
+                c.value = "{} {}".format(_("Total price"), producer_save.short_name)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
                 c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
@@ -238,7 +232,7 @@ def export_permanence_stock(
                 formula = "SUM(J{}:J{})".format(row_start_producer, row_num)
                 c.value = "=" + formula
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.font.bold = True
                 formula_main_total_a.append(formula)
@@ -246,7 +240,7 @@ def export_permanence_stock(
                 formula = "SUM(N{}:N{})".format(row_start_producer, row_num)
                 c.value = "=" + formula
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.font.bold = True
                 formula_main_total_b.append(formula)
@@ -267,13 +261,13 @@ def export_permanence_stock(
             c = ws.cell(row=row_num, column=9)
             c.value = "=" + "+".join(formula_main_total_a)
             c.style.number_format.format_code = (
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
             )
             c.style.font.bold = True
             c = ws.cell(row=row_num, column=13)
             c.value = "=" + "+".join(formula_main_total_b)
             c.style.number_format.format_code = (
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
             )
             c.style.font.bold = True
 
@@ -298,7 +292,7 @@ def export_permanence_stock(
 # def import_stock_sheet(worksheet, permanence=None):
 #     error = False
 #     error_msg = None
-#     if permanence.status < PERMANENCE_DONE:
+#     if permanence.status < SALE_DONE:
 #         header = get_header(worksheet)
 #         if header:
 #             row_num = 1
@@ -352,7 +346,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
         (_("Customer unit price") if customer_price else _("Producer unit price"), 10),
         (_("Deposit"), 10),
         (_("Inventory"), 10),
-        (repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
+        (repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY, 15),
     ]
     producers = producers.iterator()
     producer = next_row(producers)
@@ -409,13 +403,13 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 )
                 c.value = unit_price.amount
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=5)
                 c.value = product.unit_deposit.amount
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 c.style.borders.bottom.border_style = Border.BORDER_THIN
                 c = ws.cell(row=row_num, column=6)
@@ -430,7 +424,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                     row_num + 1, row_num + 1, row_num + 1
                 )
                 c.style.number_format.format_code = (
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                 )
                 ws.conditional_formatting.addCellIs(
                     get_column_letter(8) + str(row_num + 1),
@@ -462,7 +456,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
         formula = "SUM(H{}:H{})".format(2, row_num)
         c.value = "=" + formula
         c.style.number_format.format_code = (
-            repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+            repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
         )
         c.style.font.bold = True
 

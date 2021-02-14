@@ -3,6 +3,7 @@ from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
+from repanier.models.group import Group
 from repanier.const import *
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
@@ -29,10 +30,7 @@ class ProductFilterByProducer(SimpleListFilter):
         in the right sidebar.
         """
         # This list is a collection of producer.id, .name
-        return [
-            (c.id, c.short_name)
-            for c in Producer.objects.filter(is_active=True)
-        ]
+        return [(c.id, c.short_name) for c in Producer.objects.filter(is_active=True)]
 
     def queryset(self, request, queryset):
         """
@@ -43,6 +41,41 @@ class ProductFilterByProducer(SimpleListFilter):
         # This query set is a collection of products
         if self.value():
             return queryset.filter(producer_id=self.value())
+        else:
+            return queryset
+
+
+class CustomerFilterByGroup(SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar.
+    title = _("Groups")
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = "group"
+    template = get_admin_template_name("group_filter.html")
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        # This list is a collection of producer.id, .name
+        return [
+            (g.id, g.short_name)
+            for g in Group.objects.filter(is_group=True, is_active=True)
+        ]
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        # This query set is a collection of products
+        if self.value():
+            return queryset.filter(delivery_point__customer_responsible_id=self.value())
         else:
             return queryset
 
@@ -165,14 +198,14 @@ class PurchaseFilterByCustomer(SimpleListFilter):
                 .first()
             )
             if ci is not None:
-                if ci.is_order_confirm_send:
+                if ci.is_confirmed:
                     list_filter.append(
                         (
                             c.id,
                             "{} {} ({})".format(
                                 settings.LOCK_UNICODE,
                                 c.short_name,
-                                ci.get_total_price_with_tax(),
+                                ci.balance,
                             ),
                         )
                     )
@@ -180,9 +213,7 @@ class PurchaseFilterByCustomer(SimpleListFilter):
                     list_filter.append(
                         (
                             c.id,
-                            "{} ({})".format(
-                                c.short_name, ci.total_price_with_tax
-                            ),
+                            "{} ({})".format(c.short_name, ci.balance),
                         )
                     )
             else:
@@ -216,7 +247,7 @@ class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
                 list_filter.append(
                     (
                         p.id,
-                        "{} ({})".format(p.short_name, pi.total_price_with_tax),
+                        "{} ({})".format(p.short_name, pi.balance),
                     )
                 )
             else:
@@ -240,7 +271,7 @@ class PurchaseFilterByPermanence(SimpleListFilter):
             return [
                 (p.id, p.get_permanence_display())
                 for p in Permanence.objects.filter(
-                    status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]
+                    status__in=[SALE_OPENED, SALE_CLOSED, SALE_SEND]
                 )
             ]
         else:
@@ -261,7 +292,7 @@ class OfferItemSendFilterByPermanence(SimpleListFilter):
     def lookups(self, request, model_admin):
         return [
             (p.id, p.get_permanence_display())
-            for p in Permanence.objects.filter(status=PERMANENCE_SEND)
+            for p in Permanence.objects.filter(status=SALE_SEND)
         ]
 
     def queryset(self, request, queryset):
@@ -270,7 +301,7 @@ class OfferItemSendFilterByPermanence(SimpleListFilter):
             if permanence_id > 0:
                 return queryset.filter(permanence_id=permanence_id)
         else:
-            return queryset.filter(permanence__status=PERMANENCE_SEND)
+            return queryset.filter(permanence__status=SALE_SEND)
         return queryset
 
 
@@ -283,7 +314,7 @@ class OfferItemFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.exclude(qty_invoiced=DECIMAL_ZERO)
+            return queryset.exclude(qty=DECIMAL_ZERO)
         else:
             return queryset
 

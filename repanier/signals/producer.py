@@ -11,7 +11,7 @@ from repanier.tools import update_offer_item
 @receiver(pre_save, sender=Producer)
 def producer_pre_save(sender, **kwargs):
     producer = kwargs["instance"]
-    if producer.represent_this_buyinggroup:
+    if producer.is_default:
         # The buying group may not be de activated
         producer.is_active = True
     if producer.email:

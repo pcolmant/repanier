@@ -22,20 +22,22 @@
 # @author: see AUTHORS file
 
 import math
-from .style import Color
-from .shared.units import pixels_to_EMU, EMU_to_pixels, short_color
+
 from .cell import column_index_from_string
+from .shared.units import pixels_to_EMU, EMU_to_pixels, short_color
+from .style import Color
+
 
 class Shadow(object):
 
-    SHADOW_BOTTOM = 'b'
-    SHADOW_BOTTOM_LEFT = 'bl'
-    SHADOW_BOTTOM_RIGHT = 'br'
-    SHADOW_CENTER = 'ctr'
-    SHADOW_LEFT = 'l'
-    SHADOW_TOP = 't'
-    SHADOW_TOP_LEFT = 'tl'
-    SHADOW_TOP_RIGHT = 'tr'
+    SHADOW_BOTTOM = "b"
+    SHADOW_BOTTOM_LEFT = "bl"
+    SHADOW_BOTTOM_RIGHT = "br"
+    SHADOW_CENTER = "ctr"
+    SHADOW_LEFT = "l"
+    SHADOW_TOP = "t"
+    SHADOW_TOP_LEFT = "tl"
+    SHADOW_TOP_RIGHT = "tr"
 
     def __init__(self):
         self.visible = False
@@ -48,17 +50,17 @@ class Shadow(object):
 
 
 class Drawing(object):
-    """ a drawing object - eg container for shapes or charts
-        we assume user specifies dimensions in pixels; units are
-        converted to EMU in the drawing part
+    """a drawing object - eg container for shapes or charts
+    we assume user specifies dimensions in pixels; units are
+    converted to EMU in the drawing part
     """
 
     count = 0
 
     def __init__(self):
 
-        self.name = ''
-        self.description = ''
+        self.name = ""
+        self.description = ""
         self.coordinates = ((1, 2), (16, 8))
         self.left = 0
         self.top = 0
@@ -66,7 +68,8 @@ class Drawing(object):
         self._height = EMU_to_pixels(1828800)
         self.resize_proportional = False
         self.rotation = 0
-#        self.shadow = Shadow()
+
+    #        self.shadow = Shadow()
 
     @property
     def width(self):
@@ -106,13 +109,17 @@ class Drawing(object):
     def get_emu_dimensions(self):
         """ return (x, y, w, h) in EMU """
 
-        return (pixels_to_EMU(self.left), pixels_to_EMU(self.top),
-            pixels_to_EMU(self._width), pixels_to_EMU(self._height))
+        return (
+            pixels_to_EMU(self.left),
+            pixels_to_EMU(self.top),
+            pixels_to_EMU(self._width),
+            pixels_to_EMU(self._height),
+        )
 
 
 class Shape(object):
-    """ a drawing inside a chart
-        coordiantes are specified by the user in the axis units
+    """a drawing inside a chart
+    coordiantes are specified by the user in the axis units
     """
 
     MARGIN_LEFT = 6 + 13 + 1
@@ -121,11 +128,11 @@ class Shape(object):
     FONT_WIDTH = 7
     FONT_HEIGHT = 8
 
-    ROUND_RECT = 'roundRect'
-    RECT = 'rect'
+    ROUND_RECT = "roundRect"
+    RECT = "rect"
 
     # other shapes to define :
-    '''
+    """
     "line"
     "lineInv"
     "triangle"
@@ -312,13 +319,11 @@ class Shape(object):
     "chartX"
     "chartStar"
     "chartPlus"
-    '''
+    """
 
-    def __init__(self,
-                 chart,
-                 coordinates=((0, 0), (1, 1)),
-                 text=None,
-                 scheme="accent1"):
+    def __init__(
+        self, chart, coordinates=((0, 0), (1, 1)), text=None, scheme="accent1"
+    ):
         self.chart = chart
         self.coordinates = coordinates  # in axis units
         self.text = text
@@ -368,11 +373,10 @@ class Shape(object):
 
     @coordinates.setter
     def coordinates(self, coords):
-        """ set shape coordinates in percentages (left, top, right, bottom)
-        """
+        """set shape coordinates in percentages (left, top, right, bottom)"""
         # this needs refactoring to reflect changes in charts
         self.axis_coordinates = coords
-        (x1, y1), (x2, y2) = coords # bottom left, top right
+        (x1, y1), (x2, y2) = coords  # bottom left, top right
         drawing_width = pixels_to_EMU(self.chart.drawing.width)
         drawing_height = pixels_to_EMU(self.chart.drawing.height)
         plot_width = drawing_width * self.chart.width
@@ -385,16 +389,10 @@ class Shape(object):
         yunit = self.chart.get_y_units()
 
         x_start = (margin_left + (float(x1) * xunit)) / drawing_width
-        y_start = ((margin_top
-                    + plot_height
-                    - (float(y1) * yunit))
-                    / drawing_height)
+        y_start = (margin_top + plot_height - (float(y1) * yunit)) / drawing_height
 
         x_end = (margin_left + (float(x2) * xunit)) / drawing_width
-        y_end = ((margin_top
-                  + plot_height
-                  - (float(y2) * yunit))
-                  / drawing_height)
+        y_end = (margin_top + plot_height - (float(y2) * yunit)) / drawing_height
 
         # allow user to specify y's in whatever order
         # excel expect y_end to be lower
@@ -402,8 +400,10 @@ class Shape(object):
             y_end, y_start = y_start, y_end
 
         self._coordinates = (
-            self._norm_pct(x_start), self._norm_pct(y_start),
-            self._norm_pct(x_end), self._norm_pct(y_end)
+            self._norm_pct(x_start),
+            self._norm_pct(y_start),
+            self._norm_pct(x_end),
+            self._norm_pct(y_end),
         )
 
     @staticmethod
@@ -443,15 +443,21 @@ class Image(object):
             except ImportError:
                 from PIL import Image as PILImage
         except ImportError:
-            raise ImportError('You must install PIL to fetch image objects')
+            raise ImportError("You must install PIL to fetch image objects")
 
         if not isinstance(img, PILImage.Image):
             img = PILImage.open(img)
 
         return img
 
-    def __init__(self, img, coordinates=((0, 0), (1, 1)), size=(None, None),
-                 nochangeaspect=True, nochangearrowheads=True):
+    def __init__(
+        self,
+        img,
+        coordinates=((0, 0), (1, 1)),
+        size=(None, None),
+        nochangeaspect=True,
+        nochangearrowheads=True,
+    ):
 
         self.image = self._import_image(img)
         self.nochangeaspect = nochangeaspect
@@ -461,8 +467,7 @@ class Image(object):
         self.drawing = Drawing()
         self.drawing.coordinates = coordinates
 
-        newsize = bounding_box(size[0], size[1],
-                               self.image.size[0], self.image.size[1])
+        newsize = bounding_box(size[0], size[1], self.image.size[0], self.image.size[1])
         size = newsize
         self.drawing.width = size[0]
         self.drawing.height = size[1]
@@ -470,18 +475,21 @@ class Image(object):
         self.drawing.anchortype = None
 
     def anchor(self, cell, anchortype="absolute"):
-        """ anchors the image to the given cell
-            optional parameter anchortype supports 'absolute' or 'oneCell'"""
+        """anchors the image to the given cell
+        optional parameter anchortype supports 'absolute' or 'oneCell'"""
         self.drawing.anchortype = anchortype
         if anchortype == "absolute":
             self.drawing.left, self.drawing.top = cell.anchor
-            return ((cell.column, cell.row),
-                    cell.parent.point_pos(self.drawing.top + self.drawing.height,
-                                          self.drawing.left + self.drawing.width))
+            return (
+                (cell.column, cell.row),
+                cell.parent.point_pos(
+                    self.drawing.top + self.drawing.height,
+                    self.drawing.left + self.drawing.width,
+                ),
+            )
         elif anchortype == "oneCell":
             self.drawing.anchorcol = column_index_from_string(cell.column) - 1
             self.drawing.anchorrow = cell.row - 1
             return ((self.drawing.anchorcol, self.drawing.anchorrow), None)
         else:
             raise ValueError("unknown anchortype %s" % anchortype)
-

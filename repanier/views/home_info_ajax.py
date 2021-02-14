@@ -6,19 +6,20 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_OPENED, EMPTY_STRING
+from repanier.middleware import is_ajax
+from repanier.const import SALE_OPENED, EMPTY_STRING
 from repanier.models.permanence import Permanence
 
 
 @never_cache
 @require_GET
 def home_info_bs3_ajax(request):
-    if request.is_ajax():
-        from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
+    if is_ajax():
+        from repanier.globals import REPANIER_SETTINGS_NOTIFICATION
 
         permanences = []
         for permanence in (
-            Permanence.objects.filter(status=PERMANENCE_OPENED)
+            Permanence.objects.filter(status=SALE_OPENED)
             .only("id", "permanence_date", "with_delivery_point")
             .order_by("-permanence_date", "-id")
         ):

@@ -13,7 +13,6 @@ def box_pre_save(sender, **kwargs):
     box.order_unit = PRODUCT_ORDER_UNIT_PC
     box.producer_unit_price = box.customer_unit_price
     box.producer_vat = box.customer_vat
-    box.limit_order_quantity_to_stock = True
     # ! Important to initialise all fields of the box. Remember : a box is a product.
     product_pre_save(sender, **kwargs)
 

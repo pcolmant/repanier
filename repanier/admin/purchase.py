@@ -1,8 +1,6 @@
 import logging
-from urllib.parse import parse_qsl
 
 from django import forms
-from django.contrib import admin
 from django.core.checks import messages
 from django.db import transaction
 from django.http import HttpResponseRedirect
@@ -13,16 +11,17 @@ from django.utils.translation import ugettext_lazy as _
 # from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
 from import_export import resources, fields
-from import_export.admin import ExportMixin
-from import_export.formats.base_formats import CSV, XLSX
+from import_export.formats.base_formats import XLSX
 
 from repanier.admin.admin_filter import (
     PurchaseFilterByProducerForThisPermanence,
     PurchaseFilterByCustomer,
     PurchaseFilterByPermanence,
 )
+from repanier.admin.admin_model import RepanierAdminExport
 from repanier.const import *
 from repanier.email.email_order import export_order_2_1_customer
+from repanier.middleware import get_query_params
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.models.invoice import CustomerInvoice
@@ -52,9 +51,7 @@ class PurchaseResource(resources.ModelResource):
     product_id = fields.Field(attribute="offer_item__product__id", readonly=True)
     product = fields.Field(attribute="offer_item__get_long_name", readonly=True)
     producer_id = fields.Field(attribute="producer__id", readonly=True)
-    producer_name = fields.Field(
-        attribute="producer__short_name", readonly=True
-    )
+    producer_name = fields.Field(attribute="producer__short_name", readonly=True)
     customer_id = fields.Field(attribute="customer__id", readonly=True)
     customer_name = fields.Field(attribute="customer__short_name", readonly=True)
     unit_deposit = fields.Field(
@@ -76,9 +73,7 @@ class PurchaseResource(resources.ModelResource):
     customer_vat = fields.Field(
         attribute="offer_item__customer_vat", widget=TwoMoneysWidget(), readonly=True
     )
-    qty_invoiced = fields.Field(
-        attribute="qty_invoiced", widget=FourDecimalsWidget(), readonly=True
-    )
+    qty = fields.Field(attribute="qty", widget=FourDecimalsWidget(), readonly=True)
     producer_row_price = fields.Field(
         attribute="purchase_price", widget=TwoMoneysWidget(), readonly=True
     )
@@ -103,7 +98,7 @@ class PurchaseResource(resources.ModelResource):
             "product",
             "customer_id",
             "customer_name",
-            "qty_invoiced",
+            "qty",
             "unit_deposit",
             "producer_unit_price_wo_tax",
             "producer_vat",
@@ -141,10 +136,10 @@ class PurchaseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         purchase = self.instance
         if purchase.id is not None:
-            if purchase.status < PERMANENCE_SEND:
-                self.fields["quantity"].initial = purchase.qty_ordered
+            if purchase.status < SALE_SEND:
+                self.fields["quantity"].initial = purchase.qty
             else:
-                self.fields["quantity"].initial = purchase.qty_invoiced
+                self.fields["quantity"].initial = purchase.qty
 
     def clean_product(self):
         product_id = sint(self.cleaned_data.get("product"))
@@ -186,7 +181,7 @@ class PurchaseForm(forms.ModelForm):
         }
 
 
-class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
+class PurchaseAdmin(RepanierAdminExport):
     form = PurchaseForm
     resource_class = PurchaseResource
     list_display = [
@@ -200,7 +195,10 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     list_select_related = ("permanence", "customer")
     list_per_page = 16
     list_max_show_all = 16
-    ordering = ("customer", "offer_item__translations__order_sort_order")
+    ordering = [
+        "customer",
+        "offer_item__translations__order_sort_order",
+    ]
     list_filter = (
         PurchaseFilterByPermanence,
         PurchaseFilterByProducerForThisPermanence,
@@ -249,17 +247,14 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return False
 
     def has_add_permission(self, request):
-        preserved_filters = request.GET.get("_changelist_filters", None)
-        permanence_id = None
-        if preserved_filters is not None:
-            param = dict(parse_qsl(preserved_filters))
-            if "permanence" in param:
-                permanence_id = param["permanence"]
+        query_params = get_query_params()
+        if "permanence" in query_params:
+            permanence_id = query_params["permanence"]
         else:
             permanence_id = request.GET.get("permanence", None)
         if permanence_id is not None:
             if (
-                Permanence.objects.filter(id=permanence_id, status__gt=PERMANENCE_SEND)
+                Permanence.objects.filter(id=permanence_id, status__gt=SALE_SEND)
                 .order_by("?")
                 .exists()
             ):
@@ -270,7 +265,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return False
 
     def has_change_permission(self, request, purchase=None):
-        if purchase is not None and purchase.status > PERMANENCE_SEND:
+        if purchase is not None and purchase.status > SALE_SEND:
             return False
         user = request.user
         if user.is_repanier_staff:
@@ -309,7 +304,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 )
                 if customer_invoice is not None:
                     if (
-                        customer_invoice.status == PERMANENCE_OPENED
+                        customer_invoice.status == SALE_OPENED
                         and not customer_invoice.is_order_confirm_send
                     ):
                         filename = "{}-{}.xlsx".format(_("Order"), permanence)
@@ -353,7 +348,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     #                 permanence_id=permanence_id,
     #             ).order_by('?').first()
     #             if customer_invoice is not None \
-    #                     and customer_invoice.status == PERMANENCE_OPENED \
+    #                     and customer_invoice.status == SALE_OPENED \
     #                     and customer_invoice.is_order_confirm_send:
     #                 user_message_level = messages.INFO
     #                 user_message = _('Order not confirmed')
@@ -377,11 +372,9 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
         permanence_id = None
         if purchase is None:
-            preserved_filters = request.GET.get("_changelist_filters", None)
-            if preserved_filters is not None:
-                param = dict(parse_qsl(preserved_filters))
-                if "permanence" in param:
-                    permanence_id = param["permanence"]
+            query_params = get_query_params()
+            if "permanence" in query_params:
+                permanence_id = query_params["permanence"]
         else:
             permanence_id = purchase.permanence_id
 
@@ -416,7 +409,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return fieldsets
 
     def get_readonly_fields(self, request, purchase=None):
-        if purchase is not None and purchase.status > PERMANENCE_SEND:
+        if purchase is not None and purchase.status > SALE_SEND:
             return ["quantity", "is_updated_on"]
         return ["is_updated_on"]
 
@@ -428,20 +421,21 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         customer_id = None
         self.producer_id = None
         delivery_id = None
-        preserved_filters = request.GET.get("_changelist_filters", None)
-        if preserved_filters and purchase is None:
-            param = dict(parse_qsl(preserved_filters))
-            if "permanence" in param:
-                permanence_id = param["permanence"]
-            if "customer" in param:
-                customer_id = param["customer"]
-            if "producer" in param:
-                self.producer_id = param["producer"]
-            if "delivery" in param:
-                delivery_id = param["delivery"]
-        elif purchase is not None:
+        if purchase is not None:
             permanence_id = purchase.permanence_id
             customer_id = purchase.customer_id
+            self.producer_id = purchase.producer_id
+            delivery_id = purchase.customer_invoice.delivery_id
+        else:
+            query_params = get_query_params()
+            if "permanence" in query_params:
+                permanence_id = query_params["permanence"]
+            if "customer" in query_params:
+                customer_id = query_params["customer"]
+            if "producer" in query_params:
+                self.producer_id = query_params["producer"]
+            if "delivery" in query_params:
+                delivery_id = query_params["delivery"]
         if "permanence" in form.base_fields:
             permanence_field = form.base_fields["permanence"]
             customer_field = form.base_fields["customer"]
@@ -567,15 +561,12 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             delivery_id = form.cleaned_data.get("delivery")
             if delivery_id != EMPTY_STRING:
                 delivery = (
-                    DeliveryBoard.objects.filter(id=delivery_id)
-                    .only("status")
-                    .order_by("?")
-                    .first()
+                    DeliveryBoard.objects.filter(id=delivery_id).only("status").first()
                 )
                 if delivery is not None:
                     status = delivery.status
 
-        if status > PERMANENCE_SEND:
+        if status > SALE_SEND:
             # The purchase is maybe already invoiced
             # Do not update it
             # It is forbidden to change invoiced permanence
@@ -603,14 +594,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         if offer_item is not None:
 
             purchase.offer_item = offer_item
-            if status < PERMANENCE_SEND:
-                purchase.qty_ordered = form.cleaned_data.get(
-                    "quantity", DECIMAL_ZERO
-                )
-            else:
-                purchase.qty_invoiced = form.cleaned_data.get(
-                    "quantity", DECIMAL_ZERO
-                )
+            purchase.qty = form.cleaned_data.get("quantity", DECIMAL_ZERO)
 
             purchase.status = status
             purchase.producer = offer_item.producer
@@ -636,12 +620,6 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             except AttributeError:
                 pass
         return actions
-
-    def get_export_formats(self):
-        """
-        Returns available export formats.
-        """
-        return [f for f in (CSV, XLSX) if f().can_export()]
 
     class Media:
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:

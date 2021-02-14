@@ -1,29 +1,47 @@
 # non proxies
 from .bankaccount import BankAccount
+
+# after Producer and Product
+from .box import Box
+from .box import BoxContent
 from .configuration import Configuration
 from .customer import Customer
-from .deliveryboard import DeliveryBoard
+from .saledelivery import SaleDelivery
 from .invoice import CustomerInvoice, ProducerInvoice, CustomerProducerInvoice
+
+# proxies
+from .lut import (
+    Label,
+    DeliveryPoint,
+    Department,
+    Activity,
+)
+
+from .forsale import ForSale
+from .forsale import ForSaleSend, ForSaleClosed, ForSaleWoReceiver
+from .sale import Sale
+from .sale import SaleInPreparation, SaleClosed
+
+from .producer import Producer
+from .product import Product, Product_Translation
+from .purchase import Purchase
+from .purchase import PurchaseWoReceiver
+from .staff import Staff
+
+###### TODO BEGIN OF OLD MODEL : TBD
+from .invoice import CustomerSend
 from .lut import (
     LUT_ProductionMode,
     LUT_DeliveryPoint,
     LUT_DepartmentForCustomer,
     LUT_PermanenceRole,
 )
+
 from .offeritem import OfferItem
-from .permanence import Permanence
-from .permanenceboard import PermanenceBoard
-from .producer import Producer
-from .product import Product, Product_Translation
-from .purchase import Purchase
-from .staff import Staff
-
-# after Producer and Product
-from .box import Box
-from .box import BoxContent
-
-# proxies
-from .invoice import CustomerSend
 from .offeritem import OfferItemSend, OfferItemClosed, OfferItemWoReceiver
+from .permanence import Permanence
 from .permanence import PermanenceInPreparation, PermanenceDone
-from .purchase import PurchaseWoReceiver
+from .permanenceboard import PermanenceBoard
+from .deliveryboard import DeliveryBoard
+
+###### TODO END OF OLD MODEL : TBD

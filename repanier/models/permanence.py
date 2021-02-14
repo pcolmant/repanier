@@ -5,7 +5,7 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.db import models, transaction
-from django.db.models import F, Sum, DecimalField
+from django.db.models import F
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
@@ -17,6 +17,7 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
+from repanier.middleware import add_filter
 from repanier.const import *
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -37,11 +38,11 @@ from repanier.tools import cap, create_or_update_one_purchase, debug_parameters
 logger = logging.getLogger(__name__)
 
 refresh_status = [
-    PERMANENCE_WAIT_FOR_OPEN,
-    PERMANENCE_WAIT_FOR_CLOSED,
-    PERMANENCE_CLOSED,
-    PERMANENCE_WAIT_FOR_SEND,
-    PERMANENCE_WAIT_FOR_INVOICED,
+    SALE_WAIT_FOR_OPEN,
+    SALE_WAIT_FOR_CLOSED,
+    SALE_CLOSED,
+    SALE_WAIT_FOR_SEND,
+    SALE_WAIT_FOR_INVOICED,
 ]
 
 
@@ -71,8 +72,8 @@ class Permanence(TranslatableModel):
     status = models.CharField(
         _("Status"),
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=LUT_SALE_STATUS,
+        default=SALE_PLANNED,
     )
     permanence_date = models.DateField(_("Date"), db_index=True)
     payment_date = models.DateField(
@@ -90,8 +91,8 @@ class Permanence(TranslatableModel):
     is_updated_on = models.DateTimeField(_("Updated on"), auto_now=True)
     highest_status = models.CharField(
         max_length=3,
-        choices=LUT_PERMANENCE_STATUS,
-        default=PERMANENCE_PLANNED,
+        choices=LUT_SALE_STATUS,
+        default=SALE_PLANNED,
         verbose_name=_("Highest status"),
     )
     master_permanence = models.ForeignKey(
@@ -133,10 +134,9 @@ class Permanence(TranslatableModel):
     get_html_producers_without_download.short_description = _("Offers from")
 
     def get_html_producers(self, with_download):
-        from repanier.admin.tools import add_filter
 
         producers: List[str] = []
-        if self.status == PERMANENCE_PLANNED:
+        if self.status == SALE_PLANNED:
             download_url = add_filter(
                 reverse("admin:permanence-export-offer", args=[self.id])
             )
@@ -155,7 +155,7 @@ class Permanence(TranslatableModel):
                             p.short_name.replace(" ", "&nbsp;"),
                         )
                     )
-        elif self.status == PERMANENCE_OPENED:
+        elif self.status == SALE_OPENED:
             close_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemclosed_changelist"
             )
@@ -177,18 +177,16 @@ class Permanence(TranslatableModel):
                     .first()
                 )
                 if pi is not None:
-                    if pi.status == PERMANENCE_OPENED:
+                    if pi.status == SALE_OPENED:
                         label = (
-                            "{} ({}) ".format(
-                                p.short_name, pi.get_total_price_with_tax()
-                            )
+                            "{} ({}) ".format(p.short_name, pi.balance_calculated)
                         ).replace(" ", "&nbsp;")
                         offeritem_changelist_url = close_offeritem_changelist_url
                     else:
                         label = (
                             "{} ({}) {}".format(
                                 p.short_name,
-                                pi.get_total_price_with_tax(),
+                                pi.balance_calculated,
                                 settings.LOCK_UNICODE,
                             )
                         ).replace(" ", "&nbsp;")
@@ -202,8 +200,8 @@ class Permanence(TranslatableModel):
                     )
                 )
 
-        elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
-            if self.status == PERMANENCE_SEND:
+        elif self.status in [SALE_SEND, SALE_INVOICED, SALE_ARCHIVED]:
+            if self.status == SALE_SEND:
                 download_url = add_filter(
                     reverse(
                         "admin:permanence-export-producer-closed-order", args=[self.id]
@@ -227,14 +225,14 @@ class Permanence(TranslatableModel):
                 .select_related("producer")
                 .order_by("producer")
             ):
-                if pi.status == PERMANENCE_SEND:
+                if pi.status == SALE_SEND:
                     if pi.producer.invoice_by_basket:
                         changelist_url = send_customer_changelist_url
                     else:
                         changelist_url = send_offeritem_changelist_url
                     # Important : no target="_blank"
                     label = "{} ({})".format(
-                        pi.producer.short_name, pi.get_total_price_with_tax()
+                        pi.producer.short_name, pi.balance_calculated
                     )
                     producers.append(
                         '<a href="{}?permanence={}&producer={}">&nbsp;{}</a>'.format(
@@ -248,7 +246,7 @@ class Permanence(TranslatableModel):
                     if pi.reference:
                         if (
                             pi.balance_invoiced != DECIMAL_ZERO
-                            or pi.total_price_with_tax != DECIMAL_ZERO
+                            or pi.balance_calculated != DECIMAL_ZERO
                         ):
                             label = "{} ({} - {})".format(
                                 pi.producer.short_name,
@@ -263,7 +261,7 @@ class Permanence(TranslatableModel):
                     else:
                         if (
                             pi.balance_invoiced != DECIMAL_ZERO
-                            or pi.total_price_with_tax != DECIMAL_ZERO
+                            or pi.balance_calculated != DECIMAL_ZERO
                         ):
                             label = "{} ({})".format(
                                 pi.producer.short_name,
@@ -275,7 +273,10 @@ class Permanence(TranslatableModel):
                     # Such that they can be accessed by the producer and by the staff
                     producers.append(
                         '<a href="{}" target="_blank">{}</a>'.format(
-                            reverse("repanier:producer_invoice_view", args=(pi.id, pi.producer.login_uuid)),
+                            reverse(
+                                "repanier:producer_invoice_view",
+                                args=(pi.id, pi.producer.login_uuid),
+                            ),
                             label.replace(" ", "&nbsp;"),
                         )
                     )
@@ -344,12 +345,10 @@ class Permanence(TranslatableModel):
     get_html_customers_without_download.short_description = _("Orders from")
 
     def get_html_customers(self, with_download):
-        from repanier.admin.tools import add_filter
-
         customers: List[str] = []
-        if self.status in [PERMANENCE_OPENED, PERMANENCE_SEND]:
+        if self.status in [SALE_OPENED, SALE_SEND]:
             changelist_url = reverse("admin:repanier_purchase_changelist")
-            if self.status == PERMANENCE_OPENED:
+            if self.status == SALE_OPENED:
                 download_url = add_filter(
                     reverse(
                         "admin:permanence-export-customer-opened-order", args=[self.id]
@@ -381,9 +380,7 @@ class Permanence(TranslatableModel):
                         )
                     else:
                         customers.append("<br><br>--")
-                total_price_with_tax = ci.get_total_price_with_tax(
-                    customer_charged=True
-                )
+                total_price_with_tax = ci.balance_calculated
                 # if ci.is_order_confirm_send:
                 label = "{}{} ({}) {}{}".format(
                     "<b><i>" if ci.is_group else EMPTY_STRING,
@@ -403,7 +400,7 @@ class Permanence(TranslatableModel):
                         label.replace(" ", "&nbsp;"),
                     )
                 )
-        elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
+        elif self.status in [SALE_INVOICED, SALE_ARCHIVED]:
             button_download = EMPTY_STRING
             delivery_save = None
             for ci in (
@@ -419,9 +416,7 @@ class Permanence(TranslatableModel):
                         )
                     else:
                         customers.append("<br><br>--")
-                total_price_with_tax = ci.get_total_price_with_tax(
-                    customer_charged=True
-                )
+                total_price_with_tax = ci.balance_calculated
                 label = "{}{} ({}) {}{}".format(
                     "<b><i>" if ci.is_group else EMPTY_STRING,
                     ci.customer.short_name,
@@ -435,7 +430,10 @@ class Permanence(TranslatableModel):
                 # Such that they can be accessed by the customer and by the staff
                 customers.append(
                     '<a href="{}" target="_blank">{}</a>'.format(
-                        reverse("repanier:customer_invoice_view", args=(ci.id, ci.customer_id)),
+                        reverse(
+                            "repanier:customer_invoice_view",
+                            args=(ci.id, ci.customer_id),
+                        ),
                         label.replace(" ", "&nbsp;"),
                     )
                 )
@@ -506,8 +504,6 @@ class Permanence(TranslatableModel):
 
     @cached_property
     def get_html_board(self):
-        from repanier.admin.tools import add_filter
-
         permanenceboard_set = PermanenceBoard.objects.filter(
             permanence=self, permanence_role__rght=F("permanence_role__lft") + 1
         ).order_by("permanence_role__tree_id", "permanence_role__lft")
@@ -665,7 +661,7 @@ class Permanence(TranslatableModel):
 
     @transaction.atomic
     def close_order(self, everything, deliveries_id=(), send_mail=True):
-        from repanier.apps import (
+        from repanier.globals import (
             REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION,
             REPANIER_SETTINGS_MEMBERSHIP_FEE,
         )
@@ -714,7 +710,7 @@ class Permanence(TranslatableModel):
 
                 for customer_invoice in customer_invoice_qs:
                     customer = customer_invoice.customer
-                    if not customer.represent_this_buyinggroup:
+                    if not customer.is_default:
                         # Should pay a membership fee
                         if customer.membership_fee_valid_until < self.permanence_date:
                             membership_fee_offer_item = (
@@ -724,7 +720,7 @@ class Permanence(TranslatableModel):
                             create_or_update_one_purchase(
                                 customer_id=customer.id,
                                 offer_item=membership_fee_offer_item,
-                                status=PERMANENCE_OPENED,
+                                status=SALE_OPENED,
                                 q_order=1,
                                 batch_job=True,
                                 is_box_content=False,
@@ -754,7 +750,7 @@ class Permanence(TranslatableModel):
             customer_qs = Customer.objects.filter(
                 may_order=True,
                 customerinvoice__permanence_id=self.id,
-                represent_this_buyinggroup=False,
+                is_default=False,
             ).order_by("?")
             if self.with_delivery_point:
                 customer_qs = customer_qs.filter(
@@ -770,7 +766,7 @@ class Permanence(TranslatableModel):
                     create_or_update_one_purchase(
                         customer_id=customer.id,
                         offer_item=offer_item,
-                        status=PERMANENCE_OPENED,
+                        status=SALE_OPENED,
                         q_order=1,
                         batch_job=True,
                         is_box_content=False,
@@ -779,28 +775,12 @@ class Permanence(TranslatableModel):
                     create_or_update_one_purchase(
                         customer_id=customer.id,
                         offer_item=offer_item,
-                        status=PERMANENCE_OPENED,
+                        status=SALE_OPENED,
                         q_order=0,
                         batch_job=True,
                         is_box_content=False,
                         comment=EMPTY_STRING,
                     )
-        if everything:
-            # Add Transport
-            offer_item_qs = OfferItem.objects.filter(
-                permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_TRANSPORTATION
-            ).order_by("?")
-            group_id = Customer.get_or_create_default().id
-            for offer_item in offer_item_qs:
-                create_or_update_one_purchase(
-                    customer_id=group_id,
-                    offer_item=offer_item,
-                    status=PERMANENCE_OPENED,
-                    q_order=1,
-                    batch_job=True,
-                    is_box_content=False,
-                    comment=EMPTY_STRING,
-                )
 
     @transaction.atomic
     @debug_parameters
@@ -811,14 +791,12 @@ class Permanence(TranslatableModel):
         default_producer = Producer.get_or_create_default()
         default_customer = Customer.get_or_create_default()
 
-        self.set_status(
-            old_status=PERMANENCE_SEND, new_status=PERMANENCE_WAIT_FOR_INVOICED
-        )
+        self.set_status(old_status=SALE_SEND, new_status=SALE_WAIT_FOR_INVOICED)
 
         default_customer_invoice = CustomerInvoice.get_or_create(
             permanence_id=self.id, customer_id=default_customer.id
         )
-        default_customer_invoice.set_invoice_context(payment_date)
+        default_customer_invoice.set_next_balance(payment_date)
         default_customer_invoice.save()
 
         if ProducerInvoice.objects.do_not_invoice(permanence_id=self.id).exists():
@@ -844,7 +822,7 @@ class Permanence(TranslatableModel):
             new_permanence.producers.add(*producers_to_move)
             ProducerInvoice.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
-            ).update(permanence_id=new_permanence.id, status=PERMANENCE_SEND)
+            ).update(permanence_id=new_permanence.id, status=SALE_SEND)
             CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id,
                 producer_id__in=producers_to_move
@@ -878,7 +856,7 @@ class Permanence(TranslatableModel):
                 new_customer_invoice.save()
 
             new_permanence.set_status(
-                old_status=PERMANENCE_WAIT_FOR_INVOICED, new_status=PERMANENCE_SEND
+                old_status=SALE_WAIT_FOR_INVOICED, new_status=SALE_SEND
             )
             new_permanence.recalculate_order_amount(re_init=True)
             new_permanence.save()
@@ -908,7 +886,7 @@ class Permanence(TranslatableModel):
         for customer_invoice in CustomerInvoice.objects.filter(
             permanence_id=self.id
         ).order_by("?"):
-            customer_invoice.set_invoice_context(payment_date)
+            customer_invoice.set_next_balance(payment_date)
             customer_invoice.save()
             Customer.objects.filter(id=customer_invoice.customer_id).update(
                 date_balance=payment_date,
@@ -931,7 +909,7 @@ class Permanence(TranslatableModel):
         for producer_invoice in ProducerInvoice.objects.filter(
             permanence_id=self.id
         ).order_by("?"):
-            producer_invoice.set_invoice_context(payment_date)
+            producer_invoice.set_next_balance(payment_date)
             producer_invoice.save()
             Producer.objects.filter(id=producer_invoice.producer_id).update(
                 date_balance=payment_date, balance=producer_invoice.balance
@@ -971,12 +949,12 @@ class Permanence(TranslatableModel):
         )
 
         new_status = (
-            PERMANENCE_INVOICED
+            SALE_INVOICED
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING
-            else PERMANENCE_ARCHIVED
+            else SALE_ARCHIVED
         )
         self.set_status(
-            old_status=PERMANENCE_WAIT_FOR_INVOICED,
+            old_status=SALE_WAIT_FOR_INVOICED,
             new_status=new_status,
             update_payment_date=True,
             payment_date=payment_date,
@@ -985,8 +963,8 @@ class Permanence(TranslatableModel):
     @transaction.atomic
     def cancel_invoice(self, last_bank_account_total):
         self.set_status(
-            old_status=PERMANENCE_INVOICED,
-            new_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE,
+            old_status=SALE_INVOICED,
+            new_status=SALE_WAIT_FOR_CANCEL_INVOICE,
         )
         CustomerInvoice.objects.filter(permanence_id=self.id).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
@@ -1013,20 +991,20 @@ class Permanence(TranslatableModel):
                 customer_invoice_id=customer_invoice.id
             ).order_by("?").update(customer_invoice=None)
         ProducerInvoice.objects.filter(
-            permanence_id=self.id, producer__represent_this_buyinggroup=False
+            permanence_id=self.id, producer__is_default=False
         ).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
             bank_amount_out=DECIMAL_ZERO,
             delta_price_with_tax=DECIMAL_ZERO,
             delta_vat=DECIMAL_ZERO,
-            delta_transport=DECIMAL_ZERO,
+            transport=DECIMAL_ZERO,
             balance=F("previous_balance"),
             date_balance=F("date_previous_balance"),
             invoice_sort_order=None,
         )
         # Important : Restore delta from delivery points added into invoice.confirm_order()
         ProducerInvoice.objects.filter(
-            permanence_id=self.id, producer__represent_this_buyinggroup=True
+            permanence_id=self.id, producer__is_default=True
         ).order_by("?").update(
             bank_amount_in=DECIMAL_ZERO,
             bank_amount_out=DECIMAL_ZERO,
@@ -1071,13 +1049,11 @@ class Permanence(TranslatableModel):
         Permanence.objects.filter(id=self.id).order_by("?").update(
             canceled_invoice_sort_order=F("invoice_sort_order"), invoice_sort_order=None
         )
-        self.set_status(
-            old_status=PERMANENCE_WAIT_FOR_CANCEL_INVOICE, new_status=PERMANENCE_SEND
-        )
+        self.set_status(old_status=SALE_WAIT_FOR_CANCEL_INVOICE, new_status=SALE_SEND)
 
     @transaction.atomic
     def cancel_delivery(self):
-        self.set_status(old_status=PERMANENCE_SEND, new_status=PERMANENCE_CANCELLED)
+        self.set_status(old_status=SALE_SEND, new_status=SALE_CANCELLED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
@@ -1085,7 +1061,7 @@ class Permanence(TranslatableModel):
 
     @transaction.atomic
     def archive(self):
-        self.set_status(old_status=PERMANENCE_SEND, new_status=PERMANENCE_ARCHIVED)
+        self.set_status(old_status=SALE_SEND, new_status=SALE_ARCHIVED)
         bank_account = BankAccount.get_closest_to(self.permanence_date)
         if bank_account is not None:
             self.invoice_sort_order = bank_account.id
@@ -1221,7 +1197,7 @@ class Permanence(TranslatableModel):
                 if producer_invoice.reference:
                     operation_comment = producer_invoice.reference
                 else:
-                    if producer.represent_this_buyinggroup:
+                    if producer.is_default:
                         operation_comment = self.get_permanence_display()
                     else:
                         operation_comment = _(
@@ -1245,7 +1221,7 @@ class Permanence(TranslatableModel):
 
             delta = (
                 producer_invoice.balance_invoiced.amount
-                - producer_invoice.get_total_price_with_tax().amount
+                - producer_invoice.balance_calculated.amount
             ).quantize(TWO_DECIMALS)
             if delta != DECIMAL_ZERO:
                 # Profit or loss for the group
@@ -1279,15 +1255,12 @@ class Permanence(TranslatableModel):
             permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_PC_KG
         ).only("order_average_weight"):
             PurchaseWoReceiver.objects.filter(
-                # status=PERMANENCE_WAIT_FOR_SEND,
+                # status=SALE_WAIT_FOR_SEND,
                 offer_item_id=offer_item.id,
-            ).update(
-                qty_invoiced=F("qty_ordered")
-                * offer_item.order_average_weight
-            )
+            ).update(qty=F("qty") * offer_item.order_average_weight)
         OfferItemWoReceiver.objects.filter(
             permanence_id=self.id, order_unit=PRODUCT_ORDER_UNIT_PC_KG
-        ).order_by("?").update(use_order_unit_converted=True)
+        ).order_by("?").update(order_unit=PRODUCT_ORDER_UNIT_KG)
 
     def recalculate_order_amount(self, offer_item_qs=None, re_init=False):
         from repanier.models.purchase import Purchase
@@ -1315,7 +1288,7 @@ class Permanence(TranslatableModel):
             OfferItemWoReceiver.objects.filter(permanence_id=self.id).order_by(
                 "?"
             ).update(
-                qty_invoiced=DECIMAL_ZERO,
+                qty=DECIMAL_ZERO,
                 total_purchase_with_tax=DECIMAL_ZERO,
                 total_selling_with_tax=DECIMAL_ZERO,
             )
@@ -1330,8 +1303,7 @@ class Permanence(TranslatableModel):
             # the total_purchase_with_tax + total_selling_with_tax of CustomerProducerInvoice,
             # and qty_invoiced + total_purchase_with_tax + total_selling_with_tax of OfferItem
             if re_init:
-                purchase.previous_qty_ordered = DECIMAL_ZERO
-                purchase.previous_qty_invoiced = DECIMAL_ZERO
+                purchase.previous_qty = DECIMAL_ZERO
                 purchase.previous_purchase_price = DECIMAL_ZERO
                 purchase.previous_selling_price = DECIMAL_ZERO
                 purchase.previous_producer_vat = DECIMAL_ZERO
@@ -1355,7 +1327,7 @@ class Permanence(TranslatableModel):
                 PRODUCT_ORDER_UNIT_KG,
                 PRODUCT_ORDER_UNIT_PC_KG,
             ],
-        ).update(qty_for_preparation_sort_order=F("qty_invoiced"))
+        ).update(qty_for_preparation_sort_order=F("qty"))
 
     def reorder_offer_items(self):
         from repanier.models.offeritem import OfferItemWoReceiver
@@ -1420,7 +1392,7 @@ class Permanence(TranslatableModel):
 
     @cached_property
     def get_html_new_products(self):
-        assert self.status < PERMANENCE_SEND
+        assert self.status < SALE_SEND
         result = []
         for a_producer in self.producers.all():
             current_products = list(
@@ -1437,7 +1409,7 @@ class Permanence(TranslatableModel):
             six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
             previous_permanence = (
                 Permanence.objects.filter(
-                    status__gte=PERMANENCE_SEND,
+                    status__gte=SALE_SEND,
                     producers=a_producer,
                     permanence_date__gte=six_months_ago,
                 )
@@ -1485,7 +1457,7 @@ class Permanence(TranslatableModel):
 
     def get_html_status_display(self, force_refresh=True):
         need_to_refresh_status = force_refresh or self.status in refresh_status
-        if self.with_delivery_point and self.status < PERMANENCE_INVOICED:
+        if self.with_delivery_point and self.status < SALE_INVOICED:
             status_list = []
             status = None
             status_counter = 0
@@ -1494,11 +1466,16 @@ class Permanence(TranslatableModel):
             ).order_by("status", "id"):
                 need_to_refresh_status |= delivery.status in refresh_status
                 if status != delivery.status:
-                    status = delivery.status
                     status_counter += 1
-                    status_list.append(
-                        "<b>{}</b>".format(delivery.get_status_display())
-                    )
+                    status = delivery.status
+                    if self.status <= delivery.status:
+                        status_list.append(
+                            "<b>{}</b>".format(delivery.get_status_display())
+                        )
+                    else:
+                        status_list.append(
+                            "<b>{}</b>".format(_("Error, call helpdesk"))
+                        )
                 status_list.append(
                     "- {}".format(delivery.get_delivery_display(color=True))
                 )
@@ -1547,10 +1524,10 @@ class Permanence(TranslatableModel):
         if short_name:
             permanence_display = "{}".format(short_name)
         else:
-            from repanier.apps import REPANIER_SETTINGS_PERMANENCE_ON_NAME
+            from repanier.globals import REPANIER_SETTINGS_SALE_ON_NAME
 
             permanence_display = "{}{}".format(
-                REPANIER_SETTINGS_PERMANENCE_ON_NAME,
+                REPANIER_SETTINGS_SALE_ON_NAME,
                 self.permanence_date.strftime(settings.DJANGO_SETTINGS_DATE),
             )
         return permanence_display
@@ -1565,7 +1542,7 @@ class Permanence(TranslatableModel):
 
     def get_html_permanence_display(self, align=EMPTY_STRING):
         if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
-            if self.status == PERMANENCE_OPENED:
+            if self.status == SALE_OPENED:
                 return "{} - {}".format(
                     self.get_permanence_display(), self.get_status_display()
                 )
@@ -1574,7 +1551,7 @@ class Permanence(TranslatableModel):
                     self.get_permanence_display(), _("Orders closed")
                 )
         else:
-            if self.status == PERMANENCE_OPENED:
+            if self.status == SALE_OPENED:
                 return mark_safe(
                     '<span class="fa fa-unlock" style="{}color:#cdff60"></span> {}'.format(
                         align, self.get_permanence_display()
@@ -1588,7 +1565,7 @@ class Permanence(TranslatableModel):
                 )
 
     def get_html_permanence_card_display(self):
-        if settings.REPANIER_SETTINGS_TEMPLATE != "bs4":
+        if settings.REPANIER_SETTINGS_TEMPLATE == "bs3":
             offer_description = Truncator(
                 self.safe_translation_getter(
                     "offer_description", any_language=True, default=EMPTY_STRING

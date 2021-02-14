@@ -37,12 +37,11 @@ class RepanierToolbar(CMSToolbar):
                     url = reverse("admin:repanier_lut_deliverypoint_changelist")
                     office_menu.add_sideframe_item(_("Delivery points"), url=url)
 
-            url = reverse("admin:repanier_lut_permanencerole_changelist")
+            url = reverse("admin:repanier_activity_changelist")
             office_menu.add_sideframe_item(_("Tasks"), url=url)
-            if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-                url = reverse("admin:repanier_lut_productionmode_changelist")
-                office_menu.add_sideframe_item(_("Labels"), url=url)
-            url = reverse("admin:repanier_lut_departmentforcustomer_changelist")
+            url = reverse("admin:repanier_label_changelist")
+            office_menu.add_sideframe_item(_("Labels"), url=url)
+            url = reverse("admin:repanier_department_changelist")
             office_menu.add_sideframe_item(_("Departments"), url=url)
             position += 1
 

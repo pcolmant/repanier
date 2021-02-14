@@ -60,7 +60,7 @@ def new_portrait_a4_sheet(workbook, title1, title2, header=None, add_print_title
 
 
 def worksheet_setup_landscape_a4(worksheet, title1, title2, add_print_title=True):
-    from repanier.apps import REPANIER_SETTINGS_XLSX_PORTRAIT
+    from repanier.globals import REPANIER_SETTINGS_XLSX_PORTRAIT
 
     worksheet = worksheet_setup_a4(worksheet, title1, title2, add_print_title)
     worksheet.page_setup.orientation = (

@@ -25,20 +25,19 @@
 
 from itertools import groupby
 
-from .shared.compat import OrderedDict
-
 from .cell import coordinate_from_string
+from .shared.compat import OrderedDict
 
 
 def collapse_cell_addresses(cells, input_ranges=()):
-    """ Collapse a collection of cell co-ordinates down into an optimal
-        range or collection of ranges.
+    """Collapse a collection of cell co-ordinates down into an optimal
+    range or collection of ranges.
 
-        E.g. Cells A1, A2, A3, B1, B2 and B3 should have the data-validation
-        object applied, attempt to collapse down to a single range, A1:B3.
+    E.g. Cells A1, A2, A3, B1, B2 and B3 should have the data-validation
+    object applied, attempt to collapse down to a single range, A1:B3.
 
-        Currently only collapsing contiguous vertical ranges (i.e. above
-        example results in A1:A3 B1:B3).  More work to come.
+    Currently only collapsing contiguous vertical ranges (i.e. above
+    example results in A1:A3 B1:B3).  More work to come.
     """
     keyfunc = lambda x: x[0]
 
@@ -46,16 +45,19 @@ def collapse_cell_addresses(cells, input_ranges=()):
     raw_coords = [coordinate_from_string(cell) for cell in cells]
 
     # Group up as {column: [list of rows]}
-    grouped_coords = OrderedDict((k, [c[1] for c in g]) for k, g in
-                          groupby(sorted(raw_coords, key=keyfunc), keyfunc))
+    grouped_coords = OrderedDict(
+        (k, [c[1] for c in g])
+        for k, g in groupby(sorted(raw_coords, key=keyfunc), keyfunc)
+    )
     ranges = list(input_ranges)
 
     # For each column, find contiguous ranges of rows
     for column in grouped_coords:
         rows = sorted(grouped_coords[column])
-        grouped_rows = [[r[1] for r in list(g)] for k, g in
-                        groupby(enumerate(rows),
-                        lambda x: x[0] - x[1])]
+        grouped_rows = [
+            [r[1] for r in list(g)]
+            for k, g in groupby(enumerate(rows), lambda x: x[0] - x[1])
+        ]
         for rows in grouped_rows:
             if len(rows) == 0:
                 pass
@@ -154,13 +156,15 @@ default_attr_map = {
 
 
 class DataValidation(object):
-    def __init__(self,
-                 validation_type,
-                 operator=None,
-                 formula1=None,
-                 formula2=None,
-                 allow_blank=False,
-                 attr_map=None):
+    def __init__(
+        self,
+        validation_type,
+        operator=None,
+        formula1=None,
+        formula2=None,
+        allow_blank=False,
+        attr_map=None,
+    ):
 
         self.validation_type = validation_type
         self.operator = operator
@@ -180,24 +184,24 @@ class DataValidation(object):
 
     def set_error_message(self, error, error_title="Validation Error"):
         """Creates a custom error message, displayed when a user changes a cell
-           to an invalid value"""
-        self.attr_map['errorTitle'] = error_title
-        self.attr_map['error'] = error
+        to an invalid value"""
+        self.attr_map["errorTitle"] = error_title
+        self.attr_map["error"] = error
 
     def set_prompt_message(self, prompt, prompt_title="Validation Prompt"):
         """Creates a custom prompt message"""
-        self.attr_map['promptTitle'] = prompt_title
-        self.attr_map['prompt'] = prompt
+        self.attr_map["promptTitle"] = prompt_title
+        self.attr_map["prompt"] = prompt
 
     def generate_attributes_map(self):
-        self.attr_map['type'] = self.validation_type
-        self.attr_map['allowBlank'] = '1' if self.allow_blank else '0'
+        self.attr_map["type"] = self.validation_type
+        self.attr_map["allowBlank"] = "1" if self.allow_blank else "0"
 
         if self.operator:
-            self.attr_map['operator'] = self.operator
+            self.attr_map["operator"] = self.operator
 
         # Update the sqref to ensure it points at all cells we're interested in
-        self.attr_map['sqref'] = collapse_cell_addresses(self.cells, self.ranges)
+        self.attr_map["sqref"] = collapse_cell_addresses(self.cells, self.ranges)
 
         return self.attr_map
 

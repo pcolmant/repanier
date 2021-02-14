@@ -11,7 +11,7 @@ from repanier.tools import *
 
 
 def send_invoice(permanence_id):
-    from repanier.apps import (
+    from repanier.globals import (
         REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER,
         REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER,
         REPANIER_SETTINGS_CONFIG,
@@ -97,7 +97,7 @@ def send_invoice(permanence_id):
             for customer in Customer.objects.filter(
                 customerinvoice__permanence_id=permanence.id,
                 customerinvoice__customer_charged_id=F("id"),
-                represent_this_buyinggroup=False,
+                is_default=False,
                 language=language_code,
             ).order_by("?"):
                 long_name = (

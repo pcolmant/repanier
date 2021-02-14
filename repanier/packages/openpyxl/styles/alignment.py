@@ -26,23 +26,26 @@ from .hashable import HashableObject
 
 class Alignment(HashableObject):
     """Alignment options for use in styles."""
-    HORIZONTAL_GENERAL = 'general'
-    HORIZONTAL_LEFT = 'left'
-    HORIZONTAL_RIGHT = 'right'
-    HORIZONTAL_CENTER = 'center'
-    HORIZONTAL_CENTER_CONTINUOUS = 'centerContinuous'
-    HORIZONTAL_JUSTIFY = 'justify'
-    VERTICAL_BOTTOM = 'bottom'
-    VERTICAL_TOP = 'top'
-    VERTICAL_CENTER = 'center'
-    VERTICAL_JUSTIFY = 'justify'
 
-    __fields__ = ('horizontal',
-                  'vertical',
-                  'text_rotation',
-                  'wrap_text',
-                  'shrink_to_fit',
-                  'indent')
+    HORIZONTAL_GENERAL = "general"
+    HORIZONTAL_LEFT = "left"
+    HORIZONTAL_RIGHT = "right"
+    HORIZONTAL_CENTER = "center"
+    HORIZONTAL_CENTER_CONTINUOUS = "centerContinuous"
+    HORIZONTAL_JUSTIFY = "justify"
+    VERTICAL_BOTTOM = "bottom"
+    VERTICAL_TOP = "top"
+    VERTICAL_CENTER = "center"
+    VERTICAL_JUSTIFY = "justify"
+
+    __fields__ = (
+        "horizontal",
+        "vertical",
+        "text_rotation",
+        "wrap_text",
+        "shrink_to_fit",
+        "indent",
+    )
     __slots__ = __fields__
     __leaf__ = True
 

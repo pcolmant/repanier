@@ -21,10 +21,9 @@
 # @license: http://www.opensource.org/licenses/mit-license.php
 # @author: see AUTHORS file
 
+
 class Comment(object):
-    __slots__ = ('_parent',
-                 '_text',
-                 '_author')
+    __slots__ = ("_parent", "_text", "_author")
 
     def __init__(self, text, author):
         self._text = text
@@ -33,22 +32,24 @@ class Comment(object):
 
     @property
     def author(self):
-        """ The name recorded for the author
+        """The name recorded for the author
 
-            :rtype: string
+        :rtype: string
         """
         return self._author
+
     @author.setter
     def author(self, value):
         self._author = value
 
     @property
     def text(self):
-        """ The text of the commment
+        """The text of the commment
 
-            :rtype: string
+        :rtype: string
         """
         return self._text
+
     @text.setter
     def text(self, value):
         self._text = value

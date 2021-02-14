@@ -2,10 +2,10 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from repanier.const import (
-    PERMANENCE_OPENED,
-    PERMANENCE_CLOSED,
-    PERMANENCE_SEND,
-    PERMANENCE_PLANNED,
+    SALE_OPENED,
+    SALE_CLOSED,
+    SALE_SEND,
+    SALE_PLANNED,
 )
 from repanier.models.deliveryboard import DeliveryBoard
 from repanier.tools import get_repanier_template_name
@@ -27,9 +27,9 @@ class SelectAdminDeliveryWidget(forms.Select):
                 .first()
                 .status
             )
-            if status in [PERMANENCE_PLANNED, PERMANENCE_OPENED, PERMANENCE_CLOSED]:
+            if status in [SALE_PLANNED, SALE_OPENED, SALE_CLOSED]:
                 case_show_hide += 'case "{}": '.format(option_value)
-            elif status == PERMANENCE_SEND:
+            elif status == SALE_SEND:
                 case_hide_show += 'case "{}": '.format(option_value)
             else:
                 case_show_show += 'case "{}": '.format(option_value)

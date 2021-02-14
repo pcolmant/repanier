@@ -136,8 +136,8 @@ class RepanierMoney(object):
         build, next = result.append, digits.pop
 
         # Suffix currency
-        if repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            build(" {}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
+        if repanier.globals.REPANIER_SETTINGS_AFTER_AMOUNT:
+            build(" {}".format(repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY))
 
         # Decimals
         for i in range(self.decimal_places):  # noqa
@@ -164,8 +164,8 @@ class RepanierMoney(object):
             build("- ")
 
         # Prefix currency
-        if not repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT:
-            build("{}".format(repanier.apps.REPANIER_SETTINGS_CURRENCY_DISPLAY))
+        if not repanier.globals.REPANIER_SETTINGS_AFTER_AMOUNT:
+            build("{}".format(repanier.globals.REPANIER_SETTINGS_CURRENCY_DISPLAY))
         return "".join(reversed(result))
 
     def as_tuple(self):
@@ -233,9 +233,7 @@ class ModelMoneyField(models.DecimalField):
         return super().get_db_prep_save(value, connection)
 
     def contribute_to_class(self, cls, name, private_only=False):
-        super().contribute_to_class(
-            cls, name, private_only=private_only
-        )
+        super().contribute_to_class(cls, name, private_only=private_only)
         setattr(cls, self.name, MoneyFieldProxy(self))
 
 
@@ -244,9 +242,7 @@ class FormMoneyField(DecimalField):
 
     def to_python(self, value):
         # Important : Do not validate if self.disabled
-        value = (
-            not self.disabled and super().to_python(value)
-        ) or DECIMAL_ZERO
+        value = (not self.disabled and super().to_python(value)) or DECIMAL_ZERO
         return RepanierMoney(value)
 
     def prepare_value(self, value):

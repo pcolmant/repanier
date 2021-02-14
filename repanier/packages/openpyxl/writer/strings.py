@@ -24,7 +24,7 @@
 """Write the shared string table."""
 
 # compatibility imports
-from ..shared.compat import BytesIO, StringIO
+from ..shared.compat import StringIO
 
 # package imports
 from ..shared.xmltools import start_tag, end_tag, tag, XMLGenerator
@@ -43,27 +43,31 @@ def create_string_table(workbook):
 def write_string_table(string_table):
     """Write the string table xml."""
     temp_buffer = StringIO()
-    doc = XMLGenerator(out=temp_buffer, encoding='utf-8')
-    start_tag(doc, 'sst', {'xmlns':
-            'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
-            'uniqueCount': '%d' % len(string_table)})
-    strings_to_write = sorted(string_table.items(),
-            key=lambda pair: pair[1])
+    doc = XMLGenerator(out=temp_buffer, encoding="utf-8")
+    start_tag(
+        doc,
+        "sst",
+        {
+            "xmlns": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+            "uniqueCount": "%d" % len(string_table),
+        },
+    )
+    strings_to_write = sorted(string_table.items(), key=lambda pair: pair[1])
     for key in [pair[0] for pair in strings_to_write]:
-        start_tag(doc, 'si')
+        start_tag(doc, "si")
         if key.strip() != key:
-            attr = {'xml:space': 'preserve'}
+            attr = {"xml:space": "preserve"}
         else:
             attr = {}
-        tag(doc, 't', attr, key)
-        end_tag(doc, 'si')
-    end_tag(doc, 'sst')
+        tag(doc, "t", attr, key)
+        end_tag(doc, "si")
+    end_tag(doc, "sst")
     string_table_xml = temp_buffer.getvalue()
     temp_buffer.close()
     return string_table_xml
 
-class StringTableBuilder(object):
 
+class StringTableBuilder(object):
     def __init__(self):
 
         self.counter = 0

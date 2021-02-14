@@ -30,12 +30,11 @@ from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheM
 from repanier.admin.tools import (
     check_cancel_in_post,
     check_permanence,
-    get_query_filters,
-    add_filter,
 )
 from repanier.const import *
 from repanier.email.email import RepanierEmail
 from repanier.fields.RepanierMoneyField import RepanierMoney
+from repanier.middleware import add_filter, get_query_filters
 from repanier.models.box import Box
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -54,40 +53,43 @@ from repanier.xlsx.xlsx_order import generate_producer_xlsx, generate_customer_x
 logger = logging.getLogger(__name__)
 
 
-class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
-    model = PermanenceBoard
-    ordering = ("permanence_role__tree_id", "permanence_role__lft")
-    fields = ["permanence_role", "customer"]
-    extra = 0
+class PermanenceInPreparationInlineMixin(InlineForeignKeyCacheMixin):
     _has_add_or_delete_permission = None
 
     def has_delete_permission(self, request, obj=None):
         if self._has_add_or_delete_permission is None:
-            try:
+            object_id = request.resolver_match.kwargs.get("object_id", None)
+            if object_id:
+                # Update
                 parent_object = (
-                    PermanenceInPreparation.objects.filter(
-                        id=request.resolver_match.args[0]
-                    )
+                    PermanenceInPreparation.objects.filter(id=object_id)
                     .only("status")
-                    .order_by("?")
                     .first()
                 )
-                if (
-                    parent_object is not None
-                    and parent_object.status == PERMANENCE_PLANNED
-                ):
+                if parent_object is not None and parent_object.status == SALE_PLANNED:
                     self._has_add_or_delete_permission = True
                 else:
                     self._has_add_or_delete_permission = False
-            except:
+            else:
+                # Create
                 self._has_add_or_delete_permission = True
         return self._has_add_or_delete_permission
 
-    def has_add_permission(self, request, obj):
+    def has_add_permission(self, request, **kwargs):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):
         return self.has_delete_permission(request)
+
+
+class PermanenceBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInline):
+    model = PermanenceBoard
+    ordering = [
+        "permanence_role__tree_id",
+        "permanence_role__lft",
+    ]
+    fields = ["permanence_role", "customer"]
+    extra = 0
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -109,46 +111,16 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline):
+class DeliveryBoardInline(
+    PermanenceInPreparationInlineMixin, TranslatableTabularInline
+):
     model = DeliveryBoard
-    ordering = ("id",)
     fields = ["delivery_comment", "delivery_point", "status"]
     extra = 0
     readonly_fields = ["status"]
-    _has_add_or_delete_permission = None
-
-    def has_delete_permission(self, request, obj=None):
-        if self._has_add_or_delete_permission is None:
-            try:
-                parent_object = (
-                    PermanenceInPreparation.objects.filter(
-                        id=request.resolver_match.args[0]
-                    )
-                    .only("status")
-                    .first()
-                )
-                if (
-                    parent_object is not None
-                    and parent_object.highest_status == PERMANENCE_PLANNED
-                ):
-                    self._has_add_or_delete_permission = True
-                else:
-                    # A customer may already have bought something that needs to be delivered there.
-                    self._has_add_or_delete_permission = False
-            except:
-                self._has_add_or_delete_permission = False
-        return self._has_add_or_delete_permission
-
-    def has_add_permission(self, request, obj):
-        return self.has_delete_permission(request)
-
-    def has_change_permission(self, request, obj=None):
-        return self.has_delete_permission(request)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -166,9 +138,7 @@ class DeliveryBoardInline(InlineForeignKeyCacheMixin, TranslatableTabularInline)
             kwargs["queryset"] = LUT_DeliveryPoint.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super().formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class PermanenceInPreparationForm(TranslatableModelForm):
@@ -197,7 +167,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     search_fields: Tuple[str] = [
         "producers__short_name",
     ]
-    ordering = ("-status", "permanence_date", "id")
+    ordering = [
+        "-status",
+        "permanence_date",
+        "id",
+    ]
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -240,7 +214,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return fields
 
     def get_readonly_fields(self, request, permanence=None):
-        if permanence is not None and permanence.status > PERMANENCE_PLANNED:
+        if permanence is not None and permanence.status > SALE_PLANNED:
             readonly_fields = ["status", "producers"]
             if settings.REPANIER_SETTINGS_BOX:
                 readonly_fields += ["boxes"]
@@ -314,7 +288,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         ]
         return custom_urls + urls
 
-    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    @check_permanence(SALE_PLANNED, SALE_PLANNED_STR)
     def export_offer(self, request, permanence_id, permanence=None):
         wb = export_offer(permanence=permanence, wb=None)
         if wb is not None:
@@ -334,14 +308,14 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
     export_offer.short_description = _("1 --- Check the offer")
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SALE_OPENED, SALE_OPENED_STR)
     def export_customer_opened_order(self, request, permanence_id, permanence=None):
         return self.export_customer_order(
             request, permanence, action="export_customer_opened_order"
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def export_customer_closed_order(self, request, permanence_id, permanence=None):
         return self.export_customer_order(
             request, permanence, action="export_customer_closed_order"
@@ -402,11 +376,11 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             },
         )
 
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SALE_OPENED, SALE_OPENED_STR)
     def export_producer_opened_order(self, request, permanence_id, permanence=None):
         return self.export_producer_order(request, permanence)
 
-    @check_permanence(PERMANENCE_SEND, PERMANENCE_SEND_STR)
+    @check_permanence(SALE_SEND, SALE_SEND_STR)
     def export_producer_closed_order(self, request, permanence_id, permanence=None):
         return self.export_producer_order(request, permanence)
 
@@ -431,7 +405,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return response
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    @check_permanence(SALE_PLANNED, SALE_PLANNED_STR)
     def open_order(self, request, permanence_id, permanence=None):
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
             send_mail = not ("apply-wo-mail" in request.POST)
@@ -455,10 +429,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 order_responsible = Staff.get_or_create_order_responsible()
 
                 with switch_language(
-                    repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+                    repanier.globals.REPANIER_SETTINGS_CONFIG, language_code
                 ):
                     template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
+                        repanier.globals.REPANIER_SETTINGS_CONFIG.offer_customer_mail
                     )
                 with switch_language(permanence, language_code):
                     offer_description = permanence.safe_translation_getter(
@@ -497,10 +471,10 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
                 if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
                     with switch_language(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
+                        repanier.globals.REPANIER_SETTINGS_CONFIG, language_code
                     ):
                         template = Template(
-                            repanier.apps.REPANIER_SETTINGS_CONFIG.cancel_order_customer_mail
+                            repanier.globals.REPANIER_SETTINGS_CONFIG.cancel_order_customer_mail
                         )
 
                     context = TemplateContext(
@@ -545,7 +519,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SALE_OPENED, SALE_OPENED_STR)
     def close_order(self, request, permanence_id, permanence=None):
 
         if "apply" in request.POST or "apply-wo-mail" in request.POST:
@@ -596,7 +570,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             order_board_email_will_be_sent,
             order_board_email_will_be_sent_to,
         ) = RepanierEmail.send_email_to_who(
-            is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
+            is_email_send=repanier.globals.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
             board=True,
         )
 
@@ -611,7 +585,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
                 if order_customer_email_will_be_sent:
                     template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail
+                        repanier.globals.REPANIER_SETTINGS_CONFIG.order_customer_mail
                     )
 
                     customer_last_balance = _(
@@ -627,7 +601,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                         "other_order": RepanierMoney(123.45),
                     }
 
-                    bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
+                    bank_account_number = (
+                        repanier.globals.REPANIER_SETTINGS_BANK_ACCOUNT
+                    )
                     if bank_account_number is not None:
                         group_name = settings.REPANIER_SETTINGS_GROUP_NAME
 
@@ -675,7 +651,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
                 if order_producer_email_will_be_sent:
                     template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_producer_mail
+                        repanier.globals.REPANIER_SETTINGS_CONFIG.order_producer_mail
                     )
                     context = TemplateContext(
                         {
@@ -696,7 +672,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 if order_board_email_will_be_sent:
                     board_composition = permanence.get_html_board_composition()
                     template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail
+                        repanier.globals.REPANIER_SETTINGS_CONFIG.order_staff_mail
                     )
                     context = TemplateContext(
                         {
@@ -730,7 +706,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         if permanence.with_delivery_point:
             deliveries = DeliveryBoard.objects.filter(
                 permanence_id=permanence.id,
-                status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED],
+                status__in=[SALE_OPENED, SALE_CLOSED],
             )
         else:
             deliveries = DeliveryBoard.objects.none()
@@ -753,7 +729,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_OPENED, PERMANENCE_OPENED_STR)
+    @check_permanence(SALE_OPENED, SALE_OPENED_STR)
     def back_to_scheduled(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             task_order.back_to_scheduled(permanence)
@@ -776,7 +752,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         )
 
     @check_cancel_in_post
-    @check_permanence(PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR)
+    @check_permanence(SALE_PLANNED, SALE_PLANNED_STR)
     def generate_permanence(self, request, permanence_id, permanence=None):
         if "apply" in request.POST:
             form = GeneratePermanenceForm(request.POST)
@@ -808,9 +784,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 "permanenceboard": PermanenceBoard.objects.filter(
                     permanence=permanence_id
                 ).order_by("permanence_role"),
-                "deliverypoint": DeliveryBoard.objects.filter(
-                    permanence=permanence_id
-                ).order_by("delivery_point"),
+                "deliverypoint": DeliveryBoard.objects.filter(permanence=permanence_id),
                 "form": form,
                 "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
             },
@@ -818,7 +792,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
 
     def get_row_actions(self, permanence):
 
-        if permanence.status == PERMANENCE_PLANNED:
+        if permanence.status == SALE_PLANNED:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-retweet"></i></a></span>'
@@ -831,7 +805,7 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
                 ),
                 _("Open orders"),
             )
-        elif permanence.status == PERMANENCE_OPENED:
+        elif permanence.status == SALE_OPENED:
             return format_html(
                 '<div class="repanier-button-row">'
                 '<span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" href="{}" data-repanier-tooltip="{}"><i class="fas fa-pencil-alt"></i></a></span>'
@@ -855,19 +829,15 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
         if db_field.name == "boxes":
             kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
-        return super().formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(status__lte=PERMANENCE_SEND)
+        return qs.filter(status__lte=SALE_SEND)
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
-        super().save_related(
-            request, form, formsets, change
-        )
+        super().save_related(request, form, formsets, change)
         permanence = form.instance
         permanence.with_delivery_point = DeliveryBoard.objects.filter(
             permanence_id=permanence.id
@@ -879,6 +849,4 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date
             )
-        super().save_model(
-            request, permanence, form, change
-        )
+        super().save_model(request, permanence, form, change)

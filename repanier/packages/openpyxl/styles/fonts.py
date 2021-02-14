@@ -27,25 +27,28 @@ from .hashable import HashableObject
 
 class Font(HashableObject):
     """Font options used in styles."""
-    UNDERLINE_NONE = 'none'
-    UNDERLINE_DOUBLE = 'double'
-    UNDERLINE_DOUBLE_ACCOUNTING = 'doubleAccounting'
-    UNDERLINE_SINGLE = 'single'
-    UNDERLINE_SINGLE_ACCOUNTING = 'singleAccounting'
 
-    __fields__ = ('name',
-                  'size',
-                  'bold',
-                  'italic',
-                  'superscript',
-                  'subscript',
-                  'underline',
-                  'strikethrough',
-                  'color')
+    UNDERLINE_NONE = "none"
+    UNDERLINE_DOUBLE = "double"
+    UNDERLINE_DOUBLE_ACCOUNTING = "doubleAccounting"
+    UNDERLINE_SINGLE = "single"
+    UNDERLINE_SINGLE_ACCOUNTING = "singleAccounting"
+
+    __fields__ = (
+        "name",
+        "size",
+        "bold",
+        "italic",
+        "superscript",
+        "subscript",
+        "underline",
+        "strikethrough",
+        "color",
+    )
     __slots__ = __fields__
 
     def __init__(self):
-        self.name = 'Calibri'
+        self.name = "Calibri"
         self.size = 11
         self.bold = False
         self.italic = False

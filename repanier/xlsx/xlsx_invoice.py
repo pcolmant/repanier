@@ -60,7 +60,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
             bank_amount_in = customer_invoice.bank_amount_in.amount
             bank_amount_out = customer_invoice.bank_amount_out.amount
             if customer_invoice.customer_id == customer_invoice.customer_charged_id:
-                prepared = customer_invoice.get_total_price_with_tax().amount
+                prepared = customer_invoice.balance_calculated.amount
             balance_after = customer_invoice.balance.amount
         else:
             last_customer_invoice = (
@@ -84,31 +84,31 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 _("Previous balance"),
                 15,
                 balance_before,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Cash in"),
                 10,
                 bank_amount_in,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Cash out"),
                 10,
                 bank_amount_out,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Prepared"),
                 10,
                 prepared,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Final balance"),
                 15,
                 balance_after,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (_("Name"), 20, customer.short_name, NumberFormat.FORMAT_TEXT),
         ]
@@ -142,7 +142,7 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
             balance_before = -producer_invoice.previous_balance.amount
             bank_amount_in = producer_invoice.bank_amount_in.amount
             bank_amount_out = producer_invoice.bank_amount_out.amount
-            prepared = producer_invoice.get_total_price_with_tax().amount
+            prepared = producer_invoice.balance_calculated.amount
             balance_after = -producer_invoice.balance.amount
         else:
             last_producer_invoice = (
@@ -166,31 +166,31 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
                 _("Previous balance"),
                 15,
                 balance_before,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Cash in"),
                 10,
                 bank_amount_in,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Cash out"),
                 10,
                 bank_amount_out,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Prepared"),
                 10,
                 prepared,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (
                 _("Final balance"),
                 15,
                 balance_after,
-                repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
             ),
             (_("Name"), 20, producer.short_name, NumberFormat.FORMAT_TEXT),
         ]
@@ -228,13 +228,13 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
     row_num += 1
     c = ws.cell(row=row_num, column=1)
     c.value = initial_bank_amount
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.style.number_format.format_code = repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
     c = ws.cell(row=row_num, column=4)
     formula = "B{}+SUM(C{}:C{})-SUM(D{}:D{})".format(
         row_num + 1, 2, row_num - 1, 2, row_num - 1
     )
     c.value = "=" + formula
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.style.number_format.format_code = repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
     c = ws.cell(row=row_num, column=4)
@@ -242,12 +242,12 @@ def export_bank(permanence, wb=None, sheet_name=EMPTY_STRING):
         2, row_break, row_break + 2, row_num - 2
     )
     c.value = "=" + formula
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.style.number_format.format_code = repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
 
     row_num += 1
     c = ws.cell(row=row_num, column=4)
     c.value = final_bank_amount
-    c.style.number_format.format_code = repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+    c.style.number_format.format_code = repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
 
     return wb
 
@@ -261,7 +261,7 @@ def export_invoice(
     sheet_name=EMPTY_STRING,
 ):
     # Detail of what has been prepared
-    from repanier.apps import REPANIER_SETTINGS_CONFIG
+    from repanier.globals import REPANIER_SETTINGS_CONFIG
 
     hide_producer_prices = producer is None
     hide_customer_prices = customer is None
@@ -277,7 +277,7 @@ def export_invoice(
 
         for purchase in purchase_set:
 
-            qty = purchase.qty_invoiced
+            qty = purchase.qty
 
             if purchase.offer_item.unit_deposit.amount != DECIMAL_ZERO:
                 hide_column_deposit = False
@@ -335,7 +335,7 @@ def export_invoice(
                     _("Deposit"),
                     10,
                     purchase.offer_item.unit_deposit.amount,
-                    repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                    repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                     False,
                 ),
             ]
@@ -351,21 +351,21 @@ def export_invoice(
                         _("Producer unit price"),
                         10,
                         purchase.get_producer_unit_price(),
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                         False,
                     ),
                     (
                         _("Purchase price"),
                         10,
                         purchase.purchase_price.amount,
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                         False,
                     ),
                     (
                         _("VAT"),
                         10,
                         purchase.producer_vat.amount,
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                         False,
                     ),
                 ]
@@ -382,21 +382,21 @@ def export_invoice(
                         _("Customer unit price"),
                         10,
                         purchase.get_customer_unit_price(),
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                         False,
                     ),
                     (
                         _("Selling price"),
                         10,
                         purchase.selling_price.amount,
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                         False,
                     ),
                     (
                         _("VAT"),
                         10,
                         purchase.customer_vat.amount,
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX,
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX,
                         False,
                     ),
                 ]
@@ -491,28 +491,28 @@ def export_invoice(
                     formula = "SUM(J{}:J{})".format(2, row_num)
                     c.value = "=" + formula
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.bold = True
                 if col_num == 10:
                     formula = "SUM(K{}:K{})".format(2, row_num)
                     c.value = "=" + formula
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.bold = True
                 if col_num == 12:
                     formula = "SUM(M{}:M{})".format(2, row_num)
                     c.value = "=" + formula
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.bold = True
                 if col_num == 13:
                     formula = "SUM(N{}:N{})".format(2, row_num)
                     c.value = "=" + formula
                     c.style.number_format.format_code = (
-                        repanier.apps.REPANIER_SETTINGS_CURRENCY_XLSX
+                        repanier.globals.REPANIER_SETTINGS_CURRENCY_XLSX
                     )
                     c.style.font.bold = True
             if customer is not None:
@@ -547,8 +547,8 @@ def import_invoice_sheet(
             permanence = Permanence.objects.create(
                 permanence_date=now,
                 short_name=reference,
-                status=PERMANENCE_SEND,
-                highest_status=PERMANENCE_SEND,
+                status=SALE_SEND,
+                highest_status=SALE_SEND,
             )
             permanence.producers.add(producer)
             row = get_row(worksheet, header, row_num)
@@ -599,7 +599,7 @@ def import_invoice_sheet(
                     create_or_update_one_purchase(
                         customer_id=customer_id,
                         offer_item=offer_item,
-                        status=PERMANENCE_SEND,
+                        status=SALE_SEND,
                         q_order=Decimal(row[_("Quantity")]),
                         batch_job=True,
                         is_box_content=False,
@@ -634,9 +634,7 @@ def import_invoice_sheet(
     return error, error_msg
 
 
-def handle_uploaded_invoice(
-    request, permanences, file_to_import, producer, reference
-):
+def handle_uploaded_invoice(request, permanences, file_to_import, producer, reference):
     if producer is None:
         error = True
         error_msg = _("A producer must be given.")

@@ -141,7 +141,7 @@ class GroupWithUserDataForm(UserDataForm):
         Customer.objects.filter(
             may_order=True,
             delivery_point__isnull=True,
-            represent_this_buyinggroup=False,
+            is_default=False,
         ),
         label=_("Members"),
         widget=FilteredSelectMultiple(_("Members"), False),
@@ -285,7 +285,8 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             ("email", "email2"),
             ("phone1", "phone2"),
             "memo",
-            "price_list_multiplier",
+            "custom_tariff_margin",
+            "display_group_tariff",
             ("transport", "min_transport"),
             "inform_customer_responsible",
             "customers",
@@ -293,15 +294,13 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         ]
         if customer is not None:
             fields_basic += ["get_admin_balance", "get_admin_date_balance"]
-            fields_advanced = ["bank_account1", "bank_account2", "get_purchase_counter"]
-        else:
-            fields_advanced = ["bank_account1", "bank_account2"]
+        fields_basic += ["bank_account1", "bank_account2"]
         fieldsets = (
             (None, {"fields": fields_basic}),
-            (
-                _("Advanced options"),
-                {"classes": ("collapse",), "fields": fields_advanced},
-            ),
+            # (
+            #     _("Advanced options"),
+            #     {"classes": ("collapse",), "fields": fields_advanced},
+            # ),
         )
         return fieldsets
 
@@ -310,7 +309,6 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             readonly_fields = [
                 "get_admin_date_balance",
                 "get_admin_balance",
-                "get_purchase_counter",
             ]
             return readonly_fields
         return []
@@ -361,5 +359,5 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
             delivery_point=None
         )
         Customer.objects.filter(id__in=form.cleaned_data["customers"]).update(
-            delivery_point_id=delivery_point.id, price_list_multiplier=DECIMAL_ONE
+            delivery_point_id=delivery_point.id
         )

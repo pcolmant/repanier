@@ -1,6 +1,5 @@
 import datetime
 
-from django.utils import datetime_safe
 from django.utils.encoding import smart_str
 from import_export.widgets import (
     CharWidget,
@@ -305,16 +304,6 @@ class DateWidgetExcel(Widget):
     Takes optional ``format`` parameter.
     """
 
-    def __init__(self, format=None):
-        if format is None:
-            if not settings.DATE_INPUT_FORMATS:
-                formats = ("%Y-%m-%d",)
-            else:
-                formats = settings.DATE_INPUT_FORMATS
-        else:
-            formats = (format,)
-        self.formats = formats
-
     def clean(self, value, row=None, *args, **kwargs):
         if not value:
             return
@@ -326,17 +315,31 @@ class DateWidgetExcel(Widget):
             return (
                 datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
             ).date()
-        for format in self.formats:
+        for fmt in settings.DJANGO_SETTINGS_DATETIME:
             try:
-                return datetime.datetime.strptime(value, format).date()
+                return datetime.datetime.strptime(value, fmt).date()
             except (ValueError, TypeError):
                 continue
         raise ValueError("Enter a valid date.")
 
     def render(self, value, obj=None):
         if not value:
-            return ""
-        try:
-            return value.strftime(self.formats[0])
-        except:
-            return datetime_safe.new_date(value).strftime(self.formats[0])
+            return EMPTY_STRING
+        return value
+
+
+class HTMLWidget(CharWidget):
+    """
+    Widget for converting HTML Field.
+    """
+
+    def clean(self, value, row=None, *args, **kwargs):
+        if value:
+            return ("{}".format(value)).strip()
+        else:
+            return EMPTY_STRING
+
+    def render(self, value, obj=None):
+        if value is None:
+            return EMPTY_STRING
+        return value.encode("utf-8").decode("utf-8")

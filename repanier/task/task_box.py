@@ -10,16 +10,12 @@ from repanier.tools import cap
 
 def flip_flop_is_into_offer(queryset):
     for product in queryset.filter(is_active=True).order_by("?"):
-        if product.limit_order_quantity_to_stock:
-            if product.stock > DECIMAL_ZERO:
-                product.is_into_offer = False
-                product.stock = DECIMAL_ZERO
-            else:
-                product.is_into_offer = True
-                product.stock = 999999
-        else:
-            product.is_into_offer = not product.is_into_offer
-        product.save(update_fields=["is_into_offer", "stock"])
+        product.is_into_offer = not product.is_into_offer
+        product.save(
+            update_fields=[
+                "is_into_offer",
+            ]
+        )
 
 
 def admin_duplicate(queryset):

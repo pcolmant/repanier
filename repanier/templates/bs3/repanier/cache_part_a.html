@@ -1,14 +1,17 @@
 {% load cms_tags sekizai_tags i18n l10n repanier_tags %}{% spaceless %}
-<b>{{ offer.get_order_name }}</b><br>{{ offer.producer.short_name }}
-{% if offer.product.offer_description|length > 0 %} <b><span class="glyphicon glyphicon-info-sign"></span></b>{% endif %}
-{% if offer.department %}<br><small>{{ offer.department.short_name }}</small>{% endif %}
-{% for production_mode in offer.product.production_mode.all %}
-    {% if forloop.first %}<br>{% endif %}
-    {% if production_mode.picture2 %}
-        <img class="img-rounded" style="float: left; margin: 5px;" alt="{{ production_mode }}"
-             title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="24" width="24"/>
-    {% else %}
-        <small>{{ production_mode }}{% if not forloop.last %} - {% endif %}</small>
+    <b>{{ offer.get_order_name }}</b>
+    {% if offer.product.offer_description|length > 0 %}&nbsp;<span class="glyphicon glyphicon-info-sign"></span>
     {% endif %}
-{% endfor %}
+    <br><small>{{ offer.producer.short_name }}</small>
+    {% if offer.department %}<br><small>{{ offer.department.short_name }}</small>{% endif %}
+    {% for production_mode in offer.product.production_mode.all %}
+        {% if forloop.first %}<br>{% endif %}
+        {% if production_mode.picture2 %}
+            <img class="img-rounded" style="float: left; margin: 5px;" alt="{{ production_mode }}"
+                 title="{{ production_mode }}" src="{{ MEDIA_URL }}{{ production_mode.picture2 }}" height="24"
+                 width="24"/>
+        {% else %}
+            <small>{{ production_mode }}{% if not forloop.last %} - {% endif %}</small>
+        {% endif %}
+    {% endfor %}
 {% endspaceless %}

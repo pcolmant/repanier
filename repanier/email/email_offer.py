@@ -16,7 +16,7 @@ from repanier.tools import *
 
 
 def send_open_order(permanence_id):
-    from repanier.apps import REPANIER_SETTINGS_CONFIG
+    from repanier.globals import REPANIER_SETTINGS_CONFIG
 
     cur_language = translation.get_language()
     for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
@@ -29,7 +29,7 @@ def send_open_order(permanence_id):
 
         to_email = []
         for customer in Customer.objects.filter(
-            represent_this_buyinggroup=False, may_order=True, language=language_code
+            is_default=False, may_order=True, language=language_code
         ).order_by("?"):
             to_email.append(customer.user.email)
             if customer.email2:
@@ -43,9 +43,7 @@ def send_open_order(permanence_id):
         offer_customer_mail_subject = "{} - {}".format(
             settings.REPANIER_SETTINGS_GROUP_NAME, permanence
         )
-        offer_producer = ", ".join(
-            [p.short_name for p in permanence.producers.all()]
-        )
+        offer_producer = ", ".join([p.short_name for p in permanence.producers.all()])
         qs = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
             is_active=True,

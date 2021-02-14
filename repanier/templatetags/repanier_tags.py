@@ -1,28 +1,25 @@
 from django import template
 from django.conf import settings
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import (
     EMPTY_STRING,
-    PERMANENCE_CLOSED,
+    SALE_CLOSED,
     DECIMAL_ZERO,
-    PERMANENCE_OPENED,
-    PERMANENCE_SEND,
+    SALE_OPENED,
+    SALE_SEND,
 )
 from repanier.models import Permanence
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
 from repanier.models.permanenceboard import PermanenceBoard
-from repanier.models.producer import Producer
 from repanier.models.purchase import PurchaseWoReceiver
 from repanier.tools import (
     sint,
     get_html_selected_value,
     get_html_selected_box_value,
-    get_repanier_template_name,
 )
 
 register = template.Library()
@@ -42,7 +39,7 @@ def repanier_admins(*args, **kwargs):
 
 @register.simple_tag(takes_context=False)
 def repanier_notification(*args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
+    from repanier.globals import REPANIER_SETTINGS_NOTIFICATION
 
     return REPANIER_SETTINGS_NOTIFICATION.get_html_notification_card_display()
 
@@ -51,7 +48,7 @@ def repanier_notification(*args, **kwargs):
 def repanier_permanences(*args, **kwargs):
     permanences_cards = []
     for permanence in (
-        Permanence.objects.filter(status=PERMANENCE_OPENED)
+        Permanence.objects.filter(status=SALE_OPENED)
         .only("id", "permanence_date", "with_delivery_point")
         .order_by("permanence_date", "id")
     ):
@@ -60,7 +57,7 @@ def repanier_permanences(*args, **kwargs):
     displayed_permanence_counter = 0
     for permanence in (
         Permanence.objects.filter(
-            status__in=[PERMANENCE_CLOSED, PERMANENCE_SEND],
+            status__in=[SALE_CLOSED, SALE_SEND],
             master_permanence__isnull=True,
         )
         .only("id", "permanence_date")
@@ -98,25 +95,13 @@ def repanier_permanences(*args, **kwargs):
 
 @register.simple_tag(takes_context=True)
 def repanier_user_bs3(context, *args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
+    from repanier.globals import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
 
     request = context["request"]
     user = request.user
     nodes = []
     if user.is_authenticated:
         if not user.is_staff:
-            nodes = []
-            p_permanence_id = sint(kwargs.get("permanence_id", 0))
-            if p_permanence_id > 0:
-                nodes.append(
-                    '<li id="li_my_basket" style="display:none;" class="dropdown">'
-                )
-                nodes.append(
-                    '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
-                        reverse("repanier:order_view", args=(p_permanence_id,))
-                    )
-                )
-                nodes.append("</li>")
             nodes.append(
                 """
                 <li id="li_my_name" class="dropdown">
@@ -142,7 +127,11 @@ def repanier_user_bs3(context, *args, **kwargs):
             if user.customer_id is not None:
                 nodes.append(
                     '<li><a href="{}">{}</a></li>'.format(
-                        reverse("repanier:my_profile_view"), _("My profile")
+                        reverse(
+                            "repanier:published_customer_view",
+                            kwargs={"customer_id": user.customer_id},
+                        ),
+                        _("My profile"),
                     )
                 )
                 if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
@@ -178,12 +167,18 @@ def repanier_user_bs3(context, *args, **kwargs):
                         my_balance = _("My balance")
                     nodes.append(
                         '<li><a href="{}">{}</a></li>'.format(
-                            reverse("repanier:customer_invoice_view", args=(0, user.customer_id)), my_balance
+                            reverse(
+                                "repanier:customer_invoice_view",
+                                args=(0, user.customer_id),
+                            ),
+                            my_balance,
                         )
                     )
                 nodes.append('<li class="divider"></li>')
             nodes.append(
-                '<li><a href="{}">{}</a></li>'.format(reverse("repanier:logout"), _("Logout"))
+                '<li><a href="{}">{}</a></li>'.format(
+                    reverse("repanier:logout"), _("Logout")
+                )
             )
             nodes.append("</ul></li>")
 
@@ -197,63 +192,19 @@ def repanier_user_bs3(context, *args, **kwargs):
     return mark_safe("".join(nodes))
 
 
-@register.simple_tag(takes_context=True)
-def repanier_user_bs4(context, *args, **kwargs):
-    from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
-
-    request = context["request"]
-    user = request.user
-    producer = None
-    my_balance = EMPTY_STRING
-
-    if user.is_authenticated and user.customer_id is not None:
-
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            last_customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    customer__user_id=request.user.id, invoice_sort_order__isnull=False
-                )
-                .only("balance", "date_balance")
-                .order_by("-invoice_sort_order")
-                .first()
+@register.simple_tag(takes_context=False)
+def repanier_permanence_basket_bs3(*args, **kwargs):
+    p_permanence_id = sint(kwargs.get("permanence_id", 0))
+    nodes = []
+    if p_permanence_id > 0:
+        nodes.append('<li id="li_my_basket" style="display:none;" class="dropdown">')
+        nodes.append(
+            '<a href="{}?is_basket=yes" class="btn btn-info"><span id="my_basket"></span></a>'.format(
+                reverse("repanier:order_view", args=(p_permanence_id,))
             )
-            if (
-                last_customer_invoice is not None
-                and last_customer_invoice.balance < DECIMAL_ZERO
-            ):
-                my_balance = _(
-                    'My balance : <font color="red">%(balance)s</font> at %(date)s'
-                ) % {
-                    "balance": last_customer_invoice.balance,
-                    "date": last_customer_invoice.date_balance.strftime(
-                        settings.DJANGO_SETTINGS_DATE
-                    ),
-                }
-            elif last_customer_invoice:
-                my_balance = _(
-                    'My balance : <font color="green">%(balance)s</font> at %(date)s'
-                ) % {
-                    "balance": last_customer_invoice.balance,
-                    "date": last_customer_invoice.date_balance.strftime(
-                        settings.DJANGO_SETTINGS_DATE
-                    ),
-                }
-            else:
-                my_balance = _("My balance")
-
-
-    return mark_safe(
-        render_to_string(
-            get_repanier_template_name("widgets/header_user_dropdown.html"),
-            {
-                "user": user,
-                "my_balance": my_balance,
-                "producer": producer,
-                "display_who_is_who": REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,
-                "manage_accounting": settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
-            },
         )
-    )
+        nodes.append("</li>")
+    return mark_safe("".join(nodes))
 
 
 @register.simple_tag(takes_context=False)
@@ -322,7 +273,7 @@ def repanier_select_task(context, *args, **kwargs):
                 if permanence_board.customer is not None:
                     if (
                         permanence_board.customer.user_id == user.id
-                        and permanence_board.permanence.status <= PERMANENCE_CLOSED
+                        and permanence_board.permanence.status <= SALE_CLOSED
                     ):
                         result = """
                         <b><i>
@@ -348,7 +299,7 @@ def repanier_select_task(context, *args, **kwargs):
                         )
                 else:
                     if permanence_board.permanence_role.customers_may_register:
-                        if permanence_board.permanence.status <= PERMANENCE_CLOSED:
+                        if permanence_board.permanence.status <= SALE_CLOSED:
                             result = """
                             <b><i>
                             <select name="value" id="task{task_id}"
@@ -390,14 +341,14 @@ def repanier_select_offer_item(context, *args, **kwargs):
                 is_box_content=True,
             )
             .order_by("?")
-            .only("qty_ordered")
+            .only("qty")
             .first()
         )
         if box_purchase is None:
-            qty_ordered = DECIMAL_ZERO
+            qty = DECIMAL_ZERO
         else:
-            qty_ordered = box_purchase.qty_ordered
-        html = get_html_selected_box_value(offer_item, qty_ordered)
+            qty = box_purchase.qty
+        html = get_html_selected_box_value(offer_item, qty)
         result.append(
             '<select id="box_offer_item{id}" name="box_offer_item{id}" disabled class="form-control">{option}</select>'.format(
                 result=result, id=offer_item.id, option=html
@@ -411,25 +362,16 @@ def select_offer_item(offer_item, result, user):
         PurchaseWoReceiver.objects.filter(
             customer_id=user.customer, offer_item_id=offer_item.id, is_box_content=False
         )
-        .order_by("?")
-        .only("qty_ordered")
+        .only("qty")
         .first()
     )
     if purchase is not None:
-        is_open = purchase.status == PERMANENCE_OPENED
-        html = get_html_selected_value(
-            offer_item, purchase.qty_ordered, is_open=is_open
-        )
+        is_open = purchase.status == SALE_OPENED
+        html = get_html_selected_value(offer_item, purchase.qty, is_open=is_open)
     else:
-        is_open = (
-            ProducerInvoice.objects.filter(
-                permanence__offeritem=offer_item.id,
-                producer__offeritem=offer_item.id,
-                status=PERMANENCE_OPENED,
-            )
-            .order_by("?")
-            .exists()
-        )
+        is_open = Permanence.objects.filter(
+            id=offer_item.permanence_id, status=SALE_OPENED
+        ).exists()
         html = get_html_selected_value(offer_item, DECIMAL_ZERO, is_open=is_open)
     if is_open:
         result.append(

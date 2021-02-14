@@ -7,7 +7,8 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from repanier.const import PERMANENCE_CLOSED, PERMANENCE_SEND, PERMANENCE_OPENED
+from repanier.middleware import is_ajax
+from repanier.const import SALE_CLOSED, SALE_SEND, SALE_OPENED
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import sint
 
@@ -16,7 +17,7 @@ from repanier.tools import sint
 @never_cache
 @require_GET
 def task_form_ajax(request):
-    if not request.is_ajax():
+    if not is_ajax():
         raise Http404
     try:
         customer = request.user.customer
@@ -31,14 +32,14 @@ def task_form_ajax(request):
             row_counter = PermanenceBoard.objects.filter(
                 id=p_permanence_board_id,
                 customer_id=customer.id,
-                permanence__status__lt=PERMANENCE_OPENED,
+                permanence__status__lt=SALE_OPENED,
                 permanence_role__customers_may_register=True,
             ).update(customer=None)
             if row_counter == 0:
                 row_counter = PermanenceBoard.objects.filter(
                     id=p_permanence_board_id,
                     customer_id=customer.id,
-                    permanence__status__lt=PERMANENCE_CLOSED,
+                    permanence__status__lt=SALE_CLOSED,
                     permanence_role__customers_may_register=True,
                     is_registered_on__gte=timezone.now() - datetime.timedelta(days=1),
                 ).update(customer=None)
@@ -47,7 +48,7 @@ def task_form_ajax(request):
             row_counter = PermanenceBoard.objects.filter(
                 id=p_permanence_board_id,
                 customer__isnull=True,
-                permanence__status__lte=PERMANENCE_SEND,
+                permanence__status__lte=SALE_SEND,
                 permanence_role__customers_may_register=True,
             ).update(customer_id=customer.id, is_registered_on=timezone.now())
         else:

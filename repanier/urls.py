@@ -42,7 +42,7 @@ from repanier.views.login_view import login_view
 from repanier.views.logout_view import logout_view
 from repanier.views.my_balance_ajax import my_balance_ajax
 from repanier.views.my_cart_amount_ajax import my_cart_amount_ajax
-from repanier.views.my_profile_view import my_profile_view
+from repanier.views.published_customer_view import published_customer_view
 from repanier.views.order_ajax import order_ajax
 from repanier.views.order_class import OrderView
 from repanier.views.order_description_view import order_description_view
@@ -191,7 +191,12 @@ urlpatterns = [
         name="send_mail_to_coordinators_view",
     ),
     path("who/", who_is_who_view, name="who_is_who_view"),
-    path("me/", my_profile_view, name="my_profile_view"),
+    # path("me/", published_customer_view, name="published_customer_view"),
+    path(
+        "customer/<int:customer_id>/",
+        published_customer_view,
+        name="published_customer_view",
+    ),
     path("rest/permanences/", permanences_rest, name="permanences_rest"),
     path(
         "rest/permanence/<int:permanence_id>/<str:producer_name>/<str:reference>/",
@@ -214,9 +219,7 @@ urlpatterns = [
         name="department_rest",
     ),
     path("rest/producers/", producers_list, name="producers_rest"),
-    path(
-        "rest/producer/<str:short_name>/", producer_detail, name="producer_rest"
-    ),
+    path("rest/producer/<str:short_name>/", producer_detail, name="producer_rest"),
     path(
         "rest/products/<str:producer_short_name>/",
         products_rest,

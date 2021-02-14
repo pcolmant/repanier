@@ -29,7 +29,7 @@ def cm_to_pixels(value):
 
 
 def pixels_to_cm(value):
-    return (1 / cm_to_pixels(value))
+    return 1 / cm_to_pixels(value)
 
 
 def pixels_to_EMU(value):
@@ -40,14 +40,14 @@ def EMU_to_pixels(value):
     if not value:
         return 0
     else:
-        return round(value / 9525.)
+        return round(value / 9525.0)
 
 
 def EMU_to_cm(value):
     if not value:
         return 0
     else:
-        return (EMU_to_pixels(value) * 2.57 / 96)
+        return EMU_to_pixels(value) * 2.57 / 96
 
 
 def pixels_to_points(value):
@@ -69,7 +69,7 @@ def angle_to_degrees(value):
     if not value:
         return 0
     else:
-        return round(value / 60000.)
+        return round(value / 60000.0)
 
 
 def short_color(color):

@@ -1,12 +1,10 @@
 from django import forms
-from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
-from import_export.admin import ImportExportMixin
-from import_export.formats.base_formats import CSV, XLSX, XLS
 
 from repanier.admin.admin_filter import BankAccountFilterByStatus
+from repanier.admin.admin_model import RepanierAdminImportExport
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.models.bankaccount import BankAccount
@@ -62,7 +60,7 @@ class BankAccountResource(resources.ModelResource):
                 ):
                     only_one_target = (
                         ProducerInvoice.objects.filter(
-                            status=PERMANENCE_SEND,
+                            status=SALE_SEND,
                             total_price_with_tax=instance.bank_amount_out,
                         )
                         .order_by("?")
@@ -71,7 +69,7 @@ class BankAccountResource(resources.ModelResource):
                     if only_one_target == 1:
                         instance.producer = (
                             ProducerInvoice.objects.filter(
-                                status=PERMANENCE_SEND,
+                                status=SALE_SEND,
                                 total_price_with_tax=instance.bank_amount_out,
                             )
                             .order_by("?")
@@ -84,7 +82,7 @@ class BankAccountResource(resources.ModelResource):
                 ):
                     only_one_target = (
                         CustomerInvoice.objects.filter(
-                            status=PERMANENCE_SEND,
+                            status=SALE_SEND,
                             total_price_with_tax=instance.bank_amount_in,
                         )
                         .order_by("?")
@@ -93,7 +91,7 @@ class BankAccountResource(resources.ModelResource):
                     if only_one_target == 1:
                         instance.customer = (
                             CustomerInvoice.objects.filter(
-                                status=PERMANENCE_SEND,
+                                status=SALE_SEND,
                                 total_price_with_tax=instance.bank_amount_in,
                             )
                             .order_by("?")
@@ -197,9 +195,7 @@ class BankAccountDataForm(forms.ModelForm):
         widget=apply_select2(forms.Select),
     )
     producer = ProducerModelChoiceField(
-        queryset=Producer.objects.filter(
-            represent_this_buyinggroup=False, is_active=True
-        ),
+        queryset=Producer.objects.filter(is_default=False, is_active=True),
         label=_("Producer"),
         required=False,
         widget=apply_select2(forms.Select),
@@ -263,7 +259,7 @@ class BankAccountDataForm(forms.ModelForm):
                     self.fields["operation_comment"].disabled = True
         else:
             self.fields["producer"].queryset = Producer.objects.filter(
-                represent_this_buyinggroup=False, is_active=True
+                is_default=False, is_active=True
             )
             self.fields["customer"].queryset = Customer.objects.filter(is_active=True)
 
@@ -336,7 +332,7 @@ class BankAccountDataForm(forms.ModelForm):
         fields = "__all__"
 
 
-class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
+class BankAccountAdmin(RepanierAdminImportExport):
     form = BankAccountDataForm
     resource_class = BankAccountResource
     fields = (
@@ -360,7 +356,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     ]
     date_hierarchy = "operation_date"
     list_filter = (BankAccountFilterByStatus,)
-    ordering = ("-operation_date", "-id")
+    ordering = ["-operation_date", "-id"]
     search_fields = (
         "producer__short_name",
         "customer__short_name",
@@ -396,15 +392,3 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
             except AttributeError:
                 pass
         return actions
-
-    def get_import_formats(self):
-        """
-        Returns available import formats.
-        """
-        return [f for f in (XLSX, XLS, CSV) if f().can_import()]
-
-    def get_export_formats(self):
-        """
-        Returns available export formats.
-        """
-        return [f for f in (XLSX, CSV) if f().can_export()]

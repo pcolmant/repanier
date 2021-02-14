@@ -25,21 +25,21 @@
 
 # Python stdlib imports
 from __future__ import division
-from math import floor
-import calendar
+
 import datetime
-import time
 import re
+from math import floor
 
 # constants
 CALENDAR_WINDOWS_1900 = 1900
 CALENDAR_MAC_1904 = 1904
 
-W3CDTF_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+W3CDTF_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
-RE_W3CDTF = '(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.(\d{2}))?Z?'
+RE_W3CDTF = "(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.(\d{2}))?Z?"
 
 EPOCH = datetime.datetime.utcfromtimestamp(0)
+
 
 def datetime_to_W3CDTF(dt):
     """Convert from a datetime to a timestamp string."""
@@ -48,7 +48,7 @@ def datetime_to_W3CDTF(dt):
 
 def W3CDTF_to_datetime(formatted_string):
     """Convert from a timestamp string to a datetime object."""
-    match = re.match(RE_W3CDTF,formatted_string)
+    match = re.match(RE_W3CDTF, formatted_string)
     digits = map(int, match.groups()[:6])
     return datetime.datetime(*digits)
 
@@ -64,30 +64,41 @@ class SharedDate(object):
     Python and Excel accordingly.
 
     """
-    datetime_object_type = 'DateTime'
 
-    def __init__(self,base_date=CALENDAR_WINDOWS_1900):
-        if int(base_date)==CALENDAR_MAC_1904:
+    datetime_object_type = "DateTime"
+
+    def __init__(self, base_date=CALENDAR_WINDOWS_1900):
+        if int(base_date) == CALENDAR_MAC_1904:
             self.excel_base_date = CALENDAR_MAC_1904
-        elif int(base_date)==CALENDAR_WINDOWS_1900:
+        elif int(base_date) == CALENDAR_WINDOWS_1900:
             self.excel_base_date = CALENDAR_WINDOWS_1900
         else:
-            raise ValueError("base_date:%s invalid"%base_date)
+            raise ValueError("base_date:%s invalid" % base_date)
 
     def datetime_to_julian(self, date):
         """Convert from python datetime to excel julian date representation."""
 
         if isinstance(date, datetime.datetime):
-            return self.to_julian(date.year, date.month, date.day, \
-                hours=date.hour, minutes=date.minute,
-                                  seconds=date.second + date.microsecond * 1.0e-6)
+            return self.to_julian(
+                date.year,
+                date.month,
+                date.day,
+                hours=date.hour,
+                minutes=date.minute,
+                seconds=date.second + date.microsecond * 1.0e-6,
+            )
         elif isinstance(date, datetime.date):
             return self.to_julian(date.year, date.month, date.day)
         elif isinstance(date, datetime.time):
-            return self.time_to_julian(hours=date.hour, minutes=date.minute,
-                                    seconds=date.second + date.microsecond * 1.0e-6)
+            return self.time_to_julian(
+                hours=date.hour,
+                minutes=date.minute,
+                seconds=date.second + date.microsecond * 1.0e-6,
+            )
         elif isinstance(date, datetime.timedelta):
-            return self.time_to_julian(hours=0, minutes=0, seconds=date.seconds + date.days * 3600 * 24)
+            return self.time_to_julian(
+                hours=0, minutes=0, seconds=date.seconds + date.days * 3600 * 24
+            )
 
     def time_to_julian(self, hours, minutes, seconds):
         return ((hours * 3600) + (minutes * 60) + seconds) / 86400
@@ -98,7 +109,7 @@ class SharedDate(object):
         # Excel 2000 treats JD=0 as 1/0/1900 (buggy, disallow)
         # Excel 2000 treats JD=2958466 as a bad date (Y10K bug!)
         if year < 1900 or year > 10000:
-            msg = 'Year not supported by Excel: %s' % year
+            msg = "Year not supported by Excel: %s" % year
             raise ValueError(msg)
         if self.excel_base_date == CALENDAR_WINDOWS_1900:
             # Fudge factor for the erroneous fact that the year 1900 is
@@ -113,8 +124,7 @@ class SharedDate(object):
             excel_base_date = 2416481
             excel_1900_leap_year = False
         else:
-            raise NotImplementedError('base date supported.')
-
+            raise NotImplementedError("base date supported.")
 
         # Julian base date adjustment
         if month > 2:
@@ -126,16 +136,20 @@ class SharedDate(object):
         # Calculate the Julian Date, then subtract the Excel base date
         # JD 2415020 = 31 - Dec - 1899 -> Excel Date of 0
         century, decade = int(str(year)[:2]), int(str(year)[2:])
-        excel_date = floor(146097 * century / 4) + \
-                floor((1461 * decade) / 4) + floor((153 * month + 2) / 5) + \
-                day + 1721119 - excel_base_date
+        excel_date = (
+            floor(146097 * century / 4)
+            + floor((1461 * decade) / 4)
+            + floor((153 * month + 2) / 5)
+            + day
+            + 1721119
+            - excel_base_date
+        )
         if excel_1900_leap_year:
             excel_date += 1
 
         # check to ensure that we exclude 2/29/1900 as a possible value
-        if self.excel_base_date == CALENDAR_WINDOWS_1900 \
-                and excel_date == 60:
-            msg = 'Error: Excel believes 1900 was a leap year'
+        if self.excel_base_date == CALENDAR_WINDOWS_1900 and excel_date == 60:
+            msg = "Error: Excel believes 1900 was a leap year"
             raise ValueError(msg)
         excel_time = self.time_to_julian(hours, minutes, seconds)
         return excel_date + excel_time
@@ -147,14 +161,14 @@ class SharedDate(object):
             if value < 60:
                 excel_base_date -= 1
             elif value == 60:
-                msg = 'Error: Excel believes 1900 was a leap year'
+                msg = "Error: Excel believes 1900 was a leap year"
                 raise ValueError(msg)
 
         elif self.excel_base_date == CALENDAR_MAC_1904:
             excel_base_date = 24107
 
         else:
-            raise NotImplementedError('base date supported.')
+            raise NotImplementedError("base date supported.")
 
         if value >= 1:
             utc_days = value - excel_base_date
@@ -164,9 +178,10 @@ class SharedDate(object):
         elif value >= 0:
             hours = floor(value * 24)
             mins = floor(value * 24 * 60) - floor(hours * 60)
-            secs = floor(value * 24 * 60 * 60) - floor(hours * 60 * 60) - \
-                    floor(mins * 60)
+            secs = (
+                floor(value * 24 * 60 * 60) - floor(hours * 60 * 60) - floor(mins * 60)
+            )
             return datetime.time(int(hours), int(mins), int(secs))
         else:
-            msg = 'Negative dates (%s) are not supported' % value
+            msg = "Negative dates (%s) are not supported" % value
             raise ValueError(msg)

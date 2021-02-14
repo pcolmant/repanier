@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from repanier.models.bankaccount import BankAccount
+from repanier.models import ForSaleSend
 from repanier.admin.bankaccount import BankAccountAdmin
+from repanier.models.bankaccount import BankAccount
 
 admin.site.register(BankAccount, BankAccountAdmin)
 from repanier.models.configuration import Configuration
@@ -25,33 +26,36 @@ from repanier.admin.purchase import PurchaseAdmin
 
 admin.site.register(Purchase, PurchaseAdmin)
 from repanier.models.lut import (
-    LUT_ProductionMode,
-    LUT_DeliveryPoint,
-    LUT_DepartmentForCustomer,
-    LUT_PermanenceRole,
+    Label,
+    DeliveryPoint,
+    Department,
+    Activity,
 )
 from repanier.admin.lut import (
-    LUTProductionModeAdmin,
-    LUTPermanenceRoleAdmin,
-    LUTDepartmentForCustomerAdmin,
-    LUTDeliveryPointAdmin,
+    LabelAdmin,
+    ActivityAdmin,
+    DepartmentAdmin,
+    DeliveryPointAdmin,
 )
 
 from django.contrib import admin
 
 
-admin.site.register(LUT_ProductionMode, LUTProductionModeAdmin)
-admin.site.register(LUT_PermanenceRole, LUTPermanenceRoleAdmin)
-admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
-admin.site.register(LUT_DeliveryPoint, LUTDeliveryPointAdmin)
-from repanier.models.offeritem import OfferItemClosed
-from repanier.admin.offeritem import OfferItemClosedAdmin
+admin.site.register(Label, LabelAdmin)
+admin.site.register(Activity, ActivityAdmin)
+# admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
+admin.site.register(Department, DepartmentAdmin)
+admin.site.register(DeliveryPoint, DeliveryPointAdmin)
 
-admin.site.register(OfferItemClosed, OfferItemClosedAdmin)
-from repanier.models.offeritem import OfferItemSend
-from repanier.admin.rule_of_3_per_product import OfferItemSendAdmin
 
-admin.site.register(OfferItemSend, OfferItemSendAdmin)
+from repanier.models.forsale import ForSaleClosed
+from repanier.admin.forsale import ForSaleClosedAdmin
+
+admin.site.register(ForSaleClosed, ForSaleClosedAdmin)
+from repanier.models.forsale import ForSaleSend
+from repanier.admin.rule_of_3_per_product import ForSaleSendAdmin
+
+admin.site.register(ForSaleSend, ForSaleSendAdmin)
 from repanier.models.invoice import CustomerSend
 from repanier.admin.rule_of_3_per_customer import CustomerSendAdmin
 

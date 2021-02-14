@@ -71,33 +71,33 @@ from .. import LXML
 
 if LXML is True:
     from lxml.etree import (
-    Element,
-    ElementTree,
-    SubElement,
-    fromstring,
-    tostring,
-    register_namespace,
-    iterparse
+        Element,
+        ElementTree,
+        SubElement,
+        fromstring,
+        tostring,
+        register_namespace,
+        iterparse,
     )
     from xml.etree.cElementTree import iterparse
 else:
     try:
         from xml.etree.cElementTree import (
-        ElementTree,
-        Element,
-        SubElement,
-        fromstring,
-        tostring,
-        iterparse
+            ElementTree,
+            Element,
+            SubElement,
+            fromstring,
+            tostring,
+            iterparse,
         )
     except ImportError:
         from xml.etree.ElementTree import (
-        ElementTree,
-        Element,
-        SubElement,
-        fromstring,
-        tostring,
-        iterparse
+            ElementTree,
+            Element,
+            SubElement,
+            fromstring,
+            tostring,
+            iterparse,
         )
     from .namespace import register_namespace
 
@@ -111,24 +111,25 @@ from .ooxml import (
     VTYPES_NS,
     COREPROPS_NS,
     DCTERMS_NS,
-    DCTERMS_PREFIX
+    DCTERMS_PREFIX,
 )
 
 register_namespace(DCTERMS_PREFIX, DCTERMS_NS)
-register_namespace('dcmitype', 'http://purl.org/dc/dcmitype/')
-register_namespace('cp', COREPROPS_NS)
-register_namespace('c', CHART_NS)
-register_namespace('a', DRAWING_NS)
-register_namespace('s', SHEET_MAIN_NS)
-register_namespace('r', REL_NS)
-register_namespace('vt', VTYPES_NS)
-register_namespace('xdr', SHEET_DRAWING_NS)
-register_namespace('cdr', CHART_DRAWING_NS)
+register_namespace("dcmitype", "http://purl.org/dc/dcmitype/")
+register_namespace("cp", COREPROPS_NS)
+register_namespace("c", CHART_NS)
+register_namespace("a", DRAWING_NS)
+register_namespace("s", SHEET_MAIN_NS)
+register_namespace("r", REL_NS)
+register_namespace("vt", VTYPES_NS)
+register_namespace("xdr", SHEET_DRAWING_NS)
+register_namespace("cdr", CHART_DRAWING_NS)
+
 
 def get_document_content(xml_node):
     """Print nicely formatted xml to a string."""
     pretty_indent(xml_node)
-    return tostring(xml_node, encoding='utf-8')
+    return tostring(xml_node, encoding="utf-8")
 
 
 def pretty_indent(elem, level=0):
