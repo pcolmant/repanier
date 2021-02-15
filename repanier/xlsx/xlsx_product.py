@@ -27,7 +27,6 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
         Product.objects.filter(
             is_active=True,
             is_into_offer=True,
-            translations__language_code=translation.get_language(),
             producer__in=producer_qs,
         )
         .order_by(

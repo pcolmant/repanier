@@ -57,12 +57,6 @@ class Producer(models.Model):
     email3 = models.EmailField(
         _lazy("✉ #3"), null=True, blank=True, default=EMPTY_STRING
     )
-    language = models.CharField(
-        max_length=5,
-        choices=settings.LANGUAGES,
-        default=settings.LANGUAGE_CODE,
-        verbose_name=_lazy("Language"),
-    )
     picture = RepanierPictureField(
         verbose_name=_lazy("Picture"),
         null=True,

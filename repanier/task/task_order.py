@@ -20,7 +20,6 @@ from repanier.tools import debug_parameters
 
 @transaction.atomic
 def automatically_open():
-    translation.activate(settings.LANGUAGE_CODE)
     something_to_open = False
     for permanence in Permanence.objects.filter(
         status=SALE_PLANNED, automatically_closed=True

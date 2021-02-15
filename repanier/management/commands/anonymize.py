@@ -47,7 +47,6 @@ class Command(BaseCommand):
                 )
             )
             exit()
-        translation.activate(settings.LANGUAGE_CODE)
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
         if config is None:
             exit()
@@ -70,14 +69,8 @@ class Command(BaseCommand):
             producer.anonymize(also_group=True)
             print("Producer anonymized : {}".format(producer))
         for permanence_role in LUT_PermanenceRole.objects.all().order_by("?"):
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                permanence_role.set_current_language(language_code)
-                try:
-                    permanence_role.description = EMPTY_STRING
-                    permanence_role.save_translations()
-                except TranslationDoesNotExist:
-                    pass
+            permanence_role.description = EMPTY_STRING
+            permanence_role.save_translations()
         BankAccount.objects.filter(customer__isnull=False).order_by("?").update(
             operation_comment=EMPTY_STRING
         )

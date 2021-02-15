@@ -1,14 +1,13 @@
 from django.http import HttpResponse, JsonResponse
-from django.utils import translation
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 
-from repanier.models.lut import LUT_DepartmentForCustomer
+from repanier.models.lut import Department
 
 
-class DepartmentForCustomerSerializer(serializers.ModelSerializer):
+class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LUT_DepartmentForCustomer
+        model = Department
         fields = ("short_name",)
 
 
@@ -18,8 +17,8 @@ def departments_for_customers_rest(request):
     List all code snippets, or create a new snippet.
     """
     if request.method == "GET":
-        departments = LUT_DepartmentForCustomer.objects.filter(is_active=True)
-        serializer = DepartmentForCustomerSerializer(departments, many=True)
+        departments = Department.objects.filter(is_active=True)
+        serializer = DepartmentSerializer(departments, many=True)
         return JsonResponse(serializer.data)
     return HttpResponse(status=400)
 
@@ -31,15 +30,14 @@ def department_rest(request, short_name):
     """
     if request.method == "GET":
         department = (
-            LUT_DepartmentForCustomer.objects.filter(
-                translations__short_name=short_name.decode("unicode-escape"),
-                translations__language_code=translation.get_language(),
+            Department.objects.filter(
+                short_name=short_name.decode("unicode-escape"),
                 is_active=True,
             )
             .order_by("?")
             .first()
         )
         if department is not None:
-            serializer = DepartmentForCustomerSerializer(department)
+            serializer = DepartmentSerializer(department)
             return JsonResponse(serializer.data)
     return HttpResponse(status=404)

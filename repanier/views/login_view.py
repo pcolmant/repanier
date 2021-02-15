@@ -122,9 +122,7 @@ def login_view(
     if user.is_anonymous:
         from repanier.globals import REPANIER_SETTINGS_CONFIG
 
-        how_to_create_an_account = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-            "how_to_create_an_account", any_language=True, default=EMPTY_STRING
-        )
+        how_to_create_an_account = REPANIER_SETTINGS_CONFIG.how_to_create_an_account
     else:
         how_to_create_an_account = EMPTY_STRING
 

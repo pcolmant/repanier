@@ -278,7 +278,7 @@ class ProducerAdmin(RepanierAdminImportExport):
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [
-            ("short_name", "long_name", "language"),
+            ("short_name", "long_name"),
             ("email", "email2", "email3"),
             ("phone1", "phone2", "fax"),
             ("address", "city"),

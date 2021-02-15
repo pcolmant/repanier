@@ -26,7 +26,6 @@ class CoordinatorsContactForm(forms.Form):
         for staff in Staff.objects.filter(
             is_active=True,
             can_be_contacted=True,
-            translations__language_code=translation.get_language(),
         ):
             choices.append((staff.id, staff.get_str_member))
         self.fields["staff"].choices = choices

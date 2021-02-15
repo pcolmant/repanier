@@ -56,12 +56,6 @@ class Customer(models.Model):
         default=EMPTY_STRING,
     )
     email2 = models.EmailField(_("✉ #2"), null=True, blank=True, default=EMPTY_STRING)
-    language = models.CharField(
-        max_length=5,
-        choices=settings.LANGUAGES,
-        default=settings.LANGUAGE_CODE,
-        verbose_name=_("Language"),
-    )
 
     picture = RepanierPictureField(
         verbose_name=_("Picture"),

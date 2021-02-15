@@ -45,8 +45,7 @@ class CustomerInvoiceView(DetailView):
             context["bank_account_set"] = bank_account_set
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 purchase_set = Purchase.objects.filter(
-                    customer_invoice_id=customer_invoice.id,
-                    offer_item__translations__language_code=translation.get_language(),
+                    customer_invoice_id=customer_invoice.id
                 ).order_by("producer", "offer_item__translations__order_sort_order")
             else:
                 purchase_set = Purchase.objects.filter(

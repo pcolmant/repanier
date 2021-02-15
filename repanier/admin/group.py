@@ -281,7 +281,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, customer=None):
         fields_basic = [
-            ("short_name", "long_name", "language"),
+            ("short_name", "long_name"),
             ("email", "email2"),
             ("phone1", "phone2"),
             "memo",
