@@ -1,28 +1,24 @@
+from django.db import models
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
-from parler.models import TranslatableModel, TranslatedFields
 
 from repanier.const import *
 from repanier.tools import cap
 
 
-class Notification(TranslatableModel):
-    translations = TranslatedFields(
-        notification=HTMLField(
-            _("Notification"),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        )
+class Notification(models.Model):
+    message = HTMLField(
+        _("Notification"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
     )
 
     def get_notification_display(self):
-        return self.safe_translation_getter(
-            "notification", any_language=True, default=EMPTY_STRING
-        )
+        return self.message
 
     def get_html_notification_card_display(self):
         if settings.REPANIER_SETTINGS_TEMPLATE != "bs3":

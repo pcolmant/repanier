@@ -1,7 +1,7 @@
-from parler.admin import TranslatableAdmin
+from django.contrib.admin import ModelAdmin
 
 
-class NotificationAdmin(TranslatableAdmin):
+class NotificationAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # nobody even a superadmin
         return False
@@ -18,4 +18,4 @@ class NotificationAdmin(TranslatableAdmin):
         return False
 
     def get_fields(self, request, obj=None):
-        return ["notification"]
+        return ["message"]
