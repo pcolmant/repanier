@@ -2,36 +2,13 @@ from cms.toolbar_pool import toolbar_pool
 from django.core.cache import cache
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
 from menus.menu_pool import menu_pool
 
 from repanier.const import (
-    SALE_NAME_PERMANENCE,
-    SALE_NAME_CLOSURE,
-    SALE_NAME_DELIVERY,
-    SALE_NAME_ORDER,
-    SALE_NAME_OPENING,
     CURRENCY_LOC,
     CURRENCY_CHF,
 )
 from repanier.models import Configuration
-
-
-# @receiver(post_init, sender=Configuration)
-# def configuration_post_init(sender, **kwargs):
-#     config = kwargs["instance"]
-#     if config.id is not None:
-#         config.previous_email_host_password = config.email_host_password
-#     else:
-#         config.previous_email_host_password = EMPTY_STRING
-#     config.email_host_password = EMPTY_STRING
-
-
-# @receiver(pre_save, sender=Configuration)
-# def configuration_pre_save(sender, **kwargs):
-#     config = kwargs["instance"]
-#     if not config.bank_account:
-#         config.bank_account = None
 
 
 @receiver(post_save, sender=Configuration)
@@ -42,30 +19,6 @@ def configuration_post_save(sender, **kwargs):
     config = kwargs["instance"]
     if config.id is not None:
         globals.REPANIER_SETTINGS_CONFIG = config
-        if config.name == SALE_NAME_PERMANENCE:
-            globals.REPANIER_SETTINGS_SALE_NAME = _("Permanence")
-            globals.REPANIER_SETTINGS_PERMANENCES_NAME = _("Permanences")
-            globals.REPANIER_SETTINGS_SALE_ON_NAME = _("Permanence of ")
-        elif config.name == SALE_NAME_CLOSURE:
-            globals.REPANIER_SETTINGS_SALE_NAME = _("Closure")
-            globals.REPANIER_SETTINGS_PERMANENCES_NAME = _("Closures")
-            globals.REPANIER_SETTINGS_SALE_ON_NAME = _("Closure of ")
-        elif config.name == SALE_NAME_DELIVERY:
-            globals.REPANIER_SETTINGS_SALE_NAME = _("Delivery")
-            globals.REPANIER_SETTINGS_PERMANENCES_NAME = _("Deliveries")
-            globals.REPANIER_SETTINGS_SALE_ON_NAME = _("Delivery of ")
-        elif config.name == SALE_NAME_ORDER:
-            globals.REPANIER_SETTINGS_SALE_NAME = _("Order")
-            globals.REPANIER_SETTINGS_PERMANENCES_NAME = _("Orders")
-            globals.REPANIER_SETTINGS_SALE_ON_NAME = _("Order of ")
-        elif config.name == SALE_NAME_OPENING:
-            globals.REPANIER_SETTINGS_SALE_NAME = _("Opening")
-            globals.REPANIER_SETTINGS_PERMANENCES_NAME = _("Openings")
-            globals.REPANIER_SETTINGS_SALE_ON_NAME = _("Opening of ")
-        else:
-            globals.REPANIER_SETTINGS_SALE_NAME = _("Distribution")
-            globals.REPANIER_SETTINGS_PERMANENCES_NAME = _("Distributions")
-            globals.REPANIER_SETTINGS_SALE_ON_NAME = _("Distribution of ")
         globals.REPANIER_SETTINGS_MAX_WEEK_WO_PARTICIPATION = (
             config.max_week_wo_participation
         )
@@ -85,7 +38,6 @@ def configuration_post_save(sender, **kwargs):
             config.display_anonymous_order_form
         )
         globals.REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO = config.display_who_is_who
-        globals.REPANIER_SETTINGS_XLSX_PORTRAIT = config.xlsx_portrait
         # if config.bank_account is not None and len(config.bank_account.strip()) == 0:
         #     globals.REPANIER_SETTINGS_BANK_ACCOUNT = None
         # else:

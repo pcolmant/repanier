@@ -517,15 +517,15 @@ def export_invoice(
                     c.style.font.bold = True
             if customer is not None:
                 config = REPANIER_SETTINGS_CONFIG
-                group_label = config.group_label
-                if group_label:
+                certification = config.certification
+                if certification:
                     row_num += 1
                     for col_num in range(len(row)):
                         c = ws.cell(row=row_num, column=col_num)
                         c.style.borders.top.border_style = Border.BORDER_THIN
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         if col_num == 2:
-                            c.value = "{}".format(group_label)
+                            c.value = "{}".format(certification)
                             c.style.font.bold = True
     return wb
 

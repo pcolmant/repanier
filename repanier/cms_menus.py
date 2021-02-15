@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 class PermanenceMenu(Menu):
     def get_nodes(self, request):
-        from repanier.globals import REPANIER_SETTINGS_PERMANENCES_NAME
-
         user = request.user
         if user.is_anonymous or user.is_staff:
             is_anonymous = True
@@ -23,7 +21,7 @@ class PermanenceMenu(Menu):
             is_anonymous = False
         nodes = []
         parent_node = NavigationNode(
-            "{}".format(REPANIER_SETTINGS_PERMANENCES_NAME),
+            "{}".format(_("Sale")),
             "/",
             id=0,
             visible=True,

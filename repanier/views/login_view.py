@@ -122,16 +122,16 @@ def login_view(
     if user.is_anonymous:
         from repanier.globals import REPANIER_SETTINGS_CONFIG
 
-        how_to_register = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-            "how_to_register", any_language=True, default=EMPTY_STRING
+        how_to_create_an_account = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
+            "how_to_create_an_account", any_language=True, default=EMPTY_STRING
         )
     else:
-        how_to_register = EMPTY_STRING
+        how_to_create_an_account = EMPTY_STRING
 
     context = {
         "form": form,
         redirect_field_name: redirect_to,
-        "how_to_register": how_to_register,
+        "how_to_create_an_account": how_to_create_an_account,
         "staff_responsibilities": staff_responsibilities,
     }
     if extra_context is not None:

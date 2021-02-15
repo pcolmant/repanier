@@ -8,7 +8,6 @@ from django.template import Template
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
-from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
@@ -16,7 +15,7 @@ from repanier.fields.RepanierMoneyField import ModelMoneyField
 logger = logging.getLogger(__name__)
 
 
-class Configuration(TranslatableModel):
+class Configuration(models.Model):
     group_name = models.CharField(
         _("Name of the group"),
         max_length=50,
@@ -27,12 +26,6 @@ class Configuration(TranslatableModel):
     )
     password_reset_on = models.DateTimeField(
         _("Password reset on"), null=True, blank=True, default=None
-    )
-    name = models.CharField(
-        max_length=3,
-        choices=LUT_SALE_NAME,
-        default=SALE_NAME_PERMANENCE,
-        verbose_name=_("Offers name"),
     )
     currency = models.CharField(
         max_length=3,
@@ -68,9 +61,6 @@ class Configuration(TranslatableModel):
     display_who_is_who = models.BooleanField(
         _('Display the "who\'s who"'), default=True
     )
-    xlsx_portrait = models.BooleanField(
-        _("Always generate XLSX files in portrait mode"), default=False
-    )
     bank_account = models.CharField(
         _("Bank account"), max_length=100, blank=True, default=EMPTY_STRING
     )
@@ -95,127 +85,115 @@ class Configuration(TranslatableModel):
     permanence_of_last_cancelled_invoice = models.ForeignKey(
         "Permanence", on_delete=models.PROTECT, blank=True, null=True
     )
-    translations = TranslatedFields(
-        group_label=models.CharField(
-            _("Label to mention on the invoices of the group"),
-            max_length=100,
-            default=EMPTY_STRING,
-            blank=True,
+    certification = models.CharField(
+        _("certification to mention on the invoices"),
+        max_length=100,
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    how_to_create_an_account = HTMLField(
+        _("How to create an account"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_offer_customer = HTMLField(
+        _("Contents of the order opening email sent to consumers authorized to order"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_order_customer = HTMLField(
+        _("Content of the order confirmation email sent to the consumers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_cancel_order_customer = HTMLField(
+        _(
+            "Content of the email in case of cancellation of the order sent to the consumers concerned"
         ),
-        how_to_register=HTMLField(
-            _("How to register"),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_order_staff = HTMLField(
+        _(
+            "Content of the order distribution email sent to the members enrolled to a task"
         ),
-        offer_customer_mail=HTMLField(
-            _(
-                "Contents of the order opening email sent to consumers authorized to order"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        order_customer_mail=HTMLField(
-            _(
-                "Content of the order confirmation email sent to the consumers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        cancel_order_customer_mail=HTMLField(
-            _(
-                "Content of the email in case of cancellation of the order sent to the consumers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        order_staff_mail=HTMLField(
-            _(
-                "Content of the order distribution email sent to the members enrolled to a task"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        order_producer_mail=HTMLField(
-            _(
-                "Content of the order confirmation email sent to the producers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        invoice_customer_mail=HTMLField(
-            _(
-                "Content of the invoice confirmation email sent to the customers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
-        invoice_producer_mail=HTMLField(
-            _(
-                "Content of the payment confirmation email sent to the producers concerned"
-            ),
-            help_text=EMPTY_STRING,
-            configuration="CKEDITOR_SETTINGS_MODEL2",
-            default=EMPTY_STRING,
-            blank=True,
-        ),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_order_producer = HTMLField(
+        _("Content of the order confirmation email sent to the producers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_invoice_customer = HTMLField(
+        _("Content of the invoice confirmation email sent to the customers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    mail_invoice_producer = HTMLField(
+        _("Content of the payment confirmation email sent to the producers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
     )
 
     def clean(self):
         try:
-            template = Template(self.offer_customer_mail)
+            template = Template(self.mail_offer_customer)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.offer_customer_mail, error_str))
+                mark_safe("{} : {}".format(self.mail_offer_customer, error_str))
             )
         try:
-            template = Template(self.order_customer_mail)
+            template = Template(self.mail_order_customer)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.order_customer_mail, error_str))
+                mark_safe("{} : {}".format(self.mail_order_customer, error_str))
             )
         try:
-            template = Template(self.order_staff_mail)
+            template = Template(self.mail_order_staff)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.order_staff_mail, error_str))
+                mark_safe("{} : {}".format(self.mail_order_staff, error_str))
             )
         try:
-            template = Template(self.order_producer_mail)
+            template = Template(self.mail_order_producer)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.order_producer_mail, error_str))
+                mark_safe("{} : {}".format(self.mail_order_producer, error_str))
             )
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             try:
-                template = Template(self.invoice_customer_mail)
+                template = Template(self.mail_invoice_customer)
             except Exception as error_str:
                 raise ValidationError(
-                    mark_safe("{} : {}".format(self.invoice_customer_mail, error_str))
+                    mark_safe("{} : {}".format(self.mail_invoice_customer, error_str))
                 )
             try:
-                template = Template(self.invoice_producer_mail)
+                template = Template(self.mail_invoice_producer)
             except Exception as error_str:
                 raise ValidationError(
-                    mark_safe("{} : {}".format(self.invoice_producer_mail, error_str))
+                    mark_safe("{} : {}".format(self.mail_invoice_producer, error_str))
                 )
 
     @classmethod
     def init_repanier(cls):
-        from repanier.const import DECIMAL_ONE, SALE_NAME_PERMANENCE, CURRENCY_EUR
+        from repanier.const import DECIMAL_ONE, CURRENCY_EUR
 
         site = Site.objects.get_current()
         if site is not None:
@@ -230,7 +208,6 @@ class Configuration(TranslatableModel):
         if config is None:
             config = Configuration.objects.create(
                 group_name=settings.REPANIER_SETTINGS_GROUP_NAME,
-                name=SALE_NAME_PERMANENCE,
                 bank_account="BE99 9999 9999 9999",
                 currency=CURRENCY_EUR,
             )
@@ -365,164 +342,116 @@ class Configuration(TranslatableModel):
 
     @classmethod
     def init_department(cls):
-        from repanier.models.lut import LUT_DepartmentForCustomer
+        from repanier.models.lut import Department
 
-        if LUT_DepartmentForCustomer.objects.count() == 0:
-            # Generate a template of LUT_DepartmentForCustomer
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Vegetable"))
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Fruit"))
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Bakery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Flour"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Bread"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Pastry"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Butchery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Delicatessen"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Chicken"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Pork"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Beef"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Beef and pork"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Lamb"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Grocery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cookie"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Creamery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Dairy"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cow cheese"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Goat cheese"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Sheep cheese"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Mixed cheese"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cup of icecream"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Icecream per liter"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Icecream in frisco"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Drink"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Juice"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Coffee"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Tea"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Herbal tea"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Wine"), parent=parent
-            )
+        if Department.objects.count() != 0:
+            return
+
+        # Generate a template of LUT_DepartmentForCustomer
+        parent = Department.objects.create(short_name=_("Vegetable"))
+        parent = Department.objects.create(short_name=_("Fruit"))
+        parent = Department.objects.create(short_name=_("Bakery"))
+        Department.objects.create(short_name=_("Flour"), parent=parent)
+        Department.objects.create(short_name=_("Bread"), parent=parent)
+        Department.objects.create(short_name=_("Pastry"), parent=parent)
+        parent = Department.objects.create(short_name=_("Butchery"))
+        Department.objects.create(short_name=_("Delicatessen"), parent=parent)
+        Department.objects.create(short_name=_("Chicken"), parent=parent)
+        Department.objects.create(short_name=_("Pork"), parent=parent)
+        Department.objects.create(short_name=_("Beef"), parent=parent)
+        Department.objects.create(short_name=_("Beef and pork"), parent=parent)
+        Department.objects.create(short_name=_("Lamb"), parent=parent)
+        parent = Department.objects.create(short_name=_("Grocery"))
+        Department.objects.create(short_name=_("Cookie"), parent=parent)
+        parent = Department.objects.create(short_name=_("Creamery"))
+        Department.objects.create(short_name=_("Dairy"), parent=parent)
+        Department.objects.create(short_name=_("Cow cheese"), parent=parent)
+        Department.objects.create(short_name=_("Goat cheese"), parent=parent)
+        Department.objects.create(short_name=_("Sheep cheese"), parent=parent)
+        Department.objects.create(short_name=_("Mixed cheese"), parent=parent)
+        parent = Department.objects.create(short_name=_("Icecream"))
+        Department.objects.create(short_name=_("Cup of icecream"), parent=parent)
+        Department.objects.create(short_name=_("Icecream per liter"), parent=parent)
+        Department.objects.create(short_name=_("Icecream in frisco"), parent=parent)
+        parent = Department.objects.create(short_name=_("Drink"))
+        Department.objects.create(short_name=_("Juice"), parent=parent)
+        Department.objects.create(short_name=_("Coffee"), parent=parent)
+        Department.objects.create(short_name=_("Tea"), parent=parent)
+        Department.objects.create(short_name=_("Herbal tea"), parent=parent)
+        Department.objects.create(short_name=_("Wine"), parent=parent)
 
     def init_email(self):
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            self.set_current_language(language_code)
-            try:
-                self.offer_customer_mail = """
-                    Bonjour,<br />
-                    <br />
-                    Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
-                    {% if offer_description %}<br />{{ offer_description }}<br />
-                    {% endif %} {% if offer_recent_detail %}<br />
-                    Nouveauté(s) :<br />
-                    {{ offer_recent_detail }}{% endif %}<br />
-                    <br />
-                    {{ signature }}
-                    """
-                self.order_customer_mail = """
-                    Bonjour {{ long_name }},<br>
-                    <br>
-                    En pièce jointe vous trouverez le montant de votre panier {{ short_name }} de la {{ permanence_link }}.<br>
-                    <br>
-                    {{ last_balance }}<br>
-                    {{ order_amount }}<br>
-                    {% if on_hold_movement %}{{ on_hold_movement }}<br>
-                    {% endif %} {% if payment_needed %}{{ payment_needed }}<br>
-                    {% endif %}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.cancel_order_customer_mail = """
-                    Bonjour {{ long_name }},<br>
-                    <br>
-                    La commande ci-jointe de votre panier {{ short_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.order_staff_mail = """
-                    Cher/Chère membre de l'équipe de préparation,<br>
-                    <br>
-                    En pièce jointe vous trouverez la liste de préparation pour la {{ permanence_link }}.<br>
-                    <br>
-                    L'équipe de préparation est composée de :<br>
-                    {{ board_composition_and_description }}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.order_producer_mail = """
-                    Cher/Chère {{ name }},<br>
-                    <br>
-                    {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br>
-                    <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.invoice_customer_mail = """
-                    Bonjour {{ name }},<br>
-                    <br>
-                    En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br>
-                    <br>
-                    {{ invoice_description }}{% endif %}
-                    <br>
-                    {{ order_amount }}<br>
-                    {{ last_balance_link }}<br>
-                    {% if payment_needed %}{{ payment_needed }}<br>
-                    {% endif %}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.invoice_producer_mail = """
-                    Cher/Chère {{ profile_name }},<br>
-                    <br>
-                    En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.save_translations()
-            except TranslationDoesNotExist:
-                pass
+        self.mail_offer_customer = """
+            Bonjour,<br />
+            <br />
+            Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
+            {% if offer_description %}<br />{{ offer_description }}<br />
+            {% endif %} {% if offer_recent_detail %}<br />
+            Nouveauté(s) :<br />
+            {{ offer_recent_detail }}{% endif %}<br />
+            <br />
+            {{ signature }}
+            """
+        self.mail_order_customer = """
+            Bonjour {{ long_name }},<br>
+            <br>
+            En pièce jointe vous trouverez le montant de votre panier {{ short_name }} de la {{ permanence_link }}.<br>
+            <br>
+            {{ last_balance }}<br>
+            {{ order_amount }}<br>
+            {% if on_hold_movement %}{{ on_hold_movement }}<br>
+            {% endif %} {% if payment_needed %}{{ payment_needed }}<br>
+            {% endif %}<br>
+            <br>
+            {{ signature }}
+            """
+        self.mail_cancel_order_customer = """
+            Bonjour {{ long_name }},<br>
+            <br>
+            La commande ci-jointe de votre panier {{ short_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
+            <br>
+            {{ signature }}
+            """
+        self.mail_order_staff = """
+            Cher/Chère membre de l'équipe de préparation,<br>
+            <br>
+            En pièce jointe vous trouverez la liste de préparation pour la {{ permanence_link }}.<br>
+            <br>
+            L'équipe de préparation est composée de :<br>
+            {{ board_composition_and_description }}<br>
+            <br>
+            {{ signature }}
+            """
+        self.mail_order_producer = """
+            Cher/Chère {{ name }},<br>
+            <br>
+            {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br>
+            <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br>
+            <br>
+            {{ signature }}
+            """
+        self.mail_invoice_customer = """
+            Bonjour {{ name }},<br>
+            <br>
+            En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br>
+            <br>
+            {{ invoice_description }}{% endif %}
+            <br>
+            {{ order_amount }}<br>
+            {{ last_balance_link }}<br>
+            {% if payment_needed %}{{ payment_needed }}<br>
+            {% endif %}<br>
+            <br>
+            {{ signature }}
+            """
+        self.mail_invoice_producer = """
+            Cher/Chère {{ profile_name }},<br>
+            <br>
+            En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br>
+            <br>
+            {{ signature }}
+            """
+        self.save()
 
     def __str__(self):
         return self.group_name
@@ -530,3 +459,87 @@ class Configuration(TranslatableModel):
     class Meta:
         verbose_name = _("Configuration")
         verbose_name_plural = _("Configurations")
+
+
+###### TODO BEGIN OF OLD FIELD : TBD
+class ConfigurationTranslation(models.Model):
+    master = models.ForeignKey(
+        "Configuration",
+        related_name="translations",
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    language_code = models.CharField(
+        max_length=15,
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    group_label = models.CharField(
+        _("Label to mention on the invoices of the group"),
+        max_length=100,
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    how_to_register = HTMLField(
+        _("How to register"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    offer_customer_mail = HTMLField(
+        _("Contents of the order opening email sent to consumers authorized to order"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    order_customer_mail = HTMLField(
+        _("Content of the order confirmation email sent to the consumers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    cancel_order_customer_mail = HTMLField(
+        _(
+            "Content of the email in case of cancellation of the order sent to the consumers concerned"
+        ),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    order_staff_mail = HTMLField(
+        _(
+            "Content of the order distribution email sent to the members enrolled to a task"
+        ),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    order_producer_mail = HTMLField(
+        _("Content of the order confirmation email sent to the producers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    invoice_customer_mail = HTMLField(
+        _("Content of the invoice confirmation email sent to the customers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    invoice_producer_mail = HTMLField(
+        _("Content of the payment confirmation email sent to the producers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+
+
+###### TODO END OF OLD FIELD : TBD

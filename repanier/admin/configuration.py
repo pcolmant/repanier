@@ -1,15 +1,14 @@
 from django import forms
 from django.conf import settings
+from django.contrib.admin import ModelAdmin
 from django.utils.translation import ugettext_lazy as _
-from parler.admin import TranslatableAdmin
-from parler.forms import TranslatableModelForm
 
 from repanier.const import EMPTY_STRING
 from repanier.models.configuration import Configuration
 from repanier.widget.button_test_mail_config import ButtonTestMailConfigWidget
 
 
-class ConfigurationDataForm(TranslatableModelForm):
+class ConfigurationDataForm(forms.ModelForm):
     home_site = forms.URLField(
         label=_("Home site"),
         required=False,
@@ -24,40 +23,27 @@ class ConfigurationDataForm(TranslatableModelForm):
         label=_("Email"), required=True, initial=settings.DEFAULT_FROM_EMAIL
     )
     send_test_mail_button = forms.CharField(
-        # label=_("Test the email address"),
         label=EMPTY_STRING,
         widget=ButtonTestMailConfigWidget,
         required=False,
     )
-    group_label = forms.CharField(
-        label=_("Label to mention on the invoices of the group"),
+    certification = forms.CharField(
+        label=_("Certification to mention on the invoices"),
         required=False,
         widget=forms.TextInput(attrs={"style": "width:100% !important"}),
     )
 
     def __init__(self, *args, **kwargs):
-        # self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
         self.fields["group_name"].widget.attrs["readonly"] = True
         self.fields["email"].widget.attrs["readonly"] = True
-
-    # def clean(self):
-    #     if any(self.errors):
-    #         # Don't bother validating the formset unless each form is valid on its own
-    #         return
-    #     if not settings.REPANIER_SETTINGS_DEMO:
-    #         new_email_host_password = self.cleaned_data["new_email_host_password"]
-    #         if not new_email_host_password:
-    #             self.instance.email_host_password = self.instance.previous_email_host_password
-    #         else:
-    #             self.instance.email_host_password = new_email_host_password
 
     class Meta:
         model = Configuration
         fields = "__all__"
 
 
-class ConfigurationAdmin(TranslatableAdmin):
+class ConfigurationAdmin(ModelAdmin):
     form = ConfigurationDataForm
 
     def has_delete_permission(self, request, obj=None):
@@ -75,15 +61,14 @@ class ConfigurationAdmin(TranslatableAdmin):
 
     def get_fieldsets(self, *args, **kwargs):
         fields = [
-            ("group_name", "name"),
+            ("group_name", "bank_account"),
             "email",
             "send_test_mail_button",
-            "bank_account",
             "max_week_wo_participation",
             ("membership_fee", "membership_fee_duration"),
             "display_anonymous_order_form",
             "display_who_is_who",
-            "how_to_register",
+            "how_to_create_an_account",
         ]
         fieldsets = [
             (
@@ -98,7 +83,7 @@ class ConfigurationAdmin(TranslatableAdmin):
                 _("Opening mails"),
                 {
                     "classes": ("collapse",),
-                    "fields": ("offer_customer_mail",),
+                    "fields": ("mail_offer_customer",),
                 },
             ),
         ]
@@ -110,11 +95,11 @@ class ConfigurationAdmin(TranslatableAdmin):
                         "classes": ("collapse",),
                         "fields": (
                             "send_abstract_order_mail_to_customer",
-                            "order_customer_mail",
-                            "cancel_order_customer_mail",
-                            "order_producer_mail",
+                            "mail_order_customer",
+                            "mail_cancel_order_customer",
+                            "mail_order_producer",
                             "send_order_mail_to_board",
-                            "order_staff_mail",
+                            "mail_order_staff",
                         ),
                     },
                 ),
@@ -127,10 +112,10 @@ class ConfigurationAdmin(TranslatableAdmin):
                         "classes": ("collapse",),
                         "fields": (
                             "send_abstract_order_mail_to_customer",
-                            "order_customer_mail",
-                            "order_producer_mail",
+                            "mail_order_customer",
+                            "mail_order_producer",
                             "send_order_mail_to_board",
-                            "order_staff_mail",
+                            "mail_order_staff",
                         ),
                     },
                 )
@@ -143,9 +128,9 @@ class ConfigurationAdmin(TranslatableAdmin):
                         "classes": ("collapse",),
                         "fields": (
                             "send_invoice_mail_to_customer",
-                            "invoice_customer_mail",
+                            "mail_invoice_customer",
                             "send_invoice_mail_to_producer",
-                            "invoice_producer_mail",
+                            "mail_invoice_producer",
                         ),
                     },
                 ),
@@ -153,9 +138,7 @@ class ConfigurationAdmin(TranslatableAdmin):
 
         fields = [
             "home_site",
-            "group_label",
-            # 'page_break_on_customer_check',
-            "xlsx_portrait",
+            "certification",
             ("currency", "vat_id"),
         ]
         fieldsets += [
@@ -169,14 +152,3 @@ class ConfigurationAdmin(TranslatableAdmin):
         ]
 
         return fieldsets
-
-    # def get_form(self, request, obj=None, **kwargs):
-    #
-    #     form_class = super().get_form(request, obj, **kwargs)
-    #
-    #     class FormWithRequest(form_class):
-    #         def __new__(cls, *args, **kwargs):
-    #             kwargs["request"] = request
-    #             return form_class(*args, **kwargs)
-    #
-    #     return FormWithRequest

@@ -6,7 +6,6 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.globals import REPANIER_SETTINGS_SALE_NAME
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class BankAccount(models.Model):
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=REPANIER_SETTINGS_SALE_NAME,
+        verbose_name=_("Sale"),
         on_delete=models.PROTECT,
         blank=True,
         null=True,

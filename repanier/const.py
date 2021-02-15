@@ -339,22 +339,6 @@ LUT_BANK_TOTAL = (
     (BANK_LATEST_TOTAL, _("This is the latest bank total.")),
 )
 
-SALE_NAME_PERMANENCE: str = "100"
-SALE_NAME_CLOSURE: str = "200"
-SALE_NAME_DELIVERY: str = "300"
-SALE_NAME_ORDER: str = "400"
-SALE_NAME_OPENING: str = "500"
-SALE_NAME_DISTRIBUTION: str = "600"
-
-LUT_SALE_NAME = (
-    (SALE_NAME_PERMANENCE, _("Permanence")),
-    (SALE_NAME_CLOSURE, _("Closure")),
-    (SALE_NAME_DELIVERY, _("Delivery")),
-    (SALE_NAME_ORDER, _("Order")),
-    (SALE_NAME_OPENING, _("Opening")),
-    (SALE_NAME_DISTRIBUTION, _("Distribution")),
-)
-
 LIMIT_ORDER_QTY_ITEM: int = 25
 LIMIT_DISPLAYED_PERMANENCE: int = 25
 BOX_VALUE_STR: str = "-1"

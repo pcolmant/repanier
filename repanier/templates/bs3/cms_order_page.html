@@ -32,13 +32,13 @@
                         <div class="col-sm-3">
                             <a href="{% url "login_form" %}?next={% url 'repanier:order_view' permanence.id %}" class="btn btn-info">{% trans "Login me" %}</a>
                         </div>
-                        {% if how_to_register %}
+                        {% if how_to_create_an_account %}
                         <div class="col-sm-9">
                                 <div class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse">
                                     <span class="btn btn-info">{% trans "Create an account ?" %}</span>
                                 </div>
                                 <div id="collapse" class="panel-collapse collapse">
-                                        {{ how_to_register | safe }}
+                                        {{ how_to_create_an_account | safe }}
                                 </div>
                         </div>
                         {% endif %}

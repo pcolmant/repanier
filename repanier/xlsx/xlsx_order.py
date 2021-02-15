@@ -1587,7 +1587,7 @@ def export_customer_for_a_delivery(
     purchase = next_purchase(purchases)
     if purchase is not None:
         config = REPANIER_SETTINGS_CONFIG
-        group_label = config.group_label
+        certification = config.certification
         if deposit:
             wb, ws = new_portrait_a4_sheet(
                 wb,
@@ -1829,7 +1829,7 @@ def export_customer_for_a_delivery(
                 c.style.alignment.horizontal = c.style.alignment.HORIZONTAL_RIGHT
                 row_num += 1
                 c = ws.cell(row=row_num, column=4)
-                c.value = "{}".format(group_label)
+                c.value = "{}".format(certification)
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.font.bold = True
                 c = ws.cell(row=row_num, column=8)

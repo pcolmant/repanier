@@ -14,7 +14,6 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_KG,
 )
 from repanier.fields.RepanierMoneyField import ModelMoneyField
-from repanier.globals import REPANIER_SETTINGS_SALE_NAME
 from repanier.models.item import Item
 
 
@@ -34,7 +33,7 @@ class OfferItem(Item):
     )
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=REPANIER_SETTINGS_SALE_NAME,
+        verbose_name=_("Sale"),
         on_delete=models.PROTECT,
         db_index=True,
     )

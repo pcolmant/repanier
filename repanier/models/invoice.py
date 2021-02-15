@@ -862,7 +862,7 @@ class ProducerInvoice(Invoice):
         default=False,
     )
 
-    ###### TODO END OF OLD FIELD : TBD
+    ###### TODO BEGIN OF OLD FIELD : TBD
 
     delta_stock_with_tax = ModelMoneyField(
         _("Amount deducted from the stock"),

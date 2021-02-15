@@ -6,13 +6,12 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.const import (
     EMPTY_STRING,
 )
-from repanier.globals import REPANIER_SETTINGS_SALE_NAME
 
 
 class SaleDelivery(models.Model):
     sale = models.ForeignKey(
         "Sale",
-        verbose_name=REPANIER_SETTINGS_SALE_NAME,
+        verbose_name=_("Sale"),
         on_delete=models.CASCADE,
     )
     delivery_point = models.ForeignKey(

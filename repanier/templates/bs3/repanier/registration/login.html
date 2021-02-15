@@ -50,7 +50,7 @@
                                     {% endif %}
                                     <input type="password" class="form-control" id="id_password"
                                            placeholder="{% trans "Password" %}" name="password">
-                                    {% if how_to_register %}
+                                    {% if how_to_create_an_account %}
                                         <p></p>
                                         <div class="form-group">
                                             <div class="accordion-toggle collapsed" data-toggle="collapse"
@@ -58,7 +58,7 @@
                                                 <span class="btn btn-info">{% trans "Create an account ?" %}</span>
                                             </div>
                                             <div id="collapse" class="panel-collapse collapse">
-                                                {{ how_to_register | safe }}
+                                                {{ how_to_create_an_account | safe }}
                                             </div>
                                         </div>
                                     {% endif %}

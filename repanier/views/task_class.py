@@ -19,12 +19,12 @@ class PermanenceView(ListView):
             from repanier.globals import REPANIER_SETTINGS_CONFIG
 
             context[
-                "how_to_register"
+                "how_to_create_an_account"
             ] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-                "how_to_register", any_language=True, default=EMPTY_STRING
+                "how_to_create_an_account", any_language=True, default=EMPTY_STRING
             )
         else:
-            context["how_to_register"] = EMPTY_STRING
+            context["how_to_create_an_account"] = EMPTY_STRING
 
         return context
 

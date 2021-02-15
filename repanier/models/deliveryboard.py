@@ -4,7 +4,6 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
-from repanier.globals import REPANIER_SETTINGS_SALE_NAME
 from repanier.const import (
     LUT_SALE_STATUS,
     SALE_PLANNED,
@@ -28,7 +27,7 @@ class DeliveryBoard(TranslatableModel):
     )
     permanence = models.ForeignKey(
         "Permanence",
-        verbose_name=REPANIER_SETTINGS_SALE_NAME,
+        verbose_name=_("Sale"),
         on_delete=models.CASCADE,
     )
 

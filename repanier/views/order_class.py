@@ -154,12 +154,12 @@ class OrderView(ListView):
             context["staff_order"] = Staff.get_or_create_order_responsible()
             if self.is_anonymous:
                 context[
-                    "how_to_register"
+                    "how_to_create_an_account"
                 ] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-                    "how_to_register", any_language=True, default=EMPTY_STRING
+                    "how_to_create_an_account", any_language=True, default=EMPTY_STRING
                 )
             else:
-                context["how_to_register"] = EMPTY_STRING
+                context["how_to_create_an_account"] = EMPTY_STRING
 
         # use of str() to avoid "12 345" when rendering the template
         context["producer_id"] = str(self.producer_id)
