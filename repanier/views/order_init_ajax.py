@@ -103,7 +103,7 @@ def order_init_ajax(request):
                 or len(permanence_boards) > 0
             ):
                 if len(permanence_boards) == 0:
-                    count_activity = PermanenceBoard.objects.filter(
+                    count_task = PermanenceBoard.objects.filter(
                         customer_id=customer.id,
                         permanence_date__lt=now,
                         permanence_date__gte=now
@@ -112,7 +112,7 @@ def order_init_ajax(request):
                         ),
                     ).count()
                 else:
-                    count_activity = None
+                    count_task = None
                 template_name = get_repanier_template_name(
                     "communication_permanence_board.html"
                 )
@@ -120,7 +120,7 @@ def order_init_ajax(request):
                     template_name,
                     {
                         "permanence_boards": permanence_boards,
-                        "count_activity": count_activity,
+                        "count_task": count_task,
                     },
                 )
                 json_dict["#communicationModal"] = mark_safe(html)

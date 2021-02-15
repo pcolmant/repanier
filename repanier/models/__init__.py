@@ -14,7 +14,7 @@ from .lut import (
     Label,
     DeliveryPoint,
     Department,
-    Activity,
+    Task,
 )
 
 from .forsale import ForSale

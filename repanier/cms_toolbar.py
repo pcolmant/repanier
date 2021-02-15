@@ -37,7 +37,7 @@ class RepanierToolbar(CMSToolbar):
                     url = reverse("admin:repanier_lut_deliverypoint_changelist")
                     office_menu.add_sideframe_item(_("Delivery points"), url=url)
 
-            url = reverse("admin:repanier_activity_changelist")
+            url = reverse("admin:repanier_task_changelist")
             office_menu.add_sideframe_item(_("Tasks"), url=url)
             url = reverse("admin:repanier_label_changelist")
             office_menu.add_sideframe_item(_("Labels"), url=url)

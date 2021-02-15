@@ -305,12 +305,12 @@ class Department(MPTTModel):
         verbose_name_plural = _("Departments")
 
 
-class ActivityQuerySet(QuerySet):
+class TaskQuerySet(QuerySet):
     pass
 
 
-class ActivityManager(TreeManager):
-    queryset_class = ActivityQuerySet
+class TaskManager(TreeManager):
+    queryset_class = TaskQuerySet
 
     def get_queryset(self):
         # This is the safest way to combine both get_queryset() calls
@@ -320,7 +320,7 @@ class ActivityManager(TreeManager):
         )
 
 
-class Activity(MPTTModel):
+class Task(MPTTModel):
     parent = TreeForeignKey(
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
     )
@@ -340,11 +340,11 @@ class Activity(MPTTModel):
         _("Customers can register for this task"), default=True
     )
     is_active = models.BooleanField(_("Active"), default=True)
-    objects = ActivityManager()
+    objects = TaskManager()
 
     def __str__(self):
         return self.short_name
 
     class Meta:
-        verbose_name = _("Activity")
-        verbose_name_plural = _("Activities")
+        verbose_name = _("Task")
+        verbose_name_plural = _("Tasks")

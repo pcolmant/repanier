@@ -29,11 +29,11 @@ from repanier.models.lut import (
     Label,
     DeliveryPoint,
     Department,
-    Activity,
+    Task,
 )
 from repanier.admin.lut import (
     LabelAdmin,
-    ActivityAdmin,
+    TaskAdmin,
     DepartmentAdmin,
     DeliveryPointAdmin,
 )
@@ -42,7 +42,7 @@ from django.contrib import admin
 
 
 admin.site.register(Label, LabelAdmin)
-admin.site.register(Activity, ActivityAdmin)
+admin.site.register(Task, TaskAdmin)
 # admin.site.register(LUT_DepartmentForCustomer, LUTDepartmentForCustomerAdmin)
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(DeliveryPoint, DeliveryPointAdmin)

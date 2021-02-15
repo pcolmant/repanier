@@ -118,7 +118,7 @@ class DepartmentAdmin(LUTAdmin):
         return fields
 
 
-class ActivityAdmin(LUTAdmin):
+class TaskAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):

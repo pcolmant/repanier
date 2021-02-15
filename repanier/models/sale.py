@@ -17,7 +17,6 @@ from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
 
-from repanier.models.saleactivity import SaleActivity
 from repanier.middleware import add_filter
 from repanier.const import *
 from repanier.models.bankaccount import BankAccount
@@ -29,7 +28,7 @@ from repanier.models.invoice import (
     ProducerInvoice,
 )
 from repanier.models.offeritem import OfferItem, OfferItemWoReceiver
-from repanier.models.saleactivity import SaleActivity
+from repanier.models.saletask import SaleTask
 from repanier.models.producer import Producer
 from repanier.models.product import Product
 from repanier.picture.const import SIZE_L
@@ -485,18 +484,18 @@ class Sale(TranslatableModel):
 
     @cached_property
     def get_html_board(self):
-        sa_set = SaleActivity.objects.filter(
-            sale=self, activity__rght=F("activity__lft") + 1
+        sa_set = SaleTask.objects.filter(
+            sale=self, task__rght=F("task__lft") + 1
         )
         first_board = True
         board = EMPTY_STRING
         if sa_set:
             for sa in sa_set:
                 r_link = EMPTY_STRING
-                r = sa.activity
+                r = sa.task
                 if r:
                     r_url = add_filter(
-                        reverse("admin:repanier_activity_change", args=(r.id,))
+                        reverse("admin:repanier_task_change", args=(r.id,))
                     )
                     r_link = (
                         '<a href="'
@@ -1135,16 +1134,16 @@ class Sale(TranslatableModel):
             translation.activate(cur_language)
 
     def duplicate_sale_board(self, new_sale):
-        for sa in SaleActivity.objects.filter(sale=self).order_by("?"):
-            SaleActivity.objects.create(
+        for sa in SaleTask.objects.filter(sale=self).order_by("?"):
+            SaleTask.objects.create(
                 sale=new_sale,
                 sale_date=new_sale.sale_date,
-                sale_role=sa.activity,
+                sale_role=sa.task,
             )
 
     def duplicate_sale_board_and_registration(self, new_sale):
-        for sale_board in SaleActivity.objects.filter(sale=self).order_by("?"):
-            SaleActivity.objects.create(
+        for sale_board in SaleTask.objects.filter(sale=self).order_by("?"):
+            SaleTask.objects.create(
                 sale=new_sale,
                 sale_date=new_sale.sale_date,
                 sale_role=sale_board.sale_role,
@@ -1544,10 +1543,10 @@ class Sale(TranslatableModel):
         return EMPTY_STRING
 
     def get_html_board_composition(self):
-        from repanier.models.saleactivity import SaleActivity
+        from repanier.models.saletask import SaleTask
 
         board_composition = []
-        for sa in SaleActivity.objects.filter(sale_id=self.id).order_by(
+        for sa in SaleTask.objects.filter(sale_id=self.id).order_by(
             "sale_role__tree_id", "sale_role__lft"
         ):
             member = sa.get_html_board_member

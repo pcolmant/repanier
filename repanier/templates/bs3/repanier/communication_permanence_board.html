@@ -12,7 +12,7 @@
                 <b>{{ permanence_board.permanence }}</b><br>
                 {{ permanence_board.permanence_role.description | safe }}<br>
             {% empty %}
-                <br><b>{% trans "No task found." %}</b><br><br>{% trans "You participated in" %} <b>{{ count_activity}}</b> {% trans "permanence in the last 12 weeks." %}
+                <br><b>{% trans "No task found." %}</b><br><br>{% trans "You participated in" %} <b>{{ count_task}}</b> {% trans "permanence in the last 12 weeks." %}
             {% endfor %}
         </div>
         <div class="clearfix"></div>
