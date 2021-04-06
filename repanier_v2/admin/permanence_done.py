@@ -1,0 +1,908 @@
+import logging
+import threading
+
+from django import forms
+from django.contrib import admin
+from django.contrib.admin import helpers
+from django.core.checks import messages
+from django.db.models import F
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render
+from django.template import Context as TemplateContext, Template
+from django.urls import reverse, reverse_lazy, path
+from django.utils import timezone, translation
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
+from parler.admin import TranslatableAdmin
+from parler.forms import TranslatableModelForm
+from parler.utils.context import switch_language
+
+import repanier_v2.globals
+from repanier_v2.admin.forms import (
+    InvoiceOrderForm,
+    ProducerInvoicedFormSet,
+    PermanenceInvoicedForm,
+    ImportPurchasesForm,
+    ImportInvoiceForm,
+)
+from repanier_v2.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
+from repanier_v2.admin.tools import (
+    check_permanence,
+    check_cancel_in_post,
+    check_done_in_post,
+)
+from repanier_v2.const import *
+from repanier_v2.email import email_invoice
+from repanier_v2.email.email import RepanierEmail
+from repanier_v2.fields.RepanierMoneyField import RepanierMoney
+from repanier_v2.middleware import add_filter, get_query_filters
+from repanier_v2.models.bank_account import BankAccount
+from repanier_v2.models.customer import Customer
+from repanier_v2.models.invoice import ProducerInvoice
+from repanier_v2.models.lut import LUT_PermanenceRole
+from repanier_v2.models.permanence import PermanenceDone
+from repanier_v2.models.permanenceboard import PermanenceBoard
+from repanier_v2.models.staff import Staff
+from repanier_v2.tools import get_repanier_template_name
+from repanier_v2.xlsx.views import import_xslx_view
+from repanier_v2.xlsx.xlsx_invoice import (
+    export_bank,
+    export_invoice,
+    handle_uploaded_invoice,
+)
+from repanier_v2.xlsx.xlsx_purchase import handle_uploaded_purchase, export_purchase
+from repanier_v2.xlsx.xlsx_stock import export_permanence_stock
+
+logger = logging.getLogger(__name__)
+
+
+class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
+    model = PermanenceBoard
+    ordering = [
+        "permanence_role__tree_id",
+        "permanence_role__lft",
+    ]
+    fields = ["permanence_role", "customer"]
+    extra = 1
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        return True
+
+    def has_add_permission(self, request, obj) -> bool:
+        return True
+
+    def has_change_permission(self, request, obj=None) -> bool:
+        return True
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs) -> object:
+        if db_field.name == "customer":
+            kwargs["queryset"] = Customer.objects.filter(may_order=True)
+        if db_field.name == "permanence_role":
+            kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
+                is_active=True, rght=F("lft") + 1
+            ).order_by("tree_id", "lft")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class PermanenceDoneForm(TranslatableModelForm):
+    short_name = forms.CharField(
+        label=_("Offer name"),
+        widget=forms.TextInput(attrs={"style": "width:100% !important"}),
+    )
+
+    class Meta:
+        model = PermanenceDone
+        fields = "__all__"
+
+
+class PermanenceDoneAdmin(TranslatableAdmin):
+    form = PermanenceDoneForm
+    change_list_url = reverse_lazy("admin:repanier_permanencedone_changelist")
+
+    fields = [
+        "permanence_date",
+        "short_name",
+        "invoice_description",
+    ]
+    readonly_fields = ["status", "automatically_closed"]
+    list_per_page: int = 20
+    list_max_show_all = 10
+    inlines = [PermanenceBoardInline]
+    date_hierarchy = "permanence_date"
+    list_display = ("get_permanence_admin_display",)
+    list_display_links = ("get_permanence_admin_display",)
+    search_fields = [
+        "customerproducerinvoice__producer__short_name",
+        "customerproducerinvoice__customer__short_name",
+    ]
+    ordering = [
+        "-invoice_sort_order",
+        "-canceled_invoice_sort_order",
+        "-permanence_date",
+    ]
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        return False
+
+    def has_add_permission(self, request) -> bool:
+        return False
+
+    def has_change_permission(self, request, obj=None) -> bool:
+        user = request.user
+        if user.is_invoice_manager:
+            return True
+        return False
+
+    def get_redirect_to_change_list_url(self) -> str:
+        return "{}{}".format(self.change_list_url, get_query_filters())
+
+    def get_list_display(self, request):
+        list_display = ["get_permanence_admin_display", "get_row_actions"]
+        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
+            list_display += ["language_column"]
+        list_display += [
+            "get_html_producers_without_download",
+            "get_html_customers_without_download",
+            "get_html_board",
+            "get_html_status_display",
+        ]
+        return list_display
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "import-new-invoice/",
+                self.admin_site.admin_view(self.import_new_invoice),
+                name="permanence-import-new-invoice",
+            ),
+            path(
+                "<int:permanence_id>/export-invoice/",
+                self.admin_site.admin_view(self.export_purchases),
+                name="permanence-export-invoice",
+            ),
+            path(
+                "<int:permanence_id>/import-invoice/",
+                self.admin_site.admin_view(self.import_updated_purchases),
+                name="permanence-import-invoice",
+            ),
+            path(
+                "<int:permanence_id>/invoice/",
+                self.admin_site.admin_view(self.invoice),
+                name="permanence-invoice",
+            ),
+            path(
+                "<int:permanence_id>/send-invoice/",
+                self.admin_site.admin_view(self.send_invoices),
+                name="permanence-send-invoices",
+            ),
+            path(
+                "<int:permanence_id>/accounting-report/",
+                self.admin_site.admin_view(self.accounting_report),
+                name="permanence-accounting-report",
+            ),
+            path(
+                "<int:permanence_id>/archive/",
+                self.admin_site.admin_view(self.archive),
+                name="permanence-archive",
+            ),
+            path(
+                "<int:permanence_id>/cancel-delivery/",
+                self.admin_site.admin_view(self.cancel_delivery),
+                name="permanence-cancel-delivery",
+            ),
+            path(
+                "<int:permanence_id>/cancel-invoicing/",
+                self.admin_site.admin_view(self.cancel_invoicing),
+                name="permanence-cancel-invoicing",
+            ),
+            path(
+                "<int:permanence_id>/cancel-archiving/",
+                self.admin_site.admin_view(self.cancel_archiving),
+                name="permanence-cancel-archiving",
+            ),
+            path(
+                "<int:permanence_id>/restore-delivery/",
+                self.admin_site.admin_view(self.restore_delivery),
+                name="permanence-restore-delivery",
+            ),
+        ]
+        return custom_urls + urls
+
+    @check_cancel_in_post
+    def import_new_invoice(self, request):
+        return import_xslx_view(
+            self,
+            admin,
+            request,
+            None,
+            _("Import an invoice"),
+            handle_uploaded_invoice,
+            action="import_new_invoice",
+            form_klass=ImportInvoiceForm,
+        )
+
+    @check_permanence(ORDER_SEND, ORDER_SEND_STR)
+    def export_purchases(self, request, permanence_id, permanence=None):
+        wb = export_purchase(permanence=permanence, wb=None)
+        if wb is not None:
+            response = HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            response[
+                "Content-Disposition"
+            ] = "attachment; filename={0}-{1}.xlsx".format(_("Invoices"), permanence)
+            wb.save(response)
+            return response
+        else:
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_SEND, ORDER_SEND_STR)
+    def import_updated_purchases(self, request, permanence_id, permanence=None):
+        return import_xslx_view(
+            self,
+            admin,
+            request,
+            permanence,
+            _("Import purchases"),
+            handle_uploaded_purchase,
+            action="import_updated_purchases",
+            form_klass=ImportPurchasesForm,
+        )
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_SEND, ORDER_SEND_STR)
+    def cancel_delivery(self, request, permanence_id, permanence=None):
+        if "apply" in request.POST:
+            permanence.cancel_delivery()
+            user_message = _("Action performed.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
+        return render(
+            request,
+            template_name,
+            {
+                **self.admin_site.each_context(request),
+                "model_verbose_name_plural": _("Billing offers"),
+                "sub_title": _("Please, confirm the action : cancel delivery."),
+                "action": "cancel_delivery",
+                "permanence": permanence,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+            },
+        )
+
+    @check_permanence(ORDER_INVOICED, ORDER_INVOICED_STR)
+    def accounting_report(self, request, permanence_id, permanence=None):
+        wb = export_bank(permanence=permanence, wb=None, sheet_name=permanence)
+        wb = export_invoice(permanence=permanence, wb=wb, sheet_name=permanence)
+        wb = export_permanence_stock(
+            permanence=permanence, wb=wb, ws_customer_title=None
+        )
+        if wb is not None:
+            response = HttpResponse(
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            response[
+                "Content-Disposition"
+            ] = "attachment; filename={0}-{1}.xlsx".format(
+                _("Accounting report"), settings.REPANIER_SETTINGS_GROUP_NAME
+            )
+            wb.save(response)
+            return response
+        user_message = _("No invoice available for {permanence}.'.").format(
+            permanence=permanence
+        )
+        user_message_level = messages.WARNING
+        self.message_user(request, user_message, user_message_level)
+        return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+
+    @check_done_in_post
+    @check_cancel_in_post
+    @check_permanence(ORDER_SEND, ORDER_SEND_STR)
+    def invoice(self, request, permanence_id, permanence=None):
+        max_payment_date = timezone.now().date()
+        bank_account = (
+            BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
+            .only("operation_date")
+            .order_by("-id")
+            .first()
+        )
+        if bank_account is not None:
+            if bank_account.operation_date > max_payment_date:
+                max_payment_date = bank_account.operation_date
+            min_payment_date = bank_account.operation_date
+        else:
+            # This cas should never occur because of the first bank account record created at startup if none exists
+            # via config.save() in globals.
+            min_payment_date = timezone.now().date()
+
+        if max_payment_date < min_payment_date:
+            max_payment_date = min_payment_date
+        if "apply" in request.POST and helpers.ACTION_CHECKBOX_NAME in request.POST:
+            permanence_form = PermanenceInvoicedForm(request.POST)
+            producer_invoiced_formset = ProducerInvoicedFormSet(request.POST)
+            if permanence_form.is_valid() and producer_invoiced_formset.is_valid():
+                payment_date = permanence_form.cleaned_data.get("payment_date")
+                if payment_date < min_payment_date or payment_date > max_payment_date:
+                    permanence_form.add_error(
+                        "payment_date",
+                        _(
+                            "The payment date must be between %(min_payment_date)s and %(max_payment_date)s."
+                        )
+                        % {
+                            "min_payment_date": min_payment_date.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                            "max_payment_date": max_payment_date.strftime(
+                                settings.DJANGO_SETTINGS_DATE
+                            ),
+                        },
+                    )
+                else:
+                    at_least_one_selected = False
+                    for producer_invoiced_form in producer_invoiced_formset:
+                        if producer_invoiced_form.is_valid():
+                            producer_id = producer_invoiced_form.cleaned_data.get("id")
+                            selected = producer_invoiced_form.cleaned_data.get(
+                                "selected"
+                            )
+                            short_name = producer_invoiced_form.cleaned_data.get(
+                                "short_name"
+                            )
+                            producer_invoice = (
+                                ProducerInvoice.objects.filter(
+                                    permanence_id=permanence_id,
+                                    invoice_sort_order__isnull=True,
+                                    producer_id=producer_id,
+                                )
+                                .order_by("?")
+                                .first()
+                            )
+                            if selected:
+                                at_least_one_selected = True
+                                producer_invoice.balance_invoiced = (
+                                    producer_invoiced_form.cleaned_data.get(
+                                        "balance_invoiced"
+                                    )
+                                )
+                                producer_invoice.reference = (
+                                    producer_invoiced_form.cleaned_data.get(
+                                        "reference", EMPTY_STRING
+                                    )
+                                )
+                                producer_invoice.is_to_be_paid = True
+                            else:
+                                producer_invoice.balance_invoiced = DECIMAL_ZERO
+                                producer_invoice.reference = EMPTY_STRING
+                                producer_invoice.is_to_be_paid = False
+                            producer_invoice.delta_vat = DECIMAL_ZERO
+                            producer_invoice.save(
+                                update_fields=[
+                                    "balance_invoiced",
+                                    "reference",
+                                    "delta_vat",
+                                    "is_to_be_paid",
+                                ]
+                            )
+                    if at_least_one_selected:
+                        permanence.invoice(payment_date=payment_date)
+                        previous_latest_total = (
+                            BankAccount.objects.filter(
+                                operation_status=BANK_NOT_LATEST_TOTAL,
+                                producer__isnull=True,
+                                customer__isnull=True,
+                            )
+                            .order_by("-id")
+                            .first()
+                        )
+                        previous_latest_total_id = (
+                            previous_latest_total.id
+                            if previous_latest_total is not None
+                            else 0
+                        )
+                        template_name = get_repanier_template_name(
+                            "admin/confirm_bank_movement.html"
+                        )
+                        return render(
+                            request,
+                            template_name,
+                            {
+                                **self.admin_site.each_context(request),
+                                "action": "invoice",
+                                "permanence": permanence,
+                                "bankaccounts": BankAccount.objects.filter(
+                                    id__gt=previous_latest_total_id,
+                                    producer__isnull=False,
+                                    producer__is_default=False,
+                                    customer__isnull=True,
+                                    operation_status=BANK_CALCULATED_INVOICE,
+                                ).order_by("producer", "-operation_date", "-id"),
+                                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+                            },
+                        )
+                    else:
+                        user_message = _("You must select at least one producer.")
+                        user_message_level = messages.WARNING
+                        self.message_user(request, user_message, user_message_level)
+                        return HttpResponseRedirect(
+                            self.get_redirect_to_change_list_url()
+                        )
+        else:
+            producers_invoiced = []
+            for producer_invoice in ProducerInvoice.objects.filter(
+                permanence_id=permanence_id, invoice_sort_order__isnull=True
+            ).order_by("producer"):
+                producer_invoice.balance_calculated.amount = RepanierMoney(
+                    producer_invoice.balance_calculated.amount
+                )
+                # First time invoiced ? Yes : propose the calculated invoiced balance as to be invoiced balance
+                producer_invoice.balance_invoiced = producer_invoice.balance_calculated
+                producer_invoice.save(
+                    update_fields=[
+                        "balance_calculated",
+                        "balance_invoiced",
+                    ]
+                )
+                producers_invoiced.append(
+                    {
+                        "id": producer_invoice.producer_id,
+                        "selected": True,
+                        "short_name": producer_invoice.producer.short_name,
+                        "balance_calculated": producer_invoice.balance_calculated,
+                        "balance_invoiced": producer_invoice.balance_invoiced,
+                        "reference": producer_invoice.reference,
+                        "producer_tariff_is_wo_tax": producer_invoice.producer.producer_tariff_is_wo_tax,
+                    }
+                )
+            if permanence.payment_date is not None:
+                # In this case we the permanence has already been invoiced in the past
+                # and the invoice has been cancelled
+                payment_date = permanence.payment_date
+            else:
+                payment_date = max_payment_date
+            permanence_form = PermanenceInvoicedForm(payment_date=payment_date)
+
+            producer_invoiced_formset = ProducerInvoicedFormSet(
+                initial=producers_invoiced
+            )
+
+        template_name = get_repanier_template_name("admin/confirm_invoice.html")
+        return render(
+            request,
+            template_name,
+            {
+                **self.admin_site.each_context(request),
+                "action": "invoice",
+                "permanence": permanence,
+                "permanence_form": permanence_form,
+                "producer_invoiced_formset": producer_invoiced_formset,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+            },
+        )
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_SEND, ORDER_SEND_STR)
+    def archive(self, request, permanence_id, permanence=None):
+        if "apply" in request.POST:
+            permanence.archive()
+            user_message = _("Action performed.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
+        return render(
+            request,
+            template_name,
+            {
+                **self.admin_site.each_context(request),
+                "model_verbose_name_plural": _("Billing offers"),
+                "sub_title": _("Please, confirm the action : generate archive."),
+                "action": "archive",
+                "permanence": permanence,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+            },
+        )
+
+    def cancel_invoice_or_archive_or_cancelled(
+        self, request, permanence, action, sub_title
+    ):
+        if "apply" in request.POST:
+            if permanence.status == ORDER_INVOICED:
+                last_bank_account_total = (
+                    BankAccount.objects.filter(operation_status=BANK_LATEST_TOTAL)
+                    .only("permanence")
+                    .first()
+                )
+                if last_bank_account_total is not None:
+                    last_permanence_invoiced_id = last_bank_account_total.permanence_id
+                    if last_permanence_invoiced_id is not None:
+                        if last_permanence_invoiced_id == permanence.id:
+                            # This is well the latest closed permanence. The invoices can be cancelled without damages.
+                            permanence.cancel_invoice(last_bank_account_total)
+                            user_message = _("The selected invoice has been canceled.")
+                            user_message_level = messages.INFO
+                        else:
+                            user_message = _(
+                                "You mus first cancel the invoices of {} whose date is {}."
+                            ).format(
+                                last_bank_account_total.permanence,
+                                last_bank_account_total.permanence.permanence_date.strftime(
+                                    settings.DJANGO_SETTINGS_DATE
+                                ),
+                            )
+                            user_message_level = messages.ERROR
+                    else:
+                        user_message = _(
+                            "The selected invoice is not the latest invoice."
+                        )
+                        user_message_level = messages.ERROR
+                else:
+                    user_message = _("The selected invoice has been canceled.")
+                    user_message_level = messages.INFO
+                    permanence.set_status(
+                        old_status=ORDER_INVOICED, new_status=ORDER_SEND
+                    )
+            else:
+                if permanence.status == ORDER_ARCHIVED:
+                    permanence.set_status(
+                        old_status=ORDER_ARCHIVED, new_status=ORDER_SEND
+                    )
+                if permanence.status == ORDER_CANCELLED:
+                    permanence.set_status(
+                        old_status=ORDER_CANCELLED, new_status=ORDER_SEND
+                    )
+                user_message = _("The selected invoice has been restored.")
+                user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+        template_name = get_repanier_template_name("admin/confirm_action.html")
+        return render(
+            request,
+            template_name,
+            {
+                **self.admin_site.each_context(request),
+                "model_verbose_name_plural": _("Billing offers"),
+                "sub_title": sub_title,
+                "action": action,
+                "permanence": permanence,
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+            },
+        )
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_INVOICED, ORDER_INVOICED_STR)
+    def cancel_invoicing(self, request, permanence_id, permanence=None):
+        return self.cancel_invoice_or_archive_or_cancelled(
+            request,
+            permanence,
+            "cancel_invoicing",
+            _("Please, confirm the action : cancel the invoices."),
+        )
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_ARCHIVED, ORDER_ARCHIVED_STR)
+    def cancel_archiving(self, request, permanence_id, permanence=None):
+        return self.cancel_invoice_or_archive_or_cancelled(
+            request,
+            permanence,
+            "cancel_archiving",
+            _("Please, confirm the action : cancel the archiving."),
+        )
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_CANCELLED, ORDER_CANCELLED_STR)
+    def restore_delivery(self, request, permanence_id, permanence=None):
+        return self.cancel_invoice_or_archive_or_cancelled(
+            request,
+            permanence,
+            "restore_delivery",
+            _("Please, confirm the action : restore the delivery."),
+        )
+
+    @check_cancel_in_post
+    @check_permanence(ORDER_INVOICED, ORDER_INVOICED_STR)
+    def send_invoices(self, request, permanence_id, permanence=None):
+        if "apply" in request.POST:
+            t = threading.Thread(
+                target=email_invoice.send_invoice, args=(permanence_id,)
+            )
+            t.start()
+            user_message = _("The invoices are being send.")
+            user_message_level = messages.INFO
+            self.message_user(request, user_message, user_message_level)
+            return HttpResponseRedirect(self.get_redirect_to_change_list_url())
+
+        template_invoice_customer_mail = []
+        template_invoice_producer_mail = []
+        (
+            invoice_customer_email_will_be_sent,
+            invoice_customer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
+            is_email_send=repanier_v2.globals.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
+        )
+        (
+            invoice_producer_email_will_be_sent,
+            invoice_producer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
+            is_email_send=repanier_v2.globals.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
+        )
+
+        if invoice_customer_email_will_be_sent or invoice_producer_email_will_be_sent:
+            cur_language = translation.get_language()
+            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
+                language_code = language["code"]
+                translation.activate(language_code)
+                invoice_responsible = Staff.get_or_create_invoice_responsible()
+
+                if invoice_customer_email_will_be_sent:
+                    with switch_language(
+                        repanier_v2.globals.REPANIER_SETTINGS_CONFIG, language_code
+                    ):
+                        template = Template(
+                            repanier_v2.globals.REPANIER_SETTINGS_CONFIG.invoice_customer_mail
+                        )
+                    with switch_language(permanence, language_code):
+                        invoice_description = permanence.safe_translation_getter(
+                            "invoice_description",
+                            any_language=True,
+                            default=EMPTY_STRING,
+                        )
+                    # TODO : Align on tools.payment_message
+                    customer_order_amount = _(
+                        "The amount of your order is %(amount)s."
+                    ) % {"amount": RepanierMoney(123.45)}
+                    customer_last_balance = _(
+                        "The balance of your account as of %(date)s is %(balance)s."
+                    ) % {
+                        "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
+                        "balance": RepanierMoney(123.45),
+                    }
+                    bank_account_number = (
+                        repanier_v2.globals.REPANIER_SETTINGS_BANK_ACCOUNT
+                    )
+                    if bank_account_number is not None:
+                        group_name = settings.REPANIER_SETTINGS_GROUP_NAME
+                        if permanence.short_name:
+                            communication = "{} ({})".format(
+                                _("Short name"), permanence.short_name
+                            )
+                        else:
+                            communication = _("Short name")
+                        customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
+                            _(
+                                "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+                            )
+                            % {
+                                "payment": RepanierMoney(123.45),
+                                "name": group_name,
+                                "number": bank_account_number,
+                                "communication": communication,
+                            }
+                        )
+                    else:
+                        customer_payment_needed = EMPTY_STRING
+                    context = TemplateContext(
+                        {
+                            "name": _("Long name"),
+                            "long_name": _("Long name"),
+                            "basket_name": _("Short name"),
+                            "short_name": _("Short name"),
+                            "permanence_link": mark_safe(
+                                '<a href="#">{}</a>'.format(permanence)
+                            ),
+                            "last_balance_link": mark_safe(
+                                '<a href="#">{}</a>'.format(customer_last_balance)
+                            ),
+                            "last_balance": customer_last_balance,
+                            "order_amount": mark_safe(customer_order_amount),
+                            "payment_needed": mark_safe(customer_payment_needed),
+                            "invoice_description": mark_safe(invoice_description),
+                            "signature": invoice_responsible["html_signature"],
+                        }
+                    )
+                    template_invoice_customer_mail.append(language_code)
+                    template_invoice_customer_mail.append(template.render(context))
+
+                if invoice_producer_email_will_be_sent:
+                    with switch_language(
+                        repanier_v2.globals.REPANIER_SETTINGS_CONFIG, language_code
+                    ):
+                        template = Template(
+                            repanier_v2.globals.REPANIER_SETTINGS_CONFIG.invoice_producer_mail
+                        )
+                    context = TemplateContext(
+                        {
+                            "name": _("Long name"),
+                            "long_name": _("Long name"),
+                            "permanence_link": mark_safe(
+                                '<a href="#">{}</a>'.format(permanence)
+                            ),
+                            "signature": invoice_responsible["html_signature"],
+                        }
+                    )
+                    template_invoice_producer_mail.append(language_code)
+                    template_invoice_producer_mail.append(template.render(context))
+
+            translation.activate(cur_language)
+        form = InvoiceOrderForm(
+            initial={
+                "template_invoice_customer_mail": mark_safe(
+                    "<br>==============<br>".join(template_invoice_customer_mail)
+                ),
+                "template_invoice_producer_mail": mark_safe(
+                    "<br>==============<br>".join(template_invoice_producer_mail)
+                ),
+            }
+        )
+        template_name = get_repanier_template_name("admin/confirm_send_invoice.html")
+        return render(
+            request,
+            template_name,
+            {
+                **self.admin_site.each_context(request),
+                "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+                "action": "send_invoices",
+                "permanence": permanence,
+                "form": form,
+                "invoice_customer_email_will_be_sent_to": invoice_customer_email_will_be_sent_to,
+                "invoice_producer_email_will_be_sent_to": invoice_producer_email_will_be_sent_to,
+            },
+        )
+
+    def get_row_actions(self, permanence):
+
+        if permanence.status == ORDER_SEND:
+            if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+                return format_html(
+                    '<div class="repanier_v2-button-row">'
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-download"></i></a></span>'
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-upload"></i></a></span>'
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span>'
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-cash-register" style="color: #32CD32;"></i></a></span>'
+                    "</div>",
+                    add_filter(
+                        reverse("admin:permanence-export-invoice", args=[permanence.pk])
+                    ),
+                    _("Export"),
+                    add_filter(
+                        reverse("admin:permanence-import-invoice", args=[permanence.pk])
+                    ),
+                    _("Import"),
+                    add_filter(
+                        reverse(
+                            "admin:permanence-cancel-delivery", args=[permanence.pk]
+                        )
+                    ),
+                    _("Cancel the delivery"),
+                    add_filter(
+                        reverse("admin:permanence-invoice", args=[permanence.pk])
+                    ),
+                    _("To invoice"),
+                )
+
+            else:
+                return format_html(
+                    '<div class="repanier_v2-button-row">'
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-truck fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span>'
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-archive" style="color: #32CD32;"></i></a></span>'
+                    "</div>",
+                    add_filter(
+                        reverse(
+                            "admin:permanence-cancel-delivery", args=[permanence.pk]
+                        )
+                    ),
+                    _("Cancel the delivery"),
+                    add_filter(
+                        reverse("admin:permanence-archive", args=[permanence.pk])
+                    ),
+                    _("To archive"),
+                )
+
+        elif permanence.status == ORDER_INVOICED:
+            if (
+                BankAccount.objects.filter(
+                    operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
+                )
+                .order_by("?")
+                .exists()
+            ):
+                # This is the latest invoiced permanence
+                # Invoicing can be cancelled
+                cancel_invoice = format_html(
+                    '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><span class="fa-stack fa-1x"><i class="fas fa-cash-register fa-stack-1x" style="color:black;"></i><i style="color:Tomato" class="fas fa-ban fa-stack-2x"></i></span></a></span> ',
+                    add_filter(
+                        reverse(
+                            "admin:permanence-cancel-invoicing", args=[permanence.pk]
+                        )
+                    ),
+                    _("Cancel the invoicing"),
+                )
+            else:
+                cancel_invoice = EMPTY_STRING
+
+            return format_html(
+                '<div class="repanier_v2-button-row">'
+                '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-file-invoice-dollar"></i></a></span>'
+                '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-envelope-open-text"></i></a></span>'
+                "{}"
+                "</div>",
+                add_filter(
+                    reverse("admin:permanence-accounting-report", args=[permanence.pk])
+                ),
+                _("Accounting report"),
+                add_filter(
+                    reverse("admin:permanence-send-invoices", args=[permanence.pk])
+                ),
+                _("Send the invoices"),
+                cancel_invoice,
+            )
+
+        elif permanence.status == ORDER_ARCHIVED:
+            return format_html(
+                '<div class="repanier_v2-button-row">'
+                '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>'
+                "</div>",
+                add_filter(
+                    reverse("admin:permanence-cancel-archiving", args=[permanence.pk])
+                ),
+                _("Restore"),
+            )
+
+        elif permanence.status == ORDER_CANCELLED:
+            return format_html(
+                '<div class="repanier_v2-button-row">'
+                '<span class="repanier_v2-a-container"><a class="repanier_v2-a-tooltip repanier_v2-a-info" href="{}" data-repanier_v2-tooltip="{}"><i class="fas fa-trash-restore"></i></a></span>'
+                "</div>",
+                add_filter(
+                    reverse("admin:permanence-restore-delivery", args=[permanence.pk])
+                ),
+                _("Restore"),
+            )
+
+        return EMPTY_STRING
+
+    get_row_actions.short_description = EMPTY_STRING
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
+
+        if not actions:
+            try:
+                self.list_display.remove("action_checkbox")
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+        return actions
+
+    def changelist_view(self, request, extra_context=None):
+        # Important : Linked to the use of lambda in model verbose_name
+        extra_context = extra_context or {}
+        # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
+        # Finally I found the use of EMPTY_STRING nicer on the UI
+        extra_context["module_name"] = EMPTY_STRING
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(status__gte=ORDER_SEND)
+
+    def save_model(self, request, permanence, form, change):
+        if change and ("permanence_date" in form.changed_data):
+            PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
+                permanence_date=permanence.permanence_date
+            )
+        super().save_model(request, permanence, form, change)
+
+    # class Media:
+    #     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
+    #         js = (
+    #             "admin/js/jquery.init.js",
+    #             get_repanier_static_name("js/import_invoice.js"),
+    #         )

@@ -1,0 +1,74 @@
+{% extends 'bs3/cms_page.html' %}
+{% load cms_tags sekizai_tags i18n l10n %}
+{% block sub_content %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <form id="search_form" class="form-horizontal" class="navbar-form" role="search" method="post">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        {% if q != None %}
+                            <input type="search" autosave="repanier" class="form-control" value="{{ q }}"
+                                   name="q">
+                        {% else %}
+                            <input type="search" autosave="repanier" class="form-control"
+                                   placeholder="{% trans "Search" %}"
+                                   name="q">
+                        {% endif %}
+                        <div class="input-group-btn">
+                            <button class="btn btn-info" type="submit"><i class="glyphicon glyphicon-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <br>
+                {% for staff in staff_list %}
+                    {{ staff.get_str_member }}<br>
+                {% endfor %}
+                <br>
+                <p>{% trans "If you want to show information about you, then" %} <a
+                        href="{% url 'repanier_v2:published_customer_view' customer_id=customer.id %}">{% trans "update your profil" %}</a>.</p>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="panel-group" id="accordion">
+                {% for customer in customer_list %}
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                {{ customer.long_name }}{% if customer.city %} ({{ customer.city }}
+                                    ){% endif %}</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-2">
+                                {% if customer.picture %}
+                                    <img class="img-rounded" style="margin: 5px;"
+                                         alt="{{ customer.long_name }}"
+                                         title="{{ customer.long_name }}"
+                                         src="{{ MEDIA_URL }}{{ customer.picture }}"/>
+                                {% endif %}
+                            </div>
+                            <div class="col-xs-10">
+                                {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
+                                    <br>{% endif %}
+                                {% trans "Phone" %} :
+                                    {{ customer.get_phones }}
+                                    <br>
+                                {% trans "Email" %} :
+                                    {{ customer.get_emails }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
