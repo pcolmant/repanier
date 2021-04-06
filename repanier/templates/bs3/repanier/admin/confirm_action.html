@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% trans 'Manage' %}
+        &rsaquo;
+        <script>
+            document.write('<a href="' + document.referrer + '">{{ model_verbose_name_plural }}</a>');
+        </script>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
+        <div class="form-row">
+            <h4>{{ sub_title }}</h4>
+            <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
+            </button>
+        </div>
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

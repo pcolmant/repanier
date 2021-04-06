@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static repanier_admin_tags %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ form.media }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% trans 'Manage' %}
+        &rsaquo; <a
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% trans 'Offers in preparation' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{{ permanence|title }}</h2>
+        <p>{% for producer in permanence.producers.all %}
+            {% if forloop.first %}{{ producer|verbose_name_plural }} : {% endif %}{{ producer }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}</p>
+        <p>{% for role in permanenceboard %}
+            {% if forloop.first %}{{ role|verbose_name_plural }} : {% endif %}{{ role.permanence_role }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}</p>
+        <p>{% for point in deliverypoint %}
+            {% if forloop.first %}{{ point|verbose_name_plural }} : {% endif %}{{ point.delivery_point }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}</p>
+        <div class="form-row">
+            <h4>{% trans "On what dates do you want to generate permanence(s) based on the model of this one?" %}</h4>
+            <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="cancel"
+                    value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">
+                {% trans "Yes, I'm sure" %}
+            </button>
+        </div>
+        <div class="form-row">
+            <div class="fieldBox">
+                <div class="fieldWrapper">
+                    {{ form.recurrences.errors }}
+                    {{ form.recurrences.label_tag }} {{ form.recurrences }}
+                    {% if form.recurrences.help_text %}
+                        <p class="help">{{ form.recurrences.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

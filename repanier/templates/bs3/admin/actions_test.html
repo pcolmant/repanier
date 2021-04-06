@@ -1,0 +1,41 @@
+{% load i18n %}
+{#{% load static i18n %}#}
+{#<link href="{% static "easy_select2/vendor/select2/css/select2.min.css" %}" type="text/css" media="screen" rel="stylesheet" />#}
+{#<link href="{% static "easy_select2/css/easy_select2.css" %}" type="text/css" media="screen" rel="stylesheet" />#}
+{#<script type="text/javascript">var go_from_select = function(opt) { window.location = window.location.pathname + opt };</script>#}
+{#<script type="text/javascript" src="{% static "easy_select2/js/init.js" %}"></script>#}
+{#<script type="text/javascript" src="{% static "easy_select2/js/easy_select2.js" %}"></script>#}
+{#<script type="text/javascript" src="{% static "easy_select2/js/lookup_override.1.8.js" %}"></script>#}
+{#<script type="text/javascript" src="{% static "easy_select2/vendor/select2/js/select2.min.js" %}"></script>#}
+<div class="actions">
+{% with choices=action_form.fields.action.choices %}
+    <label>{{ action_form.fields.action.label }}
+    <select style="width:450px;" name="action" id="id_filter_admin_actions" required="">
+    {% for choice in choices %}
+        <option value="{{ choice.0|iriencode }}">{{ choice.1 }}</option>
+    {% endfor %}
+    </select>
+    </label>
+    {{ action_from.fields.select_across }}
+{#    <div class="field-easy-select2" style="display:none" id="id_filter_admin_actions"></div>#}
+{% endwith %}
+{#</label>#}
+{#    {{ action_form.select_across }}#}
+{#    {% for field in action_form %}{% if field.label %}<label>{{ field.label }} {% endif %}#}
+{#    {{ field }}#}
+{#    {% if field.label %}</label>{% endif %}{% endfor %}#}
+    <button type="submit" class="button" title="{% trans "Run the selected action" %}" name="index" value="{{ action_index|default:0 }}">{% trans "Send" %}</button>
+    {% if actions_selection_counter %}
+<span style="display: inherit">
+        <span class="action-counter" data-actions-icnt="{{ cl.result_list|length }}">{{ selection_note }}</span>
+        {% if cl.result_count != cl.result_list|length %}
+        <span class="all">{{ selection_note_all }}</span>
+
+        <span class="question">
+            <a href="#" title="{% trans "Click here to select the objects across all pages" %}">{% blocktrans with cl.result_count as total_count %}Select all {{ total_count }} {{ module_name }}{% endblocktrans %}</a>
+        </span>
+        <span class="clear"><a href="#">{% trans "Clear selection" %}</a></span>
+</span>
+        {% endif %}
+    {% endif %}
+</div>

@@ -1,0 +1,470 @@
+/* Repanier */
+
+:root {
+    box-sizing: border-box;
+    font-size: calc(0.5em + (0.5 * 1vw));
+
+    --input-height: 29px;
+    --border-radius: 3px;
+    --border-height: 1px;
+    --info-border-color: dodgerblue;
+    --info-background-color: white;
+    --info-text-color: dodgerblue;
+    --info-hover-border-color: dodgerblue;
+    --info-hover-text-color: white;
+    --cms-blue-color: #00bbff;
+    --cms-blue-hover-color: #00a8e6;
+    --cms-white-color: white;
+    /*--font-size: 14px;*/
+}
+
+*,
+::before,
+::after {
+    box-sizing: inherit;
+}
+
+body {
+    background-color: #f2f2f2;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+/*lobotomized owl selector*/
+/*body * + * {*/
+/*  margin-top: 0;*/
+/*}*/
+
+/*Django 1.11 adjustment*/
+div.help {
+    margin-left: 0 !important;
+}
+
+/*{#  vvvvvvvvv django cms admin style 1.2.6  #}*/
+label.translatable-field:before {
+    color: tomato;
+    content: "\2691\a0";
+}
+
+div.parler-language-tabs span.current:before {
+    color: tomato;
+    content: "\2691\a0";
+}
+
+.calendar-shortcuts a:first-child, span.datetimeshortcuts a:first-child {
+    width: initial !important;
+}
+
+/*table thead th {*/
+/*    padding: 0;*/
+/*    vertical-align: middle !important;*/
+/*    white-space: normal !important;*/
+/*}*/
+
+/*table tbody td {*/
+/*    vertical-align: middle !important;*/
+/*    white-space: nowrap !important;*/
+/*}*/
+
+/*table tbody th {*/
+/*    vertical-align: middle !important;*/
+/*    white-space: normal !important;*/
+/*}*/
+
+/*table tbody th .button {*/
+
+/*    vertical-align: middle !important;*/
+/*    white-space: nowrap !important;*/
+
+/*}*/
+
+/*#change-history thead th,*/
+/*.change-list table thead th,*/
+/*.dashboard table thead th,*/
+/*.results table thead th,*/
+/*.tabular table thead th,*/
+/*#changelist table thead th {*/
+/*    white-space: normal;*/
+/*}*/
+
+/*.wrap-text {*/
+/*    white-space: normal !important;*/
+/*}*/
+
+/*.module {*/
+/*    width: 100%;*/
+/*    white-space: normal;*/
+/*}*/
+
+/*form fieldset {*/
+/*    width: 100%;*/
+/*    white-space: nowrap;*/
+/*}*/
+
+/*body.cms-admin-sideframe .object-tools {*/
+/*    margin-top: -42px;*/
+/*    margin-right: 75px;*/
+/*    background: none !important;*/
+/*}*/
+
+/*body.cms-admin-sideframe #content {*/
+/*    margin-top: 90px !important;*/
+/*}*/
+
+body.cms-admin-sideframe form input[type = text]:not(#field-searchbar), form input[type = email], form input[type = password], form input[type = url] {
+    font-size: 1rem;
+    width: 25em !important;
+    max-width: none !important;
+    border-radius: 3px !important;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none
+}
+
+body.cms-admin-sideframe form input[type = number], form select {
+    font-size: 1rem;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 3px !important;
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none
+}
+
+/*body.cms-admin-sideframe form button {*/
+/*    font-size: 10px;*/
+/*    max-width: none !important;*/
+/*    border-radius: 3px !important;*/
+/*    background-color: #fff;*/
+/*    -webkit-appearance: none;*/
+/*    -moz-appearance: none;*/
+/*    appearance: none*/
+/*}*/
+
+/*body.cms-admin-sideframe form textarea {*/
+/*    font-size: var(--font-size);*/
+/*    width: 80em !important;*/
+/*    max-width: none !important;*/
+/*    border-radius: 3px !important;*/
+/*    background-color: #fff;*/
+/*    -webkit-appearance: none;*/
+/*    -moz-appearance: none;*/
+/*    appearance: none*/
+/*}*/
+
+/*body.cms-admin-sideframe form .aligned label + div.readonly {*/
+/*    padding: 0;*/
+/*    margin: 0;*/
+/*}*/
+
+/*.cms-pagetree-root {*/
+/*    margin-top: -55px;*/
+/*}*/
+
+/*.cms-pagetree-header-cell {*/
+/*    margin-top: -110px;*/
+/*    padding-right: 100px;*/
+/*}*/
+
+/*#field-searchbar {*/
+/*    width: 100% !important;*/
+/*}*/
+
+/*form label.aligned.btn, form label.btn {*/
+/*    color: black !important;*/
+/*}*/
+
+/*!* filter*!*/
+#changelist-filter {
+    position: relative !important;
+    overflow-y: inherit !important;
+}
+
+.change-list #changelist.filtered .paginator {
+    position: static !important;
+}
+
+div, span, ul {
+    /*line-height: inherit !important;*/
+    vertical-align: text-top;
+}
+
+.select2-container.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 1rem !important;
+}
+
+.change-list #changelist .actions select {
+    width: auto !important;
+    font-size: 1rem;
+}
+
+/*{#  ^^^^^^^^^^^  django cms admin style 1.2.6  #}*/
+
+div.recurrence-widget {
+    width: 100%;
+}
+
+.change-list #changelist table tbody td, .change-list #changelist table tbody th {
+    white-space: normal;
+}
+
+.change-list #changelist table thead th {
+    white-space: normal;
+}
+
+/* Bootstrap refresh animated */
+/*.gly-spin {*/
+/*    -webkit-animation: spin 2s infinite linear;*/
+/*    -moz-animation: spin 2s infinite linear;*/
+/*    -o-animation: spin 2s infinite linear;*/
+/*    animation: spin 2s infinite linear;*/
+/*}*/
+
+/*@-moz-keyframes spin {*/
+/*    0% {*/
+/*        -moz-transform: rotate(0deg);*/
+/*    }*/
+/*    100% {*/
+/*        -moz-transform: rotate(359deg);*/
+/*    }*/
+/*}*/
+
+/*@-webkit-keyframes spin {*/
+/*    0% {*/
+/*        -webkit-transform: rotate(0deg);*/
+/*    }*/
+/*    100% {*/
+/*        -webkit-transform: rotate(359deg);*/
+/*    }*/
+/*}*/
+
+/*@-o-keyframes spin {*/
+/*    0% {*/
+/*        -o-transform: rotate(0deg);*/
+/*    }*/
+/*    100% {*/
+/*        -o-transform: rotate(359deg);*/
+/*    }*/
+/*}*/
+
+/*@keyframes spin {*/
+/*    0% {*/
+/*        -webkit-transform: rotate(0deg);*/
+/*        transform: rotate(0deg);*/
+/*    }*/
+/*    100% {*/
+/*        -webkit-transform: rotate(359deg);*/
+/*        transform: rotate(359deg);*/
+/*    }*/
+/*}*/
+
+/* Repanier */
+
+div.repanier-submit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    line-height: var(--input-height);
+    position: sticky;
+    bottom: 0;
+    padding: 10px 0 0 3px;
+    background: 0 0;
+    width: 80%;
+    z-index: 1000;
+}
+
+div.repanier-button-row {
+    display: flex;
+    grid-column-gap: 10px;
+    align-items: baseline;
+}
+
+a.repanier-a-info {
+    border-radius: var(--border-radius);
+    background-color: var(--info-background-color);
+    padding: 6px 20px !important;
+    cursor: pointer;
+    white-space: nowrap;
+    border: var(--border-height) solid var(--info-border-color);
+    color: var(--info-text-color);
+}
+
+a.repanier-a-info:hover {
+    background-color: var(--info-hover-border-color);
+    color: var(--info-hover-text-color) !important;
+}
+
+a.repanier-a-info-selected {
+    border-radius: var(--border-radius);
+    background-color: var(--info-hover-border-color);
+    padding: 6px 20px !important;
+    cursor: pointer;
+    white-space: nowrap;
+    border: var(--border-height) solid var(--info-hover-border-color);
+    color: var(--info-hover-text-color) !important;
+}
+
+span.repanier-a-container {
+    width: 100%;
+    clear: both;
+}
+
+/*tooltip css inspired by : https://designshack.net/articles/css/html5-css3-anchor-link-tooltips/ */
+
+a.repanier-a-tooltip {
+    position: relative;
+    display: inline;
+}
+
+a.repanier-a-tooltip:after {
+    display: block;
+    visibility: hidden;
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    opacity: 0;
+    content: attr(data-repanier-tooltip);
+    height: auto;
+    /*min-width: 150px;*/
+    padding: 5px 8px;
+    z-index: 999;
+    color: var(--cms-white-color);
+    text-decoration: none;
+    text-align: center;
+    background-color: var(--cms-blue-color);
+    -webkit-border-radius: var(--border-radius);
+    -moz-border-radius: var(--border-radius);
+    border-radius: var(--border-radius);
+    transition: all 50ms ease-in-out;
+}
+
+a.repanier-a-tooltip:before {
+    position: absolute;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    left: 50%;
+    bottom: 0;
+    opacity: 0;
+    content: "";
+    border-style: solid;
+    border-width: 6px 6px 0 6px;
+    border-color: var(--cms-blue-color) transparent transparent transparent;
+    transition: all 50ms ease-in-out;
+}
+
+a.repanier-a-tooltip:hover:after {
+    visibility: visible;
+    opacity: 1;
+    bottom: 35px;
+}
+
+a.repanier-a-tooltip:hover:before {
+    visibility: visible;
+    opacity: 1;
+    bottom: calc(35px - 6px);
+}
+
+input[type="submit"].repanier-submit-info,
+button[type="submit"].repanier-submit-info {
+    border-radius: var(--border-radius);
+    background-color: var(--cms-blue-color) !important;
+    padding: 6px 20px !important;
+    font-size: 1rem !important;
+    cursor: pointer;
+    white-space: nowrap;
+    border: var(--border-height) solid var(--cms-blue-color) !important;
+    color: var(--cms-white-color) !important;
+    height: var(--input-height);
+}
+
+input[type="submit"].repanier-submit-info:hover,
+input[type="submit"].repanier-submit-info:active,
+button[type="submit"].repanier-submit-info:hover,
+button[type="submit"].repanier-submit-info:active {
+    background-color: var(--cms-blue-hover-color) !important;
+    color: var(--cms-white-color) !important;
+}
+
+div.repanier-objects-tools {
+    margin-right: 100px;
+    margin-top: -15px;
+}
+
+.repanier-money-input-container {
+    display: flex;
+    width: max-content;
+}
+
+.repanier-money-input-icon {
+    padding: 5px;
+    background: var(--info-border-color);
+    color: white;
+    min-width: 50px;
+    text-align: center;
+    height: var(--input-height);
+}
+
+.repanier-money-input-field {
+    width: 100%;
+    padding: 10px;
+    outline: none;
+    border: var(--border-height) solid var(--info-hover-border-color);
+    height: var(--input-height);
+}
+
+.repanier-money-input-field:focus {
+    border: var(--border-height) solid var(--info-hover-border-color);
+}
+
+.repanier-flex-ul-li {
+    border-top: solid 0 !important;
+    padding: 0 !important;
+    font-weight: 400 !important;
+}
+
+.repanier-flex-ul {
+    list-style: none;
+    display: flex;
+    align-items: baseline;
+    border-bottom: solid 0 !important;
+    margin: 0 !important;
+}
+
+/*** custom checkboxes ***/
+
+div.form-row input[type=checkbox] {
+    display: none;
+}
+div.recurrence-widget input[type=checkbox] {
+    display: inline-block;
+}
+
+/* to hide the checkbox itself */
+input[type=checkbox] + label:before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    display: inline-block;
+}
+
+/* unchecked icon */
+input[type=checkbox] + label:before {
+    content: "\f068";
+    letter-spacing: 12px;
+    color: tomato;
+}
+
+.repanier-ban input[type=checkbox] + label:before {
+    content: "\f05e";
+    letter-spacing: 10px;
+    color: tomato;
+}
+
+/* checked icon */
+input[type=checkbox]:checked + label:before {
+    content: "\f00c";
+    letter-spacing: 10px;
+    color: #1e90ff;
+}

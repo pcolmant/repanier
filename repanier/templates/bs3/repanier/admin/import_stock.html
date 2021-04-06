@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% trans 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_product_changelist' %}">{% trans 'Products' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form enctype="multipart/form-data" action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{{ sub_title |title }}</h2>
+        <div class="form-group">
+            <label for="id_file_to_import"><b>{% trans "File to import :"%}</b></label><input id="id_file_to_import" name="file_to_import" type="file" />
+        </div>
+        <div class="submit-row repanier-submit-row">
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Perform the import" %}</button>
+        </div>
+
+        <input type="hidden" name="action" value="{{ action }}"/>
+    </form>
+{% endblock %}

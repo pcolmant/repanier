@@ -1,0 +1,38 @@
+{% extends "admin/base_site.html" %}
+{% load cms_tags menu_tags i18n l10n static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% trans 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_product_changelist' %}">{% trans 'Products' %}</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <form action="{{ form_url }}" method="post">{% csrf_token %}
+        <h2>{% trans "Please, confirm the action : duplicate product." %}</h2>
+        <div class="form-row">
+            <h4>{{ product }}</h4>
+            <p>&nbsp;</p>
+            <button type="submit" class="repanier-submit-info" name="cancel"
+                    value="cancel">{% trans "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply"
+                    class="default">{% trans "Yes, I'm sure" %}</button>
+            <div class="form-row">
+                <p>&nbsp;</p>
+            </div>
+            <div class="form-row">
+                {% for producer in producers %}
+                    <div class="form-row">
+                        <input type="radio" id="id_producer-{{ forloop.counter0 }}" name="producers"
+                               value="{{ producer.id|unlocalize }}"
+                                {% if producer.id == product.producer_id|add:0 %} checked{% endif %}><label
+                            for="id_producer-{{ forloop.counter0 }}" style="display: inline;">{{ producer }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ product.id|unlocalize }}"/>
+            <input type="hidden" name="action" value="{{ action }}"/>
+        </div>
+    </form>
+{% endblock %}
