@@ -151,7 +151,6 @@ REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO = config.get(
     "REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO",
     fallback=EMAIL_HOST_USER,
 )
-
 REPANIER_SETTINGS_ROUND_INVOICES = config.getboolean(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_ROUND_INVOICES", fallback=False
 )
@@ -165,6 +164,11 @@ REPANIER_SETTINGS_SMS_GATEWAY_MAIL = config.get(
 REPANIER_SETTINGS_TEMPLATE = config.get(
     "REPANIER_SETTINGS", "REPANIER_SETTINGS_TEMPLATE", fallback="bs3"
 )
+REPANIER_SETTINGS_VERSION = config.get(
+    "REPANIER_SETTINGS", "REPANIER_SETTINGS_VERSION", fallback="repanier"
+)
+REPANIER_SETTINGS_STOCK = True
+REPANIER_SETTINGS_PRODUCT_LABEL = True
 
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
@@ -189,7 +193,7 @@ DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
-STATICFILES_STORAGE = "repanier.big_blind_static.BigBlindManifestStaticFilesStorage"
+STATICFILES_STORAGE = "{}.big_blind_static.BigBlindManifestStaticFilesStorage".format(REPANIER_SETTINGS_VERSION)
 
 # Directory where working files, such as media and databases are kept
 MEDIA_DIR = os.path.join(PROJECT_DIR, "media")
@@ -208,7 +212,7 @@ STATIC_URL = "{}{}{}".format(os.sep, "static", os.sep)
 
 
 def get_repanier_css_name(template_name):
-    return os.path.join("repanier", REPANIER_SETTINGS_TEMPLATE, template_name)
+    return os.path.join(REPANIER_SETTINGS_VERSION, REPANIER_SETTINGS_TEMPLATE, template_name)
 
 
 REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
@@ -285,7 +289,7 @@ SECURE_REFERRER_POLICY = "same-origin"
 LOCALE_PATHS = (os.path.join(PROJECT_DIR, "locale"),)
 
 INSTALLED_APPS = (
-    "repanier.apps.RepanierConfig",  # ! Important : First installed app for template precedence
+    "{}.apps.RepanierConfig".format(REPANIER_SETTINGS_VERSION),  # ! Important : First installed app for template precedence
     "djangocms_admin_style",  # note this needs to be above the 'django.contrib.admin' entry
     "django.contrib.admin",
     "django.contrib.auth",
@@ -335,7 +339,7 @@ text_only_plugins = [
     "VideoPlayerPlugin",  # djangocms_video
 ]
 
-MIGRATION_MODULES = {'repanier': 'repanier.migrations.{}'.format(DJANGO_SETTINGS_SITE_NAME)}
+MIGRATION_MODULES = {REPANIER_SETTINGS_VERSION: '{}.migrations.{}'.format(REPANIER_SETTINGS_VERSION, DJANGO_SETTINGS_SITE_NAME)}
 
 # http://docs.django-cms.org/en/develop/how_to/caching.html
 
@@ -354,7 +358,7 @@ MIDDLEWARE = (
     "cms.middleware.user.CurrentUserMiddleware",
     "cms.middleware.toolbar.ToolbarMiddleware",
     "cms.middleware.language.LanguageCookieMiddleware",
-    "repanier.middleware.admin_filter_middleware",
+    "{}.middleware.admin_filter_middleware".format(REPANIER_SETTINGS_VERSION),
     "django.middleware.cache.FetchFromCacheMiddleware",
 )
 
@@ -375,7 +379,7 @@ CONTEXT_PROCESSORS = [
     "django.contrib.messages.context_processors.messages",
     "sekizai.context_processors.sekizai",
     "cms.context_processors.cms_settings",
-    "repanier.context_processors.repanier_settings",
+    "{}.context_processors.repanier_settings".format(REPANIER_SETTINGS_VERSION),
 ]
 
 # Django 3.0
@@ -397,7 +401,7 @@ if DEBUG:
             "BACKEND": "django.template.backends.django.DjangoTemplates",
             "DIRS": [
                 os.path.join(
-                    PROJECT_PATH, "repanier", "templates", REPANIER_SETTINGS_TEMPLATE
+                    PROJECT_PATH, REPANIER_SETTINGS_VERSION, "templates", REPANIER_SETTINGS_TEMPLATE
                 )
             ],
             # "APP_DIRS": True,
@@ -417,7 +421,7 @@ else:
             "BACKEND": "django.template.backends.django.DjangoTemplates",
             "DIRS": [
                 os.path.join(
-                    PROJECT_PATH, "repanier", "templates", REPANIER_SETTINGS_TEMPLATE
+                    PROJECT_PATH, REPANIER_SETTINGS_VERSION, "templates", REPANIER_SETTINGS_TEMPLATE
                 )
             ],
             # 'APP_DIRS': True,
@@ -586,7 +590,7 @@ THUMBNAIL_DEBUG = FILER_DEBUG
 
 ##################### Repanier
 # AUTH_USER_MODEL = 'auth.User'
-AUTHENTICATION_BACKENDS = ("repanier.auth_backend.RepanierAuthBackend",)
+AUTHENTICATION_BACKENDS = ("{}.auth_backend.RepanierAuthBackend".format(REPANIER_SETTINGS_VERSION),)
 # ADMIN_LOGIN = 'pi'
 # ADMIN_PASSWORD = 'raspberry'
 LOGIN_URL = "/repanier/go_repanier/"
@@ -627,7 +631,7 @@ if DJANGO_SETTINGS_LOGGING:
         },
         "loggers": {
             "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
-            "repanier": {"level": "DEBUG", "handlers": ["console"]},
+            REPANIER_SETTINGS_VERSION: {"level": "DEBUG", "handlers": ["console"]},
             "django.template": {"level": "DEBUG", "handlers": ["console"]},
         },
     }

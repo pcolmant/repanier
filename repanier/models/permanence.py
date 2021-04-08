@@ -278,7 +278,7 @@ class Permanence(TranslatableModel):
                     # Such that they can be accessed by the producer and by the staff
                     link.append(
                         '<a href="{}?producer={}" target="_blank">{}</a>'.format(
-                            reverse("producer_invoice_view", args=(pi.id,)),
+                            reverse("repanier:producer_invoice_view", args=(pi.id,)),
                             pi.producer_id,
                             label.replace(" ", "&nbsp;"),
                         )
@@ -433,7 +433,7 @@ class Permanence(TranslatableModel):
                 # Such that they can be accessed by the customer and by the staff
                 link.append(
                     '<a href="{}?customer={}" target="_blank">{}</a>'.format(
-                        reverse("customer_invoice_view", args=(ci.id,)),
+                        reverse("repanier:customer_invoice_view", args=(ci.id,)),
                         ci.customer_id,
                         label.replace(" ", "&nbsp;"),
                     )
@@ -1785,7 +1785,7 @@ class Permanence(TranslatableModel):
         else:
             message = self.get_status_display()
         if need_to_refresh_status:
-            url = reverse("display_status", args=(self.id,))
+            url = reverse("repanier:display_status", args=(self.id,))
             if force_refresh:
                 # force self.gauge to 3 so that next call the guage will be set to 0
                 self.gauge = 3
@@ -1880,7 +1880,7 @@ class Permanence(TranslatableModel):
                 <div class="excerpt">{offer_description}</div>
             </a>
             """.format(
-                    href=reverse("order_view", args=(self.id,)),
+                    href=reverse("repanier:order_view", args=(self.id,)),
                     title=self.get_html_permanence_display(),
                     offer_description=offer_description.words(30, html=True),
                 )

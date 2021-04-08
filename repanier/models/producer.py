@@ -373,7 +373,7 @@ class Producer(models.Model):
         if last_producer_invoice_set.exists():
             return format_html(
                 '<a href="{}?producer={}" class="repanier-a-info" target="_blank"><span style="color:{}">{}</span></a>',
-                reverse("producer_invoice_view", args=(0,)),
+                reverse("repanier:producer_invoice_view", args=(0,)),
                 str(self.id),
                 color,
                 -balance,

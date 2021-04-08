@@ -76,7 +76,7 @@
                 {% else %}
                     <span id="link_to_order_or_filter_view"></span>
                     {% if user.is_authenticated %}
-                        <a href="{% url "order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right"
+                        <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right"
                            style="margin-right: 10px;">
                             <span id="prepared_amount_visible_xs"></span>
                         </a>
@@ -131,7 +131,7 @@
                 {% addtoblock "lastjs" %}{% spaceless %}
                     <script type="text/javascript">
                         $(document).ready(function () {
-                            lien = '{% url 'home_info_bs3' %}';
+                            lien = '{% url 'repanier:home_info_bs3' %}';
                             $.ajax({
                                 url: lien,
                                 cache: false,

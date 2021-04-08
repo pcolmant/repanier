@@ -439,7 +439,7 @@ class CustomerInvoice(Invoice):
                                 )
                             )
                     else:
-                        href = reverse("order_view", args=(permanence.id,))
+                        href = reverse("repanier:order_view", args=(permanence.id,))
                         if self.status == PERMANENCE_OPENED:
                             msg_confirmation1 = '<span style="color: red; ">{}</span><br>'.format(
                                 _("⚠ Unconfirmed orders will be canceled.")

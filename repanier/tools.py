@@ -821,7 +821,7 @@ def web_services_activated(reference_site=None):
     version = None
     if reference_site:
         try:
-            url = urljoin(reference_site, reverse("version_rest"))
+            url = urljoin(reference_site, reverse("repanier:version_rest"))
             web_services = urlopen(url, timeout=0.5)
             rest_as_json = json.load(reader(web_services))
             if rest_as_json["version"] == "1":

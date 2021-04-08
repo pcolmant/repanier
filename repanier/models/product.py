@@ -83,7 +83,7 @@ class Product(Item):
 
         css_class = ' class = "repanier-a-info"'
         is_into_offer = self.is_into_offer
-        switch_is_into_offer = reverse("is_into_offer", args=(self.id,))
+        switch_is_into_offer = reverse("repanier:is_into_offer", args=(self.id,))
         javascript = """
                 (function($) {{
                     var lien = '{LINK}';

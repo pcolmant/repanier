@@ -130,7 +130,7 @@ class Customer(models.Model):
     # or in the admin at customer level.
     may_order = models.BooleanField(_("May order"), default=True)
     zero_waste = models.BooleanField(_("Zero waste"), default=False)
-    valid_email = models.NullBooleanField(_("Valid email"), default=None)
+    valid_email = models.BooleanField(_("Valid email"), null=True, default=None)
     subscribe_to_email = models.BooleanField(
         _("Agree to receive mails from this site"), default=True
     )
@@ -355,21 +355,21 @@ class Customer(models.Model):
             if balance.amount >= 30:
                 return format_html(
                     '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#32CD32">{}</span></a>',
-                    reverse("customer_invoice_view", args=(0,)),
+                    reverse("repanier:customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
             elif balance.amount >= -10:
                 return format_html(
                     '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:#696969">{}</span></a>',
-                    reverse("customer_invoice_view", args=(0,)),
+                    reverse("repanier:customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )
             else:
                 return format_html(
                     '<a href="{}?customer={}" class="repanier-a-info" target="_blank" ><span style="color:red">{}</span></a>',
-                    reverse("customer_invoice_view", args=(0,)),
+                    reverse("repanier:customer_invoice_view", args=(0,)),
                     str(self.id),
                     balance,
                 )

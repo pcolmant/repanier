@@ -16,7 +16,7 @@
                                     <p>{% trans "You are now logged in as a customer." %}</p>
                                     <p><b>{% trans "Do you want to become:" %}</b></p>
                                     {% for staff_responsibility in staff_responsibilities %}
-                                        <a href="{% url "login_form" %}?as_id={{ staff_responsibility.id }}"
+                                        <a href="{% url "repanier:login_form" %}?as_id={{ staff_responsibility.id }}"
                                            class="btn btn-info">{{ staff_responsibility.long_name }}</a><br>
                                     {% endfor %}
                                 {% else %}
@@ -71,10 +71,10 @@
                             <div class="form-group">
                                 {% if staff_responsibilities %}
                                     <a href="{{ next }}" class="btn btn-info">{% trans "Continue as a customer." %}</a>
-                                    <a href="{% url "logout" %}" class="btn btn-info">{% trans "Logout" %}</a>
+                                    <a href="{% url "repanier:logout" %}" class="btn btn-info">{% trans "Logout" %}</a>
                                 {% else %}
                                     <button class="btn btn-info" type="submit">{% trans "Login" %}</button>
-                                    <a href="{% url "password_reset" %}"
+                                    <a href="{% url "repanier:password_reset" %}"
                                        class="btn btn-info">{% trans "Password reset" %}</a>
                                 {% endif %}
                             </div>
