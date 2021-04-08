@@ -67,7 +67,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return True
 
-    def has_add_permission(self, request, **kwargs):
+    def has_add_permission(self, request, obj):
         return True
 
     def has_change_permission(self, request, obj=None):

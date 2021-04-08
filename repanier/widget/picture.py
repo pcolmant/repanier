@@ -19,7 +19,7 @@ class RepanierPictureWidget(widgets.TextInput):
     def get_context(self, name, value, attrs):
         context = super(RepanierPictureWidget, self).get_context(name, value, attrs)
         context['upload_url'] = reverse(
-            'ajax_picture', args=(self.upload_to, self.size)
+            'repanier:ajax_picture', args=(self.upload_to, self.size)
         )
         if value:
             context['repanier_file_path'] = file_path = str(value)

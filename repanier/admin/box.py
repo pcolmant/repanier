@@ -127,7 +127,7 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                 self._has_add_or_delete_permission = True
         return self._has_add_or_delete_permission
 
-    def has_add_permission(self, request, **kwargs):
+    def has_add_permission(self, request, obj):
         return self.has_delete_permission(request)
 
     def has_change_permission(self, request, obj=None):

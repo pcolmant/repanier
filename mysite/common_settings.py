@@ -169,6 +169,7 @@ REPANIER_SETTINGS_VERSION = config.get(
 )
 REPANIER_SETTINGS_STOCK = True
 REPANIER_SETTINGS_PRODUCT_LABEL = True
+REPANIER_SETTINGS_IS_MINIMALIST = False
 
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
@@ -257,6 +258,10 @@ DATABASES = {
         "PORT": DJANGO_SETTINGS_DATABASE_PORT,  # Set to empty string for default.
     }
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 ###################### I18N
 
 TIME_ZONE = "Europe/Brussels"
