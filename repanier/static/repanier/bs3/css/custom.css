@@ -483,14 +483,3 @@ a.skip_link {
     color: initial !important;
     cursor: initial !important;
 }
-
-.colorgraph {
-    height: 5px;
-    border-top: 0;
-    background: #c4e17f;
-    border-radius: 5px;
-    background-image: -webkit-linear-gradient(left, #c4e17f, #62c2e4);
-    background-image: -moz-linear-gradient(left, #c4e17f, #62c2e4);
-    background-image: -o-linear-gradient(left, #c4e17f, #62c2e4);
-    background-image: linear-gradient(to right, #c4e17f, #62c2e4);
-}

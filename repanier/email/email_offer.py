@@ -76,7 +76,7 @@ def send_open_order(permanence_id):
         template = Template(offer_customer_mail)
         context = TemplateContext({
             'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+                settings.ALLOWED_HOSTS[0], reverse('repanier:order_view', args=(permanence.id,)), permanence)),
             'offer_description': mark_safe(offer_description),
             'offer_detail': mark_safe(offer_detail),
             'offer_recent_detail': mark_safe(permanence.get_new_products),

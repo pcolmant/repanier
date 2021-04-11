@@ -23,7 +23,7 @@ def home_info_bs3_ajax(request):
             permanences.append(
                 format_html(
                     '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
-                    reverse('order_view', args=(permanence.id,)),
+                    reverse('repanier:order_view', args=(permanence.id,)),
                     permanence.get_permanence_display()
                 )
             )

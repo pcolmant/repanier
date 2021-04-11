@@ -55,7 +55,7 @@ def send_invoice(permanence_id):
                             'long_profile_name': long_profile_name,
                             'permanence_link': mark_safe(
                                 "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
-                                                                         reverse('producer_invoice_uuid_view',
+                                                                         reverse('repanier:producer_invoice_uuid_view',
                                                                                  args=(0, producer.uuid)),
                                                                          permanence)),
                             'signature': invoice_responsible["html_signature"]
@@ -104,10 +104,10 @@ def send_invoice(permanence_id):
                         'short_basket_name': customer.short_basket_name,
                         'permanence_link': mark_safe(
                             "<a href=\"https://{}{}\">{}</a>".format(settings.ALLOWED_HOSTS[0],
-                                                                     reverse('order_view', args=(permanence.id,)),
+                                                                     reverse('repanier:order_view', args=(permanence.id,)),
                                                                      permanence)),
                         'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                            settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)),
+                            settings.ALLOWED_HOSTS[0], reverse('repanier:customer_invoice_view', args=(0,)),
                             customer_last_balance)),
                         'last_balance': mark_safe(customer_last_balance),
                         'order_amount': mark_safe(customer_order_amount),

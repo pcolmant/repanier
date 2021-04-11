@@ -58,7 +58,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 template = Template(order_staff_mail)
                 context = TemplateContext({
                     'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                        settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+                        settings.ALLOWED_HOSTS[0], reverse('repanier:order_view', args=(permanence.id,)), permanence)),
                     'board_composition': board_composition,
                     'board_composition_and_description': board_composition,
                     'signature': order_responsible["html_signature"]
@@ -106,7 +106,7 @@ def email_order(permanence_id, everything=True, deliveries_id=()):
                 'order_empty': wb is None,
                 'duplicate': wb is not None,
                 'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                    settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+                    settings.ALLOWED_HOSTS[0], reverse('repanier:order_view', args=(permanence.id,)), permanence)),
                 'signature': order_responsible["html_signature"]
             })
             html_body = template.render(context)
@@ -211,9 +211,9 @@ def export_order_2_1_group(config, delivery_id, filename, permanence, order_resp
             'basket_name': str(customer_responsible),
             'short_basket_name': str(customer_responsible),  # deprecated
             'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+                settings.ALLOWED_HOSTS[0], reverse('repanier:order_view', args=(permanence.id,)), permanence)),
             'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), _("Group invoices"))),
+                settings.ALLOWED_HOSTS[0], reverse('repanier:customer_invoice_view', args=(0,)), _("Group invoices"))),
             'last_balance': EMPTY_STRING,
             'order_amount': EMPTY_STRING,
             'on_hold_movement': EMPTY_STRING,
@@ -291,9 +291,9 @@ def export_order_2_1_customer(customer, filename, permanence, order_responsible=
                 'basket_name': customer.short_basket_name,
                 'short_basket_name': customer.short_basket_name,
                 'permanence_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                    settings.ALLOWED_HOSTS[0], reverse('order_view', args=(permanence.id,)), permanence)),
+                    settings.ALLOWED_HOSTS[0], reverse('repanier:order_view', args=(permanence.id,)), permanence)),
                 'last_balance_link': mark_safe("<a href=\"https://{}{}\">{}</a>".format(
-                    settings.ALLOWED_HOSTS[0], reverse('customer_invoice_view', args=(0,)), customer_last_balance)),
+                    settings.ALLOWED_HOSTS[0], reverse('repanier:customer_invoice_view', args=(0,)), customer_last_balance)),
                 'last_balance': mark_safe(customer_last_balance),
                 'order_amount': mark_safe(customer_order_amount),
                 'on_hold_movement': customer_on_hold_movement,
