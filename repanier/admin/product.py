@@ -545,8 +545,6 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     def get_list_display(self, request):
         list_display = ["get_long_name_with_producer", "get_row_actions"]
         list_editable = ["producer_unit_price"]
-        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            list_display += ["language_column"]
         list_display += ["producer_unit_price"]
         if settings.REPANIER_SETTINGS_STOCK:
             list_display += ["stock"]

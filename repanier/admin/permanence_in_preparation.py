@@ -188,10 +188,9 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         return "{}{}".format(self.change_list_url, get_query_filters())
 
     def get_list_display(self, request):
-        list_display = ["get_permanence_admin_display", "get_row_actions"]
-        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            list_display += ["language_column"]
-        list_display += [
+        list_display = [
+            "get_permanence_admin_display",
+            "get_row_actions",
             "get_producers_with_download",
             "get_customers_with_download",
             "get_board",

@@ -224,7 +224,6 @@ class BoxAdmin(TranslatableAdmin):
     list_display = (
         "is_into_offer",
         "get_box_admin_display",
-        "language_column",
     )
     list_display_links = ("get_box_admin_display",)
     list_per_page = 16
@@ -253,10 +252,6 @@ class BoxAdmin(TranslatableAdmin):
 
     def get_list_display(self, request):
         list_display = ["get_html_is_into_offer", "get_box_admin_display"]
-        if settings.DJANGO_SETTINGS_MULTIPLE_LANGUAGE:
-            list_display += [
-                "language_column",
-            ]
         if settings.REPANIER_SETTINGS_STOCK:
             self.list_editable = ("stock",)
             list_display += [
