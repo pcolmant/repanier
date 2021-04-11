@@ -3,33 +3,6 @@
 {% block base_content %}
     <div class="container-repanier">
         <div class="container">
-            {% block login %}{% spaceless %}
-                {% if user.is_anonymous %}
-                    <div class="row">
-                        <div class="panel-group">
-                            <div class="panel panel-primary">
-                                <div class="panel-body">
-                                    <div class="col-sm-3">
-                                        <a href="{% url "repanier:login_form" %}?next={% url 'repanier:permanence_view' %}"
-                                           class="btn btn-info">{% trans "Login me" %}</a>
-                                    </div>
-                                    {% if how_to_register %}
-                                        <div class="col-sm-9">
-                                            <div class="accordion-toggle collapsed" data-toggle="collapse"
-                                                 data-target="#collapse">
-                                                <span class="btn btn-info">{% trans "Create an account ?" %}</span>
-                                            </div>
-                                            <div id="collapse" class="panel-collapse collapse">
-                                                {{ how_to_register | safe }}
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endspaceless %}{% endblock login %}
             {% block permanenceboard %}{% spaceless %}
                 {% addtoblock "jshead" %}
                     <script src="{{ STATIC_URL }}repanier/bs3/waypoints/jquery.waypoints.min.js"></script>

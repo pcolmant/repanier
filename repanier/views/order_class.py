@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db.models import Q
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import translation
 from django.views.generic import ListView
@@ -33,6 +32,7 @@ class OrderView(ListView):
     def __init__(self, **kwargs):
         super(OrderView, self).__init__(**kwargs)
         self.user = None
+        self.customer = None
         self.first_page = False
         self.producer_id = "all"
         self.department_id = "all"
@@ -42,12 +42,8 @@ class OrderView(ListView):
         self.q = None
         self.is_basket = False
         self.is_like = False
-        self.is_anonymous = True
         self.may_order = False
         self.permanence = None
-        self.all_dates = []
-        self.date_id = "all"
-        self.date_selected = None
 
     def get(self, request, *args, **kwargs):
         self.first_page = kwargs.get("page", True)
@@ -55,25 +51,22 @@ class OrderView(ListView):
         self.permanence = (
             Permanence.objects.filter(id=permanence_id)
             .only("id", "status", "permanence_date", "with_delivery_point")
-            .order_by("?")
             .first()
         )
         permanence_ok_or_404(self.permanence)
         self.user = request.user
         self.is_basket = self.request.GET.get("is_basket", False)
         self.is_like = self.request.GET.get("is_like", False)
-        customer_may_order = (
-            Customer.objects.filter(user_id=self.user.id, is_active=True)
-            .order_by("?")
-            .exists()
-        )
-        if self.user.is_anonymous or not customer_may_order:
-            self.is_anonymous = True
+        if not self.user.is_anonymous:
+            self.customer = (
+                Customer.objects.filter(id=self.user.customer_id)
+                .first()
+            )
+        if self.customer is None:
             self.may_order = False
         else:
-            self.is_anonymous = False
-            customer = self.user.customer
-            self.may_order = customer.may_order if customer is not None else False
+            self.may_order = self.customer.may_order
+
         self.q = self.request.GET.get("q", None)
         if not self.q:
             self.producer_id = self.request.GET.get("producer", "all")
@@ -99,7 +92,6 @@ class OrderView(ListView):
     def get_context_data(self, **kwargs):
         from repanier.apps import (
             REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM,
-            REPANIER_SETTINGS_CONFIG,
             REPANIER_SETTINGS_NOTIFICATION,
         )
 
@@ -107,9 +99,6 @@ class OrderView(ListView):
         context["first_page"] = self.first_page
         context["permanence"] = self.permanence
         context["permanence_id"] = self.permanence.id
-        context["all_dates"] = self.all_dates
-        context["date_id"] = self.date_id
-        context["date_Selected"] = self.date_selected
         context[
             "notification"
         ] = REPANIER_SETTINGS_NOTIFICATION.get_notification_display()
@@ -151,14 +140,6 @@ class OrderView(ListView):
                 translations__language_code=translation.get_language(),
             ).order_by("customer_unit_price", "unit_deposit", "translations__long_name")
             context["staff_order"] = Staff.get_or_create_order_responsible()
-            if self.is_anonymous:
-                context[
-                    "how_to_register"
-                ] = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-                    "how_to_register", any_language=True, default=EMPTY_STRING
-                )
-            else:
-                context["how_to_register"] = EMPTY_STRING
 
         # use of str() to avoid "12 345" when rendering the template
         context["producer_id"] = str(self.producer_id)
@@ -175,46 +156,40 @@ class OrderView(ListView):
             context["is_select_view"] = EMPTY_STRING
             context["is_basket_view"] = "active"
 
-            customer = (
-                Customer.objects.filter(user_id=self.user.id, may_order=True)
-                .order_by("?")
-                .first()
-            )
-            if customer is None:
-                raise Http404
-            translation.activate(customer.language)
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    permanence_id=self.permanence.id, customer_id=customer.id
+            if self.may_order:
+                translation.activate(self.customer.language)
+                customer_invoice = (
+                    CustomerInvoice.objects.filter(
+                        permanence_id=self.permanence.id, customer_id=self.customer.id
+                    )
+                    .first()
                 )
-                .order_by("?")
-                .first()
-            )
-            if customer_invoice is None:
-                customer_invoice = CustomerInvoice.objects.create(
-                    permanence_id=self.permanence.id,
-                    customer_id=customer.id,
-                    status=self.permanence.status,
-                    customer_charged_id=customer.id,
+                if customer_invoice is None:
+                    customer_invoice = CustomerInvoice.objects.create(
+                        permanence_id=self.permanence.id,
+                        customer_id=self.customer.id,
+                        status=self.permanence.status,
+                        customer_charged_id=self.customer.id,
+                    )
+                    customer_invoice.set_order_delivery(delivery=None)
+                    customer_invoice.calculate_order_price()
+                    customer_invoice.save()
+                if customer_invoice.delivery is not None:
+                    status = customer_invoice.delivery.status
+                else:
+                    status = customer_invoice.status
+                basket_message = get_html_basket_message(self.customer, self.permanence, status)
+                html = customer_invoice.get_html_my_order_confirmation(
+                    permanence=self.permanence,
+                    is_basket=True,
+                    basket_message=basket_message,
                 )
-                customer_invoice.set_order_delivery(delivery=None)
-                customer_invoice.calculate_order_price()
-                customer_invoice.save()
-            if customer_invoice.delivery is not None:
-                status = customer_invoice.delivery.status
-            else:
-                status = customer_invoice.status
-            basket_message = get_html_basket_message(customer, self.permanence, status)
-            html = customer_invoice.get_html_my_order_confirmation(
-                permanence=self.permanence,
-                is_basket=True,
-                basket_message=basket_message,
-            )
-            context["span_btn_confirm_order"] = html["#span_btn_confirm_order"]
+                context["span_btn_confirm_order"] = html["#span_btn_confirm_order"]
         else:
             context["is_basket"] = EMPTY_STRING
             context["is_select_view"] = "active"
             context["is_basket_view"] = EMPTY_STRING
+
         context["is_like"] = "yes" if self.is_like else EMPTY_STRING
 
         context["communication"] = self.communication
@@ -229,7 +204,7 @@ class OrderView(ListView):
     def get_queryset(self):
         from repanier.apps import REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
 
-        if self.is_anonymous and (
+        if self.customer is None and (
             not REPANIER_SETTINGS_DISPLAY_ANONYMOUS_ORDER_FORM
             or self.is_basket
             or self.is_like
@@ -241,7 +216,6 @@ class OrderView(ListView):
                     id=self.box_id, permanence_id=self.permanence.id, may_order=True
                 )
                 .only("product_id")
-                .order_by("?")
                 .first()
             )
             if offer_item is not None and offer_item.product_id is not None:
@@ -295,7 +269,6 @@ class OrderView(ListView):
                 if self.department_id != "all":
                     department = (
                         LUT_DepartmentForCustomer.objects.filter(id=self.department_id)
-                        .order_by("?")
                         .only("lft", "rght", "tree_id")
                         .first()
                     )
@@ -311,7 +284,7 @@ class OrderView(ListView):
                         else:
                             # otherwise, act like self.department_id == 'all'
                             self.department_id = "all"
-            if self.q:
+            if self.q and self.may_order:
                 qs = qs.filter(
                     translations__long_name__icontains=self.q,
                     translations__language_code=translation.get_language(),
