@@ -32,6 +32,17 @@ class OfferItem(Item):
         # Language dependant producer sort order for optimization
         producer_sort_order=models.IntegerField(default=0, db_index=True),
     )
+    long_name_v2 = models.CharField(
+        _("Long name"), max_length=100, default=EMPTY_STRING, blank=True
+    )
+    cache_part_a_v2 = HTMLField(default=EMPTY_STRING, blank=True)
+    cache_part_b_v2 = HTMLField(default=EMPTY_STRING, blank=True)
+    # Language dependant customer sort order for optimization
+    order_sort_order_v2 = models.IntegerField(default=0, db_index=True)
+    # Language dependant preparation sort order for optimization
+    preparation_sort_order_v2 = models.IntegerField(default=0, db_index=True)
+    # Language dependant producer sort order for optimization
+    producer_sort_order_v2 = models.IntegerField(default=0, db_index=True)
     permanence = models.ForeignKey(
         "Permanence",
         verbose_name=REPANIER_SETTINGS_PERMANENCE_NAME,

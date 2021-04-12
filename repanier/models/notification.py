@@ -18,6 +18,13 @@ class Notification(TranslatableModel):
             blank=True,
         )
     )
+    notification_v2 = HTMLField(
+        _("Notification"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
 
     def get_notification_display(self):
         return self.safe_translation_getter(

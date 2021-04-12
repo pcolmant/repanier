@@ -11,18 +11,14 @@ from django.db.models import F
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy, reverse
-from django.utils import translation
 from django.utils.formats import number_format
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _, get_language_info
+from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import ForeignKeyWidget
-from parler.admin import TranslatableAdmin
-from parler.forms import TranslatableModelForm
-
 from repanier.admin.admin_filter import (
     ProductFilterByDepartmentForThisProducer,
     ProductFilterByProducer,
@@ -49,8 +45,10 @@ from repanier.const import (
     LUT_VAT,
     LUT_PRODUCT_ORDER_UNIT_WO_SHIPPING_COST,
     LUT_PRODUCT_ORDER_UNIT,
-    LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL, LUT_PRODUCT_ORDER_UNIT_ALL,
+    LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL,
+    LUT_PRODUCT_ORDER_UNIT_ALL,
 )
+from repanier.middleware import get_query_params
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -68,7 +66,8 @@ from repanier.xlsx.widget import (
     ChoiceWidget,
     ThreeDecimalsWidget,
     TranslatedManyToManyWidget,
-    TwoMoneysWidget, HTMLWidget,
+    TwoMoneysWidget,
+    HTMLWidget,
 )
 
 
@@ -78,8 +77,10 @@ class ProductResource(resources.ModelResource):
         attribute="producer",
         widget=ForeignKeyWidget(Producer, field="short_profile_name"),
     )
-    long_name = fields.Field(attribute="long_name")
-    offer_description = fields.Field(attribute="offer_description", widget=HTMLWidget())
+    long_name = fields.Field(attribute="long_name_v2")
+    offer_description = fields.Field(
+        attribute="offer_description_v2", widget=HTMLWidget()
+    )
     department_for_customer = fields.Field(
         attribute="department_for_customer",
         widget=TranslatedForeignKeyWidget(
@@ -88,7 +89,9 @@ class ProductResource(resources.ModelResource):
     )
     order_unit = fields.Field(
         attribute="order_unit",
-        widget=ChoiceWidget(LUT_PRODUCT_ORDER_UNIT_ALL, LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL),
+        widget=ChoiceWidget(
+            LUT_PRODUCT_ORDER_UNIT_ALL, LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL
+        ),
     )
     order_average_weight = fields.Field(
         attribute="order_average_weight", widget=ThreeDecimalsWidget()
@@ -251,7 +254,7 @@ class ProductResource(resources.ModelResource):
         use_transactions = False
 
 
-class ProductDataForm(TranslatableModelForm):
+class ProductDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProductDataForm, self).__init__(*args, **kwargs)
 
@@ -260,18 +263,18 @@ class ProductDataForm(TranslatableModelForm):
             # Don't bother validating the formset unless each form is valid on its own
             return
 
-        if self.instance.id is None:
-            if self.language_code != settings.LANGUAGE_CODE:
-                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
-                self.add_error(
-                    "long_name",
-                    _("Please define first a long_name in %(language)s")
-                    % {
-                        "language": get_language_info(settings.LANGUAGE_CODE)[
-                            "name_local"
-                        ]
-                    },
-                )
+        # if self.instance.id is None:
+        #     if self.language_code != settings.LANGUAGE_CODE:
+        #         # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+        #         self.add_error(
+        #             "long_name_v2",
+        #             _("Please define first a long_name in %(language)s")
+        #             % {
+        #                 "language": get_language_info(settings.LANGUAGE_CODE)[
+        #                     "name_local"
+        #                 ]
+        #             },
+        #         )
 
         producer = self.cleaned_data.get("producer", None)
         if producer is None:
@@ -279,6 +282,7 @@ class ProductDataForm(TranslatableModelForm):
                 "producer",
                 _("Please select first a producer in the filter of previous screen..."),
             )
+            return
         else:
             reference = self.cleaned_data.get("reference", EMPTY_STRING)
             if reference:
@@ -456,7 +460,7 @@ class ProductDataForm(TranslatableModelForm):
         model = Product
         fields = "__all__"
         widgets = {
-            "long_name": forms.TextInput(attrs={"style": "width:450px !important"}),
+            "long_name_v2": forms.TextInput(attrs={"style": "width:450px !important"}),
             "order_unit": SelectAdminOrderUnitWidget(
                 attrs={"style": "width:100% !important"}
             ),
@@ -464,10 +468,8 @@ class ProductDataForm(TranslatableModelForm):
         }
 
 
-class ProductAdmin(ImportExportMixin, TranslatableAdmin):
-    change_list_template = (
-        None
-    )  # get default admin selection to use customized product change_list template
+class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
+    change_list_template = None  # get default admin selection to use customized product change_list template
     form = ProductDataForm
     change_list_url = reverse_lazy("admin:repanier_product_changelist")
     resource_class = ProductResource
@@ -478,8 +480,8 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
     list_per_page = 16
     list_max_show_all = 16
     filter_horizontal = ("production_mode",)
-    ordering = ("producer", "translations__long_name")
-    search_fields = ("translations__long_name",)
+    ordering = ("producer", "long_name_v2")
+    search_fields = ("long_name_v2",)
     # actions = ["deselect_is_into_offer"]
 
     def has_delete_permission(self, request, obj=None):
@@ -571,78 +573,34 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             list_filter += ["limit_order_quantity_to_stock"]
         return list_filter
 
-    def get_form(self, request, product=None, **kwargs):
-        department_for_customer_id = None
-        is_active_value = None
-        is_into_offer_value = None
-        producer_queryset = Producer.objects.none()
-        if product is not None:
-            producer_queryset = Producer.objects.filter(
-                id=product.producer_id
-            ).order_by("?")
-        else:
-            preserved_filters = request.GET.get("_changelist_filters", None)
-            if preserved_filters:
-                param = dict(parse_qsl(preserved_filters))
-                if "producer" in param:
-                    producer_id = param["producer"]
-                    if producer_id:
-                        producer_queryset = Producer.objects.filter(
-                            id=producer_id
-                        ).order_by("?")
-                if "department_for_customer" in param:
-                    department_for_customer_id = param["department_for_customer"]
-                if "is_active__exact" in param:
-                    is_active_value = param["is_active__exact"]
-                if "is_into_offer__exact" in param:
-                    is_into_offer_value = param["is_into_offer__exact"]
-        producer = producer_queryset.first()
+    def get_fieldsets(self, request, product=None):
         fields_basic = [
-            ("producer", "long_name", "picture2"),
+            "producer",
+            "department_for_customer",
+            "long_name_v2",
+            "picture2",
             "order_unit",
-            "wrapped",
             ("producer_unit_price", "unit_deposit", "order_average_weight"),
-        ]
-        if settings.REPANIER_SETTINGS_STOCK:
-            fields_basic += [
-                (
-                    "customer_minimum_order_quantity",
-                    "customer_increment_order_quantity",
-                ),
+            (
+                "customer_minimum_order_quantity",
+                "customer_increment_order_quantity",
+            ),
+            (
                 "limit_order_quantity_to_stock",
                 "stock",
-            ]
-        else:
-            if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-                # Important : do not use ( ) for minimalist. The UI will be more logical.
-                fields_basic += [
-                    "customer_minimum_order_quantity",
-                    "customer_increment_order_quantity",
-                ]
-            else:
-                fields_basic += [
-                    (
-                        "customer_minimum_order_quantity",
-                        "customer_increment_order_quantity",
-                        "customer_alert_order_quantity",
-                    )
-                ]
+            ),
+            "wrapped",
+            "is_into_offer",
+        ]
         fields_advanced_descriptions = [
-            ("department_for_customer", "placement"),
-            "offer_description",
+            "placement",
+            "offer_description_v2",
+            "production_mode",
         ]
 
-        fields_advanced_options = []
+        fields_advanced_options = ["reference", "vat_level", "is_active"]
 
-        if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-            fields_advanced_descriptions += ["production_mode"]
-        if settings.REPANIER_SETTINGS_STOCK:
-            fields_advanced_options += ["producer_order_by_quantity"]
-        fields_advanced_options += ["reference"]
-        fields_advanced_options += ["vat_level"]
-        fields_advanced_options += [("is_into_offer", "is_active")]
-
-        self.fieldsets = (
+        fieldsets = (
             (None, {"fields": fields_basic}),
             (
                 _("Advanced descriptions"),
@@ -653,6 +611,88 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 {"classes": ("collapse",), "fields": fields_advanced_options},
             ),
         )
+        return fieldsets
+
+    def get_form(self, request, product=None, **kwargs):
+        department_for_customer_id = None
+        is_active_value = None
+        is_into_offer_value = None
+        producer_queryset = Producer.objects.none()
+        if product is not None:
+            producer_queryset = Producer.objects.filter(
+                id=product.producer_id
+            )
+        else:
+            producer_queryset = Producer.objects.none()
+            query_params = get_query_params()
+            if "producer" in query_params:
+                producer_id = query_params["producer"]
+                if producer_id:
+                    producer_queryset = Producer.objects.filter(id=producer_id)
+            if "department" in query_params:
+                department_for_customer_id = query_params["department"]
+            if "is_active__exact" in query_params:
+                is_active_value = query_params["is_active__exact"]
+            if "is_into_offer__exact" in query_params:
+                is_into_offer_value = query_params["is_into_offer__exact"]
+
+        producer = producer_queryset.first()
+        # fields_basic = [
+        #     ("producer", "long_name_v2", "picture2"),
+        #     "order_unit",
+        #     "wrapped",
+        #     ("producer_unit_price", "unit_deposit", "order_average_weight"),
+        # ]
+        # if settings.REPANIER_SETTINGS_STOCK:
+        #     fields_basic += [
+        #         (
+        #             "customer_minimum_order_quantity",
+        #             "customer_increment_order_quantity",
+        #         ),
+        #         "limit_order_quantity_to_stock",
+        #         "stock",
+        #     ]
+        # else:
+        #     if settings.REPANIER_SETTINGS_IS_MINIMALIST:
+        #         # Important : do not use ( ) for minimalist. The UI will be more logical.
+        #         fields_basic += [
+        #             "customer_minimum_order_quantity",
+        #             "customer_increment_order_quantity",
+        #         ]
+        #     else:
+        #         fields_basic += [
+        #             (
+        #                 "customer_minimum_order_quantity",
+        #                 "customer_increment_order_quantity",
+        #                 "customer_alert_order_quantity",
+        #             )
+        #         ]
+        # fields_advanced_descriptions = [
+        #     ("department_for_customer", "placement"),
+        #     "offer_description_v2",
+        # ]
+        #
+        # fields_advanced_options = []
+        #
+        # if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
+        #     fields_advanced_descriptions += ["production_mode"]
+        # if settings.REPANIER_SETTINGS_STOCK:
+        #     fields_advanced_options += ["producer_order_by_quantity"]
+        # fields_advanced_options += ["reference"]
+        # fields_advanced_options += ["vat_level"]
+        # fields_advanced_options += [("is_into_offer", "is_active")]
+        #
+        # self.fieldsets = (
+        #     (None, {"fields": fields_basic}),
+        #     (
+        #         _("Advanced descriptions"),
+        #         {"classes": ("collapse",), "fields": fields_advanced_descriptions},
+        #     ),
+        #     (
+        #         _("Advanced options"),
+        #         {"classes": ("collapse",), "fields": fields_advanced_options},
+        #     ),
+        # )
 
         form = super(ProductAdmin, self).get_form(request, product, **kwargs)
 
@@ -685,12 +725,11 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
         if product is not None:
             producer_field.empty_label = None
             producer_field.queryset = producer_queryset
-            department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
-                rght=F("lft") + 1,
-                is_active=True,
-                translations__language_code=translation.get_language(),
-            ).order_by(
-                "translations__short_name"
+            department_for_customer_field.queryset = (
+                LUT_DepartmentForCustomer.objects.filter(
+                    rght=F("lft") + 1,
+                    is_active=True,
+                ).order_by("short_name_v2")
             )
             if production_mode_field is not None:
                 production_mode_field.empty_label = None
@@ -709,16 +748,17 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
                 ]
                 producer_field.disabled = True
             if department_for_customer_id is not None:
-                department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
-                    id=department_for_customer_id
+                department_for_customer_field.queryset = (
+                    LUT_DepartmentForCustomer.objects.filter(
+                        id=department_for_customer_id
+                    )
                 )
             else:
-                department_for_customer_field.queryset = LUT_DepartmentForCustomer.objects.filter(
-                    rght=F("lft") + 1,
-                    is_active=True,
-                    translations__language_code=translation.get_language(),
-                ).order_by(
-                    "translations__short_name"
+                department_for_customer_field.queryset = (
+                    LUT_DepartmentForCustomer.objects.filter(
+                        rght=F("lft") + 1,
+                        is_active=True,
+                    ).order_by("short_name_v2")
                 )
             if is_active_value:
                 is_active_field = form.base_fields["is_active"]
@@ -736,8 +776,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
             production_mode_field.queryset = LUT_ProductionMode.objects.filter(
                 rght=F("lft") + 1,
                 is_active=True,
-                translations__language_code=translation.get_language(),
-            ).order_by("translations__short_name")
+            ).order_by("short_name_v2")
         return form
 
     def get_urls(self):
@@ -771,11 +810,7 @@ class ProductAdmin(ImportExportMixin, TranslatableAdmin):
 
     def get_queryset(self, request):
         qs = super(ProductAdmin, self).get_queryset(request)
-        qs = qs.filter(
-            is_box=False,
-            producer__is_active=True,
-            # Important to also display untranslated products : translations__language_code=settings.LANGUAGE_CODE
-            translations__language_code=settings.LANGUAGE_CODE)
+        qs = qs.filter(is_box=False, producer__is_active=True)
         # ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs
 

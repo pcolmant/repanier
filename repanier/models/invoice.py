@@ -430,8 +430,10 @@ class CustomerInvoice(Invoice):
                                 permanence.with_delivery_point and self.delivery is None
                             ) or not self.has_purchase:
                                 btn_disabled = "disabled"
-                            msg_confirmation1 = '<span style="color: red; ">{}</span><br>'.format(
-                                _("⚠ Unconfirmed orders will be canceled.")
+                            msg_confirmation1 = (
+                                '<span style="color: red; ">{}</span><br>'.format(
+                                    _("⚠ Unconfirmed orders will be canceled.")
+                                )
                             )
                             msg_confirmation2 = '<span class="glyphicon glyphicon-floppy-disk"></span>&nbsp;&nbsp;{}'.format(
                                 _(
@@ -441,8 +443,10 @@ class CustomerInvoice(Invoice):
                     else:
                         href = reverse("repanier:order_view", args=(permanence.id,))
                         if self.status == PERMANENCE_OPENED:
-                            msg_confirmation1 = '<span style="color: red; ">{}</span><br>'.format(
-                                _("⚠ Unconfirmed orders will be canceled.")
+                            msg_confirmation1 = (
+                                '<span style="color: red; ">{}</span><br>'.format(
+                                    _("⚠ Unconfirmed orders will be canceled.")
+                                )
                             )
                             msg_confirmation2 = _(
                                 "➜ Go to the confirmation step of my order."

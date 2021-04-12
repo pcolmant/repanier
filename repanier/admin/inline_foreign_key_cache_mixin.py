@@ -8,14 +8,16 @@ class InlineForeignKeyCacheMixin(object):
     """
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        formfield = super(InlineForeignKeyCacheMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        formfield = super(InlineForeignKeyCacheMixin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
         cache_key = "repanier_field{}".format(db_field.name)
         cache_value = cache.get(cache_key)
         if cache_value is not None:
             formfield.choices = cache_value
         else:
             # Optimize to not execute the query on each row
-            choices = [(None, _('---------'))]
+            choices = [(None, _("---------"))]
             for obj in kwargs["queryset"]:
                 choices.append((obj.id, str(obj)))
             formfield.choices = choices

@@ -58,6 +58,19 @@ class Staff(MPTTModel, TranslatableModel):
             default=EMPTY_STRING,
         ),
     )
+    long_name_v2 = models.CharField(
+        _("Long name"),
+        max_length=100,
+        db_index=True,
+        blank=True,
+        default=EMPTY_STRING,
+    )
+    function_description_v2 = HTMLField(
+        _("Function description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        blank=True,
+        default=EMPTY_STRING,
+    )
 
     is_repanier_admin = models.BooleanField(_("Repanier administrator"), default=False)
     is_order_manager = models.BooleanField(

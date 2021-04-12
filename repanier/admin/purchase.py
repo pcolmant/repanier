@@ -8,7 +8,6 @@ from django.core.checks import messages
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 # from django.views.i18n import JavaScriptCatalog
@@ -16,7 +15,6 @@ from easy_select2 import Select2
 from import_export import resources, fields
 from import_export.admin import ExportMixin
 from import_export.formats.base_formats import CSV, XLSX
-
 from repanier.admin.admin_filter import (
     PurchaseFilterByProducerForThisPermanence,
     PurchaseFilterByCustomer,
@@ -201,14 +199,14 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     list_select_related = ("permanence", "customer")
     list_per_page = 16
     list_max_show_all = 16
-    ordering = ("customer", "offer_item__translations__order_sort_order")
+    ordering = ("customer", "offer_item__order_sort_order_v2")
     list_filter = (
         PurchaseFilterByPermanence,
         PurchaseFilterByProducerForThisPermanence,
         PurchaseFilterByCustomer,  # Do not limit to customer in this permanence
     )
     list_display_links = ("offer_item",)
-    search_fields = ("offer_item__translations__long_name",)
+    search_fields = ("offer_item__long_name_v2",)
     actions = []
 
     # change_list_template = 'admin/purchase_change_list.html'
@@ -230,20 +228,16 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                 .get_queryset(request)
                 .filter(
                     permanence=permanence_id,
-                    offer_item__translations__language_code=translation.get_language(),
                     is_box_content=False,
                 )
-                .distinct()
             )
         else:
             return (
                 super(PurchaseAdmin, self)
                 .get_queryset(request)
                 .filter(
-                    offer_item__translations__language_code=translation.get_language(),
                     is_box_content=False,
                 )
-                .distinct()
             )
 
     def has_delete_permission(self, request, purchase=None):
@@ -511,8 +505,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                     (o.id, str(o))
                     for o in OfferItemWoReceiver.objects.filter(
                         id=purchase.offer_item_id,
-                        translations__language_code=translation.get_language(),
-                    ).order_by("translations__long_name")
+                    ).order_by("long_name_v2")
                 ]
             else:
                 if permanence_id is not None:
@@ -528,8 +521,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
                         qs = Product.objects.filter(
                             producer__permanence=permanence_id,
                             is_into_offer=True,
-                            translations__language_code=translation.get_language(),
-                        ).order_by("translations__long_name")
+                        ).order_by("long_name_v2")
                         if self.producer_id is not None:
                             qs = qs.filter(producer_id=self.producer_id)
                         if customer_id is not None and purchased_product.exists():
@@ -608,9 +600,13 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
             purchase.offer_item = offer_item
             if status < PERMANENCE_SEND:
-                purchase.quantity_ordered = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+                purchase.quantity_ordered = form.cleaned_data.get(
+                    "quantity", DECIMAL_ZERO
+                )
             else:
-                purchase.quantity_invoiced = form.cleaned_data.get("quantity", DECIMAL_ZERO)
+                purchase.quantity_invoiced = form.cleaned_data.get(
+                    "quantity", DECIMAL_ZERO
+                )
 
             purchase.status = status
             purchase.producer = offer_item.producer
@@ -658,4 +654,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             #         get_repanier_static_name("js/is_order_confirm_send.js")
             #     )
             # )
-            js = ('admin/js/jquery.init.js', get_repanier_static_name("js/is_order_confirm_send.js"),)
+            js = (
+                "admin/js/jquery.init.js",
+                get_repanier_static_name("js/is_order_confirm_send.js"),
+            )

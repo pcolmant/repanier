@@ -12,7 +12,6 @@ from django.utils.translation import ugettext_lazy as _, get_language_info
 from easy_select2 import Select2
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
-
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import (
     DECIMAL_ZERO,
@@ -144,13 +143,11 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                     is_box=False,
                     # We can't make any composition with producer preparing baskets on basis of our order.
                     producer__invoice_by_basket=False,
-                    translations__language_code=settings.LANGUAGE_CODE,
                 )
                 .select_related("producer")
-                .prefetch_related("translations")
                 .order_by(
                     "producer__short_profile_name",
-                    "translations__long_name",
+                    "long_name_v2",
                     "order_average_weight",
                 )
             )
@@ -232,9 +229,9 @@ class BoxAdmin(TranslatableAdmin):
     ordering = (
         "customer_unit_price",
         "unit_deposit",
-        "translations__long_name",
+        "long_name_v2",
     )
-    search_fields = ("translations__long_name",)
+    search_fields = ("long_name_v2",)
     list_filter = ("is_into_offer", "is_active")
     actions = ["flip_flop_select_for_offer_status", "duplicate_box"]
 
@@ -417,7 +414,5 @@ class BoxAdmin(TranslatableAdmin):
         qs = super(BoxAdmin, self).get_queryset(request)
         qs = qs.filter(
             is_box=True,
-            # Important to also display untranslated boxes : translations__language_code=settings.LANGUAGE_CODE
-            translations__language_code=settings.LANGUAGE_CODE,
         )
         return qs

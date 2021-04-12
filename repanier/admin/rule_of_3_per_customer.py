@@ -2,7 +2,6 @@ from django import forms
 from django.contrib import admin
 from django.db import transaction
 from django.forms import BaseInlineFormSet
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 
@@ -98,11 +97,9 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
                 OfferItemSend.objects.filter(
                     producer_id=self.parent_object.producer_id,
                     permanence_id=self.parent_object.permanence_id,
-                    translations__language_code=translation.get_language(),
                 )
                 .select_related("producer")
-                .prefetch_related("translations")
-                .order_by("translations__preparation_sort_order")
+                .order_by("preparation_sort_order_v2")
                 .distinct()
             )
         return super(CustomerPurchaseSendInline, self).formfield_for_foreignkey(
@@ -111,14 +108,9 @@ class CustomerPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInline
 
     def get_queryset(self, request):
         qs = super(CustomerPurchaseSendInline, self).get_queryset(request)
-        return (
-            qs.filter(
-                is_box_content=False,
-                offer_item__translations__language_code=translation.get_language(),
-            )
-            .order_by("offer_item__translations__preparation_sort_order")
-            .distinct()
-        )
+        return qs.filter(
+            is_box_content=False,
+        ).order_by("offer_item__preparation_sort_order_v2")
 
 
 class CustomerSendForm(forms.ModelForm):

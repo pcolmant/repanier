@@ -1,6 +1,7 @@
 import logging
 import threading
 
+import repanier.apps
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -12,15 +13,9 @@ from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
-from django.utils import translation
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from parler.admin import TranslatableAdmin, TranslatableTabularInline
-from parler.forms import TranslatableModelForm
-from parler.utils.context import switch_language
-
-import repanier.apps
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
     CloseAndSendOrderForm,
@@ -63,9 +58,7 @@ class PermanenceInPreparationInlineMixin(InlineForeignKeyCacheMixin):
             if object_id:
                 # Update
                 parent_object = (
-                    PermanenceInPreparation.objects.filter(
-                        id=object_id
-                    )
+                    PermanenceInPreparation.objects.filter(id=object_id)
                     .only("status")
                     .first()
                 )
@@ -119,17 +112,17 @@ class PermanenceBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInl
         )
 
 
-class DeliveryBoardInline(PermanenceInPreparationInlineMixin, TranslatableTabularInline):
+class DeliveryBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInline):
     model = DeliveryBoard
     ordering = ("id",)
-    fields = ["delivery_comment", "delivery_point", "status"]
+    fields = ["delivery_comment_v2", "delivery_point", "status"]
     extra = 0
     readonly_fields = ["status"]
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super(DeliveryBoardInline, self).get_formset(request, obj, **kwargs)
         form = formset.form
-        widget = form.base_fields["delivery_comment"].widget
+        widget = form.base_fields["delivery_comment_v2"].widget
         widget.attrs["size"] = "100%"
         widget = form.base_fields["delivery_point"].widget
         widget.can_add_related = False
@@ -147,8 +140,8 @@ class DeliveryBoardInline(PermanenceInPreparationInlineMixin, TranslatableTabula
         )
 
 
-class PermanenceInPreparationForm(TranslatableModelForm):
-    short_name = forms.CharField(
+class PermanenceInPreparationForm(forms.ModelForm):
+    short_name_v2 = forms.CharField(
         label=_("Offer name"),
         widget=forms.TextInput(attrs={"style": "width:100% !important"}),
         required=False,
@@ -159,7 +152,7 @@ class PermanenceInPreparationForm(TranslatableModelForm):
         fields = "__all__"
 
 
-class PermanenceInPreparationAdmin(TranslatableAdmin):
+class PermanenceInPreparationAdmin(admin.ModelAdmin):
     form = PermanenceInPreparationForm
     change_list_url = reverse_lazy("admin:repanier_permanenceinpreparation_changelist")
 
@@ -202,8 +195,8 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         fields = [
             ("permanence_date", "picture"),
             "automatically_closed",
-            "short_name",
-            "offer_description",
+            "short_name_v2",
+            "offer_description_v2",
             "producers",
         ]
 
@@ -420,76 +413,60 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
 
         if email_will_be_sent:
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-                order_responsible = Staff.get_or_create_order_responsible()
+            order_responsible = Staff.get_or_create_order_responsible()
 
-                with switch_language(
-                    repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-                ):
-                    template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail
+            template = Template(
+                repanier.apps.REPANIER_SETTINGS_CONFIG.offer_customer_mail_v2
+            )
+            offer_description = permanence.offer_description_v2
+            offer_producer = ", ".join(
+                [p.short_profile_name for p in permanence.producers.all()]
+            )
+            qs = Product.objects.filter(
+                producer=permanence.producers.first(),
+                is_into_offer=True,
+                order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
+            ).order_by("long_name_v2")[:5]
+            offer_detail = "<ul>{}</ul>".format(
+                "".join(
+                    "<li>{}, {}</li>".format(
+                        p.get_long_name(), p.producer.short_profile_name
                     )
-                with switch_language(permanence, language_code):
-                    offer_description = permanence.safe_translation_getter(
-                        "offer_description", any_language=True, default=EMPTY_STRING
-                    )
-                offer_producer = ", ".join(
-                    [p.short_profile_name for p in permanence.producers.all()]
+                    for p in qs
                 )
-                qs = Product.objects.filter(
-                    producer=permanence.producers.first(),
-                    is_into_offer=True,
-                    order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
-                ).order_by("translations__long_name")[:5]
-                offer_detail = "<ul>{}</ul>".format(
-                    "".join(
-                        "<li>{}, {}</li>".format(
-                            p.get_long_name(), p.producer.short_profile_name
-                        )
-                        for p in qs
-                    )
+            )
+            context = TemplateContext(
+                {
+                    "offer_description": mark_safe(offer_description),
+                    "offer_detail": offer_detail,
+                    "offer_recent_detail": offer_detail,
+                    "offer_producer": offer_producer,
+                    "permanence_link": mark_safe(
+                        '<a href="#">{}</a>'.format(permanence)
+                    ),
+                    "signature": order_responsible["html_signature"],
+                }
+            )
+            template_offer_mail.append(template.render(context))
+
+            if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.cancel_order_customer_mail_v2
                 )
+
                 context = TemplateContext(
                     {
-                        "offer_description": mark_safe(offer_description),
-                        "offer_detail": offer_detail,
-                        "offer_recent_detail": offer_detail,
-                        "offer_producer": offer_producer,
+                        "name": _("Long name"),
+                        "long_basket_name": _("Long name"),
+                        "basket_name": _("Short name"),
+                        "short_basket_name": _("Short name"),
                         "permanence_link": mark_safe(
                             '<a href="#">{}</a>'.format(permanence)
                         ),
                         "signature": order_responsible["html_signature"],
                     }
                 )
-                template_offer_mail.append(language_code)
-                template_offer_mail.append(template.render(context))
-
-                if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
-                    with switch_language(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-                    ):
-                        template = Template(
-                            repanier.apps.REPANIER_SETTINGS_CONFIG.cancel_order_customer_mail
-                        )
-
-                    context = TemplateContext(
-                        {
-                            "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
-                            "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
-                            "permanence_link": mark_safe(
-                                '<a href="#">{}</a>'.format(permanence)
-                            ),
-                            "signature": order_responsible["html_signature"],
-                        }
-                    )
-                    template_cancel_order_mail.append(language_code)
-                    template_cancel_order_mail.append(template.render(context))
-            translation.activate(cur_language)
+                template_cancel_order_mail.append(template.render(context))
 
         form = OpenAndSendOfferForm(
             initial={
@@ -556,130 +533,125 @@ class PermanenceInPreparationAdmin(TranslatableAdmin):
         template_order_producer_mail = []
         template_order_staff_mail = []
         email_will_be_sent, email_will_be_sent_to = RepanierEmail.send_email_to_who()
-        order_customer_email_will_be_sent, order_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
-            is_email_send=True
-        )
-        order_producer_email_will_be_sent, order_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
-            is_email_send=True
-        )
-        order_board_email_will_be_sent, order_board_email_will_be_sent_to = RepanierEmail.send_email_to_who(
+        (
+            order_customer_email_will_be_sent,
+            order_customer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(is_email_send=True)
+        (
+            order_producer_email_will_be_sent,
+            order_producer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(is_email_send=True)
+        (
+            order_board_email_will_be_sent,
+            order_board_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_ORDER_MAIL_TO_BOARD,
             board=True,
         )
 
         if email_will_be_sent:
 
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
+            order_responsible = Staff.get_or_create_order_responsible()
 
-                order_responsible = Staff.get_or_create_order_responsible()
+            if order_customer_email_will_be_sent:
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail_v2
+                )
 
-                if order_customer_email_will_be_sent:
-                    template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_customer_mail
-                    )
+                customer_last_balance = _(
+                    "The balance of your account as of %(date)s is %(balance)s."
+                ) % {
+                    "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
+                    "balance": RepanierMoney(123.45),
+                }
+                customer_on_hold_movement = _(
+                    "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
+                ) % {
+                    "bank": RepanierMoney(123.45),
+                    "other_order": RepanierMoney(123.45),
+                }
 
-                    customer_last_balance = _(
-                        "The balance of your account as of %(date)s is %(balance)s."
-                    ) % {
-                        "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
-                        "balance": RepanierMoney(123.45),
-                    }
-                    customer_on_hold_movement = _(
-                        "This balance does not take account of any unrecognized payments %(bank)s and any unbilled order %(other_order)s."
-                    ) % {
-                        "bank": RepanierMoney(123.45),
-                        "other_order": RepanierMoney(123.45),
-                    }
+                bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
+                if bank_account_number is not None:
+                    group_name = settings.REPANIER_SETTINGS_GROUP_NAME
 
-                    bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
-                    if bank_account_number is not None:
-                        group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-
-                        if permanence.short_name:
-                            communication = "{} ({})".format(
-                                _("Short name"), permanence.short_name
-                            )
-                        else:
-                            communication = _("Short name")
-                        customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
-                            _(
-                                "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
-                            )
-                            % {
-                                "payment": RepanierMoney(123.45),
-                                "name": group_name,
-                                "number": bank_account_number,
-                                "communication": communication,
-                            }
+                    if permanence.short_name_v2:
+                        communication = "{} ({})".format(
+                            _("Short name"), permanence.short_name_v2
                         )
                     else:
-                        customer_payment_needed = EMPTY_STRING
-                    context = TemplateContext(
-                        {
-                            "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
-                            "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
-                            "permanence_link": mark_safe(
-                                '<a href="#">{}</a>'.format(permanence)
-                            ),
-                            "last_balance": mark_safe(
-                                '<a href="#">{}</a>'.format(customer_last_balance)
-                            ),
-                            "order_amount": RepanierMoney(123.45),
-                            "on_hold_movement": mark_safe(customer_on_hold_movement),
-                            "payment_needed": mark_safe(customer_payment_needed),
-                            "delivery_point": _("Delivery point").upper(),
-                            "signature": order_responsible["html_signature"],
+                        communication = _("Short name")
+                    customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
+                        _(
+                            "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
+                        )
+                        % {
+                            "payment": RepanierMoney(123.45),
+                            "name": group_name,
+                            "number": bank_account_number,
+                            "communication": communication,
                         }
                     )
+                else:
+                    customer_payment_needed = EMPTY_STRING
+                context = TemplateContext(
+                    {
+                        "name": _("Long name"),
+                        "long_basket_name": _("Long name"),
+                        "basket_name": _("Short name"),
+                        "short_basket_name": _("Short name"),
+                        "permanence_link": mark_safe(
+                            '<a href="#">{}</a>'.format(permanence)
+                        ),
+                        "last_balance": mark_safe(
+                            '<a href="#">{}</a>'.format(customer_last_balance)
+                        ),
+                        "order_amount": RepanierMoney(123.45),
+                        "on_hold_movement": mark_safe(customer_on_hold_movement),
+                        "payment_needed": mark_safe(customer_payment_needed),
+                        "delivery_point": _("Delivery point").upper(),
+                        "signature": order_responsible["html_signature"],
+                    }
+                )
 
-                    template_order_customer_mail.append(language_code)
-                    template_order_customer_mail.append(template.render(context))
+                template_order_customer_mail.append(template.render(context))
 
-                if order_producer_email_will_be_sent:
-                    template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_producer_mail
-                    )
-                    context = TemplateContext(
-                        {
-                            "name": _("Long name"),
-                            "long_profile_name": _("Long name"),
-                            "order_empty": False,
-                            "duplicate": True,
-                            "permanence_link": format_html(
-                                '<a href="#">{}</a>', permanence
-                            ),
-                            "signature": order_responsible["html_signature"],
-                        }
-                    )
+            if order_producer_email_will_be_sent:
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.order_producer_mail_v2
+                )
+                context = TemplateContext(
+                    {
+                        "name": _("Long name"),
+                        "long_profile_name": _("Long name"),
+                        "order_empty": False,
+                        "duplicate": True,
+                        "permanence_link": format_html(
+                            '<a href="#">{}</a>', permanence
+                        ),
+                        "signature": order_responsible["html_signature"],
+                    }
+                )
 
-                    template_order_producer_mail.append(language_code)
-                    template_order_producer_mail.append(template.render(context))
+                template_order_producer_mail.append(template.render(context))
 
-                if order_board_email_will_be_sent:
-                    board_composition = permanence.get_html_board_composition()
-                    template = Template(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail
-                    )
-                    context = TemplateContext(
-                        {
-                            "permanence_link": format_html(
-                                '<a href="#">{}</a>', permanence
-                            ),
-                            "board_composition": board_composition,
-                            "board_composition_and_description": board_composition,
-                            "signature": order_responsible["html_signature"],
-                        }
-                    )
+            if order_board_email_will_be_sent:
+                board_composition = permanence.get_html_board_composition()
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.order_staff_mail_v2
+                )
+                context = TemplateContext(
+                    {
+                        "permanence_link": format_html(
+                            '<a href="#">{}</a>', permanence
+                        ),
+                        "board_composition": board_composition,
+                        "board_composition_and_description": board_composition,
+                        "signature": order_responsible["html_signature"],
+                    }
+                )
 
-                    template_order_staff_mail.append(language_code)
-                    template_order_staff_mail.append(template.render(context))
-
-            translation.activate(cur_language)
+                template_order_staff_mail.append(template.render(context))
 
         form = CloseAndSendOrderForm(
             initial={

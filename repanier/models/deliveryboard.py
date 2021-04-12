@@ -19,6 +19,9 @@ class DeliveryBoard(TranslatableModel):
             _("Comment"), max_length=50, blank=True, default=EMPTY_STRING
         )
     )
+    delivery_comment_v2 = models.CharField(
+        _("Comment"), max_length=50, blank=True, default=EMPTY_STRING
+    )
 
     delivery_point = models.ForeignKey(
         "LUT_DeliveryPoint",

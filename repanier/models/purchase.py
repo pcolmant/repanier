@@ -149,9 +149,8 @@ class Purchase(models.Model):
         self.price_list_multiplier = DECIMAL_ONE
         self.is_resale_price_fixed = self.offer_item.is_resale_price_fixed
         if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-            if (
-                not self.is_resale_price_fixed
-                and not (self.offer_item.price_list_multiplier < DECIMAL_ONE)
+            if not self.is_resale_price_fixed and not (
+                self.offer_item.price_list_multiplier < DECIMAL_ONE
             ):
                 self.price_list_multiplier = self.customer.price_list_multiplier
 

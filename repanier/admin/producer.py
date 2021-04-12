@@ -323,9 +323,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def export_stock(self, request):
         wb = export_producer_stock(
-            producers=Producer.objects.all().order_by(
-                "short_profile_name"
-            ),
+            producers=Producer.objects.all().order_by("short_profile_name"),
             wb=None,
         )
         if wb is not None:

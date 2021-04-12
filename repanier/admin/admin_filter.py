@@ -77,9 +77,7 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
 
         return [
             (d.id, d.short_name)
-            for d in LUT_DepartmentForCustomer.objects.filter(
-                product__in=inner_qs
-            ).prefetch_related("translations")
+            for d in LUT_DepartmentForCustomer.objects.filter(product__in=inner_qs)
         ]
 
     def queryset(self, request, queryset):

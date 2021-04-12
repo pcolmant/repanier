@@ -43,6 +43,15 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
             default=EMPTY_STRING,
         ),
     )
+    short_name_v2 = models.CharField(
+        _("Short name"), max_length=50, default=EMPTY_STRING
+    )
+    description_v2 = HTMLField(
+        _("Description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        blank=True,
+        default=EMPTY_STRING,
+    )
     picture2 = RepanierPictureField(
         verbose_name=_("Picture"),
         null=True,
@@ -94,6 +103,15 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
             blank=True,
             default=EMPTY_STRING,
         ),
+    )
+    short_name_v2 = models.CharField(
+        _("Short name"), max_length=50, default=EMPTY_STRING
+    )
+    description_v2 = HTMLField(
+        _("Description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        blank=True,
+        default=EMPTY_STRING,
     )
     is_active = models.BooleanField(_("Active"), default=True)
     # A delivery point may have a customer who is responsible to pay
@@ -179,6 +197,15 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
             default=EMPTY_STRING,
         ),
     )
+    short_name_v2 = models.CharField(
+        _("Short name"), max_length=50, default=EMPTY_STRING
+    )
+    description_v2 = HTMLField(
+        _("Description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        blank=True,
+        default=EMPTY_STRING,
+    )
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
@@ -220,6 +247,15 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
             blank=True,
             default=EMPTY_STRING,
         ),
+    )
+    short_name_v2 = models.CharField(
+        _("Short name"), max_length=50, default=EMPTY_STRING
+    )
+    description_v2 = HTMLField(
+        _("Description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        blank=True,
+        default=EMPTY_STRING,
     )
 
     is_counted_as_participation = models.BooleanField(

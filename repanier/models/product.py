@@ -14,6 +14,12 @@ from repanier.tools import clean_offer_item
 class Product(Item):
     long_name = TranslatedField()
     offer_description = TranslatedField()
+    long_name_v2 = models.CharField(
+        _("Long name"), max_length=100, default=EMPTY_STRING
+    )
+    offer_description_v2 = HTMLField(
+        _("Offer_description"), configuration="CKEDITOR_SETTINGS_MODEL2", blank=True
+    )
     production_mode = models.ManyToManyField(
         "LUT_ProductionMode", verbose_name=_("Production mode"), blank=True
     )

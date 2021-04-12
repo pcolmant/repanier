@@ -15,7 +15,6 @@ from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
-
 from repanier.const import *
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -65,6 +64,25 @@ class Permanence(TranslatableModel):
             blank=True,
             default=EMPTY_STRING,
         ),
+    )
+    short_name_v2 = models.CharField(_("Offer name"), max_length=50, blank=True)
+    offer_description_v2 = HTMLField(
+        _("Offer description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        help_text=_(
+            "This message is send by mail to all customers when opening the order or on top."
+        ),
+        blank=True,
+        default=EMPTY_STRING,
+    )
+    invoice_description_v2 = HTMLField(
+        _("Invoice description"),
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        help_text=_(
+            "This message is send by mail to all customers having bought something when closing the permanence."
+        ),
+        blank=True,
+        default=EMPTY_STRING,
     )
 
     status = models.CharField(
@@ -170,13 +188,9 @@ class Permanence(TranslatableModel):
 
             link = []
             for p in self.producers.all().only("id"):
-                pi = (
-                    ProducerInvoice.objects.filter(
-                        producer_id=p.id, permanence_id=self.id
-                    )
-                    
-                    .first()
-                )
+                pi = ProducerInvoice.objects.filter(
+                    producer_id=p.id, permanence_id=self.id
+                ).first()
                 if pi is not None:
                     if pi.status == PERMANENCE_OPENED:
                         label = (
@@ -601,10 +615,8 @@ class Permanence(TranslatableModel):
             raise ValueError
 
         if self.with_delivery_point:
-            qs = (
-                DeliveryBoard.objects.filter(permanence_id=self.id)
-                .exclude(status=new_status)
-                
+            qs = DeliveryBoard.objects.filter(permanence_id=self.id).exclude(
+                status=new_status
             )
             if not everything:
                 qs = qs.filter(id__in=deliveries_id)
@@ -679,26 +691,18 @@ class Permanence(TranslatableModel):
                 REPANIER_SETTINGS_MEMBERSHIP_FEE_DURATION > 0
                 and REPANIER_SETTINGS_MEMBERSHIP_FEE > 0
             ):
-                membership_fee_product = (
-                    Product.objects.filter(
-                        order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, is_active=True
-                    )
-                    
-                    .first()
-                )
+                membership_fee_product = Product.objects.filter(
+                    order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE, is_active=True
+                ).first()
                 membership_fee_product.producer_unit_price = (
                     REPANIER_SETTINGS_MEMBERSHIP_FEE
                 )
                 # Update the prices
                 membership_fee_product.save()
 
-                customer_invoice_qs = (
-                    CustomerInvoice.objects.filter(
-                        permanence_id=self.id, customer_charged_id=F("customer_id")
-                    )
-                    .select_related("customer")
-                    
-                )
+                customer_invoice_qs = CustomerInvoice.objects.filter(
+                    permanence_id=self.id, customer_charged_id=F("customer_id")
+                ).select_related("customer")
                 if self.with_delivery_point:
                     customer_invoice_qs = customer_invoice_qs.filter(
                         delivery_id__in=deliveries_id
@@ -709,8 +713,8 @@ class Permanence(TranslatableModel):
                     if not customer.represent_this_buyinggroup:
                         # Should pay a membership fee
                         if customer.membership_fee_valid_until < self.permanence_date:
-                            membership_fee_offer_item = membership_fee_product.get_or_create_offer_item(
-                                self
+                            membership_fee_offer_item = (
+                                membership_fee_product.get_or_create_offer_item(self)
                             )
                             self.producers.add(membership_fee_offer_item.producer_id)
                             create_or_update_one_purchase(
@@ -826,13 +830,9 @@ class Permanence(TranslatableModel):
             customer_buyinggroup, payment_date, PERMANENCE_WAIT_FOR_INVOICED
         )
 
-        permanence_partially_invoiced = (
-            ProducerInvoice.objects.filter(
-                permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=False
-            )
-            
-            .exists()
-        )
+        permanence_partially_invoiced = ProducerInvoice.objects.filter(
+            permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=False
+        ).exists()
         if permanence_partially_invoiced:
             # Move the producers not invoiced into a new permanence
             producers_to_keep = list(
@@ -840,9 +840,7 @@ class Permanence(TranslatableModel):
                     permanence_id=self.id,
                     invoice_sort_order__isnull=True,
                     to_be_paid=True,
-                )
-                .values_list("producer_id", flat=True)
-                
+                ).values_list("producer_id", flat=True)
             )
             self.producers.clear()
             self.producers.add(*producers_to_keep)
@@ -851,24 +849,18 @@ class Permanence(TranslatableModel):
                     permanence_id=self.id,
                     invoice_sort_order__isnull=True,
                     to_be_paid=False,
-                )
-                .values_list("producer_id", flat=True)
-                
+                ).values_list("producer_id", flat=True)
             )
             customers_to_move = list(
                 CustomerProducerInvoice.objects.filter(
                     permanence_id=self.id, producer_id__in=producers_to_move
-                )
-                
-                .values_list("customer_id", flat=True)
+                ).values_list("customer_id", flat=True)
             )
             new_permanence = self.create_child(PERMANENCE_SEND)
             new_permanence.producers.add(*producers_to_move)
             ProducerInvoice.objects.filter(
                 permanence_id=self.id, producer_id__in=producers_to_move
-            ).update(
-                permanence_id=new_permanence.id, status=PERMANENCE_SEND
-            )
+            ).update(permanence_id=new_permanence.id, status=PERMANENCE_SEND)
             CustomerProducerInvoice.objects.filter(
                 permanence_id=self.id,
                 producer_id__in=producers_to_move
@@ -901,18 +893,14 @@ class Permanence(TranslatableModel):
             new_permanence.recalculate_order_amount(re_init=True)
             new_permanence.save()
 
-        for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id
-        ):
+        for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
             customer_invoice.calculate_order_price()
             customer_invoice.save()
 
         self.recalculate_order_amount(re_init=True)
         self.save()
 
-        for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id
-        ):
+        for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
             customer_invoice.balance = (
                 customer_invoice.previous_balance
             ) = customer_invoice.customer.balance
@@ -943,9 +931,7 @@ class Permanence(TranslatableModel):
                 ).update(date_balance=payment_date)
             customer_invoice.save()
 
-        for producer_invoice in ProducerInvoice.objects.filter(
-            permanence_id=self.id
-        ):
+        for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
             producer_invoice.balance = (
                 producer_invoice.previous_balance
             ) = producer_invoice.producer.balance
@@ -963,40 +949,36 @@ class Permanence(TranslatableModel):
             )
             producer_invoice.save()
 
-        result_set = (
-            PurchaseWoReceiver.objects.filter(
-                permanence_id=self.id,
-                is_box_content=False,
-                offer_item__price_list_multiplier__gte=DECIMAL_ONE,
-                producer__represent_this_buyinggroup=False,
-            )
-            
-            .aggregate(
-                purchase_price=Sum(
-                    "purchase_price",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
+        result_set = PurchaseWoReceiver.objects.filter(
+            permanence_id=self.id,
+            is_box_content=False,
+            offer_item__price_list_multiplier__gte=DECIMAL_ONE,
+            producer__represent_this_buyinggroup=False,
+        ).aggregate(
+            purchase_price=Sum(
+                "purchase_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                 ),
-                selling_price=Sum(
-                    "selling_price",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=2, default=DECIMAL_ZERO
-                    ),
+            ),
+            selling_price=Sum(
+                "selling_price",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=2, default=DECIMAL_ZERO
                 ),
-                producer_vat=Sum(
-                    "producer_vat",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                    ),
+            ),
+            producer_vat=Sum(
+                "producer_vat",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=4, default=DECIMAL_ZERO
                 ),
-                customer_vat=Sum(
-                    "customer_vat",
-                    output_field=DecimalField(
-                        max_digits=8, decimal_places=4, default=DECIMAL_ZERO
-                    ),
+            ),
+            customer_vat=Sum(
+                "customer_vat",
+                output_field=DecimalField(
+                    max_digits=8, decimal_places=4, default=DECIMAL_ZERO
                 ),
-            )
+            ),
         )
 
         total_purchase_price_with_tax = (
@@ -1068,11 +1050,9 @@ class Permanence(TranslatableModel):
                 producer_invoice=None,
             )
 
-        for customer_invoice in (
-            CustomerInvoice.objects.filter(permanence_id=self.id)
-            .exclude(customer_id=customer_buyinggroup.id, delta_transport=DECIMAL_ZERO)
-            
-        ):
+        for customer_invoice in CustomerInvoice.objects.filter(
+            permanence_id=self.id
+        ).exclude(customer_id=customer_buyinggroup.id, delta_transport=DECIMAL_ZERO):
             if customer_invoice.delta_transport != DECIMAL_ZERO:
                 # --> This bank movement is not a real entry
                 # customer_invoice_id=customer_invoice_buyinggroup.id
@@ -1102,16 +1082,12 @@ class Permanence(TranslatableModel):
         )
 
         # Calculate new current balance : Bank
-        for bank_account in (
-            BankAccount.objects.select_for_update()
-            .filter(
-                customer_invoice__isnull=True,
-                producer_invoice__isnull=True,
-                operation_status__in=[BANK_PROFIT, BANK_TAX],
-                customer_id=customer_buyinggroup.id,
-                operation_date__lte=payment_date,
-            )
-            
+        for bank_account in BankAccount.objects.select_for_update().filter(
+            customer_invoice__isnull=True,
+            producer_invoice__isnull=True,
+            operation_status__in=[BANK_PROFIT, BANK_TAX],
+            customer_id=customer_buyinggroup.id,
+            operation_date__lte=payment_date,
         ):
             # --> This bank movement is not a real entry
             # It will not be counted into the customer_buyinggroup bank movements twice
@@ -1132,24 +1108,16 @@ class Permanence(TranslatableModel):
             bank_account.customer_invoice_id = customer_invoice_buyinggroup.id
             bank_account.save(update_fields=["customer_invoice"])
 
-        for bank_account in (
-            BankAccount.objects.select_for_update()
-            .filter(
-                customer_invoice__isnull=True,
-                producer_invoice__isnull=True,
-                customer__isnull=False,
-                operation_date__lte=payment_date,
-            )
-            
+        for bank_account in BankAccount.objects.select_for_update().filter(
+            customer_invoice__isnull=True,
+            producer_invoice__isnull=True,
+            customer__isnull=False,
+            operation_date__lte=payment_date,
         ):
 
-            customer_invoice = (
-                CustomerInvoice.objects.filter(
-                    customer_id=bank_account.customer_id, permanence_id=self.id
-                )
-                
-                .first()
-            )
+            customer_invoice = CustomerInvoice.objects.filter(
+                customer_id=bank_account.customer_id, permanence_id=self.id
+            ).first()
             if customer_invoice is None:
                 customer_invoice = CustomerInvoice.objects.create(
                     customer_id=bank_account.customer_id,
@@ -1180,24 +1148,16 @@ class Permanence(TranslatableModel):
             bank_account.permanence_id = self.id
             bank_account.save()
 
-        for bank_account in (
-            BankAccount.objects.select_for_update()
-            .filter(
-                customer_invoice__isnull=True,
-                producer_invoice__isnull=True,
-                producer__isnull=False,
-                operation_date__lte=payment_date,
-            )
-            
+        for bank_account in BankAccount.objects.select_for_update().filter(
+            customer_invoice__isnull=True,
+            producer_invoice__isnull=True,
+            producer__isnull=False,
+            operation_date__lte=payment_date,
         ):
 
-            producer_invoice = (
-                ProducerInvoice.objects.filter(
-                    producer_id=bank_account.producer_id, permanence_id=self.id
-                )
-                
-                .first()
-            )
+            producer_invoice = ProducerInvoice.objects.filter(
+                producer_id=bank_account.producer_id, permanence_id=self.id
+            ).first()
             if producer_invoice is None:
                 producer_invoice = ProducerInvoice.objects.create(
                     producer=bank_account.producer,
@@ -1268,13 +1228,9 @@ class Permanence(TranslatableModel):
         )
 
     def get_or_create_group_invoice(self, customer_buyinggroup, payment_date, status):
-        customer_invoice_buyinggroup = (
-            CustomerInvoice.objects.filter(
-                customer_id=customer_buyinggroup.id, permanence_id=self.id
-            )
-            
-            .first()
-        )
+        customer_invoice_buyinggroup = CustomerInvoice.objects.filter(
+            customer_id=customer_buyinggroup.id, permanence_id=self.id
+        ).first()
         if customer_invoice_buyinggroup is None:
             customer_invoice_buyinggroup = CustomerInvoice.objects.create(
                 permanence_id=self.id,
@@ -1304,9 +1260,7 @@ class Permanence(TranslatableModel):
             date_balance=F("date_previous_balance"),
             invoice_sort_order=None,
         )
-        for customer_invoice in CustomerInvoice.objects.filter(
-            permanence_id=self.id
-        ):
+        for customer_invoice in CustomerInvoice.objects.filter(permanence_id=self.id):
             # customer = customer_invoice.customer
             # customer.balance = customer_invoice.previous_balance
             # customer.date_balance = customer_invoice.date_previous_balance
@@ -1318,9 +1272,9 @@ class Permanence(TranslatableModel):
                 balance=customer_invoice.previous_balance,
                 date_balance=customer_invoice.date_previous_balance,
             )
-            BankAccount.objects.filter(
-                customer_invoice_id=customer_invoice.id
-            ).update(customer_invoice=None)
+            BankAccount.objects.filter(customer_invoice_id=customer_invoice.id).update(
+                customer_invoice=None
+            )
         ProducerInvoice.objects.filter(
             permanence_id=self.id, producer__represent_this_buyinggroup=False
         ).update(
@@ -1351,9 +1305,7 @@ class Permanence(TranslatableModel):
             invoice_sort_order=None,
         )
 
-        for producer_invoice in ProducerInvoice.objects.filter(
-            permanence_id=self.id
-        ):
+        for producer_invoice in ProducerInvoice.objects.filter(permanence_id=self.id):
             Producer.objects.filter(id=producer_invoice.producer_id).order_by(
                 "?"
             ).update(
@@ -1441,20 +1393,14 @@ class Permanence(TranslatableModel):
     def check_if_same_exists(self, date, short_name, cur_language):
         if short_name != EMPTY_STRING:
             # Mandatory because of Parler
-            same_exists = (
-                Permanence.objects.filter(
-                    permanence_date=date,
-                    translations__language_code=cur_language,
-                    translations__short_name=short_name,
-                )
-                
-                .exists()
-            )
+            same_exists = Permanence.objects.filter(
+                permanence_date=date,
+                translations__language_code=cur_language,
+                translations__short_name=short_name,
+            ).exists()
         else:
             same_exists = False
-            for existing_permanence in Permanence.objects.filter(
-                permanence_date=date
-            ):
+            for existing_permanence in Permanence.objects.filter(permanence_date=date):
                 try:
                     short_name = existing_permanence.short_name
                     same_exists = short_name == EMPTY_STRING
@@ -1505,9 +1451,7 @@ class Permanence(TranslatableModel):
             translation.activate(cur_language)
 
     def duplicate_permanence_board(self, new_permanence):
-        for permanence_board in PermanenceBoard.objects.filter(
-            permanence=self
-        ):
+        for permanence_board in PermanenceBoard.objects.filter(permanence=self):
             PermanenceBoard.objects.create(
                 permanence=new_permanence,
                 permanence_date=new_permanence.permanence_date,
@@ -1515,9 +1459,7 @@ class Permanence(TranslatableModel):
             )
 
     def duplicate_permanence_board_and_registration(self, new_permanence):
-        for permanence_board in PermanenceBoard.objects.filter(
-            permanence=self
-        ):
+        for permanence_board in PermanenceBoard.objects.filter(permanence=self):
             PermanenceBoard.objects.create(
                 permanence=new_permanence,
                 permanence_date=new_permanence.permanence_date,
@@ -1528,13 +1470,9 @@ class Permanence(TranslatableModel):
 
     def generate_bank_account_movement(self, payment_date):
 
-        for producer_invoice in (
-            ProducerInvoice.objects.filter(
-                permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=True
-            )
-            
-            .select_related("producer")
-        ):
+        for producer_invoice in ProducerInvoice.objects.filter(
+            permanence_id=self.id, invoice_sort_order__isnull=True, to_be_paid=True
+        ).select_related("producer"):
             # We have to pay something
             producer = producer_invoice.producer
             bank_not_invoiced = producer.get_bank_not_invoiced()
@@ -1704,9 +1642,7 @@ class Permanence(TranslatableModel):
                     order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
                     permanence_id=self.id,
                     producer=a_producer,
-                )
-                .values_list("product", flat=True)
-                
+                ).values_list("product", flat=True)
             )
             six_months_ago = timezone.now().date() - datetime.timedelta(days=6 * 30)
             previous_permanence = (
@@ -1726,9 +1662,7 @@ class Permanence(TranslatableModel):
                         order_unit__lt=PRODUCT_ORDER_UNIT_DEPOSIT,  # Don't display technical products.
                         permanence_id=previous_permanence.id,
                         producer=a_producer,
-                    )
-                    .values_list("product", flat=True)
-                    
+                    ).values_list("product", flat=True)
                 )
                 new_products = [
                     item for item in current_products if item not in previous_products

@@ -1,37 +1,9 @@
-from django.conf import settings
-from django.utils.translation import ugettext_lazy as _, get_language_info
+from django.utils.translation import ugettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
-from parler.admin import TranslatableAdmin
-from parler.forms import TranslatableModelForm
-
 from repanier.const import ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
 
 
-class LUTDataForm(TranslatableModelForm):
-    def __init__(self, *args, **kwargs):
-        super(LUTDataForm, self).__init__(*args, **kwargs)
-
-    def clean(self):
-        if any(self.errors):
-            # Don't bother validating the formset unless each form is valid on its own
-            return
-
-        if self.instance.id is None:
-            if self.language_code != settings.LANGUAGE_CODE:
-                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
-                self.add_error(
-                    "short_name",
-                    _("Please define first a short_name in %(language)s")
-                    % {
-                        "language": get_language_info(settings.LANGUAGE_CODE)[
-                            "name_local"
-                        ]
-                    },
-                )
-
-
-class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
-    form = LUTDataForm
+class LUTAdmin(DjangoMpttAdmin):
     list_display = ("__str__", "is_active")
     list_display_links = ("__str__",)
     mptt_level_indent = 20
@@ -89,10 +61,6 @@ class LUTAdmin(TranslatableAdmin, DjangoMpttAdmin):
 
     def get_queryset(self, request):
         qs = super(LUTAdmin, self).get_queryset(request)
-        qs = qs.filter(
-            # Important to also display untranslated items : translations__language_code=settings.LANGUAGE_CODE
-            translations__language_code=settings.LANGUAGE_CODE
-        )
         return qs
 
 
@@ -100,7 +68,7 @@ class LUTProductionModeAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):
-        fields = ["parent", "short_name", "picture2", "is_active"]
+        fields = ["parent", "short_name_v2", "picture2", "is_active"]
         return fields
 
 
@@ -108,7 +76,7 @@ class LUTDeliveryPointAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):
-        fields = ["short_name", "is_active", ("transport", "min_transport")]
+        fields = ["short_name_v2", "is_active", ("transport", "min_transport")]
         return fields
 
     def get_queryset(self, request):
@@ -125,7 +93,7 @@ class LUTDepartmentForCustomerAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
 
     def get_fields(self, request, obj=None):
-        fields = ["parent", "short_name", "is_active"]
+        fields = ["parent", "short_name_v2", "is_active"]
         return fields
 
 
@@ -134,10 +102,10 @@ class LUTPermanenceRoleAdmin(LUTAdmin):
 
     def get_fields(self, request, obj=None):
         fields = [
-            "short_name",
+            "short_name_v2",
             "customers_may_register",
             "is_counted_as_participation",
-            "description",
+            "description_v2",
             "is_active",
         ]
         return fields

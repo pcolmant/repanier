@@ -1,8 +1,6 @@
 from django import forms
-from django.conf import settings
-from django.utils.translation import ugettext_lazy as _, get_language_info
+from django.utils.translation import ugettext_lazy as _
 from easy_select2 import apply_select2
-from parler.forms import TranslatableModelForm
 
 from repanier.auth_backend import RepanierAuthBackend
 from repanier.const import ONE_LEVEL_DEPTH
@@ -11,7 +9,7 @@ from repanier.models.staff import Staff
 from .lut import LUTAdmin
 
 
-class UserDataForm(TranslatableModelForm):
+class UserDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UserDataForm, self).__init__(*args, **kwargs)
 
@@ -20,18 +18,18 @@ class UserDataForm(TranslatableModelForm):
             # Don't bother validating the formset unless each form is valid on its own
             return
 
-        if self.instance.id is None:
-            if self.language_code != settings.LANGUAGE_CODE:
-                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
-                self.add_error(
-                    "long_name",
-                    _("Please define first a long_name in %(language)s")
-                    % {
-                        "language": get_language_info(settings.LANGUAGE_CODE)[
-                            "name_local"
-                        ]
-                    },
-                )
+        # if self.instance.id is None:
+        #     if self.language_code != settings.LANGUAGE_CODE:
+        #         # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+        #         self.add_error(
+        #             "long_name",
+        #             _("Please define first a long_name in %(language)s")
+        #             % {
+        #                 "language": get_language_info(settings.LANGUAGE_CODE)[
+        #                     "name_local"
+        #                 ]
+        #             },
+        #         )
 
         is_active = self.cleaned_data.get("is_active", False)
         is_repanier_admin = self.cleaned_data.get("is_repanier_admin", False)
@@ -96,7 +94,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
 
     def get_fields(self, request, obj=None):
         fields = [
-            "long_name",
+            "long_name_v2",
             "customer_responsible",
             "can_be_contacted",
             "is_repanier_admin",

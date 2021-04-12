@@ -9,7 +9,6 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
-
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 
@@ -172,6 +171,72 @@ class Configuration(TranslatableModel):
             default=EMPTY_STRING,
             blank=True,
         ),
+    )
+    group_label_v2 = models.CharField(
+        _("Label to mention on the invoices of the group"),
+        max_length=100,
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    how_to_register_v2 = HTMLField(
+        _("How to register"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    offer_customer_mail_v2 = HTMLField(
+        _("Contents of the order opening email sent to consumers authorized to order"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    order_customer_mail_v2 = HTMLField(
+        _("Content of the order confirmation email sent to the consumers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    cancel_order_customer_mail_v2 = HTMLField(
+        _(
+            "Content of the email in case of cancellation of the order sent to the consumers concerned"
+        ),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    order_staff_mail_v2 = HTMLField(
+        _(
+            "Content of the order distribution email sent to the members enrolled to a task"
+        ),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    order_producer_mail_v2 = HTMLField(
+        _("Content of the order confirmation email sent to the producers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    invoice_customer_mail_v2 = HTMLField(
+        _("Content of the invoice confirmation email sent to the customers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
+    )
+    invoice_producer_mail_v2 = HTMLField(
+        _("Content of the payment confirmation email sent to the producers concerned"),
+        help_text=EMPTY_STRING,
+        configuration="CKEDITOR_SETTINGS_MODEL2",
+        default=EMPTY_STRING,
+        blank=True,
     )
 
     def clean(self):

@@ -1,6 +1,7 @@
 import logging
 import threading
 
+import repanier.apps
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -10,15 +11,10 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.template import Context as TemplateContext, Template
 from django.urls import reverse, reverse_lazy
-from django.utils import timezone, translation
+from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from parler.admin import TranslatableAdmin
-from parler.forms import TranslatableModelForm
-from parler.utils.context import switch_language
-
-import repanier.apps
 from repanier.admin.forms import (
     InvoiceOrderForm,
     ProducerInvoicedFormSet,
@@ -85,8 +81,8 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
         )
 
 
-class PermanenceDoneForm(TranslatableModelForm):
-    short_name = forms.CharField(
+class PermanenceDoneForm(forms.ModelForm):
+    short_name_v2 = forms.CharField(
         label=_("Offer name"),
         widget=forms.TextInput(attrs={"style": "width:100% !important"}),
     )
@@ -96,11 +92,11 @@ class PermanenceDoneForm(TranslatableModelForm):
         fields = "__all__"
 
 
-class PermanenceDoneAdmin(TranslatableAdmin):
+class PermanenceDoneAdmin(admin.ModelAdmin):
     form = PermanenceDoneForm
     change_list_url = reverse_lazy("admin:repanier_permanencedone_changelist")
 
-    fields = ("permanence_date", "short_name", "invoice_description")
+    fields = ("permanence_date", "short_name_v2", "invoice_description_v2")
     readonly_fields = ("status", "automatically_closed")
     list_per_page = 10
     list_max_show_all = 10
@@ -356,11 +352,15 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                             )
                             if selected:
                                 at_least_one_selected = True
-                                producer_invoice.to_be_invoiced_balance = producer_invoiced_form.cleaned_data.get(
-                                    "to_be_invoiced_balance"
+                                producer_invoice.to_be_invoiced_balance = (
+                                    producer_invoiced_form.cleaned_data.get(
+                                        "to_be_invoiced_balance"
+                                    )
                                 )
-                                producer_invoice.invoice_reference = producer_invoiced_form.cleaned_data.get(
-                                    "invoice_reference", EMPTY_STRING
+                                producer_invoice.invoice_reference = (
+                                    producer_invoiced_form.cleaned_data.get(
+                                        "invoice_reference", EMPTY_STRING
+                                    )
                                 )
                                 producer_invoice.to_be_paid = True
                             else:
@@ -436,8 +436,8 @@ class PermanenceDoneAdmin(TranslatableAdmin):
                 if not producer.represent_this_buyinggroup:
                     # We have already pay to much (look at the bank movements).
                     # So we do not need to pay anything
-                    producer_invoice.calculated_invoiced_balance.amount = producer.get_calculated_invoiced_balance(
-                        permanence_id
+                    producer_invoice.calculated_invoiced_balance.amount = (
+                        producer.get_calculated_invoiced_balance(permanence_id)
                     )
                 else:
                     producer_invoice.calculated_invoiced_balance.amount = RepanierMoney(
@@ -624,108 +624,96 @@ class PermanenceDoneAdmin(TranslatableAdmin):
 
         template_invoice_customer_mail = []
         template_invoice_producer_mail = []
-        invoice_customer_email_will_be_sent, invoice_customer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
+        (
+            invoice_customer_email_will_be_sent,
+            invoice_customer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_CUSTOMER
         )
-        invoice_producer_email_will_be_sent, invoice_producer_email_will_be_sent_to = RepanierEmail.send_email_to_who(
+        (
+            invoice_producer_email_will_be_sent,
+            invoice_producer_email_will_be_sent_to,
+        ) = RepanierEmail.send_email_to_who(
             is_email_send=repanier.apps.REPANIER_SETTINGS_SEND_INVOICE_MAIL_TO_PRODUCER
         )
 
         if invoice_customer_email_will_be_sent or invoice_producer_email_will_be_sent:
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-                invoice_responsible = Staff.get_or_create_invoice_responsible()
+            invoice_responsible = Staff.get_or_create_invoice_responsible()
 
-                if invoice_customer_email_will_be_sent:
-                    with switch_language(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-                    ):
-                        template = Template(
-                            repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_customer_mail
-                        )
-                    with switch_language(permanence, language_code):
-                        invoice_description = permanence.safe_translation_getter(
-                            "invoice_description",
-                            any_language=True,
-                            default=EMPTY_STRING,
-                        )
-                    # TODO : Align on tools.payment_message
-                    customer_order_amount = _(
-                        "The amount of your order is %(amount)s."
-                    ) % {"amount": RepanierMoney(123.45)}
-                    customer_last_balance = _(
-                        "The balance of your account as of %(date)s is %(balance)s."
-                    ) % {
-                        "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
-                        "balance": RepanierMoney(123.45),
-                    }
-                    bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
-                    if bank_account_number is not None:
-                        group_name = settings.REPANIER_SETTINGS_GROUP_NAME
-                        if permanence.short_name:
-                            communication = "{} ({})".format(
-                                _("Short name"), permanence.short_name
-                            )
-                        else:
-                            communication = _("Short name")
-                        customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
-                            _(
-                                "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
-                            )
-                            % {
-                                "payment": RepanierMoney(123.45),
-                                "name": group_name,
-                                "number": bank_account_number,
-                                "communication": communication,
-                            }
+            if invoice_customer_email_will_be_sent:
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_customer_mail_v2
+                )
+                invoice_description_v2 = permanence.invoice_description_v2
+                # TODO : Align on tools.payment_message
+                customer_order_amount = _("The amount of your order is %(amount)s.") % {
+                    "amount": RepanierMoney(123.45)
+                }
+                customer_last_balance = _(
+                    "The balance of your account as of %(date)s is %(balance)s."
+                ) % {
+                    "date": timezone.now().strftime(settings.DJANGO_SETTINGS_DATE),
+                    "balance": RepanierMoney(123.45),
+                }
+                bank_account_number = repanier.apps.REPANIER_SETTINGS_BANK_ACCOUNT
+                if bank_account_number is not None:
+                    group_name = settings.REPANIER_SETTINGS_GROUP_NAME
+                    if permanence.short_name_v2:
+                        communication = "{} ({})".format(
+                            _("Short name"), permanence.short_name_v2
                         )
                     else:
-                        customer_payment_needed = EMPTY_STRING
-                    context = TemplateContext(
-                        {
-                            "name": _("Long name"),
-                            "long_basket_name": _("Long name"),
-                            "basket_name": _("Short name"),
-                            "short_basket_name": _("Short name"),
-                            "permanence_link": mark_safe(
-                                '<a href="#">{}</a>'.format(permanence)
-                            ),
-                            "last_balance_link": mark_safe(
-                                '<a href="#">{}</a>'.format(customer_last_balance)
-                            ),
-                            "last_balance": customer_last_balance,
-                            "order_amount": mark_safe(customer_order_amount),
-                            "payment_needed": mark_safe(customer_payment_needed),
-                            "invoice_description": mark_safe(invoice_description),
-                            "signature": invoice_responsible["html_signature"],
-                        }
-                    )
-                    template_invoice_customer_mail.append(language_code)
-                    template_invoice_customer_mail.append(template.render(context))
-
-                if invoice_producer_email_will_be_sent:
-                    with switch_language(
-                        repanier.apps.REPANIER_SETTINGS_CONFIG, language_code
-                    ):
-                        template = Template(
-                            repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail
+                        communication = _("Short name")
+                    customer_payment_needed = '<font color="#bd0926">{}</font>'.format(
+                        _(
+                            "Please pay a provision of %(payment)s to the bank account %(name)s %(number)s with communication %(communication)s."
                         )
-                    context = TemplateContext(
-                        {
-                            "name": _("Long name"),
-                            "long_profile_name": _("Long name"),
-                            "permanence_link": mark_safe(
-                                '<a href="#">{}</a>'.format(permanence)
-                            ),
-                            "signature": invoice_responsible["html_signature"],
+                        % {
+                            "payment": RepanierMoney(123.45),
+                            "name": group_name,
+                            "number": bank_account_number,
+                            "communication": communication,
                         }
                     )
-                    template_invoice_producer_mail.append(language_code)
-                    template_invoice_producer_mail.append(template.render(context))
+                else:
+                    customer_payment_needed = EMPTY_STRING
+                context = TemplateContext(
+                    {
+                        "name": _("Long name"),
+                        "long_basket_name": _("Long name"),
+                        "basket_name": _("Short name"),
+                        "short_basket_name": _("Short name"),
+                        "permanence_link": mark_safe(
+                            '<a href="#">{}</a>'.format(permanence)
+                        ),
+                        "last_balance_link": mark_safe(
+                            '<a href="#">{}</a>'.format(customer_last_balance)
+                        ),
+                        "last_balance": customer_last_balance,
+                        "order_amount": mark_safe(customer_order_amount),
+                        "payment_needed": mark_safe(customer_payment_needed),
+                        "invoice_description": mark_safe(invoice_description_v2),
+                        "signature": invoice_responsible["html_signature"],
+                    }
+                )
+                template_invoice_customer_mail.append(template.render(context))
 
-            translation.activate(cur_language)
+            if invoice_producer_email_will_be_sent:
+                template = Template(
+                    repanier.apps.REPANIER_SETTINGS_CONFIG.invoice_producer_mail_v2
+                )
+                context = TemplateContext(
+                    {
+                        "name": _("Long name"),
+                        "long_profile_name": _("Long name"),
+                        "permanence_link": mark_safe(
+                            '<a href="#">{}</a>'.format(permanence)
+                        ),
+                        "signature": invoice_responsible["html_signature"],
+                    }
+                )
+                template_invoice_producer_mail.append(template.render(context))
+
         form = InvoiceOrderForm(
             initial={
                 "template_invoice_customer_mail": mark_safe(
