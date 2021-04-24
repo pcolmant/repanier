@@ -61,12 +61,10 @@ class RepanierConfig(AppConfig):
 
         # Imports are inside the function because its point is to avoid importing
         # the models when django.contrib."MODELS" isn't installed.
-        from django.contrib.auth.models import Group, Permission
-        from django.contrib.contenttypes.models import ContentType
 
         from repanier.models.configuration import Configuration
         from repanier.models.notification import Notification
-        from repanier.const import DECIMAL_ONE, WEBMASTER_GROUP
+        from repanier.const import DECIMAL_ONE
 
         try:
             # Create if needed and load RepanierSettings var when performing config.save()

@@ -117,9 +117,7 @@ def login_view(
     if user.is_anonymous:
         from repanier.apps import REPANIER_SETTINGS_CONFIG
 
-        how_to_register = REPANIER_SETTINGS_CONFIG.safe_translation_getter(
-            "how_to_register", any_language=True, default=EMPTY_STRING
-        )
+        how_to_register = REPANIER_SETTINGS_CONFIG.how_to_register_v2
     else:
         how_to_register = EMPTY_STRING
 

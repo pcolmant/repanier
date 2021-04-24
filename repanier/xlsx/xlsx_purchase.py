@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.apps import REPANIER_SETTINGS_CURRENCY_XLSX
@@ -89,20 +88,18 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         purchases = Purchase.objects.filter(
                             permanence_id=permanence.id,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(
                             "customer__short_basket_name",
-                            "offer_item__translations__preparation_sort_order"
+                            "offer_item__preparation_sort_order_v2"
                         ).iterator()
                     else:
                         purchases = Purchase.objects.filter(
                             permanence_id=permanence.id,
                             customer_id=customer.id,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(
                             "customer__short_basket_name",
-                            "offer_item__translations__preparation_sort_order"
+                            "offer_item__preparation_sort_order_v2"
                         ).iterator()
                 else:
                     if customer is None:
@@ -110,11 +107,10 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             permanence__status__gte=PERMANENCE_INVOICED,
                             permanence__permanence_date__year=year,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(
                             "permanence_id",
                             "customer__short_basket_name",
-                            "offer_item__translations__preparation_sort_order"
+                            "offer_item__preparation_sort_order_v2"
                         ).iterator()
                     else:
                         purchases = Purchase.objects.filter(
@@ -122,10 +118,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             permanence__permanence_date__year=year,
                             customer_id=customer.id,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(
                             "permanence_id",
-                            "offer_item__translations__preparation_sort_order"
+                            "offer_item__preparation_sort_order_v2"
                         ).iterator()
                 purchase = next_purchase(purchases)
                 while purchase is not None:
@@ -142,7 +137,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 and customer_save.id == purchase.customer_id:
                             offer_item_save = purchase.offer_item
                             department_for_customer_save = offer_item_save.department_for_customer
-                            department_for_customer_save__short_name = department_for_customer_save.short_name \
+                            department_for_customer_save__short_name = department_for_customer_save.short_name_v2 \
                                 if department_for_customer_save is not None else EMPTY_STRING
 
                             while purchase is not None and permanence_save.id == purchase.permanence_id \
@@ -283,9 +278,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                         purchases = Purchase.objects.filter(
                             permanence_id=permanence.id,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(  # "product__placement",
-                            "offer_item__translations__preparation_sort_order",
+                            "offer_item__preparation_sort_order_v2",
                             "quantity_for_preparation_sort_order",
                             "customer__short_basket_name"
                         ).iterator()
@@ -294,9 +288,8 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             permanence_id=permanence.id,
                             customer_id=customer.id,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(  # "product__placement",
-                            "offer_item__translations__preparation_sort_order",
+                            "offer_item__preparation_sort_order_v2",
                             "quantity_for_preparation_sort_order",
                             "customer__short_basket_name"
                         ).iterator()
@@ -306,10 +299,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             permanence__status__gte=PERMANENCE_INVOICED,
                             permanence__permanence_date__year=year,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(
                             "permanence_id",
-                            "offer_item__translations__preparation_sort_order",
+                            "offer_item__preparation_sort_order_v2",
                             "quantity_for_preparation_sort_order",
                             "customer__short_basket_name"
                         ).iterator()
@@ -319,10 +311,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                             permanence__permanence_date__year=year,
                             customer_id=customer.id,
                             producer_id=producer.id,
-                            offer_item__translations__language_code=translation.get_language()
                         ).order_by(
                             "permanence_id",
-                            "offer_item__translations__preparation_sort_order",
+                            "offer_item__preparation_sort_order_v2",
                             "quantity_for_preparation_sort_order"
                         ).iterator()
                 purchase = next_purchase(purchases)
@@ -334,7 +325,7 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                     while purchase is not None and permanence_save.id == purchase.permanence_id:
                         producer_save = purchase.producer
                         department_for_customer_save = purchase.offer_item.department_for_customer
-                        department_for_customer_save__short_name = department_for_customer_save.short_name \
+                        department_for_customer_save__short_name = department_for_customer_save.short_name_v2 \
                             if department_for_customer_save is not None else EMPTY_STRING
                         while purchase is not None and permanence_save.id == purchase.permanence_id \
                                 and producer_save == purchase.producer \

@@ -1,11 +1,10 @@
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from rest_framework import serializers
-
 from repanier.const import PERMANENCE_OPENED
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.permanence import Permanence
+from rest_framework import serializers
 
 
 class PermanenceSerializer(serializers.Serializer):
@@ -17,11 +16,13 @@ class PermanenceSerializer(serializers.Serializer):
 
     def to_representation(self, obj):
         return {
-            'id': obj.id,
-            'name': str(obj),
-            'status_code': obj.status,
-            'status': obj.get_status_display(),
-            'producers': list(obj.producers.values_list('short_profile_name', flat=True))
+            "id": obj.id,
+            "name": str(obj),
+            "status_code": obj.status,
+            "status": obj.get_status_display(),
+            "producers": list(
+                obj.producers.values_list("short_profile_name", flat=True)
+            ),
         }
 
 
@@ -37,10 +38,10 @@ class OfferItemSerializer(serializers.Serializer):
     class Meta:
         model = OfferItemWoReceiver
         fields = (
-            'reference',
-            'get_long_name',
-            'quantity_invoiced',
-            'stock',
+            "reference",
+            "get_long_name",
+            "quantity_invoiced",
+            "stock",
         )
 
 
@@ -49,9 +50,9 @@ class OfferItemSerializer(serializers.Serializer):
 def permanence_producer_rest(request, permanence_id, producer_name):
     offer_item = OfferItemWoReceiver.objects.filter(
         permanence_id=permanence_id,
-        producer__short_profile_name=producer_name.decode('unicode-escape'),
-        status=PERMANENCE_OPENED
-    ).order_by('?')
+        producer__short_profile_name=producer_name.decode("unicode-escape"),
+        status=PERMANENCE_OPENED,
+    ).order_by("?")
     if offer_item.exists():
         serializer = OfferItemSerializer(offer_item, many=True)
         return JsonResponse(serializer.data)
@@ -62,13 +63,13 @@ def permanence_producer_product_rest(request, permanence_id, producer_name, refe
     """
     Retrieve, update or delete a code snippet.
     """
-    if request.method == 'GET':
+    if request.method == "GET":
         offer_item = OfferItemWoReceiver.objects.filter(
             permanence_id=permanence_id,
-            producer__short_profile_name=producer_name.decode('unicode-escape'),
-            reference=reference.decode('unicode-escape'),
-            status=PERMANENCE_OPENED
-        ).order_by('?')
+            producer__short_profile_name=producer_name.decode("unicode-escape"),
+            reference=reference.decode("unicode-escape"),
+            status=PERMANENCE_OPENED,
+        ).order_by("?")
         if offer_item.exists():
             serializer = OfferItemSerializer(offer_item)
             return JsonResponse(serializer.data)

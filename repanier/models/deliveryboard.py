@@ -67,14 +67,8 @@ class DeliveryBoard(TranslatableModel):
         ).order_by("?").update(status=new_status)
 
     def get_delivery_display(self, br=False, color=False):
-        short_name = "{}".format(
-            self.delivery_point.safe_translation_getter(
-                "short_name", any_language=True, default=EMPTY_STRING
-            )
-        )
-        comment = self.safe_translation_getter(
-            "delivery_comment", any_language=True, default=EMPTY_STRING
-        )
+        short_name = "{}".format(self.delivery_point.short_name_v2)
+        comment = self.delivery_comment_v2
         if color:
             label = mark_safe(
                 '<font color="green">{} {}</font>'.format(comment, short_name)

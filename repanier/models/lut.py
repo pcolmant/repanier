@@ -65,9 +65,7 @@ class LUT_ProductionMode(MPTTModel, TranslatableModel):
 
     def __str__(self):
         # return self.short_name
-        return self.safe_translation_getter(
-            "short_name", any_language=True, default=EMPTY_STRING
-        )
+        return self.short_name_v2
 
     class Meta:
         verbose_name = _("Production mode")
@@ -157,9 +155,7 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         if self.customer_responsible is not None:
             return "[{}]".format(self.customer_responsible.short_basket_name)
         else:
-            return self.safe_translation_getter(
-                "short_name", any_language=True, default=EMPTY_STRING
-            )
+            return self.short_name_v2
 
     class Meta:
         verbose_name = _("Delivery point")
@@ -209,9 +205,7 @@ class LUT_DepartmentForCustomer(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        return self.safe_translation_getter(
-            "short_name", any_language=True, default=EMPTY_STRING
-        )
+        return self.short_name_v2
 
     class Meta:
         verbose_name = _("Department")
@@ -269,9 +263,7 @@ class LUT_PermanenceRole(MPTTModel, TranslatableModel):
     objects = LUT_ProductionModeManager()
 
     def __str__(self):
-        return self.safe_translation_getter(
-            "short_name", any_language=True, default=EMPTY_STRING
-        )
+        return self.short_name_v2
 
     class Meta:
         verbose_name = _("Permanence role")

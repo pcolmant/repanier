@@ -1,23 +1,24 @@
 {% load cms_tags sekizai_tags menu_tags i18n l10n static repanier_tags %}
 {% addtoblock "css" %}
-    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
-{% endaddtoblock %}
+    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">{% endaddtoblock %}
 {% addtoblock "css" %}
     <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">{% endaddtoblock %}
+{#{% addtoblock "css" %}#}
+{#    <link rel="stylesheet" href="{% static 'ligature_symbols/ligature_symbols_2.11.css' %}">{% endaddtoblock %}#}
 {% addtoblock "jshead" %}
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.4.min.js"></script>{% endaddtoblock %}
 {% addtoblock "jshead" %}
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>{% endaddtoblock %}
-{% addtoblock "js" %}
-    <script src="{% static "repanier/bs3/fluidvids/fluidvids.js" %}"></script>{% endaddtoblock %}
-{% addtoblock "lastjs" %}{% spaceless %}
-    <script>
-        fluidvids.init({
-            selector: ['iframe'],
-            players: ['www.youtube.com', 'player.vimeo.com']
-        });
-    </script>
-{% endspaceless %}{% endaddtoblock %}
+{#{% addtoblock "js" %}#}
+{#    <script src="{% static "repanier/bs3/fluidvids/fluidvids.js" %}"></script>{% endaddtoblock %}#}
+{#{% addtoblock "lastjs" %}{% spaceless %}#}
+{#    <script>#}
+{#        fluidvids.init({#}
+{#            selector: ['iframe'],#}
+{#            players: ['www.youtube.com', 'player.vimeo.com']#}
+{#        });#}
+{#    </script>#}
+{#{% endspaceless %}{% endaddtoblock %}#}
 {% addtoblock "css" %}{% spaceless %}
     {#    django CMS toolbar adjustment#}
     {% if request.toolbar %}
@@ -52,10 +53,10 @@
             'Class': (typeof Class === 'function') ? Class : undefined,
             'API': {}
         };
-        var my_app = undefined;
-        if (typeof angular !== "undefined") {
-            my_app = angular.module('repanier', ['djng.forms']);
-        }
+        {#var my_app = undefined;#}
+        {#if (typeof angular !== "undefined") {#}
+        {#    my_app = angular.module('repanier', ['djng.forms']);#}
+        {# } #}
     </script>
 </head>
 <body>
@@ -76,7 +77,8 @@
                 {% else %}
                     <span id="link_to_order_or_filter_view"></span>
                     {% if user.is_authenticated %}
-                        <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" class="btn btn-info pull-right"
+                        <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes"
+                           class="btn btn-info pull-right"
                            style="margin-right: 10px;">
                             <span id="prepared_amount_visible_xs"></span>
                         </a>

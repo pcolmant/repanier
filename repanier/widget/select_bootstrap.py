@@ -19,7 +19,6 @@ class SelectBootstrapWidget(forms.Select):
             if str(choice[0]) == value:
                 selected_label = choice[1]
                 break
-        context['repanier_selected_label'] = selected_label
-        context['repanier_selected_value'] = value
+        context["repanier_selected_label"] = selected_label
+        context["repanier_selected_value"] = value
         return context
-

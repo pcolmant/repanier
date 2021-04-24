@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+import repanier.apps
 from django import forms
 from django.conf import settings
 from django.conf.urls import url
@@ -14,15 +15,13 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import CharWidget
-
-import repanier.apps
 from repanier.admin.forms import ImportStockForm
 from repanier.admin.tools import check_cancel_in_post, get_query_filters
 from repanier.const import PERMANENCE_PLANNED, DECIMAL_ONE, DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.box import BoxContent
 from repanier.models.permanence import Permanence
 from repanier.models.producer import Producer
-from repanier.tools import web_services_activated, get_repanier_static_name
+from repanier.tools import web_services_activated
 from repanier.xlsx.views import import_xslx_view
 from repanier.xlsx.widget import (
     IdWidget,

@@ -1,7 +1,6 @@
 import logging
 
 from django.db import transaction
-from django.utils import translation
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,6 @@ from repanier.tools import reorder_purchases
 
 @transaction.atomic
 def automatically_open():
-    translation.activate(settings.LANGUAGE_CODE)
     something_to_open = False
     for permanence in Permanence.objects.filter(
         status=PERMANENCE_PLANNED, automatically_closed=True
@@ -97,14 +95,11 @@ def open_order(permanence_id, send_mail=True):
 
 def back_to_scheduled(permanence):
     permanence.back_to_scheduled()
-    permanence.set_status(
-        old_status=PERMANENCE_OPENED, new_status=PERMANENCE_PLANNED
-    )
+    permanence.set_status(old_status=PERMANENCE_OPENED, new_status=PERMANENCE_PLANNED)
 
 
 @transaction.atomic
 def automatically_closed():
-    translation.activate(settings.LANGUAGE_CODE)
     something_to_close = False
     for permanence in Permanence.objects.filter(
         status=PERMANENCE_OPENED, automatically_closed=True
@@ -129,9 +124,7 @@ def automatically_closed():
 # Important : no @transaction.atomic because otherwise the "clock" in **permanence.get_html_status_display()**
 # won't works on the admin screen. The clock is based on the permanence.status state.
 @debug_parameters
-def close_order(
-    permanence_id, everything=True, deliveries_id=(), send_mail=True
-):
+def close_order(permanence_id, everything=True, deliveries_id=(), send_mail=True):
     # Be careful : use permanece_id, deliveries_id, ... and not objects
     # for the "thread" processing
 
@@ -152,7 +145,9 @@ def close_order(
         everything=everything,
         deliveries_id=deliveries_id,
     )
-    permanence.close_order(everything=everything, deliveries_id=deliveries_id, send_mail=send_mail)
+    permanence.close_order(
+        everything=everything, deliveries_id=deliveries_id, send_mail=send_mail
+    )
     permanence.set_status(
         old_status=PERMANENCE_WAIT_FOR_CLOSED,
         new_status=PERMANENCE_CLOSED,

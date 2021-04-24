@@ -5,6 +5,7 @@ import repanier.apps
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.db.models import F
 from django.http import HttpResponseRedirect, HttpResponse
@@ -262,7 +263,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 "sub_title": _("Please, confirm the action : cancel delivery."),
                 "action": "cancel_delivery",
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -313,7 +314,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 
         if max_payment_date < min_payment_date:
             max_payment_date = min_payment_date
-        if "apply" in request.POST and admin.ACTION_CHECKBOX_NAME in request.POST:
+        if "apply" in request.POST and ACTION_CHECKBOX_NAME in request.POST:
             permanence_form = PermanenceInvoicedForm(request.POST)
             producer_invoiced_formset = ProducerInvoicedFormSet(request.POST)
             if permanence_form.is_valid() and producer_invoiced_formset.is_valid():
@@ -413,7 +414,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                                     customer__isnull=True,
                                     operation_status=BANK_CALCULATED_INVOICE,
                                 ).order_by("producer", "-operation_date", "-id"),
-                                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                             },
                         )
                     else:
@@ -486,7 +487,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 "permanence": permanence,
                 "permanence_form": permanence_form,
                 "producer_invoiced_formset": producer_invoiced_formset,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -509,7 +510,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 "sub_title": _("Please, confirm the action : generate archive."),
                 "action": "archive",
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -575,7 +576,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 "sub_title": sub_title,
                 "action": action,
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -730,7 +731,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "action": "send_invoices",
                 "permanence": permanence,
                 "form": form,

@@ -533,7 +533,7 @@ class Permanence(TranslatableModel):
                         '<a href="'
                         + r_url
                         + '" target="_blank">'
-                        + r.short_name.replace(" ", "&nbsp;")
+                        + r.short_name_v2.replace(" ", "&nbsp;")
                         + "</a>"
                     )
                 c_link = EMPTY_STRING
@@ -1362,9 +1362,7 @@ class Permanence(TranslatableModel):
 
     def duplicate(self, dates):
         creation_counter = 0
-        short_name = self.safe_translation_getter(
-            "short_name", any_language=True, default=EMPTY_STRING
-        )
+        short_name = self.short_name_v2
         cur_language = translation.get_language()
         for date in dates[:56]:
             # Limit to 56 weeks
@@ -1395,35 +1393,15 @@ class Permanence(TranslatableModel):
             # Mandatory because of Parler
             same_exists = Permanence.objects.filter(
                 permanence_date=date,
-                translations__language_code=cur_language,
-                translations__short_name=short_name,
+                short_name_v2=short_name,
             ).exists()
         else:
             same_exists = False
-            for existing_permanence in Permanence.objects.filter(permanence_date=date):
-                try:
-                    short_name = existing_permanence.short_name
-                    same_exists = short_name == EMPTY_STRING
-                except TranslationDoesNotExist:
-                    same_exists = True
-                if same_exists:
-                    break
         return same_exists
 
     def duplicate_short_name(self, new_permanence, cur_language):
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            translation.activate(language_code)
-            new_permanence.set_current_language(language_code)
-            self.set_current_language(language_code)
-            try:
-                new_permanence.short_name = self.safe_translation_getter(
-                    "short_name", any_language=True
-                )
-                new_permanence.save_translations()
-            except TranslationDoesNotExist:
-                pass
-        translation.activate(cur_language)
+        new_permanence.short_name_v2 = self.short_name_v2
+        new_permanence.save()
 
     def duplicate_producers(self, new_permanence):
         for a_producer in self.producers.all():
@@ -1434,21 +1412,10 @@ class Permanence(TranslatableModel):
             "?"
         ):
             new_delivery_board = DeliveryBoard.objects.create(
-                permanence=new_permanence, delivery_point=delivery_board.delivery_point
+                permanence=new_permanence,
+                delivery_point=delivery_board.delivery_point,
+                delivery_comment_v2=delivery_board.delivery_comment_v2,
             )
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-                new_delivery_board.set_current_language(language_code)
-                delivery_board.set_current_language(language_code)
-                try:
-                    new_delivery_board.delivery_comment = (
-                        delivery_board.delivery_comment
-                    )
-                    new_delivery_board.save_translations()
-                except TranslationDoesNotExist:
-                    pass
-            translation.activate(cur_language)
 
     def duplicate_permanence_board(self, new_permanence):
         for permanence_board in PermanenceBoard.objects.filter(permanence=self):
@@ -1673,8 +1640,7 @@ class Permanence(TranslatableModel):
             qs = OfferItemWoReceiver.objects.filter(
                 permanence_id=self.id,
                 product__in=new_products,
-                translations__language_code=translation.get_language(),
-            ).order_by("translations__order_sort_order")
+            ).order_by("order_sort_order_v2")
             department_for_customer_save = None
             for o in qs:
                 if department_for_customer_save != o.department_for_customer:
@@ -1756,7 +1722,7 @@ class Permanence(TranslatableModel):
     get_html_status_display.short_description = _("Status")
 
     def get_permanence_display(self):
-        short_name = self.safe_translation_getter("short_name", any_language=True)
+        short_name = self.short_name_v2
         if short_name:
             permanence_display = "{}".format(short_name)
         else:
@@ -1802,11 +1768,7 @@ class Permanence(TranslatableModel):
 
     def get_html_permanence_card_display(self):
         if settings.REPANIER_SETTINGS_TEMPLATE != "bs4":
-            offer_description = Truncator(
-                self.safe_translation_getter(
-                    "offer_description", any_language=True, default=EMPTY_STRING
-                )
-            )
+            offer_description = Truncator(self.offer_description_v2)
             return mark_safe(
                 """
             <a href="{href}" class="card-body offer">

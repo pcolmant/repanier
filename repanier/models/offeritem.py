@@ -198,10 +198,10 @@ class OfferItem(Item):
         qty_display = self.get_qty_display()
         if qty_display:
             return "{} {}".format(
-                self.safe_translation_getter("long_name", any_language=True),
+                self.long_name_v2,
                 qty_display,
             )
-        return "{}".format(self.safe_translation_getter("long_name", any_language=True))
+        return "{}".format(self.long_name_v2)
 
     def get_qty_display(self):
         if self.is_box:
@@ -239,7 +239,7 @@ class OfferItem(Item):
         return mark_safe(self.get_long_name_with_producer(is_html=True))
 
     get_html_long_name_with_producer.short_description = _("Offer items")
-    get_html_long_name_with_producer.admin_order_field = "translations__long_name"
+    get_html_long_name_with_producer.admin_order_field = "long_name_v2"
 
     def __str__(self):
         return self.get_long_name_with_producer()

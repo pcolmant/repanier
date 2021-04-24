@@ -2,13 +2,13 @@ from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin import TabularInline
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.forms import ModelForm, BaseInlineFormSet
 from django.forms.formsets import DELETION_FIELD_NAME
 from django.shortcuts import render
-from django.utils.translation import ugettext_lazy as _, get_language_info
+from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -200,18 +200,18 @@ class BoxForm(TranslatableModelForm):
             # Don't bother validating the formset unless each form is valid on its own
             return
 
-        if self.instance.id is None:
-            if self.language_code != settings.LANGUAGE_CODE:
-                # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
-                self.add_error(
-                    "long_name",
-                    _("Please define first a long_name in %(language)s")
-                    % {
-                        "language": get_language_info(settings.LANGUAGE_CODE)[
-                            "name_local"
-                        ]
-                    },
-                )
+        # if self.instance.id is None:
+        #     if self.language_code != settings.LANGUAGE_CODE:
+        #         # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
+        #         self.add_error(
+        #             "long_name_v2",
+        #             _("Please define first a long_name in %(language)s")
+        #             % {
+        #                 "language": get_language_info(settings.LANGUAGE_CODE)[
+        #                     "name_local"
+        #                 ]
+        #             },
+        #         )
 
 
 class BoxAdmin(TranslatableAdmin):
@@ -280,7 +280,7 @@ class BoxAdmin(TranslatableAdmin):
             template_name,
             {
                 "sub_title": _("Please, confirm the action : duplicate box."),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "action": "duplicate_box",
                 "product": box,
             },
@@ -291,13 +291,13 @@ class BoxAdmin(TranslatableAdmin):
     def get_fieldsets(self, request, box=None):
         if not settings.REPANIER_SETTINGS_STOCK:
             fields_basic = [
-                ("producer", "long_name", "picture2"),
+                ("producer", "long_name_v2", "picture2"),
                 ("customer_unit_price", "unit_deposit"),
                 ("calculated_customer_box_price", "calculated_box_deposit"),
             ]
         else:
             fields_basic = [
-                ("producer", "long_name", "picture2"),
+                ("producer", "long_name_v2", "picture2"),
                 ("stock", "customer_unit_price", "unit_deposit"),
                 (
                     "calculated_stock",
@@ -306,7 +306,7 @@ class BoxAdmin(TranslatableAdmin):
                 ),
             ]
         fields_advanced_descriptions = [
-            "offer_description",
+            "offer_description_v2",
         ]
         fields_advanced_options = ["vat_level", "is_into_offer", "is_active"]
         fieldsets = (

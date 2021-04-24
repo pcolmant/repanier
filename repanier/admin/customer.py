@@ -18,7 +18,6 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import CharWidget
-
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint

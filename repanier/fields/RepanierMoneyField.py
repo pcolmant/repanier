@@ -1,11 +1,10 @@
 from decimal import Decimal, ROUND_HALF_UP
 
+import repanier.apps
 from django.conf import settings
 from django.db import models
 from django.db.models.expressions import BaseExpression, Expression
 from django.forms import DecimalField
-
-import repanier.apps
 from repanier.widget.money import MoneyWidget
 
 DECIMAL_ZERO = Decimal("0")

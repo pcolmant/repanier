@@ -1,7 +1,6 @@
+import repanier.apps
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
-
-import repanier.apps
 from repanier.const import *
 from repanier.models.customer import Customer
 from repanier.models.deliveryboard import DeliveryBoard
@@ -213,9 +212,7 @@ def export_abstract(permanence, deliveries_id=(), group=False, wb=None):
 
                     at_least_one = True
 
-                staff_function = staff.safe_translation_getter(
-                    'long_name', any_language=True, default=EMPTY_STRING
-                )
+                staff_function = staff.long_name_v2
                 row = [
                     staff_function,
                     customer_responsible.long_basket_name,
@@ -431,10 +428,9 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                 purchase_set = Purchase.objects.filter(
                     permanence_id=permanence.id,
                     producer_id=producer.id,
-                    offer_item__translations__language_code=translation.get_language()
                 ).order_by(
                     "customer__short_basket_name",
-                    "offer_item__translations__preparation_sort_order"
+                    "offer_item__preparation_sort_order_v2"
                 ).select_related('customer', 'offer_item', 'offer_item__department_for_customer')
                 if delivery_id is not None:
                     purchase_set = purchase_set.filter(customer_invoice__delivery_id=delivery_id)
@@ -555,9 +551,8 @@ def export_preparation_for_a_delivery(delivery_cpt, delivery_id, header, permane
                 for offer_item in OfferItemWoReceiver.objects.filter(
                         permanence_id=permanence.id,
                         producer_id=producer.id,
-                        translations__language_code=translation.get_language()
                 ).order_by(
-                    "translations__preparation_sort_order"
+                    "preparation_sort_order_v2"
                 ):
                     purchase_set = Purchase.objects.filter(
                         offer_item_id=offer_item.id
@@ -708,11 +703,10 @@ def export_producer_by_product(permanence, producer, wb=None):
     offer_items = OfferItemWoReceiver.objects.filter(
         permanence_id=permanence.id,
         producer_id=producer.id,
-        translations__language_code=translation.get_language(),
         quantity_invoiced__gt=DECIMAL_ZERO
     ).order_by(
         "department_for_customer",
-        "translations__producer_sort_order"
+        "producer_sort_order_v2"
     ).iterator()
     offer_item = next_row(offer_items)
     if offer_item:
@@ -745,9 +739,8 @@ def export_producer_by_product(permanence, producer, wb=None):
                     first_purchase = True
                     purchase_set = Purchase.objects.filter(
                         offer_item_id=offer_item.id,
-                        offer_item__translations__language_code=translation.get_language()
                     ).order_by(
-                        "offer_item__translations__producer_sort_order",
+                        "offer_item__producer_sort_order_v2",
                         "customer__short_basket_name"
                     )
                     for purchase in purchase_set:
@@ -1000,10 +993,9 @@ def export_producer_by_customer(permanence, producer, wb=None):
     purchase_set = Purchase.objects.filter(
         permanence_id=permanence.id,
         producer_id=producer.id,
-        offer_item__translations__language_code=translation.get_language(),
     ).order_by(
         "customer__short_basket_name",
-        "offer_item__translations__producer_sort_order"
+        "offer_item__producer_sort_order_v2"
     ).select_related("offer_item")
     purchases = purchase_set.iterator()
     purchase = next_row(purchases)
@@ -1181,10 +1173,9 @@ def export_customer_for_a_delivery(
                 permanence_id=permanence.id,
                 customer_id=customer_invoice.customer_id,
                 producer__isnull=False,
-                offer_item__translations__language_code=customer.language,
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
             ).order_by(
-                "offer_item__translations__long_name",
+                "offer_item__long_name_v2",
                 "offer_item__order_average_weight",
             ).select_related('customer', 'offer_item', 'offer_item__department_for_customer')
         else:
@@ -1192,11 +1183,10 @@ def export_customer_for_a_delivery(
                 permanence_id=permanence.id,
                 customer_id=customer_invoice.customer_id,
                 producer__isnull=False,
-                offer_item__translations__language_code=customer.language,
             ).exclude(
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
             ).order_by(
-                "offer_item__translations__long_name",
+                "offer_item__long_name_v2",
                 "offer_item__order_average_weight",
             ).select_related('customer', 'offer_item', 'offer_item__department_for_customer')
     else:
@@ -1204,25 +1194,23 @@ def export_customer_for_a_delivery(
             purchase_set = Purchase.objects.filter(
                 permanence_id=permanence.id,
                 producer__isnull=False,
-                offer_item__translations__language_code=language_code,
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
             ).order_by(
                 "customer__short_basket_name",
                 "offer_item__producer",
-                "offer_item__translations__long_name",
+                "offer_item__long_name_v2",
                 "offer_item__order_average_weight",
             ).select_related('customer', 'offer_item', 'offer_item__department_for_customer')
         else:
             purchase_set = Purchase.objects.filter(
                 permanence_id=permanence.id,
                 producer__isnull=False,
-                offer_item__translations__language_code=language_code,
             ).exclude(
                 offer_item__order_unit=PRODUCT_ORDER_UNIT_DEPOSIT
             ).order_by(
                 "customer__short_basket_name",
                 "offer_item__producer",
-                "offer_item__translations__long_name",
+                "offer_item__long_name_v2",
                 "offer_item__order_average_weight",
             ).select_related('customer', 'offer_item', 'offer_item__department_for_customer')
         if delivery_id is not None:
@@ -1231,7 +1219,7 @@ def export_customer_for_a_delivery(
     purchase = next_purchase(purchases)
     if purchase is not None:
         config = REPANIER_SETTINGS_CONFIG
-        group_label = config.group_label
+        group_label = config.group_label_v2
         if deposit:
             wb, ws = new_portrait_a4_sheet(
                 wb,

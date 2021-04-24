@@ -13,10 +13,8 @@ class RepanierCheckboxWidget(CheckboxInput):
 
     def get_context(self, name, value, attrs):
         context = super(RepanierCheckboxWidget, self).get_context(name, value, attrs)
-        context['repanier_label'] = self.repanier_label
+        context["repanier_label"] = self.repanier_label
         return context
 
     class Media:
-        css = {
-            'all': (get_repanier_static_name("css/widgets/checkbox.css"),)
-        }
+        css = {"all": (get_repanier_static_name("css/widgets/checkbox.css"),)}

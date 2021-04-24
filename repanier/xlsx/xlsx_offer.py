@@ -1,11 +1,9 @@
-from django.utils.translation import ugettext_lazy as _
-
 import repanier.apps
+from django.utils.translation import ugettext_lazy as _
 from repanier.const import PERMANENCE_PLANNED, PERMANENCE_OPENED, LIMIT_ORDER_QTY_ITEM
 from repanier.models.offeritem import OfferItem
 from repanier.models.producer import Producer
 from repanier.models.product import Product
-from repanier.tools import *
 from repanier.xlsx.export_tools import *
 
 
@@ -20,21 +18,19 @@ def export_offer(permanence, wb=None):
         for product in Product.objects.prefetch_related(
                 "producer", "department_for_customer").filter(
             producer__in=producers_in_this_permanence, is_into_offer=True,
-            is_box=False,
-            translations__language_code=translation.get_language()).order_by(
+            is_box=False).order_by(
             "producer__short_profile_name",
             "department_for_customer",
-            "translations__long_name",
+            "long_name_v2",
             "order_average_weight"):
             row_num = export_offer_row(product, row_num, ws)
         for product in Product.objects.prefetch_related(
                 "producer", "department_for_customer").filter(
             is_into_offer=True,
-            is_box=True,
-            translations__language_code=translation.get_language()).order_by(
+            is_box=True).order_by(
             "customer_unit_price",
             "unit_deposit",
-            "translations__long_name"):
+            "long_name_v2"):
             row_num = export_offer_row(product, row_num, ws)
 
     elif permanence.status == PERMANENCE_OPENED:
@@ -43,8 +39,8 @@ def export_offer(permanence, wb=None):
         ).filter(
             permanence_id=permanence.id,
             is_active=True,
-            product__translations__language_code=translation.get_language()).order_by(
-            'translations__order_sort_order',
+        ).order_by(
+            'order_sort_order_v2',
         ):
             row_num = export_offer_row(
                 offer_item, row_num, ws

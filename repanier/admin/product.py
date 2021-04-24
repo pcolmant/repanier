@@ -1,11 +1,11 @@
 # -*- coding: utf-8
 from os import sep as os_sep
-from urllib.parse import parse_qsl
 
 from django import forms
 from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.db.models import F
 from django.http import HttpResponseRedirect
@@ -245,7 +245,7 @@ class ProductResource(resources.ModelResource):
             "picture",
             "is_into_offer",
             "is_active",
-            "offer_description",
+            "offer_description_v2",
         )
         export_order = fields
         import_id_fields = ("id",)
@@ -535,7 +535,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "action": "duplicate_product",
                 "product": product,
                 "producers": Producer.objects.filter(is_active=True),
@@ -619,9 +619,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         is_into_offer_value = None
         producer_queryset = Producer.objects.none()
         if product is not None:
-            producer_queryset = Producer.objects.filter(
-                id=product.producer_id
-            )
+            producer_queryset = Producer.objects.filter(id=product.producer_id)
         else:
             producer_queryset = Producer.objects.none()
             query_params = get_query_params()

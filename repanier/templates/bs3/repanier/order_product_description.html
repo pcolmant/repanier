@@ -12,8 +12,8 @@
                 <img class="img-responsive img-thumbnail" style="float: left; margin: 5px;" alt="{{ offer.get_long_name }}"
                      title="{{ offer.get_long_name }}" src="{{ MEDIA_URL }}{{ offer.picture2 }}"/>
             {% endif %}
-            {% if offer.product.offer_description %}
-                {{ offer.product.offer_description | safe }}
+            {% if offer.product.offer_description_v2 %}
+                {{ offer.product.offer_description_v2 | safe }}
             {% else %}
                 {% trans "There is no more product's information." %}
             {% endif %}

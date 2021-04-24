@@ -1,17 +1,16 @@
 import datetime
 import uuid
 
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Sum, DecimalField
 from django.urls import reverse
-from django.utils import timezone, translation
-from django.utils.html import format_html
+from django.utils import timezone
 from django.utils.formats import number_format
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
-
 from repanier.const import (
     EMPTY_STRING,
     DECIMAL_ZERO,
@@ -22,7 +21,6 @@ from repanier.const import (
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
     PERMANENCE_OPENED,
     PERMANENCE_SEND,
-    TWO_DECIMALS,
 )
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
@@ -162,15 +160,8 @@ class Producer(models.Model):
                     producer_id=producer_buyinggroup.id,
                     order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
                     vat_level=VAT_100,
+                    long_name_v2="{}".format(_("Membership fee")),
                 )
-                cur_language = translation.get_language()
-                for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                    language_code = language["code"]
-                    translation.activate(language_code)
-                    membership_fee_product.set_current_language(language_code)
-                    membership_fee_product.long_name = "{}".format(_("Membership fee"))
-                    membership_fee_product.save()
-                translation.activate(cur_language)
         return producer_buyinggroup
 
     def get_phone1(self, prefix=EMPTY_STRING):

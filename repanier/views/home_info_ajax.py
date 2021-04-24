@@ -15,19 +15,21 @@ from repanier.models.permanence import Permanence
 def home_info_bs3_ajax(request):
     if request.is_ajax():
         from repanier.apps import REPANIER_SETTINGS_NOTIFICATION
+
         permanences = []
-        for permanence in Permanence.objects.filter(
-                status=PERMANENCE_OPENED) \
-                .only("id", "permanence_date", "with_delivery_point") \
-                .order_by('-permanence_date', '-id'):
+        for permanence in (
+            Permanence.objects.filter(status=PERMANENCE_OPENED)
+            .only("id", "permanence_date", "with_delivery_point")
+            .order_by("-permanence_date", "-id")
+        ):
             permanences.append(
                 format_html(
                     '<div class="panel-heading"><h4 class="panel-title"><a href="{}">{}</a></h4></div>',
-                    reverse('repanier:order_view', args=(permanence.id,)),
-                    permanence.get_permanence_display()
+                    reverse("repanier:order_view", args=(permanence.id,)),
+                    permanence.get_permanence_display(),
                 )
             )
-            if permanence.offer_description:
+            if permanence.offer_description_v2:
                 if permanence.picture:
                     permanences.append(
                         format_html(
@@ -39,19 +41,18 @@ def home_info_bs3_ajax(request):
                                     {3}
                                 </div>
                                 </div>
-                            """
-                            ,
+                            """,
                             permanence.get_permanence_display(),
                             settings.MEDIA_URL,
                             permanence.picture,
-                            mark_safe(permanence.offer_description)
+                            mark_safe(permanence.offer_description_v2),
                         )
                     )
                 else:
                     permanences.append(
                         format_html(
                             '<div class="panel-body"><div class="col-xs-12">{}</div></div>',
-                            mark_safe(permanence.offer_description)
+                            mark_safe(permanence.offer_description_v2),
                         )
                     )
         if len(permanences) > 0:
@@ -93,7 +94,7 @@ def home_info_bs3_ajax(request):
 
         html = "{notification_html}{permanences_info_html}".format(
             notification_html=notification_html,
-            permanences_info_html=permanences_info_html
+            permanences_info_html=permanences_info_html,
         )
         if html:
             return JsonResponse({"#containerInfo": mark_safe(html)})

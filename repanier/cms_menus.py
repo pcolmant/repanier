@@ -4,7 +4,6 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from menus.base import Menu, NavigationNode
 from menus.menu_pool import menu_pool
-
 from repanier.const import *
 from repanier.models import Permanence
 from repanier.models import PermanenceBoard
@@ -98,7 +97,9 @@ class PermanenceMenu(Menu):
 
         return submenu_id, separator_needed
 
-    def append_permanence(self, nodes, parent_node, submenu_id, is_anonymous, permanence):
+    def append_permanence(
+        self, nodes, parent_node, submenu_id, is_anonymous, permanence
+    ):
 
         path = reverse("repanier:order_view", args=(permanence.id,))
         if not is_anonymous and permanence.status > PERMANENCE_OPENED:

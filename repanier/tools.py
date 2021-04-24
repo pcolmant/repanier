@@ -19,7 +19,6 @@ from django.utils import translation
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-
 from repanier import apps
 from repanier import const
 
@@ -242,9 +241,9 @@ def payment_message(customer, permanence):
         bank_account_number = apps.REPANIER_SETTINGS_BANK_ACCOUNT
         if bank_account_number is not None:
             if payment_needed.amount > const.DECIMAL_ZERO:
-                if permanence.short_name:
+                if permanence.short_name_v2:
                     communication = "{} ({})".format(
-                        customer.short_basket_name, permanence.short_name
+                        customer.short_basket_name, permanence.short_name_v2
                     )
                 else:
                     communication = customer.short_basket_name
@@ -263,8 +262,10 @@ def payment_message(customer, permanence):
 
             else:
                 if customer.balance.amount != const.DECIMAL_ZERO:
-                    customer_payment_needed = '<br><font color="#51a351">{}.</font>'.format(
-                        _("Your account balance is sufficient")
+                    customer_payment_needed = (
+                        '<br><font color="#51a351">{}.</font>'.format(
+                            _("Your account balance is sufficient")
+                        )
                     )
                 else:
                     customer_payment_needed = const.EMPTY_STRING
@@ -688,27 +689,20 @@ def clean_offer_item(permanence, queryset):
         offer_item.save()
 
     # Now got everything to calculate the sort order of the order display screen
-    cur_language = translation.get_language()
     template_cache_part_a = get_repanier_template_name("cache_part_a.html")
     template_cache_part_b = get_repanier_template_name("cache_part_b.html")
-    for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-        translation.activate(language["code"])
-        for offer_item in queryset.select_related(
-            "producer", "department_for_customer"
-        ):
-            offer_item.long_name = offer_item.product.long_name
-            print("################## offer_item.long_name : {}".format(offer_item.long_name))
-            offer_item.cache_part_a = render_to_string(
-                template_cache_part_a,
-                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
-            )
-            offer_item.cache_part_b = render_to_string(
-                template_cache_part_b,
-                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
-            )
-            offer_item.save_translations()
 
-    translation.activate(cur_language)
+    for offer_item in queryset.select_related("producer", "department_for_customer"):
+        offer_item.long_name_v2 = offer_item.product.long_name_v2
+        offer_item.cache_part_a_v2 = render_to_string(
+            template_cache_part_a,
+            {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+        )
+        offer_item.cache_part_b_v2 = render_to_string(
+            template_cache_part_b,
+            {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+        )
+        offer_item.save()
 
 
 def reorder_purchases(permanence_id):
@@ -736,58 +730,49 @@ def reorder_offer_items(permanence_id):
     offer_item_qs = OfferItemWoReceiver.objects.filter(
         permanence_id=permanence_id
     ).order_by("?")
-    for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-        language_code = language["code"]
-        translation.activate(language_code)
 
-        i = 0
-        reorder_queryset = offer_item_qs.filter(
-            is_box=False, translations__language_code=language_code
-        ).order_by(
-            "department_for_customer",
-            "translations__long_name",
-            "order_average_weight",
-            "producer__short_profile_name",
-        )
-        for offer_item in reorder_queryset:
-            offer_item.producer_sort_order = (
-                offer_item.order_sort_order
-            ) = offer_item.preparation_sort_order = i
-            offer_item.save_translations()
-            if i < 9999:
-                i += 1
-        # producer lists sort order : sort by reference if needed, otherwise sort by order_sort_order
-        i = 9999
-        reorder_queryset = offer_item_qs.filter(
-            is_box=False,
-            producer__sort_products_by_reference=True,
-            translations__language_code=language_code,
-        ).order_by("department_for_customer", "reference")
-        for offer_item in reorder_queryset:
-            offer_item.producer_sort_order = i
-            offer_item.save_translations()
-            if i < 19999:
-                i += 1
-        # preparation lists sort order
-        i = -9999
-        reorder_queryset = offer_item_qs.filter(
-            is_box=True, translations__language_code=language_code
-        ).order_by(
-            "customer_unit_price",
-            # "department_for_customer__lft",
-            "unit_deposit",
-            "translations__long_name",
-        )
-        # 'TranslatableQuerySet' object has no attribute 'desc'
-        for offer_item in reorder_queryset:
-            # display box on top
-            offer_item.producer_sort_order = (
-                offer_item.order_sort_order
-            ) = offer_item.preparation_sort_order = i
-            offer_item.save_translations()
-            if i < -1:
-                i += 1
-    translation.activate(cur_language)
+    i = 0
+    reorder_queryset = offer_item_qs.filter(is_box=False,).order_by(
+        "department_for_customer",
+        "long_name_v2",
+        "order_average_weight",
+        "producer__short_profile_name",
+    )
+    for offer_item in reorder_queryset:
+        offer_item.producer_sort_order_v2 = (
+            offer_item.order_sort_order_v2
+        ) = offer_item.preparation_sort_order_v2 = i
+        offer_item.save()
+        if i < 9999:
+            i += 1
+    # producer lists sort order : sort by reference if needed, otherwise sort by order_sort_order
+    i = 9999
+    reorder_queryset = offer_item_qs.filter(
+        is_box=False,
+        producer__sort_products_by_reference=True,
+    ).order_by("department_for_customer", "reference")
+    for offer_item in reorder_queryset:
+        offer_item.producer_sort_order_v2 = i
+        offer_item.save()
+        if i < 19999:
+            i += 1
+    # preparation lists sort order
+    i = -9999
+    reorder_queryset = offer_item_qs.filter(is_box=True,).order_by(
+        "customer_unit_price",
+        # "department_for_customer__lft",
+        "unit_deposit",
+        "long_name_v2",
+    )
+    # 'TranslatableQuerySet' object has no attribute 'desc'
+    for offer_item in reorder_queryset:
+        # display box on top
+        offer_item.producer_sort_order_v2 = (
+            offer_item.order_sort_order_v2
+        ) = offer_item.preparation_sort_order_v2 = i
+        offer_item.save()
+        if i < -1:
+            i += 1
 
 
 def update_offer_item(product_id=None, producer_id=None):
@@ -835,9 +820,12 @@ def web_services_activated(reference_site=None):
 def get_html_basket_message(customer, permanence, status):
     invoice_msg = const.EMPTY_STRING
     payment_msg = const.EMPTY_STRING
-    customer_last_balance, customer_on_hold_movement, customer_payment_needed, customer_order_amount = payment_message(
-        customer, permanence
-    )
+    (
+        customer_last_balance,
+        customer_on_hold_movement,
+        customer_payment_needed,
+        customer_order_amount,
+    ) = payment_message(customer, permanence)
     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING and customer_last_balance:
         invoice_msg = "<br>{} {}".format(
             customer_last_balance, customer_on_hold_movement
@@ -891,9 +879,8 @@ def html_box_content(offer_item, user):
             OfferItemWoReceiver.objects.filter(
                 permanence_id=offer_item.permanence_id,
                 product_id__in=box_products,
-                translations__language_code=translation.get_language(),
             )
-            .order_by("translations__order_sort_order")
+            .order_by("order_sort_order_v2")
             .select_related("producer")
         )
         box_products_description = []
@@ -914,7 +901,7 @@ def html_box_content(offer_item, user):
                             with_price_display=False,
                         )
                     ),
-                    box_offer_item.long_name,
+                    box_offer_item.long_name_v2,
                     box_offer_item.producer.short_profile_name,
                     box_offer_item.id,
                     mark_safe(box_offer_item.get_like(user)),
@@ -975,7 +962,7 @@ def get_recurrence_dates(first_date, recurrences):
 
 
 def round_gov_be(number):
-    """ Round according to Belgian market regulations
+    """Round according to Belgian market regulations
     http://economie.fgov.be/fr/entreprises/reglementation_de_marche/Pratiques_commerce/bienarrondir/
     If the total amount to be paid ends with 1 or 2 cents, it is rounded down to 0.00 euro.
     If the total amount to be paid ends with 3, 4, 6 or 7 cents, it is rounded to 0.05 euro.

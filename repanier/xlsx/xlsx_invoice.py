@@ -1,9 +1,8 @@
+import repanier.apps
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
-import repanier.apps
 from repanier.const import *
 from repanier.models import CustomerInvoice
 from repanier.models.bankaccount import BankAccount
@@ -519,7 +518,7 @@ def export_invoice(
                     c.style.font.bold = True
             if customer is not None:
                 config = REPANIER_SETTINGS_CONFIG
-                group_label = config.group_label
+                group_label = config.group_label_v2
                 if group_label:
                     row_num += 1
                     for col_num in range(len(row)):

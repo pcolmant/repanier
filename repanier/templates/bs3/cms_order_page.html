@@ -34,7 +34,7 @@
         {% if may_order or display_anonymous_order_form %}
             <div class="row">
             <div class="panel panel-default">
-                {% if permanence.offer_description and permanence.offer_description.strip %}
+                {% if permanence.offer_description_v2 and permanence.offer_description_v2.strip %}
                 <div class="panel-heading accordion-toggle collapsed" data-toggle="collapse" data-target="#collapse-offer-description">
                     <h4 class="panel-title">{{ permanence.get_permanence_display }}</h4>
                 </div>
@@ -42,7 +42,7 @@
                     <div class="panel-body">
                         <div class="col-xs-12">
                             {% if permanence.picture %}<img class="img-responsive img-rounded" style="float: left; margin: 5px;" alt="{{ permanence.get_permanence_display }}" title="{{ permanence.get_permanence_customer_display }}" src="{{ MEDIA_URL }}{{ permanence.picture }}"/><div class="clearfix visible-xs-block visible-sm-block"></div>{%  endif %}
-                            {{ permanence.offer_description | safe }}
+                            {{ permanence.offer_description_v2 | safe }}
                         </div>
                     </div>
                 </div>

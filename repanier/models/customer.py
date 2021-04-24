@@ -11,7 +11,6 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
@@ -530,7 +529,7 @@ class Customer(models.Model):
         return "https://{}{}".format(
             self._get_unsubscribe_site(),
             reverse(
-                "unsubscribe_view", kwargs={"customer_id": customer_id, "token": token}
+                "repanier:unsubscribe_view", kwargs={"customer_id": customer_id, "token": token}
             ),
         )
 

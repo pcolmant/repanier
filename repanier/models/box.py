@@ -63,7 +63,7 @@ class Box(Product):
 
     def __str__(self):
         # return super(Box, self).display()
-        return "{}".format(self.safe_translation_getter("long_name", any_language=True))
+        return "{}".format(self.long_name_v2)
 
     class Meta:
         proxy = True

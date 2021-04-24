@@ -1,5 +1,4 @@
 from django.utils import timezone
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.const import *
@@ -20,11 +19,10 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
     products = Product.objects.filter(
         is_active=True,
         is_into_offer=True,
-        translations__language_code=translation.get_language(),
         producer__in=producer_qs
     ).order_by(
         "department_for_customer",
-        "translations__long_name",
+        "long_name_v2",
         "order_average_weight",
     ).select_related(
         'producer', 'department_for_customer'

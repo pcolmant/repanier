@@ -23,7 +23,7 @@ def repanier_admin_paginator_number(cl, i):
                 '<span class="repanier-a-container"><a class="repanier-a-info-selected" href="{}"{}>{}</a></span>',
                 cl.get_query_string({PAGE_VAR: i}),
                 mark_safe(' class="end"' if i == cl.paginator.num_pages - 1 else ''),
-                i + 1,
+                i,
             )
         else:
             return format_html(
@@ -31,7 +31,7 @@ def repanier_admin_paginator_number(cl, i):
                 '<span class="repanier-a-container"><a class="repanier-a-info" href="{}"{}>{}</a></span>',
                 cl.get_query_string({PAGE_VAR: i}),
                 mark_safe(' class="end"' if i == cl.paginator.num_pages - 1 else ''),
-                i + 1,
+                i,
             )
 
 

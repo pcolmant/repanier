@@ -1,13 +1,12 @@
 import logging
 
+import repanier.apps
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db import transaction
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-
-import repanier.apps
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField
 from repanier.models.box import BoxContent

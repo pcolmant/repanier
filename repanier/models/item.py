@@ -423,7 +423,7 @@ class Item(TranslatableModel):
         return self.get_long_name(customer_price=False)
 
     get_long_name_with_producer_price.short_description = _("Long name")
-    get_long_name_with_producer_price.admin_order_field = "translations__long_name"
+    get_long_name_with_producer_price.admin_order_field = "long_name_v2"
 
     def get_qty_display(self):
         raise NotImplementedError
@@ -447,18 +447,13 @@ class Item(TranslatableModel):
     def get_long_name(self, customer_price=True):
         qty_and_price_display = self.get_qty_and_price_display(customer_price)
         if qty_and_price_display:
-            result = "{}{}".format(
-                self.safe_translation_getter("long_name", any_language=True),
-                qty_and_price_display,
-            )
+            result = "{}{}".format(self.long_name_v2, qty_and_price_display)
         else:
-            result = "{}".format(
-                self.safe_translation_getter("long_name", any_language=True)
-            )
+            result = "{}".format(self.long_name_v2)
         return result
 
     get_long_name.short_description = _("Long name")
-    get_long_name.admin_order_field = "translations__long_name"
+    get_long_name.admin_order_field = "long_name_v2"
 
     def get_long_name_with_producer(self):
         if self.id is not None:
@@ -470,7 +465,7 @@ class Item(TranslatableModel):
             return "N/A"
 
     get_long_name_with_producer.short_description = _("Long name")
-    get_long_name_with_producer.admin_order_field = "translations__long_name"
+    get_long_name_with_producer.admin_order_field = "long_name_v2"
 
     def __str__(self):
         return EMPTY_STRING

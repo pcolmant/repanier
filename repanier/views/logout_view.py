@@ -21,11 +21,9 @@ def logout_view(request):
     # pages-root is the django cms root page.
     # pages-root may be replaced by login_form to go to the login form instead of the home page
     # The reverse may be replaced by "/" to also go to the home page
-    return HttpResponseRedirect(reverse('pages-root'))
+    return HttpResponseRedirect(reverse("pages-root"))
 
 
 @receiver(user_logged_out)
 def receiver_user_logged_out(sender, request, user, **kwargs):
-    RepanierAuthBackend.remove_staff_right(
-        user=user
-    )
+    RepanierAuthBackend.remove_staff_right(user=user)

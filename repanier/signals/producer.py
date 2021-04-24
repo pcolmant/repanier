@@ -2,7 +2,6 @@ import uuid
 
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-
 from repanier.const import DECIMAL_ZERO, DECIMAL_ONE
 from repanier.models import Producer, Product
 from repanier.tools import update_offer_item

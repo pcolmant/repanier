@@ -1,7 +1,6 @@
 from django.contrib import admin
-
-from repanier.models.bankaccount import BankAccount
 from repanier.admin.bankaccount import BankAccountAdmin
+from repanier.models.bankaccount import BankAccount
 
 admin.site.register(BankAccount, BankAccountAdmin)
 from repanier.models.configuration import Configuration

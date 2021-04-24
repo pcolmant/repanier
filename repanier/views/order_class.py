@@ -58,10 +58,7 @@ class OrderView(ListView):
         self.is_basket = self.request.GET.get("is_basket", False)
         self.is_like = self.request.GET.get("is_like", False)
         if not self.user.is_anonymous:
-            self.customer = (
-                Customer.objects.filter(id=self.user.customer_id)
-                .first()
-            )
+            self.customer = Customer.objects.filter(id=self.user.customer_id).first()
         if self.customer is None:
             self.may_order = False
         else:
@@ -137,8 +134,7 @@ class OrderView(ListView):
                 is_box=True,
                 is_active=True,
                 may_order=True,
-                translations__language_code=translation.get_language(),
-            ).order_by("customer_unit_price", "unit_deposit", "translations__long_name")
+            ).order_by("customer_unit_price", "unit_deposit", "long_name_v2")
             context["staff_order"] = Staff.get_or_create_order_responsible()
 
         # use of str() to avoid "12 345" when rendering the template
@@ -158,12 +154,9 @@ class OrderView(ListView):
 
             if self.may_order:
                 translation.activate(self.customer.language)
-                customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        permanence_id=self.permanence.id, customer_id=self.customer.id
-                    )
-                    .first()
-                )
+                customer_invoice = CustomerInvoice.objects.filter(
+                    permanence_id=self.permanence.id, customer_id=self.customer.id
+                ).first()
                 if customer_invoice is None:
                     customer_invoice = CustomerInvoice.objects.create(
                         permanence_id=self.permanence.id,
@@ -178,7 +171,9 @@ class OrderView(ListView):
                     status = customer_invoice.delivery.status
                 else:
                     status = customer_invoice.status
-                basket_message = get_html_basket_message(self.customer, self.permanence, status)
+                basket_message = get_html_basket_message(
+                    self.customer, self.permanence, status
+                )
                 html = customer_invoice.get_html_my_order_confirmation(
                     permanence=self.permanence,
                     is_basket=True,
@@ -229,13 +224,11 @@ class OrderView(ListView):
                     permanence_id=self.permanence.id,
                     may_order=True,
                     product=box_id,
-                    translations__language_code=translation.get_language(),
                 )
                 | Q(
                     permanence_id=self.permanence.id,
                     may_order=True,
                     product__box_content__in=product_ids,
-                    translations__language_code=translation.get_language(),
                 )
             )
         else:
@@ -246,7 +239,6 @@ class OrderView(ListView):
                     purchase__customer__user=self.user,
                     purchase__quantity_ordered__gt=0,
                     # is_box=False,
-                    translations__language_code=translation.get_language(),
                 )
             else:
                 qs = OfferItemWoReceiver.objects.filter(
@@ -255,13 +247,11 @@ class OrderView(ListView):
                         is_active=True,
                         is_box=False,  # Don't display boxes -> Added from customers reactions.
                         may_order=True,  # Don't display technical products.
-                        translations__language_code=translation.get_language(),
                     )
                     | Q(
                         permanence_id=self.permanence.id,
                         is_box_content=True,
                         may_order=True,  # Don't display technical products.
-                        translations__language_code=translation.get_language(),
                     )
                 )
                 if self.producer_id != "all":
@@ -286,10 +276,9 @@ class OrderView(ListView):
                             self.department_id = "all"
             if self.q and self.may_order:
                 qs = qs.filter(
-                    translations__long_name__icontains=self.q,
-                    translations__language_code=translation.get_language(),
+                    long_name_v2__icontains=self.q,
                 )
-        qs = qs.order_by("translations__order_sort_order")
+        qs = qs.order_by("order_sort_order_v2")
         if self.is_like:
             qs = qs.filter(product__likes__id=self.user.id)
         return qs.distinct()

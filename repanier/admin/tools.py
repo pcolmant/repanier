@@ -6,7 +6,6 @@ from django.core.checks import messages
 from django.http import HttpResponseRedirect, QueryDict
 from django.utils.http import urlencode
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.models import Permanence
 from repanier.models import Product
 

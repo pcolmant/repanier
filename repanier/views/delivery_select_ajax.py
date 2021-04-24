@@ -22,17 +22,20 @@ def delivery_select_ajax(request):
         raise Http404
     # construct a list which will contain all of the data for the response
     user = request.user
-    customer = Customer.objects.filter(
-        user_id=user.id, may_order=True
-    ).order_by('?').first()
+    customer = (
+        Customer.objects.filter(user_id=user.id, may_order=True).order_by("?").first()
+    )
     if customer is None:
         raise Http404
     translation.activate(customer.language)
-    permanence_id = sint(request.GET.get('permanence', 0))
-    customer_invoice = CustomerInvoice.objects.filter(
-        customer_id=customer.id,
-        permanence_id=permanence_id
-    ).order_by('?').first()
+    permanence_id = sint(request.GET.get("permanence", 0))
+    customer_invoice = (
+        CustomerInvoice.objects.filter(
+            customer_id=customer.id, permanence_id=permanence_id
+        )
+        .order_by("?")
+        .first()
+    )
     if customer_invoice is None:
         raise Http404
     if customer.delivery_point is not None:
@@ -40,18 +43,19 @@ def delivery_select_ajax(request):
             Q(
                 permanence_id=permanence_id,
                 delivery_point_id=customer.delivery_point_id,
-                status=PERMANENCE_OPENED
-            ) | Q(
+                status=PERMANENCE_OPENED,
+            )
+            | Q(
                 permanence_id=permanence_id,
                 delivery_point__customer_responsible__isnull=True,
-                status=PERMANENCE_OPENED
+                status=PERMANENCE_OPENED,
             )
         )
     else:
         qs = DeliveryBoard.objects.filter(
             permanence_id=permanence_id,
             delivery_point__customer_responsible__isnull=True,
-            status=PERMANENCE_OPENED
+            status=PERMANENCE_OPENED,
         )
     is_selected = False
     delivery_counter = 0
@@ -61,17 +65,24 @@ def delivery_select_ajax(request):
     for delivery in qs:
         if delivery.id == customer_invoice.delivery_id:
             is_selected = True
-            html += "<option value=\"{}\" selected>{}</option>".format(delivery.id,
-                                                                       delivery.get_delivery_customer_display())
-        elif delivery.status == PERMANENCE_OPENED and customer_invoice.status == PERMANENCE_OPENED:
+            html += '<option value="{}" selected>{}</option>'.format(
+                delivery.id, delivery.get_delivery_customer_display()
+            )
+        elif (
+            delivery.status == PERMANENCE_OPENED
+            and customer_invoice.status == PERMANENCE_OPENED
+        ):
             delivery_counter += 1
-            html += "<option value=\"{}\">{}</option>".format(delivery.id,
-                                                              delivery.get_delivery_customer_display())
+            html += '<option value="{}">{}</option>'.format(
+                delivery.id, delivery.get_delivery_customer_display()
+            )
     if not is_selected:
         if delivery_counter == 0:
-            label = "{}".format(_('No delivery point is open for you. You can not place order.'))
+            label = "{}".format(
+                _("No delivery point is open for you. You can not place order.")
+            )
         else:
-            label = "{}".format(_('Please, select a delivery point'))
-        html = "<option value=\"-1\" selected>{}</option>".format(label) + html
+            label = "{}".format(_("Please, select a delivery point"))
+        html = '<option value="-1" selected>{}</option>'.format(label) + html
 
     return JsonResponse({"#delivery": mark_safe(html)})

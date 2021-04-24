@@ -21,12 +21,12 @@
                     {% else %}
                         <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="">
                     {% endif %}
-                    {{ offer.cache_part_a | safe }}
+                    {{ offer.cache_part_a_v2 | safe }}
                         </div>
                 </div>
                 <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
                     {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
-                    {{ offer.cache_part_b | safe }}
+                    {{ offer.cache_part_b_v2 | safe }}
                     {% if may_order and not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}
                 </div>
                 {% if offer.is_box %}

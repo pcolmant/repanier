@@ -20,9 +20,7 @@ from django.core.mail import EmailMultiAlternatives, mail_admins
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.const import EMPTY_STRING
-from repanier.tools import debug_parameters
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +86,7 @@ class RepanierEmail(EmailMultiAlternatives):
         # Email subject *must not* contain newlines
         self.subject = "".join(self.subject.splitlines())
 
-        logger.debug("################################## send_email")
+        logger.debug("################################## send_email to : {}".format(email_to))
         attempt_counter = 1
         while not email_send and attempt_counter < 3:
             attempt_counter += 1
@@ -97,8 +95,9 @@ class RepanierEmail(EmailMultiAlternatives):
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.to = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
                         self.send()
+                        logger.debug("email send only to REPANIER_SETTINGS_BCC_ALL_EMAIL_TO (DEBUG)")
                     else:
-                        logger.debug("send email to : {}".format(email_to))
+                        logger.debug("email not send (DEBUG and no REPANIER_SETTINGS_BCC_ALL_EMAIL_TO)")
                 else:
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]

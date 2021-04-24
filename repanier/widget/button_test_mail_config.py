@@ -10,7 +10,9 @@ class ButtonTestMailConfigWidget(Widget):
         super(ButtonTestMailConfigWidget, self).__init__(attrs=attrs)
 
     def get_context(self, name, value, attrs):
-        context = super(ButtonTestMailConfigWidget, self).get_context(name, value, attrs)
+        context = super(ButtonTestMailConfigWidget, self).get_context(
+            name, value, attrs
+        )
         return context
 
     class Media:

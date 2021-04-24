@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import translation
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -115,15 +114,8 @@ class Staff(MPTTModel, TranslatableModel):
                 is_webmaster=True,
                 customer_responsible=very_first_customer,
                 can_be_contacted=True,
+                long_name_v2=_("Coordinator"),
             )
-            cur_language = translation.get_language()
-            for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-                language_code = language["code"]
-                translation.activate(language_code)
-                coordinator.set_current_language(language_code)
-                coordinator.long_name = _("Coordinator")
-                coordinator.save()
-            translation.activate(cur_language)
         return coordinator
 
     @classmethod
@@ -184,9 +176,7 @@ class Staff(MPTTModel, TranslatableModel):
 
     @cached_property
     def get_html_signature(self):
-        function_name = self.safe_translation_getter(
-            "long_name", any_language=True, default=EMPTY_STRING
-        )
+        function_name = self.long_name_v2
         if self.customer_responsible is not None:
             customer = self.customer_responsible
             customer_name = customer.long_basket_name or customer.short_basket_name
@@ -218,9 +208,7 @@ class Staff(MPTTModel, TranslatableModel):
     def get_str_member(self):
         if self.customer_responsible is not None:
             return "{} : {}{}".format(
-                self.safe_translation_getter(
-                    "long_name", any_language=True, default=EMPTY_STRING
-                ),
+                self.long_name_v2,
                 self.customer_responsible.long_basket_name or self.customer_responsible,
                 self.customer_responsible.get_phone1(prefix=" (", postfix=")"),
             )
@@ -230,9 +218,7 @@ class Staff(MPTTModel, TranslatableModel):
     objects = StaffManager()
 
     def __str__(self):
-        return self.safe_translation_getter(
-            "long_name", any_language=True, default=EMPTY_STRING
-        )
+        return self.long_name_v2
 
     class Meta:
         verbose_name = _("Staff member")

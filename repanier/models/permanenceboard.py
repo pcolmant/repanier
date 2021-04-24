@@ -1,8 +1,7 @@
+import repanier.apps
 from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-
-import repanier.apps
 from repanier.const import EMPTY_STRING
 
 
@@ -45,9 +44,7 @@ class PermanenceBoard(models.Model):
             self.permanence_role,
             customer_name,
             customer_phone_or_email,
-            self.permanence_role.safe_translation_getter(
-                "description", any_language=True, default=EMPTY_STRING
-            ),
+            self.permanence_role.description_v2,
         )
 
     class Meta:

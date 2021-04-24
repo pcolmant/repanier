@@ -2,13 +2,12 @@ from os import sep as os_sep
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.forms import widgets, HiddenInput, forms, fields
+from django.forms import widgets, forms, fields
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-
 from repanier.const import DECIMAL_ZERO, EMPTY_STRING
 from repanier.models.customer import Customer
 from repanier.picture.const import SIZE_S
@@ -79,8 +78,6 @@ class CustomerForm(forms.Form):
         return email1
 
     def __init__(self, *args, **kwargs):
-        from repanier.apps import REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO
-
         self.request = kwargs.pop("request", None)
         super(CustomerForm, self).__init__(*args, **kwargs)
 

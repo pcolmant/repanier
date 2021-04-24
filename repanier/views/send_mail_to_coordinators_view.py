@@ -3,12 +3,10 @@ import threading
 from django.contrib.auth.decorators import login_required
 from django.forms import widgets, forms, fields
 from django.shortcuts import render
-from django.utils import translation
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
-
 from repanier.email.email import RepanierEmail
 from repanier.models.staff import Staff
 from repanier.tools import get_repanier_template_name
@@ -26,7 +24,6 @@ class CoordinatorsContactForm(forms.Form):
         for staff in Staff.objects.filter(
             is_active=True,
             can_be_contacted=True,
-            translations__language_code=translation.get_language(),
         ):
             choices.append((staff.id, staff.get_str_member))
         self.fields["staff"].choices = choices

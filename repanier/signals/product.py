@@ -5,7 +5,6 @@ from django.db.models import F
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.utils.text import capfirst
-
 from repanier.const import (
     PRODUCT_ORDER_UNIT_PC,
     PRODUCT_ORDER_UNIT_PC_PRICE_KG,
@@ -126,6 +125,7 @@ def product_post_save(sender, **kwargs):
         * product.customer_unit_price.amount,
         calculated_content_deposit=F("content_quantity") * product.unit_deposit.amount,
     )
+
 
 @receiver(pre_save, sender=Product_Translation)
 def product_translation_pre_save(sender, **kwargs):

@@ -9,11 +9,15 @@ from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q, F
 from django.template import loader
 from django.utils import timezone
-from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.widgets import TextEditorWidget
-
-from repanier.const import DECIMAL_ONE, DECIMAL_ZERO, LUT_PRODUCER_PRODUCT_ORDER_UNIT, EMPTY_STRING, LUT_VAT
+from repanier.const import (
+    DECIMAL_ONE,
+    DECIMAL_ZERO,
+    LUT_PRODUCER_PRODUCT_ORDER_UNIT,
+    EMPTY_STRING,
+    LUT_VAT,
+)
 from repanier.email.email import RepanierEmail
 from repanier.models.configuration import Configuration
 from repanier.models.customer import Customer
@@ -28,14 +32,21 @@ logger = logging.getLogger(__name__)
 
 
 class AuthRepanierPasswordResetForm(PasswordResetForm):
-    def send_mail(self, subject_template_name, email_template_name,
-                  context, from_email, to_email, html_email_template_name=None):
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
-        subject = ''.join(subject.splitlines())
+        subject = "".join(subject.splitlines())
         body = loader.render_to_string(html_email_template_name, context)
 
         if settings.REPANIER_SETTINGS_DEMO:
@@ -45,30 +56,31 @@ class AuthRepanierPasswordResetForm(PasswordResetForm):
             html_body=body,
             to=[to_email],
             show_customer_may_unsubscribe=False,
-            send_even_if_unsubscribed=True
+            send_even_if_unsubscribed=True,
         )
         email.send_email()
 
     # From Django 1.8, this let the user enter name or email to recover
     def get_users(self, email):
-        """Given an email, return matching user(s) who should receive a reset.
-
-        """
+        """Given an email, return matching user(s) who should receive a reset."""
         if email:
             return User.objects.filter(
-                Q(
-                    username__iexact=email[:150], is_active=True
-                ) | Q(
-                    email__iexact=email, is_active=True
-                )
-            ).order_by('?')
+                Q(username__iexact=email[:150], is_active=True)
+                | Q(email__iexact=email, is_active=True)
+            ).order_by("?")
         else:
             return User.objects.none()
 
 
 class AuthRepanierSetPasswordForm(SetPasswordForm):
-    def send_mail(self, subject_template_name, email_template_name,
-                  context, to_email, html_email_template_name=None):
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        to_email,
+        html_email_template_name=None,
+    ):
         """
         Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
@@ -77,10 +89,16 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
         subject = EMPTY_STRING.join(subject.splitlines())
         body = loader.render_to_string(email_template_name, context)
 
-        email_message = EmailMultiAlternatives(subject, body, [to_email, ])
+        email_message = EmailMultiAlternatives(
+            subject,
+            body,
+            [
+                to_email,
+            ],
+        )
         if html_email_template_name is not None:
             html_email = loader.render_to_string(html_email_template_name, context)
-            email_message.attach_alternative(html_email, 'text/html')
+            email_message.attach_alternative(html_email, "text/html")
 
         email_message.send()
 
@@ -90,32 +108,39 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
             now = timezone.now()
             if self.user.is_superuser:
                 Configuration.objects.filter(id=DECIMAL_ONE).update(
-                    login_attempt_counter=DECIMAL_ZERO,
-                    password_reset_on=now
+                    login_attempt_counter=DECIMAL_ZERO, password_reset_on=now
                 )
             else:
-                customer = Customer.objects.filter(
-                    user=self.user, is_active=True
-                ).order_by('?').first()
+                customer = (
+                    Customer.objects.filter(user=self.user, is_active=True)
+                    .order_by("?")
+                    .first()
+                )
                 if customer is not None:
                     Customer.objects.filter(id=customer.id).update(
-                        login_attempt_counter=DECIMAL_ZERO,
-                        password_reset_on=now
+                        login_attempt_counter=DECIMAL_ZERO, password_reset_on=now
                     )
             current_site = get_current_site(request)
             site_name = current_site.name
             domain = current_site.domain
             context = {
-                'email': self.user.email,
-                'domain': domain,
-                'site_name': site_name,
-                'user': self.user,
-                'protocol': 'https' if use_https else 'http',
+                "email": self.user.email,
+                "domain": domain,
+                "site_name": site_name,
+                "user": self.user,
+                "protocol": "https" if use_https else "http",
             }
-            self.send_mail(get_repanier_template_name('registration/password_reset_done_subject.txt'),
-                           get_repanier_template_name('registration/password_reset_done_email.html'),
-                           context, self.user.email,
-                           html_email_template_name=None)
+            self.send_mail(
+                get_repanier_template_name(
+                    "registration/password_reset_done_subject.txt"
+                ),
+                get_repanier_template_name(
+                    "registration/password_reset_done_email.html"
+                ),
+                context,
+                self.user.email,
+                html_email_template_name=None,
+            )
         return self.user
 
 
@@ -131,49 +156,50 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
 
 
 class ProducerProductForm(forms.Form):
-    long_name = forms.CharField(label=_('Long name'))
+    long_name = forms.CharField(label=_("Long name"))
     order_unit = forms.ChoiceField(
         label=_("Order unit"),
         choices=LUT_PRODUCER_PRODUCT_ORDER_UNIT,
         widget=SelectProducerOrderUnitWidget,
-        required=True
+        required=True,
     )
 
     if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
         production_mode = forms.ModelChoiceField(
             LUT_ProductionMode.objects.filter(
-                rght=F('lft') + 1, is_active=True, translations__language_code=translation.get_language()).order_by(
-                'translations__short_name'
-            ),
+                rght=F("lft") + 1,
+                is_active=True,
+            ).order_by("short_name_v2"),
             label=_("Production mode"),
             widget=SelectBootstrapWidget,
-            required=False
+            required=False,
         )
 
     customer_increment_order_quantity = forms.DecimalField(
-        max_digits=4, decimal_places=1)
-    order_average_weight = forms.DecimalField(
-        max_digits=4, decimal_places=1)
+        max_digits=4, decimal_places=1
+    )
+    order_average_weight = forms.DecimalField(max_digits=4, decimal_places=1)
     producer_unit_price = forms.DecimalField(
-        label=_("Producer unit price"),
-        max_digits=8, decimal_places=2)
+        label=_("Producer unit price"), max_digits=8, decimal_places=2
+    )
     unit_deposit = forms.DecimalField(
-        label=_("Deposit"),
-        max_digits=8, decimal_places=2)
-    stock = forms.DecimalField(
-        label=_("Stock"),
-        max_digits=7, decimal_places=1)
+        label=_("Deposit"), max_digits=8, decimal_places=2
+    )
+    stock = forms.DecimalField(label=_("Stock"), max_digits=7, decimal_places=1)
     vat_level = forms.ChoiceField(
         label=_("VAT rate"),
         choices=LUT_VAT,
         widget=SelectBootstrapWidget,
-        required=True
+        required=True,
     )
     picture = forms.CharField(
         label=_("Picture"),
         widget=RepanierPictureWidget(upload_to="product", size=SIZE_M, bootstrap=True),
-        required=False)
-    offer_description = forms.CharField(label=_('Offer description'), widget=TextEditorWidget, required=False)
+        required=False,
+    )
+    offer_description_v2 = forms.CharField(
+        label=_("Offer description"), widget=TextEditorWidget, required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super(ProducerProductForm, self).__init__(*args, **kwargs)

@@ -1,7 +1,6 @@
 import django
 from django.conf import settings
 from django.http import Http404
-from django.utils import translation
 from django.views.generic import DetailView
 
 from repanier.models.bankaccount import BankAccount
@@ -46,26 +45,21 @@ class CustomerInvoiceView(DetailView):
             if settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM:
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
-                    offer_item__translations__language_code=translation.get_language(),
                     is_box_content=False,
-                ).order_by("producer", "offer_item__translations__order_sort_order")
+                ).order_by("producer", "offer_item__order_sort_order_v2")
             else:
                 purchase_set = Purchase.objects.filter(
                     customer_invoice=customer_invoice,
-                    offer_item__translations__language_code=translation.get_language(),
-                ).order_by("offer_item__translations__order_sort_order")
+                ).order_by("offer_item__order_sort_order_v2")
             context["purchase_set"] = purchase_set
             purchase_by_other_set = (
                 Purchase.objects.filter(
                     customer_invoice__customer_charged_id=customer_invoice.customer_id,
                     # customer_charged_id=customer_invoice.customer_id,
                     permanence_id=customer_invoice.permanence_id,
-                    offer_item__translations__language_code=translation.get_language(),
                 )
                 .exclude(customer_id=customer_invoice.customer_id)
-                .order_by(
-                    "customer", "producer", "offer_item__translations__order_sort_order"
-                )
+                .order_by("customer", "producer", "offer_item__order_sort_order_v2")
             )
             context["purchase_by_other_set"] = purchase_by_other_set
             if customer_invoice.invoice_sort_order is not None:

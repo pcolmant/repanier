@@ -3,7 +3,6 @@ from typing import Any, Union
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.fields.RepanierMoneyField import RepanierMoney
 
 WEBMASTER_GROUP = "webmaster"
@@ -329,8 +328,8 @@ else:
 BANK_NOT_LATEST_TOTAL = "100"
 BANK_MEMBERSHIP_FEE = "150"
 BANK_COMPENSATION = (
-    "200"
-)  # BANK_COMPENSATION may occurs in previous release of Repanier
+    "200"  # BANK_COMPENSATION may occurs in previous release of Repanier
+)
 BANK_PROFIT = "210"
 BANK_TAX = "220"
 BANK_CALCULATED_INVOICE = "250"

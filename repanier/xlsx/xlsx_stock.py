@@ -1,8 +1,6 @@
-from django.db import transaction
-from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
-
 import repanier.apps
+from django.db import transaction
+from django.utils.translation import ugettext_lazy as _
 from repanier.const import *
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
@@ -48,9 +46,8 @@ def export_permanence_stock(
             OfferItemWoReceiver.objects.filter(
                 permanence_id=permanence.id,
                 manage_production=True,
-                translations__language_code=translation.get_language(),
             )
-            .order_by("producer", "translations__long_name", "order_average_weight")
+            .order_by("producer", "long_name_v2", "order_average_weight")
             .select_related("producer", "department_for_customer")
             .iterator()
         )
@@ -364,9 +361,8 @@ def export_producer_stock(producers, customer_price=False, wb=None):
             Product.objects.filter(
                 producer_id=producer.id,
                 is_active=True,
-                translations__language_code=translation.get_language(),
             )
-            .order_by("translations__long_name", "order_average_weight")
+            .order_by("long_name_v2", "order_average_weight")
             .select_related("producer", "department_for_customer")
             .iterator()
         )

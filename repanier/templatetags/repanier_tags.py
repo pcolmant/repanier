@@ -204,7 +204,7 @@ def repanier_user_bs3(context, *args, **kwargs):
                 ]
         else:
             nodes = [
-                '<li class="dropdown"><a href="{}" class="btn btn-info">👤 {}</a></li>'.format(
+                '<li class="dropdown"><a href="{}" class="btn btn-info"><span class="glyphicon glyphicon-user" aria-hidden="true"></span> {}</a></li>'.format(
                     reverse("repanier:login_form"), _("Log me in")
                 )
             ]

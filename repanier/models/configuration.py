@@ -241,41 +241,45 @@ class Configuration(TranslatableModel):
 
     def clean(self):
         try:
-            template = Template(self.offer_customer_mail)
+            template = Template(self.offer_customer_mail_v2)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.offer_customer_mail, error_str))
+                mark_safe("{} : {}".format(self.offer_customer_mail_V2, error_str))
             )
         try:
-            template = Template(self.order_customer_mail)
+            template = Template(self.order_customer_mail_v2)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.order_customer_mail, error_str))
+                mark_safe("{} : {}".format(self.order_customer_mail_v2, error_str))
             )
         try:
-            template = Template(self.order_staff_mail)
+            template = Template(self.order_staff_mail_v2)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.order_staff_mail, error_str))
+                mark_safe("{} : {}".format(self.order_staff_mail_v2, error_str))
             )
         try:
-            template = Template(self.order_producer_mail)
+            template = Template(self.order_producer_mail_v2)
         except Exception as error_str:
             raise ValidationError(
-                mark_safe("{} : {}".format(self.order_producer_mail, error_str))
+                mark_safe("{} : {}".format(self.order_producer_mail_v2, error_str))
             )
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             try:
-                template = Template(self.invoice_customer_mail)
+                template = Template(self.invoice_customer_mail_v2)
             except Exception as error_str:
                 raise ValidationError(
-                    mark_safe("{} : {}".format(self.invoice_customer_mail, error_str))
+                    mark_safe(
+                        "{} : {}".format(self.invoice_customer_mail_v2, error_str)
+                    )
                 )
             try:
-                template = Template(self.invoice_producer_mail)
+                template = Template(self.invoice_producer_mail_v2)
             except Exception as error_str:
                 raise ValidationError(
-                    mark_safe("{} : {}".format(self.invoice_producer_mail, error_str))
+                    mark_safe(
+                        "{} : {}".format(self.invoice_producer_mail_v2, error_str)
+                    )
                 )
 
     @classmethod
@@ -438,160 +442,166 @@ class Configuration(TranslatableModel):
 
         if LUT_DepartmentForCustomer.objects.count() == 0:
             # Generate a template of LUT_DepartmentForCustomer
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Vegetable"))
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Fruit"))
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Bakery"))
+            parent = LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Vegetable")
+            )
+            parent = LUT_DepartmentForCustomer.objects.create(short_name_v2=_("Fruit"))
+            parent = LUT_DepartmentForCustomer.objects.create(short_name_v2=_("Bakery"))
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Flour"), parent=parent
+                short_name_v2=_("Flour"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Bread"), parent=parent
+                short_name_v2=_("Bread"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Pastry"), parent=parent
+                short_name_v2=_("Pastry"), parent=parent
             )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Butchery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Delicatessen"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Chicken"), parent=parent
+            parent = LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Butchery")
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Pork"), parent=parent
+                short_name_v2=_("Delicatessen"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Beef"), parent=parent
+                short_name_v2=_("Chicken"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Beef and pork"), parent=parent
+                short_name_v2=_("Pork"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Lamb"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Grocery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cookie"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Creamery"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Dairy"), parent=parent
+                short_name_v2=_("Beef"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cow cheese"), parent=parent
+                short_name_v2=_("Beef and pork"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Goat cheese"), parent=parent
+                short_name_v2=_("Lamb"), parent=parent
+            )
+            parent = LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Grocery")
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Sheep cheese"), parent=parent
+                short_name_v2=_("Cookie"), parent=parent
+            )
+            parent = LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Creamery")
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Mixed cheese"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Icecream"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Cup of icecream"), parent=parent
+                short_name_v2=_("Dairy"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Icecream per liter"), parent=parent
+                short_name_v2=_("Cow cheese"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Icecream in frisco"), parent=parent
-            )
-            parent = LUT_DepartmentForCustomer.objects.create(short_name=_("Drink"))
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Juice"), parent=parent
+                short_name_v2=_("Goat cheese"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Coffee"), parent=parent
-            )
-            LUT_DepartmentForCustomer.objects.create(short_name=_("Tea"), parent=parent)
-            LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Herbal tea"), parent=parent
+                short_name_v2=_("Sheep cheese"), parent=parent
             )
             LUT_DepartmentForCustomer.objects.create(
-                short_name=_("Wine"), parent=parent
+                short_name_v2=_("Mixed cheese"), parent=parent
+            )
+            parent = LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Icecream")
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Cup of icecream"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Icecream per liter"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Icecream in frisco"), parent=parent
+            )
+            parent = LUT_DepartmentForCustomer.objects.create(short_name_v2=_("Drink"))
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Juice"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Coffee"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Tea"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Herbal tea"), parent=parent
+            )
+            LUT_DepartmentForCustomer.objects.create(
+                short_name_v2=_("Wine"), parent=parent
             )
 
     def init_email(self):
-        for language in settings.PARLER_LANGUAGES[settings.SITE_ID]:
-            language_code = language["code"]
-            self.set_current_language(language_code)
-            try:
-                self.offer_customer_mail = """
-                    Bonjour,<br />
-                    <br />
-                    Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
-                    {% if offer_description %}<br />{{ offer_description }}<br />
-                    {% endif %} {% if offer_recent_detail %}<br />
-                    Nouveauté(s) :<br />
-                    {{ offer_recent_detail }}{% endif %}<br />
-                    <br />
-                    {{ signature }}
-                    """
-                self.order_customer_mail = """
-                    Bonjour {{ long_basket_name }},<br>
-                    <br>
-                    En pièce jointe vous trouverez le montant de votre panier {{ short_basket_name }} de la {{ permanence_link }}.<br>
-                    <br>
-                    {{ last_balance }}<br>
-                    {{ order_amount }}<br>
-                    {% if on_hold_movement %}{{ on_hold_movement }}<br>
-                    {% endif %} {% if payment_needed %}{{ payment_needed }}<br>
-                    {% endif %}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.cancel_order_customer_mail = """
-                    Bonjour {{ long_basket_name }},<br>
-                    <br>
-                    La commande ci-jointe de votre panier {{ short_basket_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.order_staff_mail = """
-                    Cher/Chère membre de l'équipe de préparation,<br>
-                    <br>
-                    En pièce jointe vous trouverez la liste de préparation pour la {{ permanence_link }}.<br>
-                    <br>
-                    L'équipe de préparation est composée de :<br>
-                    {{ board_composition_and_description }}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.order_producer_mail = """
-                    Cher/Chère {{ name }},<br>
-                    <br>
-                    {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br>
-                    <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.invoice_customer_mail = """
-                    Bonjour {{ name }},<br>
-                    <br>
-                    En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br>
-                    <br>
-                    {{ invoice_description }}{% endif %}
-                    <br>
-                    {{ order_amount }}<br>
-                    {{ last_balance_link }}<br>
-                    {% if payment_needed %}{{ payment_needed }}<br>
-                    {% endif %}<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.invoice_producer_mail = """
-                    Cher/Chère {{ profile_name }},<br>
-                    <br>
-                    En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br>
-                    <br>
-                    {{ signature }}
-                    """
-                self.save_translations()
-            except TranslationDoesNotExist:
-                pass
+        self.offer_customer_mail_v2 = """
+            Bonjour,<br />
+            <br />
+            Les commandes de la {{ permanence_link }} sont maintenant ouvertes auprès de : {{ offer_producer }}.<br />
+            {% if offer_description %}<br />{{ offer_description }}<br />
+            {% endif %} {% if offer_recent_detail %}<br />
+            Nouveauté(s) :<br />
+            {{ offer_recent_detail }}{% endif %}<br />
+            <br />
+            {{ signature }}
+            """
+        self.order_customer_mail_v2 = """
+            Bonjour {{ long_basket_name }},<br>
+            <br>
+            En pièce jointe vous trouverez le montant de votre panier {{ short_basket_name }} de la {{ permanence_link }}.<br>
+            <br>
+            {{ last_balance }}<br>
+            {{ order_amount }}<br>
+            {% if on_hold_movement %}{{ on_hold_movement }}<br>
+            {% endif %} {% if payment_needed %}{{ payment_needed }}<br>
+            {% endif %}<br>
+            <br>
+            {{ signature }}
+            """
+        self.cancel_order_customer_mail_v2 = """
+            Bonjour {{ long_basket_name }},<br>
+            <br>
+            La commande ci-jointe de votre panier {{ short_basket_name }} de la {{ permanence_link }} <b>a été annulée</b> car vous ne l'avez pas confirmée.<br>
+            <br>
+            {{ signature }}
+            """
+        self.order_staff_mail_v2 = """
+            Cher/Chère membre de l'équipe de préparation,<br>
+            <br>
+            En pièce jointe vous trouverez la liste de préparation pour la {{ permanence_link }}.<br>
+            <br>
+            L'équipe de préparation est composée de :<br>
+            {{ board_composition_and_description }}<br>
+            <br>
+            {{ signature }}
+            """
+        self.order_producer_mail_v2 = """
+            Cher/Chère {{ name }},<br>
+            <br>
+            {% if order_empty %}Le groupe ne vous a rien acheté pour la {{ permanence_link }}.{% else %}En pièce jointe, vous trouverez la commande du groupe pour la {{ permanence }}.{% if duplicate %}<br>
+            <strong>ATTENTION </strong>: La commande est présente en deux exemplaires. Le premier exemplaire est classé par produit et le duplicata est classé par panier.{% else %}{% endif %}{% endif %}<br>
+            <br>
+            {{ signature }}
+            """
+        self.invoice_customer_mail_v2 = """
+            Bonjour {{ name }},<br>
+            <br>
+            En cliquant sur ce lien vous trouverez votre facture pour la {{ permanence_link }}.{% if invoice_description %}<br>
+            <br>
+            {{ invoice_description }}{% endif %}
+            <br>
+            {{ order_amount }}<br>
+            {{ last_balance_link }}<br>
+            {% if payment_needed %}{{ payment_needed }}<br>
+            {% endif %}<br>
+            <br>
+            {{ signature }}
+            """
+        self.invoice_producer_mail_v2 = """
+            Cher/Chère {{ profile_name }},<br>
+            <br>
+            En cliquant sur ce lien vous trouverez le détail de notre paiement pour la {{ permanence_link }}.<br>
+            <br>
+            {{ signature }}
+            """
+        self.save()
 
     def __str__(self):
         return self.group_name

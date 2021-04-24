@@ -76,7 +76,7 @@ class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
                 )
 
         return [
-            (d.id, d.short_name)
+            (d.id, d.short_name_v2)
             for d in LUT_DepartmentForCustomer.objects.filter(product__in=inner_qs)
         ]
 
@@ -105,7 +105,7 @@ class ProductFilterByProductionMode(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return [
-            (p.id, p.short_name)
+            (p.id, p.short_name_v2)
             for p in LUT_ProductionMode.objects.filter(is_active=True)
         ]
 

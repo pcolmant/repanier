@@ -8,7 +8,7 @@ from repanier.tools import get_repanier_template_name
 
 class PermanenceView(ListView):
     template_name = get_repanier_template_name("task_form.html")
-    success_url = '/'
+    success_url = "/"
     paginate_by = 50
     paginate_orphans = 5
 
@@ -20,11 +20,9 @@ class PermanenceView(ListView):
         qs = PermanenceBoard.objects.filter(
             permanence__status__lte=PERMANENCE_SEND,
             permanence__master_permanence__isnull=True,
-            permanence_role__rght=F('permanence_role__lft') + 1,
-            permanence_role__is_active=True
+            permanence_role__rght=F("permanence_role__lft") + 1,
+            permanence_role__is_active=True,
         ).order_by(
-            "permanence_date",
-            "permanence_role__tree_id",
-            "permanence_role__lft"
+            "permanence_date", "permanence_role__tree_id", "permanence_role__lft"
         )
         return qs

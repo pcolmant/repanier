@@ -11,7 +11,6 @@ from django.forms import Textarea
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.const import EMPTY_STRING, DECIMAL_ONE
 from repanier.const import REPANIER_MONEY_ZERO
 from repanier.fields.RepanierMoneyField import FormMoneyField

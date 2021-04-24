@@ -1,6 +1,5 @@
-from django.forms import NumberInput
-
 import repanier.apps
+from django.forms import NumberInput
 from repanier.tools import get_repanier_template_name
 
 

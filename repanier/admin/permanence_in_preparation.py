@@ -5,6 +5,7 @@ import repanier.apps
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
 from django.db import transaction
 from django.db.models import F
@@ -329,7 +330,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
                 wb.save(response)
             return response
         if "apply" in request.POST:
-            if admin.ACTION_CHECKBOX_NAME in request.POST:
+            if ACTION_CHECKBOX_NAME in request.POST:
                 deliveries_to_be_exported = request.POST.getlist("deliveries", [])
                 if len(deliveries_to_be_exported) == 0:
                     user_message = _("You must select at least one delivery point.")
@@ -360,7 +361,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "action": "export_customer_order",
                 "permanence": permanence,
                 "deliveries": DeliveryBoard.objects.filter(permanence_id=permanence.id),
@@ -484,7 +485,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "action": "open_order",
                 "permanence": permanence,
                 "form": form,
@@ -679,7 +680,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
                 "action": "close_order",
                 "permanence": permanence,
                 "deliveries": deliveries,
@@ -710,7 +711,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
                 "sub_title": _("Please, confirm the action : back to scheduled"),
                 "action": "back_to_scheduled",
                 "permanence": permanence,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
 
@@ -751,7 +752,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
                     permanence=permanence_id
                 ).order_by("delivery_point"),
                 "form": form,
-                "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
+                "action_checkbox_name": ACTION_CHECKBOX_NAME,
             },
         )
 

@@ -27,9 +27,7 @@ class Notification(TranslatableModel):
     )
 
     def get_notification_display(self):
-        return self.safe_translation_getter(
-            "notification", any_language=True, default=EMPTY_STRING
-        )
+        return self.notification_v2
 
     def get_html_notification_card_display(self):
         if settings.REPANIER_SETTINGS_TEMPLATE != "bs3":
