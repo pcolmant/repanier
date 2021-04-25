@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repanier\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-11 12:11+0100\n"
+"POT-Creation-Date: 2021-04-25 10:09+0200\n"
 "PO-Revision-Date: 2019-12-11 13:48+0100\n"
 "Last-Translator: Patrick Colmant <pcolmant@gmail.com>\n"
 "Language-Team: Patrick Colmant <pcolmant@gmail.com>\n"
@@ -21,7 +21,8 @@ msgstr ""
 #: static/repanier/bs3/js/confirm_exit.js:12
 #: static/repanier/bs4/js/confirm_exit.js:12
 msgid "New information not saved. Do you wish to leave the page?"
-msgstr "Les modifications ne sont pas sauvegardées. Voulez-vous quitter la page ?"
+msgstr ""
+"Les modifications ne sont pas sauvegardées. Voulez-vous quitter la page ?"
 
 #: static/repanier/bs3/js/expenses_to_be_apportioned.js:4
 #: static/repanier/bs4/js/expenses_to_be_apportioned.js:4

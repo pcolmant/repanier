@@ -32,11 +32,11 @@ class CustomerForm(forms.Form):
     )
     email1 = fields.EmailField(
         label=_(
-            "My main email address, used to reset the password and connect to the site"
+            "E-mail address used to sign in to the site"
         )
     )
     email2 = fields.EmailField(
-        label=_("My secondary email address (does not allow to connect to the site)"),
+        label=_("Secondary email address informed of sales"),
         required=False,
     )
 
@@ -73,7 +73,7 @@ class CustomerForm(forms.Form):
         if qs.exists():
             self.add_error(
                 "email1",
-                _("The email {} is already used by another user.").format(email1),
+                _("The email address {} is already used by another user.").format(email1),
             )
         return email1
 

@@ -39,13 +39,17 @@ def get_group_name(site_name):
 
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
-PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
+PROJECT_DIR = Path(__file__).parent
+PROJECT_PATH = Path('.')
+DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
+# PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
+# PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
 print("---- common_settings.py - Python path is : %s", sys.path)
 
-conf_file_name = "{}.ini".format(os.path.join(PROJECT_DIR, DJANGO_SETTINGS_SITE_NAME))
-if not (os.path.exists(conf_file_name)):
+conf_file_name = PROJECT_DIR / ( DJANGO_SETTINGS_SITE_NAME +  ".ini" )
+print("---- common_settings.py - conf_file_name : ", conf_file_name)
+if not conf_file_name.exists():
     print("---- common_settings.py - Settings file %s not found", conf_file_name)
     raise SystemExit(-1)
 
@@ -198,19 +202,17 @@ DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 STATICFILES_STORAGE = "{}.big_blind_static.BigBlindManifestStaticFilesStorage".format(REPANIER_SETTINGS_VERSION)
 
 # Directory where working files, such as media and databases are kept
-MEDIA_DIR = os.path.join(PROJECT_DIR, "media")
+MEDIA_DIR = PROJECT_DIR / "media"
 print("---- common_settings.py - media dir : {}".format(MEDIA_DIR))
-
-MEDIA_PUBLIC_DIR = os.path.join(MEDIA_DIR, "public")
+MEDIA_PUBLIC_DIR = MEDIA_DIR / "public"
 print("---- common_settings.py - media public dir : {}".format(MEDIA_PUBLIC_DIR))
-
-STATIC_DIR = os.path.join(PROJECT_DIR, "collect-static")
-print("---- common_settings.py - static dir : {}".format(STATIC_DIR))
-
 MEDIA_ROOT = MEDIA_PUBLIC_DIR
-MEDIA_URL = "{}{}{}".format(os.sep, "media", os.sep)
+MEDIA_URL = "/media/"
+
+STATIC_DIR = PROJECT_DIR / "collect-static"
+print("---- common_settings.py - static dir : {}".format(STATIC_DIR))
 STATIC_ROOT = STATIC_DIR
-STATIC_URL = "{}{}{}".format(os.sep, "static", os.sep)
+STATIC_URL = "/static/"
 
 
 def get_repanier_css_name(template_name):
@@ -292,7 +294,7 @@ SECURE_REFERRER_POLICY = "same-origin"
 
 
 ##################### Application definition : Django & Django CMS
-LOCALE_PATHS = (os.path.join(PROJECT_DIR, "locale"),)
+LOCALE_PATHS = ( PROJECT_DIR / "locale",)
 
 INSTALLED_APPS = (
     "{}.apps.RepanierConfig".format(REPANIER_SETTINGS_VERSION),  # ! Important : First installed app for template precedence
@@ -636,9 +638,9 @@ if DJANGO_SETTINGS_LOGGING:
             }
         },
         "loggers": {
-            "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
+            # "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
             REPANIER_SETTINGS_VERSION: {"level": "DEBUG", "handlers": ["console"]},
-            "django.template": {"level": "DEBUG", "handlers": ["console"]},
+            # "django.template": {"level": "DEBUG", "handlers": ["console"]},
         },
     }
 

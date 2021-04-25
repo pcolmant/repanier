@@ -9,7 +9,7 @@ django-crispy-forms==1.11.2
 django-debug-toolbar==3.2
 django-easy-select2==1.5.7
 django-filer==2.0.2 # 2.1rc1
-django-formtools==2.2
+django-formtools==2.3
 django-import-export==2.5.0
 django-js-asset==1.2.2
 django-mptt==0.12.0

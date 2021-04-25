@@ -7,7 +7,7 @@
                     <form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8"
                           id="login-form">{% csrf_token %}
                         <div class="modal-header">
-                            <h4 class="modal-title" id="loginModalLabel">{% trans "Login" %}</h4>
+                            <h4 class="modal-title" id="loginModalLabel">{% trans "Sign in" %}</h4>
                         </div>
 
                         <div class="modal-body">
@@ -29,7 +29,7 @@
                                             </p>
                                         </div>
                                     {% endif %}
-                                    <label for="id_username">{% trans "Username" %}</label>
+                                    <label for="id_username">{% trans "E-mail address" %}</label>
                                     {% if form.username.errors %}
                                         <p class="text-danger">
                                             {% for error in form.username.errors %}
@@ -38,7 +38,7 @@
                                         </p>
                                     {% endif %}
                                     <input type="text" class="form-control" id="id_username"
-                                           placeholder="{% trans "Username" %}" name="username" autofocus>
+                                           placeholder="{% trans "E-mail address" %}" name="username" autofocus>
                                     <br>
                                     <label for="id_password">{% trans "Password" %}</label>
                                     {% if form.password.errors %}
@@ -73,7 +73,7 @@
                                     <a href="{{ next }}" class="btn btn-info">{% trans "Continue as a customer." %}</a>
                                     <a href="{% url "repanier:logout" %}" class="btn btn-info">{% trans "Logout" %}</a>
                                 {% else %}
-                                    <button class="btn btn-info" type="submit">{% trans "Login" %}</button>
+                                    <button class="btn btn-info" type="submit">{% trans "Sign in" %}</button>
                                     <a href="{% url "repanier:password_reset" %}"
                                        class="btn btn-info">{% trans "Password reset" %}</a>
                                 {% endif %}

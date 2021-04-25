@@ -62,7 +62,7 @@ class UserDataForm(forms.ModelForm):
         if qs.exists():
             self.add_error(
                 "email",
-                _("The email {} is already used by another user.").format(email),
+                _("The email address {} is already used by another user.").format(email),
             )
         qs = user_model.objects.filter(username=username).order_by("?")
         if self.instance.id is not None:
@@ -248,7 +248,7 @@ class CustomerResource(resources.ModelResource):
             customer = None
         if user_email_qs.exists():
             raise ValueError(
-                _("The email {} is already used by another user.").format(
+                _("The email address {} is already used by another user.").format(
                     instance.user.email
                 )
             )
@@ -407,7 +407,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return EMPTY_STRING
 
-    get_last_login.short_description = _("Last login")
+    get_last_login.short_description = _("Last sign in")
     get_last_login.admin_order_field = "user__last_login"
 
     def get_actions(self, request):

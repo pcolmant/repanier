@@ -40,7 +40,7 @@ class Staff(MPTTModel, TranslatableModel):
         blank=False,
     )
     login_attempt_counter = models.DecimalField(
-        _("Login attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
+        _("Sign in attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
     )
     translations = TranslatedFields(
         long_name=models.CharField(

@@ -25,7 +25,7 @@ class Customer(models.Model):
         settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE
     )
     login_attempt_counter = models.DecimalField(
-        _("Login attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
+        _("Sign in attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
     )
 
     short_basket_name = models.CharField(
