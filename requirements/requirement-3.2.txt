@@ -6,7 +6,7 @@ django-classy-tags==2.0.0
 # django-cms==3.8.0
 https://github.com/pcolmant/django-cms/archive/refs/heads/develop.zip
 django-crispy-forms==1.11.2
-django-debug-toolbar==3.2
+django-debug-toolbar==3.2.1
 django-easy-select2==1.5.7
 django-filer==2.0.2 # 2.1rc1
 django-formtools==2.3
