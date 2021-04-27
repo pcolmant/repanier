@@ -515,11 +515,12 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         return []
 
     def get_form(self, request, customer=None, **kwargs):
+
         form = super(CustomerWithUserDataAdmin, self).get_form(
             request, customer, **kwargs
         )
-        email_field = form.base_fields["email"]
 
+        email_field = form.base_fields["email"]
         if customer is not None:
             user_model = get_user_model()
             user = user_model.objects.get(id=customer.user_id)

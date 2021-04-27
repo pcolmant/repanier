@@ -92,14 +92,21 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
                 "get_html_producer_qty_stock_invoiced",
             )
 
-    def get_form(self, request, offer_item=None, **kwargs):
+    def get_fieldsets(self, request, offer_item=None):
         fields_basic = [
             ("permanence", "department_for_customer", "product"),
             ("producer_qty_stock_invoiced",),
         ]
-        self.fieldsets = ((None, {"fields": fields_basic}),)
+
+        fieldsets = (
+            (None, {"fields": fields_basic}),
+        )
+        return fieldsets
+
+    def get_form(self, request, offer_item=None, **kwargs):
 
         form = super(OfferItemClosedAdmin, self).get_form(request, offer_item, **kwargs)
+
         permanence_field = form.base_fields["permanence"]
         department_for_customer_field = form.base_fields["department_for_customer"]
         product_field = form.base_fields["product"]

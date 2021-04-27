@@ -330,7 +330,9 @@ class BoxAdmin(TranslatableAdmin):
         producer_queryset = Producer.objects.filter(
             id=Producer.get_or_create_group().id
         )
+
         form = super(BoxAdmin, self).get_form(request, box, **kwargs)
+
         producer_field = form.base_fields["producer"]
         picture_field = form.base_fields["picture2"]
         vat_level_field = form.base_fields["vat_level"]

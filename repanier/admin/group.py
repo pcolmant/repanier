@@ -316,9 +316,10 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return []
 
     def get_form(self, request, group=None, **kwargs):
-        form = super(GroupWithUserDataAdmin, self).get_form(request, group, **kwargs)
-        email_field = form.base_fields["email"]
 
+        form = super(GroupWithUserDataAdmin, self).get_form(request, group, **kwargs)
+
+        email_field = form.base_fields["email"]
         if group is not None:
             user_model = get_user_model()
             user = user_model.objects.get(id=group.user_id)

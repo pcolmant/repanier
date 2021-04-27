@@ -162,6 +162,7 @@ class CustomerSendAdmin(admin.ModelAdmin):
     ordering = ("customer",)
 
     def get_form(self, request, obj=None, **kwargs):
+
         form = super(CustomerSendAdmin, self).get_form(request, obj, **kwargs)
 
         permanence_field = form.base_fields["permanence"]

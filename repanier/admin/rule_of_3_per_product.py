@@ -230,14 +230,14 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         qs = super(OfferItemSendAdmin, self).get_queryset(request)
         return qs
 
-    def get_form(self, request, obj=None, **kwargs):
+    def get_fieldsets(self, request, product=None):
         prices = ("producer_unit_price", "unit_deposit")
 
-        if not obj.wrapped and obj.order_unit in [
+        if not product.wrapped and product.order_unit in [
             PRODUCT_ORDER_UNIT_KG,
             PRODUCT_ORDER_UNIT_PC_KG,
         ]:
-            self.fields = (
+            fields_basic = (
                 (
                     "permanence",
                     "department_for_customer",
@@ -251,7 +251,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 ),
             )
         else:
-            self.fields = (
+            fields_basic = (
                 (
                     "permanence",
                     "department_for_customer",
@@ -261,8 +261,15 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 prices,
                 ("offer_purchase_price",),
             )
+        fieldsets = (
+            (None, {"fields": fields_basic}),
+        )
+        return fieldsets
+
+    def get_form(self, request, obj=None, **kwargs):
 
         form = super(OfferItemSendAdmin, self).get_form(request, obj, **kwargs)
+
         permanence_field = form.base_fields["permanence"]
         department_for_customer_field = form.base_fields["department_for_customer"]
         product_field = form.base_fields["product"]

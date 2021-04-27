@@ -419,7 +419,9 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return ["is_updated_on"]
 
     def get_form(self, request, purchase=None, **kwargs):
+
         form = super(PurchaseAdmin, self).get_form(request, purchase, **kwargs)
+
         # /purchase/add/?_changelist_filters=permanence%3D6%26customer%3D3
         # If we are coming from a list screen, use the filter to pre-fill the form
         permanence_id = None

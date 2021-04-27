@@ -6,4 +6,4 @@
 
 # Do not forget to change chmod +x on this .sh file
 DIR=$( cd "$( dirname "${0}" )" && pwd )
-$DIR/../../bin/python $DIR/../manage.py delete_pending_purchases
+$DIR/../../../../venvs/_a_/bin/python $DIR/../manage.py delete_pending_purchases

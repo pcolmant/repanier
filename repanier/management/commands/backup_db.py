@@ -28,7 +28,7 @@ class Command(BaseCommand):
         if result == 0:
             migrations_files = NamedTemporaryFile(prefix="{}-mig.bak.".format(db_name), suffix='.gz')
             repanier_path = os.path.join(os.path.dirname(settings.PROJECT_DIR), "repanier")
-            result = call("cd {} && tar -zcf {} migrations{}*.py".format(repanier_path, migrations_files.name, os.sep),
+            result = call("cd {} && tar -zcf {} migrations{}{}{}*.py".format(repanier_path, migrations_files.name, os.sep, settings.DJANGO_SETTINGS_SITE_NAME, os.sep),
                           stdout=migrations_files, shell=True)
 
             if result == 0:

@@ -45,7 +45,7 @@ DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
 # PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 # PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
-print("---- common_settings.py - Python path is : %s", sys.path)
+print("---- common_settings.py - Python path is : ", sys.path)
 
 conf_file_name = PROJECT_DIR / ( DJANGO_SETTINGS_SITE_NAME +  ".ini" )
 print("---- common_settings.py - conf_file_name : ", conf_file_name)
