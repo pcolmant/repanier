@@ -2,7 +2,6 @@
 from os import sep as os_sep
 
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
@@ -18,13 +17,10 @@ from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
-from import_export.widgets import ForeignKeyWidget
+from import_export.widgets import ForeignKeyWidget, ManyToManyWidget
 from repanier.admin.admin_filter import (
     ProductFilterByDepartmentForThisProducer,
     ProductFilterByProducer,
-    ProductFilterByProductionMode,
-    ProductFilterByPlacement,
-    ProductFilterByVatLevel,
 )
 from repanier.admin.tools import check_cancel_in_post, check_product, add_filter
 from repanier.admin.tools import get_query_filters
@@ -61,11 +57,9 @@ from repanier.tools import (
 from repanier.widget.select_admin_order_unit import SelectAdminOrderUnitWidget
 from repanier.xlsx.widget import (
     IdWidget,
-    TranslatedForeignKeyWidget,
     DecimalBooleanWidget,
     ChoiceWidget,
     ThreeDecimalsWidget,
-    TranslatedManyToManyWidget,
     TwoMoneysWidget,
     HTMLWidget,
 )
@@ -83,9 +77,7 @@ class ProductResource(resources.ModelResource):
     )
     department_for_customer = fields.Field(
         attribute="department_for_customer",
-        widget=TranslatedForeignKeyWidget(
-            LUT_DepartmentForCustomer, field="short_name"
-        ),
+        widget=ForeignKeyWidget(LUT_DepartmentForCustomer, field="short_name_v2"),
     )
     order_unit = fields.Field(
         attribute="order_unit",
@@ -117,18 +109,13 @@ class ProductResource(resources.ModelResource):
     )
     wrapped = fields.Field(attribute="wrapped", widget=DecimalBooleanWidget())
     stock = fields.Field(attribute="stock", widget=ThreeDecimalsWidget())
-    limit_order_quantity_to_stock = fields.Field(
-        attribute="limit_order_quantity_to_stock",
-        widget=DecimalBooleanWidget(),
-        readonly=False,
-    )
     producer_order_by_quantity = fields.Field(
         attribute="producer_order_by_quantity", widget=ThreeDecimalsWidget()
     )
     label = fields.Field(
         attribute="production_mode",
-        widget=TranslatedManyToManyWidget(
-            LUT_ProductionMode, separator="; ", field="short_name"
+        widget=ManyToManyWidget(
+            LUT_ProductionMode, separator="; ", field="short_name_v2"
         ),
     )
     picture = fields.Field(attribute="picture2", readonly=True)
@@ -239,7 +226,6 @@ class ProductResource(resources.ModelResource):
             "customer_increment_order_quantity",
             "customer_alert_order_quantity",
             "stock",
-            "limit_order_quantity_to_stock",
             "producer_order_by_quantity",
             "label",
             "picture",
@@ -329,22 +315,7 @@ class ProductDataForm(forms.ModelForm):
             customer_alert_order_quantity = self.cleaned_data.get(
                 "customer_alert_order_quantity", LIMIT_ORDER_QTY_ITEM
             )
-            if not settings.REPANIER_SETTINGS_STOCK:
-                limit_order_quantity_to_stock = False
-            else:
-                # Important, default for limit_order_quantity_to_stock is True, because this field is not displayed
-                # if the pre-opening of offer is activated fro this producer.
-                limit_order_quantity_to_stock = self.cleaned_data.get(
-                    "limit_order_quantity_to_stock", False
-                )
-                if not limit_order_quantity_to_stock and producer is not None:
-                    if producer.represent_this_buyinggroup:
-                        self.add_error(
-                            "limit_order_quantity_to_stock",
-                            _(
-                                "You must limit the order quantity to the stock because the producer represent this buyinggroup."
-                            ),
-                        )
+            stock = self.cleaned_data.get("stock", DECIMAL_ZERO)
 
             if order_unit in [
                 PRODUCT_ORDER_UNIT_PC,
@@ -370,13 +341,9 @@ class ProductDataForm(forms.ModelForm):
                         "customer_increment_order_quantity",
                         _("The increment must be an integer."),
                     )
-                if limit_order_quantity_to_stock:
-                    stock = self.cleaned_data.get("stock", DECIMAL_ZERO)
-                    if stock != stock // 1:
-                        self.add_error("stock", _("The stock must be an integer."))
-                elif (
-                    customer_alert_order_quantity != customer_alert_order_quantity // 1
-                ):
+                if stock != stock // 1:
+                    self.add_error("stock", _("The stock must be an integer."))
+                if customer_alert_order_quantity != customer_alert_order_quantity // 1:
                     self.add_error(
                         "customer_alert_order_quantity",
                         _("The alert quantity must be an integer."),
@@ -395,7 +362,7 @@ class ProductDataForm(forms.ModelForm):
                     "customer_increment_order_quantity",
                     _("The increment must be greater than zero."),
                 )
-            elif not limit_order_quantity_to_stock:
+            elif stock == DECIMAL_ZERO:
                 if customer_increment_order_quantity <= customer_minimum_order_quantity:
                     if customer_minimum_order_quantity != customer_alert_order_quantity:
                         order_qty_item = (
@@ -545,15 +512,16 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     duplicate_product.short_description = _("Duplicate")
 
     def get_list_display(self, request):
-        list_display = ["get_long_name_with_producer", "get_row_actions"]
-        list_editable = ["producer_unit_price"]
-        list_display += ["producer_unit_price"]
-        if settings.REPANIER_SETTINGS_STOCK:
-            list_display += ["stock"]
-            list_editable += ["stock"]
-        else:
-            if not settings.REPANIER_SETTINGS_IS_MINIMALIST:
-                list_display += ["get_customer_alert_order_quantity"]
+        list_display = [
+            "get_long_name_with_producer",
+            "get_row_actions",
+            "producer_unit_price",
+            "stock",
+        ]
+        list_editable = [
+            "producer_unit_price",
+            "stock",
+        ]
         self.list_editable = list_editable
         return list_display
 
@@ -563,14 +531,11 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             ProductFilterByDepartmentForThisProducer,
             "is_into_offer",
             "wrapped",
-            ProductFilterByPlacement,
-            ProductFilterByVatLevel,
+            # ProductFilterByPlacement,
+            # ProductFilterByVatLevel,
             "is_active",
+            # ProductFilterByProductionMode,
         ]
-        if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-            list_filter += [ProductFilterByProductionMode]
-        if settings.REPANIER_SETTINGS_STOCK:
-            list_filter += ["limit_order_quantity_to_stock"]
         return list_filter
 
     def get_fieldsets(self, request, product=None):
@@ -585,10 +550,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                 "customer_minimum_order_quantity",
                 "customer_increment_order_quantity",
             ),
-            (
-                "limit_order_quantity_to_stock",
-                "stock",
-            ),
+            ("stock",),
             "wrapped",
             "is_into_offer",
         ]
@@ -635,62 +597,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                 is_into_offer_value = query_params["is_into_offer__exact"]
 
         producer = producer_queryset.first()
-        # fields_basic = [
-        #     ("producer", "long_name_v2", "picture2"),
-        #     "order_unit",
-        #     "wrapped",
-        #     ("producer_unit_price", "unit_deposit", "order_average_weight"),
-        # ]
-        # if settings.REPANIER_SETTINGS_STOCK:
-        #     fields_basic += [
-        #         (
-        #             "customer_minimum_order_quantity",
-        #             "customer_increment_order_quantity",
-        #         ),
-        #         "limit_order_quantity_to_stock",
-        #         "stock",
-        #     ]
-        # else:
-        #     if settings.REPANIER_SETTINGS_IS_MINIMALIST:
-        #         # Important : do not use ( ) for minimalist. The UI will be more logical.
-        #         fields_basic += [
-        #             "customer_minimum_order_quantity",
-        #             "customer_increment_order_quantity",
-        #         ]
-        #     else:
-        #         fields_basic += [
-        #             (
-        #                 "customer_minimum_order_quantity",
-        #                 "customer_increment_order_quantity",
-        #                 "customer_alert_order_quantity",
-        #             )
-        #         ]
-        # fields_advanced_descriptions = [
-        #     ("department_for_customer", "placement"),
-        #     "offer_description_v2",
-        # ]
-        #
-        # fields_advanced_options = []
-        #
-        # if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-        #     fields_advanced_descriptions += ["production_mode"]
-        # if settings.REPANIER_SETTINGS_STOCK:
-        #     fields_advanced_options += ["producer_order_by_quantity"]
-        # fields_advanced_options += ["reference"]
-        # fields_advanced_options += ["vat_level"]
-        # fields_advanced_options += [("is_into_offer", "is_active")]
-        #
-        # self.fieldsets = (
-        #     (None, {"fields": fields_basic}),
-        #     (
-        #         _("Advanced descriptions"),
-        #         {"classes": ("collapse",), "fields": fields_advanced_descriptions},
-        #     ),
-        #     (
-        #         _("Advanced options"),
-        #         {"classes": ("collapse",), "fields": fields_advanced_options},
-        #     ),
-        # )
 
         form = super(ProductAdmin, self).get_form(request, product, **kwargs)
 

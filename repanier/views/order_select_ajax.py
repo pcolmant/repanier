@@ -80,10 +80,7 @@ def order_select_ajax(request):
                         q_previous_order = purchase.quantity_ordered
                     else:
                         q_previous_order = DECIMAL_ZERO
-                    if (
-                        status == PERMANENCE_OPENED
-                        and offer_item.limit_order_quantity_to_stock
-                    ):
+                    if status == PERMANENCE_OPENED and offer_item.stock > DECIMAL_ZERO:
                         q_alert = (
                             offer_item.stock
                             - offer_item.quantity_invoiced

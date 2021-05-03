@@ -170,6 +170,11 @@ class Command(BaseCommand):
                     "WHERE repanier_product.id = b.master_id and b.language_code = 'fr' "
                 )
                 cursor.execute(
+                    "UPDATE repanier_product SET "
+                    "stock = 0 "
+                    "WHERE limit_order_quantity_to_stock = false "
+                )
+                cursor.execute(
                     "UPDATE repanier_staff SET "
                     "long_name_v2 = b.long_name, "
                     "function_description_v2 = b.function_description "

@@ -9,28 +9,26 @@ from repanier.models.product import Product
 
 
 class Box(Product):
-    def get_calculated_stock(self):
-        # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)
-        stock = DECIMAL_MAX_STOCK
-        for box_content in (
-            BoxContent.objects.filter(
-                box_id=self.id,
-                product__limit_order_quantity_to_stock=True,
-                content_quantity__gt=DECIMAL_ZERO,
-                product__is_box=False,  # Disallow recursivity
-            )
-            .prefetch_related("product")
-            .only(
-                "content_quantity",
-                "product__stock",
-                "product__limit_order_quantity_to_stock",
-            )
-            .order_by("?")
-        ):
-            stock = min(
-                stock, box_content.product.stock // box_content.content_quantity
-            )
-        return stock
+    # def get_calculated_stock(self):
+    #     # stock : max_digits=9, decimal_places=3 => 1000000 > max(stock)
+    #     stock = DECIMAL_MAX_STOCK
+    #     for box_content in (
+    #         BoxContent.objects.filter(
+    #             box_id=self.id,
+    #             product__stock__gt=DECIMAL_ZERO,
+    #             content_quantity__gt=DECIMAL_ZERO,
+    #             product__is_box=False,  # Disallow recursivity
+    #         )
+    #         .prefetch_related("product")
+    #         .only(
+    #             "content_quantity",
+    #             "product__stock",
+    #         )
+    #     ):
+    #         stock = min(
+    #             stock, box_content.product.stock // box_content.content_quantity
+    #         )
+    #     return stock
 
     def get_calculated_price(self):
         result_set = BoxContent.objects.filter(box_id=self.id).aggregate(

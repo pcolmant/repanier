@@ -86,7 +86,9 @@ class RepanierEmail(EmailMultiAlternatives):
         # Email subject *must not* contain newlines
         self.subject = "".join(self.subject.splitlines())
 
-        logger.debug("################################## send_email to : {}".format(email_to))
+        logger.debug(
+            "################################## send_email to : {}".format(email_to)
+        )
         attempt_counter = 1
         while not email_send and attempt_counter < 3:
             attempt_counter += 1
@@ -95,9 +97,13 @@ class RepanierEmail(EmailMultiAlternatives):
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.to = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
                         self.send()
-                        logger.debug("email send only to REPANIER_SETTINGS_BCC_ALL_EMAIL_TO (DEBUG)")
+                        logger.debug(
+                            "email send only to REPANIER_SETTINGS_BCC_ALL_EMAIL_TO (DEBUG)"
+                        )
                     else:
-                        logger.debug("email not send (DEBUG and no REPANIER_SETTINGS_BCC_ALL_EMAIL_TO)")
+                        logger.debug(
+                            "email not send (DEBUG and no REPANIER_SETTINGS_BCC_ALL_EMAIL_TO)"
+                        )
                 else:
                     if settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO:
                         self.bcc = [settings.REPANIER_SETTINGS_BCC_ALL_EMAIL_TO]
@@ -197,14 +203,12 @@ class RepanierEmail(EmailMultiAlternatives):
                         REPANIER_SETTINGS_DELIVERY_POINT : {REPANIER_SETTINGS_DELIVERY_POINT}
                         REPANIER_SETTINGS_DEMO : {REPANIER_SETTINGS_DEMO}
                         REPANIER_SETTINGS_GROUP : {REPANIER_SETTINGS_GROUP}
-                        REPANIER_SETTINGS_IS_MINIMALIST : {REPANIER_SETTINGS_IS_MINIMALIST}
                         REPANIER_SETTINGS_MANAGE_ACCOUNTING : {REPANIER_SETTINGS_MANAGE_ACCOUNTING}
                         REPANIER_SETTINGS_PRODUCT_LABEL : {REPANIER_SETTINGS_PRODUCT_LABEL}
                         REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO : {REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO}
                         REPANIER_SETTINGS_ROUND_INVOICES : {REPANIER_SETTINGS_ROUND_INVOICES}
                         REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM : {REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM}
                         REPANIER_SETTINGS_SMS_GATEWAY_MAIL : {REPANIER_SETTINGS_SMS_GATEWAY_MAIL}
-                        REPANIER_SETTINGS_STOCK : {REPANIER_SETTINGS_STOCK}
                         REPANIER_SETTINGS_TEMPLATE : {REPANIER_SETTINGS_TEMPLATE}
                         """ "".format(
                 REPANIER_SETTINGS_GROUP_NAME=settings.REPANIER_SETTINGS_GROUP_NAME,
@@ -220,14 +224,12 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_DELIVERY_POINT=settings.REPANIER_SETTINGS_DELIVERY_POINT,
                 REPANIER_SETTINGS_DEMO=settings.REPANIER_SETTINGS_DEMO,
                 REPANIER_SETTINGS_GROUP=settings.REPANIER_SETTINGS_GROUP,
-                REPANIER_SETTINGS_IS_MINIMALIST=settings.REPANIER_SETTINGS_IS_MINIMALIST,
                 REPANIER_SETTINGS_MANAGE_ACCOUNTING=settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
                 REPANIER_SETTINGS_PRODUCT_LABEL=settings.REPANIER_SETTINGS_PRODUCT_LABEL,
                 REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO=settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO,
                 REPANIER_SETTINGS_ROUND_INVOICES=settings.REPANIER_SETTINGS_ROUND_INVOICES,
                 REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM=settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM,
                 REPANIER_SETTINGS_SMS_GATEWAY_MAIL=settings.REPANIER_SETTINGS_SMS_GATEWAY_MAIL,
-                REPANIER_SETTINGS_STOCK=settings.REPANIER_SETTINGS_STOCK,
                 REPANIER_SETTINGS_TEMPLATE=settings.REPANIER_SETTINGS_TEMPLATE,
             )
             RepanierEmail.send_test_email(

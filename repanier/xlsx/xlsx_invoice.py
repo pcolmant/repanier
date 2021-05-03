@@ -309,7 +309,7 @@ def export_invoice(
                 (
                     _("Department"),
                     15,
-                    purchase.offer_item.department_for_customer.short_name
+                    purchase.offer_item.department_for_customer.short_name_v2
                     if purchase.offer_item.department_for_customer is not None
                     else EMPTY_STRING,
                     NumberFormat.FORMAT_TEXT,

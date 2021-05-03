@@ -206,7 +206,7 @@ class OfferItem(Item):
     def get_qty_display(self):
         if self.is_box:
             # To avoid unicode error in email_offer.send_open_order
-            qty_display = BOX_UNICODE
+            qty_display = EMPTY_STRING # BOX_UNICODE
         else:
             if self.use_order_unit_converted:
                 # The only conversion done in permanence concerns PRODUCT_ORDER_UNIT_PC_KG

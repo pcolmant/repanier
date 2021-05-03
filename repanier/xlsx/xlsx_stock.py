@@ -15,7 +15,7 @@ from repanier.xlsx.import_tools import get_row, get_header
 def export_permanence_stock(
     permanence, deliveries_id=(), customer_price=False, wb=None, ws_customer_title=None
 ):
-    if settings.REPANIER_SETTINGS_STOCK and wb is not None:
+    if wb is not None:
         yellowFill = Fill()
         yellowFill.start_color.index = "FFEEEE11"
         yellowFill.end_color.index = "FFEEEE11"
@@ -92,7 +92,7 @@ def export_permanence_stock(
                         offer_item.department_for_customer_id
                     )
                     department_for_customer_save__short_name = (
-                        offer_item.department_for_customer.short_name
+                        offer_item.department_for_customer.short_name_v2
                         if offer_item.department_for_customer is not None
                         else None
                     )
@@ -390,7 +390,7 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 if product.department_for_customer is not None:
                     c.value = "{} - {}".format(
                         product.get_long_name(),
-                        product.department_for_customer.short_name,
+                        product.department_for_customer.short_name_v2,
                     )
                 else:
                     c.value = product.get_long_name()

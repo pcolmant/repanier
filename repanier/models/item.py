@@ -138,11 +138,13 @@ class Item(TranslatableModel):
 
     stock = models.DecimalField(
         _("Inventory"),
+        help_text=_("0 mean : do not limit the quantity on sale."),
         default=DECIMAL_MAX_STOCK,
         max_digits=9,
         decimal_places=3,
         validators=[MinValueValidator(0)],
     )
+    # TBD
     limit_order_quantity_to_stock = models.BooleanField(
         _("Limit maximum order qty of the group to stock qty"), default=False
     )
@@ -173,7 +175,6 @@ class Item(TranslatableModel):
         self.producer_unit_price = source.producer_unit_price
         self.producer_vat = source.producer_vat
         self.unit_deposit = source.unit_deposit
-        self.limit_order_quantity_to_stock = source.limit_order_quantity_to_stock
         self.stock = source.stock
         self.customer_minimum_order_quantity = source.customer_minimum_order_quantity
         self.customer_increment_order_quantity = (
@@ -412,12 +413,6 @@ class Item(TranslatableModel):
             display = "{}{}".format(unit_display, price_display)
             return display
 
-    def get_customer_alert_order_quantity(self):
-        if settings.REPANIER_SETTINGS_STOCK and self.limit_order_quantity_to_stock:
-            return "{}".format(_("Inventory"))
-        return self.customer_alert_order_quantity
-
-    get_customer_alert_order_quantity.short_description = _("Alert quantity")
 
     def get_long_name_with_producer_price(self):
         return self.get_long_name(customer_price=False)

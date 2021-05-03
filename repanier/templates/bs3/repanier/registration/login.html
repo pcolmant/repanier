@@ -17,7 +17,7 @@
                                     <p><b>{% trans "Do you want to become:" %}</b></p>
                                     {% for staff_responsibility in staff_responsibilities %}
                                         <a href="{% url "repanier:login_form" %}?as_id={{ staff_responsibility.id }}"
-                                           class="btn btn-info">{{ staff_responsibility.long_name }}</a><br>
+                                           class="btn btn-info">{{ staff_responsibility.long_name_v2 }}</a><br>
                                     {% endfor %}
                                 {% else %}
                                     {% if form.non_field_errors %}

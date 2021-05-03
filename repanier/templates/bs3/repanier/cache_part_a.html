@@ -2,7 +2,7 @@
 <b>{{ offer.get_order_name }}</b>
 {% if offer.product.offer_description_v2|length > 0 %}&nbsp;<span class="glyphicon glyphicon-info-sign"></span>{% endif %}
 <br><small>{{ offer.producer.short_profile_name }}</small>
-{% if offer.department_for_customer %}<br><small>{{ offer.department_for_customer.short_name }}</small>{% endif %}
+{% if offer.department_for_customer %}<br><small>{{ offer.department_for_customer.short_name_v2 }}</small>{% endif %}
 {% for production_mode in offer.product.production_mode.all %}
     {% if forloop.first %}<br>{% endif %}
     {% if production_mode.picture2 %}

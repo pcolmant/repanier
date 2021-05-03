@@ -128,7 +128,7 @@
                             {% if box_set %}
                                 {% for box in box_set.all %}
                                     <li><a href="{% url "repanier:order_view" permanence_id %}?box={{ box.id|unlocalize }}"
-                                           {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }} 📦{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
+                                           {% if box.id == box_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ box.long_name | truncatechars:20 }}{#  <span class="glyphicon glyphicon-gift"></span> #}</a>
                                 {% endfor %}
                             {% endif %}
                             {% if producer_set %}
@@ -154,18 +154,18 @@
                                                 {% ifchanged department.parent_id %}
                                                 {% if department.parent.level == 0 %}</ul>{% endif %}
                                                 <li><a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department.parent_id|unlocalize }}"
-                                                       {% if department.parent_id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.parent.short_name }}</a>
+                                                       {% if department.parent_id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.parent.short_name_v2 }}</a>
                                                 </li>
                                                 {% if department.parent.level == 0 %}<ul class="nav nav-stacked">{% endif %}
                                                 {% endifchanged %}
                                                 <li>
                                                     <a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department.id|unlocalize }}"
-                                                       {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name }}</a>
+                                                       {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name_v2 }}</a>
                                                 </li>
                                             {% else %}
                                                     </ul><li>
                                                     <a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department.id|unlocalize }}"
-                                                       {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name }}</a>
+                                                       {% if department.id == department_id|add:0 %}class="bs-docs-sidebar-active"{% endif %}>{{ department.short_name_v2 }}</a>
                                                     </li><ul class="nav nav-stacked">
                                             {% endif %}
                                         {% endfor %}

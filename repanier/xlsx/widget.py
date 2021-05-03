@@ -1,9 +1,13 @@
 import datetime
 
 from django.utils import datetime_safe
-from django.utils.encoding import smart_text
-from import_export.widgets import CharWidget, ForeignKeyWidget, DecimalWidget, ManyToManyWidget, \
-    BooleanWidget, Widget
+from import_export.widgets import (
+    CharWidget,
+    ForeignKeyWidget,
+    DecimalWidget,
+    BooleanWidget,
+    Widget,
+)
 from repanier.const import *
 
 
@@ -11,6 +15,7 @@ class DecimalBooleanWidget(BooleanWidget):
     """
     Widget for converting boolean fields.
     """
+
     TRUE_VALUES = ["1", 1, DECIMAL_ONE, 1.0]
     FALSE_VALUE = "0"
 
@@ -131,26 +136,15 @@ class TwoMoneysWidget(MoneysWidget):
         return super(TwoMoneysWidget, self).render_quantize(value, TWO_DECIMALS)
 
 
-class TranslatedForeignKeyWidget(ForeignKeyWidget):
-    def clean(self, value, row=None, *args, **kwargs):
-        if value:
-            target = self.model.objects.filter(**{"translations__{}".format(self.field): value}).order_by('?').first()
-            if target is not None:
-                return target
-            else:
-                target = self.model.objects.create(**{"{}".format(self.field): value})
-                return target
-        else:
-            return
-
-
 class ProducerNameWidget(ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if value:
             value = ("{}".format(value)).strip()
-            target = self.model.objects.filter(**{"{}".format(self.field): value}).order_by('?').first()
+            target = self.model.objects.filter(
+                **{"{}".format(self.field): value}
+            ).first()
             if target is None:
-                target = self.model.objects.filter(**{"bank_account": value}).order_by('?').first()
+                target = self.model.objects.filter(**{"bank_account": value}).first()
             return target
         else:
             return
@@ -160,33 +154,50 @@ class CustomerNameWidget(ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if value:
             value = ("{}".format(value)).strip()
-            target = self.model.objects.filter(**{"{}".format(self.field): value}).order_by('?').first()
+            target = self.model.objects.filter(
+                **{"{}".format(self.field): value}
+            ).first()
             if target is None:
-                target = self.model.objects.filter(**{"bank_account1": value}).order_by('?').first()
+                target = self.model.objects.filter(**{"bank_account1": value}).first()
                 if target is None:
-                    target = self.model.objects.filter(**{"bank_account2": value}).order_by('?').first()
+                    target = self.model.objects.filter(
+                        **{"bank_account2": value}
+                    ).first()
             return target
         else:
             return
 
 
-class TranslatedManyToManyWidget(ManyToManyWidget):
-    def clean(self, value, row=None, *args, **kwargs):
-        if not value:
-            return self.model.objects.none()
-        result = []
-        if value:
-            array_values = value.split(self.separator)
-            for v in array_values:
-                add_this = self.model.objects.filter(**{"translations__{}".format(self.field): v}).order_by('?').first()
-                if add_this is None:
-                    add_this = self.model.objects.create(**{"{}".format(self.field): v})
-                result.append(add_this)
-        return result
+# class TranslatedForeignKeyWidget(ForeignKeyWidget):
+#     def clean(self, value, row=None, *args, **kwargs):
+#         if value:
+#             target = self.model.objects.filter(**{"translations__{}".format(self.field): value}).first()
+#             if target is not None:
+#                 return target
+#             else:
+#                 target = self.model.objects.create(**{"{}".format(self.field): value})
+#                 return target
+#         else:
+#             return
 
-    def render(self, array_values, obj=None):
-        ids = [smart_text(getattr(obj, self.field)) for obj in array_values.all()]
-        return self.separator.join(ids)
+
+# class TranslatedManyToManyWidget(ManyToManyWidget):
+#     def clean(self, value, row=None, *args, **kwargs):
+#         if not value:
+#             return self.model.objects.none()
+#         result = []
+#         if value:
+#             array_values = value.split(self.separator)
+#             for v in array_values:
+#                 add_this = self.model.objects.filter(**{"translations__{}".format(self.field): v}).first()
+#                 if add_this is None:
+#                     add_this = self.model.objects.create(**{"{}".format(self.field): v})
+#                 result.append(add_this)
+#         return result
+#
+#     def render(self, array_values, obj=None):
+#         ids = [smart_text(getattr(obj, self.field)) for obj in array_values.all()]
+#         return self.separator.join(ids)
 
 
 class ChoiceWidget(CharWidget):
@@ -236,11 +247,15 @@ class OneToOneWidget(ForeignKeyWidget):
         ``field`` should be the lookup field on the related model.
     """
 
-    def __init__(self, model, field='pk', **kwargs):
+    def __init__(self, model, field="pk", **kwargs):
         super(OneToOneWidget, self).__init__(model, field, **kwargs)
 
     def clean(self, value, row=None, *args, **kwargs):
-        r = self.model.objects.filter(**{self.field: value}).order_by('?').only(self.field).first() if value else None
+        r = (
+            self.model.objects.filter(**{self.field: value}).only(self.field).first()
+            if value
+            else None
+        )
         if r is None and value is not None:
             r = self.model(**{self.field: value})
         return r
@@ -276,7 +291,9 @@ class DateWidgetExcel(Widget):
             return value.date()
         if isinstance(value, float):
             # Data comes from Excel
-            return (datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)).date()
+            return (
+                datetime.datetime(1899, 12, 30) + datetime.timedelta(days=value)
+            ).date()
         for format in self.formats:
             try:
                 return datetime.datetime.strptime(value, format).date()
@@ -291,6 +308,7 @@ class DateWidgetExcel(Widget):
             return value.strftime(self.formats[0])
         except:
             return datetime_safe.new_date(value).strftime(self.formats[0])
+
 
 class HTMLWidget(CharWidget):
     """

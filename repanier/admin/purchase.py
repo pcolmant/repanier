@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 class PurchaseResource(resources.ModelResource):
     id = fields.Field(attribute="id", widget=IdWidget(), readonly=True)
-    short_name = fields.Field(attribute="permanence__short_name", readonly=True)
+    short_name = fields.Field(attribute="permanence__short_name_v2", readonly=True)
     date = fields.Field(
         attribute="permanence__permanence_date", widget=DateWidgetExcel(), readonly=True
     )

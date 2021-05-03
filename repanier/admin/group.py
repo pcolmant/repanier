@@ -50,7 +50,9 @@ class UserDataForm(forms.ModelForm):
         if qs.exists():
             self.add_error(
                 "email",
-                _("The email address {} is already used by another user.").format(email),
+                _("The email address {} is already used by another user.").format(
+                    email
+                ),
             )
         qs = user_model.objects.filter(username=username).order_by("?")
         if self.instance.id is not None:
@@ -356,7 +358,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         delivery_point.is_active = True
         delivery_point.transport = form.cleaned_data["transport"]
         delivery_point.min_transport = form.cleaned_data["min_transport"]
-        delivery_point.short_name = form.cleaned_data["short_basket_name"]
+        delivery_point.short_name_v2 = form.cleaned_data["short_basket_name"]
         delivery_point.save()
         Customer.objects.filter(delivery_point_id=delivery_point.id).update(
             delivery_point=None

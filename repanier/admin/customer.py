@@ -17,7 +17,7 @@ from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
-from import_export.widgets import CharWidget
+from import_export.widgets import CharWidget, ForeignKeyWidget
 from repanier.const import EMPTY_STRING, DECIMAL_ONE, TWO_DECIMALS
 from repanier.models.customer import Customer
 from repanier.models.lut import LUT_DeliveryPoint
@@ -27,7 +27,6 @@ from repanier.xlsx.widget import (
     DecimalBooleanWidget,
     ZeroDecimalsWidget,
     TwoMoneysWidget,
-    TranslatedForeignKeyWidget,
     DateWidgetExcel,
 )
 from repanier.xlsx.xlsx_invoice import export_invoice
@@ -62,7 +61,9 @@ class UserDataForm(forms.ModelForm):
         if qs.exists():
             self.add_error(
                 "email",
-                _("The email address {} is already used by another user.").format(email),
+                _("The email address {} is already used by another user.").format(
+                    email
+                ),
             )
         qs = user_model.objects.filter(username=username).order_by("?")
         if self.instance.id is not None:
@@ -212,7 +213,7 @@ class CustomerResource(resources.ModelResource):
     )
     delivery_point = fields.Field(
         attribute="delivery_point",
-        widget=TranslatedForeignKeyWidget(LUT_DeliveryPoint, field="short_name"),
+        widget=ForeignKeyWidget(LUT_DeliveryPoint, field="short_name_v2"),
     )
     valid_email = fields.Field(
         attribute="valid_email", widget=DecimalBooleanWidget(), readonly=True

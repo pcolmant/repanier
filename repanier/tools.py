@@ -288,7 +288,7 @@ def get_html_selected_value(offer_item, quantity_ordered, is_open=True):
                     label = _("Sold out")
                 else:
                     q_min = offer_item.customer_minimum_order_quantity
-                    if offer_item.limit_order_quantity_to_stock:
+                    if offer_item.stock > const.DECIMAL_ZERO:
                         q_alert = offer_item.stock - offer_item.quantity_invoiced
                         if q_alert < const.DECIMAL_ZERO:
                             q_alert = const.DECIMAL_ZERO
@@ -396,7 +396,7 @@ def create_or_update_one_purchase(
             .exists()
         )
         if permanence_is_opened:
-            if offer_item.limit_order_quantity_to_stock:
+            if offer_item.stock > const.DECIMAL_ZERO:
                 if purchase is not None:
                     q_previous_order = purchase.quantity_ordered
                 else:

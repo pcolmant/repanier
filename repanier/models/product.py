@@ -114,7 +114,7 @@ class Product(Item):
     def get_qty_display(self):
         if self.is_box:
             # To avoid unicode error in email_offer.send_open_order
-            qty_display = BOX_UNICODE
+            qty_display = EMPTY_STRING # BOX_UNICODE
         else:
             qty_display = self.get_display(
                 qty=1,

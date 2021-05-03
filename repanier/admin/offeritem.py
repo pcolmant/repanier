@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
@@ -70,21 +69,13 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         # if permanence.exists():
         #     permanence_open = True
         if producer is not None:
-            if settings.REPANIER_SETTINGS_STOCK:
-                self.list_editable = ("stock",)
-                return (
-                    "department_for_customer",
-                    "get_html_long_name_with_producer",
-                    "stock",
-                    "limit_order_quantity_to_stock",
-                    "get_html_producer_qty_stock_invoiced",
-                )
-            else:
-                return (
-                    "department_for_customer",
-                    "get_html_long_name_with_producer",
-                    "get_html_producer_qty_stock_invoiced",
-                )
+            self.list_editable = ("stock",)
+            return (
+                "department_for_customer",
+                "get_html_long_name_with_producer",
+                "stock",
+                "get_html_producer_qty_stock_invoiced",
+            )
         else:
             return (
                 "department_for_customer",
@@ -98,9 +89,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
             ("producer_qty_stock_invoiced",),
         ]
 
-        fieldsets = (
-            (None, {"fields": fields_basic}),
-        )
+        fieldsets = ((None, {"fields": fields_basic}),)
         return fieldsets
 
     def get_form(self, request, offer_item=None, **kwargs):

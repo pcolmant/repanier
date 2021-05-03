@@ -8,7 +8,7 @@
         <div class="modal-body">
             {% trans "Your are registered to the following task :" %}<br>
             {% for permanence_board in permanence_boards.all %}
-                <h4>{{ permanence_board.permanence_role.short_name }}</h4>
+                <h4>{{ permanence_board.permanence_role.short_name_v2 }}</h4>
                 <b>{{ permanence_board.permanence }}</b><br>
                 {{ permanence_board.permanence_role.description | safe }}<br>
             {% empty %}

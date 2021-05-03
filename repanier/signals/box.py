@@ -2,7 +2,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from repanier.const import PRODUCT_ORDER_UNIT_PC
-from repanier.models import BoxContent, Product, Box
+from repanier.models import BoxContent, Product, Box, Producer
 from repanier.signals.product import product_pre_save
 
 
@@ -10,10 +10,10 @@ from repanier.signals.product import product_pre_save
 def box_pre_save(sender, **kwargs):
     box = kwargs["instance"]
     box.is_box = True
+    box.producer =  Producer.get_or_create_group()
     box.order_unit = PRODUCT_ORDER_UNIT_PC
     box.producer_unit_price = box.customer_unit_price
     box.producer_vat = box.customer_vat
-    box.limit_order_quantity_to_stock = True
     # ! Important to initialise all fields of the box. Remember : a box is a product.
     product_pre_save(sender, **kwargs)
 
@@ -25,7 +25,6 @@ def box_content_pre_save(sender, **kwargs):
     if product_id is not None:
         product = (
             Product.objects.filter(id=product_id)
-            .order_by("?")
             .only("customer_unit_price", "unit_deposit")
             .first()
         )

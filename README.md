@@ -295,13 +295,10 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by `Repanier`.
 - REPANIER_SETTINGS_DELIVERY_POINT (True, *False*) : If True, Repanier lets you manage more than one delivery point per offer.
 - REPANIER_SETTINGS_GROUP (True, *False*) : Others groups may be members of the `Repanier` site. Orders from a group member are billed to the group and not to the member.
-- REPANIER_SETTINGS_IS_MINIMALIST (*True*, False) : Remove the rare option from the Repanier administration screens, for e.g. configure the currency need that this option is set to `False`.
 - REPANIER_SETTINGS_MANAGE_ACCOUNTING (*True*, False) : If True, Repanier is used to manage the accounts (customers, proucers, bank).
-- REPANIER_SETTINGS_PRODUCT_LABEL (True, *False*) : If True, Repanier lets you define labels (for e.g. bio, local, ...) at product level.
 - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5).
 - REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form.
 - REPANIER_SETTINGS_SMS_GATEWAY_MAIL (*EMPTY_STRING*, ) : Email address of a sms gateway service.
-- REPANIER_SETTINGS_STOCK (True, *False*) : Allows you to limit the available quantities of a product.
 
 ## Install or update `Repanier`
 1. Git clone the `Repanier` project into the home folder of the user `repanier`
