@@ -23,6 +23,10 @@ body {
     margin-top: 30px;
 }
 
+td, th {
+    vertical-align: initial;
+}
+
 div.repanier-submit-row {
     display: flex;
     justify-content: space-between;
