@@ -157,8 +157,8 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
     form = PermanenceInPreparationForm
     change_list_url = reverse_lazy("admin:repanier_permanenceinpreparation_changelist")
 
-    list_per_page = 10
-    list_max_show_all = 10
+    list_per_page = 20
+    list_max_show_all = 20
     filter_horizontal = ("producers", "boxes")
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = "permanence_date"

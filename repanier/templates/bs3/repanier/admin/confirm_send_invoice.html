@@ -3,9 +3,9 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
+        {% translate 'Manage' %}
         &rsaquo; <a
-            href="{% url 'admin:repanier_permanencedone_changelist' %}">{% trans 'Billing offers' %}</a>
+            href="{% url 'admin:repanier_permanencedone_changelist' %}">{% translate 'Billing offers' %}</a>
     </div>
 {% endblock %}
 
@@ -13,15 +13,15 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% trans "Please confirm your send invoices request." %}</h4>
+            <h4>{% translate "Please confirm your send invoices request." %}</h4>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}
             </button>
         </div>
         {% if form.template_invoice_customer_mail.value %}
             <div class="form-row">
-                <div><h4>{% trans "Mail invoices to customers" %}</h4>
+                <div><h4>{% translate "Mail invoices to customers" %}</h4>
                     <p>&nbsp;</p>{{ invoice_customer_email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>
@@ -56,7 +56,7 @@
 
         {% if form.template_invoice_producer_mail.value %}
             <div class="form-row">
-                <div><h4>{% trans "Mail invoices to producers" %}</h4>
+                <div><h4>{% translate "Mail invoices to producers" %}</h4>
                     <p>&nbsp;</p>{{ invoice_producer_email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>

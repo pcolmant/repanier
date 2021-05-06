@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {#    <meta name="description" content="{% page_attribute 'meta_description' %}">#}
-    <title>{% trans "Repanier Internal Error" %}</title>
+    <title>{% translate "Repanier Internal Error" %}</title>
     <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">
     <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
     {#    django CMS toolbar adjustment#}
@@ -24,7 +24,7 @@
     <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
         <div class="navbar-header visible-xs-inline-block">
             <a href="#" class="btn btn-info" onclick="openNav()">
-                <span class="sr-only">{% trans "Toggle navigation" %}</span>
+                <span class="sr-only">{% translate "Toggle navigation" %}</span>
                 <span class="glyphicon glyphicon-list"></span>
             </a>
             <span class="navbar-group-name"><small>{{ REPANIER_GROUP_NAME | truncatechars:25 }}</small></span>
@@ -44,11 +44,11 @@
     <section>
         {% block base_content %}
             <br><br><br><br>
-            <h1>{% trans "Internal Error" %}</h1>
-            <p>{% trans "An internal error in this web site has just occurred" %}.</p>
-            <p>{% trans "An email containing the detailed content of the error has been sent to" %}
+            <h1>{% translate "Internal Error" %}</h1>
+            <p>{% translate "An internal error in this web site has just occurred" %}.</p>
+            <p>{% translate "An email containing the detailed content of the error has been sent to" %}
                 <strong>{% repanier_admins %}</strong>.</p>
-            <p>{% trans "You will eventually be contacted in case further details of the action you are making would be needed to understand the cause of the error" %}.</p>
+            <p>{% translate "You will eventually be contacted in case further details of the action you are making would be needed to understand the cause of the error" %}.</p>
         {% endblock %}
     </section>
 {% endspaceless %}</body>

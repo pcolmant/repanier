@@ -3,8 +3,8 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
-        &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% trans 'Billing offers' %}</a>
+        {% translate 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% translate 'Billing offers' %}</a>
     </div>
 {% endblock %}
 
@@ -12,10 +12,10 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% trans "Please make the following payments." %}</h4>
-            <h4>{% trans "The corresponding account transactions have been generated." %}</h4>
+            <h4>{% translate "Please make the following payments." %}</h4>
+            <h4>{% translate "The corresponding account transactions have been generated." %}</h4>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="done" value="done" class="default">{% trans "Done" %}</button>
+            <button type="submit" class="repanier-submit-info" name="done" value="done" class="default">{% translate "Done" %}</button>
         </div>
         {% for bankaccount in bankaccounts %}
             <div class="form-row">

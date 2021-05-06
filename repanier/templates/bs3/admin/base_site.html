@@ -1,44 +1,27 @@
 {% extends "admin/base.html" %}
-{% load i18n static admin_style_tags %}
+{% load i18n static %}
 
 {% block extrastyle %}
     {{ block.super }}
-    <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
-    {# PCO : remove djangocms-admin-style include #}
-    {#    {% include 'admin/inc/extrastyle.html' %}#}
-    <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+    <script src="{% url 'javascript-catalog' %}"></script>
+    <script src="{% url 'admin:jsi18n' %}"></script>
     <link rel="stylesheet" type="text/css"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
-    {#    <link rel="stylesheet" href="{% static REPANIER_BOOTSTRAP_CSS %}">#}
-    <link rel="stylesheet" href="{% static REPANIER_CUSTOM_CSS %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'djangocms_admin_style/css/djangocms-admin.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static "repanier/bs3/css/custom_admin.css" %}"/>
-    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
-    {#    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">#}
 {% endblock %}
+
+{% block branding %}{% endblock %}
+{% block usertools %}{% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
-    <script type="text/javascript" src="{% static 'repanier/bs3/js/toggle.js' %}"></script>
-    {# PCO : remove djangocms-admin-style viewport, already defined by django #}
-    {#    <meta name="viewport" content="width=device-width,initial-scale=1"/>#}
-    {# PCO : move djangocms-admin-style css to the block extrastyle #}
-    {#    <link rel="stylesheet" type="text/css" href="{% static 'djangocms_admin_style/css/djangocms-admin.css' %}"/>#}
-    {% if request.user.is_superuser %}{% render_update_notification %}{% endif %}
-    <script src="{% static 'djangocms_admin_style/js/dist/bundle.adminstyle.min.js' %}"></script>
-    {# PCO : remove djangocms-admin-style include #}
-    {#    {% include 'admin/inc/extrahead.html' %}#}
+    <script src="{% static 'repanier/bs3/js/toggle.js' %}"></script>
 {% endblock %}
 
-{# PCO : remove djangocms-admin-style include #}
-{#{% block title %}{% include 'admin/inc/title.html' %}{% endblock %}#}
-
-{% block bodyclass %}{{ block.super }} djangocms-admin-style{% endblock %}
-
-{% block branding %}{% include 'admin/inc/branding.html' %}{% endblock %}
-
-{# PCO : remove djangocms-admin-style include #}
-{#{% block userlinks %}{% include 'admin/inc/userlinks.html' %}{{ block.super }}{% endblock %}#}
+{% block bodyclass %}{{ block.super }}{% endblock %}
+{% block pretitle %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block content_subtitle %}{% endblock %}
 
 {% block object-tools %}
     <div class="repanier-objects-tools">
@@ -48,9 +31,6 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
+        {% translate 'Manage' %}
     </div>
 {% endblock %}
-
-{# PCO : remove django content_title #}
-{% block content_title %}{% endblock %}

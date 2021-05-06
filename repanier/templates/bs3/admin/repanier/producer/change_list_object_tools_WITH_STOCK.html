@@ -4,13 +4,13 @@
     {% url 'admin:producer-export-stock' as export_url %}
     <li>
         <a href="{% add_preserved_filters export_url %}">
-            <i class="fas fa-file-download"></i> {% trans 'Stock' %}
+            <i class="fas fa-file-download"></i> {% translate 'Stock' %}
         </a>
     </li>
     {% url 'admin:producer-import-stock' as import_url %}
     <li>
         <a href="{% add_preserved_filters import_url %}">
-            <i class="fas fa-file-upload"></i> {% trans 'Stock' %}
+            <i class="fas fa-file-upload"></i> {% translate 'Stock' %}
         </a>
     </li>
     {{ block.super }}

@@ -5,13 +5,13 @@
         <div class="row">
             <div class="col">
                 {% if send %}
-                    <div class="alert alert-success" role="alert">{% trans "The mail has been send" %}</div>{% endif %}
+                    <div class="alert alert-success" role="alert">{% translate "The mail has been send" %}</div>{% endif %}
                 <form name="{{ form.form_name }}" method="post" action="">
                     {% csrf_token %}
                     {{ form|crispy }}
                     {% if not send %}
                         <div class="form-group form-sticky-update-button">
-                            <button type="submit" class="btn btn-info pull-right">{% trans "Send email" %}</button>
+                            <button type="submit" class="btn btn-info pull-right">{% translate "Send email" %}</button>
                         </div>
                     {% endif %}
                 </form>

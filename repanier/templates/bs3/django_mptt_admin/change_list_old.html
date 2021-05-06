@@ -3,7 +3,7 @@
 
 {% block extrastyle %}
     {{ block.super }}
-{#    <script type="text/javascript" src="{{ jsi18n_url }}"></script>#}
+{#    <script src="{{ jsi18n_url }}"></script>#}
 {% endblock %}
 
 {% block search %}{% endblock %}
@@ -28,7 +28,7 @@
 {% block filters %}
     {% if cl.has_filters %}
         <div id="changelist-filter">
-          <h2>{% trans 'Filter' %}</h2>
+          <h2>{% translate 'Filter' %}</h2>
           {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
         </div>
     {% endif %}
@@ -39,6 +39,6 @@
 {% block object-tools-items %}
     {{ block.super }}
 {#    <li>#}
-{#        <a href="{{ grid_url }}">{% trans "Grid view" %}</a>#}
+{#        <a href="{{ grid_url }}">{% translate "Grid view" %}</a>#}
 {#    </li>#}
 {% endblock %}

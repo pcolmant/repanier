@@ -6,7 +6,7 @@
   {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
   </optgroup>{% endif %}{% endfor %}
 </select>
-<script type="text/javascript">
+<script>
     django.jQuery(document).ready(function() { {{ name }}_select("{{ widget.value|first }}");});
     function {{ name }}_select(value) {
         (function($){

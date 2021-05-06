@@ -6,58 +6,58 @@
         {# {% debug %} #}
         <h4>{{ producer.long_profile_name }}</h4>
         {% if object %}
-        <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> {% trans "Previous balance" %} : {{ object.get_negative_previous_balance }}
+        <h4><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> {% translate "Previous balance" %} : {{ object.get_negative_previous_balance }}
             <small>({{ object.date_previous_balance | date:"DATE_FORMAT" }})</small><br></h4>
         {%  endif %}
         {% if offer_item_set %}
-            <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% trans "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
+            <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% translate "Purchases" %} {{ object.permanence }} : {{ object.get_total_price_with_tax }}
             {% if object.get_total_vat != 0 or object.get_total_deposit != 0 or object.delta_transport != 0 %}
                 <small>
-                    . {% trans "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
-                    {% if object.get_total_vat != 0 %}{% trans "VAT" %} : {{ object.get_total_vat }}{% endif %}
+                    . {% translate "This price include" %} <span class="glyphicon glyphicon-arrow-right"></span>
+                    {% if object.get_total_vat != 0 %}{% translate "VAT" %} : {{ object.get_total_vat }}{% endif %}
                     {% if object.get_total_deposit != 0 %}
                         {% if object.get_total_vat != 0 %}; {% endif %}
-                        {% trans "Deposit" %} : {{ object.get_total_deposit }}
+                        {% translate "Deposit" %} : {{ object.get_total_deposit }}
                     {% endif %}
                     {% if object.delta_transport != 0 %}
                         {% if object.get_total_vat != 0 or object.get_total_deposit != 0 %}; {% endif %}
-                        {% trans "Shipping cost" %} : {{ object.delta_transport }}
+                        {% translate "Shipping cost" %} : {{ object.delta_transport }}
                     {% endif %}
                 </small>
                 <br>
                 {% if object.delta_price_with_tax != 0 %}
-                    {% if object.delta_price_with_tax < 0 %}{% trans "Reduction granted" %}{%  else %}{% trans "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
+                    {% if object.delta_price_with_tax < 0 %}{% translate "Reduction granted" %}{%  else %}{% translate "Surcharge" %}{% endif %} : {{ object.get_abs_delta_price_with_tax }}<br>
                 {% endif %}
             {% endif %}
         {% endif %}
         {% for bank_account in bank_account_set %}
             {% if bank_account.bank_amount_in != 0 %}
-                <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% trans "Provision" %} :
+                <span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {% translate "Provision" %} :
                 {% if bank_account.operation_comment %}
                     {{ bank_account.operation_comment }}
                 {% else %}
-                    {% trans "Refund" %}
+                    {% translate "Refund" %}
                 {% endif %} : {{ bank_account.bank_amount_in }}
                 <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
             {% endif %}
             {% if bank_account.bank_amount_out != 0 %}
-                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% trans "Refund" %} :
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {% translate "Refund" %} :
                 {% if bank_account.operation_comment %}
                     {{ bank_account.operation_comment }}
                 {% else %}
-                    {% trans "Payment" %}
+                    {% translate "Payment" %}
                 {% endif %} : {{ bank_account.bank_amount_out }}
                 <small>({{ bank_account.operation_date | date:"DATE_FORMAT" }})</small><br>
             {% endif %}
         {% endfor %}
         <div class="panel">
             {% if object %}
-            <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% trans "New balance" %} : {{ object.get_negative_balance }}
-                <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id and object.invoice_sort_order %} - {% trans "last sale" %}{% endif %})</small>
+            <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% translate "New balance" %} : {{ object.get_negative_balance }}
+                <small>({{ object.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id and object.invoice_sort_order %} - {% translate "last sale" %}{% endif %})</small>
             </h4>
             {% else %}
-            <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% trans "New balance" %} : {{ producer.get_negative_balance }}
-                <small>({{ producer.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id %} - {% trans "last sale" %}{% endif %})</small>
+            <h4><span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> {% translate "New balance" %} : {{ producer.get_negative_balance }}
+                <small>({{ producer.date_balance | date:"DATE_FORMAT" }}{% if not next_producer_invoice_id %} - {% translate "last sale" %}{% endif %})</small>
             </h4>
             {% endif %}
             <span id="basket_message">{{ basket_message }}</span>
@@ -70,9 +70,9 @@
         {% endif %}
         {% if next_producer_invoice_id %}
             <a href="{% if uuid %}{% url 'repanier:producer_invoice_uuid_view' 0 uuid %}{% else %}{% url 'repanier:producer_invoice_view' 0 %}?producer={{ object.producer.id }}{% endif %}"
-               class="btn btn-disabled"> {% trans "Invoice" %} </a>
+               class="btn btn-disabled"> {% translate "Invoice" %} </a>
         {% else %}
-            <span class="btn btn-disabled">{% trans "Invoice" %}</span>
+            <span class="btn btn-disabled">{% translate "Invoice" %}</span>
         {% endif %}
         {% if next_producer_invoice_id %}
             <a href="
@@ -87,19 +87,19 @@
                 <thead>
                 <tr>
                     <th>
-                        {% trans "Reference" %}
+                        {% translate "Reference" %}
                     </th>
                     <th>
-                        {% trans "Product" %}
+                        {% translate "Product" %}
                     </th>
                     <th>
-                        {% trans "Qty" %}
+                        {% translate "Qty" %}
                     </th>
                     <th>
-                        {% trans "Unit price" %}
+                        {% translate "Unit price" %}
                     </th>
                     <th>
-                        {% trans "Total price" %}
+                        {% translate "Total price" %}
                     </th>
                 <tr>
                 </thead>
@@ -128,7 +128,7 @@
                 </tbody>
             </table>
         {% else %}
-            <h4>{% trans "No purchase found" %}</h4>
+            <h4>{% translate "No purchase found" %}</h4>
         {% endif %}
     </div>
     </div>
@@ -136,7 +136,7 @@
         <br>
     </div>
 {% addtoblock "lastjs" %}
-    <script type="text/javascript">
+    <script>
         $(document).ready(function () {
             lien = '{% url 'repanier:order_name' %}';
             $.ajax({
@@ -152,7 +152,7 @@
 {#                    $("#my_name").html(result);#}
 {#                },#}
 {#                error: function (result) {#}
-{#                    $("#my_name").html("{% trans "Retry5" %}");#}
+{#                    $("#my_name").html("{% translate "Retry5" %}");#}
 {#                }#}
             });
         });
@@ -160,7 +160,7 @@
 {% endaddtoblock %}
 {% addtoblock "lastjs" %}
 {% if not next_producer_invoice_id %}
-<script type="text/javascript">
+<script>
     $(document).ready(function () {
         var lien = '{% url 'repanier:producer_basket_message_form_ajax' producer.id producer.uuid %}';
         $.ajax({
@@ -179,7 +179,7 @@
 {#                });#}
 {#            },#}
 {#            error: function (result) {#}
-{#                $("#basket_message").html("{% trans "Retry" %}");#}
+{#                $("#basket_message").html("{% translate "Retry" %}");#}
 {#            }#}
         });
     });

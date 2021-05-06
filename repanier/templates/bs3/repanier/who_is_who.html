@@ -12,7 +12,7 @@
                                    name="q">
                         {% else %}
                             <input type="search" autosave="repanier" class="form-control"
-                                   placeholder="{% trans "Search" %}"
+                                   placeholder="{% translate "Search" %}"
                                    name="q">
                         {% endif %}
                         <div class="input-group-btn">
@@ -32,8 +32,8 @@
                     {{ staff.get_str_member }}<br>
                 {% endfor %}
                 <br>
-                <p>{% trans "If you want to show information about you, then" %} <a
-                        href="{% url 'repanier:my_profile_view' %}">{% trans "update your profil" %}</a>.</p>
+                <p>{% translate "If you want to show information about you, then" %} <a
+                        href="{% url 'repanier:my_profile_view' %}">{% translate "update your profil" %}</a>.</p>
             </div>
         </div>
     </div>
@@ -59,10 +59,10 @@
                             <div class="col-xs-10">
                                 {% if customer.about_me and customer.about_me.strip %}{{ customer.about_me | safe }}
                                     <br>{% endif %}
-                                {% trans "Phone" %} :
+                                {% translate "Phone" %} :
                                     {{ customer.get_phones }}
                                     <br>
-                                {% trans "Email" %} :
+                                {% translate "Email" %} :
                                     {{ customer.get_emails }}
                             </div>
                         </div>

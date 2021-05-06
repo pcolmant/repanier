@@ -8,9 +8,9 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
+        {% translate 'Manage' %}
         &rsaquo; <a
-            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% trans 'Offers in preparation' %}</a>
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% translate 'Offers in preparation' %}</a>
     </div>
 {% endblock %}
 
@@ -27,12 +27,12 @@
             {% if forloop.first %}{{ point|verbose_name_plural }} : {% endif %}{{ point.delivery_point }}{% if not forloop.last %}, {% endif %}
         {% endfor %}</p>
         <div class="form-row">
-            <h4>{% trans "On what dates do you want to generate permanence(s) based on the model of this one?" %}</h4>
+            <h4>{% translate "On what dates do you want to generate permanence(s) based on the model of this one?" %}</h4>
             <p>&nbsp;</p>
             <button type="submit" class="repanier-submit-info" name="cancel"
-                    value="cancel">{% trans "No, cancel the action" %}</button>
+                    value="cancel">{% translate "No, cancel the action" %}</button>
             <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">
-                {% trans "Yes, I'm sure" %}
+                {% translate "Yes, I'm sure" %}
             </button>
         </div>
         <div class="form-row">

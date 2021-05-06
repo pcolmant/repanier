@@ -7,14 +7,14 @@
                     <form role="form" action="{{ app_path }}" method="post" accept-charset="UTF-8"
                           id="login-form">{% csrf_token %}
                         <div class="modal-header">
-                            <h4 class="modal-title" id="loginModalLabel">{% trans "Sign in" %}</h4>
+                            <h4 class="modal-title" id="loginModalLabel">{% translate "Sign in" %}</h4>
                         </div>
 
                         <div class="modal-body">
                             <div class="form-group">
                                 {% if staff_responsibilities %}
-                                    <p>{% trans "You are now logged in as a customer." %}</p>
-                                    <p><b>{% trans "Do you want to become:" %}</b></p>
+                                    <p>{% translate "You are now logged in as a customer." %}</p>
+                                    <p><b>{% translate "Do you want to become:" %}</b></p>
                                     {% for staff_responsibility in staff_responsibilities %}
                                         <a href="{% url "repanier:login_form" %}?as_id={{ staff_responsibility.id }}"
                                            class="btn btn-info">{{ staff_responsibility.long_name_v2 }}</a><br>
@@ -29,7 +29,7 @@
                                             </p>
                                         </div>
                                     {% endif %}
-                                    <label for="id_username">{% trans "E-mail address" %}</label>
+                                    <label for="id_username">{% translate "E-mail address" %}</label>
                                     {% if form.username.errors %}
                                         <p class="text-danger">
                                             {% for error in form.username.errors %}
@@ -38,9 +38,9 @@
                                         </p>
                                     {% endif %}
                                     <input type="text" class="form-control" id="id_username"
-                                           placeholder="{% trans "E-mail address" %}" name="username" autofocus>
+                                           placeholder="{% translate "E-mail address" %}" name="username" autofocus>
                                     <br>
-                                    <label for="id_password">{% trans "Password" %}</label>
+                                    <label for="id_password">{% translate "Password" %}</label>
                                     {% if form.password.errors %}
                                         <p class="text-danger">
                                             {% for error in form.password.errors %}
@@ -49,13 +49,13 @@
                                         </p>
                                     {% endif %}
                                     <input type="password" class="form-control" id="id_password"
-                                           placeholder="{% trans "Password" %}" name="password">
+                                           placeholder="{% translate "Password" %}" name="password">
                                     {% if how_to_register %}
                                         <p></p>
                                         <div class="form-group">
                                             <div class="accordion-toggle collapsed" data-toggle="collapse"
                                                  data-target="#collapse">
-                                                <span class="btn btn-info">{% trans "Create an account ?" %}</span>
+                                                <span class="btn btn-info">{% translate "Create an account ?" %}</span>
                                             </div>
                                             <div id="collapse" class="panel-collapse collapse">
                                                 {{ how_to_register | safe }}
@@ -70,12 +70,12 @@
                         <div class="modal-footer">
                             <div class="form-group">
                                 {% if staff_responsibilities %}
-                                    <a href="{{ next }}" class="btn btn-info">{% trans "Continue as a customer." %}</a>
-                                    <a href="{% url "repanier:logout" %}" class="btn btn-info">{% trans "Logout" %}</a>
+                                    <a href="{{ next }}" class="btn btn-info">{% translate "Continue as a customer." %}</a>
+                                    <a href="{% url "repanier:logout" %}" class="btn btn-info">{% translate "Logout" %}</a>
                                 {% else %}
-                                    <button class="btn btn-info" type="submit">{% trans "Sign in" %}</button>
+                                    <button class="btn btn-info" type="submit">{% translate "Sign in" %}</button>
                                     <a href="{% url "repanier:password_reset" %}"
-                                       class="btn btn-info">{% trans "Password reset" %}</a>
+                                       class="btn btn-info">{% translate "Password reset" %}</a>
                                 {% endif %}
                             </div>
                         </div>

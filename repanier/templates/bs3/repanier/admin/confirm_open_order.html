@@ -3,9 +3,9 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
+        {% translate 'Manage' %}
         &rsaquo; <a
-            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% trans 'Offers in preparation' %}</a>
+            href="{% url 'admin:repanier_permanenceinpreparation_changelist' %}">{% translate 'Offers in preparation' %}</a>
     </div>
 {% endblock %}
 
@@ -13,19 +13,19 @@
     <form action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ permanence|title }}</h2>
         <div class="form-row">
-            <h4>{% trans "Please confirm your open order request." %}</h4>
+            <h4>{% translate "Please confirm your open order request." %}</h4>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}
             </button>
             {% if email_will_be_sent %}
                 <button type="submit" class="repanier-submit-info" name="apply-wo-mail" value="apply-wo-mail">
-                    {% trans "Yes, I'm sure but do not send any mail" %}</button>
+                    {% translate "Yes, I'm sure but do not send any mail" %}</button>
             {% endif %}
         </div>
         {% if form.template_offer_customer_mail.value %}
             <div class="form-row">
-                <div><h4>{% trans "Contents of the order opening email sent to consumers authorized to order" %}</h4>
+                <div><h4>{% translate "Contents of the order opening email sent to consumers authorized to order" %}</h4>
                     <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>
@@ -60,7 +60,7 @@
         {% if form.template_cancel_order_customer_mail.value %}
             <div class="form-row">
                 <div>
-                    <h4>{% trans "Content of the email in case of cancellation of the order sent to the consumers concerned" %}</h4>
+                    <h4>{% translate "Content of the email in case of cancellation of the order sent to the consumers concerned" %}</h4>
                     <p>&nbsp;</p>{{ email_will_be_sent_to }}
                     <p>&nbsp;</p>
                 </div>

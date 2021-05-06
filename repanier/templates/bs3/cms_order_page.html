@@ -24,7 +24,7 @@
             <div class="row">
             <div class="panel panel-danger">
                 <div class="panel-heading">
-                    {% trans "The ordering functionality is not activated in your account. <br> If you wish to order, please contact the managers of your group." %}
+                    {% translate "The ordering functionality is not activated in your account. <br> If you wish to order, please contact the managers of your group." %}
                 </div>
             </div>
             </div>
@@ -61,7 +61,7 @@
                 <div class="row">
                 <div class="panel panel-default">
                     <div class="panel-heading accordion-toggle" data-toggle="collapse" data-target="#collapse-basket-description" aria-expanded="true">
-                        <h4 class="panel-title">{% trans "Details of your order" %}</h4>
+                        <h4 class="panel-title">{% translate "Details of your order" %}</h4>
                     </div>
                     <div id="collapse-basket-description" class="panel-collapse collapse in" aria-expanded="true">
                         <div class="panel-body bg-primary">
@@ -97,7 +97,7 @@
                                 {% if q %}
                                     <input type="search" autosave="repanier" class="form-control" value="{{ q }}" name="q">
                                 {% else %}
-                                    <input type="search" autosave="repanier" class="form-control" placeholder="{% trans "Search" %}"
+                                    <input type="search" autosave="repanier" class="form-control" placeholder="{% translate "Search" %}"
                                            name="q">
                                 {% endif %}
                                 <div class="input-group-btn">
@@ -116,13 +116,13 @@
                         <ul class="nav nav-stacked" id="sidebar">
                             {% if may_order %}
                             <li>
-                                <a href="{% url "repanier:order_view" permanence_id %}" {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All products" %}</a>
+                                <a href="{% url "repanier:order_view" permanence_id %}" {% if not q and not is_like and not is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All products" %}</a>
                             </li>
                             <li>
-                                <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My cart" %}</a>
+                                <a href="{% url "repanier:order_view" permanence_id %}?is_basket=yes" {% if not q and not is_like and is_basket and department_id == "all" and producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My cart" %}</a>
                             </li>
                             <li>
-                                <a href="{% url "repanier:order_view" permanence_id %}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% trans "My" %} <span class="glyphicon glyphicon-heart"></span></a>
+                                <a href="{% url "repanier:order_view" permanence_id %}?is_like=yes{% if q %}&q={{ q }}{% endif %}" {% if is_like %}class="bs-docs-sidebar-active"{% endif %}>{% translate "My" %} <span class="glyphicon glyphicon-heart"></span></a>
                             </li>
                             {% endif %}
                             {% if box_set %}
@@ -134,7 +134,7 @@
                             {% if producer_set %}
                                 <li>
                                     <a href="{% url "repanier:order_view" permanence_id %}?department={{ department_id }}"
-                                       {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All producers" %}</a>
+                                       {% if producer_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All producers" %}</a>
                                     <ul class="nav nav-stacked">
                                 {% for producer in producer_set.all %}
                                     <li><a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer.id|unlocalize }}&department={{ department_id }}"
@@ -147,7 +147,7 @@
                             {% if department_set %}
                                 <li>
                                     <a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}"
-                                       {% if department_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% trans "All departments" %}</a>
+                                       {% if department_id == "all" %}class="bs-docs-sidebar-active"{% endif %}>{% translate "All departments" %}</a>
                                     <ul class="nav nav-stacked">
                                         {% for department in department_set.all %}
                                             {% if department.level > 0 %}
@@ -202,14 +202,14 @@
                         </div>
                         <div class="modal-body">
                 <span id="otherQtyDetails">
-                  {% trans "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
+                  {% translate "To order a bigger quantity, please contact your " %}{{ staff_order.long_name | lower }} : <br>
                   <b>{{ staff_order.customer_responsible.long_basket_name }}</b><br>
                   <span class="glyphicon glyphicon glyphicon-earphone"></span>  <b>{{ staff_order.customer_responsible.get_phone1 }}</b><br>
                   <a href="mailto:{{ staff_order.user.email }}" style="color : inherit;">{{ staff_order.user.email }}</a><br>
                 </span>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+                            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
                         </div>
                     </div>
                 </div>
@@ -220,7 +220,7 @@
     {% block my_cart_amount_js %}{% spaceless %}
         {% if may_order %}
             {% addtoblock "lastjs" %}
-                <script type="text/javascript">
+                <script>
                 $(document).ready(function () {
                     var lien = '{% url "repanier:my_cart_amount_ajax" permanence_id %}';
                     $.ajax({
@@ -241,7 +241,7 @@
     {% endspaceless %}{% endblock my_cart_amount_js %}
     {% block my_order_js %}
         {% addtoblock "lastjs" %}{% spaceless %}
-            <script type="text/javascript">
+            <script>
                 $(document).ready(function () {
                     $('#orderModal').modal({
                         keyboard: true,
@@ -266,7 +266,7 @@
         {% endspaceless %}{% endaddtoblock %}
         {% if may_order %}
             {% addtoblock "lastjs" %}{% spaceless %}
-                <script type="text/javascript">
+                <script>
                 {#            saved_offer_item_id is a fix for firefox throwings mouseover repeatingly #}
                 var saved_offer_item_id = -1;
                 {#            saved_delivery_val is a fix for firefox throwings mouseover repeatingly #}
@@ -375,7 +375,7 @@
                 function btn_receive_order_email() {
                     var receive_email = $("#btn_confirm_order");
                     receive_email.attr("disabled", true);
-                    receive_email.html('<span class="glyphicon glyphicon-refresh gly-spin"></span> ' + '{% trans "Your order is being processed..." %}');
+                    receive_email.html('<span class="glyphicon glyphicon-refresh gly-spin"></span> ' + '{% translate "Your order is being processed..." %}');
 
                     var lien = '{% url 'repanier:btn_confirm_order_ajax' %}?permanence=' + {{ permanence.id|unlocalize }};
                     $.ajax({
@@ -408,7 +408,7 @@
     {% endblock my_order_js %}
     {% block link_to_filter_js %}
         {% addtoblock "lastjs" %}{% spaceless %}
-            <script type="text/javascript">
+            <script>
             $(document).ready(function () {
                 $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_filter_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
             });
@@ -417,7 +417,7 @@
     {% endblock link_to_filter_js %}
     {% block link_to_order_js %}
         {% addtoblock "lastjs" %}{% spaceless %}
-            <script type="text/javascript">
+            <script>
             $(document).ready(function () {
                 $("#link_to_order_or_filter_view").html('<a href="{% url "repanier:order_view" permanence_id %}?producer={{ producer_id }}&department={{ department_id }}&box={{ box_id }}{% if q %}&q={{ q }}{% endif %}{% if is_like %}&is_like=yes{% endif %}{% if is_basket %}&is_basket=yes{% endif %}" class="btn btn-info" style="margin-left: 10px;"><span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span></a>');
             });

@@ -99,8 +99,8 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
 
     fields = ("permanence_date", "short_name_v2", "invoice_description_v2")
     readonly_fields = ("status", "automatically_closed")
-    list_per_page = 10
-    list_max_show_all = 10
+    list_per_page = 20
+    list_max_show_all = 20
     inlines = [PermanenceBoardInline]
     date_hierarchy = "permanence_date"
     list_display = ("get_permanence_admin_display",)

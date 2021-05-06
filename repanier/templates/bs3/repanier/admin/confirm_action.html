@@ -3,7 +3,7 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
+        {% translate 'Manage' %}
         &rsaquo;
         <script>
             document.write('<a href="' + document.referrer + '">{{ model_verbose_name_plural }}</a>');
@@ -17,8 +17,8 @@
         <div class="form-row">
             <h4>{{ sub_title }}</h4>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}
             </button>
         </div>
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ permanence.id|unlocalize }}"/>

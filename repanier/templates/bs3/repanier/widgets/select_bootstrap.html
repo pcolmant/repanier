@@ -14,7 +14,7 @@
         {% endfor %}
     </ul>
     <input type="hidden" id="{{ id }}" name="{{ name }}" value=""/>
-    <script type="text/javascript">
+    <script>
         {{ name }}_select('{{ repanier_selected_value }}', '{{ repanier_selected_label }}');
         function {{ name }}_select(value, label) {
             $('input[id={{ id }}]').val(value);

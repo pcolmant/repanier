@@ -298,7 +298,6 @@ LOCALE_PATHS = ( PROJECT_DIR / "locale",)
 
 INSTALLED_APPS = (
     "{}.apps.RepanierConfig".format(REPANIER_SETTINGS_VERSION),  # ! Important : First installed app for template precedence
-    "djangocms_admin_style",  # note this needs to be above the 'django.contrib.admin' entry
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

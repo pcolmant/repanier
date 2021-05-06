@@ -3,8 +3,8 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
-        &rsaquo; <a href="{% url 'admin:repanier_box_changelist' %}">{% trans 'Boxes content' %}</a>
+        {% translate 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_box_changelist' %}">{% translate 'Boxes content' %}</a>
     </div>
 {% endblock %}
 
@@ -14,8 +14,8 @@
         <div class="form-row">
             <h4>{{ box }}</h4>
             <p>&nbsp;</p>
-            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% trans "No, cancel the action" %}</button>
-            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% trans "Yes, I'm sure" %}</button>
+            <button type="submit" class="repanier-submit-info" name="cancel" value="cancel">{% translate "No, cancel the action" %}</button>
+            <button type="submit" class="repanier-submit-info" name="apply" value="apply" class="default">{% translate "Yes, I'm sure" %}</button>
         </div>
         <input type="hidden" name="{{ action_checkbox_name }}" value="{{ product.id|unlocalize }}"/>
         <input type="hidden" name="action" value="{{ action }}"/>

@@ -5,18 +5,18 @@
         <div class="row">
             <div class="col">
                 {% if update %}
-                    <div class="alert alert-success" role="alert">{% trans "Update done." %}</div>{% endif %}
+                    <div class="alert alert-success" role="alert">{% translate "Update done." %}</div>{% endif %}
                 <form name="{{ form.form_name }}" method="post" action="">
                     {% csrf_token %}
                     {% if display_who_is_who %}
-                        {% trans "All the information below is visible in the &quot;who&#39;s who&quot; except your phone numbers and email addresses for which you must validate your agreement." %}
+                        {% translate "All the information below is visible in the &quot;who&#39;s who&quot; except your phone numbers and email addresses for which you must validate your agreement." %}
                     {% endif %}
-                    <p>{% if membership_fee_valid_until %}<i>{% trans "Your membership fee is valid until" %} :
+                    <p>{% if membership_fee_valid_until %}<i>{% translate "Your membership fee is valid until" %} :
                         <u>{{ membership_fee_valid_until }}</u></i>{% endif %}</p>
                     {{ form|crispy }}
                     {% if not update %}
                         <div class="form-group form-sticky-update-button">
-                            <button type="submit" class="btn btn-info pull-right">{% trans "Update" %}</button>
+                            <button type="submit" class="btn btn-info pull-right">{% translate "Update" %}</button>
                         </div>{% endif %}
                 </form>
                 {% addtoblock "css" %}{{ form.media.css }}{% endaddtoblock %}

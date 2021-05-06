@@ -264,8 +264,8 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     change_list_url = reverse_lazy("admin:repanier_producer_changelist")
 
     search_fields = ("short_profile_name", "email")
-    list_per_page = 16
-    list_max_show_all = 16
+    list_per_page = 20
+    list_max_show_all = 20
     list_filter = ("is_active", "invoice_by_basket")
     actions = ["export_customer_prices"]
 

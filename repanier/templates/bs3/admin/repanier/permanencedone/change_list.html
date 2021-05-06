@@ -4,7 +4,7 @@
 {% block object-tools-items %}
     {% if REPANIER_ADMIN_MANAGE_ACCOUNTING is True %}
         <li><a href='{% url "admin:permanence-import-new-invoice" %}'
-               class="import_link">{% trans "Import an invoice" %}</a></li>
+               class="import_link">{% translate "Import an invoice" %}</a></li>
     {% endif %}
     {{ block.super }}
 {% endblock %}
@@ -12,8 +12,8 @@
 {% if REPANIER_ADMIN_MANAGE_ACCOUNTING is True %}
     {% block breadcrumbs %}
         <div class="breadcrumbs">
-            {% trans 'Manage' %}
-            &rsaquo; {% trans "In archiving" %}
+            {% translate 'Manage' %}
+            &rsaquo; {% translate "In archiving" %}
         </div>
     {% endblock %}
 {% endif %}

@@ -52,7 +52,7 @@
                         <div class="loading" style="display: none;">
                             <a href="?page={{ page_obj.next_page_number }}"
                                class="infinite-more-link btn btn-info not-active"><span
-                                    class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% trans "Loading..." %}
+                                    class="glyphicon glyphicon-refresh gly-spin"></span>&nbsp;{% translate "Loading..." %}
                             </a>
                         </div>
                     {% endif %}
@@ -85,11 +85,11 @@
                         });
                     </script>
                 {% else %}
-                    <h3>{% trans "No permanence found" %}</h3>
+                    <h3>{% translate "No permanence found" %}</h3>
                 {% endif %}
             {% endspaceless %}{% endblock permanenceboard %}
             {% addtoblock "lastjs" %}{% spaceless %}
-                <script type="text/javascript">
+                <script>
                     function task_ajax(task_id) {
                         var $task = $("#task" + task_id);
                         var lien = '{% url 'repanier:task_form_ajax' %}?value=' + $task.val() + "&task=" + task_id;

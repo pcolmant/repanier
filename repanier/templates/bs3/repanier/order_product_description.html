@@ -15,7 +15,7 @@
             {% if offer.product.offer_description_v2 %}
                 {{ offer.product.offer_description_v2 | safe }}
             {% else %}
-                {% trans "There is no more product's information." %}
+                {% translate "There is no more product's information." %}
             {% endif %}
             <br>
             {% for production_mode in offer.product.production_mode.all %}
@@ -35,7 +35,7 @@
         </div>
         <div class="clearfix"></div>
         <div class="modal-footer">
-            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% trans "Close" %}</button>
+            <button class="btn btn-info" data-dismiss="modal" aria-hidden="true">{% translate "Close" %}</button>
         </div>
     </div>
 </div>

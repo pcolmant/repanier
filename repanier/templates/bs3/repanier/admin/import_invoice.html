@@ -3,8 +3,8 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        {% trans 'Manage' %}
-        &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% trans 'Billing offers' %}</a>
+        {% translate 'Manage' %}
+        &rsaquo; <a href="{% url 'admin:repanier_permanencedone_changelist' %}">{% translate 'Billing offers' %}</a>
     </div>
 {% endblock %}
 
@@ -12,11 +12,11 @@
     <form enctype="multipart/form-data" action="{{ form_url }}" method="post">{% csrf_token %}
         <h2>{{ sub_title|title }}</h2>
         <div class="form-row">
-            <b>{% trans "The importation concern :" %}</b> {% for object in queryset.all %}{{ object }}
+            <b>{% translate "The importation concern :" %}</b> {% for object in queryset.all %}{{ object }}
             <input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.id|unlocalize }}"/>
             {% if not forloop.last %}, {% endif %}{% endfor %}
             <br>
-            <label for="id_file_to_import"><b>{% trans "File to import :" %}</b></label><input id="id_file_to_import"
+            <label for="id_file_to_import"><b>{% translate "File to import :" %}</b></label><input id="id_file_to_import"
                                                                                                name="file_to_import"
                                                                                                type="file"/>
         </div>
@@ -36,9 +36,9 @@
         </div>
         <div class="form-row">
             <button type="submit" class="repanier-submit-info" name="cancel"
-                    value="cancel">{% trans "No, cancel the action" %}</button>
+                    value="cancel">{% translate "No, cancel the action" %}</button>
             <button type="submit" class="repanier-submit-info" name="apply" value="apply"
-                    class="default">{% trans "Perform the import" %}</button>
+                    class="default">{% translate "Perform the import" %}</button>
         </div>
 
         <input type="hidden" name="action" value="{{ action }}"/>

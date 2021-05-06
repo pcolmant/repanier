@@ -2,11 +2,11 @@
 {% spaceless %}
     {% with id=widget.attrs.id name=widget.name %}
 {#        <input type="submit" id="{{ id }}" href="#"#}
-{#           onclick="{{ id }}_test_mail_config();return false;" value="{% trans "Send a test email" %}">#}
+{#           onclick="{{ id }}_test_mail_config();return false;" value="{% translate "Send a test email" %}">#}
         <a id="{{ id }}" href="#"
-           onclick="{{ id }}_test_mail_config();return false;">{% trans "Send a test email" %}</a>
+           onclick="{{ id }}_test_mail_config();return false;">{% translate "Send a test email" %}</a>
 
-        <script type="text/javascript">
+        <script>
             var {{ id }}_jQuery;
             if (typeof django === 'undefined') {
                 if (typeof CMS === 'undefined') {
@@ -36,7 +36,7 @@
                         return csrftoken;
                     }
 
-                    $('#{{ id }}').html('{% trans "Please wait..." %}');
+                    $('#{{ id }}').html('{% translate "Please wait..." %}');
                     var id_email = $("#id_email").val();
                     var lien = '{% url 'repanier:test_mail_config_ajax' %}';
                     var csrftoken = getCsrftoken();

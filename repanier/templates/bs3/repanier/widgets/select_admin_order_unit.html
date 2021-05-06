@@ -5,7 +5,7 @@
   {% include option.template_name with widget=option %}{% endfor %}{% if group_name %}
   </optgroup>{% endif %}{% endfor %}
 </select>
-<script type="text/javascript">
+<script>
     django.jQuery(document).ready(function() { {{ widget.name }}_select("{{ widget.value|first }}");});
     function {{ widget.name }}_select(value) {
         (function($){
@@ -90,54 +90,54 @@
             }
             switch (value) {
                 case "105":
-                    $("div.fieldBox.field-order_average_weight label").html("{% trans "Piece weight in kg" %}");
+                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Piece weight in kg" %}");
                     break;
                 case "110":
-                    $("div.fieldBox.field-order_average_weight label").html("{% trans "Piece content in l" %}");
+                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Piece content in l" %}");
                     break;
                 case "115":
-                    $("div.fieldBox.field-order_average_weight label").html("{% trans "Number of pieces in a pack" %}");
+                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Number of pieces in a pack" %}");
                     break;
                 case "140":
-                    $("div.fieldBox.field-order_average_weight label").html("{% trans "Average weight in kg of a piece" %}");
+                    $("div.fieldBox.field-order_average_weight label").html("{% translate "Average weight in kg of a piece" %}");
                     break;
             }
             switch (value) {
                 case "100":
                 case "105":
                 case "110":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one piece" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% trans "Customer price for one piece" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed as number of pieces" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one piece" %}");
+                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one piece" %}");
+                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed as number of pieces" %}");
                     break;
                 case "115":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one pack" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% trans "Customer price for one pack" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed in number of pack(s)" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one pack" %}");
+                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one pack" %}");
+                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed in number of pack(s)" %}");
                     break;
                 case "120":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one kg" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% trans "Customer price for one kg" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity in kg (0.05 = 50 grams)" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one kg" %}");
+                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one kg" %}");
+                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity in kg (0.05 = 50 grams)" %}");
                     break;
                 case "140":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one kg" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% trans "Customer price for one kg" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed as number of pieces" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one kg" %}");
+                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one kg" %}");
+                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed as number of pieces" %}");
                     break;
                 case "150":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one l" %}");
-                    $("div.fieldBox.field-customer_unit_price label").html("{% trans "Customer price for one l" %}");
-                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% trans "Minimum order quantity expressed in ℓ (0.75 = 75 cℓ)" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one l" %}");
+                    $("div.fieldBox.field-customer_unit_price label").html("{% translate "Customer price for one l" %}");
+                    $("div.fieldBox.field-customer_minimum_order_quantity label").html("{% translate "Minimum order quantity expressed in ℓ (0.75 = 75 cℓ)" %}");
                     break;
                 case "300":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one deposit" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one deposit" %}");
                     break;
                 case "500":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one transportation" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one transportation" %}");
                     break;
                 case "600":
-                    $("div.fieldBox.field-producer_unit_price label").html("{% trans "Producer price for one subscription" %}");
+                    $("div.fieldBox.field-producer_unit_price label").html("{% translate "Producer price for one subscription" %}");
                     break;
             }
         }(django.jQuery))

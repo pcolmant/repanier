@@ -33,7 +33,7 @@
     <title>{% page_attribute "title" %}</title>
     {% render_block "css"  %}
     {% render_block "jshead" %}
-    <script type="text/javascript">
+    <script>
 {#      ensuring django namespace is set correctly#}
       window.django = window.django || undefined;
 {#      ensuring jQuery namespace is set correctly#}
@@ -53,7 +53,7 @@
     </script>
    </head>
   <body>
-    <a href="#content" class="skip_link">{% trans "Skip to main content" %}</a>
+    <a href="#content" class="skip_link">{% translate "Skip to main content" %}</a>
 <a name="#top"></a><section>
 {#    {% cms_toolbar %}#}
     {% spaceless %}
@@ -61,7 +61,7 @@
     <nav class="navbar-default navbar-fixed-top navbar-custom" role="navigation">
         <div class="navbar-header visible-xs-inline-block">
           <a href="#" class="btn btn-info" onclick="openNav()">
-            <span class="sr-only">{% trans "Toggle navigation" %}</span>
+            <span class="sr-only">{% translate "Toggle navigation" %}</span>
             <span class="glyphicon glyphicon-list"></span>
           </a>
           {% if not permanence_id %}
@@ -93,7 +93,7 @@
             {% repanier_user_bs3 permanence_id=0 %}
               {% if REPANIER_DISPLAY_LANGUAGE %}
                 <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Language" %} <b class="caret"></b></a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% translate "Language" %} <b class="caret"></b></a>
                   <ul class="dropdown-menu">
                     {% language_chooser "native" %}
                   </ul>
@@ -104,7 +104,7 @@
       </div>
     </nav>
     {% addtoblock "js" %}{% spaceless %}
-        <script type="text/javascript">
+        <script>
             function openNav() {
                 $("#mySideNav").show()
             }
