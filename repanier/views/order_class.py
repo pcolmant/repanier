@@ -30,7 +30,7 @@ class OrderView(ListView):
     paginate_orphans = 2
 
     def __init__(self, **kwargs):
-        super(OrderView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.user = None
         self.customer = None
         self.first_page = False
@@ -84,7 +84,7 @@ class OrderView(ListView):
         else:
             self.communication = False
 
-        return super(OrderView, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         from repanier.apps import (
@@ -92,7 +92,7 @@ class OrderView(ListView):
             REPANIER_SETTINGS_NOTIFICATION,
         )
 
-        context = super(OrderView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context["first_page"] = self.first_page
         context["permanence"] = self.permanence
         context["permanence_id"] = self.permanence.id

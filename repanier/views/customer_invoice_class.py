@@ -1,7 +1,7 @@
-import django
 from django.conf import settings
 from django.http import Http404
 from django.views.generic import DetailView
+from repanier.models import Customer
 
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
@@ -16,13 +16,13 @@ class CustomerInvoiceView(DetailView):
     def get_object(self, queryset=None):
         # Important to handle customer without any invoice
         try:
-            obj = super(CustomerInvoiceView, self).get_object(queryset)
+            obj = super().get_object(queryset)
         except Http404:
             obj = None
         return obj
 
     def get_context_data(self, **kwargs):
-        context = super(CustomerInvoiceView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         if context["object"] is None:
             # This customer has never been invoiced
             context["bank_account_set"] = BankAccount.objects.none()
@@ -33,7 +33,7 @@ class CustomerInvoiceView(DetailView):
             # if self.request.user.is_staff:
             #     raise Http404
             # else:
-            customer = self.request.user.customer
+            customer = Customer.objects.filter(id=self.request.user.customer_id)
             context["customer"] = customer
             context["download_invoice"] = False
         else:
@@ -111,10 +111,7 @@ class CustomerInvoiceView(DetailView):
         return context
 
     def get_queryset(self):
-        if django.VERSION[0] < 2:
-            pk = int(self.kwargs.get("pk", 0))
-        else:
-            pk = self.kwargs.get("pk", 0)
+        pk = self.kwargs.get("pk", 0)
         if self.request.user.is_staff:
             if pk == 0:
                 customer_id = self.request.GET.get("customer", None)
@@ -135,7 +132,7 @@ class CustomerInvoiceView(DetailView):
             if pk == 0:
                 last_customer_invoice = (
                     CustomerInvoice.objects.filter(
-                        customer__user_id=self.request.user.id,
+                        customer_id=self.request.user.customer_id,
                         invoice_sort_order__isnull=False,
                     )
                     .only("id")
@@ -145,5 +142,5 @@ class CustomerInvoiceView(DetailView):
                 if last_customer_invoice is not None:
                     self.kwargs["pk"] = last_customer_invoice.id
             return CustomerInvoice.objects.filter(
-                customer__user_id=self.request.user.id, invoice_sort_order__isnull=False
+                customer_id=self.request.user.customer_id, invoice_sort_order__isnull=False
             ).order_by("-invoice_sort_order")

@@ -9,7 +9,6 @@ from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
-
 # from django.views.i18n import JavaScriptCatalog
 from easy_select2 import Select2
 from import_export import resources, fields
@@ -137,7 +136,7 @@ class PurchaseForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(PurchaseForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         purchase = self.instance
         if purchase.id is not None:
             if purchase.status < PERMANENCE_SEND:
@@ -212,7 +211,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
     # change_list_template = 'admin/purchase_change_list.html'
 
     def __init__(self, model, admin_site):
-        super(PurchaseAdmin, self).__init__(model, admin_site)
+        super().__init__(model, admin_site)
         self.producer_id = None
 
     def get_department_for_customer(self, obj):
@@ -224,7 +223,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         permanence_id = request.GET.get("permanence", None)
         if permanence_id is not None:
             return (
-                super(PurchaseAdmin, self)
+                super()
                 .get_queryset(request)
                 .filter(
                     permanence=permanence_id,
@@ -233,7 +232,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             )
         else:
             return (
-                super(PurchaseAdmin, self)
+                super()
                 .get_queryset(request)
                 .filter(
                     is_box_content=False,
@@ -273,7 +272,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
         return False
 
     def get_urls(self):
-        urls = super(PurchaseAdmin, self).get_urls()
+        urls = super().get_urls()
         if settings.REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER:
             my_urls = [
                 url(
@@ -420,7 +419,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
 
     def get_form(self, request, purchase=None, **kwargs):
 
-        form = super(PurchaseAdmin, self).get_form(request, purchase, **kwargs)
+        form = super().get_form(request, purchase, **kwargs)
 
         # /purchase/add/?_changelist_filters=permanence%3D6%26customer%3D3
         # If we are coming from a list screen, use the filter to pre-fill the form
@@ -631,7 +630,7 @@ class PurchaseAdmin(ExportMixin, admin.ModelAdmin):
             customer_invoice.save()
 
     def get_actions(self, request):
-        actions = super(PurchaseAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         if not actions:

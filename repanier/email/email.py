@@ -32,7 +32,7 @@ class RepanierEmail(EmailMultiAlternatives):
             "show_customer_may_unsubscribe", True
         )
         self.send_even_if_unsubscribed = kwargs.pop("send_even_if_unsubscribed", False)
-        super(RepanierEmail, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def send_email(self):
         self.body = strip_tags(self.html_body)
@@ -202,9 +202,7 @@ class RepanierEmail(EmailMultiAlternatives):
                         REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE : {REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE}
                         REPANIER_SETTINGS_DELIVERY_POINT : {REPANIER_SETTINGS_DELIVERY_POINT}
                         REPANIER_SETTINGS_DEMO : {REPANIER_SETTINGS_DEMO}
-                        REPANIER_SETTINGS_GROUP : {REPANIER_SETTINGS_GROUP}
                         REPANIER_SETTINGS_MANAGE_ACCOUNTING : {REPANIER_SETTINGS_MANAGE_ACCOUNTING}
-                        REPANIER_SETTINGS_PRODUCT_LABEL : {REPANIER_SETTINGS_PRODUCT_LABEL}
                         REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO : {REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO}
                         REPANIER_SETTINGS_ROUND_INVOICES : {REPANIER_SETTINGS_ROUND_INVOICES}
                         REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM : {REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM}
@@ -223,9 +221,7 @@ class RepanierEmail(EmailMultiAlternatives):
                 REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE=settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE,
                 REPANIER_SETTINGS_DELIVERY_POINT=settings.REPANIER_SETTINGS_DELIVERY_POINT,
                 REPANIER_SETTINGS_DEMO=settings.REPANIER_SETTINGS_DEMO,
-                REPANIER_SETTINGS_GROUP=settings.REPANIER_SETTINGS_GROUP,
                 REPANIER_SETTINGS_MANAGE_ACCOUNTING=settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING,
-                REPANIER_SETTINGS_PRODUCT_LABEL=settings.REPANIER_SETTINGS_PRODUCT_LABEL,
                 REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO=settings.REPANIER_SETTINGS_REPLY_ALL_EMAIL_TO,
                 REPANIER_SETTINGS_ROUND_INVOICES=settings.REPANIER_SETTINGS_ROUND_INVOICES,
                 REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM=settings.REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM,

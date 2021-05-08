@@ -227,13 +227,13 @@ class OfferItem(Item):
         return qty_display
 
     def get_long_name(self, customer_price=True, is_html=False):
-        return super(OfferItem, self).get_long_name(customer_price=customer_price)
+        return super().get_long_name(customer_price=customer_price)
 
     def get_html_long_name(self):
         return mark_safe(self.get_long_name(is_html=True))
 
     def get_long_name_with_producer(self, is_html=False):
-        return super(OfferItem, self).get_long_name_with_producer()
+        return super().get_long_name_with_producer()
 
     def get_html_long_name_with_producer(self):
         return mark_safe(self.get_long_name_with_producer(is_html=True))

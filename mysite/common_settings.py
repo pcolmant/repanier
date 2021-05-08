@@ -1,13 +1,12 @@
 import codecs
+import configparser
 import os
 import sys
-import configparser
 
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
-
 from .settings import *
 
 EMPTY_STRING = ""
@@ -175,6 +174,7 @@ REPANIER_SETTINGS_STOCK = True
 REPANIER_SETTINGS_PRODUCT_LABEL = True
 REPANIER_SETTINGS_IS_MINIMALIST = False
 REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE = True
+REPANIER_SETTINGS_GROUP = REPANIER_SETTINGS_DELIVERY_POINT
 
 ALLOWED_HOSTS = []
 for name in config.options("ALLOWED_HOSTS"):
@@ -637,7 +637,7 @@ if DJANGO_SETTINGS_LOGGING:
             }
         },
         "loggers": {
-            # "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
+            "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
             REPANIER_SETTINGS_VERSION: {"level": "DEBUG", "handlers": ["console"]},
             # "django.template": {"level": "DEBUG", "handlers": ["console"]},
         },

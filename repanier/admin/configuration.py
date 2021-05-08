@@ -34,7 +34,7 @@ class ConfigurationDataForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ConfigurationDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["group_name"].widget.attrs["readonly"] = True
         self.fields["email"].widget.attrs["readonly"] = True
 

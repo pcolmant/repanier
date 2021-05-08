@@ -12,11 +12,11 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
         """
         try:
             try:
-                if (
-                    context
-                    == "djangocms_text_ckeditor/js/dist/bundle-45a646fecc.cms.ckeditor.min.js"
-                ):
-                    context = "djangocms_text_ckeditor/js/dist/bundle-bca0d2d3f4.cms.ckeditor.min.js"
+                # if (
+                #     context
+                #     == "djangocms_text_ckeditor/js/dist/bundle-45a646fecc.cms.ckeditor.min.js"
+                # ):
+                #     context = "djangocms_text_ckeditor/js/dist/bundle-bca0d2d3f4.cms.ckeditor.min.js"
                 try:
                     return super(ManifestStaticFilesStorage, self).url(context, True)
                 except ValueError:
@@ -28,11 +28,11 @@ class BigBlindManifestStaticFilesStorage(ManifestStaticFilesStorage):
                         .replace(__version__, "")
                     )
             except:
-                if (
-                    context
-                    == "djangocms_text_ckeditor/js/dist/bundle-bca0d2d3f4.cms.ckeditor.min.js"
-                ):
-                    context = "djangocms_text_ckeditor/js/dist/bundle-45a646fecc.cms.ckeditor.min.js"
+                # if (
+                #     context
+                #     == "djangocms_text_ckeditor/js/dist/bundle-bca0d2d3f4.cms.ckeditor.min.js"
+                # ):
+                #     context = "djangocms_text_ckeditor/js/dist/bundle-45a646fecc.cms.ckeditor.min.js"
                 try:
                     return super(ManifestStaticFilesStorage, self).url(context, True)
                 except ValueError:

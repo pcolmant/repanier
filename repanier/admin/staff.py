@@ -1,35 +1,20 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from easy_select2 import apply_select2
 
 from repanier.auth_backend import RepanierAuthBackend
 from repanier.const import ONE_LEVEL_DEPTH
-from repanier.models.customer import Customer
 from repanier.models.staff import Staff
 from .lut import LUTAdmin
 
 
 class UserDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        super(UserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-
-        # if self.instance.id is None:
-        #     if self.language_code != settings.LANGUAGE_CODE:
-        #         # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
-        #         self.add_error(
-        #             "long_name",
-        #             _("Please define first a long_name in %(language)s")
-        #             % {
-        #                 "language": get_language_info(settings.LANGUAGE_CODE)[
-        #                     "name_local"
-        #                 ]
-        #             },
-        #         )
 
         is_active = self.cleaned_data.get("is_active", False)
         is_repanier_admin = self.cleaned_data.get("is_repanier_admin", False)
@@ -50,9 +35,7 @@ class UserDataForm(forms.ModelForm):
             )
 
         if not is_repanier_admin:
-            qs = Staff.objects.filter(is_repanier_admin=True, is_active=True).order_by(
-                "?"
-            )
+            qs = Staff.objects.filter(is_repanier_admin=True, is_active=True)
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if not qs.exists():
@@ -69,7 +52,6 @@ class StaffWithUserDataForm(UserDataForm):
     class Meta:
         model = Staff
         fields = "__all__"
-        widgets = {"customer_responsible": apply_select2(forms.Select)}
 
 
 class StaffWithUserDataAdmin(LUTAdmin):
@@ -82,6 +64,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
     list_select_related = ("customer_responsible",)
     list_per_page = 16
     list_max_show_all = 16
+    autocomplete_fields = ["customer_responsible"]
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_repanier_admin
@@ -106,15 +89,6 @@ class StaffWithUserDataAdmin(LUTAdmin):
         ]
         return fields
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "customer_responsible":
-            kwargs["queryset"] = Customer.objects.filter(
-                is_active=True
-            )  # , represent_this_buyinggroup=False)
-        return super(StaffWithUserDataAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
     def save_model(self, request, staff, form, change):
         old_customer_responsible_field = form.base_fields[
             "customer_responsible"
@@ -126,7 +100,7 @@ class StaffWithUserDataAdmin(LUTAdmin):
             and old_customer_responsible_field.id != new_customer_responsible_field.id
         )
 
-        super(StaffWithUserDataAdmin, self).save_model(request, staff, form, change)
+        super().save_model(request, staff, form, change)
         if (
             change_previous_customer_responsible
             and old_customer_responsible_field.user is not None

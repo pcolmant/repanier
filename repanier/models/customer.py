@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.core.validators import MinValueValidator
-from django.db import models
+from django.db import models, connection
 from django.db.models import Q, Sum, DecimalField
 from django.urls import reverse
 from django.utils import timezone
@@ -15,7 +15,6 @@ from repanier.const import *
 from repanier.fields.RepanierMoneyField import ModelMoneyField, RepanierMoney
 from repanier.models.bankaccount import BankAccount
 from repanier.models.invoice import CustomerInvoice
-from repanier.models.permanenceboard import PermanenceBoard
 from repanier.picture.const import SIZE_S
 from repanier.picture.fields import RepanierPictureField
 
@@ -25,7 +24,10 @@ class Customer(models.Model):
         settings.AUTH_USER_MODEL, db_index=True, on_delete=models.CASCADE
     )
     login_attempt_counter = models.DecimalField(
-        _("Sign in attempt counter"), default=DECIMAL_ZERO, max_digits=2, decimal_places=0
+        _("Sign in attempt counter"),
+        default=DECIMAL_ZERO,
+        max_digits=2,
+        decimal_places=0,
     )
 
     short_basket_name = models.CharField(
@@ -106,9 +108,9 @@ class Customer(models.Model):
     represent_this_buyinggroup = models.BooleanField(
         _("Represent_this_buyinggroup"), default=False
     )
-    delivery_point = models.ForeignKey(
-        "LUT_DeliveryPoint",
-        verbose_name=_("Delivery point"),
+    group = models.ForeignKey(
+        "Group",
+        verbose_name=_("Group"),
         blank=True,
         null=True,
         default=None,
@@ -134,6 +136,16 @@ class Customer(models.Model):
         _("Agree to receive mails from this site"), default=True
     )
     preparation_order = models.IntegerField(null=True, blank=True, default=0)
+
+    # TODO : TBD
+    delivery_point = models.ForeignKey(
+        "LUT_DeliveryPoint",
+        verbose_name=_("Delivery point"),
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.CASCADE,
+    )
 
     @classmethod
     def get_or_create_group(cls):
@@ -470,32 +482,46 @@ class Customer(models.Model):
     get_last_membership_fee_date.short_description = _("Last membership fee date")
 
     def get_participation_counter(self):
-        now = timezone.now()
-        return (
-            PermanenceBoard.objects.filter(
-                customer_id=self.id,
-                permanence_date__gte=now - datetime.timedelta(days=ONE_YEAR),
-                permanence_date__lt=now,
-                permanence_role__is_counted_as_participation=True,
-            )
-            .order_by("?")
-            .count()
-        )
+        since = (timezone.now() - datetime.timedelta(ONE_YEAR)).date()
+        now = timezone.now().date()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) AS participation_counter "
+                    "  FROM repanier_permanenceboard INNER JOIN repanier_lut_permanencerole "
+                    "    ON (repanier_permanenceboard.permanence_role_id = repanier_lut_permanencerole.id) "
+                    "  WHERE repanier_permanenceboard.customer_id = %s "
+                    "    AND repanier_permanenceboard.permanence_date BETWEEN %s AND %s ",
+                    [self.id, since, now],
+                )
+                result = cursor.fetchone()
+                return Decimal(result[0])
+        except:
+            return DECIMAL_ZERO
 
-    get_participation_counter.short_description = _("Participation")
+    get_participation_counter.short_description = _(
+        "Participations in the last 12 months"
+    )
 
     def get_purchase_counter(self):
-        now = timezone.now()
-        # Do not count invoice having only products free of charge
-        # or slitted permanences (master_permanence is not NULL)
-        return CustomerInvoice.objects.filter(
-            customer_id=self.id,
-            total_price_with_tax__gt=DECIMAL_ZERO,
-            date_balance__gte=now - datetime.timedelta(ONE_YEAR),
-            permanence__master_permanence__isnull=True,
-        ).count()
+        since = (timezone.now() - datetime.timedelta(ONE_YEAR)).date()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(DISTINCT repanier_permanence.permanence_date) AS purchase_counter "
+                    "  FROM repanier_customerinvoice INNER JOIN repanier_permanence "
+                    "    ON (repanier_customerinvoice.permanence_id = repanier_permanence.id) "
+                    "  WHERE repanier_customerinvoice.permanence_id = repanier_permanence.id "
+                    "    AND repanier_customerinvoice.customer_id = %s "
+                    "    AND repanier_permanence.permanence_date >= %s ",
+                    [self.id, since],
+                )
+                result = cursor.fetchone()
+                return Decimal(result[0])
+        except:
+            return DECIMAL_ZERO
 
-    get_purchase_counter.short_description = _("Purchase")
+    get_purchase_counter.short_description = _("Purchases in the last 12 months")
 
     def my_order_confirmation_email_send_to(self):
         if self.email2:
@@ -529,7 +555,8 @@ class Customer(models.Model):
         return "https://{}{}".format(
             self._get_unsubscribe_site(),
             reverse(
-                "repanier:unsubscribe_view", kwargs={"customer_id": customer_id, "token": token}
+                "repanier:unsubscribe_view",
+                kwargs={"customer_id": customer_id, "token": token},
             ),
         )
 
@@ -549,12 +576,14 @@ class Customer(models.Model):
         return True
 
     def anonymize(self, also_group=False):
-        if self.represent_this_buyinggroup or self.is_group:
-            # Do not anonymize groups
+        if self.represent_this_buyinggroup or self.is_group or self.may_order:
+            # Do not anonymize
             return
-        self.short_basket_name = "{}-{}".format(_("BASKET"), self.id).lower()
-        self.long_basket_name = "{} {}".format(_("Family"), self.id)
+        self.long_basket_name = self.short_basket_name = "{}({})".format(
+            _("nameless"), self.id
+        ).lower()
         self.email2 = EMPTY_STRING
+        self.group = None
         self.picture = EMPTY_STRING
         self.phone1 = EMPTY_STRING
         self.phone2 = EMPTY_STRING
@@ -569,18 +598,20 @@ class Customer(models.Model):
         )
         self.user.first_name = EMPTY_STRING
         self.user.last_name = self.short_basket_name
+        self.user.is_active = False
         self.user.set_password(None)
         self.user.save()
+        self.is_active = False
         self.is_anonymized = True
         self.valid_email = False
         self.subscribe_to_email = False
         self.save()
 
     def __str__(self):
-        if self.delivery_point is None:
+        if self.group is None:
             return self.short_basket_name
         else:
-            return "{} - {}".format(self.delivery_point, self.short_basket_name)
+            return "{} - {}".format(self.group, self.short_basket_name)
 
     class Meta:
         verbose_name = _("Customer")

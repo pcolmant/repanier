@@ -8,9 +8,7 @@ class InlineForeignKeyCacheMixin(object):
     """
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        formfield = super(InlineForeignKeyCacheMixin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
         cache_key = "repanier_field{}".format(db_field.name)
         cache_value = cache.get(cache_key)
         if cache_value is not None:

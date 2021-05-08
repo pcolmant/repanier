@@ -314,7 +314,7 @@ class Purchase(models.Model):
                     producer_id=self.producer_id,
                 )
             self.customer_producer_invoice = customer_producer_invoice
-        super(Purchase, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @transaction.atomic
     def save_box(self):

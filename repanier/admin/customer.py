@@ -9,11 +9,10 @@ from django.contrib import admin
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from django.forms import Textarea
+from django.forms import Textarea, EmailInput, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
@@ -35,27 +34,43 @@ User = get_user_model()
 
 
 class UserDataForm(forms.ModelForm):
-    email = forms.EmailField(label=_("Email"), required=True)
+    email = forms.EmailField(
+        label=_("Email"),
+        required=True,
+        widget=forms.TextInput(
+            attrs={"placeholder": _("Email"), "style": "width: 70%;"}
+        ),
+    )
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(UserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        # cleaned_data = super(UserDataForm, self).clean()
-        username_field_name = "short_basket_name"
-        username = self.cleaned_data.get(username_field_name)
-        user_error1 = _("The given short_basket_name must be set")
-        user_error2 = _("The given short_basket_name is used by another user.")
-        if not username:
-            self.add_error(username_field_name, user_error1)
+        # cleaned_data = super().clean()
+        short_basket_name_field = "short_basket_name"
+        short_basket_name = self.cleaned_data.get(short_basket_name_field)
+        if not short_basket_name:
+            self.add_error(
+                short_basket_name_field,
+                _("The given short_basket_name must be set"),
+            )
+        # Check that the short_basket_name is set
+        qs = Customer.objects.filter(short_basket_name=short_basket_name)
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.id)
+        if qs.exists():
+            self.add_error(
+                short_basket_name_field,
+                _("The given short_basket_name is used by another user."),
+            )
         # Check that the email is set
         email = self.cleaned_data["email"].lower()
         user_model = get_user_model()
-        qs = user_model.objects.filter(email=email).order_by("?")
+        qs = user_model.objects.filter(Q(username=email) | Q(email=email))
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.user_id)
         if qs.exists():
@@ -65,46 +80,22 @@ class UserDataForm(forms.ModelForm):
                     email
                 ),
             )
-        qs = user_model.objects.filter(username=username).order_by("?")
         if self.instance.id is not None:
-            qs = qs.exclude(id=self.instance.user_id)
-        if qs.exists():
-            self.add_error(username_field_name, user_error2)
-        if self.instance.id is not None:
-            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                if (
-                    self.instance.delivery_point is not None
-                    and self.instance.delivery_point.customer_responsible is not None
-                    and self.cleaned_data.get("price_list_multiplier") != DECIMAL_ONE
-                ):
-                    self.add_error(
-                        "price_list_multiplier",
-                        _(
-                            "If the customer is member of a closed group with a customer_responsible, the customer.price_list_multiplier must be set to ONE."
-                        ),
-                    )
-            is_active = self.cleaned_data.get("is_active")
-            if is_active is not None and not is_active:
-                delivery_point = (
-                    LUT_DeliveryPoint.objects.filter(
-                        customer_responsible_id=self.instance.id
-                    )
-                    .order_by("?")
-                    .first()
+            if (
+                self.instance.group is not None
+                and self.cleaned_data.get("price_list_multiplier") != DECIMAL_ONE
+            ):
+                self.add_error(
+                    "price_list_multiplier",
+                    _(
+                        "If the customer is member of a group, the customer.price_list_multiplier must be set to ONE."
+                    ),
                 )
-                if delivery_point is not None:
-                    self.add_error(
-                        "is_active",
-                        _(
-                            "This customer is responsible of the delivery point (%(delivery_point)s). A customer responsible of a delivery point must be active."
-                        )
-                        % {"delivery_point": delivery_point},
-                    )
         bank_account1 = self.cleaned_data["bank_account1"]
         if bank_account1:
             qs = Customer.objects.filter(
                 Q(bank_account1=bank_account1) | Q(bank_account2=bank_account1)
-            ).order_by("?")
+            )
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
@@ -116,7 +107,7 @@ class UserDataForm(forms.ModelForm):
         if bank_account2:
             qs = Customer.objects.filter(
                 Q(bank_account1=bank_account2) | Q(bank_account2=bank_account2)
-            ).order_by("?")
+            )
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
@@ -124,10 +115,10 @@ class UserDataForm(forms.ModelForm):
                     "bank_account2",
                     _("This bank account already belongs to another customer."),
                 )
-                # return cleaned_data
+        # return cleaned_data
 
     def save(self, *args, **kwargs):
-        super(UserDataForm, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         change = self.instance.id is not None
         short_basket_name = self.data["short_basket_name"]
         email = self.data["email"].lower()
@@ -164,9 +155,6 @@ class CustomerResource(resources.ModelResource):
         attribute="phone1", default="1234", widget=CharWidget(), readonly=False
     )
     phone2 = fields.Field(attribute="phone2", widget=CharWidget(), readonly=False)
-    date_balance = fields.Field(
-        attribute="get_admin_date_balance", widget=CharWidget(), readonly=True
-    )
     balance = fields.Field(
         attribute="get_admin_balance", widget=TwoMoneysWidget(), readonly=True
     )
@@ -176,32 +164,11 @@ class CustomerResource(resources.ModelResource):
         widget=DecimalBooleanWidget(),
         readonly=False,
     )
-    is_group = fields.Field(
-        attribute="is_group",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=False,
-    )
-    represent_this_buyinggroup = fields.Field(
-        attribute="represent_this_buyinggroup",
-        default=False,
-        widget=DecimalBooleanWidget(),
-        readonly=True,
-    )
-    is_active = fields.Field(
-        attribute="is_active", widget=DecimalBooleanWidget(), readonly=True
-    )
     membership_fee_valid_until = fields.Field(
         attribute="membership_fee_valid_until",
         default=timezone.now().date(),
         widget=DateWidgetExcel(),
         readonly=False,
-    )
-    last_membership_fee = fields.Field(
-        attribute="get_last_membership_fee", widget=TwoMoneysWidget(), readonly=True
-    )
-    last_membership_fee_date = fields.Field(
-        attribute="last_membership_fee_date", widget=DateWidgetExcel(), readonly=True
     )
     purchase = fields.Field(
         attribute="get_purchase_counter", widget=ZeroDecimalsWidget(), readonly=True
@@ -211,18 +178,12 @@ class CustomerResource(resources.ModelResource):
         widget=ZeroDecimalsWidget(),
         readonly=True,
     )
-    delivery_point = fields.Field(
-        attribute="delivery_point",
-        widget=ForeignKeyWidget(LUT_DeliveryPoint, field="short_name_v2"),
-    )
-    valid_email = fields.Field(
-        attribute="valid_email", widget=DecimalBooleanWidget(), readonly=True
+    group = fields.Field(
+        attribute="group",
+        widget=ForeignKeyWidget(LUT_DeliveryPoint, field="short_basket_name"),
     )
     zero_waste = fields.Field(
         attribute="zero_waste", widget=DecimalBooleanWidget(), readonly=True
-    )
-    date_joined = fields.Field(
-        attribute="get_admin_date_joined", widget=CharWidget(), readonly=True
     )
 
     def before_save_instance(self, instance, using_transactions, dry_run):
@@ -287,27 +248,19 @@ class CustomerResource(resources.ModelResource):
             "long_basket_name",
             "email",
             "email2",
-            "language",
             "phone1",
             "phone2",
             "address",
             "city",
             "bank_account1",
             "bank_account2",
-            "date_balance",
             "balance",
             "price_list_multiplier",
             "membership_fee_valid_until",
-            "last_membership_fee",
-            "last_membership_fee_date",
             "participation",
             "purchase",
-            "represent_this_buyinggroup",
-            "is_group",
-            "is_active",
-            "delivery_point",
+            "group",
             "zero_waste",
-            "valid_email",
         )
         export_order = fields
         import_id_fields = ("id",)
@@ -347,25 +300,15 @@ def create__customer_action(year):
 
 
 class CustomerWithUserDataForm(UserDataForm):
-    delivery_point = forms.ModelChoiceField(
-        LUT_DeliveryPoint.objects.filter(customer_responsible__isnull=False),
-        label=_("Group"),
-        widget=apply_select2(forms.Select),
-        required=False,
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(CustomerWithUserDataForm, self).__init__(*args, **kwargs)
-        self.fields["delivery_point"].widget.can_add_related = False
-        self.fields["delivery_point"].widget.can_delete_related = False
-
     class Meta:
         widgets = {
+            "long_basket_name": TextInput(attrs={"style": "width: 70%;"}),
+            "email2": EmailInput(attrs={"style": "width: 70%;"}),
             "address": Textarea(
-                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 30em;"}
+                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 95%;"}
             ),
             "memo": Textarea(
-                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 60em;"}
+                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 95%;"}
             ),
         }
         model = Customer
@@ -377,9 +320,10 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = CustomerResource
     list_display = ("short_basket_name",)
     search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2")
-    list_filter = ("may_order", "is_active", "valid_email")
+    list_filter = ("may_order", "valid_email")
     list_per_page = 16
     list_max_show_all = 16
+    autocomplete_fields = ["group"]
 
     def has_delete_permission(self, request, customer=None):
         user = request.user
@@ -412,7 +356,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     get_last_login.admin_order_field = "user__last_login"
 
     def get_actions(self, request):
-        actions = super(CustomerWithUserDataAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         this_year = timezone.now().year
         actions.update(
             OrderedDict(
@@ -446,56 +390,68 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             )
 
     def get_fieldsets(self, request, customer=None):
-        fields_basic = [
-            ("short_basket_name", "long_basket_name", "language"),
-            ("email", "email2"),
-            ("phone1", "phone2"),
-            "membership_fee_valid_until",
-        ]
-        if customer is not None:
-            if customer.represent_this_buyinggroup:
-                fields_basic += [
-                    "get_admin_balance",
-                    "get_admin_date_balance",
-                    ("may_order", "represent_this_buyinggroup"),
-                ]
-            else:
-                fields_basic += ["subscribe_to_email"]
-                if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                    fields_basic += ["price_list_multiplier"]
-                if settings.REPANIER_SETTINGS_GROUP:
-                    fields_basic += ["delivery_point"]
-                fields_basic += [
-                    "get_admin_balance",
-                    "get_admin_date_balance",
-                    ("may_order", "is_active", "zero_waste"),
-                ]
-            fields_basic += [("address", "city", "picture"), "memo"]
-            fields_advanced = [
-                "bank_account1",
-                "bank_account2",
-                "get_last_login",
-                "get_admin_date_joined",
-                "get_last_membership_fee",
-                "get_last_membership_fee_date",
-                "get_participation_counter",
-                "get_purchase_counter",
+        fields_advanced = None
+        if customer is not None and customer.represent_this_buyinggroup:
+            fields_basic = [
+                "short_basket_name",
+                "long_basket_name",
+                "represent_this_buyinggroup",
+                "email",
+                "email2",
+                "phone1",
+                "phone2",
+                "get_admin_balance",
+                "get_admin_date_balance",
             ]
         else:
-            fields_basic += [("may_order", "is_active")]
-            if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
-                fields_basic += ["price_list_multiplier"]
-            # Do not accept the picture because there is no customer.id for the "upload_to"
-            fields_basic += [("address", "city"), "memo"]
-            fields_advanced = ["bank_account1", "bank_account2", "zero_waste"]
+            fields_basic = [
+                "short_basket_name",
+                "long_basket_name",
+                "email",
+                "email2",
+                "subscribe_to_email",
+                "may_order",
+                "zero_waste",
+                "phone1",
+                "phone2",
+                "membership_fee_valid_until",
+                "price_list_multiplier",
+            ]
+            if settings.REPANIER_SETTINGS_DELIVERY_POINT:
+                fields_basic += ["group"]
+            if customer is not None:
+                fields_basic += [
+                    "get_admin_balance",
+                    "get_admin_date_balance",
+                ]
+            fields_basic += [
+                "address",
+                "city",
+                "picture",
+                "memo",
+                "bank_account1",
+                "bank_account2",
+            ]
+            if customer is not None:
+                fields_advanced = [
+                    "get_last_login",
+                    "get_admin_date_joined",
+                    "get_last_membership_fee",
+                    "get_last_membership_fee_date",
+                    "get_participation_counter",
+                    "get_purchase_counter",
+                ]
 
-        fieldsets = (
-            (None, {"fields": fields_basic}),
-            (
-                _("Advanced options"),
-                {"classes": ("collapse",), "fields": fields_advanced},
-            ),
-        )
+        if fields_advanced is None:
+            fieldsets = ((None, {"fields": fields_basic}),)
+        else:
+            fieldsets = (
+                (None, {"fields": fields_basic}),
+                (
+                    _("Advanced options"),
+                    {"classes": ("collapse",), "fields": fields_advanced},
+                ),
+            )
         return fieldsets
 
     def get_readonly_fields(self, request, customer=None):
@@ -517,9 +473,7 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_form(self, request, customer=None, **kwargs):
 
-        form = super(CustomerWithUserDataAdmin, self).get_form(
-            request, customer, **kwargs
-        )
+        form = super().get_form(request, customer, **kwargs)
 
         email_field = form.base_fields["email"]
         if customer is not None:
@@ -539,19 +493,17 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
         return form
 
     def get_queryset(self, request):
-        qs = super(CustomerWithUserDataAdmin, self).get_queryset(request)
-        qs = qs.filter(is_group=False)
+        qs = super().get_queryset(request)
+        qs = qs.filter(is_group=False, is_active=True)
         return qs
 
     def save_model(self, request, customer, form, change):
         customer.user = form.user
         form.user.is_staff = False
-        form.user.is_active = customer.is_active
+        form.user.is_active = True
         form.user.save()
-        super(CustomerWithUserDataAdmin, self).save_model(
-            request, customer, form, change
-        )
-        if customer.delivery_point is not None:
+        super().save_model(request, customer, form, change)
+        if customer.group is not None:
             customer_price = EMPTY_STRING
             if settings.REPANIER_SETTINGS_CUSTOM_CUSTOMER_PRICE:
                 if customer.price_list_multiplier < DECIMAL_ONE:
@@ -570,47 +522,33 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
                             (customer.price_list_multiplier - DECIMAL_ONE) * 100
                         ).quantize(TWO_DECIMALS)
                     }
-            if (
-                customer.delivery_point.customer_responsible.price_list_multiplier
-                < DECIMAL_ONE
-            ):
+            if customer.group.price_list_multiplier < DECIMAL_ONE:
                 messages.add_message(
                     request,
                     messages.WARNING,
                     _(
-                        "%(discount)s%% discount is granted to customer invoices when delivered to %(delivery_point)s%(customer_price)s."
+                        "%(discount)s%% discount is granted to customer invoices when delivered to %(group)s%(customer_price)s."
                     )
                     % {
                         "discount": Decimal(
-                            (
-                                DECIMAL_ONE
-                                - customer.delivery_point.customer_responsible.price_list_multiplier
-                            )
-                            * 100
+                            (DECIMAL_ONE - customer.group.price_list_multiplier) * 100
                         ).quantize(TWO_DECIMALS),
-                        "delivery_point": customer.delivery_point,
+                        "group": customer.group,
                         "customer_price": customer_price,
                     },
                 )
-            elif (
-                customer.delivery_point.customer_responsible.price_list_multiplier
-                > DECIMAL_ONE
-            ):
+            elif customer.group.price_list_multiplier > DECIMAL_ONE:
                 messages.add_message(
                     request,
                     messages.WARNING,
                     _(
-                        "%(surcharge)s%% surcharge is applied to customer invoices when delivered to %(delivery_point)s%(customer_price)s."
+                        "%(surcharge)s%% surcharge is applied to customer invoices when delivered to %(group)s%(customer_price)s."
                     )
                     % {
                         "surcharge": Decimal(
-                            (
-                                customer.delivery_point.customer_responsible.price_list_multiplier
-                                - DECIMAL_ONE
-                            )
-                            * 100
+                            (customer.group.price_list_multiplier - DECIMAL_ONE) * 100
                         ).quantize(TWO_DECIMALS),
-                        "delivery_point": customer.delivery_point,
+                        "group": customer.group,
                         "customer_price": customer_price,
                     },
                 )

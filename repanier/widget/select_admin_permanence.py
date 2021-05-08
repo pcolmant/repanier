@@ -15,7 +15,7 @@ class SelectAdminPermanenceWidget(forms.Select):
     template_name = get_repanier_template_name("widgets/select_admin_purchase_qty.html")
 
     def get_context(self, name, value, attrs):
-        context = super(SelectAdminPermanenceWidget, self).get_context(
+        context = super().get_context(
             name, value, attrs
         )
         case_show_show = 'case "0": '

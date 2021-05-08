@@ -60,7 +60,7 @@ class Box(Product):
     get_box_admin_display.short_description = _("Box")
 
     def __str__(self):
-        # return super(Box, self).display()
+        # return super().display()
         return "{}".format(self.long_name_v2)
 
     class Meta:

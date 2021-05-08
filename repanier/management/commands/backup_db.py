@@ -42,12 +42,11 @@ class Command(BaseCommand):
                 email.attach_file(os.path.abspath(migrations_files.name),
                                   'application/zip')
                 email.send()
+
                 for customer in Customer.objects.filter(
                         represent_this_buyinggroup=False,
-                        subscribe_to_email=False,
                         is_group=False,
                         is_anonymized=False,
-                ).order_by('?'):
+                ):
                     if customer.get_purchase_counter() <= 0 and customer.get_participation_counter() <= 0 and customer.get_admin_balance().amount == DECIMAL_ZERO:
-                        customer.is_active = False
                         customer.anonymize()

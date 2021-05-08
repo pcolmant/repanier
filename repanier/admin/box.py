@@ -12,12 +12,11 @@ from easy_select2 import Select2
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import (
     PERMANENCE_PLANNED,
-    DECIMAL_MAX_STOCK,
     PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE,
-    LUT_VAT, REPANIER_MONEY_ZERO,
+    LUT_VAT,
+    REPANIER_MONEY_ZERO,
 )
 from repanier.fields.RepanierMoneyField import FormMoneyField
-from repanier.models import Producer
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
@@ -45,7 +44,7 @@ class BoxContentInlineForm(ModelForm):
     previous_product = forms.ModelChoiceField(Product.objects.none(), required=False)
 
     def __init__(self, *args, **kwargs):
-        super(BoxContentInlineForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["product"].widget.can_add_related = False
         self.fields["product"].widget.can_delete_related = False
         if self.instance.id is not None:
@@ -116,9 +115,7 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
                     "order_average_weight",
                 )
             )
-        return super(BoxContentInline, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class BoxForm(forms.ModelForm):
@@ -138,7 +135,7 @@ class BoxForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(BoxForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         box = self.instance
         if box.id is not None:
             box_price, box_deposit = box.get_calculated_price()
@@ -186,7 +183,9 @@ class BoxAdmin(admin.ModelAdmin):
     )
     search_fields = ("long_name_v2",)
     list_filter = ("is_into_offer", "is_active")
-    actions = ["duplicate_box",]
+    actions = [
+        "duplicate_box",
+    ]
 
     def has_delete_permission(self, request, box=None):
         user = request.user
@@ -199,7 +198,6 @@ class BoxAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, box=None):
         return self.has_delete_permission(request, box)
-
 
     def duplicate_box(self, request, queryset):
         if "cancel" in request.POST:
@@ -260,7 +258,7 @@ class BoxAdmin(admin.ModelAdmin):
 
     def get_form(self, request, box=None, **kwargs):
 
-        form = super(BoxAdmin, self).get_form(request, box, **kwargs)
+        form = super().get_form(request, box, **kwargs)
 
         picture_field = form.base_fields["picture2"]
         vat_level_field = form.base_fields["vat_level"]
@@ -269,7 +267,6 @@ class BoxAdmin(admin.ModelAdmin):
 
         if hasattr(picture_field.widget, "upload_to"):
             picture_field.widget.upload_to = "box"
-
 
         if box is None:
             preserved_filters = request.GET.get("_changelist_filters", None)
@@ -297,7 +294,7 @@ class BoxAdmin(admin.ModelAdmin):
     get_html_is_into_offer.short_description = _("In offer")
 
     def save_model(self, request, box, form, change):
-        super(BoxAdmin, self).save_model(request, box, form, change)
+        super().save_model(request, box, form, change)
         update_offer_item(box)
 
     def save_related(self, request, form, formsets, change):
@@ -333,7 +330,7 @@ class BoxAdmin(admin.ModelAdmin):
             pass
 
     def get_queryset(self, request):
-        qs = super(BoxAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(
             is_box=True,
         )

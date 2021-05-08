@@ -14,10 +14,10 @@ class RepanierPictureWidget(widgets.TextInput):
         self.upload_to = kwargs.pop("upload_to", "pictures")
         self.size = kwargs.pop("size", SIZE_M)
         self.bootstrap = kwargs.pop("bootstrap", False)
-        super(RepanierPictureWidget, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_context(self, name, value, attrs):
-        context = super(RepanierPictureWidget, self).get_context(name, value, attrs)
+        context = super().get_context(name, value, attrs)
         context["upload_url"] = reverse(
             "repanier:ajax_picture", args=(self.upload_to, self.size)
         )

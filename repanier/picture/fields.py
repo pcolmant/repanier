@@ -19,12 +19,12 @@ class RepanierPictureField(Field):
         self.widget = RepanierPictureWidget(
             upload_to=upload_to, size=size, bootstrap=bootstrap
         )
-        super(RepanierPictureField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def contribute_to_class(
         self, cls, name, private_only=False, virtual_only=NOT_PROVIDED
     ):
-        super(RepanierPictureField, self).contribute_to_class(
+        super().contribute_to_class(
             cls, name, private_only=private_only
         )
         setattr(cls, self.name, self.descriptor_class(self))
@@ -42,7 +42,7 @@ class RepanierPictureField(Field):
     def formfield(self, **kwargs):
         defaults = {"widget": self.widget}
         defaults.update(kwargs)
-        return super(RepanierPictureField, self).formfield(**defaults)
+        return super().formfield(**defaults)
 
 
 class AjaxPictureField(RepanierPictureField):

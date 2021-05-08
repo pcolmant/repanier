@@ -21,7 +21,7 @@ class OfferItemClosedDataForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(OfferItemClosedDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         offer_item = self.instance
         self.fields["producer_qty_stock_invoiced"].initial = strip_tags(
             offer_item.get_html_producer_qty_stock_invoiced()
@@ -53,7 +53,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
     ordering = ("long_name_v2",)
 
     def get_queryset(self, request):
-        qs = super(OfferItemClosedAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs
 
     def get_list_display(self, request):
@@ -94,7 +94,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
 
     def get_form(self, request, offer_item=None, **kwargs):
 
-        form = super(OfferItemClosedAdmin, self).get_form(request, offer_item, **kwargs)
+        form = super().get_form(request, offer_item, **kwargs)
 
         permanence_field = form.base_fields["permanence"]
         department_for_customer_field = form.base_fields["department_for_customer"]
@@ -128,7 +128,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         return request.user.is_repanier_staff
 
     def get_actions(self, request):
-        actions = super(OfferItemClosedAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         if not actions:
@@ -141,7 +141,7 @@ class OfferItemClosedAdmin(admin.ModelAdmin):
         return actions
 
     def save_model(self, request, offer_item, form, change):
-        super(OfferItemClosedAdmin, self).save_model(request, offer_item, form, change)
+        super().save_model(request, offer_item, form, change)
         if offer_item.product_id is not None:
             offer_item.product.stock = offer_item.stock
             offer_item.product.save(update_fields=["stock"])

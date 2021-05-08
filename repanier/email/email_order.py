@@ -199,14 +199,14 @@ def export_order_2_1_group(
 ):
     delivery_board = (
         DeliveryBoard.objects.filter(id=delivery_id)
-        .exclude(delivery_point__customer_responsible=None)
+        .exclude(delivery_point__group=None)
         .first()
     )
     if delivery_board is None:
         return
 
     delivery_point = delivery_board.delivery_point
-    customer_responsible = delivery_point.customer_responsible
+    group = delivery_point.group
 
     wb = generate_customer_xlsx(
         permanence=permanence, deliveries_id=[delivery_id], group=True
@@ -218,8 +218,8 @@ def export_order_2_1_group(
             settings.REPANIER_SETTINGS_GROUP_NAME, permanence
         )
 
-        long_basket_name = customer_responsible.long_basket_name or str(
-            customer_responsible
+        long_basket_name = group.long_basket_name or str(
+            group
         )
 
         template = Template(order_customer_mail)
@@ -227,8 +227,8 @@ def export_order_2_1_group(
             {
                 "name": long_basket_name,
                 "long_basket_name": long_basket_name,  # deprecated
-                "basket_name": str(customer_responsible),
-                "short_basket_name": str(customer_responsible),  # deprecated
+                "basket_name": str(group),
+                "short_basket_name": str(group),  # deprecated
                 "permanence_link": mark_safe(
                     '<a href="https://{}{}">{}</a>'.format(
                         settings.ALLOWED_HOSTS[0],
@@ -253,9 +253,9 @@ def export_order_2_1_group(
         )
         html_body = template.render(context)
 
-        to_email = [customer_responsible.user.email]
-        if customer_responsible.email2:
-            to_email.append(customer_responsible.email2)
+        to_email = [group.user.email]
+        if group.email2:
+            to_email.append(group.email2)
         to_email = list(set(to_email + order_responsible["to_email"]))
 
         email = RepanierEmail(
@@ -303,15 +303,15 @@ def export_order_2_1_customer(
                 delivery_point = customer_invoice.delivery
                 if (
                     delivery_point.delivery_point.inform_customer_responsible
-                    and delivery_point.delivery_point.customer_responsible is not None
+                    and delivery_point.delivery_point.group is not None
                 ):
-                    customer_responsible = (
-                        delivery_point.delivery_point.customer_responsible
+                    group = (
+                        delivery_point.delivery_point.group
                     )
-                    if customer_responsible.id != customer.id:
-                        to_email.append(customer_responsible.user.email)
-                        if customer_responsible.email2:
-                            to_email.append(customer_responsible.email2)
+                    if group.id != customer.id:
+                        to_email.append(group.user.email)
+                        if group.email2:
+                            to_email.append(group.email2)
             else:
                 delivery_point = EMPTY_STRING
             (

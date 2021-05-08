@@ -19,7 +19,7 @@ class CoordinatorsContactForm(forms.Form):
     message = fields.CharField(label=_("Message"), widget=widgets.Textarea)
 
     def __init__(self, *args, **kwargs):
-        super(CoordinatorsContactForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         choices = []
         for staff in Staff.objects.filter(
             is_active=True,

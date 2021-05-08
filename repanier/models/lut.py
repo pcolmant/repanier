@@ -115,11 +115,12 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
     # A delivery point may have a customer who is responsible to pay
     # for all the customers who have selected this delivery point
     # Such delivery point represent a closed group of customers.
-    customer_responsible = models.ForeignKey(
+    group = models.ForeignKey(
         "Customer",
-        verbose_name=_("Customer responsible"),
+        related_name="+",
+        verbose_name=_("Group"),
         help_text=_(
-            "Invoices are sent to this customer who is responsible for collecting the payments."
+            "Invoices are sent to this group who is responsible for collecting the payments."
         ),
         blank=True,
         null=True,
@@ -148,12 +149,24 @@ class LUT_DeliveryPoint(MPTTModel, TranslatableModel):
         decimal_places=2,
         validators=[MinValueValidator(0)],
     )
+    # TODO : TBD
+    customer_responsible = models.ForeignKey(
+        "Customer",
+        verbose_name=_("Customer responsible"),
+        help_text=_(
+            "Invoices are sent to this customer who is responsible for collecting the payments."
+        ),
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.CASCADE,
+    )
 
     objects = LUT_DeliveryPointManager()
 
     def __str__(self):
-        if self.customer_responsible is not None:
-            return "[{}]".format(self.customer_responsible.short_basket_name)
+        if self.group is not None:
+            return "[{}]".format(self.group.short_basket_name)
         else:
             return self.short_name_v2
 

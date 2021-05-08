@@ -7,10 +7,10 @@ class ButtonTestMailConfigWidget(Widget):
     template_name = get_repanier_template_name("widgets/button_test_mail_config.html")
 
     def __init__(self, attrs=None):
-        super(ButtonTestMailConfigWidget, self).__init__(attrs=attrs)
+        super().__init__(attrs=attrs)
 
     def get_context(self, name, value, attrs):
-        context = super(ButtonTestMailConfigWidget, self).get_context(
+        context = super().get_context(
             name, value, attrs
         )
         return context

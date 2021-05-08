@@ -103,7 +103,7 @@ class AuthRepanierSetPasswordForm(SetPasswordForm):
         email_message.send()
 
     def save(self, commit=True, use_https=False, request=None):
-        super(AuthRepanierSetPasswordForm, self).save(commit)
+        super().save(commit)
         if commit:
             now = timezone.now()
             if self.user.is_superuser:
@@ -164,16 +164,15 @@ class ProducerProductForm(forms.Form):
         required=True,
     )
 
-    if settings.REPANIER_SETTINGS_PRODUCT_LABEL:
-        production_mode = forms.ModelChoiceField(
-            LUT_ProductionMode.objects.filter(
-                rght=F("lft") + 1,
-                is_active=True,
-            ).order_by("short_name_v2"),
-            label=_("Production mode"),
-            widget=SelectBootstrapWidget,
-            required=False,
-        )
+    production_mode = forms.ModelChoiceField(
+        LUT_ProductionMode.objects.filter(
+            rght=F("lft") + 1,
+            is_active=True,
+        ).order_by("short_name_v2"),
+        label=_("Production mode"),
+        widget=SelectBootstrapWidget,
+        required=False,
+    )
 
     customer_increment_order_quantity = forms.DecimalField(
         max_digits=4, decimal_places=1
@@ -202,4 +201,4 @@ class ProducerProductForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ProducerProductForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

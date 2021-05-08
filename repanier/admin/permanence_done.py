@@ -77,9 +77,7 @@ class PermanenceBoardInline(InlineForeignKeyCacheMixin, admin.TabularInline):
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(PermanenceBoardInline, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class PermanenceDoneForm(forms.ModelForm):
@@ -142,7 +140,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
         return list_display
 
     def get_urls(self):
-        urls = super(PermanenceDoneAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r"^import-new-invoice/$",
@@ -855,7 +853,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
     get_row_actions.short_description = EMPTY_STRING
 
     def get_actions(self, request):
-        actions = super(PermanenceDoneAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
 
@@ -874,12 +872,10 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
         # extra_context['module_name'] = "{}".format(self.model._meta.verbose_name_plural())
         # Finally I found the use of EMPTY_STRING nicer on the UI
         extra_context["module_name"] = EMPTY_STRING
-        return super(PermanenceDoneAdmin, self).changelist_view(
-            request, extra_context=extra_context
-        )
+        return super().changelist_view(request, extra_context=extra_context)
 
     def get_queryset(self, request):
-        qs = super(PermanenceDoneAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs.filter(status__gte=PERMANENCE_SEND)
 
     def save_model(self, request, permanence, form, change):
@@ -887,7 +883,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date
             )
-        super(PermanenceDoneAdmin, self).save_model(request, permanence, form, change)
+        super().save_model(request, permanence, form, change)
 
     # class Media:
     #     if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:

@@ -7,7 +7,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db.models import Q
-from django.forms import Textarea
+from django.forms import Textarea, EmailInput, TextInput
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -21,30 +21,42 @@ from repanier.xlsx.xlsx_invoice import export_invoice
 
 
 class UserDataForm(forms.ModelForm):
-    email = forms.EmailField(label=_("Email"), required=True)
+    email = forms.EmailField(
+        label=_("Email"),
+        required=True,
+        widget=forms.TextInput(
+            attrs={"placeholder": _("Email"), "style": "width: 70%;"}
+        ),
+    )
     user = None
 
     def __init__(self, *args, **kwargs):
-        super(UserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-        # cleaned_data = super(UserDataForm, self).clean()
+        # cleaned_data = super().clean()
         short_basket_name_field = "short_basket_name"
-        username = self.cleaned_data.get(short_basket_name_field)
-        user_error1 = _("The given short_basket_name must be set")
-        user_error2 = _("The given short_basket_name is used by another user.")
-        if not username:
-            self.add_error(short_basket_name_field, user_error1)
+        short_basket_name = self.cleaned_data.get(short_basket_name_field)
+        if not short_basket_name:
+            self.add_error(
+                short_basket_name_field, _("The given short_basket_name must be set")
+            )
+        # Check that the short_basket_name is set
+        qs = Customer.objects.filter(short_basket_name=short_basket_name)
+        if self.instance.id is not None:
+            qs = qs.exclude(id=self.instance.id)
+        if qs.exists():
+            self.add_error(
+                short_basket_name_field,
+                _("The given short_basket_name is used by another user."),
+            )
         # Check that the email is set
-        # if not "email" in self.cleaned_data:
-        #     self.add_error('email', _('The given email must be set'))
-        # else:
         email = self.cleaned_data["email"].lower()
         user_model = get_user_model()
-        qs = user_model.objects.filter(email=email, is_staff=False).order_by("?")
+        qs = user_model.objects.filter(Q(username=email) | Q(email=email))
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.user_id)
         if qs.exists():
@@ -54,16 +66,11 @@ class UserDataForm(forms.ModelForm):
                     email
                 ),
             )
-        qs = user_model.objects.filter(username=username).order_by("?")
-        if self.instance.id is not None:
-            qs = qs.exclude(id=self.instance.user_id)
-        if qs.exists():
-            self.add_error(short_basket_name_field, user_error2)
         bank_account1 = self.cleaned_data["bank_account1"]
         if bank_account1:
             qs = Group.objects.filter(
                 Q(bank_account1=bank_account1) | Q(bank_account2=bank_account1)
-            ).order_by("?")
+            )
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
@@ -75,7 +82,7 @@ class UserDataForm(forms.ModelForm):
         if bank_account2:
             qs = Group.objects.filter(
                 Q(bank_account1=bank_account2) | Q(bank_account2=bank_account2)
-            ).order_by("?")
+            )
             if self.instance.id is not None:
                 qs = qs.exclude(id=self.instance.id)
             if qs.exists():
@@ -83,10 +90,10 @@ class UserDataForm(forms.ModelForm):
                     "bank_account2",
                     _("This bank account already belongs to another customer."),
                 )
-                # return cleaned_data
+        # return cleaned_data
 
     def save(self, *args, **kwargs):
-        super(UserDataForm, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         change = self.instance.id is not None
         short_basket_name = self.data["short_basket_name"]
         email = self.data["email"].lower()
@@ -142,7 +149,7 @@ class GroupWithUserDataForm(UserDataForm):
     customers = forms.ModelMultipleChoiceField(
         Customer.objects.filter(
             may_order=True,
-            delivery_point__isnull=True,
+            group__isnull=True,
             represent_this_buyinggroup=False,
         ),
         label=_("Members"),
@@ -172,22 +179,18 @@ class GroupWithUserDataForm(UserDataForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(GroupWithUserDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.id:
-            delivery_point = (
-                LUT_DeliveryPoint.objects.filter(
-                    customer_responsible_id=self.instance.id
-                )
-                .order_by("?")
-                .first()
-            )
+            delivery_point = LUT_DeliveryPoint.objects.filter(
+                group_id=self.instance.id
+            ).first()
             if delivery_point is not None:
                 self.fields["customers"].initial = Customer.objects.filter(
-                    delivery_point_id=delivery_point.id
+                    group_id=delivery_point.group_id
                 )
                 self.fields["customers"].queryset = Customer.objects.filter(
-                    Q(may_order=True, delivery_point__isnull=True)
-                    | Q(delivery_point_id=delivery_point.id)
+                    Q(may_order=True, group__isnull=True)
+                    | Q(group_id=delivery_point.group_id)
                 ).distinct()
                 self.fields[
                     "inform_customer_responsible"
@@ -197,24 +200,18 @@ class GroupWithUserDataForm(UserDataForm):
             else:
                 self.fields["customers"].initial = Customer.objects.none()
                 self.fields["customers"].queryset = Customer.objects.filter(
-                    Q(may_order=True, delivery_point__isnull=True)
+                    Q(may_order=True, group_id__isnull=True)
                 )
-
-    # def save(self, *args, **kwargs):
-    #     super(GroupWithUserDataForm, self).save(*args, **kwargs)
-    #     self.selected_customers = self.cleaned_data['customers']
-    #     self.selected_inform = self.cleaned_data['inform_customer_responsible']
-    #     self.selected_transport = self.cleaned_data['transport']
-    #     self.selected_min_transport = self.cleaned_data['min_transport']
-    #     return self.instance
 
     class Meta:
         widgets = {
+            "long_basket_name": TextInput(attrs={"style": "width: 70%;"}),
+            "email2": EmailInput(attrs={"style": "width: 70%;"}),
             "address": Textarea(
-                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 30em;"}
+                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 95%;"}
             ),
             "memo": Textarea(
-                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 60em;"}
+                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 95%;"}
             ),
         }
         model = Group
@@ -223,9 +220,15 @@ class GroupWithUserDataForm(UserDataForm):
 
 class GroupWithUserDataAdmin(admin.ModelAdmin):
     form = GroupWithUserDataForm
-    list_display = ("short_basket_name",)
+    list_display = (
+        "__str__",
+        "get_balance",
+        "long_basket_name",
+        "phone1",
+        "get_email",
+        "is_active",
+    )
     search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2")
-    list_filter = ("is_active", "valid_email")
     list_per_page = 16
     list_max_show_all = 16
 
@@ -258,7 +261,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
     get_last_login.admin_order_field = "user__last_login"
 
     def get_actions(self, request):
-        actions = super(GroupWithUserDataAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         this_year = timezone.now().year
         actions.update(
             OrderedDict(
@@ -268,47 +271,41 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         )
         return actions
 
-    def get_list_display(self, request):
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            return (
-                "__str__",
-                "get_balance",
-                "long_basket_name",
-                "phone1",
-                "get_email",
-                "valid_email",
-            )
-        else:
-            return ("__str__", "long_basket_name", "phone1", "get_email", "valid_email")
-
-    def get_fieldsets(self, request, customer=None):
+    def get_fieldsets(self, request, group=None):
+        fields_advanced = None
         fields_basic = [
-            ("short_basket_name", "long_basket_name", "language"),
-            ("email", "email2"),
-            ("phone1", "phone2"),
+            "short_basket_name",
+            "long_basket_name",
+            "email",
+            "email2",
+            "phone1",
+            "phone2",
             "memo",
             "price_list_multiplier",
             ("transport", "min_transport"),
             "inform_customer_responsible",
             "customers",
             "is_active",
+            "bank_account1",
+            "bank_account2",
         ]
-        if customer is not None:
-            fields_basic += ["get_admin_balance", "get_admin_date_balance"]
-            fields_advanced = ["bank_account1", "bank_account2", "get_purchase_counter"]
+        if group is not None:
+            fields_advanced = ["get_admin_balance", "get_admin_date_balance"]
+
+        if fields_advanced is None:
+            fieldsets = ((None, {"fields": fields_basic}),)
         else:
-            fields_advanced = ["bank_account1", "bank_account2"]
-        fieldsets = (
-            (None, {"fields": fields_basic}),
-            (
-                _("Advanced options"),
-                {"classes": ("collapse",), "fields": fields_advanced},
-            ),
-        )
+            fieldsets = (
+                (None, {"fields": fields_basic}),
+                (
+                    _("Advanced options"),
+                    {"classes": ("collapse",), "fields": fields_advanced},
+                ),
+            )
         return fieldsets
 
-    def get_readonly_fields(self, request, customer=None):
-        if customer is not None:
+    def get_readonly_fields(self, request, group=None):
+        if group is not None:
             readonly_fields = [
                 "get_admin_date_balance",
                 "get_admin_balance",
@@ -319,7 +316,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
 
     def get_form(self, request, group=None, **kwargs):
 
-        form = super(GroupWithUserDataAdmin, self).get_form(request, group, **kwargs)
+        form = super().get_form(request, group, **kwargs)
 
         email_field = form.base_fields["email"]
         if group is not None:
@@ -333,7 +330,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         return form
 
     def get_queryset(self, request):
-        qs = super(GroupWithUserDataAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(is_group=True)
         return qs
 
@@ -342,16 +339,10 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         form.user.is_staff = False
         form.user.is_active = group.is_active
         form.user.save()
-        super(GroupWithUserDataAdmin, self).save_model(request, group, form, change)
-        delivery_point = (
-            LUT_DeliveryPoint.objects.filter(customer_responsible_id=group.id)
-            .order_by("?")
-            .first()
-        )
+        super().save_model(request, group, form, change)
+        delivery_point = LUT_DeliveryPoint.objects.filter(group_id=group.id).first()
         if delivery_point is None:
-            delivery_point = LUT_DeliveryPoint.objects.create(
-                customer_responsible=group
-            )
+            delivery_point = LUT_DeliveryPoint.objects.create(group=group)
         delivery_point.inform_customer_responsible = form.cleaned_data[
             "inform_customer_responsible"
         ]
@@ -360,9 +351,7 @@ class GroupWithUserDataAdmin(admin.ModelAdmin):
         delivery_point.min_transport = form.cleaned_data["min_transport"]
         delivery_point.short_name_v2 = form.cleaned_data["short_basket_name"]
         delivery_point.save()
-        Customer.objects.filter(delivery_point_id=delivery_point.id).update(
-            delivery_point=None
-        )
+        Customer.objects.filter(group_id=group.id).update(group_id=None)
         Customer.objects.filter(id__in=form.cleaned_data["customers"]).update(
-            delivery_point_id=delivery_point.id, price_list_multiplier=DECIMAL_ONE
+            group_id=group.id, price_list_multiplier=DECIMAL_ONE
         )

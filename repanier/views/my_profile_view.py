@@ -79,7 +79,7 @@ class CustomerForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
-        super(CustomerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 @login_required()

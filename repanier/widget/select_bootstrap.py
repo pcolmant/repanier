@@ -8,7 +8,7 @@ class SelectBootstrapWidget(forms.Select):
     template_name = get_repanier_template_name("widgets/select_bootstrap.html")
 
     def get_context(self, name, value, attrs):
-        context = super(SelectBootstrapWidget, self).get_context(name, value, attrs)
+        context = super().get_context(name, value, attrs)
         selected_label = EMPTY_STRING
         if value is None:
             # This is the "Empty Value" for ModelChoicesField

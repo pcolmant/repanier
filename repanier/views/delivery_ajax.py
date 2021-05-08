@@ -70,7 +70,7 @@ def delivery_ajax(request):
                 | Q(
                     id=delivery_id,
                     permanence_id=permanence_id,
-                    delivery_point__customer_responsible__isnull=True,
+                    delivery_point__group__isnull=True,
                     status=PERMANENCE_OPENED,
                 )
             ).order_by("?")
@@ -78,7 +78,7 @@ def delivery_ajax(request):
             qs = DeliveryBoard.objects.filter(
                 id=delivery_id,
                 permanence_id=permanence_id,
-                delivery_point__customer_responsible__isnull=True,
+                delivery_point__group__isnull=True,
                 status=PERMANENCE_OPENED,
             ).order_by("?")
         delivery = qs.first()

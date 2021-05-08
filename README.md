@@ -294,7 +294,6 @@ Some other parameters may be set in the `[REPANIER_SETTINGS]` section of here ab
 - REPANIER_SETTINGS_BCC_ALL_EMAIL_TO : If present, email address to put in bcc of all the mails
 - REPANIER_SETTINGS_CUSTOMER_MUST_CONFIRM_ORDER (True, *False*) : If True, unconfirmed orders are cancelled by `Repanier`.
 - REPANIER_SETTINGS_DELIVERY_POINT (True, *False*) : If True, Repanier lets you manage more than one delivery point per offer.
-- REPANIER_SETTINGS_GROUP (True, *False*) : Others groups may be members of the `Repanier` site. Orders from a group member are billed to the group and not to the member.
 - REPANIER_SETTINGS_MANAGE_ACCOUNTING (*True*, False) : If True, Repanier is used to manage the accounts (customers, proucers, bank).
 - REPANIER_SETTINGS_ROUND_INVOICES (True, *False*) : Round the total amount of the order as appropriate to [0 or 5 cents](https://economie.fgov.be/fr/themes/ventes/politique-des-prix/paiements/votre-paiement-arrondi-0-ou-5).
 - REPANIER_SETTINGS_SHOW_PRODUCER_ON_ORDER_FORM (*True*, False) : If True, Repanier show the producer of the product on the order form.

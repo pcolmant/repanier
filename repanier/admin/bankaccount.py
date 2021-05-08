@@ -143,7 +143,7 @@ class BankAccountResource(resources.ModelResource):
         if instance.id is not None:
             # The import may not be used to update bank movements.
             return True
-        super(BankAccountResource, self).skip_row(instance, original)
+        super().skip_row(instance, original)
 
     class Meta:
         model = BankAccount
@@ -223,7 +223,7 @@ class BankAccountDataForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(BankAccountDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         bank_account = self.instance
         if bank_account.id is not None:
             self.fields["bank_amount_in"].initial = bank_account.bank_amount_in
@@ -381,7 +381,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         return self.has_add_permission(request)
 
     # def get_urls(self):
-    #     urls = super(BankAccountAdmin, self).get_urls()
+    #     urls = super().get_urls()
     #     my_urls = [
     #         url(r'^expenses_to_be_apportioned/$', self.expenses_to_be_apportioned),
     #     ]
@@ -396,7 +396,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     #     return HttpResponseRedirect(redirect_to)
 
     def get_actions(self, request):
-        actions = super(BankAccountAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         if not actions:

@@ -7,10 +7,10 @@ class MoneyWidget(NumberInput):
     template_name = get_repanier_template_name("widgets/money.html")
 
     def __init__(self, attrs=None):
-        super(MoneyWidget, self).__init__(attrs=attrs)
+        super().__init__(attrs=attrs)
 
     def get_context(self, name, value, attrs):
-        context = super(MoneyWidget, self).get_context(name, value, attrs)
+        context = super().get_context(name, value, attrs)
         context[
             "repanier_currency_after"
         ] = repanier.apps.REPANIER_SETTINGS_AFTER_AMOUNT

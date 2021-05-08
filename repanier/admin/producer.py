@@ -6,7 +6,7 @@ from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.forms import Textarea
+from django.forms import Textarea, TextInput, EmailInput
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -71,9 +71,6 @@ class ProducerResource(resources.ModelResource):
         widget=DecimalBooleanWidget(),
         readonly=True,
     )
-    is_active = fields.Field(
-        attribute="is_active", widget=DecimalBooleanWidget(), readonly=True
-    )
     reference_site = fields.Field(attribute="reference_site", readonly=True)
 
     def before_save_instance(self, instance, using_transactions, dry_run):
@@ -82,7 +79,7 @@ class ProducerResource(resources.ModelResource):
         """
         producer_qs = Producer.objects.filter(
             short_profile_name=instance.short_profile_name
-        ).order_by("?")
+        )
         if instance.id is not None:
             producer_qs = producer_qs.exclude(id=instance.id)
         if producer_qs.exists():
@@ -101,7 +98,6 @@ class ProducerResource(resources.ModelResource):
             "email",
             "email2",
             "email3",
-            "language",
             "phone1",
             "phone2",
             "fax",
@@ -115,7 +111,6 @@ class ProducerResource(resources.ModelResource):
             "date_balance",
             "balance",
             "represent_this_buyinggroup",
-            "is_active",
         )
         export_order = fields
         import_id_fields = ("id",)
@@ -172,7 +167,7 @@ class ProducerDataForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(ProducerDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.id:
             self.fields["permanences"].initial = self.instance.permanence_set.all()
 
@@ -214,9 +209,7 @@ class ProducerDataForm(forms.ModelForm):
                     ),
                 )
         short_profile_name = self.cleaned_data["short_profile_name"]
-        qs = Producer.objects.filter(short_profile_name=short_profile_name).order_by(
-            "?"
-        )
+        qs = Producer.objects.filter(short_profile_name=short_profile_name)
         if self.instance.id is not None:
             qs = qs.exclude(id=self.instance.id)
         if qs.exists():
@@ -226,13 +219,11 @@ class ProducerDataForm(forms.ModelForm):
             )
 
     def save(self, *args, **kwargs):
-        instance = super(ProducerDataForm, self).save(*args, **kwargs)
+        instance = super().save(*args, **kwargs)
         if instance.id is not None:
-            updated_permanences = (
-                Permanence.objects.filter(producers=instance.pk)
-                .exclude(status=PERMANENCE_PLANNED)
-                .order_by("?")
-            )
+            updated_permanences = Permanence.objects.filter(
+                producers=instance.pk
+            ).exclude(status=PERMANENCE_PLANNED)
             instance.permanence_set.set(updated_permanences)
             instance.permanence_set.add(*self.cleaned_data["permanences"])
             # The previous save is called with "commit=False"
@@ -247,11 +238,15 @@ class ProducerDataForm(forms.ModelForm):
 
     class Meta:
         widgets = {
+            "long_profile_name": TextInput(attrs={"style": "width: 70%;"}),
+            "email": EmailInput(attrs={"style": "width: 70%;"}),
+            "email2": EmailInput(attrs={"style": "width: 70%;"}),
+            "email3": EmailInput(attrs={"style": "width: 70%;"}),
             "address": Textarea(
-                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 30em;"}
+                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 95%;"}
             ),
             "memo": Textarea(
-                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 60em;"}
+                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 95%;"}
             ),
         }
         model = Producer
@@ -266,7 +261,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
     search_fields = ("short_profile_name", "email")
     list_per_page = 20
     list_max_show_all = 20
-    list_filter = ("is_active", "invoice_by_basket")
+    list_filter = ("invoice_by_basket",)
     actions = ["export_customer_prices"]
 
     # change_list_template = 'admin/producer_change_list.html'
@@ -287,7 +282,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         return "{}{}".format(self.change_list_url, get_query_filters())
 
     def get_urls(self):
-        urls = super(ProducerAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r"^export-stock/$",
@@ -351,7 +346,7 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         )
 
     def get_actions(self, request):
-        actions = super(ProducerAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         this_year = timezone.now().year
         actions.update(
             OrderedDict(
@@ -370,16 +365,26 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_fieldsets(self, request, producer=None):
         fields_basic = [
-            ("short_profile_name", "long_profile_name", "language"),
-            ("email", "email2", "email3"),
-            ("phone1", "phone2", "fax"),
+            "short_profile_name",
+            "long_profile_name",
+            "email",
+            "email2",
+            "email3",
+            "phone1",
+            "phone2",
+            "fax",
         ]
         if producer is not None:
             fields_basic += [
-                ("address", "city", "picture"),
+                "address",
+                "city",
+                "picture",
                 "memo",
-                "is_active",
                 "producer_price_are_wo_vat",
+                "sort_products_by_reference",
+                "invoice_by_basket",
+                "minimum_order_value",
+                "price_list_multiplier",
                 "permanences",
                 "get_admin_balance",
                 "get_admin_date_balance",
@@ -387,10 +392,14 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             # Do not accept the picture because there is no producer.id for the "upload_to"
             fields_basic += [
-                ("address", "city"),
+                "address",
+                "city",
                 "memo",
                 "producer_price_are_wo_vat",
-                "is_active",
+                "sort_products_by_reference",
+                "invoice_by_basket",
+                "minimum_order_value",
+                "price_list_multiplier",
             ]
         if producer is not None and producer.represent_this_buyinggroup:
             fields_advanced = ["represent_this_buyinggroup"]
@@ -399,10 +408,6 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
             fields_advanced += ["bank_account", "vat_id"]
         fields_advanced += [
-            "sort_products_by_reference",
-            "invoice_by_basket",
-            "minimum_order_value",
-            "price_list_multiplier",
             "reference_site",
             "web_services_activated",
         ]
@@ -433,11 +438,16 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         else:
             return ["web_services_activated"]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.filter(is_active=True)
+        return qs
+
     def save_model(self, request, producer, form, change):
         producer.web_services_activated, _, _ = web_services_activated(
             producer.reference_site
         )
-        super(ProducerAdmin, self).save_model(request, producer, form, change)
+        super().save_model(request, producer, form, change)
 
     def get_import_formats(self):
         """

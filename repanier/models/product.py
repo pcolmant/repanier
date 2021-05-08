@@ -125,7 +125,7 @@ class Product(Item):
         return qty_display
 
     def __str__(self):
-        return super(Product, self).get_long_name_with_producer()
+        return super().get_long_name_with_producer()
 
     class Meta:
         verbose_name = _("Product")

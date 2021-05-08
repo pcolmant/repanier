@@ -242,25 +242,12 @@ class ProductResource(resources.ModelResource):
 
 class ProductDataForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        super(ProductDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         if any(self.errors):
             # Don't bother validating the formset unless each form is valid on its own
             return
-
-        # if self.instance.id is None:
-        #     if self.language_code != settings.LANGUAGE_CODE:
-        #         # Important to also prohibit untranslated instance in settings.LANGUAGE_CODE
-        #         self.add_error(
-        #             "long_name_v2",
-        #             _("Please define first a long_name in %(language)s")
-        #             % {
-        #                 "language": get_language_info(settings.LANGUAGE_CODE)[
-        #                     "name_local"
-        #                 ]
-        #             },
-        #         )
 
         producer = self.cleaned_data.get("producer", None)
         if producer is None:
@@ -427,11 +414,11 @@ class ProductDataForm(forms.ModelForm):
         model = Product
         fields = "__all__"
         widgets = {
-            "long_name_v2": forms.TextInput(attrs={"style": "width:450px !important"}),
+            "long_name_v2": forms.TextInput(attrs={"style": "width: 95%;"}),
             "order_unit": SelectAdminOrderUnitWidget(
-                attrs={"style": "width:100% !important"}
+                attrs={"style": "width: 95%;"}
             ),
-            "department_for_customer": apply_select2(forms.Select),
+            # "department_for_customer": apply_select2(forms.Select),
         }
 
 
@@ -449,7 +436,13 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     filter_horizontal = ("production_mode",)
     ordering = ("producer", "long_name_v2")
     search_fields = ("long_name_v2",)
-    # actions = ["deselect_is_into_offer"]
+    list_filter = (
+        ProductFilterByProducer,
+        ProductFilterByDepartmentForThisProducer,
+        "is_into_offer",
+        "wrapped",
+    )
+    autocomplete_fields = ["department_for_customer", "production_mode"]
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -465,13 +458,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_redirect_to_change_list_url(self):
         return "{}{}".format(self.change_list_url, get_query_filters())
-
-    # def deselect_is_into_offer(self, request, queryset):
-    #     task_product.deselect_is_into_offer(queryset)
-    #
-    # deselect_is_into_offer.short_description = _(
-    #     "Remove selected products from the offer"
-    # )
 
     @check_cancel_in_post
     @check_product
@@ -524,19 +510,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         ]
         self.list_editable = list_editable
         return list_display
-
-    def get_list_filter(self, request):
-        list_filter = [
-            ProductFilterByProducer,
-            ProductFilterByDepartmentForThisProducer,
-            "is_into_offer",
-            "wrapped",
-            # ProductFilterByPlacement,
-            # ProductFilterByVatLevel,
-            "is_active",
-            # ProductFilterByProductionMode,
-        ]
-        return list_filter
 
     def get_fieldsets(self, request, product=None):
         fields_basic = [
@@ -598,10 +571,10 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
         producer = producer_queryset.first()
 
-        form = super(ProductAdmin, self).get_form(request, product, **kwargs)
+        form = super().get_form(request, product, **kwargs)
 
         producer_field = form.base_fields["producer"]
-        department_for_customer_field = form.base_fields["department_for_customer"]
+        # department_for_customer_field = form.base_fields["department_for_customer"]
 
         picture_field = form.base_fields["picture2"]
         order_unit_field = form.base_fields["order_unit"]
@@ -611,7 +584,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         producer_field.widget.can_add_related = False
         producer_field.widget.can_delete_related = False
         producer_field.widget.attrs["readonly"] = True
-        department_for_customer_field.widget.can_delete_related = False
+        # department_for_customer_field.widget.can_delete_related = False
 
         production_mode_field = form.base_fields.get("production_mode")
 
@@ -629,12 +602,12 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
         if product is not None:
             producer_field.empty_label = None
             producer_field.queryset = producer_queryset
-            department_for_customer_field.queryset = (
-                LUT_DepartmentForCustomer.objects.filter(
-                    rght=F("lft") + 1,
-                    is_active=True,
-                ).order_by("short_name_v2")
-            )
+            # department_for_customer_field.queryset = (
+            #     LUT_DepartmentForCustomer.objects.filter(
+            #         rght=F("lft") + 1,
+            #         is_active=True,
+            #     ).order_by("short_name_v2")
+            # )
             if production_mode_field is not None:
                 production_mode_field.empty_label = None
         else:
@@ -651,19 +624,19 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                     )
                 ]
                 producer_field.disabled = True
-            if department_for_customer_id is not None:
-                department_for_customer_field.queryset = (
-                    LUT_DepartmentForCustomer.objects.filter(
-                        id=department_for_customer_id
-                    )
-                )
-            else:
-                department_for_customer_field.queryset = (
-                    LUT_DepartmentForCustomer.objects.filter(
-                        rght=F("lft") + 1,
-                        is_active=True,
-                    ).order_by("short_name_v2")
-                )
+            # if department_for_customer_id is not None:
+            #     department_for_customer_field.queryset = (
+            #         LUT_DepartmentForCustomer.objects.filter(
+            #             id=department_for_customer_id
+            #         )
+            #     )
+            # else:
+            #     department_for_customer_field.queryset = (
+            #         LUT_DepartmentForCustomer.objects.filter(
+            #             rght=F("lft") + 1,
+            #             is_active=True,
+            #         ).order_by("short_name_v2")
+            #     )
             if is_active_value:
                 is_active_field = form.base_fields["is_active"]
                 if is_active_value == "0":
@@ -676,15 +649,15 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
                     is_into_offer_field.initial = False
                 else:
                     is_into_offer_field.initial = True
-        if production_mode_field is not None:
-            production_mode_field.queryset = LUT_ProductionMode.objects.filter(
-                rght=F("lft") + 1,
-                is_active=True,
-            ).order_by("short_name_v2")
+        # if production_mode_field is not None:
+        #     production_mode_field.queryset = LUT_ProductionMode.objects.filter(
+        #         rght=F("lft") + 1,
+        #         is_active=True,
+        #     ).order_by("short_name_v2")
         return form
 
     def get_urls(self):
-        urls = super(ProductAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r"^(?P<product_id>.+)/duplicate-product/$",
@@ -709,11 +682,11 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     get_row_actions.short_description = EMPTY_STRING
 
     def save_model(self, request, product, form, change):
-        super(ProductAdmin, self).save_model(request, product, form, change)
+        super().save_model(request, product, form, change)
         update_offer_item(product_id=product.id)
 
     def get_queryset(self, request):
-        qs = super(ProductAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         qs = qs.filter(is_box=False, producer__is_active=True)
         # ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs

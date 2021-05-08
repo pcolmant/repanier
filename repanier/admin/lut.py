@@ -1,6 +1,8 @@
+from django.db.models import F
 from django.utils.translation import ugettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
 from repanier.const import ONE_LEVEL_DEPTH, TWO_LEVEL_DEPTH
+from repanier.models import LUT_DepartmentForCustomer, LUT_ProductionMode
 
 
 class LUTAdmin(DjangoMpttAdmin):
@@ -29,9 +31,7 @@ class LUTAdmin(DjangoMpttAdmin):
             kwargs["queryset"] = self.model.objects.filter(
                 level__lt=self.mptt_level_limit
             )
-        return super(LUTAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def do_move(self, instance, position, target_instance):
         """
@@ -57,48 +57,74 @@ class LUTAdmin(DjangoMpttAdmin):
                             )
                         )
                     )
-        super(LUTAdmin, self).do_move(instance, position, target_instance)
+        super().do_move(instance, position, target_instance)
 
     def get_queryset(self, request):
-        qs = super(LUTAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs
 
 
 class LUTProductionModeAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
+    search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):
         fields = ["parent", "short_name_v2", "picture2", "is_active"]
         return fields
 
+    def get_queryset(self, request):
+        if request.is_ajax() and "/autocomplete/" in request.path:
+            # Autocomplete
+            qs = LUT_ProductionMode.objects.filter(
+                        rght=F("lft") + 1,
+                        is_active=True,
+                    ).order_by("short_name_v2")
+        else:
+            qs = super().get_queryset(request)
+        return qs
+
 
 class LUTDeliveryPointAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
+    search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):
         fields = ["short_name_v2", "is_active", ("transport", "min_transport")]
         return fields
 
     def get_queryset(self, request):
-        qs = super(LUTDeliveryPointAdmin, self).get_queryset(request)
-        qs = qs.filter(customer_responsible__isnull=True)
+        qs = super().get_queryset(request)
+        qs = qs.filter(group__isnull=True)
         return qs
 
     def filter_tree_queryset(self, qs, request):
         # https://github.com/mbraak/django-mptt-admin/issues/47
-        return qs.filter(customer_responsible__isnull=True)
+        return qs.filter(group__isnull=True)
 
 
 class LUTDepartmentForCustomerAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
+    search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):
         fields = ["parent", "short_name_v2", "is_active"]
         return fields
 
+    def get_queryset(self, request):
+        if request.is_ajax() and "/autocomplete/" in request.path:
+            # Autocomplete
+            qs = LUT_DepartmentForCustomer.objects.filter(
+                        rght=F("lft") + 1,
+                        is_active=True,
+                    ).order_by("short_name_v2")
+        else:
+            qs = super().get_queryset(request)
+        return qs
+
 
 class LUTPermanenceRoleAdmin(LUTAdmin):
     mptt_level_limit = ONE_LEVEL_DEPTH
+    search_fields = ("short_name_v2",)
 
     def get_fields(self, request, obj=None):
         fields = [

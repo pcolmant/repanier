@@ -57,7 +57,7 @@ class OfferItemPurchaseSendInlineForm(forms.ModelForm):
     previous_customer = forms.ModelChoiceField(Customer.objects.none(), required=False)
 
     def __init__(self, *args, **kwargs):
-        super(OfferItemPurchaseSendInlineForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.id is not None:
             self.fields[
                 "previous_purchase_price"
@@ -96,12 +96,10 @@ class OfferItemPurchaseSendInline(InlineForeignKeyCacheMixin, admin.TabularInlin
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "customer":
             kwargs["queryset"] = Customer.objects.filter(may_order=True)
-        return super(OfferItemPurchaseSendInline, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
-        qs = super(OfferItemPurchaseSendInline, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs.filter(is_box_content=False)
 
 
@@ -142,7 +140,7 @@ class OfferItemSendDataForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(OfferItemSendDataForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         offer_item = self.instance
         self.fields[
             "previous_producer_unit_price"
@@ -170,7 +168,7 @@ class OfferItemSendDataForm(forms.ModelForm):
             return ["offer_purchase_price", "product"]
 
     def save(self, *args, **kwargs):
-        offer_item = super(OfferItemSendDataForm, self).save(*args, **kwargs)
+        offer_item = super().save(*args, **kwargs)
         if offer_item.id is not None:
             previous_producer_unit_price = self.cleaned_data[
                 "previous_producer_unit_price"
@@ -227,7 +225,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     readonly_fields = ("get_html_producer_qty_stock_invoiced", "get_vat_level")
 
     def get_queryset(self, request):
-        qs = super(OfferItemSendAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs
 
     def get_fieldsets(self, request, product=None):
@@ -261,14 +259,12 @@ class OfferItemSendAdmin(admin.ModelAdmin):
                 prices,
                 ("offer_purchase_price",),
             )
-        fieldsets = (
-            (None, {"fields": fields_basic}),
-        )
+        fieldsets = ((None, {"fields": fields_basic}),)
         return fieldsets
 
     def get_form(self, request, obj=None, **kwargs):
 
-        form = super(OfferItemSendAdmin, self).get_form(request, obj, **kwargs)
+        form = super().get_form(request, obj, **kwargs)
 
         permanence_field = form.base_fields["permanence"]
         department_for_customer_field = form.base_fields["department_for_customer"]
@@ -313,7 +309,7 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         return False
 
     def get_actions(self, request):
-        actions = super(OfferItemSendAdmin, self).get_actions(request)
+        actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         if not actions:

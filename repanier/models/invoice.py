@@ -265,7 +265,7 @@ class CustomerInvoice(Invoice):
                         )
                         | Q(
                             permanence_id=permanence.id,
-                            delivery_point__customer_responsible__isnull=True,
+                            delivery_point__group__isnull=True,
                             status=PERMANENCE_OPENED,
                         )
                     )
@@ -273,7 +273,7 @@ class CustomerInvoice(Invoice):
                 else:
                     qs = DeliveryBoard.objects.filter(
                         permanence_id=permanence.id,
-                        delivery_point__customer_responsible__isnull=True,
+                        delivery_point__group__isnull=True,
                         status=PERMANENCE_OPENED,
                     )
 
@@ -583,32 +583,32 @@ class CustomerInvoice(Invoice):
             self.transport = DECIMAL_ZERO
             self.min_transport = DECIMAL_ZERO
         else:
-            customer_responsible = delivery_point.customer_responsible
-            if customer_responsible is None:
+            group = delivery_point.group
+            if group is None:
                 self.customer_charged = self.customer
                 self.price_list_multiplier = DECIMAL_ONE
                 self.transport = delivery_point.transport
                 self.min_transport = delivery_point.min_transport
             else:
                 assert (
-                    self.customer_id != customer_responsible.id
+                    self.customer_id != group.id
                 ), "A group may not place an order"
-                self.customer_charged = customer_responsible
+                self.customer_charged = group
                 self.price_list_multiplier = DECIMAL_ONE
                 self.transport = REPANIER_MONEY_ZERO
                 self.min_transport = REPANIER_MONEY_ZERO
 
                 customer_invoice_charged = CustomerInvoice.objects.filter(
                     permanence_id=self.permanence_id,
-                    customer_id=customer_responsible.id,
+                    customer_id=group.id,
                 )
                 if not customer_invoice_charged.exists():
                     CustomerInvoice.objects.create(
                         permanence_id=self.permanence_id,
-                        customer_id=customer_responsible.id,
+                        customer_id=group.id,
                         status=self.status,
-                        customer_charged_id=customer_responsible.id,
-                        price_list_multiplier=customer_responsible.price_list_multiplier,
+                        customer_charged_id=group.id,
+                        price_list_multiplier=group.price_list_multiplier,
                         transport=delivery_point.transport,
                         min_transport=delivery_point.min_transport,
                         is_order_confirm_send=True,

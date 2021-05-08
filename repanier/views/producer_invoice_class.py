@@ -18,13 +18,13 @@ class ProducerInvoiceView(DetailView):
     def get_object(self, queryset=None):
         # Important to handle producer without any invoice
         try:
-            obj = super(ProducerInvoiceView, self).get_object(queryset)
+            obj = super().get_object(queryset)
         except Http404:
             obj = None  # ProducerInvoice.objects.none()
         return obj
 
     def get_context_data(self, **kwargs):
-        context = super(ProducerInvoiceView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         if context["object"] is None:
             # This producer has never been invoiced
             raise Http404
@@ -100,10 +100,7 @@ class ProducerInvoiceView(DetailView):
                     raise Http404
             else:
                 raise Http404
-        if django.VERSION[0] < 2:
-            pk = int(self.kwargs.get("pk", 0))
-        else:
-            pk = self.kwargs.get("pk", 0)
+        pk = self.kwargs.get("pk", 0)
         if pk == 0:
             last_producer_invoice = (
                 ProducerInvoice.objects.filter(

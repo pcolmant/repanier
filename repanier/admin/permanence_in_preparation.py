@@ -89,7 +89,7 @@ class PermanenceBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInl
     extra = 0
 
     def get_formset(self, request, obj=None, **kwargs):
-        formset = super(PermanenceBoardInline, self).get_formset(request, obj, **kwargs)
+        formset = super().get_formset(request, obj, **kwargs)
         form = formset.form
         widget = form.base_fields["permanence_role"].widget
         widget.can_add_related = True
@@ -108,9 +108,7 @@ class PermanenceBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInl
             kwargs["queryset"] = LUT_PermanenceRole.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(PermanenceBoardInline, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class DeliveryBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInline):
@@ -121,7 +119,7 @@ class DeliveryBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInlin
     readonly_fields = ["status"]
 
     def get_formset(self, request, obj=None, **kwargs):
-        formset = super(DeliveryBoardInline, self).get_formset(request, obj, **kwargs)
+        formset = super().get_formset(request, obj, **kwargs)
         form = formset.form
         widget = form.base_fields["delivery_comment_v2"].widget
         widget.attrs["size"] = "100%"
@@ -136,9 +134,7 @@ class DeliveryBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInlin
             kwargs["queryset"] = LUT_DeliveryPoint.objects.filter(
                 is_active=True, rght=F("lft") + 1
             ).order_by("tree_id", "lft")
-        return super(DeliveryBoardInline, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class PermanenceInPreparationForm(forms.ModelForm):
@@ -165,6 +161,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
     ordering = ("-status", "permanence_date", "id")
+    autocomplete_fields = ["producers", "boxes"]
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -230,7 +227,7 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             yield inline.get_formset(request, obj), inline
 
     def get_urls(self):
-        urls = super(PermanenceInPreparationAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             url(
                 r"^(?P<permanence_id>.+)/export-offer/$",
@@ -795,19 +792,15 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             kwargs["queryset"] = Producer.objects.filter(is_active=True)
         if db_field.name == "boxes":
             kwargs["queryset"] = Box.objects.filter(is_box=True, is_into_offer=True)
-        return super(PermanenceInPreparationAdmin, self).formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def get_queryset(self, request):
-        qs = super(PermanenceInPreparationAdmin, self).get_queryset(request)
+        qs = super().get_queryset(request)
         return qs.filter(status__lte=PERMANENCE_SEND)
 
     @transaction.atomic
     def save_related(self, request, form, formsets, change):
-        super(PermanenceInPreparationAdmin, self).save_related(
-            request, form, formsets, change
-        )
+        super().save_related(request, form, formsets, change)
         permanence = form.instance
         permanence.with_delivery_point = DeliveryBoard.objects.filter(
             permanence_id=permanence.id
@@ -819,6 +812,4 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             PermanenceBoard.objects.filter(permanence_id=permanence.id).update(
                 permanence_date=permanence.permanence_date
             )
-        super(PermanenceInPreparationAdmin, self).save_model(
-            request, permanence, form, change
-        )
+        super().save_model(request, permanence, form, change)
