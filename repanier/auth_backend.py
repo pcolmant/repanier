@@ -98,11 +98,9 @@ class RepanierAuthBackend(ModelBackend):
         user.is_staff = True
         user.groups.clear()
         if as_staff.is_webmaster:
-            print("##### is_webmaster")
             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
             user.groups.add(group_id)
-        if as_staff.is_order_manager or as_staff.is_invoice_manager:
-            print("##### is_order_manager or is_invoice_manager")
+        if as_staff.is_order_manager or as_staff.is_invoice_manager or as_staff.is_repanier_admin:
             group_id = Group.objects.filter(name=REPANIER_GROUP).first()
             user.groups.add(group_id)
         user.save()
