@@ -51,22 +51,9 @@ def login_view(
 
             if user.is_authenticated:
 
-                if user.is_staff:
-                    if "/?" in redirect_to:
-                        concatenate_with = "&"
-                    else:
-                        concatenate_with = "?"
-                    return HttpResponseRedirect(
-                        "{}{}{}".format(
-                            redirect_to,
-                            concatenate_with,
-                            get_cms_setting("CMS_TOOLBAR_URL__EDIT_ON"),
-                        )
-                    )
-
                 staff_qs = Staff.objects.filter(
                     customer_responsible_id=user.customer_id, is_active=True
-                ).order_by("?")
+                )
                 may_become_a_staff_user = staff_qs.exists()
 
                 if not may_become_a_staff_user:
@@ -96,7 +83,6 @@ def login_view(
                     customer_responsible_id=user.customer_id,
                     is_active=True,
                 )
-                .order_by("?")
                 .first()
             )
 

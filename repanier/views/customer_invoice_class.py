@@ -112,35 +112,23 @@ class CustomerInvoiceView(DetailView):
 
     def get_queryset(self):
         pk = self.kwargs.get("pk", 0)
-        if self.request.user.is_staff:
-            if pk == 0:
-                customer_id = self.request.GET.get("customer", None)
-                last_customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        customer_id=customer_id, invoice_sort_order__isnull=False
-                    )
-                    .only("id")
-                    .order_by("-invoice_sort_order")
-                    .first()
-                )
-                if last_customer_invoice is not None:
-                    self.kwargs["pk"] = last_customer_invoice.id
-            return CustomerInvoice.objects.filter(
-                invoice_sort_order__isnull=False
-            ).order_by("-invoice_sort_order")
+        user = self.request.user
+        if user.is_staff:
+            customer_id = self.request.GET.get("customer", user.customer_id)
         else:
-            if pk == 0:
-                last_customer_invoice = (
-                    CustomerInvoice.objects.filter(
-                        customer_id=self.request.user.customer_id,
-                        invoice_sort_order__isnull=False,
-                    )
-                    .only("id")
-                    .order_by("-invoice_sort_order")
-                    .first()
+            customer_id = user.customer_id
+        if pk == 0:
+            last_customer_invoice = (
+                CustomerInvoice.objects.filter(
+                    customer_id=customer_id,
+                    invoice_sort_order__isnull=False
                 )
-                if last_customer_invoice is not None:
-                    self.kwargs["pk"] = last_customer_invoice.id
-            return CustomerInvoice.objects.filter(
-                customer_id=self.request.user.customer_id, invoice_sort_order__isnull=False
-            ).order_by("-invoice_sort_order")
+                .only("id")
+                .order_by("-invoice_sort_order")
+                .first()
+            )
+            if last_customer_invoice is not None:
+                self.kwargs["pk"] = last_customer_invoice.id
+        return CustomerInvoice.objects.filter(
+            customer_id=customer_id, invoice_sort_order__isnull=False
+        ).order_by("-invoice_sort_order")

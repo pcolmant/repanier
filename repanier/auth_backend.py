@@ -24,23 +24,17 @@ class RepanierAuthBackend(ModelBackend):
             UserModel.objects.filter(
                 Q(last_name__iexact=username[:150]) | Q(email__iexact=username)
             )
-            .order_by("?")
             .first()
         )
         is_superuser = False
-        # staff = customer = None
         customer = None
         login_attempt_counter = DECIMAL_THREE
         if user_username is not None:
             username = user_username.username
             customer = (
-                Customer.objects.filter(user_id=user_username.id).order_by("?").first()
+                Customer.objects.filter(user_id=user_username.id).first()
             )
             if customer is None:
-                # staff = Staff.objects.filter(
-                #     user_id=user_username.id
-                # ).order_by('?').first()
-                # if staff is None:
                 is_superuser = True
                 login_attempt_counter = (
                     Configuration.objects.filter(id=DECIMAL_ONE)
@@ -48,8 +42,6 @@ class RepanierAuthBackend(ModelBackend):
                     .first()
                     .login_attempt_counter
                 )
-                # else:
-                #     login_attempt_counter = staff.login_attempt_counter
             else:
                 login_attempt_counter = customer.login_attempt_counter
 
@@ -64,11 +56,6 @@ class RepanierAuthBackend(ModelBackend):
                     Customer.objects.filter(id=customer.id).update(
                         login_attempt_counter=F("login_attempt_counter") + DECIMAL_ONE
                     )
-                # elif staff is not None:
-                #     Staff.objects.filter(id=staff.id).update(
-                #         login_attempt_counter=F('login_attempt_counter') +
-                #                               DECIMAL_ONE
-                #     )
                 elif is_superuser:
                     Configuration.objects.filter(id=DECIMAL_ONE).update(
                         login_attempt_counter=F("login_attempt_counter") + DECIMAL_ONE
@@ -90,22 +77,11 @@ class RepanierAuthBackend(ModelBackend):
                 )
             else:
                 # Reset login_attempt_counter
-                # and if it's a customer, update/save the customer's language
                 if customer is not None:
                     if login_attempt_counter > DECIMAL_ZERO:
                         Customer.objects.filter(id=customer.id).update(
                             login_attempt_counter=DECIMAL_ZERO,
-                            language=translation.get_language(),
                         )
-                    else:
-                        Customer.objects.filter(id=customer.id).update(
-                            language=translation.get_language()
-                        )
-                # elif staff is not None:
-                #     if login_attempt_counter > DECIMAL_ZERO:
-                #         Staff.objects.filter(id=staff.id).update(
-                #             login_attempt_counter=DECIMAL_ZERO
-                #         )
                 elif is_superuser:
                     if login_attempt_counter > DECIMAL_ZERO:
                         Configuration.objects.filter(id=DECIMAL_ONE).update(
@@ -118,13 +94,15 @@ class RepanierAuthBackend(ModelBackend):
     @classmethod
     def set_staff_right(cls, request, user=None, as_staff=None):
         auth_logout(request)
-        Customer.objects.filter(user_id=user.id).order_by("?").update(as_staff=as_staff)
+        Customer.objects.filter(user_id=user.id).update(as_staff=as_staff)
         user.is_staff = True
         user.groups.clear()
         if as_staff.is_webmaster:
+            print("##### is_webmaster")
             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
             user.groups.add(group_id)
         if as_staff.is_order_manager or as_staff.is_invoice_manager:
+            print("##### is_order_manager or is_invoice_manager")
             group_id = Group.objects.filter(name=REPANIER_GROUP).first()
             user.groups.add(group_id)
         user.save()
@@ -137,7 +115,7 @@ class RepanierAuthBackend(ModelBackend):
                 user_id=user.id, as_staff__isnull=False
             ).exists()
             if is_customer_as_staff:
-                Customer.objects.filter(user_id=user.id).order_by("?").update(
+                Customer.objects.filter(user_id=user.id).update(
                     as_staff=None
                 )
                 user.is_staff = False
@@ -194,7 +172,6 @@ class RepanierAuthBackend(ModelBackend):
         user_or_none = (
             UserModel.objects.filter(pk=user_id)
             .only("id", "password", "is_staff", "is_superuser")
-            .order_by("?")
             .first()
         )
         if user_or_none is not None:
@@ -202,7 +179,6 @@ class RepanierAuthBackend(ModelBackend):
                 customer = (
                     Customer.objects.filter(user_id=user_or_none.id)
                     .only("id", "is_active", "as_staff", "subscribe_to_email")
-                    .order_by("?")
                     .first()
                 )
                 if customer is not None:
@@ -219,7 +195,6 @@ class RepanierAuthBackend(ModelBackend):
                                 "is_repanier_admin",
                                 "is_webmaster",
                             )
-                            .order_by("?")
                             .first()
                         )
                         if staff is not None and staff.is_active:
@@ -242,7 +217,10 @@ class RepanierAuthBackend(ModelBackend):
                     user_or_none = None
             else:
                 RepanierAuthBackend.set_user_right(
-                    user=user_or_none, is_superuser=True, staff=None, customer=None
+                    user=user_or_none,
+                    is_superuser=True,
+                    staff=None,
+                    customer=None
                 )
         self.user = user_or_none
         return user_or_none
