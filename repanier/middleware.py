@@ -72,7 +72,7 @@ def is_ajax():
     request = get_request()
     # See : https://docs.djangoproject.com/en/3.1/releases/3.1/
     # The HttpRequest.is_ajax() method is deprecated as it relied on a jQuery-specific way of signifying AJAX calls
-    return request.headers.get("x-requested-with") == "XMLHttpRequest"
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
 
 def admin_filter_middleware(get_response):

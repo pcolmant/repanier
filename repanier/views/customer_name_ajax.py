@@ -8,11 +8,9 @@ from django.views.decorators.http import require_GET
 @never_cache
 @require_GET
 def customer_name_ajax(request):
-    if request.is_ajax():
-        user = request.user
-        if user.is_anonymous:
-            result = _("Anonymous")
-        else:
-            result = user.username
-        return HttpResponse(result)
-    raise Http404
+    user = request.user
+    if user.is_anonymous:
+        result = _("Anonymous")
+    else:
+        result = user.username
+    return HttpResponse(result)

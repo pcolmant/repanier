@@ -29,8 +29,6 @@ template_communication_confirm_order = get_repanier_template_name(
 @require_GET
 @login_required
 def delivery_ajax(request):
-    if not request.is_ajax():
-        raise Http404
     user = request.user
     permanence_id = sint(request.GET.get("permanence", 0))
     permanence = (

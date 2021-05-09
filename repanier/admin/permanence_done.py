@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from repanier.admin.admin_filter import StatusFilterPermanenceDone
 from repanier.admin.forms import (
     InvoiceOrderForm,
     ProducerInvoicedFormSet,
@@ -104,9 +105,10 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
     search_fields = [
-        "customerproducerinvoice__producer__short_profile_name",
-        "customerproducerinvoice__customer__short_basket_name",
+        "producerinvoice__producer__short_profile_name",
+        "customerinvoice__customer__short_basket_name",
     ]
+    list_filter = (StatusFilterPermanenceDone,)
     ordering = (
         "-invoice_sort_order",
         "-canceled_invoice_sort_order",

@@ -37,14 +37,12 @@ def order_init_ajax(request):
     Open an order for a customer when arriving on the order page (i.e. create the corresponding `CustomerInvoice`)
     """
 
-    if not request.is_ajax():
-        raise Http404
     permanence_id = sint(request.GET.get("pe", 0))
     permanence = Permanence.objects.filter(id=permanence_id).first()
     permanence_ok_or_404(permanence)
     user = request.user
     customer = (
-        Customer.objects.filter(user_id=user.id, may_order=True)
+        Customer.objects.filter(id=user.customer_id, may_order=True)
         .only(
             "id",
             "vat_id",

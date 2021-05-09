@@ -250,7 +250,7 @@
                     }).on('show.bs.modal', function (event) {
                         t_row=$(event.relatedTarget);
                         var getIdFromRow = t_row.data('id');
-                        var lien = '{% url 'repanier:customer_product_description_ajax' %}?offer_item=' + getIdFromRow;
+                        var lien = '{% url 'repanier:order_product_description_ajax' %}?offer_item=' + getIdFromRow;
                         $.ajax({
                             url: lien,
                             cache: false,

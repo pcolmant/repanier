@@ -18,8 +18,6 @@ from repanier.tools import sint
 @require_GET
 @login_required
 def delivery_select_ajax(request):
-    if not request.is_ajax():
-        raise Http404
     # construct a list which will contain all of the data for the response
     user = request.user
     customer = (

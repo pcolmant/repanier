@@ -329,22 +329,21 @@ def repanier_select_task(context, *args, **kwargs):
     request = context["request"]
     user = request.user
     result = EMPTY_STRING
-    customer_is_active = (
-        Customer.objects.filter(user_id=user.id, is_active=True).order_by("?").exists()
+    customer = (
+        Customer.objects.filter(id=user.customer_id, may_order=True).first()
     )
-    if customer_is_active:
+    if customer is not None:
         p_task_id = sint(kwargs.get("task_id", 0))
         if p_task_id > 0:
             permanence_board = (
                 PermanenceBoard.objects.filter(id=p_task_id)
                 .select_related("customer", "permanence_role", "permanence")
-                .order_by("?")
                 .first()
             )
             if permanence_board is not None:
                 if permanence_board.customer is not None:
                     if (
-                        permanence_board.customer.user_id == user.id
+                        permanence_board.customer_id == customer.id
                         and permanence_board.permanence.status <= PERMANENCE_CLOSED
                     ):
                         result = """
@@ -357,7 +356,7 @@ def repanier_select_task(context, *args, **kwargs):
                         </i></b>
                         """.format(
                             task_id=permanence_board.id,
-                            long_basket_name=user.customer.long_basket_name,
+                            long_basket_name=customer.long_basket_name,
                         )
                     else:
                         result = """
@@ -382,7 +381,7 @@ def repanier_select_task(context, *args, **kwargs):
                             </i></b>
                             """.format(
                                 task_id=permanence_board.id,
-                                long_basket_name=user.customer.long_basket_name,
+                                long_basket_name=customer.long_basket_name,
                             )
                         else:
                             result = """
@@ -408,7 +407,7 @@ def repanier_select_offer_item(context, *args, **kwargs):
     if offer_item.is_box_content:
         box_purchase = (
             PurchaseWoReceiver.objects.filter(
-                customer_id=user.customer,
+                customer_id=user.customer_id,
                 offer_item_id=offer_item.id,
                 is_box_content=True,
             )
@@ -432,7 +431,7 @@ def repanier_select_offer_item(context, *args, **kwargs):
 def select_offer_item(offer_item, result, user):
     purchase = (
         PurchaseWoReceiver.objects.filter(
-            customer_id=user.customer, offer_item_id=offer_item.id, is_box_content=False
+            customer_id=user.customer_id, offer_item_id=offer_item.id, is_box_content=False
         )
         .order_by("?")
         .only("quantity_ordered")

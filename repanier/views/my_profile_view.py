@@ -87,12 +87,11 @@ class CustomerForm(forms.Form):
 @never_cache
 def my_profile_view(request):
     user = request.user
-    customer_is_active = (
-        Customer.objects.filter(user_id=user.id, is_active=True).order_by("?").exists()
+    customer = (
+        Customer.objects.filter(id=user.customer_id).first()
     )
-    if not customer_is_active:
+    if customer is None:
         raise Http404
-    customer = request.user.customer
     from repanier.apps import (
         REPANIER_SETTINGS_MEMBERSHIP_FEE,
         REPANIER_SETTINGS_DISPLAY_WHO_IS_WHO,

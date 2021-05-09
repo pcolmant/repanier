@@ -15,16 +15,14 @@ template_order_product_description = get_repanier_template_name(
 
 
 @require_GET
-def customer_product_description_ajax(request):
-    if request.is_ajax():
-        offer_item_id = sint(request.GET.get("offer_item", 0))
-        offer_item = get_object_or_404(OfferItem, id=offer_item_id)
-        permanence = offer_item.permanence
-        permanence_ok_or_404(permanence)
-        if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
-            html = render_to_string(
-                template_order_product_description,
-                {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
-            )
-            return JsonResponse({"#orderModal": mark_safe(html)})
-    raise Http404
+def order_product_description_ajax(request):
+    offer_item_id = sint(request.GET.get("offer_item", 0))
+    offer_item = get_object_or_404(OfferItem, id=offer_item_id)
+    permanence = offer_item.permanence
+    permanence_ok_or_404(permanence)
+    if PERMANENCE_OPENED <= permanence.status <= PERMANENCE_SEND:
+        html = render_to_string(
+            template_order_product_description,
+            {"offer": offer_item, "MEDIA_URL": settings.MEDIA_URL},
+        )
+        return JsonResponse({"#orderModal": mark_safe(html)})

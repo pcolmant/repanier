@@ -14,13 +14,12 @@ from repanier.tools import sint
 @transaction.atomic
 @login_required
 def is_into_offer(request, product_id):
-    if request.is_ajax():
-        user = request.user
-        if user.is_order_manager:
-            product_id = sint(product_id)
-            product = Product.objects.filter(id=product_id).order_by("?").first()
-            if product is not None:
-                product.is_into_offer = not product.is_into_offer
-                product.save(update_fields=["is_into_offer"])
-                return HttpResponse(product.get_html_is_into_offer())
+    user = request.user
+    if user.is_order_manager:
+        product_id = sint(product_id)
+        product = Product.objects.filter(id=product_id).order_by("?").first()
+        if product is not None:
+            product.is_into_offer = not product.is_into_offer
+            product.save(update_fields=["is_into_offer"])
+            return HttpResponse(product.get_html_is_into_offer())
     raise Http404

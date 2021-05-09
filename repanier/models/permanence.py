@@ -14,7 +14,7 @@ from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 from djangocms_text_ckeditor.fields import HTMLField
 from menus.menu_pool import menu_pool
-from parler.models import TranslatableModel, TranslatedFields, TranslationDoesNotExist
+from parler.models import TranslatableModel, TranslatedFields
 from repanier.const import *
 from repanier.models.bankaccount import BankAccount
 from repanier.models.customer import Customer
@@ -161,18 +161,19 @@ class Permanence(TranslatableModel):
                 download_url,
                 _("Export"),
             )
-            link = []
+            producers = []
+            producers_html = []
             if len(self.producers.all()) > 0:
                 changelist_url = reverse("admin:repanier_product_changelist")
                 for p in self.producers.all():
-                    link.append(
+                    producers.append(p.short_profile_name)
+                    producers_html.append(
                         '<a href="{}?producer={}">&nbsp;{}</a>'.format(
                             changelist_url,
                             p.id,
                             p.short_profile_name.replace(" ", "&nbsp;"),
                         )
                     )
-            producers = ", ".join(link)
         elif self.status == PERMANENCE_OPENED:
             close_offeritem_changelist_url = reverse(
                 "admin:repanier_offeritemclosed_changelist"
@@ -186,7 +187,8 @@ class Permanence(TranslatableModel):
                 _("Export"),
             )
 
-            link = []
+            producers = []
+            producers_html = []
             for p in self.producers.all().only("id"):
                 pi = ProducerInvoice.objects.filter(
                     producer_id=p.id, permanence_id=self.id
@@ -211,12 +213,12 @@ class Permanence(TranslatableModel):
                 else:
                     label = ("{} ".format(p.short_profile_name)).replace(" ", "&nbsp;")
                     offeritem_changelist_url = close_offeritem_changelist_url
-                link.append(
+                producers.append(p.short_profile_name)
+                producers_html.append(
                     '<a href="{}?permanence={}&producer={}">{}</a>'.format(
                         offeritem_changelist_url, self.id, p.id, label
                     )
                 )
-            producers = ", ".join(link)
 
         elif self.status in [PERMANENCE_SEND, PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             if self.status == PERMANENCE_SEND:
@@ -238,7 +240,8 @@ class Permanence(TranslatableModel):
             send_customer_changelist_url = reverse(
                 "admin:repanier_customersend_changelist"
             )
-            link = []
+            producers = []
+            producers_html = []
             for pi in (
                 ProducerInvoice.objects.filter(permanence_id=self.id)
                 .select_related("producer")
@@ -253,7 +256,8 @@ class Permanence(TranslatableModel):
                     label = "{} ({})".format(
                         pi.producer.short_profile_name, pi.get_total_price_with_tax()
                     )
-                    link.append(
+                    producers.append(label)
+                    producers_html.append(
                         '<a href="{}?permanence={}&producer={}">&nbsp;{}</a>'.format(
                             changelist_url,
                             self.id,
@@ -290,53 +294,62 @@ class Permanence(TranslatableModel):
                             continue
                     # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                     # Such that they can be accessed by the producer and by the staff
-                    link.append(
+                    producers.append(label)
+                    producers_html.append(
                         '<a href="{}?producer={}" target="_blank">{}</a>'.format(
                             reverse("repanier:producer_invoice_view", args=(pi.id,)),
                             pi.producer_id,
                             label.replace(" ", "&nbsp;"),
                         )
                     )
-            producers = ", ".join(link)
         else:
             button_download = EMPTY_STRING
-            producers = ", ".join(
-                [
-                    p.short_profile_name
-                    for p in Producer.objects.filter(
-                        producerinvoice__permanence_id=self.id
-                    ).only("short_profile_name")
-                ]
-            )
-        if len(producers) > 0:
+            producers = [
+                p.short_profile_name
+                for p in Producer.objects.filter(
+                    producerinvoice__permanence_id=self.id
+                ).only("short_profile_name")
+            ]
+            producers_html = producers
+        len_producer = len(producers)
+        if len_producer > 0:
             if not with_download:
                 button_download = EMPTY_STRING
+            # msg_producers = cap(" ".join(producers), 50)
+            msg_producers_html = ", ".join(producers_html)
+            msg_show = _("Show")
+            msg_hide = _("Hide")
+
+            if len_producer > 0:
+                # Do not display the producers by default if more than 0 producers
+                display_producers = "none"
+                hide_producers = "block"
+            else:
+                display_producers = "block"
+                hide_producers = "none"
             msg_html = """
-    <div id="id_hide_producers_{}" style="display:block;" class="repanier-button-row">{}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_producers_{}').style.display = 'block'; document.getElementById('id_hide_producers_{}').style.display = 'none'; return false;">
+    <div id="id_hide_producers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
+                onclick="document.getElementById('id_show_producers_{id}').style.display = 'block'; document.getElementById('id_hide_producers_{id}').style.display = 'none'; return false;">
             <i
-                    class="far fa-eye"></i></a></span>
+                    class="far fa-eye"></i> {len_producer}</a></span>
     </div>
-    <div id="id_show_producers_{}" style="display:none;" class="repanier-button-row">{}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_producers_{}').style.display = 'none'; document.getElementById('id_hide_producers_{}').style.display = 'block'; return false;">
+    <div id="id_show_producers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
+                onclick="document.getElementById('id_show_producers_{id}').style.display = 'none'; document.getElementById('id_hide_producers_{id}').style.display = 'block'; return false;">
             <i
                     class="far fa-eye-slash"></i></a></span>
-        <p><br><div class="wrap-text">{}</div></p>
+        <p></p><div class="wrap-text">{msg_producers_html}</div>
     </div>
             """.format(
-                self.id,
-                button_download,
-                _("Show"),
-                self.id,
-                self.id,
-                self.id,
-                button_download,
-                _("Hide"),
-                self.id,
-                self.id,
-                producers,
+                id=self.id,
+                button_download=button_download,
+                msg_show=msg_show,
+                msg_hide=msg_hide,
+                display_producers=display_producers,
+                hide_producers=hide_producers,
+                msg_producers_html=msg_producers_html,
+                len_producer=len_producer,
             )
             return mark_safe(msg_html)
         else:
@@ -376,7 +389,8 @@ class Permanence(TranslatableModel):
                 download_url,
                 _("Export"),
             )
-            link = []
+            customers = []
+            customers_html = []
             delivery_save = None
             for ci in (
                 CustomerInvoice.objects.filter(permanence_id=self.id)
@@ -386,11 +400,11 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append(
+                        customers_html.append(
                             "<br><b>{}</b>".format(ci.delivery.get_delivery_display())
                         )
                     else:
-                        link.append("<br><br>--")
+                        customers_html.append("<br><br>--")
                 total_price_with_tax = ci.get_total_price_with_tax(
                     customer_charged=True
                 )
@@ -405,7 +419,7 @@ class Permanence(TranslatableModel):
                     "</i></b>" if ci.is_group else EMPTY_STRING,
                 )
                 # Important : no target="_blank"
-                link.append(
+                customers_html.append(
                     '<a href="{}?permanence={}&customer={}">{}</a>'.format(
                         changelist_url,
                         self.id,
@@ -413,10 +427,11 @@ class Permanence(TranslatableModel):
                         label.replace(" ", "&nbsp;"),
                     )
                 )
-            customers = ", ".join(link)
+                customers.append(label)
         elif self.status in [PERMANENCE_INVOICED, PERMANENCE_ARCHIVED]:
             button_download = EMPTY_STRING
-            link = []
+            customers = []
+            customers_html = []
             delivery_save = None
             for ci in (
                 CustomerInvoice.objects.filter(permanence_id=self.id)
@@ -426,11 +441,11 @@ class Permanence(TranslatableModel):
                 if delivery_save != ci.delivery:
                     delivery_save = ci.delivery
                     if ci.delivery is not None:
-                        link.append(
+                        customers_html.append(
                             "<br><b>{}</b>".format(ci.delivery.get_delivery_display())
                         )
                     else:
-                        link.append("<br><br>--")
+                        customers_html.append("<br><br>--")
                 total_price_with_tax = ci.get_total_price_with_tax(
                     customer_charged=True
                 )
@@ -445,53 +460,62 @@ class Permanence(TranslatableModel):
                 )
                 # Important : target="_blank" because the invoices must be displayed without the cms_toolbar
                 # Such that they can be accessed by the customer and by the staff
-                link.append(
+                customers_html.append(
                     '<a href="{}?customer={}" target="_blank">{}</a>'.format(
                         reverse("repanier:customer_invoice_view", args=(ci.id,)),
                         ci.customer_id,
                         label.replace(" ", "&nbsp;"),
                     )
                 )
-            customers = ", ".join(link)
+                customers.append(label)
         else:
             button_download = EMPTY_STRING
-            customers = ", ".join(
-                [
-                    c.short_basket_name
-                    for c in Customer.objects.filter(
-                        customerinvoice__permanence_id=self.id
-                    ).only("short_basket_name")
-                ]
-            )
-        if len(customers) > 0:
+            customers = [
+                c.short_basket_name
+                for c in Customer.objects.filter(
+                    customerinvoice__permanence_id=self.id
+                ).only("short_basket_name")
+            ]
+            customers_html = customers
+        len_customers = len(customers)
+        if len_customers > 0:
             if not with_download:
                 button_download = EMPTY_STRING
+            # msg_customers = cap(" ".join(customers), 50)
+            msg_customers_html = ", ".join(customers_html)
+            msg_show = _("Show")
+            msg_hide = _("Hide")
+
+            if len_customers > 0:
+                # Do not display the customers by default if more than 0 customers
+                display_customers = "none"
+                hide_customers = "block"
+            else:
+                display_customers = "block"
+                hide_customers = "none"
             msg_html = """
-    <div id="id_hide_customers_{}" style="display:block;" class="repanier-button-row">{}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_customers_{}').style.display = 'block'; document.getElementById('id_hide_customers_{}').style.display = 'none'; return false;">
+    <div id="id_hide_customers_{id}" style="display:{hide_producers};" class="repanier-button-row">{button_download}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
+                onclick="document.getElementById('id_show_customers_{id}').style.display = 'block'; document.getElementById('id_hide_customers_{id}').style.display = 'none'; return false;">
             <i
-                    class="far fa-eye"></i></a></span>
+                    class="far fa-eye"></i> {len_customers}</a></span>
     </div>
-    <div id="id_show_customers_{}" style="display:none;" class="repanier-button-row">{}
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_customers_{}').style.display = 'none'; document.getElementById('id_hide_customers_{}').style.display = 'block'; return false;">
+    <div id="id_show_customers_{id}" style="display:{display_producers};" class="repanier-button-row">{button_download}
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
+                onclick="document.getElementById('id_show_customers_{id}').style.display = 'none'; document.getElementById('id_hide_customers_{id}').style.display = 'block'; return false;">
             <i
                     class="far fa-eye-slash"></i></a></span>
-        <p><br><div class="wrap-text">{}</div></p>
+        <p></p><div class="wrap-text">{msg_producers_html}</div>
     </div>
             """.format(
-                self.id,
-                button_download,
-                _("Show"),
-                self.id,
-                self.id,
-                self.id,
-                button_download,
-                _("Hide"),
-                self.id,
-                self.id,
-                customers,
+                id=self.id,
+                button_download=button_download,
+                msg_show=msg_show,
+                msg_hide=msg_hide,
+                display_producers=display_customers,
+                hide_producers=hide_customers,
+                msg_producers_html=msg_customers_html,
+                len_customers=len_customers,
             )
             return mark_safe(msg_html)
         else:
@@ -517,10 +541,12 @@ class Permanence(TranslatableModel):
         permanenceboard_set = PermanenceBoard.objects.filter(
             permanence=self, permanence_role__rght=F("permanence_role__lft") + 1
         ).order_by("permanence_role__tree_id", "permanence_role__lft")
-        first_board = True
-        board = EMPTY_STRING
+        max_board_entry = 0
+        board = []
+        board_html = []
         if permanenceboard_set:
             for permanenceboard_row in permanenceboard_set:
+                max_board_entry += 1
                 r_link = EMPTY_STRING
                 r = permanenceboard_row.permanence_role
                 if r:
@@ -549,36 +575,39 @@ class Permanence(TranslatableModel):
                         + c.short_basket_name.replace(" ", "&nbsp;")
                         + "</a>"
                     )
-                if not first_board:
-                    board += "<br>"
-                board += r_link + c_link
-                first_board = False
-        if not first_board:
+                    board.append(c.short_basket_name)
+                board_html.append(r_link + c_link)
+        len_board = len(board)
+        if len_board > 0 or max_board_entry > 0:
             # At least one role is defined in the permanence board
+            # msg_board = cap(" ".join(board), 50)
+            msg_board_html = "<br> ".join(board_html)
+            msg_show = _("Show")
+            msg_hide = _("Hide")
+            if len_board == max_board_entry:
+                msg_len = len_board
+            else:
+                msg_len = "{} / {}".format(len_board, max_board_entry)
             msg_html = """
-    <div id="id_hide_board_{}" style="display:block;" class="repanier-button-row">
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_board_{}').style.display = 'block'; document.getElementById('id_hide_board_{}').style.display = 'none'; return false;">
+    <div id="id_hide_board_{id}" style="display:block;" class="repanier-button-row">
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_show}"
+                onclick="document.getElementById('id_show_board_{id}').style.display = 'block'; document.getElementById('id_hide_board_{id}').style.display = 'none'; return false;">
             <i
-                    class="far fa-eye"></i></a></span>
+                    class="far fa-eye"></i> {msg_len}</a></span>
     </div>
-    <div id="id_show_board_{}" style="display:none;" class="repanier-button-row">
-        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{}"
-                onclick="document.getElementById('id_show_board_{}').style.display = 'none'; document.getElementById('id_hide_board_{}').style.display = 'block'; return false;">
+    <div id="id_show_board_{id}" style="display:none;" class="repanier-button-row">
+        <span class="repanier-a-container"><a class="repanier-a-tooltip repanier-a-info" data-repanier-tooltip="{msg_hide}"
+                onclick="document.getElementById('id_show_board_{id}').style.display = 'none'; document.getElementById('id_hide_board_{id}').style.display = 'block'; return false;">
             <i
                     class="far fa-eye-slash"></i></a></span>
-        <p><br><div class="wrap-text">{}</div></p>
+        <p></p><div class="wrap-text">{msg_board_html}</div>
     </div>
             """.format(
-                self.id,
-                _("Show"),
-                self.id,
-                self.id,
-                self.id,
-                _("Hide"),
-                self.id,
-                self.id,
-                board,
+                id=self.id,
+                msg_show=msg_show,
+                msg_hide=msg_hide,
+                msg_board_html=msg_board_html,
+                msg_len=msg_len,
             )
             return mark_safe(msg_html)
         else:

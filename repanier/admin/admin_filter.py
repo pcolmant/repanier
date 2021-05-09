@@ -319,3 +319,68 @@ class BankAccountFilterByStatus(SimpleListFilter):
 
         else:
             return queryset
+
+class StatusFilterPermanenceInPreparation(SimpleListFilter):
+    title = _("Status")
+    parameter_name = "status"
+
+    def lookups(self, request, model_admin):
+        return [
+            (PERMANENCE_PLANNED, PERMANENCE_PLANNED_STR),
+            (PERMANENCE_OPENED, PERMANENCE_OPENED_STR),
+            (PERMANENCE_SEND, PERMANENCE_SEND_STR),
+        ]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value:
+            if value == PERMANENCE_PLANNED:
+                return queryset.filter(
+                    status__lt=PERMANENCE_OPENED
+                )
+            elif value == PERMANENCE_OPENED:
+                return queryset.filter(
+                    status=PERMANENCE_OPENED,
+                )
+            else:
+                return queryset.filter(
+                    status__gt=PERMANENCE_OPENED,
+                )
+        else:
+            return queryset
+
+
+class StatusFilterPermanenceDone(SimpleListFilter):
+    title = _("Status")
+    parameter_name = "status"
+
+    def lookups(self, request, model_admin):
+        return [
+            (PERMANENCE_SEND, PERMANENCE_SEND_STR),
+            (PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR),
+            (PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR),
+            (PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR),
+
+        ]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value:
+            if value == PERMANENCE_SEND:
+                return queryset.filter(
+                    status__lt=PERMANENCE_INVOICED
+                )
+            elif value == PERMANENCE_INVOICED:
+                return queryset.filter(
+                    status=PERMANENCE_INVOICED,
+                )
+            elif value == PERMANENCE_CANCELLED:
+                return queryset.filter(
+                    status=PERMANENCE_CANCELLED,
+                )
+            else:
+                return queryset.filter(
+                    status=PERMANENCE_ARCHIVED,
+                )
+        else:
+            return queryset

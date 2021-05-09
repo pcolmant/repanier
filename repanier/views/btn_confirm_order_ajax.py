@@ -21,8 +21,6 @@ from repanier.tools import (
 @require_GET
 @login_required
 def btn_confirm_order_ajax(request):
-    if not request.is_ajax():
-        raise Http404
     user = request.user
     customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
     if customer is None:

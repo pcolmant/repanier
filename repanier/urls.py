@@ -25,7 +25,7 @@ from repanier.views.btn_confirm_order_ajax import btn_confirm_order_ajax
 from repanier.views.customer_invoice_class import CustomerInvoiceView
 from repanier.views.customer_name_ajax import customer_name_ajax
 from repanier.views.customer_product_description_ajax import (
-    customer_product_description_ajax,
+    order_product_description_ajax,
 )
 from repanier.views.delivery_ajax import delivery_ajax
 from repanier.views.delivery_select_ajax import delivery_select_ajax
@@ -145,7 +145,7 @@ urlpatterns = [
     path("ajax/delivery-select/", delivery_select_ajax, name="delivery_select_ajax"),
     path("ajax/permanence/", task_form_ajax, name="task_form_ajax"),
     path(
-        "ajax/customer-basket-message/<int:pk>/",
+        "ajax/customer-basket-message/",
         customer_basket_message_form_ajax,
         name="customer_basket_message_form_ajax",
     ),
@@ -156,8 +156,8 @@ urlpatterns = [
     ),
     path(
         "ajax/customer-product-description/",
-        customer_product_description_ajax,
-        name="customer_product_description_ajax",
+        order_product_description_ajax,
+        name="order_product_description_ajax",
     ),
     path(
         "ajax/upload-picture/<path:upload_to>/<int:size>/",

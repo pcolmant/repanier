@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from repanier.admin.admin_filter import StatusFilterPermanenceInPreparation
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
     CloseAndSendOrderForm,
@@ -160,6 +161,12 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
     date_hierarchy = "permanence_date"
     list_display = ("get_permanence_admin_display",)
     list_display_links = ("get_permanence_admin_display",)
+    search_fields = [
+        "producers__short_profile_name",
+        "permanenceboard__customer__short_basket_name",
+        "customerinvoice__customer__short_basket_name",
+    ]
+    list_filter = (StatusFilterPermanenceInPreparation,)
     ordering = ("-status", "permanence_date", "id")
     autocomplete_fields = ["producers", "boxes"]
 

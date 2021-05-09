@@ -33,10 +33,8 @@ def order_ajax(request):
     Add a selected offer item to a customer order (i.e. update the customer's invoice and the producer's invoice)
     """
 
-    if not request.is_ajax():
-        raise Http404
     user = request.user
-    customer = Customer.objects.filter(user_id=user.id, may_order=True).first()
+    customer = Customer.objects.filter(id=user.customer_id, may_order=True).first()
     if customer is None:
         raise Http404
     offer_item_id = sint(request.GET.get("offer_item", 0))

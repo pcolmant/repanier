@@ -24,13 +24,10 @@ from repanier.tools import sint, get_html_selected_value
 @require_GET
 @login_required
 def order_select_ajax(request):
-    if not request.is_ajax():
-        raise Http404
     user = request.user
     customer = (
-        Customer.objects.filter(user_id=user.id, may_order=True)
+        Customer.objects.filter(id=user.customer_id, may_order=True)
         .only("id", "vat_id", "language")
-        .order_by("?")
         .first()
     )
     if customer is None:

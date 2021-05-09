@@ -313,7 +313,7 @@
     {% if not next_customer_invoice_id %}
     <script>
         $(document).ready(function () {
-            var lien = '{% url 'repanier:customer_basket_message_form_ajax' customer.id %}';
+            var lien = '{% url 'repanier:customer_basket_message_form_ajax' %}';
             $.ajax({
                 url: lien,
                 cache: false,

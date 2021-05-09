@@ -73,7 +73,7 @@ class LUTProductionModeAdmin(LUTAdmin):
         return fields
 
     def get_queryset(self, request):
-        if request.is_ajax() and "/autocomplete/" in request.path:
+        if "/autocomplete/" in request.path:
             # Autocomplete
             qs = LUT_ProductionMode.objects.filter(
                         rght=F("lft") + 1,
@@ -111,7 +111,7 @@ class LUTDepartmentForCustomerAdmin(LUTAdmin):
         return fields
 
     def get_queryset(self, request):
-        if request.is_ajax() and "/autocomplete/" in request.path:
+        if "/autocomplete/" in request.path:
             # Autocomplete
             qs = LUT_DepartmentForCustomer.objects.filter(
                         rght=F("lft") + 1,

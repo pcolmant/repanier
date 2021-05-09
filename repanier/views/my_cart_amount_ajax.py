@@ -11,12 +11,10 @@ from repanier.tools import my_basket
 @require_GET
 @login_required
 def my_cart_amount_ajax(request, permanence_id):
-    if not request.is_ajax():
-        raise Http404
     user = request.user
     customer_invoice = (
         CustomerInvoice.objects.filter(
-            permanence_id=permanence_id, customer__user_id=user.id
+            permanence_id=permanence_id, customer_id=user.customer_id
         )
         .order_by("?")
         .first()

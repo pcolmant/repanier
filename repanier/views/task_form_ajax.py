@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 from repanier.const import PERMANENCE_CLOSED, PERMANENCE_SEND, PERMANENCE_OPENED
+from repanier.models import Customer
 from repanier.models.permanenceboard import PermanenceBoard
 from repanier.tools import sint
 
@@ -15,11 +16,13 @@ from repanier.tools import sint
 @never_cache
 @require_GET
 def task_form_ajax(request):
-    if not request.is_ajax():
-        raise Http404
-    try:
-        customer = request.user.customer
-    except:
+    user = request.user
+    customer = (
+        Customer.objects.filter(id=user.customer_id, may_order=True)
+            .only("id", "vat_id", "language")
+            .first()
+    )
+    if customer is None:
         raise Http404
     result = "ko"
     p_permanence_board_id = sint(request.GET.get("task", -1))
