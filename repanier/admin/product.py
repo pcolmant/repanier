@@ -526,8 +526,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             ("stock",),
             "wrapped",
             "is_into_offer",
-        ]
-        fields_advanced_descriptions = [
             "placement",
             "offer_description_v2",
             "production_mode",
@@ -537,10 +535,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
         fieldsets = (
             (None, {"fields": fields_basic}),
-            (
-                _("Advanced descriptions"),
-                {"classes": ("collapse",), "fields": fields_advanced_descriptions},
-            ),
             (
                 _("Advanced options"),
                 {"classes": ("collapse",), "fields": fields_advanced_options},

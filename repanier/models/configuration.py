@@ -293,6 +293,7 @@ class Configuration(TranslatableModel):
             site.save()
 
         cls.init_webmaster_group()
+        cls.init_repanier_group()
 
         # Create the configuration record managed via the admin UI
         config = Configuration.objects.filter(id=DECIMAL_ONE).first()
@@ -329,25 +330,49 @@ class Configuration(TranslatableModel):
         content_types = (
             ContentType.objects.exclude(
                 app_label__in=[
-                    "repanier",
                     "admin",
                     "auth",
                     "contenttypes",
                     "menus",
+                    "recurrence",
+                    "repanier",
                     "reversion",
                     "sessions",
                     "sites",
                 ]
             )
             .only("id")
-            .order_by("?")
         )
         permissions = (
             Permission.objects.filter(content_type__in=content_types)
             .only("id")
-            .order_by("?")
         )
         webmaster_group.permissions.set(permissions)
+
+    @classmethod
+    def init_repanier_group(cls):
+        # Create REPANIER group with correct rights
+        from django.contrib.auth.models import Group, Permission
+        from django.contrib.contenttypes.models import ContentType
+
+        repanier_group = (
+            Group.objects.filter(name=REPANIER_GROUP).only("id").order_by("?").first()
+        )
+        if repanier_group is None:
+            repanier_group = Group.objects.create(name=REPANIER_GROUP)
+        content_types = (
+            ContentType.objects.filter(
+                app_label__in=[
+                    "repanier",
+                ]
+            )
+                .only("id")
+        )
+        permissions = (
+            Permission.objects.filter(content_type__in=content_types)
+                .only("id")
+        )
+        repanier_group.permissions.set(permissions)
 
     @classmethod
     def init_firsts_users(cls):

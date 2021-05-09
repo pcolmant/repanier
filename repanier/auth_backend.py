@@ -7,7 +7,7 @@ from django.db.models import F, Q
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE, WEBMASTER_GROUP
+from repanier.const import DECIMAL_ZERO, DECIMAL_ONE, DECIMAL_THREE, WEBMASTER_GROUP, REPANIER_GROUP
 from repanier.models import Customer, Staff, Configuration
 
 UserModel = get_user_model()
@@ -123,6 +123,9 @@ class RepanierAuthBackend(ModelBackend):
         user.groups.clear()
         if as_staff.is_webmaster:
             group_id = Group.objects.filter(name=WEBMASTER_GROUP).first()
+            user.groups.add(group_id)
+        if as_staff.is_order_manager or as_staff.is_invoice_manager:
+            group_id = Group.objects.filter(name=REPANIER_GROUP).first()
             user.groups.add(group_id)
         user.save()
         auth_login(request, user)

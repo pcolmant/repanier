@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from repanier.fields.RepanierMoneyField import RepanierMoney
 
 WEBMASTER_GROUP = "webmaster"
+REPANIER_GROUP = "repanier"
 
 EMPTY_STRING = ""
 ONE_YEAR = 365
