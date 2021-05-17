@@ -68,7 +68,7 @@
                 {% if object.customer.price_list_multiplier != 1 %}
                     <div class="row">
                         <div class="col-lg-12 col-sm-offset-1">
-                            <small>{% translate "Coefficient applied to the producer tariff to calculate the consumer tariff" %} :
+                            <small>{% translate "Coefficient applied to the producer tariff to calculate the customer tariff" %} :
 {{ object.customer.price_list_multiplier }}. </small>
                         </div>
                     </div>
@@ -199,7 +199,7 @@
                             {% endif %}
                             </td>
                             <td>
-                                {{ purchase.get_long_name }}
+                                {{ purchase.get_long_name_with_customer_price }}
                             </td>
                             <td align="right">
                                 {{ purchase.quantity_invoiced | floatformat:3 }}
@@ -282,7 +282,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {{ purchase.get_long_name }}
+                                {{ purchase.get_long_name_with_customer_price }}
                             </td>
                             <td align="right">
                                 {{ purchase.quantity_invoiced | floatformat:3 }}

@@ -101,7 +101,7 @@ class Producer(models.Model):
 
     price_list_multiplier = models.DecimalField(
         _(
-            "Coefficient applied to the producer tariff to calculate the consumer tariff"
+            "Coefficient applied to the producer tariff to calculate the customer tariff"
         ),
         help_text=_(
             "This multiplier is applied to each price automatically imported/pushed."

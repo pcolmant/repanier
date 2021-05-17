@@ -91,7 +91,7 @@ class RepanierToolbar(CMSToolbar):
             if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
                 url = reverse("admin:repanier_permanencedone_changelist")
                 admin_menu.add_sideframe_item(
-                    _("Billing offers"), url=url, position=position
+                    _("Offers in payment"), url=url, position=position
                 )
                 position += 1
                 url = reverse("admin:repanier_bankaccount_changelist")
@@ -102,7 +102,7 @@ class RepanierToolbar(CMSToolbar):
             else:
                 url = reverse("admin:repanier_permanencedone_changelist")
                 admin_menu.add_sideframe_item(
-                    _("In archiving"), url=url, position=position
+                    _("Offers in archiving"), url=url, position=position
                 )
                 position += 1
 

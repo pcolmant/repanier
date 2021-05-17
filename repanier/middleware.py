@@ -60,7 +60,7 @@ def add_filter(path):
     return "{}{}".format(path, get_query_preserved_filters())
 
 
-def get_query_params():
+def get_request_params():
     """
     Return the params present in the querystring as a dict
     """

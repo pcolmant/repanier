@@ -2,6 +2,7 @@ import logging
 import threading
 
 import repanier.apps
+from dal import autocomplete
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -17,7 +18,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from repanier.admin.admin_filter import StatusFilterPermanenceInPreparation
+from repanier.admin.admin_filter import AdminFilterPermanenceInPreparationStatus
 from repanier.admin.forms import (
     OpenAndSendOfferForm,
     CloseAndSendOrderForm,
@@ -138,6 +139,26 @@ class DeliveryBoardInline(PermanenceInPreparationInlineMixin, admin.TabularInlin
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class ProducerAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Producer.objects.filter(is_active=True)
+
+        if self.q:
+            qs = qs.filter(short_profile_name__istartswith=self.q)
+
+        return qs
+
+
+class BoxesAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Box.objects.filter(is_box=True, is_into_offer=True)
+
+        if self.q:
+            qs = qs.filter(long_name_v2__istartswith=self.q)
+
+        return qs
+
+
 class PermanenceInPreparationForm(forms.ModelForm):
     short_name_v2 = forms.CharField(
         label=_("Offer name"),
@@ -148,6 +169,16 @@ class PermanenceInPreparationForm(forms.ModelForm):
     class Meta:
         model = PermanenceInPreparation
         fields = "__all__"
+        widgets = {
+            "producers": autocomplete.ModelSelect2Multiple(
+                url="admin:producer-autocomplete",
+                attrs={"data-dropdown-auto-width": "true", "data-width": "100%"},
+            ),
+            "boxes": autocomplete.ModelSelect2Multiple(
+                url="admin:boxes-autocomplete",
+                attrs={"data-dropdown-auto-width": "true", "data-width": "100%"},
+            ),
+        }
 
 
 class PermanenceInPreparationAdmin(admin.ModelAdmin):
@@ -159,16 +190,26 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
     filter_horizontal = ("producers", "boxes")
     inlines = [DeliveryBoardInline, PermanenceBoardInline]
     date_hierarchy = "permanence_date"
-    list_display = ("get_permanence_admin_display",)
+    list_display = (
+        "get_permanence_admin_display",
+        "get_row_actions",
+        "get_producers_with_download",
+        "get_customers_with_download",
+        "get_board",
+        "get_html_status_display",
+    )
     list_display_links = ("get_permanence_admin_display",)
     search_fields = [
         "producers__short_profile_name",
         "permanenceboard__customer__short_basket_name",
         "customerinvoice__customer__short_basket_name",
     ]
-    list_filter = (StatusFilterPermanenceInPreparation,)
-    ordering = ("-status", "permanence_date", "id")
-    autocomplete_fields = ["producers", "boxes"]
+    list_filter = (AdminFilterPermanenceInPreparationStatus,)
+    ordering = (
+        "permanence_date",
+        "id",
+    )
+    # autocomplete_fields = ["producers", "boxes"]
 
     def has_delete_permission(self, request, obj=None):
         user = request.user
@@ -184,17 +225,6 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
 
     def get_redirect_to_change_list_url(self):
         return "{}{}".format(self.change_list_url, get_query_filters())
-
-    def get_list_display(self, request):
-        list_display = [
-            "get_permanence_admin_display",
-            "get_row_actions",
-            "get_producers_with_download",
-            "get_customers_with_download",
-            "get_board",
-            "get_html_status_display",
-        ]
-        return list_display
 
     def get_fields(self, request, permanence=None):
         fields = [
@@ -217,6 +247,15 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             return readonly_fields
         return ["status"]
 
+    def get_form(self, request, permanence=None, **kwargs):
+        form = super().get_form(request, permanence, **kwargs)
+        producer_field = form.base_fields["producers"]
+        producer_field.widget.can_add_related = False
+        if settings.REPANIER_SETTINGS_BOX:
+            boxes_field = form.base_fields["boxes"]
+            boxes_field.widget.can_add_related = False
+        return form
+
     def get_formsets_with_inlines(self, request, obj=None):
         for inline in self.get_inline_instances(request, obj):
             # hide DeliveryBoardInline if no delivery point
@@ -236,6 +275,16 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
+            url(
+                r"^producer_autocomplete/$",
+                ProducerAutocomplete.as_view(),
+                name="producer-autocomplete",
+            ),
+            url(
+                r"^boxes_autocomplete/$",
+                BoxesAutocomplete.as_view(),
+                name="boxes-autocomplete",
+            ),
             url(
                 r"^(?P<permanence_id>.+)/export-offer/$",
                 self.admin_site.admin_view(self.export_offer),
@@ -434,8 +483,9 @@ class PermanenceInPreparationAdmin(admin.ModelAdmin):
             ).order_by("long_name_v2")[:5]
             offer_detail = "<ul>{}</ul>".format(
                 "".join(
-                    "<li>{}, {}</li>".format(
-                        p.get_long_name(), p.producer.short_profile_name
+                    "<li>{producer}, {product}</li>".format(
+                        producer=p.producer.short_profile_name,
+                        product=p.get_long_name_with_customer_price(),
                     )
                     for p in qs
                 )

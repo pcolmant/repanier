@@ -6,21 +6,19 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.core.checks import messages
-from django.db.models import F
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse_lazy, reverse
 from django.utils.formats import number_format
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-from easy_select2 import apply_select2
 from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 from import_export.widgets import ForeignKeyWidget, ManyToManyWidget
 from repanier.admin.admin_filter import (
-    ProductFilterByDepartmentForThisProducer,
-    ProductFilterByProducer,
+    AdminFilterProducer,
+    AdminFilterDepartment,
 )
 from repanier.admin.tools import check_cancel_in_post, check_product, add_filter
 from repanier.admin.tools import get_query_filters
@@ -44,7 +42,7 @@ from repanier.const import (
     LUT_PRODUCT_ORDER_UNIT_REVERSE_ALL,
     LUT_PRODUCT_ORDER_UNIT_ALL,
 )
-from repanier.middleware import get_query_params
+from repanier.middleware import get_request_params
 from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
 from repanier.models.producer import Producer
 from repanier.models.product import Product
@@ -415,9 +413,7 @@ class ProductDataForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "long_name_v2": forms.TextInput(attrs={"style": "width: 95%;"}),
-            "order_unit": SelectAdminOrderUnitWidget(
-                attrs={"style": "width: 95%;"}
-            ),
+            "order_unit": SelectAdminOrderUnitWidget(attrs={"style": "width: 95%;"}),
             # "department_for_customer": apply_select2(forms.Select),
         }
 
@@ -427,20 +423,32 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
     form = ProductDataForm
     change_list_url = reverse_lazy("admin:repanier_product_changelist")
     resource_class = ProductResource
-    list_display = ("get_long_name_with_producer",)
-    list_display_links = ("get_long_name_with_producer",)
+    list_display = (
+        "producer",
+        "department_for_customer",
+        "get_long_name_with_producer_price",
+        "get_row_actions",
+        "producer_unit_price",
+        "stock",
+    )
+    list_display_links = ("get_long_name_with_producer_price",)
+    list_editable = (
+        "producer_unit_price",
+        "stock",
+    )
     readonly_fields = ("is_updated_on",)
     list_select_related = ("producer", "department_for_customer")
     list_per_page = 16
     list_max_show_all = 16
     filter_horizontal = ("production_mode",)
-    ordering = ("producer", "long_name_v2")
+    ordering = ("department_for_customer", "long_name_v2")
     search_fields = ("long_name_v2",)
     list_filter = (
-        ProductFilterByProducer,
-        ProductFilterByDepartmentForThisProducer,
+        AdminFilterProducer,
+        AdminFilterDepartment,
         "is_into_offer",
         "wrapped",
+        "is_active",
     )
     autocomplete_fields = ["department_for_customer", "production_mode"]
 
@@ -497,20 +505,6 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     duplicate_product.short_description = _("Duplicate")
 
-    def get_list_display(self, request):
-        list_display = [
-            "get_long_name_with_producer",
-            "get_row_actions",
-            "producer_unit_price",
-            "stock",
-        ]
-        list_editable = [
-            "producer_unit_price",
-            "stock",
-        ]
-        self.list_editable = list_editable
-        return list_display
-
     def get_fieldsets(self, request, product=None):
         fields_basic = [
             "producer",
@@ -551,7 +545,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
             producer_queryset = Producer.objects.filter(id=product.producer_id)
         else:
             producer_queryset = Producer.objects.none()
-            query_params = get_query_params()
+            query_params = get_request_params()
             if "producer" in query_params:
                 producer_id = query_params["producer"]
                 if producer_id:
@@ -681,7 +675,7 @@ class ProductAdmin(ImportExportMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.filter(is_box=False, producer__is_active=True)
+        qs = qs.filter(is_box=False)
         # ).exclude(order_unit=PRODUCT_ORDER_UNIT_MEMBERSHIP_FEE)
         return qs
 

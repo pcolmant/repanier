@@ -128,11 +128,11 @@ def export_permanence_stock(
                             c = ws.cell(row=row_num, column=3)
                             if department_for_customer_save__short_name is not None:
                                 c.value = "{} - {}".format(
-                                    offer_item.get_long_name(),
+                                    offer_item.get_long_name_with_customer_price(),
                                     department_for_customer_save__short_name,
                                 )
                             else:
-                                c.value = "{}".format(offer_item.get_long_name())
+                                c.value = "{}".format(offer_item.get_long_name_with_customer_price())
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.alignment.wrap_text = True
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -389,11 +389,11 @@ def export_producer_stock(producers, customer_price=False, wb=None):
                 c = ws.cell(row=row_num, column=3)
                 if product.department_for_customer is not None:
                     c.value = "{} - {}".format(
-                        product.get_long_name(),
                         product.department_for_customer.short_name_v2,
+                        product.get_long_name_with_customer_price(),
                     )
                 else:
-                    c.value = product.get_long_name()
+                    c.value = product.get_long_name_with_customer_price()
                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                 c.style.alignment.wrap_text = True
                 c.style.borders.bottom.border_style = Border.BORDER_THIN

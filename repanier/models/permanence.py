@@ -258,7 +258,7 @@ class Permanence(TranslatableModel):
                     )
                     producers.append(label)
                     producers_html.append(
-                        '<a href="{}?permanence={}&producer={}">&nbsp;{}</a>'.format(
+                        '<a href="{}?is_filled_exact=1&permanence={}&producer={}">&nbsp;{}</a>'.format(
                             changelist_url,
                             self.id,
                             pi.producer_id,
@@ -1676,9 +1676,16 @@ class Permanence(TranslatableModel):
                     if department_for_customer_save is not None:
                         result.append("</ul></li>")
                     department_for_customer_save = o.department_for_customer
-                    result.append("<li>{}<ul>".format(department_for_customer_save))
+                    result.append(
+                        "<li>{department}<ul>".format(
+                            department=department_for_customer_save
+                        )
+                    )
                 result.append(
-                    "<li>{}</li>".format(o.get_long_name_with_producer(is_html=True))
+                    "<li>{producer}, {product}</li>".format(
+                        producer=o.producer.short_profile_name,
+                        product=o.get_long_name_with_customer_price(),
+                    )
                 )
             if department_for_customer_save is not None:
                 result.append("</ul>")
@@ -1831,7 +1838,6 @@ class Permanence(TranslatableModel):
     class Meta:
         verbose_name = _("Order")
         verbose_name_plural = _("Orders")
-
         index_together = [["permanence_date"]]
 
 
@@ -1845,5 +1851,5 @@ class PermanenceInPreparation(Permanence):
 class PermanenceDone(Permanence):
     class Meta:
         proxy = True
-        verbose_name = _("Billing offer")
-        verbose_name_plural = _("Billing offers")
+        verbose_name = _("Offer in payment")
+        verbose_name_plural = _("Offers in payment")

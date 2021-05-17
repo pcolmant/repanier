@@ -39,7 +39,7 @@ class OfferItemSerializer(serializers.Serializer):
         model = OfferItemWoReceiver
         fields = (
             "reference",
-            "get_long_name",
+            "get_long_name_with_customer_price",
             "quantity_invoiced",
             "stock",
         )

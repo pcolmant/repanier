@@ -91,7 +91,7 @@ class UserDataForm(forms.ModelForm):
                         "If the customer is member of a group, the customer.price_list_multiplier must be set to ONE."
                     ),
                 )
-        bank_account1 = self.cleaned_data["bank_account1"]
+        bank_account1 = self.cleaned_data.get("bank_account1", EMPTY_STRING)
         if bank_account1:
             qs = Customer.objects.filter(
                 Q(bank_account1=bank_account1) | Q(bank_account2=bank_account1)
@@ -103,7 +103,7 @@ class UserDataForm(forms.ModelForm):
                     "bank_account1",
                     _("This bank account already belongs to another customer."),
                 )
-        bank_account2 = self.cleaned_data["bank_account2"]
+        bank_account2 = self.cleaned_data.get("bank_account2", EMPTY_STRING)
         if bank_account2:
             qs = Customer.objects.filter(
                 Q(bank_account1=bank_account2) | Q(bank_account2=bank_account2)
@@ -319,8 +319,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
     form = CustomerWithUserDataForm
     resource_class = CustomerResource
     list_display = ("short_basket_name",)
-    search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2")
-    list_filter = ("may_order", "valid_email")
+    search_fields = ("short_basket_name", "long_basket_name", "user__email", "email2", )
+    list_filter = ("may_order", "subscribe_to_email", "valid_email", "is_active", )
     list_per_page = 16
     list_max_show_all = 16
     autocomplete_fields = ["group"]
@@ -482,8 +482,8 @@ class CustomerWithUserDataAdmin(ImportExportMixin, admin.ModelAdmin):
             # username_field.initial = getattr(user, user_model.USERNAME_FIELD)
             email_field.initial = user.email
             # One folder by customer to avoid picture names conflicts
-            picture_field = form.base_fields["picture"]
-            if hasattr(picture_field.widget, "upload_to"):
+            picture_field = form.base_fields.get("picture", None)
+            if picture_field is not None and hasattr(picture_field.widget, "upload_to"):
                 picture_field.widget.upload_to = "{}{}{}".format(
                     "customer", os_sep, customer.id
                 )

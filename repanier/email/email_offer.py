@@ -45,10 +45,9 @@ def send_open_order(permanence_id):
     ).order_by("order_sort_order_v2")
     offer_detail = "<ul>{}</ul>".format(
         "".join(
-            "<li>{}, {}, {}</li>".format(
-                o.get_long_name(),
-                o.producer.short_profile_name,
-                o.email_offer_price_with_vat,
+            "<li>{producer}, {product}</li>".format(
+                producer=o.producer.short_profile_name,
+                product=o.get_long_name_with_customer_price()
             )
             for o in qs
         ),

@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
-from repanier.admin.admin_filter import StatusFilterPermanenceDone
+from repanier.admin.admin_filter import AdminFilterPermanenceDoneStatus
 from repanier.admin.forms import (
     InvoiceOrderForm,
     ProducerInvoicedFormSet,
@@ -108,11 +108,12 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
         "producerinvoice__producer__short_profile_name",
         "customerinvoice__customer__short_basket_name",
     ]
-    list_filter = (StatusFilterPermanenceDone,)
+    list_filter = (AdminFilterPermanenceDoneStatus,)
     ordering = (
         "-invoice_sort_order",
         "-canceled_invoice_sort_order",
         "-permanence_date",
+        "-id",
     )
 
     def has_delete_permission(self, request, obj=None):
@@ -259,7 +260,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "model_verbose_name_plural": _("Billing offers"),
+                "model_verbose_name_plural": _("Offers in payment"),
                 "sub_title": _("Please, confirm the action : cancel delivery."),
                 "action": "cancel_delivery",
                 "permanence": permanence,
@@ -506,7 +507,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "model_verbose_name_plural": _("Billing offers"),
+                "model_verbose_name_plural": _("Offers in payment"),
                 "sub_title": _("Please, confirm the action : generate archive."),
                 "action": "archive",
                 "permanence": permanence,
@@ -572,7 +573,7 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
             template_name,
             {
                 **self.admin_site.each_context(request),
-                "model_verbose_name_plural": _("Billing offers"),
+                "model_verbose_name_plural": _("Offers in payment"),
                 "sub_title": sub_title,
                 "action": action,
                 "permanence": permanence,
@@ -794,7 +795,6 @@ class PermanenceDoneAdmin(admin.ModelAdmin):
                 BankAccount.objects.filter(
                     operation_status=BANK_LATEST_TOTAL, permanence_id=permanence.id
                 )
-                .order_by("?")
                 .exists()
             ):
                 # This is the latest invoiced permanence

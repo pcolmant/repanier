@@ -9,11 +9,9 @@
     {{ block.super }}
 {% endblock %}
 
-{% if REPANIER_ADMIN_MANAGE_ACCOUNTING is True %}
-    {% block breadcrumbs %}
-        <div class="breadcrumbs">
-            {% translate 'Manage' %}
-            &rsaquo; {% translate "In archiving" %}
-        </div>
-    {% endblock %}
-{% endif %}
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        {% translate 'Manage' %}
+        &rsaquo; {% if REPANIER_ADMIN_MANAGE_ACCOUNTING is False %}{% translate "Offers in archiving" %}{% else %}{% translate "Offers in payment" %}{% endif %}
+    </div>
+{% endblock %}

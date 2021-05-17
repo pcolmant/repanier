@@ -118,7 +118,7 @@ class CustomerSendForm(forms.ModelForm):
         initial=REPANIER_MONEY_ZERO,
     )
     offer_selling_price = FormMoneyField(
-        label=_("Invoiced to the consumer including VAT"),
+        label=_("Invoiced to the customer including VAT"),
         max_digits=8,
         decimal_places=2,
         required=False,

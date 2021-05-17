@@ -54,10 +54,10 @@ class Box(Product):
 
         return RepanierMoney(box_price), RepanierMoney(box_deposit)
 
-    def get_box_admin_display(self):
-        return self.get_long_name()
-
-    get_box_admin_display.short_description = _("Box")
+    # def get_box_admin_display(self):
+    #     return self.get_long_name()
+    #
+    # get_box_admin_display.short_description = _("Box")
 
     def __str__(self):
         # return super().display()
@@ -96,7 +96,7 @@ class BoxContent(models.Model):
         validators=[MinValueValidator(0)],
     )
     calculated_customer_content_price = ModelMoneyField(
-        _("Calculated consumer tariff"),
+        _("Calculated customer tariff"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -114,7 +114,7 @@ class BoxContent(models.Model):
         return self.calculated_customer_content_price + self.calculated_content_deposit
 
     get_calculated_customer_content_price.short_description = _(
-        "Calculated consumer tariff"
+        "Calculated customer tariff"
     )
 
     def __str__(self):

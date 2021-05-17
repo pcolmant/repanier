@@ -25,8 +25,10 @@ from django.views.i18n import JavaScriptCatalog
 
 from django.urls import path
 
+admin.site.site_header = ""
+admin.site.site_title = ""
+admin.site.empty_value_display = "-"
 # Disable new unwanted left admin menu :
-# https://github.com/django/django/commit/d24ba1be7a53a113d19e2860c03aff9922efec24
 admin.site.enable_nav_sidebar = False
 
 urlpatterns = i18n_patterns(

@@ -27,6 +27,16 @@ td, th {
     vertical-align: initial;
 }
 
+#changelist table input {
+    width: 90px;
+    text-align: right;
+}
+
+input[type=number] {
+    width: 90px;
+    text-align: right;
+}
+
 div.repanier-submit-row {
     display: flex;
     justify-content: space-between;
@@ -172,7 +182,8 @@ div.repanier-objects-tools {
 }
 
 .repanier-money-input-field {
-    width: 100%;
+    width: 90px;
+    text-align: right;
     padding: 10px;
     outline: none;
     border: var(--border-height) solid var(--info-hover-border-color);

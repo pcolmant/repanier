@@ -1,0 +1,11 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% if REPANIER_ADMIN_MANAGE_ACCOUNTING is False %}
+    {% block breadcrumbs %}
+        <div class="breadcrumbs">
+            {% translate 'Manage' %}
+            &rsaquo; {% translate "Purchases" %} {% if PERMANENCE %} ({{ PERMANENCE }}){% endif %}{% if DELIVERY_POINT %} &rsaquo; {{ DELIVERY_POINT }}{% endif %}
+        </div>
+    {% endblock %}
+{% endif %}

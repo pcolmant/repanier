@@ -162,7 +162,7 @@ class ProducerDataForm(forms.ModelForm):
     )
     reference_site = forms.URLField(
         label=_("Reference site"),
-        widget=forms.URLInput(attrs={"style": "width:100% !important"}),
+        widget=forms.URLInput(attrs={"style": "width: 70%;"}),
         required=False,
     )
 
@@ -243,10 +243,10 @@ class ProducerDataForm(forms.ModelForm):
             "email2": EmailInput(attrs={"style": "width: 70%;"}),
             "email3": EmailInput(attrs={"style": "width: 70%;"}),
             "address": Textarea(
-                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 95%;"}
+                attrs={"rows": 4, "cols": 80, "style": "height: 5em; width: 70%;"}
             ),
             "memo": Textarea(
-                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 95%;"}
+                attrs={"rows": 4, "cols": 160, "style": "height: 5em; width: 70%;"}
             ),
         }
         model = Producer
@@ -404,13 +404,16 @@ class ProducerAdmin(ImportExportMixin, admin.ModelAdmin):
         if producer is not None and producer.represent_this_buyinggroup:
             fields_advanced = ["represent_this_buyinggroup"]
         else:
-            fields_advanced = []
-        if settings.REPANIER_SETTINGS_MANAGE_ACCOUNTING:
-            fields_advanced += ["bank_account", "vat_id"]
-        fields_advanced += [
-            "reference_site",
-            "web_services_activated",
-        ]
+            if producer is not None:
+                fields_basic += [
+                    "is_active",
+                ]
+            fields_advanced = [
+                "bank_account",
+                "vat_id",
+                "reference_site",
+                "web_services_activated",
+            ]
         fieldsets = (
             (None, {"fields": fields_basic}),
             (

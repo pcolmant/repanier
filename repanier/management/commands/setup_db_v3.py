@@ -15,6 +15,11 @@ class Command(BaseCommand):
                     # "WHERE limit_order_quantity_to_stock = false "
                 )
                 cursor.execute(
+                    "UPDATE repanier_offeritem SET "
+                    "long_name_v2 = concat(upper(left(long_name_v2, 1)), right(long_name_v2, -1)) "
+                    # "WHERE limit_order_quantity_to_stock = false "
+                )
+                cursor.execute(
                     "UPDATE repanier_customer SET "
                     "group_id = b.customer_responsible_id "
                     "FROM ( "

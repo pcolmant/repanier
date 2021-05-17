@@ -72,7 +72,7 @@ def export_customer_prices(producer_qs, wb=None, producer_prices=True):
             (
                 _("Long name"),
                 60,
-                product.get_long_name(),
+                product.get_long_name_with_customer_price(),
                 NumberFormat.FORMAT_TEXT,
                 False,
             ),

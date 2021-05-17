@@ -125,7 +125,7 @@ class Purchase(models.Model):
 
     price_list_multiplier = models.DecimalField(
         _(
-            "Coefficient applied to the producer tariff to calculate the consumer tariff"
+            "Coefficient applied to the producer tariff to calculate the customer tariff"
         ),
         help_text=_(
             "This multiplier is applied to each price automatically imported/pushed."
@@ -222,8 +222,8 @@ class Purchase(models.Model):
             self.customer_invoice is not None
             and self.customer_invoice.delivery is not None
         ):
-            return self.customer_invoice.delivery.get_delivery_display(br=True)
-        return EMPTY_STRING
+            return self.customer_invoice.delivery.get_delivery_display()
+        return None
 
     get_delivery_display.short_description = _("Delivery point")
 
@@ -247,8 +247,8 @@ class Purchase(models.Model):
                     ).quantize(FOUR_DECIMALS)
             return self.quantity_invoiced
 
-    def get_long_name(self, customer_price=True):
-        return self.offer_item.get_long_name(customer_price=customer_price)
+    def get_long_name_with_customer_price(self):
+        return self.offer_item.get_long_name_with_customer_price()
 
     def set_comment(self, comment):
         if comment:

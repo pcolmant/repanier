@@ -6,7 +6,7 @@ from import_export import resources, fields
 from import_export.admin import ImportExportMixin
 from import_export.formats.base_formats import CSV, XLSX, XLS
 
-from repanier.admin.admin_filter import BankAccountFilterByStatus
+from repanier.admin.admin_filter import AdminFilterBankAccountStatus
 from repanier.const import *
 from repanier.fields.RepanierMoneyField import FormMoneyField
 from repanier.models.bankaccount import BankAccount
@@ -359,7 +359,7 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
         "operation_comment",
     ]
     date_hierarchy = "operation_date"
-    list_filter = (BankAccountFilterByStatus,)
+    list_filter = (AdminFilterBankAccountStatus,)
     ordering = ("-operation_date", "-id")
     search_fields = (
         "producer__short_profile_name",
@@ -380,20 +380,9 @@ class BankAccountAdmin(ImportExportMixin, admin.ModelAdmin):
     def has_change_permission(self, request, bank_account=None):
         return self.has_add_permission(request)
 
-    # def get_urls(self):
-    #     urls = super().get_urls()
-    #     my_urls = [
-    #         url(r'^expenses_to_be_apportioned/$', self.expenses_to_be_apportioned),
-    #     ]
-    #     return my_urls + urls
-
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = ["is_updated_on", "customer_invoice", "producer_invoice"]
         return readonly_fields
-
-    # def expenses_to_be_apportioned(self, request):
-    #     redirect_to = reverse('admin:repanier_bankaccount_changelist', )
-    #     return HttpResponseRedirect(redirect_to)
 
     def get_actions(self, request):
         actions = super().get_actions(request)

@@ -17,14 +17,14 @@
                 <div class="col-sm-6 col-lg-3">
                     {% if offer.picture %}
                         {% thumbnail offer.picture "0x150"|extra_padding_y:5 crop="smart" as product_thumbnail %}
-                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="{{ product_thumbnail.url }}">
+                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="{{ product_thumbnail.url }}">
                     {% else %}
-                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}" data-picture="">
+                        <div data-toggle="modal" data-target="#orderModal" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}" data-picture="">
                     {% endif %}
                     {{ offer.cache_part_a_v2 | safe }}
                         </div>
                 </div>
-                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name }}">
+                <div class="col-sm-6 col-lg-3" data-id="{{ offer.id|unlocalize }}" data-product="{{ offer.get_long_name_with_customer_price }}">
                     {% if may_order %}{% repanier_select_offer_item offer_item=offer %}{% endif %}
                     {{ offer.cache_part_b_v2 | safe }}
                     {% if may_order and not offer.is_box %}{% repanier_btn_like offer_item=offer %}{% endif %}

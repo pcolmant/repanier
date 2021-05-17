@@ -75,7 +75,7 @@ class Staff(MPTTModel, TranslatableModel):
     is_order_manager = models.BooleanField(
         _("Offers in preparation manager"), default=False
     )
-    is_invoice_manager = models.BooleanField(_("Billing offers manager"), default=False)
+    is_invoice_manager = models.BooleanField(_("Offers in payment manager"), default=False)
     is_webmaster = models.BooleanField(_("Webmaster"), default=False)
     is_other_manager = models.BooleanField(_("Other responsibility"), default=False)
     can_be_contacted = models.BooleanField(_("Can be contacted"), default=True)

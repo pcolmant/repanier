@@ -4,15 +4,14 @@ from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 
 from repanier.admin.admin_filter import (
-    PurchaseFilterByProducerForThisPermanence,
-    ProductFilterByDepartmentForThisProducer,
-    OfferItemFilter,
+    AdminFilterProducerOfPermanence,
+    AdminFilterQuantityInvoiced,
+    AdminFilterDepartment,
 )
 from repanier.models.lut import LUT_DepartmentForCustomer
 from repanier.models.permanence import Permanence
-from repanier.models.producer import Producer
 from repanier.models.product import Product
-from repanier.tools import sint, update_offer_item
+from repanier.tools import update_offer_item
 
 
 class OfferItemClosedDataForm(forms.ModelForm):
@@ -38,55 +37,38 @@ class OfferItemClosedDataForm(forms.ModelForm):
 class OfferItemClosedAdmin(admin.ModelAdmin):
     form = OfferItemClosedDataForm
     search_fields = ("long_name_v2",)
-    list_display = [
-        "get_html_long_name_with_producer",
-    ]
-    list_display_links = ("get_html_long_name_with_producer",)
+    list_display = (
+        "producer",
+        "department_for_customer",
+        "get_long_name_with_producer_price",
+        "stock",
+        "get_html_producer_qty_stock_invoiced",
+    )
+    list_display_links = ("get_long_name_with_producer_price",)
+    list_editable = ("stock",)
     list_filter = (
-        PurchaseFilterByProducerForThisPermanence,
-        OfferItemFilter,
-        ProductFilterByDepartmentForThisProducer,
+        AdminFilterProducerOfPermanence,
+        AdminFilterQuantityInvoiced,
+        AdminFilterDepartment,
     )
     list_select_related = ("producer", "department_for_customer")
     list_per_page = 13
     list_max_show_all = 13
-    ordering = ("long_name_v2",)
+    ordering = (
+        "department_for_customer",
+        "long_name_v2",
+    )
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs
 
-    def get_list_display(self, request):
-        producer_id = sint(request.GET.get("producer", 0))
-        if producer_id != 0:
-            producer_queryset = Producer.objects.filter(id=producer_id).order_by("?")
-            producer = producer_queryset.first()
-        else:
-            producer = None
-        # permanence_id = sint(request.GET.get('permanence', 0))
-        # permanence_open = False
-        # permanence = Permanence.objects.filter(id=permanence_id, status=PERMANENCE_OPENED).order_by('?')
-        # if permanence.exists():
-        #     permanence_open = True
-        if producer is not None:
-            self.list_editable = ("stock",)
-            return (
-                "department_for_customer",
-                "get_html_long_name_with_producer",
-                "stock",
-                "get_html_producer_qty_stock_invoiced",
-            )
-        else:
-            return (
-                "department_for_customer",
-                "get_html_long_name_with_producer",
-                "get_html_producer_qty_stock_invoiced",
-            )
-
     def get_fieldsets(self, request, offer_item=None):
         fields_basic = [
-            ("permanence", "department_for_customer", "product"),
-            ("producer_qty_stock_invoiced",),
+            "permanence",
+            "department_for_customer",
+            "product",
+            "producer_qty_stock_invoiced",
         ]
 
         fieldsets = ((None, {"fields": fields_basic}),)

@@ -68,6 +68,13 @@ class LUTProductionModeAdmin(LUTAdmin):
     mptt_level_limit = TWO_LEVEL_DEPTH
     search_fields = ("short_name_v2",)
 
+    def has_add_permission(self, request):
+        if "/lut_productionmode/" in request.path:
+            # Only if in admin > producer
+            return self.has_delete_permission(request)
+        # If in autocomplete field
+        return False
+
     def get_fields(self, request, obj=None):
         fields = ["parent", "short_name_v2", "picture2", "is_active"]
         return fields

@@ -144,20 +144,20 @@ class Item(TranslatableModel):
         decimal_places=3,
         validators=[MinValueValidator(0)],
     )
+    is_box = models.BooleanField(default=False)
+    is_active = models.BooleanField(_("Active"), default=True)
+
     # TBD
     limit_order_quantity_to_stock = models.BooleanField(
         _("Limit maximum order qty of the group to stock qty"), default=False
     )
 
-    is_box = models.BooleanField(default=False)
-    is_active = models.BooleanField(_("Active"), default=True)
-
-    @property
-    def email_offer_price_with_vat(self):
-        offer_price = self.get_reference_price()
-        if offer_price == EMPTY_STRING:
-            offer_price = self.get_unit_price()
-        return offer_price
+    # @property
+    # def email_offer_price_with_vat(self):
+    #     offer_price = self.get_reference_price()
+    #     if offer_price == EMPTY_STRING:
+    #         offer_price = self.get_unit_price()
+    #     return offer_price
 
     def set_from(self, source):
         self.is_active = source.is_active
@@ -233,38 +233,38 @@ class Item(TranslatableModel):
         else:
             return "{}".format(unit_price)
 
-    def get_reference_price(self, customer_price=True):
-        if (
-            self.order_average_weight > DECIMAL_ZERO
-            and self.order_average_weight != DECIMAL_ONE
-        ):
-            if self.order_unit in [
-                PRODUCT_ORDER_UNIT_PC_PRICE_KG,
-                PRODUCT_ORDER_UNIT_PC_PRICE_LT,
-                PRODUCT_ORDER_UNIT_PC_PRICE_PC,
-            ]:
-                if customer_price:
-                    reference_price = (
-                        self.customer_unit_price.amount / self.order_average_weight
-                    )
-                else:
-                    reference_price = (
-                        self.producer_unit_price.amount / self.order_average_weight
-                    )
-                reference_price = RepanierMoney(
-                    reference_price.quantize(TWO_DECIMALS), 2
-                )
-                if self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
-                    reference_unit = _("/ kg")
-                elif self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
-                    reference_unit = _("/ l")
-                else:
-                    reference_unit = _("/ pc")
-                return "{} {}".format(reference_price, reference_unit)
-            else:
-                return EMPTY_STRING
-        else:
-            return EMPTY_STRING
+    # def get_reference_price(self, customer_price=True):
+    #     if (
+    #         self.order_average_weight > DECIMAL_ZERO
+    #         and self.order_average_weight != DECIMAL_ONE
+    #     ):
+    #         if self.order_unit in [
+    #             PRODUCT_ORDER_UNIT_PC_PRICE_KG,
+    #             PRODUCT_ORDER_UNIT_PC_PRICE_LT,
+    #             PRODUCT_ORDER_UNIT_PC_PRICE_PC,
+    #         ]:
+    #             if customer_price:
+    #                 reference_price = (
+    #                     self.customer_unit_price.amount / self.order_average_weight
+    #                 )
+    #             else:
+    #                 reference_price = (
+    #                     self.producer_unit_price.amount / self.order_average_weight
+    #                 )
+    #             reference_price = RepanierMoney(
+    #                 reference_price.quantize(TWO_DECIMALS), 2
+    #             )
+    #             if self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_KG:
+    #                 reference_unit = _("/ kg")
+    #             elif self.order_unit == PRODUCT_ORDER_UNIT_PC_PRICE_LT:
+    #                 reference_unit = _("/ l")
+    #             else:
+    #                 reference_unit = _("/ pc")
+    #             return "{} {}".format(reference_price, reference_unit)
+    #         else:
+    #             return EMPTY_STRING
+    #     else:
+    #         return EMPTY_STRING
 
     def get_display(
         self,
@@ -414,12 +414,6 @@ class Item(TranslatableModel):
             return display
 
 
-    def get_long_name_with_producer_price(self):
-        return self.get_long_name(customer_price=False)
-
-    get_long_name_with_producer_price.short_description = _("Long name")
-    get_long_name_with_producer_price.admin_order_field = "long_name_v2"
-
     def get_qty_display(self):
         raise NotImplementedError
 
@@ -439,10 +433,13 @@ class Item(TranslatableModel):
             else:
                 return "; {}".format(unit_price)
 
-    def get_long_name(self, customer_price=True):
-        qty_and_price_display = self.get_qty_and_price_display(customer_price)
-        if qty_and_price_display:
-            result = "{}{}".format(self.long_name_v2, qty_and_price_display)
+    def get_long_name(self, customer_price=False, producer_price=False):
+        if customer_price or producer_price:
+            qty_and_price_display = self.get_qty_and_price_display(customer_price)
+            if qty_and_price_display:
+                result = "{}{}".format(self.long_name_v2, qty_and_price_display)
+            else:
+                result = "{}".format(self.long_name_v2)
         else:
             result = "{}".format(self.long_name_v2)
         return result
@@ -450,17 +447,25 @@ class Item(TranslatableModel):
     get_long_name.short_description = _("Long name")
     get_long_name.admin_order_field = "long_name_v2"
 
-    def get_long_name_with_producer(self):
+    def get_long_name_with_customer_price(self):
         if self.id is not None:
-            return "{}, {}".format(
-                self.producer.short_profile_name, self.get_long_name()
-            )
+            return self.get_long_name(customer_price=True)
         else:
-            # Nedeed for django import export since django_import_export-0.4.5
+            # Needed for django import export since django_import_export-0.4.5
             return "N/A"
 
-    get_long_name_with_producer.short_description = _("Long name")
-    get_long_name_with_producer.admin_order_field = "long_name_v2"
+    get_long_name_with_customer_price.short_description = _("Customer tariff")
+    get_long_name_with_customer_price.admin_order_field = "long_name_v2"
+
+    def get_long_name_with_producer_price(self):
+        if self.id is not None:
+            return self.get_long_name(producer_price=True)
+        else:
+            # Needed for django import export since django_import_export-0.4.5
+            return "N/A"
+
+    get_long_name_with_producer_price.short_description = _("Producer tariff")
+    get_long_name_with_producer_price.admin_order_field = "long_name_v2"
 
     def __str__(self):
         return EMPTY_STRING

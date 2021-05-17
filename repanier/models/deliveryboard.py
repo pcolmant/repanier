@@ -66,17 +66,14 @@ class DeliveryBoard(TranslatableModel):
             customer_invoice__delivery_id=self.id
         ).order_by("?").update(status=new_status)
 
-    def get_delivery_display(self, br=False, color=False):
-        short_name = "{}".format(self.delivery_point.short_name_v2)
+    def get_delivery_display(self, color=False):
+        short_name = self.delivery_point.short_name_v2
         comment = self.delivery_comment_v2
+        label = " ".join(comment, short_name)
         if color:
             label = mark_safe(
-                '<font color="green">{} {}</font>'.format(comment, short_name)
+                '<font color="green">{}</font>'.format(label)
             )
-        elif br:
-            label = mark_safe("{}<br>{}".format(comment, short_name))
-        else:
-            label = "{} {}".format(comment, short_name)
         return label
 
     def get_delivery_status_display(self):

@@ -131,7 +131,7 @@ class CustomerInvoice(Invoice):
     )
     price_list_multiplier = models.DecimalField(
         _(
-            "Delivery point coefficient applied to the producer tariff to calculate the consumer tariff"
+            "Delivery point coefficient applied to the producer tariff to calculate the customer tariff"
         ),
         help_text=_(
             "This multiplier is applied once for groups with entitled customer or at each customer invoice for open groups."
@@ -983,7 +983,7 @@ class CustomerProducerInvoice(models.Model):
     )
     # Calculated with Purchase
     total_selling_with_tax = ModelMoneyField(
-        _("Invoiced to the consumer w TVA"),
+        _("Invoiced to the customer w TVA"),
         help_text=_("Total selling amount vat included"),
         default=DECIMAL_ZERO,
         max_digits=8,

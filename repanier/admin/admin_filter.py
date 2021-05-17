@@ -1,104 +1,33 @@
 # Filters in the right sidebar of the change list page of the admin
+from admin_auto_filters.filters import AutocompleteFilter
+from admin_auto_filters.views import AutocompleteJsonView
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
-
 from repanier.const import *
+from repanier.middleware import get_request_params
 from repanier.models.customer import Customer
 from repanier.models.invoice import CustomerInvoice, ProducerInvoice
-from repanier.models.lut import LUT_DepartmentForCustomer, LUT_ProductionMode
+from repanier.models.lut import LUT_ProductionMode
 from repanier.models.permanence import Permanence
-from repanier.models.producer import Producer, Product
+from repanier.models.producer import Producer
 from repanier.tools import sint, get_admin_template_name
 
 
-class ProductFilterByProducer(SimpleListFilter):
-    # Human-readable title which will be displayed in the
-    # right admin sidebar.
-    title = _("Producers")
-    # Parameter for the filter that will be used in the URL query.
+class AdminFilterProducer(AutocompleteFilter):
+    title = _("Producers")  # display title
+    field_name = "producer"  # name of the foreign key field
     parameter_name = "producer"
-    template = get_admin_template_name("producer_filter.html")
-
-    def lookups(self, request, model_admin):
-        """
-        Returns a list of tuples. The first element in each
-        tuple is the coded value for the option that will
-        appear in the URL query. The second element is the
-        human-readable name for the option that will appear
-        in the right sidebar.
-        """
-        # This list is a collection of producer.id, .name
-        return [
-            (c.id, c.short_profile_name)
-            for c in Producer.objects.filter(is_active=True)
-        ]
-
-    def queryset(self, request, queryset):
-        """
-        Returns the filtered queryset based on the value
-        provided in the query string and retrievable via
-        `self.value()`.
-        """
-        # This query set is a collection of products
-        if self.value():
-            return queryset.filter(producer_id=self.value())
-        else:
-            return queryset
 
 
-class ProductFilterByDepartmentForThisProducer(SimpleListFilter):
-    title = _("Departments")
+class AdminFilterDepartment(AutocompleteFilter):
+    title = _("Departments")  # display title
+    field_name = "department_for_customer"  # name of the foreign key field
     parameter_name = "department_for_customer"
-    template = get_admin_template_name("department_filter.html")
-
-    def lookups(self, request, model_admin):
-        producer_id = request.GET.get("producer")
-        if producer_id:
-            inner_qs = (
-                Product.objects.filter(producer_id=producer_id)
-                .order_by("department_for_customer")
-                .distinct("department_for_customer__id")
-            )
-        else:
-            permanence_id = request.GET.get("permanence")
-            if permanence_id:
-                inner_qs = (
-                    Product.objects.filter(offeritem__permanence_id=permanence_id)
-                    .order_by("department_for_customer")
-                    .distinct("department_for_customer__id")
-                )
-            else:
-                inner_qs = (
-                    Product.objects.all()
-                    .order_by("department_for_customer")
-                    .distinct("department_for_customer__id")
-                )
-
-        return [
-            (d.id, d.short_name_v2)
-            for d in LUT_DepartmentForCustomer.objects.filter(product__in=inner_qs)
-        ]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            # When self.value() is not a valid filter value, Django display "all"
-            # in the admin UI filter and show nothing. This occurs when you change
-            # of producer and that this producer doesn't have such products.
-            # This is a way to avoid it
-            producer_id = request.GET.get("producer")
-            if (
-                Product.objects.filter(
-                    producer_id=producer_id, department_for_customer_id=self.value()
-                )
-                .order_by("?")
-                .exists()
-            ):
-                return queryset.filter(department_for_customer_id=self.value())
-        return queryset
 
 
-class ProductFilterByProductionMode(SimpleListFilter):
+class AdminFilterProductionMode(SimpleListFilter):
     title = _("Productions modes")
     parameter_name = "production_mode"
     template = get_admin_template_name("production_mode_filter.html")
@@ -116,7 +45,7 @@ class ProductFilterByProductionMode(SimpleListFilter):
             return queryset
 
 
-class ProductFilterByPlacement(SimpleListFilter):
+class AdminFilterPlacement(SimpleListFilter):
     title = _("Products placements")
     parameter_name = "placement"
     template = get_admin_template_name("placement_filter.html")
@@ -131,10 +60,10 @@ class ProductFilterByPlacement(SimpleListFilter):
             return queryset
 
 
-class ProductFilterByVatLevel(SimpleListFilter):
-    title = _("VAT")
-    parameter_name = "vat_level"
-    template = get_admin_template_name("vat_level_filter.html")
+class AdminFilterTaxLevel(SimpleListFilter):
+    title = _("TAX")
+    parameter_name = "tax_level"
+    template = get_admin_template_name("tax_level_filter.html")
 
     def lookups(self, request, model_admin):
         return [(p[0], p[1]) for p in LUT_ALL_VAT]
@@ -146,13 +75,14 @@ class ProductFilterByVatLevel(SimpleListFilter):
             return queryset
 
 
-class PurchaseFilterByCustomer(SimpleListFilter):
+class AdminFilterCustomerOfPermanence(SimpleListFilter):
     title = _("Customers")
     parameter_name = "customer"
     template = get_admin_template_name("customer_filter.html")
 
     def lookups(self, request, model_admin):
-        permanence_id = request.GET.get("permanence", None)
+        param = get_request_params()
+        permanence_id = param.get("permanence", None)
         list_filter = []
         for c in Customer.objects.filter(may_order=True):
             ci = (
@@ -194,86 +124,77 @@ class PurchaseFilterByCustomer(SimpleListFilter):
             return queryset
 
 
-class PurchaseFilterByProducerForThisPermanence(SimpleListFilter):
+class AdminFilterProducerOfPermanence(SimpleListFilter):
     title = _("Producers")
     parameter_name = "producer"
     template = get_admin_template_name("producer_filter.html")
 
     def lookups(self, request, model_admin):
-        permanence_id = request.GET.get("permanence", None)
-        list_filter = []
-        for p in Producer.objects.filter(permanence=permanence_id):
-            pi = (
-                ProducerInvoice.objects.filter(
+        param = get_request_params()
+        permanence_id = param.get("permanence", None)
+        if permanence_id is None:
+            list_filter = [(0, _("No permanence selected"))]
+        else:
+            list_filter = [(None, _("All"))]
+            for p in Producer.objects.filter(permanence=permanence_id):
+                pi = ProducerInvoice.objects.filter(
                     permanence_id=permanence_id, producer_id=p.id
-                )
-                .order_by("?")
-                .first()
-            )
-            if pi is not None:
-                list_filter.append(
-                    (
-                        p.id,
-                        "{} ({})".format(p.short_profile_name, pi.total_price_with_tax),
+                ).first()
+                if pi is not None:
+                    list_filter.append(
+                        (
+                            p.id,
+                            "{} ({})".format(
+                                p.short_profile_name, pi.total_price_with_tax
+                            ),
+                        )
                     )
-                )
-            else:
-                list_filter.append((p.id, p.short_profile_name))
+                else:
+                    list_filter.append((p.id, p.short_profile_name))
         return list_filter
 
     def queryset(self, request, queryset):
-        if self.value():
+        param = get_request_params()
+        permanence_id = param.get("permanence", None)
+        if permanence_id is None:
+            # return a queryset which returns nothing if not permanence is selected
+            return queryset.filter(producer_id=0)
+        elif self.value():
             return queryset.filter(producer_id=self.value())
         else:
             return queryset
 
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == str(lookup),
+                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
+                'display': title,
+            }
 
-class PurchaseFilterByPermanence(SimpleListFilter):
-    title = _("Permanences")
-    parameter_name = "permanence"
 
-    def lookups(self, request, model_admin):
-        permanence_id = request.GET.get("permanence", None)
-        if permanence_id is None:
-            return [
-                (p.id, p.get_permanence_display())
-                for p in Permanence.objects.filter(
-                    status__in=[PERMANENCE_OPENED, PERMANENCE_CLOSED, PERMANENCE_SEND]
-                )
-            ]
-        else:
-            return []
+class AdminFilterPermanenceSendSearchView(AutocompleteJsonView):
+    model_admin = None
 
-    def queryset(self, request, queryset):
-        if self.value():
-            permanence_id = sint(self.value(), 0)
-            if permanence_id > 0:
-                return queryset.filter(permanence_id=permanence_id)
+    def get_queryset(self):
+        queryset = Permanence.objects.filter(status=PERMANENCE_SEND).order_by(
+            "permanence_date",
+            "id",
+        )
         return queryset
 
 
-class OfferItemSendFilterByPermanence(SimpleListFilter):
+class AdminFilterPermanenceSend(AutocompleteFilter):
     title = _("Permanences")
+    field_name = "permanence"  # name of the foreign key field
     parameter_name = "permanence"
 
-    def lookups(self, request, model_admin):
-        return [
-            (p.id, p.get_permanence_display())
-            for p in Permanence.objects.filter(status=PERMANENCE_SEND)
-        ]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            permanence_id = sint(self.value(), 0)
-            if permanence_id > 0:
-                return queryset.filter(permanence_id=permanence_id)
-        else:
-            return queryset.filter(permanence__status=PERMANENCE_SEND)
-        return queryset
+    def get_autocomplete_url(self, request, model_admin):
+        return reverse("admin:afcs_offer_item_send_permanence")
 
 
-class OfferItemFilter(SimpleListFilter):
-    title = _("Products")
+class AdminFilterQuantityInvoiced(SimpleListFilter):
+    title = _("Invoiced")
     parameter_name = "is_filled_exact"
 
     def lookups(self, request, model_admin):
@@ -286,7 +207,7 @@ class OfferItemFilter(SimpleListFilter):
             return queryset
 
 
-class BankAccountFilterByStatus(SimpleListFilter):
+class AdminFilterBankAccountStatus(SimpleListFilter):
     title = _("Status")
     parameter_name = "is_filled_exact"
 
@@ -295,7 +216,6 @@ class BankAccountFilterByStatus(SimpleListFilter):
             (1, _("Not invoiced")),
             (2, _("Balance")),
             (3, _("Loses and profits")),
-            (4, _("Taxes")),
         ]
 
     def queryset(self, request, queryset):
@@ -312,15 +232,14 @@ class BankAccountFilterByStatus(SimpleListFilter):
                     customer_id__isnull=True,
                     producer_id__isnull=True,
                 )
-            elif value == "3":
-                return queryset.filter(operation_status=BANK_PROFIT)
             else:
-                return queryset.filter(operation_status=BANK_TAX)
+                return queryset.filter(operation_status__in=[BANK_PROFIT, BANK_TAX])
 
         else:
             return queryset
 
-class StatusFilterPermanenceInPreparation(SimpleListFilter):
+
+class AdminFilterPermanenceInPreparationStatus(SimpleListFilter):
     title = _("Status")
     parameter_name = "status"
 
@@ -335,9 +254,7 @@ class StatusFilterPermanenceInPreparation(SimpleListFilter):
         value = self.value()
         if value:
             if value == PERMANENCE_PLANNED:
-                return queryset.filter(
-                    status__lt=PERMANENCE_OPENED
-                )
+                return queryset.filter(status__lt=PERMANENCE_OPENED)
             elif value == PERMANENCE_OPENED:
                 return queryset.filter(
                     status=PERMANENCE_OPENED,
@@ -350,7 +267,7 @@ class StatusFilterPermanenceInPreparation(SimpleListFilter):
             return queryset
 
 
-class StatusFilterPermanenceDone(SimpleListFilter):
+class AdminFilterPermanenceDoneStatus(SimpleListFilter):
     title = _("Status")
     parameter_name = "status"
 
@@ -360,16 +277,13 @@ class StatusFilterPermanenceDone(SimpleListFilter):
             (PERMANENCE_INVOICED, PERMANENCE_INVOICED_STR),
             (PERMANENCE_CANCELLED, PERMANENCE_CANCELLED_STR),
             (PERMANENCE_ARCHIVED, PERMANENCE_ARCHIVED_STR),
-
         ]
 
     def queryset(self, request, queryset):
         value = self.value()
         if value:
             if value == PERMANENCE_SEND:
-                return queryset.filter(
-                    status__lt=PERMANENCE_INVOICED
-                )
+                return queryset.filter(status__lt=PERMANENCE_INVOICED)
             elif value == PERMANENCE_INVOICED:
                 return queryset.filter(
                     status=PERMANENCE_INVOICED,

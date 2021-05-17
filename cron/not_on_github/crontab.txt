@@ -1,0 +1,43 @@
+MAILTO="pcolmant@gmail.com"
+# Edit this file to introduce tasks to be run by cron.
+#
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+#
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').#
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+#
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+#
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+# m h  dom mon dow   command
+00 20 * * 3 /home/repad/p3/_0_prd_monssud/cron/close_orders.sh
+05 21 * * 2 /home/repad/p3/_1_prd_ptidej/cron/close_orders.sh
+01 00 * * 3 /home/repad/p3/_2_prd_apero/cron/close_orders.sh
+00 22 * * 3 /home/repad/p3/_3_prd_lelensois/cron/close_orders.sh
+00 14 * * 1 /home/repad/p3/_4_prd_lebio/cron/pre_open_orders.sh
+00 14 * * 2 /home/repad/p3/_4_prd_lebio/cron/open_orders.sh
+00 18 * * 3 /home/repad/p3/_4_prd_lebio/cron/close_orders.sh
+55 00 * * * /home/repad/p3/_0_prd_monssud/cron/backup_db.sh
+05 01 * * * /home/repad/p3/_1_prd_ptidej/cron/backup_db.sh
+15 01 * * * /home/repad/p3/_2_prd_apero/cron/backup_db.sh
+25 01 * * * /home/repad/p3/_3_prd_lelensois/cron/backup_db.sh
+35 01 * * * /home/repad/p3/_4_prd_lebio/cron/backup_db.sh
+45 01 * * * /home/repad/p3/_5_prd_exceptionnel/cron/backup_db.sh
+55 01 * * * /home/repad/p3/_6_prd_bees/cron/backup_db.sh
+05 02 * * * /home/repad/p3/_7_prd_coopeco2/cron/backup_db.sh
+15 02 * * * /home/repad/p3/_8_prd_gassines/cron/backup_db.sh
+25 02 * * * /home/repad/p3/_9_prd_bloum/cron/backup_db.sh
+35 02 * * 0 /home/repad/p3/_a_prd_repanier/cron/backup_db.sh
+45 02 * * 0 /home/repad/p3/_b_prd_lepi/cron/backup_db.sh
+55 02 * * 0 /home/repad/p3/_c_prd_gasath/cron/backup_db.sh

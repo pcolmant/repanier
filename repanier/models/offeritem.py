@@ -60,7 +60,7 @@ class OfferItem(Item):
     )
     price_list_multiplier = models.DecimalField(
         _(
-            "Coefficient applied to the producer tariff to calculate the consumer tariff"
+            "Coefficient applied to the producer tariff to calculate the customer tariff"
         ),
         help_text=_(
             "This multiplier is applied to each price automatically imported/pushed."
@@ -83,7 +83,7 @@ class OfferItem(Item):
     )
     # Calculated with Purchase : Total customer selling price vat included
     total_selling_with_tax = ModelMoneyField(
-        _("Invoiced to the consumer w TVA"),
+        _("Invoiced to the customer w TVA"),
         default=DECIMAL_ZERO,
         max_digits=8,
         decimal_places=2,
@@ -226,23 +226,23 @@ class OfferItem(Item):
                 )
         return qty_display
 
-    def get_long_name(self, customer_price=True, is_html=False):
-        return super().get_long_name(customer_price=customer_price)
+    # def get_long_name(self, customer_price=True, is_html=False):
+    #     return super().get_long_name(customer_price=customer_price)
 
-    def get_html_long_name(self):
-        return mark_safe(self.get_long_name(is_html=True))
+    # def get_html_long_name(self):
+    #     return mark_safe(self.get_long_name(is_html=True))
 
-    def get_long_name_with_producer(self, is_html=False):
-        return super().get_long_name_with_producer()
+    # def get_long_name_with_producer(self, is_html=False):
+    #     return super().get_long_name_with_producer()
 
-    def get_html_long_name_with_producer(self):
-        return mark_safe(self.get_long_name_with_producer(is_html=True))
-
-    get_html_long_name_with_producer.short_description = _("Offer items")
-    get_html_long_name_with_producer.admin_order_field = "long_name_v2"
+    # def get_html_long_name_with_producer(self):
+    #     return mark_safe(self.get_long_name_with_producer_price())
+    #
+    # get_html_long_name_with_producer.short_description = _("Offer items")
+    # get_html_long_name_with_producer.admin_order_field = "long_name_v2"
 
     def __str__(self):
-        return self.get_long_name_with_producer()
+        return self.get_long_name_with_producer_price()
 
     class Meta:
         verbose_name = _("Offer item")
@@ -255,7 +255,7 @@ class OfferItem(Item):
 
 class OfferItemWoReceiver(OfferItem):
     def __str__(self):
-        return self.get_long_name_with_producer()
+        return self.get_long_name_with_producer_price()
 
     class Meta:
         proxy = True
@@ -265,7 +265,7 @@ class OfferItemWoReceiver(OfferItem):
 
 class OfferItemSend(OfferItem):
     def __str__(self):
-        return self.get_long_name_with_producer()
+        return self.get_long_name_with_producer_price()
 
     class Meta:
         proxy = True
@@ -275,7 +275,7 @@ class OfferItemSend(OfferItem):
 
 class OfferItemClosed(OfferItem):
     def __str__(self):
-        return self.get_long_name_with_producer()
+        return self.get_long_name_with_producer_price()
 
     class Meta:
         proxy = True

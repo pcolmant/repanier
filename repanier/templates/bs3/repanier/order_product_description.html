@@ -3,14 +3,14 @@
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
-            <h4 class="modal-title" id="orderModalLabel">{{ offer.get_html_long_name }}</h4>
+            <h4 class="modal-title" id="orderModalLabel">{{ offer.get_long_name_with_customer_price }}</h4>
         </div>
         <div class="modal-body">
             {{ offer.producer.short_profile_name }}<br>
             <small>{{ offer.department_for_customer.short_name_v2 }}</small><br>
             {% if offer.picture2 %}
-                <img class="img-responsive img-thumbnail" style="float: left; margin: 5px;" alt="{{ offer.get_long_name }}"
-                     title="{{ offer.get_long_name }}" src="{{ MEDIA_URL }}{{ offer.picture2 }}"/>
+                <img class="img-responsive img-thumbnail" style="float: left; margin: 5px;" alt="{{ offer.get_long_name_with_customer_price }}"
+                     title="{{ offer.get_long_name_with_customer_price }}" src="{{ MEDIA_URL }}{{ offer.picture2 }}"/>
             {% endif %}
             {% if offer.product.offer_description_v2 %}
                 {{ offer.product.offer_description_v2 | safe }}

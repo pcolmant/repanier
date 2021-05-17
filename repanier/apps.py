@@ -57,6 +57,7 @@ class RepanierConfig(AppConfig):
                 db_started = connection.cursor() is not None
             except Exception:
                 logger.info("Waiting for database connection")
+                print("---- repanier:apps.py - ready : Waiting for database connection")
                 time.sleep(1)
 
         # Imports are inside the function because its point is to avoid importing

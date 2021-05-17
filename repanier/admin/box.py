@@ -17,6 +17,7 @@ from repanier.const import (
     REPANIER_MONEY_ZERO,
 )
 from repanier.fields.RepanierMoneyField import FormMoneyField
+from repanier.middleware import get_request_params
 from repanier.models.box import BoxContent, Box
 from repanier.models.offeritem import OfferItemWoReceiver
 from repanier.models.product import Product
@@ -120,7 +121,7 @@ class BoxContentInline(InlineForeignKeyCacheMixin, TabularInline):
 
 class BoxForm(forms.ModelForm):
     calculated_customer_box_price = FormMoneyField(
-        label=_("Consumer rate per unit calculated"),
+        label=_("Customer rate per unit calculated"),
         max_digits=8,
         decimal_places=2,
         required=False,
@@ -170,9 +171,9 @@ class BoxAdmin(admin.ModelAdmin):
 
     list_display = (
         "get_html_is_into_offer",
-        "get_box_admin_display",
+        "__str__",
     )
-    list_display_links = ("get_box_admin_display",)
+    list_display_links = ("__str__",)
     list_per_page = 16
     list_max_show_all = 16
     inlines = (BoxContentInline,)
@@ -182,7 +183,7 @@ class BoxAdmin(admin.ModelAdmin):
         "long_name_v2",
     )
     search_fields = ("long_name_v2",)
-    list_filter = ("is_into_offer", "is_active")
+    list_filter = ("is_into_offer",)
     actions = [
         "duplicate_box",
     ]
@@ -269,23 +270,21 @@ class BoxAdmin(admin.ModelAdmin):
             picture_field.widget.upload_to = "box"
 
         if box is None:
-            preserved_filters = request.GET.get("_changelist_filters", None)
-            if preserved_filters:
-                param = dict(parse_qsl(preserved_filters))
-                if "is_active__exact" in param:
-                    is_active_value = param["is_active__exact"]
-                    is_active_field = form.base_fields["is_active"]
-                    if is_active_value == "0":
-                        is_active_field.initial = False
-                    else:
-                        is_active_field.initial = True
-                if "is_into_offer__exact" in param:
-                    is_into_offer_value = param["is_into_offer__exact"]
-                    is_into_offer_field = form.base_fields["is_into_offer"]
-                    if is_into_offer_value == "0":
-                        is_into_offer_field.initial = False
-                    else:
-                        is_into_offer_field.initial = True
+            param = get_request_params()
+            if "is_active__exact" in param:
+                is_active_value = param["is_active__exact"]
+                is_active_field = form.base_fields["is_active"]
+                if is_active_value == "0":
+                    is_active_field.initial = False
+                else:
+                    is_active_field.initial = True
+            if "is_into_offer__exact" in param:
+                is_into_offer_value = param["is_into_offer__exact"]
+                is_into_offer_field = form.base_fields["is_into_offer"]
+                if is_into_offer_value == "0":
+                    is_into_offer_field.initial = False
+                else:
+                    is_into_offer_field.initial = True
         return form
 
     def get_html_is_into_offer(self, product):

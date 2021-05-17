@@ -568,11 +568,11 @@ def export_preparation_for_a_delivery(
                                 c = ws.cell(row=row_num, column=5)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "{} - {}".format(
-                                        purchase.get_long_name(),
+                                        purchase.get_long_name_with_customer_price(),
                                         department_for_customer_save__short_name,
                                     )
                                 else:
-                                    c.value = "{}".format(purchase.get_long_name())
+                                    c.value = "{}".format(purchase.get_long_name_with_customer_price())
                                 c.style.number_format.format_code = (
                                     NumberFormat.FORMAT_TEXT
                                 )
@@ -768,11 +768,11 @@ def export_preparation_for_a_delivery(
                                         is not None
                                     ):
                                         c.value = "{} - {}".format(
-                                            purchase.get_long_name(),
+                                            purchase.get_long_name_with_customer_price(),
                                             department_for_customer_save__short_name,
                                         )
                                     else:
-                                        c.value = "{}".format(purchase.get_long_name())
+                                        c.value = "{}".format(purchase.get_long_name_with_customer_price())
                                     c.style.alignment.wrap_text = True
                                     if count_offer_item != 0:
                                         c.style.font.color.index = "FF939393"
@@ -1008,7 +1008,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
                             c = ws.cell(row=row_num, column=4)
-                            c.value = offer_item.get_long_name(customer_price=False)
+                            c.value = offer_item.get_long_name_with_producer_price()
                             c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                             c.style.alignment.wrap_text = True
                             c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -1122,7 +1122,7 @@ def export_producer_by_product(permanence, producer, wb=None):
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
                         c = ws.cell(row=row_num, column=4)
-                        c.value = offer_item.get_long_name(customer_price=False)
+                        c.value = offer_item.get_long_name_with_producer_price()
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.alignment.wrap_text = True
                         c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -1347,7 +1347,7 @@ def export_producer_by_customer(permanence, producer, wb=None):
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
                     c = ws.cell(row=row_num, column=3)
-                    c.value = offer_item_save.get_long_name(customer_price=False)
+                    c.value = offer_item_save.get_long_name_with_producer_price()
                     c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                     c.style.alignment.wrap_text = True
                     c.style.borders.bottom.border_style = Border.BORDER_THIN
@@ -1707,11 +1707,11 @@ def export_customer_for_a_delivery(
                         c = ws.cell(row=row_num, column=4)
                         if department_for_customer_save__short_name is not None:
                             c.value = "{} - {}".format(
-                                purchase.get_long_name(),
+                                purchase.get_long_name_with_customer_price(),
                                 department_for_customer_save__short_name,
                             )
                         else:
-                            c.value = "{}".format(purchase.get_long_name())
+                            c.value = "{}".format(purchase.get_long_name_with_customer_price())
                         c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                         c.style.alignment.wrap_text = True
                         c.style.borders.bottom.border_style = Border.BORDER_THIN

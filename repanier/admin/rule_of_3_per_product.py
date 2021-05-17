@@ -2,14 +2,15 @@ from django import forms
 from django.contrib import admin
 from django.db import transaction
 from django.forms import BaseInlineFormSet
+from django.urls import path
 from django.utils.translation import ugettext_lazy as _
 from easy_select2 import Select2
-
 from repanier.admin.admin_filter import (
-    PurchaseFilterByProducerForThisPermanence,
-    ProductFilterByDepartmentForThisProducer,
-    OfferItemFilter,
-    OfferItemSendFilterByPermanence,
+    AdminFilterProducerOfPermanence,
+    AdminFilterQuantityInvoiced,
+    AdminFilterPermanenceSend,
+    AdminFilterDepartment,
+    AdminFilterPermanenceSendSearchView,
 )
 from repanier.admin.inline_foreign_key_cache_mixin import InlineForeignKeyCacheMixin
 from repanier.const import *
@@ -203,30 +204,25 @@ class OfferItemSendAdmin(admin.ModelAdmin):
     inlines = [OfferItemPurchaseSendInline]
     search_fields = ("long_name_v2",)
     list_display = [
-        "department_for_customer",
         "producer",
+        "department_for_customer",
         "get_long_name_with_producer_price",
         "get_html_producer_qty_stock_invoiced",
         "get_html_producer_price_purchased",
     ]
     list_display_links = ("get_long_name_with_producer_price",)
     list_filter = (
-        OfferItemSendFilterByPermanence,
-        PurchaseFilterByProducerForThisPermanence,
-        OfferItemFilter,
-        ProductFilterByDepartmentForThisProducer,
+        AdminFilterProducerOfPermanence,
+        AdminFilterPermanenceSend,
+        AdminFilterQuantityInvoiced,
+        AdminFilterDepartment,
+
     )
     list_select_related = ("producer", "department_for_customer")
     list_per_page = 16
     list_max_show_all = 16
-    # Important : Do not order by 'translations__order_sort_order'
-    # because in this case, when searching on the long_name, records may be duplicated in the admin result list.
-    ordering = ("long_name_v2",)
+    ordering = ("department_for_customer", "long_name_v2",)
     readonly_fields = ("get_html_producer_qty_stock_invoiced", "get_vat_level")
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs
 
     def get_fieldsets(self, request, product=None):
         prices = ("producer_unit_price", "unit_deposit")
@@ -307,6 +303,19 @@ class OfferItemSendAdmin(admin.ModelAdmin):
         if user.is_repanier_staff:
             return True
         return False
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "afcs_offer_item_send_permanence/",
+                self.admin_site.admin_view(
+                    AdminFilterPermanenceSendSearchView.as_view(model_admin=self)
+                ),
+                name="afcs_offer_item_send_permanence",
+            ),
+        ]
+        return custom_urls + urls
 
     def get_actions(self, request):
         actions = super().get_actions(request)

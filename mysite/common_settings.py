@@ -39,14 +39,14 @@ def get_group_name(site_name):
 
 # os.path.realpath resolves symlinks and os.path.abspath doesn't.
 PROJECT_DIR = Path(__file__).parent
-PROJECT_PATH = Path('.')
+PROJECT_PATH = Path(".")
 DJANGO_SETTINGS_SITE_NAME = PROJECT_DIR.name
 # PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
 # PROJECT_PATH, DJANGO_SETTINGS_SITE_NAME = os.path.split(PROJECT_DIR)
 os.sys.path.insert(0, PROJECT_PATH)
 print("---- common_settings.py - Python path is : ", sys.path)
 
-conf_file_name = PROJECT_DIR / ( DJANGO_SETTINGS_SITE_NAME +  ".ini" )
+conf_file_name = PROJECT_DIR / (DJANGO_SETTINGS_SITE_NAME + ".ini")
 print("---- common_settings.py - conf_file_name : ", conf_file_name)
 if not conf_file_name.exists():
     print("---- common_settings.py - Settings file %s not found", conf_file_name)
@@ -199,7 +199,9 @@ DJANGO_SETTINGS_DAY_MONTH = "%d-%m"
 DJANGO_SETTINGS_DATE = "%d-%m-%Y"
 DJANGO_SETTINGS_DATETIME = "%d-%m-%Y %H:%M"
 
-STATICFILES_STORAGE = "{}.big_blind_static.BigBlindManifestStaticFilesStorage".format(REPANIER_SETTINGS_VERSION)
+STATICFILES_STORAGE = "{}.big_blind_static.BigBlindManifestStaticFilesStorage".format(
+    REPANIER_SETTINGS_VERSION
+)
 
 # Directory where working files, such as media and databases are kept
 MEDIA_DIR = PROJECT_DIR / "media"
@@ -216,7 +218,9 @@ STATIC_URL = "/static/"
 
 
 def get_repanier_css_name(template_name):
-    return os.path.join(REPANIER_SETTINGS_VERSION, REPANIER_SETTINGS_TEMPLATE, template_name)
+    return os.path.join(
+        REPANIER_SETTINGS_VERSION, REPANIER_SETTINGS_TEMPLATE, template_name
+    )
 
 
 REPANIER_SETTINGS_BOOTSTRAP_CSS_PATH = get_repanier_css_name(
@@ -262,7 +266,7 @@ DATABASES = {
     }
 }
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ###################### I18N
@@ -294,10 +298,14 @@ SECURE_REFERRER_POLICY = "same-origin"
 
 
 ##################### Application definition : Django & Django CMS
-LOCALE_PATHS = ( PROJECT_DIR / "locale",)
+LOCALE_PATHS = (PROJECT_DIR / "locale",)
 
 INSTALLED_APPS = (
-    "{}.apps.RepanierConfig".format(REPANIER_SETTINGS_VERSION),  # ! Important : First installed app for template precedence
+    "dal",  # django-autocomplete-light for template precedence
+    "dal_select2",  # django-autocomplete-light for template precedence
+    "{}.apps.RepanierConfig".format(
+        REPANIER_SETTINGS_VERSION
+    ),  # ! Important : First installed app for template precedence
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -309,6 +317,8 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "djangocms_text_ckeditor",  # note this needs to be above the 'cms' entry
     # 'django_select2',
+
+    "admin_auto_filters", # django-admin-autocomplete-filter
     "djangocms_link",
     "djangocms_file",
     "djangocms_picture",
@@ -346,7 +356,11 @@ text_only_plugins = [
     "VideoPlayerPlugin",  # djangocms_video
 ]
 
-MIGRATION_MODULES = {REPANIER_SETTINGS_VERSION: '{}.migrations.{}'.format(REPANIER_SETTINGS_VERSION, DJANGO_SETTINGS_SITE_NAME)}
+MIGRATION_MODULES = {
+    REPANIER_SETTINGS_VERSION: "{}.migrations.{}".format(
+        REPANIER_SETTINGS_VERSION, DJANGO_SETTINGS_SITE_NAME
+    )
+}
 
 # http://docs.django-cms.org/en/develop/how_to/caching.html
 
@@ -408,7 +422,10 @@ if DEBUG:
             "BACKEND": "django.template.backends.django.DjangoTemplates",
             "DIRS": [
                 os.path.join(
-                    PROJECT_PATH, REPANIER_SETTINGS_VERSION, "templates", REPANIER_SETTINGS_TEMPLATE
+                    PROJECT_PATH,
+                    REPANIER_SETTINGS_VERSION,
+                    "templates",
+                    REPANIER_SETTINGS_TEMPLATE,
                 )
             ],
             # "APP_DIRS": True,
@@ -428,7 +445,10 @@ else:
             "BACKEND": "django.template.backends.django.DjangoTemplates",
             "DIRS": [
                 os.path.join(
-                    PROJECT_PATH, REPANIER_SETTINGS_VERSION, "templates", REPANIER_SETTINGS_TEMPLATE
+                    PROJECT_PATH,
+                    REPANIER_SETTINGS_VERSION,
+                    "templates",
+                    REPANIER_SETTINGS_TEMPLATE,
                 )
             ],
             # 'APP_DIRS': True,
@@ -597,7 +617,9 @@ THUMBNAIL_DEBUG = FILER_DEBUG
 
 ##################### Repanier
 # AUTH_USER_MODEL = 'auth.User'
-AUTHENTICATION_BACKENDS = ("{}.auth_backend.RepanierAuthBackend".format(REPANIER_SETTINGS_VERSION),)
+AUTHENTICATION_BACKENDS = (
+    "{}.auth_backend.RepanierAuthBackend".format(REPANIER_SETTINGS_VERSION),
+)
 # ADMIN_LOGIN = 'pi'
 # ADMIN_PASSWORD = 'raspberry'
 LOGIN_URL = "/repanier/go_repanier/"

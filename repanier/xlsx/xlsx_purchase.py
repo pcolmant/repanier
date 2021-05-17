@@ -165,9 +165,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=4)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "{} - {}".format(
-                                        purchase.get_long_name(), department_for_customer_save__short_name)
+                                        purchase.get_long_name_with_customer_price(), department_for_customer_save__short_name)
                                 else:
-                                    c.value = "{}".format(purchase.get_long_name())
+                                    c.value = "{}".format(purchase.get_long_name_with_customer_price())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 c = ws.cell(row=row_num, column=5)
                                 c.value = "{}".format(customer_save.short_basket_name)
@@ -360,9 +360,9 @@ def export_purchase(permanence=None, year=None, producer=None, customer=None, wb
                                 c = ws.cell(row=row_num, column=4)
                                 if department_for_customer_save__short_name is not None:
                                     c.value = "{} - {}".format(
-                                        purchase.get_long_name(), department_for_customer_save__short_name)
+                                        purchase.get_long_name_with_customer_price(), department_for_customer_save__short_name)
                                 else:
-                                    c.value = "{}".format(purchase.get_long_name())
+                                    c.value = "{}".format(purchase.get_long_name_with_customer_price())
                                 c.style.number_format.format_code = NumberFormat.FORMAT_TEXT
                                 if count_offer_item != 0:
                                     c.style.font.color.index = 'FF939393'

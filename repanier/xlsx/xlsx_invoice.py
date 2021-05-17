@@ -318,7 +318,7 @@ def export_invoice(
                 (
                     _("Product"),
                     60,
-                    purchase.get_long_name(),
+                    purchase.get_long_name_with_customer_price(),
                     NumberFormat.FORMAT_TEXT,
                     False,
                 ),

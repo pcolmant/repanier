@@ -72,7 +72,7 @@ def export_offer_row(product, row_num, ws):
             NumberFormat.FORMAT_TEXT,
             False,
         ),
-        (_("Product"), 60, product.get_long_name(), NumberFormat.FORMAT_TEXT, False),
+        (_("Product"), 60, product.get_long_name_with_customer_price(), NumberFormat.FORMAT_TEXT, False),
         (
             _("Producer unit price"),
             10,
